@@ -2,329 +2,210 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Sole graph producer for typed compared-line relation proofs. Family proof
-  * objects retain their chess-specific certification; this owner only binds
-  * demanded certificates to the common graph/cache envelope.
+/** Sole graph producer for the four relation-backed causal families. Each
+  * family orients exact roots from its own lower facts; only deterministic
+  * graph ownership is shared here.
   */
 private[chessjudgment] object RelationCausalProofAssembler:
 
   private[assembly] def fromDemand(
-      context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      demand: RelationCausalProofDemand
+      demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
     val records =
-      uniqueCheckReply(context, allocator, demand) ++
-        soleRecapturerRemoval(context, allocator, demand) ++
-        vacatedGateCapture(context, allocator, demand) ++
-        squareReleaseRoute(context, allocator, demand) ++
-        captureExclusionMoveOrder(context, allocator, demand)
+      uniqueCheckReply(allocator, demand) ++
+        soleRecapturerRemoval(allocator, demand) ++
+        vacatedGateCapture(allocator, demand) ++
+        squareReleaseRoute(allocator, demand)
     require(
       records.map(_.ref.id).distinct.size == records.size,
       "one relation-causal evidence id may have only one graph owner"
     )
-    records
+    records.sortBy(_.ref.id)
 
   private def uniqueCheckReply(
-      context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      demand: RelationCausalProofDemand
+      demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
-    demand.uniqueCheckReplyDefenderDisplacementBeforeCaptureDemand.toList.flatMap { exactDemand =>
-      val input = demand.input
-      val family = "unique-check-reply-defender-displacement-before-capture"
-      records(
-        family,
-        context,
-        allocator,
-        input,
-        {
-          case payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence
-              if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
-            Some(payload.dependencyId -> payload.resultSet)
-          case _ => None
-        }
+    UniqueCheckReplyProofDemand.from(demand).flatMap { exactDemand =>
+      familyRecords(
+        family = BoundedCausalContractKind.UniqueCheckReplyDefenderDisplacementBeforeCapture,
+        allocator = allocator,
+        subject = exactDemand.subject
       )(
         UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.certifyDemanded(
-          input.comparison.referenceLine,
-          input.comparison.candidateLine,
-          input.referenceSource,
-          input.playedSource,
-          input.referenceReplay,
-          input.playedReplay,
-          exactDemand
+          exactDemand.subject,
+          exactDemand.displacementBranch,
+          exactDemand.immediateCaptureBranch,
+          exactDemand.lower
         )
       )(
-        semantic = _.semantic,
-        record = exact => comparedLineRecord(
-          exact.semantic.semanticId,
-          exact.occurrence.occurrenceId,
-          exact.dependency.value,
-          exact.occurrence.referenceLine,
-          exact.proof.parentSources,
-          exact.occurrence.proofPaths
-        ),
-        payload = (exact, resultSet) =>
+        semanticId = _.semantic.semanticId,
+        occurrenceId = _.occurrence.occurrenceId,
+        dependencyId = _.dependency.value,
+        proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+        parentSources = _.proof.parentSources,
+        payload = exact =>
           UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence(
             exact.semantic,
             exact.occurrence,
+            exactDemand.subject.publicOccurrence,
             exact.dependency.value,
-            resultSet,
-            Some(exact.proof)
+            exact.proof
           )
       )
     }
 
   private def soleRecapturerRemoval(
-      context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      demand: RelationCausalProofDemand
+      demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
-    demand.soleRecapturerRemovalBeforeTargetCaptureDemand.toList.flatMap { exactDemand =>
-      val input = demand.input
-      val family = "sole-recapturer-removal-before-target-capture"
-      records(
-        family,
-        context,
-        allocator,
-        input,
-        {
-          case payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence
-              if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
-            Some(payload.dependencyId -> payload.resultSet)
-          case _ => None
-        }
+    SoleRecapturerRemovalProofDemand.from(demand).flatMap { exactDemand =>
+      familyRecords(
+        family = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture,
+        allocator = allocator,
+        subject = exactDemand.subject
       )(
         SoleRecapturerRemovalBeforeTargetCaptureProof.certifyDemanded(
-          input.comparison.referenceLine,
-          input.comparison.candidateLine,
-          input.referenceSource,
-          input.playedSource,
-          input.referenceReplay,
-          input.playedReplay,
-          exactDemand
+          exactDemand.subject,
+          exactDemand.removalBranch,
+          exactDemand.immediateCaptureBranch,
+          exactDemand.lower
         )
       )(
-        semantic = _.semantic,
-        record = exact => comparedLineRecord(
-          exact.semantic.semanticId,
-          exact.occurrence.occurrenceId,
-          exact.dependency.value,
-          exact.occurrence.referenceLine,
-          exact.parentSources,
-          exact.occurrence.proofPaths
-        ),
-        payload = (exact, resultSet) =>
+        semanticId = _.semantic.semanticId,
+        occurrenceId = _.occurrence.occurrenceId,
+        dependencyId = _.dependency.value,
+        proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+        parentSources = _.parentSources,
+        payload = exact =>
           SoleRecapturerRemovalBeforeTargetCaptureEvidence(
             exact.semantic,
             exact.occurrence,
+            exactDemand.subject.publicOccurrence,
             exact.dependency.value,
-            resultSet,
-            Some(exact)
+            exact
           )
       )
     }
 
   private def vacatedGateCapture(
-      context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      demand: RelationCausalProofDemand
+      demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
-    if demand.vacatedGateEnablesUnrecapturableSliderCaptureDemands.isEmpty then Nil
-    else
-      val input = demand.input
-      val family = "vacated-gate-enables-unrecapturable-slider-capture"
-      records(
-        family,
-        context,
-        allocator,
-        input,
-        {
-          case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence
-              if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
-            Some(payload.dependencyId -> payload.resultSet)
-          case _ => None
-        }
+    VacatedGateCaptureProofDemand.from(demand).flatMap { exactDemand =>
+      familyRecords(
+        family = BoundedCausalContractKind.VacatedGateEnablesUnrecapturableSliderCapture,
+        allocator = allocator,
+        subject = exactDemand.subject
       )(
         VacatedGateEnablesUnrecapturableSliderCaptureProof.certifyDemanded(
-          input.comparison.referenceLine,
-          input.comparison.candidateLine,
-          input.referenceSource,
-          input.playedSource,
-          input.referenceReplay,
-          input.playedReplay,
-          demand.vacatedGateEnablesUnrecapturableSliderCaptureDemands
+          exactDemand.subject,
+          exactDemand.vacatedGateBranch,
+          exactDemand.retainedGateBranch,
+          exactDemand.lowers
         )
       )(
-        semantic = _.semantic,
-        record = exact => comparedLineRecord(
-          exact.semantic.semanticId,
-          exact.occurrence.occurrenceId,
-          exact.dependency.value,
-          exact.occurrence.referenceLine,
-          exact.parentSources,
-          exact.occurrence.proofPaths
-        ),
-        payload = (exact, resultSet) =>
+        semanticId = _.semantic.semanticId,
+        occurrenceId = _.occurrence.occurrenceId,
+        dependencyId = _.dependency.value,
+        proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+        parentSources = _.parentSources,
+        payload = exact =>
           VacatedGateEnablesUnrecapturableSliderCaptureEvidence(
             exact.semantic,
             exact.occurrence,
+            exactDemand.subject.publicOccurrence,
             exact.dependency.value,
-            resultSet,
-            Some(exact)
+            exact
           )
       )
+    }
 
   private def squareReleaseRoute(
-      context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      demand: RelationCausalProofDemand
+      demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
-    if demand.squareReleaseRouteDemands.isEmpty then Nil
-    else
-      val input = demand.input
-      val family = "square-release-route"
-      records(
-        family,
-        context,
-        allocator,
-        input,
-        {
-          case payload: SquareReleaseRouteEvidence
-              if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
-            Some(payload.dependencyId -> payload.resultSet)
-          case _ => None
-        }
+    SquareReleaseRouteProofDemand.from(demand).flatMap { exactDemand =>
+      familyRecords(
+        family = BoundedCausalContractKind.SquareReleaseRoute,
+        allocator = allocator,
+        subject = exactDemand.subject
       )(
         SquareReleaseRouteProof.certifyDemanded(
-          input.comparison.referenceLine,
-          input.comparison.candidateLine,
-          input.referenceSource,
-          input.playedSource,
-          input.referenceReplay,
-          input.playedReplay,
-          demand.squareReleaseRouteDemands
+          exactDemand.subject,
+          exactDemand.releasedSquareBranch,
+          exactDemand.retainedSquareBranch,
+          exactDemand.lowers
         )
       )(
-        semantic = _.semantic,
-        record = exact => comparedLineRecord(
-          exact.semantic.semanticId,
-          exact.occurrence.occurrenceId,
-          exact.dependency.value,
-          exact.occurrence.referenceLine,
-          exact.parentSources,
-          exact.occurrence.proofPaths
-        ),
-        payload = (exact, resultSet) =>
+        semanticId = _.semantic.semanticId,
+        occurrenceId = _.occurrence.occurrenceId,
+        dependencyId = _.dependency.value,
+        proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+        parentSources = _.parentSources,
+        payload = exact =>
           SquareReleaseRouteEvidence(
             exact.semantic,
             exact.occurrence,
+            exactDemand.subject.publicOccurrence,
             exact.dependency.value,
-            resultSet,
-            Some(exact)
+            exact
           )
       )
+    }
 
-  private def captureExclusionMoveOrder(
-      context: JudgmentAssemblyContext,
+  private def familyRecords[A](
+      family: BoundedCausalContractKind,
       allocator: JudgmentProvenanceAllocator,
-      demand: RelationCausalProofDemand
-  ): List[EvidenceRecord] =
-    if demand.captureExclusionMoveOrderDemands.isEmpty then Nil
-    else
-      val input = demand.input
-      val family = "capture-exclusion-move-order"
-      records(
-        family,
-        context,
-        allocator,
-        input,
-        {
-          case payload: CaptureExclusionMoveOrderEvidence
-              if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
-            Some(payload.dependencyId -> payload.resultSet)
-          case _ => None
-        }
-      )(
-        CaptureExclusionMoveOrderProof.certifyDemanded(
-          input.comparison.referenceLine,
-          input.comparison.candidateLine,
-          input.referenceSource,
-          input.playedSource,
-          input.referenceReplay,
-          input.playedReplay,
-          demand.captureExclusionMoveOrderDemands
-        )
-      )(
-        semantic = _.semantic,
-        record = exact => comparedLineRecord(
-          exact.semantic.semanticId,
-          exact.occurrence.occurrenceId,
-          exact.dependency.value,
-          exact.occurrence.referenceLine,
-          exact.parentSources,
-          exact.occurrence.proofPaths
-        ),
-        payload = (exact, resultSet) =>
-          CaptureExclusionMoveOrderEvidence(
-            exact.semantic,
-            exact.occurrence,
-            exact.dependency.value,
-            resultSet,
-            Some(exact)
-          )
-      )
-
-  private def records[A, S](
-      family: String,
-      context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator,
-      input: ExactPlayedVsBestCausalInput,
-      existingPayload: EvidencePayload => Option[(String, ExactCausalProofResultSet)]
+      subject: CertifiedRootOccurrence
   )(
       derive: => List[A]
   )(
-      semantic: A => S,
-      record: A => ExactCausalProofOwnerReuse.ComparedLineProofRecord,
-      payload: (A, ExactCausalProofResultSet) => EvidencePayload
+      semanticId: A => String,
+      occurrenceId: A => String,
+      dependencyId: A => String,
+      proofPathIds: A => List[String],
+      parentSources: A => List[EvidenceRef],
+      payload: A => EvidencePayload
   ): List[EvidenceRecord] =
-    ExactCausalProofOwnerReuse.comparedLineRecords(
-      family,
-      context,
-      input,
-      existingPayload
-    )(derive)(
-      semantic,
-      record,
-      (exact, proofRecord, resultSet) =>
-        EvidenceRecord(
-          EvidenceRef(
-            allocator.evidenceId(proofRecord.evidenceIdInput(family)),
-            EvidenceProducer.CausalProofProducer,
-            EvidenceLayer.CausalProof,
-            proofRecord.referencePosition,
-            Some(proofRecord.referenceLine),
-            proofRecord.referenceLine.role.scope,
-            EvidenceConfidence.LegalReplayVerified
+    val familyNamespace = family.semanticNamespace
+    val certified = derive
+    require(
+      certified.map(occurrenceId).distinct.size == certified.size,
+      s"one exact $familyNamespace occurrence may be produced only once"
+    )
+    val derived = certified.map(exact => dependencyId(exact) -> exact)
+    require(
+      derived.map(_._1).distinct.size == derived.size,
+      s"one exact $familyNamespace dependency may be produced only once"
+    )
+    derived.map { case (_, exact) =>
+      val paths = proofPathIds(exact).sorted
+      val parents = parentSources(exact)
+      require(
+        paths.nonEmpty && paths.distinct.size == paths.size,
+        s"a $familyNamespace record must retain every independent proof path"
+      )
+      require(
+        parents.nonEmpty && parents == parents.sortBy(_.id) &&
+          parents.map(_.id).distinct.size == parents.size,
+        s"a $familyNamespace record needs canonical distinct lower owners"
+      )
+      val publicSubject = subject.publicOccurrence
+      EvidenceRecord(
+        EvidenceRef(
+          allocator.evidenceId(
+            s"causal-proof:$familyNamespace:${semanticId(exact)}:${occurrenceId(exact)}:${dependencyId(exact)}:${paths.mkString(":")}:subject:${publicSubject.occurrenceId}"
           ),
-          payload(exact, resultSet),
-          proofRecord.parentSources
-        )
-    )
-
-  private def comparedLineRecord(
-      semanticId: String,
-      occurrenceId: String,
-      dependencyId: String,
-      referenceLine: LineNodeRef,
-      parentSources: List[EvidenceRef],
-      proofPaths: List[CausalProofPathOccurrence]
-  ): ExactCausalProofOwnerReuse.ComparedLineProofRecord =
-    ExactCausalProofOwnerReuse.ComparedLineProofRecord(
-      semanticId,
-      occurrenceId,
-      dependencyId,
-      referenceLine,
-      parentSources,
-      proofPaths.map(_.pathOccurrenceId).sorted
-    )
+          EvidenceProducer.CausalProofProducer,
+          EvidenceLayer.CausalProof,
+          publicSubject.start,
+          Some(publicSubject.line),
+          subject.transitionOwner.ref.scope,
+          EvidenceConfidence.LegalReplayVerified
+        ),
+        payload(exact),
+        parents
+      )
+    }.sortBy(_.ref.id)

@@ -5,6 +5,7 @@ import java.security.MessageDigest
 import java.util.Locale
 
 import lila.chessjudgment.analysis.assembly.{
+  ExplanationRequest,
   MoveReviewInputAdmission,
   MoveReviewJudgmentOrchestrator,
   PreparedFocusedMoveReview,
@@ -700,7 +701,8 @@ object CommentaryJobReducer:
       ledger: EngineWorkLedger
   ): CommentaryJobState =
     MoveReviewJudgmentOrchestrator.executePreparedReview(
-      context.preparedInput
+      context.preparedInput,
+      Some(ExplanationRequest.forObservedMove(context.preparedInput))
     ) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
       case Some(execution) =>

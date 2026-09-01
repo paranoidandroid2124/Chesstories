@@ -33,7 +33,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
     )
     val first = moveRefs.head
-    val line = LineNodeRef("exact-recapture", first.uci, 1, LineNodeRole.BestReference)
+    val line = LineNodeRef("exact-recapture", first.uci)
     val facts = PrincipalVariationEvidence.LineFacts(
       line = PrincipalVariationEvidence.LineVariationRef(moveRefs),
       first = first,
@@ -41,7 +41,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       continuation = None,
       continuationTail = Nil
     )
-    val material = CandidateLineAssembler
+    val material = LegalLineAssembler
       .lineMaterialSummary(history, lineHistory)
       .getOrElse(fail("expected the canonical material ledger"))
     val payload = LineFactNormalizer
@@ -51,7 +51,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
         facts = facts,
         replay = replay,
         position = PositionNodeRef(rootFen, 0, Some(Black)),
-        scope = line.role.scope,
+        scope = EvidenceScope.LegalLine,
         materialSummary = Some(material)
       )
       .payload match
@@ -168,8 +168,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       initialFen = rootFen,
       historyMoves = Nil,
       rootFen = rootFen,
-      moves = List("a2b3", "h6h5", "a1a8"),
-      whitePovMate = Some(1)
+      moves = List("a2b3", "h6h5", "a1a8")
     )
     val replay = payload.certifiedReplay.getOrElse(fail("expected the certified clearance replay"))
     val steps = payload.lineReplaySteps
@@ -180,7 +179,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
         EvidenceLayer.Line,
         PositionNodeRef(rootFen, 0, Some(White)),
         Some(line),
-        line.role.scope,
+        EvidenceScope.LegalLine,
         EvidenceConfidence.LegalReplayVerified
       ),
       payload
@@ -209,7 +208,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
     assertEquals(trajectory.persistenceStates.map(_.step), List(steps(1)))
     assert(
       trajectory.persistenceStates.forall(state =>
-        state.occurrence.certifies(state.proof, line.role.scope)
+        state.occurrence.certifies(state.proof, EvidenceScope.LegalLine)
       )
     )
     val persistence = trajectory.persistenceStates.head
@@ -230,8 +229,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       initialFen = rootFen,
       historyMoves = Nil,
       rootFen = rootFen,
-      moves = List("a2b3", "h6h5", "a1a8"),
-      whitePovMate = Some(1)
+      moves = List("a2b3", "h6h5", "a1a8")
     )
     val foreignReplay = foreignPayload.certifiedReplay.getOrElse(fail("expected the foreign replay"))
     val foreignOccurrence = foreignReplay
@@ -242,14 +240,19 @@ class LineFactAuthorityTest extends munit.FunSuite:
       .getOrElse(fail("expected the foreign intervening analysis"))
       .relationInventory
     assertEquals(
-      foreignInventory.bindState(firstCertificate, foreignOccurrence.position, line.role.scope),
+      foreignInventory.bindState(firstCertificate, foreignOccurrence.position, EvidenceScope.LegalLine),
       None
     )
 
-    val branch = CausalBranchOccurrence.certifiedCounterfactual(
-      LineAccessBranchRole,
+    val rootOccurrence = CertifiedRootOccurrenceTestFixture.from(
       line,
+      lineRecord,
       replay,
+      CausalRootProvenance.CounterfactualAnalyzedRoot
+    )
+    val branch = CausalBranchOccurrence.fromRootOccurrence(
+      LineAccessBranchRole,
+      rootOccurrence,
       steps.size
     )
     val binding = CausalClosedStateBinding.afterStep(
@@ -283,7 +286,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
         EvidenceLayer.Line,
         PositionNodeRef(rootFen, 1, Some(White)),
         Some(line),
-        line.role.scope,
+        EvidenceScope.LegalLine,
         EvidenceConfidence.LegalReplayVerified
       ),
       payload
@@ -307,8 +310,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       historyMoves: List[String],
       rootFen: String,
       moves: List[String],
-      requireMaterial: Boolean = true,
-      whitePovMate: Option[Int] = None
+      requireMaterial: Boolean = true
   ): (LineFactEvidence, LineNodeRef) =
     val history = CanonicalPositionHistory
       .from(initialFen, historyMoves, rootFen)
@@ -325,7 +327,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
     )
     val first = moveRefs.headOption.getOrElse(fail(s"expected a root move for $id"))
-    val line = LineNodeRef(id, first.uci, 1, LineNodeRole.BestReference)
+    val line = LineNodeRef(id, first.uci)
     val facts = PrincipalVariationEvidence.LineFacts(
       line = PrincipalVariationEvidence.LineVariationRef(moveRefs),
       first = first,
@@ -333,7 +335,7 @@ class LineFactAuthorityTest extends munit.FunSuite:
       continuation = moveRefs.lift(2),
       continuationTail = moveRefs.drop(3)
     )
-    val material = CandidateLineAssembler
+    val material = LegalLineAssembler
       .lineMaterialSummary(history, lineHistory)
     if requireMaterial && material.isEmpty then fail(s"expected a canonical material ledger for $id")
     val payload = LineFactNormalizer
@@ -343,9 +345,8 @@ class LineFactAuthorityTest extends munit.FunSuite:
         facts = facts,
         replay = replay,
         position = PositionNodeRef(rootFen, 0, replay.legalSteps.headOption.map(_.move.piece.color)),
-        scope = line.role.scope,
-        materialSummary = material,
-        whitePovMate = whitePovMate
+        scope = EvidenceScope.LegalLine,
+        materialSummary = material
       )
       .payload match
       case value: LineFactEvidence => value

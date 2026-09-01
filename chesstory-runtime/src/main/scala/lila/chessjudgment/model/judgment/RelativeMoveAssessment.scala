@@ -44,24 +44,6 @@ object AdmittedRootRankingPair:
 enum CandidateComparisonKind:
   case PlayedVsBest
   case BestVsSecond
-  case PlayedVsAlternative
-  case ReferenceVsAlternative
-
-enum RelativeCauseSourceSide:
-  case Reference
-  case Candidate
-
-object RelativeCauseSourceSide:
-  def eventLine(
-      sourceSide: RelativeCauseSourceSide,
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef
-  ): LineNodeRef =
-    sourceSide match
-      case RelativeCauseSourceSide.Reference =>
-        referenceLine
-      case RelativeCauseSourceSide.Candidate =>
-        candidateLine
 
 enum VerdictConfidence:
   case EngineBacked
@@ -160,6 +142,8 @@ case class CandidateComparisonFact(
     kind: CandidateComparisonKind,
     referenceLine: LineNodeRef,
     candidateLine: LineNodeRef,
+    referenceSelection: SemanticLineKey,
+    candidateSelection: SemanticLineKey,
     comparison: EvalComparison,
     verdictConfidence: VerdictConfidence
 ):
@@ -180,13 +164,13 @@ object CandidateComparisonFact:
       kind = kind,
       referenceLine = reference.ref,
       candidateLine = candidate.ref,
+      referenceSelection = SemanticLineKey.from(reference),
+      candidateSelection = SemanticLineKey.from(candidate),
       comparison = comparison,
       verdictConfidence = verdictConfidence
     )
 
-/** Evidence-id-independent identity of one evaluated comparison relation.
-  * Both C canonicalization and cross-comparison exposure reuse this key.
-  */
+/** Evidence-id-independent identity of one quantitative Assessment comparison. */
 final case class CandidateComparisonSemanticKey(
     kind: CandidateComparisonKind,
     mover: Color,
@@ -212,144 +196,11 @@ object CandidateComparisonSemanticKey:
     CandidateComparisonSemanticKey(
       kind = comparison.kind,
       mover = comparison.comparison.mover,
-      referenceLine = SemanticLineKey.from(comparison.referenceLine),
-      candidateLine = SemanticLineKey.from(comparison.candidateLine),
+      referenceLine = comparison.referenceSelection,
+      candidateLine = comparison.candidateSelection,
       candidateWinPercentDeltaForMover = comparison.comparison.candidateWinPercentDeltaForMover,
       verdict = comparison.comparison.verdict,
       verdictConfidence = comparison.verdictConfidence
-    )
-
-enum RelativeCauseKind:
-  case MissedTacticalResource
-  case MissedSquareRelease
-  case WrongMoveOrder
-  case PassedPawnProgress
-
-case class RelativeCauseFact(
-    kind: RelativeCauseKind,
-    comparisonEvidence: EvidenceRef,
-    sourceSide: RelativeCauseSourceSide,
-    proofSources: List[EvidenceRef]
-):
-  require(proofSources.nonEmpty, "a relative Cause requires exact typed proof sources")
-  require(
-    proofSources.map(_.id).distinct.size == proofSources.size,
-    "a relative Cause must not repeat or collide proof-source owners"
-  )
-  require(
-    proofSources == proofSources.sortBy(_.id),
-    "relative Cause proof sources must use canonical evidence-id order"
-  )
-
-/** Evidence-id-independent causal frame used only with the complete typed
-  * proof-occurrence list when checking producer ownership.
-  */
-final case class RelativeCauseSemanticFrameKey(
-    kind: RelativeCauseKind,
-    comparison: CandidateComparisonSemanticKey,
-    eventLine: SemanticLineKey,
-    sourceSide: RelativeCauseSourceSide
-):
-  def stableKey: String =
-    List(
-      kind.toString,
-      comparison.stableKey,
-      eventLine.stableKey,
-      sourceSide.toString
-    ).mkString("|")
-
-final case class RelativeCauseSemanticKey(
-    frame: RelativeCauseSemanticFrameKey,
-    exactProofOccurrences: List[RootOwnedEffectChannelOccurrenceFingerprint]
-):
-  require(exactProofOccurrences.nonEmpty, "a relative Cause semantic key requires an admitted proof occurrence")
-  require(
-    exactProofOccurrences.map(_.stableSortKey) == exactProofOccurrences.map(_.stableSortKey).sorted &&
-      exactProofOccurrences.distinct.size == exactProofOccurrences.size,
-    "relative Cause proof occurrences must be unique and canonically ordered"
-  )
-
-  def kind: RelativeCauseKind = frame.kind
-  def comparisonKind: CandidateComparisonKind = frame.comparison.kind
-  def mover: Color = frame.comparison.mover
-  def referenceLine: SemanticLineKey = frame.comparison.referenceLine
-  def candidateLine: SemanticLineKey = frame.comparison.candidateLine
-  def eventLine: SemanticLineKey = frame.eventLine
-  def sourceSide: RelativeCauseSourceSide = frame.sourceSide
-
-  def stableKey: String =
-    List(
-      frame.stableKey,
-      exactProofOccurrences.map(_.stableSortKey).mkString(",")
-    ).mkString("|")
-
-object RelativeCauseSemanticKey:
-  def from(
-      cause: RelativeCauseFact,
-      causeEvidenceId: String,
-      graph: TypedEvidenceGraph
-  ): RelativeCauseSemanticKey =
-    val comparison = graph.comparisonFor(cause).getOrElse(
-      throw IllegalArgumentException(
-        s"relative cause '${cause.comparisonEvidence.id}' is not bound to a candidate comparison"
-      )
-    )
-    val binding = graph.requiredRelativeCauseBinding(cause)
-    val admittedChannels = RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
-    require(
-      RelativeCauseConstructionAdmission.initiallyReadyWithChannels(cause, graph, admittedChannels),
-      s"relative cause '$causeEvidenceId' has no complete admitted typed proof construction"
-    )
-    val exactProofOccurrences = admittedChannels.map(_.exactOccurrenceFingerprint)
-    require(
-      exactProofOccurrences.distinct.size == exactProofOccurrences.size,
-      s"relative cause '$causeEvidenceId' repeats one exact proof occurrence"
-    )
-    val orderedProofOccurrences = exactProofOccurrences.sortBy(_.stableSortKey)
-    val frame = RelativeCauseSemanticFrameKey(
-      kind = cause.kind,
-      comparison = CandidateComparisonSemanticKey.from(comparison),
-      eventLine = SemanticLineKey.from(binding.eventLine),
-      sourceSide = cause.sourceSide
-    )
-    RelativeCauseSemanticKey(
-      frame = frame,
-      exactProofOccurrences = orderedProofOccurrences
-    )
-
-case class RelativeCauseBinding(
-    sourceSide: RelativeCauseSourceSide,
-    eventLine: LineNodeRef,
-    evidenceLines: List[LineNodeRef]
-)
-
-object RelativeCauseFact:
-  def binding(
-      cause: RelativeCauseFact,
-      comparison: CandidateComparisonFact
-  ): RelativeCauseBinding =
-    binding(
-      comparisonKind = comparison.kind,
-      referenceLine = comparison.referenceLine,
-      candidateLine = comparison.candidateLine,
-      sourceSide = cause.sourceSide
-    )
-
-  def binding(
-      comparisonKind: CandidateComparisonKind,
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef,
-      sourceSide: RelativeCauseSourceSide
-  ): RelativeCauseBinding =
-    require(
-      comparisonKind == CandidateComparisonKind.PlayedVsBest,
-      "a relative Cause may bind only an exact PlayedVsBest comparison"
-    )
-    val eventLine = RelativeCauseSourceSide.eventLine(sourceSide, referenceLine, candidateLine)
-    RelativeCauseBinding(
-      sourceSide = sourceSide,
-      eventLine = eventLine,
-      evidenceLines = List(eventLine)
     )
 
 case class RelativeMoveAssessment(
@@ -358,20 +209,17 @@ case class RelativeMoveAssessment(
     reference: CandidateLineNode,
     candidate: CandidateLineNode,
     evidence: EvidenceRef,
-    primaryComparisonEvidence: EvidenceRef,
-    relatedComparisonEvidence: List[EvidenceRef] = Nil,
-    relativeCauseEvidence: List[EvidenceRef] = Nil
+    primaryComparisonEvidence: EvidenceRef
 ):
   val confidence: EvidenceConfidence = evidence.confidence
 
   private[chessjudgment] def canonicalParents: Option[List[EvidenceRef]] =
     val lineParents =
-      if reference == candidate then List(reference.evidence)
-      else List(reference.evidence, candidate.evidence)
+      if reference == candidate then List(reference.lineEvidence)
+      else List(reference.lineEvidence, candidate.lineEvidence)
     val parents =
       List(played.evidence) ++
         lineParents ++
         referenceTransition.toList.map(_.evidence) ++
-        (primaryComparisonEvidence :: relatedComparisonEvidence) ++
-        relativeCauseEvidence
+        List(primaryComparisonEvidence)
     Option.when(parents.map(_.id).distinct.size == parents.size)(parents)

@@ -9,12 +9,11 @@ private[chessjudgment] object RelationCausalProofTestDispatch:
 
   def forced(
       context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator,
-      demandSource: EvidenceRecord
+      allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
-    exactDemand(context, demandSource).flatMap(demand =>
+    exactDemand(context).flatMap(demand =>
       RelationCausalProofAssembler
-        .fromDemand(context, allocator, demand)
+        .fromDemand(allocator, demand)
         .collect {
           case record @ EvidenceRecord(
                 _,
@@ -25,27 +24,24 @@ private[chessjudgment] object RelationCausalProofTestDispatch:
     )
 
   def defense(
-      context: JudgmentAssemblyContext,
-      demandSource: EvidenceRecord
+      context: JudgmentAssemblyContext
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
-    exactDemand(context, demandSource).flatMap(demand =>
+    exactDemand(context).flatMap(demand =>
       RelationCausalProofAssembler
         .fromDemand(
-          context,
           JudgmentProvenanceAllocator.forInput(context.input),
           demand
         )
-        .flatMap(_.payload match
-          case exact: SoleRecapturerRemovalBeforeTargetCaptureEvidence => exact.occurrenceProof
-          case _                                      => None
-        )
+        .collect {
+          case EvidenceRecord(_, exact: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) =>
+            exact.occurrenceProof
+        }
     )
 
-  private def exactDemand(
-      context: JudgmentAssemblyContext,
-      demandSource: EvidenceRecord
-  ): List[RelationCausalProofDemand] =
-    ExactPlayedVsBestCausalInput
-      .from(context, demandSource)
-      .map(RelationCausalProofDemand.from)
+  private def exactDemand(context: JudgmentAssemblyContext): List[OccurrenceExplanationDemand] =
+    OccurrenceExplanationDemand
+      .resolve(
+        context,
+        ExplanationRequest.forObservedMove(context.input)
+      )
       .toList

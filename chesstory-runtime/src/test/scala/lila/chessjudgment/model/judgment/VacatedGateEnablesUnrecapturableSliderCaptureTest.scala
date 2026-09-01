@@ -3,9 +3,12 @@ package lila.chessjudgment.model.judgment
 import chess.White
 import lila.chessjudgment.analysis.assembly.{
   EvidenceFactAssembler,
+  ExplanationRequest,
+  JudgmentProvenanceAllocator,
+  OccurrenceExplanationAssembler,
+  OccurrenceExplanationDemand,
   RawMoveReviewInput,
-  RelativeAssessmentAssembler,
-  RelativeCauseSignalProfile
+  RelativeAssessmentAssembler
 }
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.{ EngineLine, PrincipalVariationEvidence }
@@ -13,15 +16,15 @@ import lila.chessjudgment.model.line.{ EngineLine, PrincipalVariationEvidence }
 class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
 
   private val rootFen = "7k/q7/8/8/8/8/N7/R6K w - - 0 1"
-  private val referenceMoves = List("a2b4", "h8g8", "a1a7")
-  private val playedMoves = List("h1h2", "h8g8")
+  private val vacatedGateMoves = List("a2b4", "h8g8", "a1a7")
+  private val retainedGateMoves = List("h1h2", "h8g8")
 
   test("a vacated gate is consumed by the same slider's later exact capture"):
     val exact = deriveProofs(
       "positive",
       rootFen,
-      certifiedReplay(rootFen, referenceMoves),
-      certifiedReplay(rootFen, playedMoves)
+      certifiedReplay(rootFen, vacatedGateMoves),
+      certifiedReplay(rootFen, retainedGateMoves)
     ) match
       case one :: Nil => one
       case other      =>
@@ -34,8 +37,8 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assertEquals(exact.semantic.exploit.stableKey, "white:rook>rook:a1-a7")
     assertEquals(exact.semantic.capturedTarget.square.key.toLowerCase, "a7")
     assertEquals(exact.semantic.capturedTarget.role.name.toLowerCase, "queen")
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
-    assertEquals(exact.occurrence.playedSteps.map(_.moveUci), playedMoves)
+    assertEquals(exact.occurrence.vacatedGateSteps.map(_.moveUci), vacatedGateMoves)
+    assertEquals(exact.occurrence.retainedGateSteps.map(_.moveUci), retainedGateMoves)
 
     val path = exact.occurrence.proofPaths match
       case one :: Nil => one
@@ -43,17 +46,17 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assertEquals(
       path.premiseUses.map(_.role),
       List(
-        VacatedGateEnablesUnrecapturableSliderCapturePremiseRole.ReferenceRootSliderReach,
-        VacatedGateEnablesUnrecapturableSliderCapturePremiseRole.ReferenceExploitCapture
+        VacatedGateEnablesUnrecapturableSliderCapturePremiseRole.GateVacatingSliderReach,
+        VacatedGateEnablesUnrecapturableSliderCapturePremiseRole.LaterSliderCapture
       )
     )
     assertEquals(path.premiseUses.map(_.stepIndex), List(0, 2))
     assertEquals(
       path.closedAbsenceUses.map(_.binding.role),
       List(
-        VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.ReferenceImmediateRecaptureAbsent,
-        VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.PlayedExploitMoveAbsent,
-        VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.PlayedReplacementCaptureAbsent
+        VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.LaterCaptureImmediateRecaptureAbsent,
+        VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.RetainedGateExploitMoveAbsent,
+        VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.RetainedGateReplacementCaptureAbsent
       )
     )
     assertEquals(
@@ -63,16 +66,16 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assertEquals(
       path.closedStateUses.map(_.binding.role),
       List(
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceInterveningSliderReach,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedBlockedSliderReach
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.VacatedGateInterveningSliderReach,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.VacatedGateTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.VacatedGateTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateSliderPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateBlockerPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateSliderPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateBlockerPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.RetainedGateBlockedSliderReach
       )
     )
     assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(1, 0, 1, 0, 0, 0, 1, 1, 1, 1))
@@ -106,68 +109,73 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assert(exact.remainsCertified)
     assertEquals(
       exact.parentSources.map(_.id).toSet,
-      Set("reference-source-positive", "played-source-positive")
+      Set(
+        "vacated-gate-source-positive",
+        "vacated-gate-source-positive:transition",
+        "retained-gate-source-positive",
+        "retained-gate-source-positive:transition"
+      )
     )
-    assert(exact.parentSources.forall(_.layer == EvidenceLayer.Line))
-    assert(exact.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
+    assertEquals(exact.parentSources.map(_.layer).toSet, Set(EvidenceLayer.Line, EvidenceLayer.MoveTransition))
+    assertEquals(exact.lowerIssuerRecords.map(_.ref).sortBy(_.id), exact.parentSources)
 
-  test("replacement recapture, changed reply, already-open line, and opened Played sibling fail closed"):
+  test("replacement recapture, changed reply, already-open line, and opened retained-gate sibling fail closed"):
     val replacementFen = "7k/q3r3/8/8/8/8/N7/R6K w - - 0 1"
     assertEquals(
       deriveProofs(
         "replacement-recapture",
         replacementFen,
-        certifiedReplay(replacementFen, referenceMoves),
-        certifiedReplay(replacementFen, playedMoves)
+        certifiedReplay(replacementFen, vacatedGateMoves),
+        certifiedReplay(replacementFen, retainedGateMoves)
       ),
       Nil
     )
 
-    val changedPlayed = List("h1h2", "h8g7")
+    val changedRetainedGate = List("h1h2", "h8g7")
     assertEquals(
       deriveProofs(
         "changed-reply",
         rootFen,
-        certifiedReplay(rootFen, referenceMoves),
-        certifiedReplay(rootFen, changedPlayed),
-        exactPlayedMoves = changedPlayed
+        certifiedReplay(rootFen, vacatedGateMoves),
+        certifiedReplay(rootFen, changedRetainedGate),
+        exactRetainedGateMoves = changedRetainedGate
       ),
       Nil
     )
 
     val alreadyOpenFen = "7k/q7/8/8/8/8/8/R6K w - - 0 1"
-    val alreadyOpenReference = List("h1h2", "h8g8", "a1a7")
-    val alreadyOpenPlayed = List("h1g2", "h8g8")
+    val alreadyOpenVacatedGate = List("h1h2", "h8g8", "a1a7")
+    val alreadyOpenRetainedGate = List("h1g2", "h8g8")
     assertEquals(
       deriveProofs(
         "already-open",
         alreadyOpenFen,
-        certifiedReplay(alreadyOpenFen, alreadyOpenReference),
-        certifiedReplay(alreadyOpenFen, alreadyOpenPlayed),
-        exactReferenceMoves = alreadyOpenReference,
-        exactPlayedMoves = alreadyOpenPlayed
+        certifiedReplay(alreadyOpenFen, alreadyOpenVacatedGate),
+        certifiedReplay(alreadyOpenFen, alreadyOpenRetainedGate),
+        exactVacatedGateMoves = alreadyOpenVacatedGate,
+        exactRetainedGateMoves = alreadyOpenRetainedGate
       ),
       Nil
     )
 
-    val playedAlsoOpens = List("a2c3", "h8g8")
+    val retainedGateAlsoOpens = List("a2c3", "h8g8")
     assertEquals(
       deriveProofs(
-        "played-opens",
+        "retained-gate-opens",
         rootFen,
-        certifiedReplay(rootFen, referenceMoves),
-        certifiedReplay(rootFen, playedAlsoOpens),
-        exactPlayedMoves = playedAlsoOpens
+        certifiedReplay(rootFen, vacatedGateMoves),
+        certifiedReplay(rootFen, retainedGateAlsoOpens),
+        exactRetainedGateMoves = retainedGateAlsoOpens
       ),
       Nil
     )
 
-  test("the played-root analysis continuation certifies exact occupants and rejects false state and absence claims"):
-    val replay = certifiedReplay(rootFen, playedMoves)
+  test("the retained-gate continuation certifies exact occupants and rejects false state and absence claims"):
+    val replay = certifiedReplay(rootFen, retainedGateMoves)
     val occurrence = replay
       .positionAfter(replay.replaySteps.last)
-      .getOrElse(fail("expected the played-root analysis-continuation pre-exploit occurrence"))
-    val scope = EvidenceScope.PlayedLine
+      .getOrElse(fail("expected the retained-gate pre-exploit occurrence"))
+    val scope = EvidenceScope.LegalLine
     val exactPieces = List(
       RelationColoredPieceWitness(EvidenceSquare("a1"), EvidencePieceRole("rook"), chess.White),
       RelationColoredPieceWitness(EvidenceSquare("a7"), EvidencePieceRole("queen"), chess.Black),
@@ -207,7 +215,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     )
 
     val replacementFen = "7k/q3r3/8/8/8/8/N7/R6K w - - 0 1"
-    val replacementReplay = certifiedReplay(replacementFen, referenceMoves)
+    val replacementReplay = certifiedReplay(replacementFen, vacatedGateMoves)
     val replacementAfterExploit = replacementReplay
       .positionAfter(replacementReplay.replaySteps.last)
       .getOrElse(fail("expected the replacement-recapture occurrence"))
@@ -220,14 +228,14 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
         EvidenceScope.BestLine
       ),
       None,
-      "the e7 rook must defeat the reference no-recapture closure"
+      "the e7 rook must defeat the vacated-gate no-recapture closure"
     )
 
     val openedMoves = List("a2c3", "h8g8")
     val openedReplay = certifiedReplay(rootFen, openedMoves)
     val openedOccurrence = openedReplay
       .positionAfter(openedReplay.replaySteps.last)
-      .getOrElse(fail("expected the opened played-root analysis-continuation occurrence"))
+      .getOrElse(fail("expected the opened retained-gate occurrence"))
     assertEquals(
       openedOccurrence.closedAbsence(
         PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(
@@ -235,7 +243,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
           EvidenceSquare("a1"),
           EvidenceSquare("a7")
         ),
-        EvidenceScope.PlayedLine
+        EvidenceScope.LegalLine
       ),
       None,
       "an opened sibling must defeat the exact from-to absence"
@@ -246,17 +254,17 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
           chess.White,
           EvidenceSquare("a7")
         ),
-        EvidenceScope.PlayedLine
+        EvidenceScope.LegalLine
       ),
       None,
       "an opened sibling must defeat the target-capture absence"
     )
 
   test("semantic transpositions preserve distinct occurrence and path ownership"):
-    val referenceReplay = certifiedReplay(rootFen, referenceMoves)
-    val playedReplay = certifiedReplay(rootFen, playedMoves)
-    val first = deriveProofs("route-a", rootFen, referenceReplay, playedReplay).head
-    val second = deriveProofs("route-b", rootFen, referenceReplay, playedReplay).head
+    val vacatedGateReplay = certifiedReplay(rootFen, vacatedGateMoves)
+    val retainedGateReplay = certifiedReplay(rootFen, retainedGateMoves)
+    val first = deriveProofs("route-a", rootFen, vacatedGateReplay, retainedGateReplay).head
+    val second = deriveProofs("route-b", rootFen, vacatedGateReplay, retainedGateReplay).head
 
     assertEquals(first.semantic.semanticId, second.semantic.semanticId)
     assertNotEquals(first.occurrence.occurrenceId, second.occurrence.occurrenceId)
@@ -267,77 +275,66 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assertNotEquals(first.dependency.value, second.dependency.value)
 
   test("the exploit occurrence stays bounded when its certified source PV continues"):
-    val sourceMoves = referenceMoves :+ "g8f8"
+    val sourceMoves = vacatedGateMoves :+ "g8f8"
     val exact = deriveProofs(
       "trailing-source-pv",
       rootFen,
       certifiedReplay(rootFen, sourceMoves),
-      certifiedReplay(rootFen, playedMoves),
-      exactReferenceMoves = sourceMoves
+      certifiedReplay(rootFen, retainedGateMoves),
+      exactVacatedGateMoves = sourceMoves
     ) match
       case one :: Nil => one
       case other      => fail(s"expected one bounded gate-release proof, found ${other.size}")
 
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
+    assertEquals(exact.occurrence.vacatedGateSteps.map(_.moveUci), vacatedGateMoves)
     assertEquals(exact.occurrence.exploitStep.moveUci, "a1a7")
     assertEquals(exact.occurrence.proofPaths.head.premiseUses.last.stepIndex, 2)
 
-  test("the exact gate-release proof reaches its MissedTacticalResource consumer"):
+  test("the exact gate-release proof reaches its occurrence Cause directly"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = rootFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = retainedGateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(vacatedGateMoves, scoreCp = 600, depth = 24),
+            EngineLine(retainedGateMoves, scoreCp = 0, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected exact lower facts"))
-    val facts = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
-    val demand = facts.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.PlayedVsBest => record
-    }.getOrElse(fail("expected the exact PlayedVsBest demand"))
-    val comparison = demand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val causalRecords = RelativeCauseSignalProfile.referenceDirectCausalProofRecords(
-      facts.evidenceGraph,
-      facts.evidenceGraph.recordsFor(comparison.referenceLine),
-      comparison,
-      demand
-    )
+    val facts = produceExplanations(RelativeAssessmentAssembler.enrichComparisonEvidence(lowerFacts))
+    val causalRecords = facts.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, _: VacatedGateEnablesUnrecapturableSliderCaptureEvidence, _) => record
+    }
     assertEquals(causalRecords.size, 1)
     val causalPayload = causalRecords.head.payload.asInstanceOf[VacatedGateEnablesUnrecapturableSliderCaptureEvidence]
     assert(causalPayload.hasCompleteProofPaths)
     assert(causalPayload.exactOccurrenceCertified(causalRecords.head))
 
-    val withCauses = RelativeAssessmentAssembler.enrichCauses(facts)
-    val allMissedCauses = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.MissedTacticalResource => cause
-    }
-    assertEquals(allMissedCauses.size, 1)
-    val exactCauses = allMissedCauses.filter(
-      _.proofSources.exists(_.id == causalRecords.head.ref.id)
+    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
+      facts,
+      JudgmentProvenanceAllocator.forInput(facts.input),
+      exactDemand(facts)
     )
-    assertEquals(exactCauses.size, 1)
-    val unrelatedGenericMissed = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.MissedTacticalResource &&
-            !cause.proofSources.exists(_.id == causalRecords.head.ref.id) => cause
+    val causes = withCauses.evidenceGraph.records.collect {
+      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
+          if cause.proofSource == causalRecords.head.ref => cause
     }
-    assertEquals(unrelatedGenericMissed, Nil)
-    val channels = DirectCauseChannel.certifiedForCause(
-      exactCauses.head,
-      withCauses.evidenceGraph
+    assertEquals(causes.size, 1)
+    assertEquals(causes.head.subject, causalPayload.subjectOccurrence)
+
+  private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    OccurrenceExplanationAssembler.enrichProofs(
+      context,
+      JudgmentProvenanceAllocator.forInput(context.input),
+      exactDemand(context)
     )
-    assert(channels.nonEmpty)
-    assert(channels.forall(channel => channel.rootOwnedProof match
-      case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result) =>
-        result.semanticId == causalPayload.semanticId && result.hasCompleteProofPaths
-      case _ => false
-    ))
+
+  private def exactDemand(context: JudgmentAssemblyContext): OccurrenceExplanationDemand =
+    OccurrenceExplanationDemand
+      .resolve(context, ExplanationRequest.forObservedMove(context.input))
+      .getOrElse(fail("expected the exact observed occurrence demand"))
 
   private def certifiedReplay(fen: String, moves: List[String]): CanonicalLineReplay =
     PrincipalVariationEvidence
@@ -348,34 +345,41 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
   private def deriveProofs(
       path: String,
       fen: String,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
-      exactReferenceMoves: List[String] = referenceMoves,
-      exactPlayedMoves: List[String] = playedMoves
+      vacatedGateReplay: CanonicalLineReplay,
+      retainedGateReplay: CanonicalLineReplay,
+      exactVacatedGateMoves: List[String] = vacatedGateMoves,
+      exactRetainedGateMoves: List[String] = retainedGateMoves
   ): List[CertifiedVacatedGateEnablesUnrecapturableSliderCapture] =
-    val referenceLine = LineNodeRef(
-      s"reference-$path",
-      exactReferenceMoves.head,
-      1,
-      LineNodeRole.BestReference
+    val vacatedGateLine = LineNodeRef(s"vacated-gate-$path", exactVacatedGateMoves.head)
+    val retainedGateLine = LineNodeRef(s"retained-gate-$path", exactRetainedGateMoves.head)
+    val vacatedGateRecord = EvidenceRecord(
+      lineRef(s"vacated-gate-source-$path", vacatedGateLine, fen),
+      LineFactEvidence.fromCertifiedReplay(vacatedGateLine, vacatedGateReplay)
     )
-    val playedLine = LineNodeRef(s"played-$path", exactPlayedMoves.head, 1, LineNodeRole.Played)
-    val referenceRecord = EvidenceRecord(
-      lineRef(s"reference-source-$path", referenceLine, fen),
-      LineFactEvidence.fromCertifiedReplay(referenceLine, referenceReplay)
+    val retainedGateRecord = EvidenceRecord(
+      lineRef(s"retained-gate-source-$path", retainedGateLine, fen),
+      LineFactEvidence.fromCertifiedReplay(retainedGateLine, retainedGateReplay)
     )
-    val playedRecord = EvidenceRecord(
-      lineRef(s"played-source-$path", playedLine, fen),
-      LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
+    val vacatedGateRoot = CertifiedRootOccurrenceTestFixture.from(
+      vacatedGateLine,
+      vacatedGateRecord,
+      vacatedGateReplay,
+      CausalRootProvenance.CounterfactualAnalyzedRoot
+    )
+    val retainedGateRoot = CertifiedRootOccurrenceTestFixture.from(
+      retainedGateLine,
+      retainedGateRecord,
+      retainedGateReplay,
+      CausalRootProvenance.ObservedGameRoot
     )
     val demands = for
-      enablingStep <- referenceReplay.replaySteps.headOption.toList
-      rootReachOccurrence <- referenceReplay.verticalRelationOccurrences(
+      enablingStep <- vacatedGateReplay.replaySteps.headOption.toList
+      rootReachOccurrence <- vacatedGateReplay.verticalRelationOccurrences(
         enablingStep,
         List(VerticalRelationContractKind.SliderReachDelta)
       )
-      exploitStep <- referenceReplay.replaySteps.lift(2).toList
-      exploitOccurrence <- (referenceReplay.verticalRelationOccurrences(
+      exploitStep <- vacatedGateReplay.replaySteps.lift(2).toList
+      exploitOccurrence <- (vacatedGateReplay.verticalRelationOccurrences(
         exploitStep,
         List(VerticalRelationContractKind.CaptureRecaptureInventory)
       ) match
@@ -383,12 +387,9 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
         case _            => Nil)
     yield VacatedGateEnablesUnrecapturableSliderCaptureDemand(rootReachOccurrence, exploitOccurrence, 2)
     VacatedGateEnablesUnrecapturableSliderCaptureProof.certifyDemanded(
-      referenceLine,
-      playedLine,
-      referenceRecord,
-      playedRecord,
-      referenceReplay,
-      playedReplay,
+      retainedGateRoot,
+      vacatedGateRoot,
+      retainedGateRoot,
       demands.sortBy(_.stableKey)
     )
 
@@ -399,6 +400,6 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       layer = EvidenceLayer.Line,
       position = PositionNodeRef(fen, 0, Some(White), Some("vacated-gate-root")),
       line = Some(line),
-      scope = line.role.scope,
+      scope = EvidenceScope.LegalLine,
       confidence = EvidenceConfidence.LegalReplayVerified
     )

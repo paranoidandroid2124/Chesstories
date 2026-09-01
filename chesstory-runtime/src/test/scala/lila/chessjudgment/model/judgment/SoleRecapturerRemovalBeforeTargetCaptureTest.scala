@@ -3,10 +3,13 @@ package lila.chessjudgment.model.judgment
 import chess.White
 import lila.chessjudgment.analysis.assembly.{
   EvidenceFactAssembler,
+  ExplanationRequest,
+  JudgmentProvenanceAllocator,
+  OccurrenceExplanationAssembler,
+  OccurrenceExplanationDemand,
   RawMoveReviewInput,
   RelationCausalProofTestDispatch,
-  RelativeAssessmentAssembler,
-  RelativeCauseSignalProfile
+  RelativeAssessmentAssembler
 }
 import lila.chessjudgment.model.line.{ EngineLine, PrincipalVariationEvidence }
 
@@ -15,17 +18,17 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
   private val positiveFen = "8/4p2k/5n2/3r2B1/8/8/8/K2Q4 w - - 0 1"
   private val negativeFen = "6b1/4p2k/5n2/3r2B1/8/8/8/K2Q4 w - - 0 1"
   private val replacementNegativeFen = "4r3/4p2k/5n2/6B1/4b3/8/8/K3Q3 w - - 0 1"
-  private val replacementReferenceMoves = List("g5f6", "e7f6", "e1e4")
-  private val replacementPlayedMoves = List("e1e4", "f6e4")
-  private val referenceMoves = List("g5f6", "e7f6", "d1d5")
-  private val playedMoves = List("d1d5", "f6d5")
+  private val replacementRemovalMoves = List("g5f6", "e7f6", "e1e4")
+  private val replacementImmediateMoves = List("e1e4", "f6e4")
+  private val removalMoves = List("g5f6", "e7f6", "d1d5")
+  private val immediateMoves = List("d1d5", "f6d5")
 
-  test("a non-check reference capture removes the played branch's sole exact recapturer"):
-    val referenceReplay = certifiedReplay(positiveFen, referenceMoves)
-    val playedReplay = certifiedReplay(positiveFen, playedMoves)
-    val removalStep = referenceReplay.replaySteps.head
+  test("a non-check removal captures the immediate branch's sole exact recapturer"):
+    val removalReplay = certifiedReplay(positiveFen, removalMoves)
+    val immediateReplay = certifiedReplay(positiveFen, immediateMoves)
+    val removalStep = removalReplay.replaySteps.head
     assertEquals(
-      referenceReplay.verticalRelationOccurrences(
+      removalReplay.verticalRelationOccurrences(
         removalStep,
         List(VerticalRelationContractKind.CreatedCheckResponseInventory)
       ),
@@ -33,7 +36,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       "the family must not depend on check-forcing promotion"
     )
 
-    val exact = deriveProofs("positive", positiveFen, referenceReplay, playedReplay) match
+    val exact = deriveProofs("positive", positiveFen, removalReplay, immediateReplay) match
       case one :: Nil => one
       case other      => fail(s"expected one sole-recapturer-removal proof, found ${other.size}")
 
@@ -45,9 +48,9 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     assertEquals(exact.semantic.exploit.stableKey, "white:queen>queen:d1-d5")
     assertEquals(exact.semantic.capturedTarget.role.name.toLowerCase, "rook")
     assertEquals(exact.semantic.capturedTarget.square.key.toLowerCase, "d5")
-    assertEquals(exact.semantic.playedRecapture.moveUci, "f6d5")
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
-    assertEquals(exact.occurrence.playedSteps.map(_.moveUci), playedMoves)
+    assertEquals(exact.semantic.immediateRecapture.moveUci, "f6d5")
+    assertEquals(exact.occurrence.removalSteps.map(_.moveUci), removalMoves)
+    assertEquals(exact.occurrence.immediateSteps.map(_.moveUci), immediateMoves)
 
     val path = exact.occurrence.proofPaths match
       case one :: Nil => one
@@ -55,9 +58,9 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     assertEquals(
       path.premiseUses.map(_.role),
       List(
-        SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceDefenderRemoval,
-        SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceLaterExploitInventory,
-        SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PlayedImmediateExploitInventory
+        SoleRecapturerRemovalBeforeTargetCapturePremiseRole.DefenderRemoval,
+        SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PostRemovalTargetCaptureInventory,
+        SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ImmediateTargetCaptureInventory
       )
     )
     assertEquals(path.premiseUses.map(_.stepIndex), List(0, 2, 0))
@@ -65,10 +68,10 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     assertEquals(
       path.closedStateUses.map(_.binding.role),
       List(
-        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent,
-        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent,
-        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent,
-        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalExploitActorPresent,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalTargetPresent,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalExploitActorPresent,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalTargetPresent
       )
     )
     assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(0, 0, 1, 1))
@@ -86,8 +89,8 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       case other      => fail(s"expected one exact closed absence, found ${other.size}")
     assertEquals(absence.queryKey, "legal-capture:black:d5")
     assertEquals(absence.afterStepIndex, 2)
-    assertEquals(absence.branchId, exact.occurrence.referenceBranch.branchId)
-    assertEquals(absence.issuerEvidenceId, "reference-source-positive")
+    assertEquals(absence.branchId, exact.occurrence.removalBranch.branchId)
+    assertEquals(absence.issuerEvidenceId, "removal-source-positive")
     assert(absence.issuerOccurrenceId.matches("[0-9a-f]{64}"))
     assert(exact.semantic.semanticId.matches("[0-9a-f]{64}"))
     assert(exact.occurrence.occurrenceId.matches("[0-9a-f]{64}"))
@@ -95,17 +98,22 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     assert(exact.remainsCertified)
     assertEquals(
       exact.parentSources.map(_.id).toSet,
-      Set("reference-source-positive", "played-source-positive")
+      Set(
+        "removal-source-positive",
+        "removal-source-positive:transition",
+        "immediate-source-positive",
+        "immediate-source-positive:transition"
+      )
     )
-    assert(exact.parentSources.forall(_.layer == EvidenceLayer.Line))
-    assert(exact.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
+    assertEquals(exact.parentSources.map(_.layer).toSet, Set(EvidenceLayer.Line, EvidenceLayer.MoveTransition))
+    assertEquals(exact.lowerIssuerRecords.map(_.ref).sortBy(_.id), exact.parentSources)
 
   test("missing or query-tampered intermediate occupancy cannot form the sole-recapturer manifest"):
     val exact = deriveProofs(
       "state-adversary",
       positiveFen,
-      certifiedReplay(positiveFen, referenceMoves),
-      certifiedReplay(positiveFen, playedMoves)
+      certifiedReplay(positiveFen, removalMoves),
+      certifiedReplay(positiveFen, immediateMoves)
     ).headOption.getOrElse(fail("expected the exact sole-recapturer proof"))
     val path = exact.occurrence.proofPaths.head
     val states = path.manifest.stateBindings
@@ -130,9 +138,9 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     }
     val actorAtRoot = states.head
     val targetRoleWithActorState = CausalClosedStateBinding.afterStep(
-      SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent,
+      SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalTargetPresent,
       actorAtRoot.authority,
-      exact.occurrence.referenceBranch,
+      exact.occurrence.removalBranch,
       actorAtRoot.afterStepIndex
     )
     intercept[IllegalArgumentException] {
@@ -140,169 +148,102 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     }
 
   test("the specified bishop alternative prevents a sole-recapturer certificate"):
-    val referenceReplay = certifiedReplay(negativeFen, referenceMoves)
-    val exploitStep = referenceReplay.replaySteps(2)
-    val inventory = referenceReplay.verticalRelationOccurrences(
+    val removalReplay = certifiedReplay(negativeFen, removalMoves)
+    val exploitStep = removalReplay.replaySteps(2)
+    val inventory = removalReplay.verticalRelationOccurrences(
       exploitStep,
       List(VerticalRelationContractKind.CaptureRecaptureInventory)
     ) match
       case one :: Nil => one.relation.detail.asInstanceOf[RelationWitnessDetail.CaptureRecaptureInventory]
-      case other      => fail(s"expected one reference capture inventory, found ${other.size}")
+      case other      => fail(s"expected one post-removal capture inventory, found ${other.size}")
     assertEquals(inventory.legalRecaptures.map(_.moveUci), List("g8d5"))
 
     assertEquals(
       deriveProofs(
         "alternative-recapture",
         negativeFen,
-        referenceReplay,
-        certifiedReplay(negativeFen, playedMoves)
+        removalReplay,
+        certifiedReplay(negativeFen, immediateMoves)
       ),
       Nil
     )
 
-  test("a replacement rook recapture fails only the reference closed absence"):
-    val referenceReplay = certifiedReplay(replacementNegativeFen, replacementReferenceMoves)
-    val playedReplay = certifiedReplay(replacementNegativeFen, replacementPlayedMoves)
-    val playedInventory = captureInventory(playedReplay, playedReplay.replaySteps.head)
-    val referenceInventory = captureInventory(referenceReplay, referenceReplay.replaySteps(2))
-    assertEquals(playedInventory.legalRecaptures.map(_.moveUci), List("f6e4"))
-    assertEquals(referenceInventory.legalRecaptures.map(_.moveUci), List("e8e4"))
+  test("a replacement rook recapture fails only the post-removal closed absence"):
+    val removalReplay = certifiedReplay(replacementNegativeFen, replacementRemovalMoves)
+    val immediateReplay = certifiedReplay(replacementNegativeFen, replacementImmediateMoves)
+    val immediateInventory = captureInventory(immediateReplay, immediateReplay.replaySteps.head)
+    val postRemovalInventory = captureInventory(removalReplay, removalReplay.replaySteps(2))
+    assertEquals(immediateInventory.legalRecaptures.map(_.moveUci), List("f6e4"))
+    assertEquals(postRemovalInventory.legalRecaptures.map(_.moveUci), List("e8e4"))
 
     assertEquals(
       deriveProofs(
         "replacement-recapture",
         replacementNegativeFen,
-        referenceReplay,
-        playedReplay,
-        replacementReferenceMoves,
-        replacementPlayedMoves
+        removalReplay,
+        immediateReplay,
+        replacementRemovalMoves,
+        replacementImmediateMoves
       ),
       Nil
     )
 
-  test("evaluation-only demand ownership leaves the structural proof identity unchanged"):
+  test("assessment owner changes leave the occurrence proof identity unchanged"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = positiveFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = immediateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(removalMoves, scoreCp = 600, depth = 24),
+            EngineLine(immediateMoves, scoreCp = 0, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected exact lower facts"))
-    val context = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
-    val demand = context.evidenceGraph.records.collectFirst {
+    val assessed = RelativeAssessmentAssembler.enrichComparisonEvidence(lowerFacts)
+    val context = produceExplanations(assessed)
+    val assessmentRecord = context.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
           if fact.kind == CandidateComparisonKind.PlayedVsBest => record
-    }.getOrElse(fail("expected the exact PlayedVsBest demand"))
+    }.getOrElse(fail("expected the exact PlayedVsBest Assessment record"))
 
-    val first = dispatchDefense(context, demand) match
+    val first = dispatchDefense(context) match
       case one :: Nil => one
       case other      => fail(s"expected one demanded proof, found ${other.size}")
-    val changedDemand = demand.copy(ref = demand.ref.copy(id = s"${demand.ref.id}:changed-owner"))
-    val second = dispatchDefense(
-      context.withEvidence(changedDemand),
-      changedDemand
-    ) match
+    val changedAssessmentRecord = assessmentRecord.copy(
+      ref = assessmentRecord.ref.copy(id = s"${assessmentRecord.ref.id}:changed-owner")
+    )
+    val second = dispatchDefense(context.withEvidence(changedAssessmentRecord)) match
       case one :: Nil => one
-      case other      => fail(s"expected one changed-demand proof, found ${other.size}")
+      case other      => fail(s"expected one proof after an Assessment-owner change, found ${other.size}")
 
     assertEquals(first.semantic.semanticId, second.semantic.semanticId)
     assertEquals(first.occurrence.occurrenceId, second.occurrence.occurrenceId)
     assertEquals(first.dependency.value, second.dependency.value)
     assert(first.consumesDependencies(
-      context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(first.occurrence.referenceLine).get._1,
-      context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(first.occurrence.playedLine).get._1
+      context.certifiedRootOccurrence(first.occurrence.subjectOccurrence.line).get,
+      context.certifiedRootOccurrence(first.occurrence.removalLine).get,
+      context.certifiedRootOccurrence(first.occurrence.immediateCaptureLine).get
     ))
 
-  test("forged comparison confidence, scope, or ancestry cannot open an L2 demand"):
+  test("the certified family reaches one occurrence Cause directly"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = positiveFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = immediateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(removalMoves, scoreCp = 600, depth = 24),
+            EngineLine(immediateMoves, scoreCp = 0, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected exact lower facts"))
-    val context = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
-    val demand = context.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.PlayedVsBest => record
-    }.getOrElse(fail("expected the exact PlayedVsBest demand"))
-    val fact = demand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val referenceSource = context.evidenceGraph
-      .uniqueProofEligibleLineFactRecordFor(fact.referenceLine)
-      .map(_._1)
-      .getOrElse(fail("missing exact reference line source"))
-    val playedSource = context.evidenceGraph
-      .uniqueProofEligibleLineFactRecordFor(fact.candidateLine)
-      .map(_._1)
-      .getOrElse(fail("missing exact played line source"))
-    val root = referenceSource.ref.position
-    assert(context.evidenceGraph.proofEligible(demand))
-    assert(ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-      demand,
-      fact,
-      root,
-      referenceSource,
-      playedSource
-    ))
-
-    val forged = List(
-      demand.copy(
-        ref = demand.ref.copy(id = s"${demand.ref.id}:wrong-confidence", confidence = EvidenceConfidence.BoardDerived)
-      ),
-      demand.copy(
-        ref = demand.ref.copy(id = s"${demand.ref.id}:wrong-scope", scope = EvidenceScope.CurrentPosition)
-      ),
-      demand.copy(
-        ref = demand.ref.copy(id = s"${demand.ref.id}:missing-parent"),
-        parents = demand.parents.filterNot(_.layer == EvidenceLayer.Eval)
-      )
-    )
-    forged.foreach { carrier =>
-      assert(!context.withEvidence(carrier).evidenceGraph.proofEligible(carrier))
-      assert(!ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-        carrier,
-        fact,
-        root,
-        referenceSource,
-        playedSource
-      ))
+    val facts = produceExplanations(RelativeAssessmentAssembler.enrichComparisonEvidence(lowerFacts))
+    val proofs = facts.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, _: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) => record
     }
-
-  test("the certified family reaches the exact WrongMoveOrder consumer"):
-    val lowerFacts = EvidenceFactAssembler
-      .assemble(
-        RawMoveReviewInput(
-          fen = positiveFen,
-          playedMoveUci = playedMoves.head,
-          variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
-          )
-        )
-      )
-      .getOrElse(fail("expected exact lower facts"))
-    val facts = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
-    val demand = facts.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.PlayedVsBest => record
-    }.getOrElse(fail("expected the exact PlayedVsBest demand"))
-    val comparison = demand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val proofs = RelativeCauseSignalProfile.referenceDirectCausalProofRecords(
-      facts.evidenceGraph,
-      facts.evidenceGraph.recordsFor(comparison.referenceLine),
-      comparison,
-      demand
-    )
     assertEquals(proofs.size, 1)
     val proofRecord = proofs.head
     val proofPayload = proofRecord.payload.asInstanceOf[SoleRecapturerRemovalBeforeTargetCaptureEvidence]
@@ -311,15 +252,31 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       proofRecord.copy(ref = proofRecord.ref.copy(scope = EvidenceScope.Counterfactual))
     ))
     assert(!proofPayload.exactOccurrenceCertified(
-      proofRecord.copy(ref = proofRecord.ref.copy(line = Some(comparison.candidateLine)))
+      proofRecord.copy(ref = proofRecord.ref.copy(line = None))
     ))
 
-    val withCauses = RelativeAssessmentAssembler.enrichCauses(facts)
+    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
+      facts,
+      JudgmentProvenanceAllocator.forInput(facts.input),
+      exactDemand(facts)
+    )
     val causes = withCauses.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder => record
+      case record @ EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
+          if cause.proofSource == proofRecord.ref => record
     }
     assertEquals(causes.size, 1)
+
+  private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    OccurrenceExplanationAssembler.enrichProofs(
+      context,
+      JudgmentProvenanceAllocator.forInput(context.input),
+      exactDemand(context)
+    )
+
+  private def exactDemand(context: JudgmentAssemblyContext): OccurrenceExplanationDemand =
+    OccurrenceExplanationDemand
+      .resolve(context, ExplanationRequest.forObservedMove(context.input))
+      .getOrElse(fail("expected the exact observed occurrence demand"))
 
   private def certifiedReplay(fen: String, moves: List[String]): CanonicalLineReplay =
     PrincipalVariationEvidence
@@ -330,66 +287,69 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
   private def deriveProofs(
       path: String,
       rootFen: String,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
-      exactReferenceMoves: List[String] = referenceMoves,
-      exactPlayedMoves: List[String] = playedMoves
+      removalReplay: CanonicalLineReplay,
+      immediateReplay: CanonicalLineReplay,
+      exactRemovalMoves: List[String] = removalMoves,
+      exactImmediateMoves: List[String] = immediateMoves
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
-    val referenceLine = LineNodeRef(
-      s"reference-$path",
-      exactReferenceMoves.head,
-      1,
-      LineNodeRole.BestReference
+    val removalLine = LineNodeRef(s"removal-$path", exactRemovalMoves.head)
+    val immediateLine = LineNodeRef(s"immediate-$path", exactImmediateMoves.head)
+    val removalRecord = EvidenceRecord(
+      lineRef(s"removal-source-$path", removalLine, rootFen),
+      LineFactEvidence.fromCertifiedReplay(removalLine, removalReplay)
     )
-    val playedLine = LineNodeRef(s"played-$path", exactPlayedMoves.head, 1, LineNodeRole.Played)
-    val referenceRecord = EvidenceRecord(
-      lineRef(s"reference-source-$path", referenceLine, rootFen),
-      LineFactEvidence.fromCertifiedReplay(referenceLine, referenceReplay)
+    val immediateRecord = EvidenceRecord(
+      lineRef(s"immediate-source-$path", immediateLine, rootFen),
+      LineFactEvidence.fromCertifiedReplay(immediateLine, immediateReplay)
     )
-    val playedRecord = EvidenceRecord(
-      lineRef(s"played-source-$path", playedLine, rootFen),
-      LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
+    val removalRoot = CertifiedRootOccurrenceTestFixture.from(
+      removalLine,
+      removalRecord,
+      removalReplay,
+      CausalRootProvenance.CounterfactualAnalyzedRoot
+    )
+    val immediateCaptureRoot = CertifiedRootOccurrenceTestFixture.from(
+      immediateLine,
+      immediateRecord,
+      immediateReplay,
+      CausalRootProvenance.ObservedGameRoot
     )
     val demand = for
-      removalStep <- referenceReplay.replaySteps.headOption
-      removalReplyStep <- referenceReplay.replaySteps.lift(1)
+      removalStep <- removalReplay.replaySteps.headOption
+      removalReplyStep <- removalReplay.replaySteps.lift(1)
       (removalOccurrence, removalRecapture) <-
-        referenceReplay.exactRecaptureOccurrenceMembership(removalStep, removalReplyStep)
-      referenceExploitStep <- referenceReplay.replaySteps.lift(2)
-      referenceExploitOccurrence <- referenceReplay.verticalRelationOccurrences(
-        referenceExploitStep,
+        removalReplay.exactRecaptureOccurrenceMembership(removalStep, removalReplyStep)
+      postRemovalCaptureStep <- removalReplay.replaySteps.lift(2)
+      postRemovalCaptureOccurrence <- removalReplay.verticalRelationOccurrences(
+        postRemovalCaptureStep,
         List(VerticalRelationContractKind.CaptureRecaptureInventory)
       ) match
         case exact :: Nil => Some(exact)
         case _            => None
-      playedExploitStep <- playedReplay.replaySteps.headOption
-      playedReplyStep <- playedReplay.replaySteps.lift(1)
-      (playedExploitOccurrence, playedRecapture) <-
-        playedReplay.exactRecaptureOccurrenceMembership(playedExploitStep, playedReplyStep)
+      immediateCaptureStep <- immediateReplay.replaySteps.headOption
+      immediateReplyStep <- immediateReplay.replaySteps.lift(1)
+      (immediateCaptureOccurrence, immediateRecapture) <-
+        immediateReplay.exactRecaptureOccurrenceMembership(immediateCaptureStep, immediateReplyStep)
     yield SoleRecapturerRemovalBeforeTargetCaptureDemand(
       removalOccurrence,
       removalRecapture,
-      referenceExploitOccurrence,
-      playedExploitOccurrence,
-      playedRecapture
+      postRemovalCaptureOccurrence,
+      immediateCaptureOccurrence,
+      immediateRecapture
     )
     demand.toList.flatMap(exactDemand =>
       SoleRecapturerRemovalBeforeTargetCaptureProof.certifyDemanded(
-        referenceLine,
-        playedLine,
-        referenceRecord,
-        playedRecord,
-        referenceReplay,
-        playedReplay,
+        immediateCaptureRoot,
+        removalRoot,
+        immediateCaptureRoot,
         exactDemand
       )
     )
 
   private def dispatchDefense(
-      context: JudgmentAssemblyContext,
-      demandSource: EvidenceRecord
+      context: JudgmentAssemblyContext
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
-    RelationCausalProofTestDispatch.defense(context, demandSource)
+    RelationCausalProofTestDispatch.defense(context)
 
   private def captureInventory(
       replay: CanonicalLineReplay,
@@ -409,6 +369,6 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       layer = EvidenceLayer.Line,
       position = PositionNodeRef(rootFen, 0, Some(White), Some("sole-recapturer-removal-root")),
       line = Some(line),
-      scope = line.role.scope,
+      scope = EvidenceScope.LegalLine,
       confidence = EvidenceConfidence.LegalReplayVerified
     )

@@ -55,11 +55,9 @@ object EvidencePieceRole:
 enum EvidenceSemanticAnchorKind:
   case PassedPawnResultKind
   case Relation
-  case CandidateComparison
   case PassedPawnResultEvent
   case LineEvent
   case LineConsequence
-  case StructuralDelta
 
 final case class EvidenceSemanticAnchor(
     kind: EvidenceSemanticAnchorKind,
@@ -99,40 +97,12 @@ enum RootOwnedEffectProof:
       result: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence
   )
 
-  /** Evidence record that owns the effect. */
-  final def primitiveSource: EvidenceRef =
-    this match
-      case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(source, _) => source
-      case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(source, _)         => source
-      case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(source, _)     => source
-      case RootOwnedEffectProof.SquareReleaseRoute(source, _)                          => source
-      case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, _)                   => source
-      case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(source, _)               => source
-
-  final def provenance: List[EvidenceRef] =
-    this match
-      case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) => result.proofParentSources
-      case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(_, result)         => result.proofParentSources
-      case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result)     => result.proofParentSources
-      case RootOwnedEffectProof.SquareReleaseRoute(_, result)                          => result.proofParentSources
-      case RootOwnedEffectProof.CaptureExclusionMoveOrder(_, result)                   => result.proofParentSources
-      case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result)                => result.proofParentSources
-
-  final def eventLine: LineNodeRef =
-    this match
-      case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) => result.occurrence.referenceLine
-      case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(_, result)         => result.occurrence.referenceLine
-      case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result)     => result.occurrence.referenceLine
-      case RootOwnedEffectProof.SquareReleaseRoute(_, result)                          => result.occurrence.referenceLine
-      case RootOwnedEffectProof.CaptureExclusionMoveOrder(_, result)                   => result.occurrence.referenceLine
-      case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result)                => result.rootLine
-
   /** Compact producer-issued identity for one exact proof occurrence. */
-  final def occurrenceIdentity: RootOwnedEffectOccurrenceIdentity =
+  private[chessjudgment] final def occurrenceIdentity: RootOwnedEffectOccurrenceIdentity =
     this match
       case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "unique-check-reply-defender-displacement-before-capture",
+          family = BoundedCausalContractKind.UniqueCheckReplyDefenderDisplacementBeforeCapture,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -141,7 +111,7 @@ enum RootOwnedEffectProof:
         )
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "sole-recapturer-removal-before-target-capture",
+          family = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -150,7 +120,7 @@ enum RootOwnedEffectProof:
         )
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "vacated-gate-enables-unrecapturable-slider-capture",
+          family = BoundedCausalContractKind.VacatedGateEnablesUnrecapturableSliderCapture,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -159,7 +129,7 @@ enum RootOwnedEffectProof:
         )
       case RootOwnedEffectProof.SquareReleaseRoute(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "square-release-route",
+          family = BoundedCausalContractKind.SquareReleaseRoute,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -168,7 +138,7 @@ enum RootOwnedEffectProof:
         )
       case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "capture-exclusion-move-order",
+          family = BoundedCausalContractKind.CaptureExclusionMoveOrder,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -177,7 +147,7 @@ enum RootOwnedEffectProof:
         )
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "passed-pawn-progress-realized-after-only-legal-reply",
+          family = BoundedCausalContractKind.PassedPawnProgressRealizedAfterOnlyLegalReply,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -185,15 +155,14 @@ enum RootOwnedEffectProof:
           proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
         )
 
-final case class RootOwnedEffectOccurrenceIdentity(
-    family: String,
+private[chessjudgment] final case class RootOwnedEffectOccurrenceIdentity(
+    family: BoundedCausalContractKind,
     sourceEvidenceId: String,
     semanticId: String,
     occurrenceId: String,
     dependencyFingerprint: String,
     proofPathOccurrenceIds: List[String]
 ):
-  require(family.nonEmpty, "an exact L2 proof occurrence requires a family")
   require(sourceEvidenceId.nonEmpty, "an exact L2 proof occurrence requires a source owner")
   require(semanticId.nonEmpty, "an exact L2 proof occurrence requires a semantic id")
   require(occurrenceId.nonEmpty, "an exact L2 proof occurrence requires an occurrence id")
@@ -209,81 +178,38 @@ final case class RootOwnedEffectOccurrenceIdentity(
 
   private[judgment] def stableKey: String =
     List(
-      family,
+      family.semanticNamespace,
       sourceEvidenceId,
       semanticId,
       occurrenceId,
       dependencyFingerprint,
       proofPathOccurrenceIds.mkString("[", ",", "]")
-    ).map(RootOwnedEffectChannelOccurrenceFingerprint.atom).mkString
+    ).map(RootOwnedEffectOccurrenceIdentity.atom).mkString
 
   /** Exact chess occurrence independent of the evidence owner id. Used only
     * to reject a second producer for the same typed truth.
     */
   private[judgment] def producerIndependentKey: String =
     List(
-      family,
+      family.semanticNamespace,
       semanticId,
       occurrenceId,
       dependencyFingerprint,
       proofPathOccurrenceIds.mkString("[", ",", "]")
-    ).map(RootOwnedEffectChannelOccurrenceFingerprint.atom).mkString
+    ).map(RootOwnedEffectOccurrenceIdentity.atom).mkString
 
-/** One exact typed proof occurrence prepared for an upper Cause consumer. */
-final case class DirectCauseChannel(
-    rootOwnedProof: RootOwnedEffectProof
-):
-  def source: EvidenceRef = rootOwnedProof.primitiveSource
-  def provenance: List[EvidenceRef] = rootOwnedProof.provenance
-  def eventLine: LineNodeRef = rootOwnedProof.eventLine
-  private[chessjudgment] def familyMetadata: DirectCauseFamilyMetadata =
-    RootOwnedEffectPolicy.familyMetadata(rootOwnedProof)
-
-  /** The typed producer's proposition and occurrence identity. */
-  def typedProofIdentity: RootOwnedEffectOccurrenceIdentity =
-    rootOwnedProof.occurrenceIdentity
-
-  /** Exact truth occurrence beneath carrier ids and wrapper provenance. This
-    * is the shared deduplication key for direct-channel production and Cause
-    * record canonicalization.
-    */
-  private[chessjudgment] def exactOccurrenceFingerprint:
-      RootOwnedEffectChannelOccurrenceFingerprint =
-    RootOwnedEffectChannelOccurrenceFingerprint(
-      proofOccurrence = typedProofIdentity
-    )
-
-/** `DirectCauseChannel` remains the one stored/public causal representation;
-  * this alias names its stronger root-owned role without introducing a second
-  * actor/target/mechanism/consequence authority.
-  */
-type RootOwnedEffect = DirectCauseChannel
-
-final case class RootOwnedEffectChannelOccurrenceFingerprint(
-    proofOccurrence: RootOwnedEffectOccurrenceIdentity
-):
-  /** Deterministic ordering only. Equality of this case class remains the
-    * occurrence identity; the ordering key never substitutes for it.
-    */
-  private[judgment] def stableSortKey: String =
-    RootOwnedEffectChannelOccurrenceFingerprint.atom(proofOccurrence.stableKey)
-
-  private[judgment] def stablePublicId(ownerKey: String): String =
-    MessageDigest
-      .getInstance("SHA-256")
-      .digest(
-        RootOwnedEffectChannelOccurrenceFingerprint
-          .atom(ownerKey)
-          .concat(stableSortKey)
-          .getBytes(StandardCharsets.UTF_8)
-      )
-      .map(byte => f"${byte & 0xff}%02x")
-      .mkString
-
-object RootOwnedEffectChannelOccurrenceFingerprint:
+private[chessjudgment] object RootOwnedEffectOccurrenceIdentity:
   private[judgment] def atom(value: String): String = s"${value.length}:$value"
 
-object DirectCauseChannel:
+/** One exact typed proof occurrence prepared for an upper Cause consumer. */
+private[chessjudgment] final case class DirectCauseChannel(
+    rootOwnedProof: RootOwnedEffectProof
+):
+  /** The typed producer's proposition and occurrence identity. */
+  private[chessjudgment] def typedProofIdentity: RootOwnedEffectOccurrenceIdentity =
+    rootOwnedProof.occurrenceIdentity
+
+private[chessjudgment] object DirectCauseChannel:
   private[chessjudgment] def fromTypedProofRecord(
       record: EvidenceRecord
   ): Option[DirectCauseChannel] =
@@ -301,45 +227,6 @@ object DirectCauseChannel:
       case EvidenceRecord(ref, payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(ref, payload)))
       case _ => None
-
-  /** Build only channels whose typed proof producer owns this exact Cause.
-    * Missing or mismatched proof sources are not adapted into a channel.
-    */
-  private[chessjudgment] def certifiedForCause(
-      cause: RelativeCauseFact,
-      graph: TypedEvidenceGraph
-  ): List[DirectCauseChannel] =
-    validateAndOrder(
-      graph.relativeCauseBinding(cause).toList.flatMap { binding =>
-        cause.proofSources.flatMap(ref =>
-          graph
-            .record(ref)
-            .flatMap(fromTypedProofRecord)
-            .toList
-            .flatMap(RootOwnedEffectPolicy.certify(cause, graph, binding, _))
-        )
-      }
-    )
-
-  private[judgment] def validateAndOrder(
-      channels: List[DirectCauseChannel]
-  ): List[DirectCauseChannel] =
-    channels.foreach { channel =>
-      require(
-        channel.source == channel.rootOwnedProof.primitiveSource,
-        "an exact L2 channel carrier must be its typed proof owner"
-      )
-    }
-    val duplicateOccurrences = channels
-      .groupMap(_.typedProofIdentity.producerIndependentKey)(_.source.id)
-      .collect { case (occurrence, owners) if owners.size > 1 => occurrence -> owners.sorted }
-      .toList
-      .sortBy(_._1)
-    require(
-      duplicateOccurrences.isEmpty,
-      s"one exact L2 channel occurrence has multiple producers: ${duplicateOccurrences.flatMap(_._2).mkString(",")}"
-    )
-    channels.sortBy(_.exactOccurrenceFingerprint.stableSortKey)
 
 enum RelationParticipantRole:
   case Controller
@@ -1346,77 +1233,40 @@ private[chessjudgment] final case class PositionOccurrenceEvidence(
     occurrence: PositionOccurrenceState
 ) extends EvidencePayload
 
-/** Private cache ownership for one deterministic L2 family result set.
-  *
-  * Every produced owner carries the complete set of dependency fingerprints
-  * produced from the same exact demand.  A later assembly can therefore tell
-  * a full cache hit from a partially populated graph without deriving the
-  * family again.  This is deliberately not a public proof contract.
-  */
-private[chessjudgment] final case class ExactCausalProofResultSet private (
-    dependencyIds: List[String]
-):
-  require(dependencyIds.nonEmpty, "an exact causal result set cannot be empty")
-  require(
-    dependencyIds == dependencyIds.sorted && dependencyIds.distinct.size == dependencyIds.size,
-    "an exact causal result set must retain one sorted entry per dependency"
-  )
-  require(
-    dependencyIds.forall(_.matches("[0-9a-f]{64}")),
-    "an exact causal result set may contain only complete dependency fingerprints"
-  )
-
-  def contains(dependencyId: String): Boolean = dependencyIds.contains(dependencyId)
-
-  def exactlyOwns(currentDependencyIds: Iterable[String]): Boolean =
-    currentDependencyIds.toList.sorted == dependencyIds
-
-private[chessjudgment] object ExactCausalProofResultSet:
-  def from(dependencyIds: List[String]): ExactCausalProofResultSet =
-    require(
-      dependencyIds.distinct.size == dependencyIds.size,
-      "one exact causal dependency may occur only once in its result set"
-    )
-    ExactCausalProofResultSet(dependencyIds.sorted)
-
-/** First result in the common bounded L2 family. It is deliberately
-  * package-private: the only public projection is the existing WrongMoveOrder
-  * explanation that consumes this exact actual/counterfactual proof.
+/** Exact occurrence result for one bounded L2 family. It remains
+  * package-private; the occurrence explanation host exposes only its certified
+  * structured projection.
   */
 private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence private[chessjudgment] (
     semantic: UniqueCheckReplyDefenderDisplacementBeforeCaptureSemanticProof,
     occurrence: UniqueCheckReplyDefenderDisplacementBeforeCaptureOccurrence,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     dependencyFingerprint: String,
-    private[chessjudgment] val resultSet: ExactCausalProofResultSet,
-    private[chessjudgment] val occurrenceProof: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureOccurrenceProof] = None
+    private[chessjudgment] val occurrenceProof: UniqueCheckReplyDefenderDisplacementBeforeCaptureOccurrenceProof
 ) extends EvidencePayload:
   require(
     occurrence.semanticId == semantic.semanticId,
     "an L2 occurrence must retain its exact semantic proof"
   )
+  require(occurrence.subjectOccurrence == subjectOccurrence)
   require(
     dependencyFingerprint.matches("[0-9a-f]{64}"),
     "an L2 result needs its complete dependency fingerprint"
   )
-  require(
-    resultSet.contains(dependencyFingerprint),
-    "an L2 result must belong to its demand's complete result set"
-  )
-
   def semanticId: String = semantic.semanticId
   def occurrenceId: String = occurrence.occurrenceId
   def dependencyId: String = dependencyFingerprint
-  def referenceLine: LineNodeRef = occurrence.referenceLine
-  def playedLine: LineNodeRef = occurrence.playedLine
-  def referenceSteps: List[LineReplayStep] = occurrence.referenceSteps
-  def playedSteps: List[LineReplayStep] = occurrence.playedSteps
-  def referenceBranch: CausalBranchOccurrence = occurrence.referenceBranch
-  def playedBranch: CausalBranchOccurrence = occurrence.playedBranch
+  def displacementLine: LineNodeRef = occurrence.displacementLine
+  def immediateCaptureLine: LineNodeRef = occurrence.immediateCaptureLine
+  def displacementSteps: List[LineReplayStep] = occurrence.displacementSteps
+  def immediateCaptureSteps: List[LineReplayStep] = occurrence.immediateCaptureSteps
+  def displacementBranch: CausalBranchOccurrence = occurrence.displacementBranch
+  def immediateCaptureBranch: CausalBranchOccurrence = occurrence.immediateCaptureBranch
   def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicReferenceBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.referenceBranch)
-  def publicPlayedBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.playedBranch)
+  def publicDisplacementBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(occurrence.displacementBranch)
+  def publicImmediateCaptureBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(occurrence.immediateCaptureBranch)
   def publicProofPaths: List[BoundedCausalPublicProofPath] =
     BoundedCausalPublicProjection.verticalRelationPaths(occurrence.proofPaths)
   def hasCompleteProofPaths: Boolean =
@@ -1427,64 +1277,61 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   def uniqueCheckReplyDefenderDisplacementBeforeCapture: RelationLegalMoveResourceWitness = semantic.forcedReply
   def realizerMovement: RelationMoveTransitionWitness = semantic.realizer
   def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
-  def playedDefenseResource: RelationLegalMoveResourceWitness = semantic.playedDefense
+  def immediateDefenseResource: RelationLegalMoveResourceWitness = semantic.immediateDefense
   def disabledDefender: RelationColoredPieceWitness = semantic.disabledDefender
   def realizingMove: String = occurrence.realizerStep.moveUci
-  def playedDefenseMove: String = occurrence.playedReplyStep.moveUci
+  def immediateDefenseMove: String = occurrence.immediateReplyStep.moveUci
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.exists(_.proves(record, this))
+    occurrenceProof.proves(record, this)
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.toList.flatMap(_.parentSources)
+    occurrenceProof.parentSources
 
   private[chessjudgment] def lowerRecordsAreCanonical(
       byId: Map[String, EvidenceRecord]
   ): Boolean =
-    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
   private[chessjudgment] def consumesDependencies(
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
+      subject: CertifiedRootOccurrence,
+      displacement: CertifiedRootOccurrence,
+      immediateCapture: CertifiedRootOccurrence
   ): Boolean =
-    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
-/** Exact occurrence of one defense obligation changing between the retained
-  * BestReference and Played branches. The mechanism remains family-specific;
+    occurrenceProof.consumesDependencies(subject, displacement, immediateCapture)
+/** Exact occurrence of one defense obligation changing between two retained
+  * sibling branches. The mechanism remains family-specific;
   * this payload does not claim general overload or defense collapse.
   */
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureEvidence private[chessjudgment] (
     semantic: SoleRecapturerRemovalBeforeTargetCaptureSemanticProof,
     occurrence: SoleRecapturerRemovalBeforeTargetCaptureOccurrence,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     dependencyFingerprint: String,
-    private[chessjudgment] val resultSet: ExactCausalProofResultSet,
-    private[chessjudgment] val occurrenceProof: Option[CertifiedSoleRecapturerRemovalBeforeTargetCapture] = None
+    private[chessjudgment] val occurrenceProof: CertifiedSoleRecapturerRemovalBeforeTargetCapture
 ) extends EvidencePayload:
   require(
     occurrence.semanticId == semantic.semanticId,
     "a sole-recapturer-removal-before-target-capture occurrence must retain its exact semantic proof"
   )
+  require(occurrence.subjectOccurrence == subjectOccurrence)
   require(
     dependencyFingerprint.matches("[0-9a-f]{64}"),
     "a sole-recapturer-removal-before-target-capture result needs its complete dependency fingerprint"
   )
-  require(
-    resultSet.contains(dependencyFingerprint),
-    "a sole-recapturer-removal-before-target-capture result must belong to its demand's complete result set"
-  )
-
   def semanticId: String = semantic.semanticId
   def occurrenceId: String = occurrence.occurrenceId
   def dependencyId: String = dependencyFingerprint
-  def referenceLine: LineNodeRef = occurrence.referenceLine
-  def playedLine: LineNodeRef = occurrence.playedLine
-  def referenceSteps: List[LineReplayStep] = occurrence.referenceSteps
-  def playedSteps: List[LineReplayStep] = occurrence.playedSteps
-  def referenceBranch: CausalBranchOccurrence = occurrence.referenceBranch
-  def playedBranch: CausalBranchOccurrence = occurrence.playedBranch
+  def removalLine: LineNodeRef = occurrence.removalLine
+  def immediateCaptureLine: LineNodeRef = occurrence.immediateCaptureLine
+  def removalSteps: List[LineReplayStep] = occurrence.removalSteps
+  def immediateCaptureSteps: List[LineReplayStep] = occurrence.immediateSteps
+  def removalBranch: CausalBranchOccurrence = occurrence.removalBranch
+  def immediateCaptureBranch: CausalBranchOccurrence = occurrence.immediateCaptureBranch
   def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicReferenceBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.referenceBranch)
-  def publicPlayedBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.playedBranch)
+  def publicRemovalBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(occurrence.removalBranch)
+  def publicImmediateCaptureBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(occurrence.immediateCaptureBranch)
   def publicProofPaths: List[BoundedCausalPublicProofPath] =
     BoundedCausalPublicProjection.verticalRelationPaths(occurrence.proofPaths)
   def hasCompleteProofPaths: Boolean =
@@ -1496,65 +1343,62 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   def removalRecapture: RelationLegalMoveResourceWitness = semantic.removalRecapture
   def laterExploit: RelationMoveTransitionWitness = semantic.exploit
   def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
-  def playedSoleRecapture: RelationLegalMoveResourceWitness = semantic.playedRecapture
-  def laterExploitMove: String = occurrence.referenceExploitStep.moveUci
-  def playedSoleRecaptureMove: String = occurrence.playedRecaptureStep.moveUci
+  def immediateSoleRecapture: RelationLegalMoveResourceWitness = semantic.immediateRecapture
+  def postRemovalTargetCaptureMove: String = occurrence.postRemovalCaptureStep.moveUci
+  def immediateSoleRecaptureMove: String = occurrence.immediateRecaptureStep.moveUci
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.exists(_.proves(record, this))
+    occurrenceProof.proves(record, this)
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.toList.flatMap(_.parentSources)
+    occurrenceProof.parentSources
 
   private[chessjudgment] def lowerRecordsAreCanonical(
       byId: Map[String, EvidenceRecord]
   ): Boolean =
-    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
 
   private[chessjudgment] def consumesDependencies(
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
+      subject: CertifiedRootOccurrence,
+      removal: CertifiedRootOccurrence,
+      immediateCapture: CertifiedRootOccurrence
   ): Boolean =
-    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
+    occurrenceProof.consumesDependencies(subject, removal, immediateCapture)
 
-/** Exact capture-only gate release: the reference root vacates a certified
-  * gate, the same slider later consumes the opened line, and the Played
+/** Exact capture-only gate release: one root vacates a certified gate, the
+  * same slider later consumes the opened line, and the retained-gate
   * sibling retains the exact blocker and lacks that legal capture resource.
   */
 private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCaptureEvidence private[chessjudgment] (
     semantic: VacatedGateEnablesUnrecapturableSliderCaptureSemanticProof,
     occurrence: VacatedGateEnablesUnrecapturableSliderCaptureOccurrence,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     dependencyFingerprint: String,
-    private[chessjudgment] val resultSet: ExactCausalProofResultSet,
-    private[chessjudgment] val occurrenceProof: Option[CertifiedVacatedGateEnablesUnrecapturableSliderCapture] = None
+    private[chessjudgment] val occurrenceProof: CertifiedVacatedGateEnablesUnrecapturableSliderCapture
 ) extends EvidencePayload:
   require(
     occurrence.semanticId == semantic.semanticId,
     "a vacated-gate-enables-unrecapturable-slider-capture occurrence must retain its semantic proof"
   )
+  require(occurrence.subjectOccurrence == subjectOccurrence)
   require(
     dependencyFingerprint.matches("[0-9a-f]{64}"),
     "a vacated-gate-enables-unrecapturable-slider-capture result needs its complete dependency fingerprint"
   )
-  require(
-    resultSet.contains(dependencyFingerprint),
-    "a direct line-access result must belong to its demand's complete result set"
-  )
-
   def semanticId: String = semantic.semanticId
   def occurrenceId: String = occurrence.occurrenceId
   def dependencyId: String = dependencyFingerprint
-  def referenceLine: LineNodeRef = occurrence.referenceLine
-  def playedLine: LineNodeRef = occurrence.playedLine
-  def referenceSteps: List[LineReplayStep] = occurrence.referenceSteps
-  def playedSteps: List[LineReplayStep] = occurrence.playedSteps
-  def referenceBranch: CausalBranchOccurrence = occurrence.referenceBranch
-  def playedBranch: CausalBranchOccurrence = occurrence.playedBranch
+  def vacatedGateLine: LineNodeRef = occurrence.vacatedGateLine
+  def retainedGateLine: LineNodeRef = occurrence.retainedGateLine
+  def vacatedGateSteps: List[LineReplayStep] = occurrence.vacatedGateSteps
+  def retainedGateSteps: List[LineReplayStep] = occurrence.retainedGateSteps
+  def vacatedGateBranch: CausalBranchOccurrence = occurrence.vacatedGateBranch
+  def retainedGateBranch: CausalBranchOccurrence = occurrence.retainedGateBranch
   def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicReferenceBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.referenceBranch)
-  def publicPlayedBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.playedBranch)
+  def publicVacatedGateBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(occurrence.vacatedGateBranch)
+  def publicRetainedGateBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(occurrence.retainedGateBranch)
   def publicProofPaths: List[BoundedCausalPublicProofPath] =
     BoundedCausalPublicProjection.verticalRelationPaths(occurrence.proofPaths)
   def hasCompleteProofPaths: Boolean =
@@ -1570,21 +1414,22 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
   def exploitMove: String = occurrence.exploitStep.moveUci
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.exists(_.proves(record, this))
+    occurrenceProof.proves(record, this)
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.toList.flatMap(_.parentSources)
+    occurrenceProof.parentSources
 
   private[chessjudgment] def lowerRecordsAreCanonical(
       byId: Map[String, EvidenceRecord]
   ): Boolean =
-    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
 
   private[chessjudgment] def consumesDependencies(
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
+      subject: CertifiedRootOccurrence,
+      vacatedGate: CertifiedRootOccurrence,
+      retainedGate: CertifiedRootOccurrence
   ): Boolean =
-    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
+    occurrenceProof.consumesDependencies(subject, vacatedGate, retainedGate)
 
 /** Derivation-free public detail for the exact route terminal. Lower result
   * ids and sources remain in each public proof path.
@@ -1650,41 +1495,37 @@ object SquareReleaseRoutePublicTerminal:
         )
 
 /** Exact bounded square release consumed by an ordered same-object route.
-  * The Played sibling is closed immediately before the first route leg; a
-  * multi-leg reference occurrence additionally retains its exact L1 terminal
-  * and actual reply when that terminal is ongoing.
+  * The retained-blocker sibling is closed immediately before the first route
+  * leg; a multi-leg released-route occurrence additionally retains its exact
+  * L1 terminal and certified reply when that terminal is ongoing.
   */
 private[chessjudgment] final case class SquareReleaseRouteEvidence private[chessjudgment] (
     semantic: SquareReleaseRouteSemanticProof,
     occurrence: SquareReleaseRouteOccurrence,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     dependencyFingerprint: String,
-    private[chessjudgment] val resultSet: ExactCausalProofResultSet,
-    private[chessjudgment] val occurrenceProof: Option[CertifiedSquareReleaseRoute] = None
+    private[chessjudgment] val occurrenceProof: CertifiedSquareReleaseRoute
 ) extends EvidencePayload:
   require(occurrence.semanticId == semantic.semanticId)
+  require(occurrence.subjectOccurrence == subjectOccurrence)
   require(
     dependencyFingerprint.matches("[0-9a-f]{64}"),
     "a square-release-route result needs its complete dependency fingerprint"
   )
-  require(
-    resultSet.contains(dependencyFingerprint),
-    "a square-release-route result must belong to its demand's complete result set"
-  )
-
   def semanticId: String = semantic.semanticId
   def occurrenceId: String = occurrence.occurrenceId
   def dependencyId: String = dependencyFingerprint
-  def referenceLine: LineNodeRef = occurrence.referenceLine
-  def playedLine: LineNodeRef = occurrence.playedLine
-  def referenceSteps: List[LineReplayStep] = occurrence.referenceSteps
-  def playedSteps: List[LineReplayStep] = occurrence.playedSteps
-  def referenceBranch: CausalBranchOccurrence = occurrence.referenceBranch
-  def playedBranch: CausalBranchOccurrence = occurrence.playedBranch
+  def releasedRouteLine: LineNodeRef = occurrence.releasedRouteLine
+  def retainedBlockerLine: LineNodeRef = occurrence.retainedBlockerLine
+  def releasedRouteSteps: List[LineReplayStep] = occurrence.releasedRouteSteps
+  def retainedBlockerSteps: List[LineReplayStep] = occurrence.retainedBlockerSteps
+  def releasedRouteBranch: CausalBranchOccurrence = occurrence.releasedRouteBranch
+  def retainedBlockerBranch: CausalBranchOccurrence = occurrence.retainedBlockerBranch
   def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicReferenceBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(referenceBranch)
-  def publicPlayedBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(playedBranch)
+  def publicReleasedRouteBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(releasedRouteBranch)
+  def publicRetainedBlockerBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(retainedBlockerBranch)
   def publicProofPaths: List[BoundedCausalPublicProofPath] =
     BoundedCausalPublicProjection.mixedPaths(proofPaths)
   def hasCompleteProofPaths: Boolean =
@@ -1715,59 +1556,55 @@ private[chessjudgment] final case class SquareReleaseRouteEvidence private[chess
     SquareReleaseRoutePublicTerminal.from(semantic.terminal)
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.exists(_.proves(record, this))
+    occurrenceProof.proves(record, this)
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.toList.flatMap(_.parentSources)
+    occurrenceProof.parentSources
 
   private[chessjudgment] def lowerRecordsAreCanonical(
       byId: Map[String, EvidenceRecord]
   ): Boolean =
-    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
 
   private[chessjudgment] def consumesDependencies(
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
+      subject: CertifiedRootOccurrence,
+      releasedRoute: CertifiedRootOccurrence,
+      retainedBlocker: CertifiedRootOccurrence
   ): Boolean =
-    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
+    occurrenceProof.consumesDependencies(subject, releasedRoute, retainedBlocker)
 
 /** Exact move-order occurrence where vacating an ordinary capture target
-  * excludes the played branch's immediate capture reply before the same move
+  * excludes the immediate branch's capture reply before the same move
   * is realized later. It does not assert prevention, bestness, or a plan.
   */
 private[chessjudgment] final case class CaptureExclusionMoveOrderEvidence private[chessjudgment] (
     semantic: CaptureExclusionMoveOrderSemanticProof,
     occurrence: CaptureExclusionMoveOrderOccurrence,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     dependencyFingerprint: String,
-    private[chessjudgment] val resultSet: ExactCausalProofResultSet,
-    private[chessjudgment] val occurrenceProof: Option[CertifiedCaptureExclusionMoveOrder] = None
+    private[chessjudgment] val occurrenceProof: CertifiedCaptureExclusionMoveOrder
 ) extends EvidencePayload:
   require(occurrence.semanticId == semantic.semanticId)
   require(
     dependencyFingerprint.matches("[0-9a-f]{64}"),
     "capture-exclusion move order needs its complete dependency fingerprint"
   )
-  require(
-    resultSet.contains(dependencyFingerprint),
-    "capture-exclusion move order must belong to its complete demanded result set"
-  )
-
   def semanticId: String = semantic.semanticId
   def occurrenceId: String = occurrence.occurrenceId
   def dependencyId: String = dependencyFingerprint
-  def referenceLine: LineNodeRef = occurrence.referenceLine
-  def playedLine: LineNodeRef = occurrence.playedLine
-  def referenceBranch: CausalBranchOccurrence = occurrence.referenceBranch
-  def playedBranch: CausalBranchOccurrence = occurrence.playedBranch
-  def publicReferenceBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(referenceBranch)
-  def publicPlayedBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(playedBranch)
+  def vacatingLine: LineNodeRef = occurrence.vacatingLine
+  def immediateLine: LineNodeRef = occurrence.immediateLine
+  def vacatingBranch: CausalBranchOccurrence = occurrence.vacatingBranch
+  def immediateBranch: CausalBranchOccurrence = occurrence.immediateBranch
+  def publicVacatingBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(vacatingBranch)
+  def publicImmediateBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(immediateBranch)
   def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
   def publicProofPaths: List[BoundedCausalPublicProofPath] =
     BoundedCausalPublicProjection.legalMovePaths(proofPaths)
   def hasCompleteProofPaths: Boolean =
-    val deferredIndex = occurrence.referenceDeferredStepIndex
+    val deferredIndex = occurrence.laterDeferredStepIndex
     proofPaths.size == 1 && proofPaths.forall(path =>
         path.premiseUses.isEmpty && path.manifest.supplementalPremiseUses.size == 4 &&
         path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse]) &&
@@ -1777,24 +1614,25 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderEvidence privat
   def deferredMove: RelationMoveTransitionWitness = semantic.deferredMove
   def captureReply: RelationMoveTransitionWitness = semantic.captureReply
   def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
-  def referenceDeferredStepIndex: Int = occurrence.referenceDeferredStepIndex
+  def laterDeferredStepIndex: Int = occurrence.laterDeferredStepIndex
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.exists(_.proves(record, this))
+    occurrenceProof.proves(record, this)
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.toList.flatMap(_.parentSources)
+    occurrenceProof.parentSources
 
   private[chessjudgment] def lowerRecordsAreCanonical(
       byId: Map[String, EvidenceRecord]
   ): Boolean =
-    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
 
   private[chessjudgment] def consumesDependencies(
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
+      subject: CertifiedRootOccurrence,
+      vacating: CertifiedRootOccurrence,
+      immediate: CertifiedRootOccurrence
   ): Boolean =
-    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
+    occurrenceProof.consumesDependencies(subject, vacating, immediate)
 
 /** Read-only public occurrence projection of one exact replay step. */
 final case class PassedPawnProgressPublicStep(
@@ -1805,8 +1643,6 @@ final case class PassedPawnProgressPublicStep(
     fenBefore: String,
     fenAfter: String,
     lineId: String,
-    lineRole: String,
-    lineRank: Int,
     lineRootMove: String,
     provenance: String
 )
@@ -1820,15 +1656,18 @@ final case class PassedPawnProgressPublicBranch(
     replyMove: String,
     sourceOccurrenceId: String,
     lineId: String,
-    lineRole: String,
-    lineRank: Int,
+    lineOwnerEvidenceId: String,
+    rootTransitionEvidenceId: String,
     lineRootMove: String,
     rootProvenance: String,
     steps: List[PassedPawnProgressPublicStep]
 ):
   require(
-    role == "played_root_analysis_continuation" && EvidenceRef.normalizeMove(replyMove).nonEmpty &&
-      sourceOccurrenceId.nonEmpty,
+    role == "observed_root_with_analyzed_continuation" && EvidenceRef.normalizeMove(replyMove).nonEmpty &&
+      sourceOccurrenceId.nonEmpty && rootProvenance == "observed_game_root" &&
+      steps.size > 1 && steps.map(_.index) == steps.indices.toList &&
+      steps.head.provenance == "observed_game_move" &&
+      steps.tail.forall(_.provenance == "certified_analysis_move"),
     "a public passed-pawn result branch needs its exact analysis-continuation identity"
   )
 
@@ -1866,7 +1705,7 @@ final case class PassedPawnProgressPublicRelationIssuer(
     contract == relationKind &&
       resultKey.matches(s"${java.util.regex.Pattern.quote(contract)}:[0-9a-f]{64}") &&
       occurrenceId.matches("[0-9a-f]{64}") && stepKey.nonEmpty && issuerEvidenceId.nonEmpty &&
-        scope == line.role.scope,
+        scope == EvidenceScope.LegalLine,
     "a public relation issuer needs exact result and occurrence identities"
   )
   require(
@@ -1945,7 +1784,7 @@ final case class PassedPawnProgressPublicPositionStateIssuer(
       ply > 0 && EvidenceRef.normalizeMove(moveUci).nonEmpty && fenBefore.nonEmpty && fenAfter.nonEmpty,
     "a public position-state issuer needs exact LegalLine and replay occurrence ownership"
   )
-  require(scope == line.role.scope, "a public position-state issuer scope must match its exact line owner")
+  require(scope == EvidenceScope.LegalLine, "a public position-state issuer scope must match its exact line owner")
 
 final case class PassedPawnProgressPublicDependencyProof(
     dependencyKind: String,
@@ -2009,7 +1848,7 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
     private[chessjudgment] val closedReplyInventory: PassedPawnProgressClosedReplyInventoryBinding,
     dependencyFingerprint: String,
     lowerPremiseIds: List[String],
-    private[chessjudgment] val occurrenceProof: Option[PassedPawnProgressOccurrenceProof] = None
+    private[chessjudgment] val occurrenceProof: PassedPawnProgressOccurrenceProof
 ) extends EvidencePayload:
   require(dependencyFingerprint.matches("[0-9a-f]{64}"), "a passed-pawn result needs a complete dependency key")
   require(lowerPremiseIds.nonEmpty && lowerPremiseIds == lowerPremiseIds.distinct.sorted)
@@ -2024,6 +1863,7 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
   def contract: String = "passed_pawn_progress_realized_after_only_legal_reply"
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
+  def subjectOccurrence: ExplanationSubjectOccurrence = event.subjectOccurrence
   def rootLine: LineNodeRef = event.rootLine
   def rootMove: String = EvidenceRef.normalizeMove(event.rootMove)
   def rootPly: Int = analysisContinuationBranch.steps.head.step.ply
@@ -2038,7 +1878,7 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
   def analysisContinuationBranch: CausalBranchOccurrence =
     proofSet.occurrence.branches match
       case exact :: Nil
-          if exact.role.isInstanceOf[PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation] => exact
+          if exact.role.isInstanceOf[PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation] => exact
       case _ =>
         throw IllegalStateException("a passed-pawn result lost its single analysis-continuation occurrence")
   def proofPaths: List[CausalProofPathOccurrence] = proofSet.paths
@@ -2101,37 +1941,38 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
   private def resultRoute: PassedPawnResultRoute = resultRoutes.head
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.exists(_.proves(record, this))
+    occurrenceProof.proves(record, this)
 
   private[chessjudgment] def consumesExactDependencies(
+      subject: CertifiedRootOccurrence,
       source: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): Boolean =
-    occurrenceProof.exists(_.consumesExactDependencies(source, inventory, routes))
+    occurrenceProof.consumesExactDependencies(subject, source, inventory, routes)
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.toList.flatMap(_.parentSources)
+    occurrenceProof.parentSources
 
   private[chessjudgment] def lowerRecordsAreCanonical(
       byId: Map[String, EvidenceRecord]
   ): Boolean =
-    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
 
   private def publicBranch(branch: CausalBranchOccurrence): PassedPawnProgressPublicBranch =
     val (replyMove, sourceOccurrenceId) = branch.role match
-      case PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(move, occurrence) =>
+      case PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation(move, occurrence) =>
         EvidenceRef.normalizeMove(move) -> occurrence
       case _ =>
         throw IllegalStateException("a public passed-pawn result contains an unsupported branch role")
     PassedPawnProgressPublicBranch(
       branchId = branch.branchId,
-      role = "played_root_analysis_continuation",
+      role = "observed_root_with_analyzed_continuation",
       replyMove = replyMove,
       sourceOccurrenceId = sourceOccurrenceId,
       lineId = branch.line.id,
-      lineRole = snakeCode(branch.line.role.toString),
-      lineRank = branch.line.rank,
+      lineOwnerEvidenceId = branch.lineOwnerEvidenceId,
+      rootTransitionEvidenceId = branch.rootTransitionEvidenceId,
       lineRootMove = EvidenceRef.normalizeMove(branch.line.rootMove),
       rootProvenance = branch.rootProvenance match
         case CausalRootProvenance.CounterfactualAnalyzedRoot => "counterfactual_analyzed_root"
@@ -2146,8 +1987,6 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
           fenBefore = step.fenBefore,
           fenAfter = step.fenAfter,
           lineId = occurrence.line.id,
-          lineRole = snakeCode(occurrence.line.role.toString),
-          lineRank = occurrence.line.rank,
           lineRootMove = EvidenceRef.normalizeMove(occurrence.line.rootMove),
           provenance = occurrence.provenance match
             case CausalStepProvenance.ObservedGameMove       => "observed_game_move"
@@ -2178,8 +2017,8 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
 
   private def passedPawnResultBranchRoleCode(role: CausalBranchRole): String =
     role match
-      case PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(_, _) =>
-        "played_root_analysis_continuation"
+      case PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation(_, _) =>
+        "observed_root_with_analyzed_continuation"
       case _ =>
         throw IllegalStateException("a public passed-pawn result contains an unsupported premise branch")
 
@@ -2321,8 +2160,7 @@ private[chessjudgment] final case class PassedPawnResultPositionStateOccurrence 
       issuerEvidenceId,
       issuerOccurrenceId,
       BoundedCausalIdentity.stepKey(step),
-      BoundedCausalIdentity.lineKey(issuerLine),
-      scope.toString.toLowerCase
+      BoundedCausalIdentity.lineKey(issuerLine)
     ).mkString("|")
 
 private[chessjudgment] object PassedPawnResultPositionStateOccurrence:
@@ -3517,7 +3355,7 @@ final class ClosedRelationOccurrenceEvidence private (
     val lineEvidence: Option[EvidenceRef],
     private val outputsByEvidenceId: Map[String, ClosedRelationOutputBinding]
 ) extends EvidencePayload:
-  val scope: EvidenceScope = edge.role.scope
+  val scope: EvidenceScope = lineOwner.fold(edge.role.scope)(_ => EvidenceScope.LegalLine)
 
   private[chessjudgment] def outputFor(result: EvidenceRef): Option[ClosedRelationOutputBinding] =
     outputsByEvidenceId.get(result.id).filter(_.result == result)
@@ -3552,17 +3390,16 @@ private[judgment] object ClosedRelationOccurrenceEvidence:
             ref.layer == EvidenceLayer.Line &&
             ref.position == edge.from &&
             ref.line.contains(line) &&
-            ref.scope == line.role.scope &&
+            ref.scope == EvidenceScope.LegalLine &&
             ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-            edge.role.acceptsLineOwnerRole(line.role) &&
             EvidenceRef.sameMove(line.rootMove, edge.moveUci)
         )
       ),
       lineOwner.zip(lineEvidence).headOption
         .map { case (line, ref) =>
           s"closed relation line authority mismatch: producer=${ref.producer}, layer=${ref.layer}, " +
-            s"position=${ref.position == edge.from}, scope=${ref.scope}/${line.role.scope}, " +
-            s"confidence=${ref.confidence}, lineRole=${line.role}, transitionRole=${edge.role}, " +
+            s"position=${ref.position == edge.from}, scope=${ref.scope}/${EvidenceScope.LegalLine}, " +
+            s"confidence=${ref.confidence}, transitionRole=${edge.role}, " +
             s"move=${line.rootMove}/${edge.moveUci}"
         }
         .getOrElse("a closed relation occurrence line must be owned by its exact line evidence")
@@ -3573,7 +3410,7 @@ private[judgment] object ClosedRelationOccurrenceEvidence:
           output.result.layer == EvidenceLayer.Relation &&
           output.result.position == edge.from &&
           output.result.line == lineOwner &&
-          output.result.scope == edge.role.scope &&
+          output.result.scope == lineOwner.fold(edge.role.scope)(_ => EvidenceScope.LegalLine) &&
           output.result.confidence == EvidenceConfidence.LegalReplayVerified
       ),
       "every relation output must belong to the exact transition occurrence"
@@ -4032,7 +3869,7 @@ final case class PassedPawnResultEventNode private[chessjudgment] (
       lineOccurrenceOwner.producer == EvidenceProducer.LegalLineProducer &&
       lineOccurrenceOwner.layer == EvidenceLayer.Line &&
       lineOccurrenceOwner.line == structuralTransition.line &&
-      lineOccurrenceOwner.line.exists(line => lineOccurrenceOwner.scope == line.role.scope) &&
+      lineOccurrenceOwner.line.nonEmpty && lineOccurrenceOwner.scope == EvidenceScope.LegalLine &&
       EvidenceRef.sameMove(structuralTransition.moveUci, step.moveUci) &&
       structuralTransition.from.ply == step.ply - 1 &&
       structuralTransition.to.ply == step.ply &&
@@ -4140,7 +3977,7 @@ final case class PassedPawnResultDependency(
         case _ => Nil
       val authoritySteps =
         (positionStateAuthorities.map(_.step) ++ relationOccurrenceAuthorities.map(_.step)).toSet
-      consumingScope == consumingLine.role.scope &&
+      consumingScope == EvidenceScope.LegalLine &&
       positionStateAuthorities.map(_.step) == requiredStateSteps &&
       interveningSteps.forall(authoritySteps) &&
       positionStateAuthorities.forall(authority =>
@@ -5276,11 +5113,19 @@ object PassedPawnProgressSemanticIdentity:
 
 final case class PassedPawnResultEventEvidence(
     rootTransition: StructuralTransitionBinding,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     causalEpisode: PassedPawnResultEpisode,
     directResultProofs: List[PassedPawnResultTransitionProof],
     private[chessjudgment] val canonicalRootTransitionProof: Option[CanonicalTransitionProof] = None
 ) extends EvidencePayload:
   require(rootTransition.line.nonEmpty, "passed-pawn-result-causal root transition must reference its canonical line")
+  require(
+    subjectOccurrence.line.id == rootTransition.line.get.id &&
+      EvidenceRef.sameMove(subjectOccurrence.moveUci, rootTransition.moveUci) &&
+      subjectOccurrence.start == rootTransition.from && subjectOccurrence.destination == rootTransition.to &&
+      subjectOccurrence.rootProvenance == CausalRootProvenance.ObservedGameRoot,
+    "a passed-pawn result event must retain its exact history-observed subject transition"
+  )
   require(
     EvidenceRef.sameMove(causalEpisode.root.moveUci, rootTransition.moveUci) &&
       causalEpisode.root.step.ply == rootTransition.to.ply &&
@@ -5366,11 +5211,18 @@ final case class PassedPawnResultEventEvidence(
     ).sortBy(_.ref.id)
 
   private[chessjudgment] def lineOccurrenceOwners: List[EvidenceRef] =
-    lineOccurrenceRecords.map(_.ref).distinctBy(_.id)
+    val ownersById = lineOccurrenceRecords.groupBy(_.ref.id)
+    require(
+      ownersById.values.forall(records => records.nonEmpty && records.forall(_ == records.head)),
+      "a passed-pawn result cannot coalesce conflicting line-occurrence owners"
+    )
+    ownersById.valuesIterator.map(_.head.ref).toList.sortBy(_.id)
 
   private[chessjudgment] def retainsLineOccurrenceOwners(record: EvidenceRecord): Boolean =
     record.payload == this && lineOccurrenceOwners.nonEmpty &&
-      lineOccurrenceOwners.forall(owner => record.parents.contains(owner))
+      lineOccurrenceOwners.forall(owner => record.parents.contains(owner)) &&
+      record.parents.exists(_.id == subjectOccurrence.lineOwnerEvidenceId) &&
+      record.parents.exists(_.id == subjectOccurrence.transitionEvidenceId)
 
   private def analysisContinuationSteps(route: PassedPawnResultRoute): List[LineReplayStep] =
     causalEpisode.root.step :: route.causalPath.flatMap(dependency =>
@@ -5631,8 +5483,8 @@ final case class RelativeAssessmentEvidence(
     assessment: RelativeMoveAssessment
 ) extends EvidencePayload
 
-final case class RelativeCauseFactEvidence(
-    cause: RelativeCauseFact
+private[chessjudgment] final case class OccurrenceExplanationCauseEvidence(
+    cause: OccurrenceExplanationCause
 ) extends EvidencePayload
 
 final case class EvidenceRecord(
@@ -5649,23 +5501,23 @@ final case class EvidenceRecord(
       case payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence =>
         List(payload.rootLine)
       case payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence =>
-        List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
+        List(payload.occurrence.displacementLine, payload.occurrence.immediateCaptureLine)
       case payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence =>
-        List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
+        List(payload.occurrence.removalLine, payload.occurrence.immediateCaptureLine)
       case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence =>
-        List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
+        List(payload.occurrence.vacatedGateLine, payload.occurrence.retainedGateLine)
       case payload: SquareReleaseRouteEvidence =>
-        List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
+        List(payload.occurrence.releasedRouteLine, payload.occurrence.retainedBlockerLine)
       case payload: CaptureExclusionMoveOrderEvidence =>
-        List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
+        List(payload.occurrence.vacatingLine, payload.occurrence.immediateLine)
       case CandidateLineEvaluationEvidence(payloadLine, _) =>
         List(payloadLine)
       case CandidateComparisonEvidence(fact) =>
         List(fact.referenceLine, fact.candidateLine)
       case RelativeAssessmentEvidence(assessment) =>
         List(assessment.reference.ref, assessment.candidate.ref)
-      case RelativeCauseFactEvidence(_) =>
-        ref.line.toList
+      case OccurrenceExplanationCauseEvidence(cause) =>
+        List(cause.subject.line)
       case _ =>
         Nil
   def referencesLine(line: LineNodeRef): Boolean =
@@ -5705,7 +5557,7 @@ final case class CanonicalRelationNode private[judgment] (
     List(
       CanonicalRelationGraph.positionOccurrenceKey(ref.position),
       occurrenceOwner.map(_.id)
-        .orElse(ref.line.map(SemanticLineKey.from).map(_.stableKey))
+        .orElse(ref.line.map(BoundedCausalIdentity.lineKey))
         .getOrElse("position"),
       ref.scope.toString,
       relation.semanticId
@@ -5991,19 +5843,6 @@ final class TypedEvidenceGraph private (
   def comparisonFor(assessment: RelativeMoveAssessment): Option[CandidateComparisonFact] =
     candidateComparison(assessment.primaryComparisonEvidence)
 
-  def comparisonFor(cause: RelativeCauseFact): Option[CandidateComparisonFact] =
-    candidateComparison(cause.comparisonEvidence)
-
-  def relativeCauseBinding(cause: RelativeCauseFact): Option[RelativeCauseBinding] =
-    comparisonFor(cause).map(comparison => RelativeCauseFact.binding(cause, comparison))
-
-  def requiredRelativeCauseBinding(cause: RelativeCauseFact): RelativeCauseBinding =
-    relativeCauseBinding(cause).getOrElse(
-      throw IllegalArgumentException(
-        s"relative cause '${cause.comparisonEvidence.id}' is not bound to a candidate comparison"
-      )
-    )
-
   def parentClosure(origin: EvidenceRecord): List[EvidenceRecord] =
     val visited = scala.collection.mutable.Set.empty[String]
     val ordered = scala.collection.mutable.ListBuffer.empty[EvidenceRecord]
@@ -6081,14 +5920,15 @@ final class TypedEvidenceGraph private (
         case payload: LineFactEvidence =>
           exactAuthority(record, EvidenceProducer.LegalLineProducer, EvidenceLayer.Line) &&
             record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-            record.ref.line.contains(payload.line) && record.ref.scope == payload.line.role.scope &&
+            record.ref.line.contains(payload.line) && record.ref.scope == EvidenceScope.LegalLine &&
             payload.replayIsCertified && payload.rootMove.exists(EvidenceRef.sameMove(_, payload.line.rootMove)) &&
             payload.canonicalReplay.exists(_.replaySteps.headOption.exists(step =>
               PrincipalVariationEvidence.sameBoardState(step.fenBefore, record.ref.position.fen)
             ))
         case CandidateLineEvaluationEvidence(line, evaluation) =>
           record.ref.layer == EvidenceLayer.Eval && record.ref.line.contains(line) &&
-            record.ref.scope == line.role.scope && (evaluation match
+            Set(EvidenceScope.BestLine, EvidenceScope.PlayedLine, EvidenceScope.CandidateLine)(record.ref.scope) &&
+            (evaluation match
               case lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(_) =>
                 record.ref.producer == EvidenceProducer.EngineEvalProducer &&
                   record.ref.confidence == EvidenceConfidence.EngineBacked
@@ -6139,12 +5979,44 @@ final class TypedEvidenceGraph private (
         case RelativeAssessmentEvidence(assessment) =>
           exactAuthority(record, EvidenceProducer.RelativeMoveProducer, EvidenceLayer.RelativeAssessment) &&
             record.ref == assessment.evidence && record.ref.line.contains(assessment.candidate.ref)
-        case RelativeCauseFactEvidence(cause) =>
-          exactAuthority(record, EvidenceProducer.RelativeMoveProducer, EvidenceLayer.RelativeCause) &&
-            record.parents.map(_.id).distinct.size == record.parents.size &&
-            record.parents.toSet == (cause.comparisonEvidence :: cause.proofSources).toSet &&
-            record.parents.size == cause.proofSources.size + 1
+        case OccurrenceExplanationCauseEvidence(cause) =>
+          occurrenceExplanationAncestryVerified(record, cause)
       )
+
+  private def occurrenceExplanationAncestryVerified(
+      record: EvidenceRecord,
+      cause: OccurrenceExplanationCause
+  ): Boolean =
+    val parentIds = List(cause.subject.transitionEvidenceId, cause.proofSource.id)
+    val transitionBound = byId.get(cause.subject.transitionEvidenceId).exists {
+      case EvidenceRecord(ref, MoveTransitionEvidence(moveUci, from, to, _), _) =>
+        record.parents.headOption.contains(ref) &&
+          record.ref.scope == ref.scope &&
+          ref.producer == EvidenceProducer.MoveTransitionProducer &&
+          ref.layer == EvidenceLayer.MoveTransition &&
+          EvidenceRef.sameMove(moveUci, cause.subject.moveUci) &&
+          from == cause.subject.start && to == cause.subject.destination
+      case _ => false
+    }
+    val proofBound = byId.get(cause.proofSource.id).exists { proofRecord =>
+      proofRecord.ref == cause.proofSource &&
+        DirectCauseChannel.fromTypedProofRecord(proofRecord).exists(channel =>
+          channel.typedProofIdentity == cause.proofOccurrence &&
+            OccurrenceExplanationCause.proofOwnsSubject(channel, cause.subject)
+        )
+    }
+    exactAuthority(
+      record,
+      EvidenceProducer.OccurrenceExplanationProducer,
+      EvidenceLayer.OccurrenceExplanation
+    ) &&
+      record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
+      record.ref.position == cause.subject.start &&
+      record.ref.line.contains(cause.subject.line) &&
+      cause.subject.rootProvenance == CausalRootProvenance.ObservedGameRoot &&
+      record.parents.map(_.id) == parentIds &&
+      parentIds.distinct.size == parentIds.size &&
+      transitionBound && proofBound
 
   private def exactAuthority(
       record: EvidenceRecord,
@@ -6162,13 +6034,14 @@ final class TypedEvidenceGraph private (
       directParents.collect {
         case source @ EvidenceRecord(ref, payload: LineFactEvidence, _)
             if ref.position == record.ref.position && ref.line.contains(line) &&
-              ref.scope == line.role.scope && payload.line == line =>
+              ref.scope == EvidenceScope.LegalLine && payload.line == line =>
           source
       } match
         case source :: Nil => Some(source)
         case _             => None
     def exactEvaluation(
         line: LineNodeRef,
+        selection: SemanticLineKey,
         lineSource: EvidenceRecord
     ): Option[lila.chessjudgment.model.line.CandidateLineEvaluation] =
       directParents.collect {
@@ -6178,7 +6051,7 @@ final class TypedEvidenceGraph private (
               parents
             )
             if ref.position == record.ref.position && ref.line.contains(line) &&
-              ref.scope == line.role.scope && payloadLine == line &&
+              ref.scope == selection.role.scope && payloadLine == line &&
               parents == List(lineSource.ref) =>
           evaluation
       } match
@@ -6187,13 +6060,25 @@ final class TypedEvidenceGraph private (
     val canonicalInputs = for
       referenceSource <- exactLineSource(comparison.referenceLine)
       candidateSource <- exactLineSource(comparison.candidateLine)
-      referenceEvaluation <- exactEvaluation(comparison.referenceLine, referenceSource)
-      candidateEvaluation <- exactEvaluation(comparison.candidateLine, candidateSource)
+      referenceEvaluation <- exactEvaluation(comparison.referenceLine, comparison.referenceSelection, referenceSource)
+      candidateEvaluation <- exactEvaluation(comparison.candidateLine, comparison.candidateSelection, candidateSource)
     yield (
       referenceSource,
       candidateSource,
-      CandidateLineNode(comparison.referenceLine, referenceEvaluation, referenceSource.ref),
-      CandidateLineNode(comparison.candidateLine, candidateEvaluation, candidateSource.ref)
+      CandidateLineNode(
+        comparison.referenceLine,
+        comparison.referenceSelection.role,
+        comparison.referenceSelection.rank,
+        referenceEvaluation,
+        referenceSource.ref
+      ),
+      CandidateLineNode(
+        comparison.candidateLine,
+        comparison.candidateSelection.role,
+        comparison.candidateSelection.rank,
+        candidateEvaluation,
+        candidateSource.ref
+      )
     )
     directParents.size == record.parents.size && canonicalInputs.exists {
       case (referenceSource, candidateSource, reference, candidate) =>
@@ -6268,9 +6153,8 @@ final class TypedEvidenceGraph private (
               ref.layer == EvidenceLayer.Line &&
               ref.position == payload.edge.from &&
               ref.line.contains(line) &&
-              ref.scope == line.role.scope &&
+              ref.scope == EvidenceScope.LegalLine &&
               ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-              payload.edge.role.acceptsLineOwnerRole(line.role) &&
               lineFact.line == line &&
               lineFact.canonicalReplay.exists(_.replaySteps.headOption.exists(step =>
                 step.ply == payload.edge.to.ply &&

@@ -3,34 +3,43 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
-private[chessjudgment] enum CaptureExclusionMoveOrderPremiseRole extends CausalPremiseRole:
-  case ReferenceVacatingMove
-  case PlayedDeferredMove
-  case PlayedCaptureReply
-  case ReferenceDeferredMove
+private[chessjudgment] enum CaptureExclusionBranchRole extends CausalBranchRole:
+  case VacatingThenDeferred
+  case ImmediateDeferredCapture
 
   def stableKey: String =
     this match
-      case ReferenceVacatingMove  => "reference-vacating-move"
-      case PlayedDeferredMove     => "played-deferred-move"
-      case PlayedCaptureReply     => "played-capture-reply"
-      case ReferenceDeferredMove  => "reference-deferred-move"
+      case VacatingThenDeferred     => "vacating-then-deferred"
+      case ImmediateDeferredCapture => "immediate-deferred-capture"
+
+private[chessjudgment] enum CaptureExclusionMoveOrderPremiseRole extends CausalPremiseRole:
+  case VacatingMove
+  case ImmediateDeferredMove
+  case ImmediateCaptureReply
+  case LaterDeferredMove
+
+  def stableKey: String =
+    this match
+      case VacatingMove          => "vacating-move"
+      case ImmediateDeferredMove => "immediate-deferred-move"
+      case ImmediateCaptureReply => "immediate-capture-reply"
+      case LaterDeferredMove     => "later-deferred-move"
 
 private[chessjudgment] enum CaptureExclusionMoveOrderAbsenceRole extends CausalAbsenceRole:
-  case ReferenceCaptureReplyAbsent
+  case CaptureReplyAbsent
 
-  def stableKey: String = "reference-capture-reply-absent"
+  def stableKey: String = "capture-reply-absent"
 
 private[chessjudgment] enum CaptureExclusionMoveOrderStateRole extends CausalStateRole:
-  case ReferenceVacatedTarget
-  case ReferenceReplyActor
-  case ReferenceDeferredActor
+  case VacatedTarget
+  case ReplyActor
+  case DeferredActor
 
   def stableKey: String =
     this match
-      case ReferenceVacatedTarget  => "reference-vacated-target"
-      case ReferenceReplyActor     => "reference-reply-actor"
-      case ReferenceDeferredActor  => "reference-deferred-actor"
+      case VacatedTarget => "vacated-target"
+      case ReplyActor    => "reply-actor"
+      case DeferredActor => "deferred-actor"
 
 private[chessjudgment] object CaptureExclusionMoveOrderCausalAuthority:
   private final case class PropositionDescriptor(
@@ -50,7 +59,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderCausalAuthority:
         vacatingMove.beforeRole == capturedTarget.role &&
         captureReply.to == capturedTarget.square &&
         captureReply.side != capturedTarget.side,
-      "the reference root must vacate the played reply's exact captured target"
+      "the vacating root must remove the immediate reply's exact captured target"
     )
 
     val contractKind = BoundedCausalContractKind.CaptureExclusionMoveOrder
@@ -98,96 +107,97 @@ private[chessjudgment] object CaptureExclusionMoveOrderManifest:
   ) extends CaptureExclusionMoveOrderManifest
 
   def exact(
-      referenceVacating: CausalLegalMovePremiseUse,
-      playedDeferred: CausalLegalMovePremiseUse,
-      playedReply: CausalLegalMovePremiseUse,
-      referenceDeferred: CausalLegalMovePremiseUse,
+      vacatingMove: CausalLegalMovePremiseUse,
+      immediateDeferredMove: CausalLegalMovePremiseUse,
+      immediateCaptureReply: CausalLegalMovePremiseUse,
+      laterDeferredMove: CausalLegalMovePremiseUse,
       capturedTarget: RelationColoredPieceWitness,
       replyAbsences: List[CausalClosedAbsenceBinding],
       retainedStates: List[CausalClosedStateBinding]
   ): CaptureExclusionMoveOrderManifest =
-    val deferredIndex = referenceDeferred.stepIndex
+    val laterDeferredIndex = laterDeferredMove.stepIndex
     require(
-      referenceVacating.role == CaptureExclusionMoveOrderPremiseRole.ReferenceVacatingMove &&
-        referenceVacating.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-        referenceVacating.stepIndex == 0,
-      "the vacating move must be the exact reference root occurrence"
+      vacatingMove.role == CaptureExclusionMoveOrderPremiseRole.VacatingMove &&
+        vacatingMove.branchRole == CaptureExclusionBranchRole.VacatingThenDeferred &&
+        vacatingMove.stepIndex == 0,
+      "the vacating move must be the exact vacating-branch root occurrence"
     )
     require(
-      playedDeferred.role == CaptureExclusionMoveOrderPremiseRole.PlayedDeferredMove &&
-        playedDeferred.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
-        playedDeferred.stepIndex == 0 &&
-        playedReply.role == CaptureExclusionMoveOrderPremiseRole.PlayedCaptureReply &&
-        playedReply.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
-        playedReply.branchId == playedDeferred.branchId && playedReply.stepIndex == 1,
-      "the played branch must retain the deferred move and its immediate capture reply"
+      immediateDeferredMove.role == CaptureExclusionMoveOrderPremiseRole.ImmediateDeferredMove &&
+        immediateDeferredMove.branchRole == CaptureExclusionBranchRole.ImmediateDeferredCapture &&
+        immediateDeferredMove.stepIndex == 0 &&
+        immediateCaptureReply.role == CaptureExclusionMoveOrderPremiseRole.ImmediateCaptureReply &&
+        immediateCaptureReply.branchRole == CaptureExclusionBranchRole.ImmediateDeferredCapture &&
+        immediateCaptureReply.branchId == immediateDeferredMove.branchId &&
+        immediateCaptureReply.stepIndex == 1,
+      "the immediate branch must retain the deferred move and its exact capture reply"
     )
     require(
-      referenceDeferred.role == CaptureExclusionMoveOrderPremiseRole.ReferenceDeferredMove &&
-        referenceDeferred.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-        referenceDeferred.branchId == referenceVacating.branchId &&
-        deferredIndex >= 2 && deferredIndex % 2 == 0,
-      "the identical deferred move must be a later same-side reference occurrence"
+      laterDeferredMove.role == CaptureExclusionMoveOrderPremiseRole.LaterDeferredMove &&
+        laterDeferredMove.branchRole == CaptureExclusionBranchRole.VacatingThenDeferred &&
+        laterDeferredMove.branchId == vacatingMove.branchId &&
+        laterDeferredIndex >= 2 && laterDeferredIndex % 2 == 0,
+      "the identical deferred move must be a later same-side vacating-branch occurrence"
     )
     require(
-      sameMove(playedDeferred, referenceDeferred),
-      "played and reference deferred moves must retain identical movement, capture, and mode"
+      sameMove(immediateDeferredMove, laterDeferredMove),
+      "immediate and later deferred moves must retain identical movement, capture, and mode"
     )
-    val replyCapture = playedReply.capture.getOrElse(
+    val replyCapture = immediateCaptureReply.capture.getOrElse(
       throw IllegalArgumentException("capture-exclusion move order needs an exact capture reply")
     )
     require(
-      replyCapture.capturedSquare == playedReply.movement.to &&
+      replyCapture.capturedSquare == immediateCaptureReply.movement.to &&
         replyCapture.capturedSquare == capturedTarget.square &&
         replyCapture.capturedSide == capturedTarget.side &&
         replyCapture.capturedRole == capturedTarget.role &&
-        referenceVacating.movement.from == capturedTarget.square &&
-        referenceVacating.movement.side == capturedTarget.side &&
-        referenceVacating.movement.beforeRole == capturedTarget.role &&
-        referenceVacating.movement.side == playedDeferred.movement.side &&
-        playedReply.movement.side != playedDeferred.movement.side,
-      "the reference root must remove the ordinary captured target of the played reply"
+        vacatingMove.movement.from == capturedTarget.square &&
+        vacatingMove.movement.side == capturedTarget.side &&
+        vacatingMove.movement.beforeRole == capturedTarget.role &&
+        vacatingMove.movement.side == immediateDeferredMove.movement.side &&
+        immediateCaptureReply.movement.side != immediateDeferredMove.movement.side,
+      "the vacating root must remove the ordinary captured target of the immediate reply"
     )
 
     val replyQuery = PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(
-      playedReply.movement.side,
-      playedReply.movement.from,
-      playedReply.movement.to
+      immediateCaptureReply.movement.side,
+      immediateCaptureReply.movement.from,
+      immediateCaptureReply.movement.to
     )
-    val expectedAbsenceIndices = List(0, deferredIndex)
+    val expectedAbsenceIndices = List(0, laterDeferredIndex)
     require(
       replyAbsences.map(_.afterStepIndex) == expectedAbsenceIndices &&
         replyAbsences.forall(binding =>
-          binding.role == CaptureExclusionMoveOrderAbsenceRole.ReferenceCaptureReplyAbsent &&
-            binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-            binding.branchId == referenceVacating.branchId && binding.authority.query == replyQuery
+          binding.role == CaptureExclusionMoveOrderAbsenceRole.CaptureReplyAbsent &&
+            binding.branchRole == CaptureExclusionBranchRole.VacatingThenDeferred &&
+            binding.branchId == vacatingMove.branchId && binding.authority.query == replyQuery
         ),
-      "the exact capture reply must be closed at both causal reference endpoints"
+      "the exact capture reply must be closed at both vacating-branch causal endpoints"
     )
 
-    val replyActor = coloredOrigin(playedReply.movement)
-    val deferredActor = coloredOrigin(playedDeferred.movement)
-    val expectedStates = (0 to deferredIndex).toList.flatMap { index =>
+    val replyActor = coloredOrigin(immediateCaptureReply.movement)
+    val deferredActor = coloredOrigin(immediateDeferredMove.movement)
+    val expectedStates = (0 to laterDeferredIndex).toList.flatMap { index =>
       List(
         (
-          CaptureExclusionMoveOrderStateRole.ReferenceVacatedTarget,
-          ComparedLineBranchRole.CounterfactualReference,
-          referenceVacating.branchId,
+          CaptureExclusionMoveOrderStateRole.VacatedTarget,
+          CaptureExclusionBranchRole.VacatingThenDeferred,
+          vacatingMove.branchId,
           index,
           PositionRelationExtractor.ClosedPositionStateQuery.Vacant(capturedTarget.square)
         ),
         (
-          CaptureExclusionMoveOrderStateRole.ReferenceReplyActor,
-          ComparedLineBranchRole.CounterfactualReference,
-          referenceVacating.branchId,
+          CaptureExclusionMoveOrderStateRole.ReplyActor,
+          CaptureExclusionBranchRole.VacatingThenDeferred,
+          vacatingMove.branchId,
           index,
           PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(replyActor)
         )
-      ) ++ Option.when(index < deferredIndex)(
+      ) ++ Option.when(index < laterDeferredIndex)(
         (
-          CaptureExclusionMoveOrderStateRole.ReferenceDeferredActor,
-          ComparedLineBranchRole.CounterfactualReference,
-          referenceVacating.branchId,
+          CaptureExclusionMoveOrderStateRole.DeferredActor,
+          CaptureExclusionBranchRole.VacatingThenDeferred,
+          vacatingMove.branchId,
           index,
           PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(deferredActor)
         )
@@ -203,7 +213,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderManifest:
       "capture-exclusion move order needs the complete target and actor state interval"
     )
     Exact(
-      List(referenceVacating, playedDeferred, playedReply, referenceDeferred),
+      List(vacatingMove, immediateDeferredMove, immediateCaptureReply, laterDeferredMove),
       replyAbsences,
       retainedStates
     )
@@ -246,40 +256,37 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderOccurrence priv
   require(proofSet.proposition.contractKind == BoundedCausalContractKind.CaptureExclusionMoveOrder)
   require(
     proofSet.occurrence.branches.size == 2 &&
-      proofSet.occurrence.branch(ComparedLineBranchRole.CounterfactualReference).exists(
-        _.line.role == LineNodeRole.BestReference
-      ) &&
-      proofSet.occurrence.branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation).exists(
-        _.line.role == LineNodeRole.Played
-      ),
-    "capture-exclusion move order needs one reference and one played occurrence"
+      proofSet.occurrence.branch(CaptureExclusionBranchRole.VacatingThenDeferred).nonEmpty &&
+      proofSet.occurrence.branch(CaptureExclusionBranchRole.ImmediateDeferredCapture).nonEmpty,
+    "capture exclusion needs its two family-specific sibling branches"
   )
-  require(referenceDeferredStepIndex >= 2 && referenceDeferredStepIndex % 2 == 0)
-  require(playedSteps.size == 2)
+  require(laterDeferredStepIndex >= 2 && laterDeferredStepIndex % 2 == 0)
+  require(immediateSteps.size == 2)
 
-  private def branch(role: ComparedLineBranchRole): CausalBranchOccurrence =
+  private def branch(role: CaptureExclusionBranchRole): CausalBranchOccurrence =
     proofSet.occurrence.branch(role).getOrElse(
-      throw IllegalStateException(s"capture-exclusion move order lost its $role branch")
+      throw IllegalStateException(s"capture exclusion lost its $role branch")
     )
 
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
-  def referenceBranch: CausalBranchOccurrence = branch(ComparedLineBranchRole.CounterfactualReference)
-  def playedBranch: CausalBranchOccurrence = branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation)
-  def referenceLine: LineNodeRef = referenceBranch.line
-  def playedLine: LineNodeRef = playedBranch.line
-  def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
-  def playedSteps: List[LineReplayStep] = playedBranch.replaySteps
-  def referenceDeferredStepIndex: Int = referenceSteps.size - 1
+  def vacatingBranch: CausalBranchOccurrence = branch(CaptureExclusionBranchRole.VacatingThenDeferred)
+  def immediateBranch: CausalBranchOccurrence = branch(CaptureExclusionBranchRole.ImmediateDeferredCapture)
+  def vacatingLine: LineNodeRef = vacatingBranch.line
+  def immediateLine: LineNodeRef = immediateBranch.line
+  def vacatingSteps: List[LineReplayStep] = vacatingBranch.replaySteps
+  def immediateSteps: List[LineReplayStep] = immediateBranch.replaySteps
+  def laterDeferredStepIndex: Int = vacatingSteps.size - 1
   def proofPaths: List[CausalProofPathOccurrence] = proofSet.paths
-  def vacatingStep: LineReplayStep = referenceSteps.head
-  def referenceDeferredStep: LineReplayStep = referenceSteps(referenceDeferredStepIndex)
-  def playedDeferredStep: LineReplayStep = playedSteps.head
-  def playedReplyStep: LineReplayStep = playedSteps(1)
+  def vacatingStep: LineReplayStep = vacatingSteps.head
+  def laterDeferredStep: LineReplayStep = vacatingSteps(laterDeferredStepIndex)
+  def immediateDeferredStep: LineReplayStep = immediateSteps.head
+  def immediateReplyStep: LineReplayStep = immediateSteps(1)
 
 private[chessjudgment] final case class CaptureExclusionMoveOrderDependencyManifest private[chessjudgment] (
-    referenceLineRecord: EvidenceRecord,
-    playedLineRecord: EvidenceRecord,
+    subject: CertifiedRootOccurrence,
+    vacating: CertifiedRootOccurrence,
+    immediate: CertifiedRootOccurrence,
     proofSet: BoundedCausalProofSet
 ) extends BoundedCausalDependencyManifest:
   val contractKind = BoundedCausalContractKind.CaptureExclusionMoveOrder
@@ -290,25 +297,35 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderDependencyManif
 
   val stableKey: String =
     List(
-      BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
-      BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
+      "subject-root",
+      BoundedCausalIdentity.evidenceRecordKey(subject.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(subject.transitionOwner),
+      "vacating-root",
+      BoundedCausalIdentity.evidenceRecordKey(vacating.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(vacating.transitionOwner),
+      "immediate-root",
+      BoundedCausalIdentity.evidenceRecordKey(immediate.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(immediate.transitionOwner),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).sorted.mkString("paths[", ",", "]")
     ).mkString("|")
 
-  def consumes(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
-    referenceLineRecord == referenceSource && playedLineRecord == playedSource
+  def consumes(
+      exactSubject: CertifiedRootOccurrence,
+      exactVacating: CertifiedRootOccurrence,
+      exactImmediate: CertifiedRootOccurrence
+  ): Boolean =
+    subject == exactSubject && vacating == exactVacating && immediate == exactImmediate
 
 private[chessjudgment] final class CertifiedCaptureExclusionMoveOrder private (
     val semantic: CaptureExclusionMoveOrderSemanticProof,
     val occurrence: CaptureExclusionMoveOrderOccurrence,
     val dependency: BoundedCausalDependencyFingerprint,
     private val dependencyManifest: CaptureExclusionMoveOrderDependencyManifest,
-    private val referenceLineRecord: EvidenceRecord,
-    private val playedLineRecord: EvidenceRecord,
-    private val referenceReplay: CanonicalLineReplay,
-    private val playedReplay: CanonicalLineReplay,
+    val subject: CertifiedRootOccurrence,
+    private val vacating: CertifiedRootOccurrence,
+    private val immediate: CertifiedRootOccurrence,
     private val legalMoveAuthorities: List[(CausalLegalMovePremiseUse, RecordBoundLegalMoveOccurrence)],
     private val absenceAuthorities: List[(CausalClosedAbsenceUse, ClosedRelationAbsenceAuthority)],
     private val stateAuthorities: List[(CausalClosedStateUse, ClosedPositionStateAuthority)]
@@ -326,39 +343,52 @@ private[chessjudgment] final class CertifiedCaptureExclusionMoveOrder private (
   )
 
   def parentSources: List[EvidenceRef] =
-    List(referenceLineRecord.ref, playedLineRecord.ref).sortBy(_.id)
+    val sources = List(
+      vacating.lineOwner.ref,
+      vacating.transitionOwner.ref,
+      immediate.lineOwner.ref,
+      immediate.transitionOwner.ref
+    ).sortBy(_.id)
+    require(
+      sources.map(_.id).distinct.size == sources.size,
+      "capture exclusion needs four distinct line/transition parent owners"
+    )
+    sources
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(referenceLineRecord, playedLineRecord)
+    List(
+      vacating.lineOwner,
+      vacating.transitionOwner,
+      immediate.lineOwner,
+      immediate.transitionOwner
+    )
 
-  def consumesDependencies(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
-    dependencyManifest.consumes(referenceSource, playedSource)
+  def consumesDependencies(
+      exactSubject: CertifiedRootOccurrence,
+      exactVacating: CertifiedRootOccurrence,
+      exactImmediate: CertifiedRootOccurrence
+  ): Boolean =
+    dependencyManifest.consumes(exactSubject, exactVacating, exactImmediate)
 
   def proves(record: EvidenceRecord, payload: CaptureExclusionMoveOrderEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
       record.ref.layer == EvidenceLayer.CausalProof &&
       record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-      record.ref.position == referenceLineRecord.ref.position &&
-      record.ref.line.contains(occurrence.referenceLine) &&
-      record.ref.scope == occurrence.referenceLine.role.scope &&
+      record.ref.position == subject.transition.from &&
+      record.ref.line.contains(subject.line) &&
+      record.ref.scope == subject.transitionOwner.ref.scope &&
       record.parents == parentSources && payload.semantic == semantic &&
       payload.occurrence == occurrence && payload.dependencyFingerprint == dependency.value &&
-      payload.occurrenceProof.contains(this) && remainsCertified
+      payload.subjectOccurrence == subject.publicOccurrence &&
+      payload.occurrenceProof == this && remainsCertified
 
   def remainsCertified: Boolean =
-    CertifiedComparedLineAuthority.exactRecord(
-      referenceLineRecord,
-      occurrence.referenceLine,
-      referenceReplay
-    ) &&
-      CertifiedComparedLineAuthority.exactRecord(
-        playedLineRecord,
-        occurrence.playedLine,
-        playedReplay
-      ) &&
-      referenceLineRecord.ref.position == playedLineRecord.ref.position &&
-      referenceReplay.replaySteps.take(occurrence.referenceDeferredStepIndex + 1) == occurrence.referenceSteps &&
-      playedReplay.replaySteps.take(2) == occurrence.playedSteps &&
+    subject.remainsCertified && vacating.remainsCertified && immediate.remainsCertified &&
+      (subject == vacating || subject == immediate) &&
+      occurrence.vacatingLine == vacating.line &&
+      occurrence.immediateLine == immediate.line &&
+      vacating.replay.replaySteps.take(occurrence.laterDeferredStepIndex + 1) == occurrence.vacatingSteps &&
+      immediate.replay.replaySteps.take(2) == occurrence.immediateSteps &&
       CaptureExclusionMoveOrderCausalAuthority.proposition(
         semantic.rootBoardState,
         semantic.vacatingMove,
@@ -390,9 +420,9 @@ private[chessjudgment] final class CertifiedCaptureExclusionMoveOrder private (
   private def absencesRemainCertified: Boolean =
     absenceAuthorities.forall { case (use, authority) =>
       val binding = use.binding
-      authority.issuerRecord == referenceLineRecord && authority.remainsCertified &&
+      authority.issuerRecord == vacating.lineOwner && authority.remainsCertified &&
         binding.authority == authority &&
-        occurrence.referenceBranch.stepAt(binding.afterStepIndex).exists(step =>
+        occurrence.vacatingBranch.stepAt(binding.afterStepIndex).exists(step =>
           step.step == authority.step && step.line == authority.issuerLine
         )
     }
@@ -417,8 +447,10 @@ private[chessjudgment] final class CertifiedCaptureExclusionMoveOrder private (
       role: CausalBranchRole
   ): Option[(EvidenceRecord, CanonicalLineReplay)] =
     role match
-      case ComparedLineBranchRole.CounterfactualReference => Some(referenceLineRecord -> referenceReplay)
-      case ComparedLineBranchRole.PlayedRootAnalysisContinuation => Some(playedLineRecord -> playedReplay)
+      case CaptureExclusionBranchRole.VacatingThenDeferred =>
+        Some(vacating.lineOwner -> vacating.replay)
+      case CaptureExclusionBranchRole.ImmediateDeferredCapture =>
+        Some(immediate.lineOwner -> immediate.replay)
       case _ => None
 
 private[chessjudgment] object CertifiedCaptureExclusionMoveOrder:
@@ -427,10 +459,9 @@ private[chessjudgment] object CertifiedCaptureExclusionMoveOrder:
       occurrence: CaptureExclusionMoveOrderOccurrence,
       dependency: BoundedCausalDependencyFingerprint,
       dependencyManifest: CaptureExclusionMoveOrderDependencyManifest,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      vacating: CertifiedRootOccurrence,
+      immediate: CertifiedRootOccurrence,
       legalMoveAuthorities: List[(CausalLegalMovePremiseUse, RecordBoundLegalMoveOccurrence)],
       absenceAuthorities: List[(CausalClosedAbsenceUse, ClosedRelationAbsenceAuthority)],
       stateAuthorities: List[(CausalClosedStateUse, ClosedPositionStateAuthority)]
@@ -440,10 +471,9 @@ private[chessjudgment] object CertifiedCaptureExclusionMoveOrder:
       occurrence,
       dependency,
       dependencyManifest,
-      referenceLineRecord,
-      playedLineRecord,
-      referenceReplay,
-      playedReplay,
+      subject,
+      vacating,
+      immediate,
       legalMoveAuthorities,
       absenceAuthorities,
       stateAuthorities
@@ -452,22 +482,22 @@ private[chessjudgment] object CertifiedCaptureExclusionMoveOrder:
     exact
 
 private[chessjudgment] final case class CaptureExclusionMoveOrderDemand private[chessjudgment] (
-    referenceVacating: ReplayLegalMoveOccurrence,
-    playedDeferred: ReplayLegalMoveOccurrence,
-    playedReply: ReplayLegalMoveOccurrence,
-    referenceDeferred: ReplayLegalMoveOccurrence,
-    referenceDeferredStepIndex: Int
+    vacatingMove: ReplayLegalMoveOccurrence,
+    immediateDeferredMove: ReplayLegalMoveOccurrence,
+    immediateCaptureReply: ReplayLegalMoveOccurrence,
+    laterDeferredMove: ReplayLegalMoveOccurrence,
+    laterDeferredStepIndex: Int
 ):
-  require(referenceDeferredStepIndex >= 2 && referenceDeferredStepIndex % 2 == 0)
-  require(CaptureExclusionMoveOrderDemand.sameMove(playedDeferred, referenceDeferred))
+  require(laterDeferredStepIndex >= 2 && laterDeferredStepIndex % 2 == 0)
+  require(CaptureExclusionMoveOrderDemand.sameMove(immediateDeferredMove, laterDeferredMove))
 
   def stableKey: String =
     List(
-      referenceVacating.occurrenceId,
-      playedDeferred.occurrenceId,
-      playedReply.occurrenceId,
-      referenceDeferred.occurrenceId,
-      referenceDeferredStepIndex.toString
+      vacatingMove.occurrenceId,
+      immediateDeferredMove.occurrenceId,
+      immediateCaptureReply.occurrenceId,
+      laterDeferredMove.occurrenceId,
+      laterDeferredStepIndex.toString
     ).mkString("|")
 
 private[chessjudgment] object CaptureExclusionMoveOrderDemand:
@@ -485,178 +515,182 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
   )
 
   def certifyDemanded(
-      referenceLine: LineNodeRef,
-      playedLine: LineNodeRef,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      vacating: CertifiedRootOccurrence,
+      immediate: CertifiedRootOccurrence,
       demands: List[CaptureExclusionMoveOrderDemand]
   ): List[CertifiedCaptureExclusionMoveOrder] =
     demands.flatMap(demand =>
       derive(
-        referenceLine,
-        playedLine,
-        referenceLineRecord,
-        playedLineRecord,
-        referenceReplay,
-        playedReplay,
+        subject,
+        vacating,
+        immediate,
         demand
       )
     )
 
   private def derive(
-      referenceLine: LineNodeRef,
-      playedLine: LineNodeRef,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      vacating: CertifiedRootOccurrence,
+      immediate: CertifiedRootOccurrence,
       demand: CaptureExclusionMoveOrderDemand
   ): Option[CertifiedCaptureExclusionMoveOrder] =
+    val vacatingLineRecord = vacating.lineOwner
+    val immediateLineRecord = immediate.lineOwner
+    val vacatingReplay = vacating.replay
+    val immediateReplay = immediate.replay
     for
       _ <- Option.when(
-        CertifiedComparedLineAuthority.exactRecord(referenceLineRecord, referenceLine, referenceReplay) &&
-          CertifiedComparedLineAuthority.exactRecord(playedLineRecord, playedLine, playedReplay) &&
-          referenceLineRecord.ref.position == playedLineRecord.ref.position
+        subject.remainsCertified && vacating.remainsCertified && immediate.remainsCertified &&
+          (subject == vacating || subject == immediate) &&
+          vacating.line != immediate.line &&
+          vacating.transition.from.ply == immediate.transition.from.ply &&
+          PrincipalVariationEvidence.sameBoardState(
+            vacating.transition.from.fen,
+            immediate.transition.from.fen
+          )
       )((): Unit)
-      referenceRoot <- referenceReplay.replaySteps.headOption
-      playedRoot <- playedReplay.replaySteps.headOption
-      playedReplyStep <- playedReplay.replaySteps.lift(1)
-      referenceDeferredStep <- referenceReplay.replaySteps.lift(demand.referenceDeferredStepIndex)
-      if demand.referenceDeferredStepIndex >= 2 && demand.referenceDeferredStepIndex % 2 == 0
-      if demand.referenceVacating.step == referenceRoot && demand.playedDeferred.step == playedRoot &&
-        demand.playedReply.step == playedReplyStep && demand.referenceDeferred.step == referenceDeferredStep
-      rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(referenceRoot.fenBefore)
-      playedBoard <- PrincipalVariationEvidence.semanticBoardStateFen(playedRoot.fenBefore)
-      if rootBoard == playedBoard
-      referenceVacating <- RecordBoundLegalMoveOccurrence.certified(
-        referenceLineRecord,
-        demand.referenceVacating
+      vacatingRoot <- vacatingReplay.replaySteps.headOption
+      immediateRoot <- immediateReplay.replaySteps.headOption
+      immediateReplyStep <- immediateReplay.replaySteps.lift(1)
+      laterDeferredStep <- vacatingReplay.replaySteps.lift(demand.laterDeferredStepIndex)
+      if demand.laterDeferredStepIndex >= 2 && demand.laterDeferredStepIndex % 2 == 0
+      if demand.vacatingMove.step == vacatingRoot &&
+        demand.immediateDeferredMove.step == immediateRoot &&
+        demand.immediateCaptureReply.step == immediateReplyStep &&
+        demand.laterDeferredMove.step == laterDeferredStep
+      rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(vacatingRoot.fenBefore)
+      immediateBoard <- PrincipalVariationEvidence.semanticBoardStateFen(immediateRoot.fenBefore)
+      if rootBoard == immediateBoard
+      vacatingMove <- RecordBoundLegalMoveOccurrence.certified(
+        vacatingLineRecord,
+        demand.vacatingMove
       )
-      playedDeferred <- RecordBoundLegalMoveOccurrence.certified(playedLineRecord, demand.playedDeferred)
-      playedReply <- RecordBoundLegalMoveOccurrence.certified(playedLineRecord, demand.playedReply)
-      referenceDeferred <- RecordBoundLegalMoveOccurrence.certified(
-        referenceLineRecord,
-        demand.referenceDeferred
+      immediateDeferredMove <- RecordBoundLegalMoveOccurrence.certified(
+        immediateLineRecord,
+        demand.immediateDeferredMove
       )
-      if sameMove(playedDeferred, referenceDeferred)
-      replyCapture <- playedReply.capture
-      if replyCapture.capturedSquare == playedReply.movement.to
+      immediateCaptureReply <- RecordBoundLegalMoveOccurrence.certified(
+        immediateLineRecord,
+        demand.immediateCaptureReply
+      )
+      laterDeferredMove <- RecordBoundLegalMoveOccurrence.certified(
+        vacatingLineRecord,
+        demand.laterDeferredMove
+      )
+      if sameMove(immediateDeferredMove, laterDeferredMove)
+      replyCapture <- immediateCaptureReply.capture
+      if replyCapture.capturedSquare == immediateCaptureReply.movement.to
       capturedTarget = RelationColoredPieceWitness(
         replyCapture.capturedSquare,
         replyCapture.capturedRole,
         replyCapture.capturedSide
       )
-      if referenceVacating.movement.from == capturedTarget.square &&
-        referenceVacating.movement.side == capturedTarget.side &&
-        referenceVacating.movement.beforeRole == capturedTarget.role &&
-        referenceVacating.movement.side == playedDeferred.movement.side &&
-        playedReply.movement.side != playedDeferred.movement.side
-      referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
-        ComparedLineBranchRole.CounterfactualReference,
-        referenceLine,
-        referenceReplay,
-        demand.referenceDeferredStepIndex + 1
+      if vacatingMove.movement.from == capturedTarget.square &&
+        vacatingMove.movement.side == capturedTarget.side &&
+        vacatingMove.movement.beforeRole == capturedTarget.role &&
+        vacatingMove.movement.side == immediateDeferredMove.movement.side &&
+        immediateCaptureReply.movement.side != immediateDeferredMove.movement.side
+      vacatingBranch = CausalBranchOccurrence.fromRootOccurrence(
+        CaptureExclusionBranchRole.VacatingThenDeferred,
+        vacating,
+        demand.laterDeferredStepIndex + 1
       )
-      playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        ComparedLineBranchRole.PlayedRootAnalysisContinuation,
-        playedLine,
-        playedReplay,
+      immediateBranch = CausalBranchOccurrence.fromRootOccurrence(
+        CaptureExclusionBranchRole.ImmediateDeferredCapture,
+        immediate,
         2
       )
-      absenceAuthorities <- referenceAbsences(
-        referenceLineRecord,
-        referenceReplay,
-        playedReply,
-        demand.referenceDeferredStepIndex
+      absenceAuthorities <- vacatingBranchAbsences(
+        vacatingLineRecord,
+        vacatingReplay,
+        immediateCaptureReply,
+        demand.laterDeferredStepIndex
       )
       stateAuthorities <- retainedStates(
-        referenceLineRecord,
-        referenceReplay,
-        referenceBranch,
-        playedDeferred,
-        playedReply,
+        vacatingLineRecord,
+        vacatingReplay,
+        vacatingBranch,
+        immediateDeferredMove,
+        immediateCaptureReply,
         capturedTarget,
-        demand.referenceDeferredStepIndex
+        demand.laterDeferredStepIndex
       )
     yield certify(
       rootBoard,
-      referenceVacating,
-      playedDeferred,
-      playedReply,
-      referenceDeferred,
+      vacatingMove,
+      immediateDeferredMove,
+      immediateCaptureReply,
+      laterDeferredMove,
       capturedTarget,
-      referenceBranch,
-      playedBranch,
+      vacatingBranch,
+      immediateBranch,
       absenceAuthorities,
       stateAuthorities,
-      referenceLineRecord,
-      playedLineRecord,
-      referenceReplay,
-      playedReplay,
-      demand.referenceDeferredStepIndex
+      subject,
+      vacating,
+      immediate,
+      demand.laterDeferredStepIndex
     )
 
   private def certify(
       rootBoard: String,
-      referenceVacating: RecordBoundLegalMoveOccurrence,
-      playedDeferred: RecordBoundLegalMoveOccurrence,
-      playedReply: RecordBoundLegalMoveOccurrence,
-      referenceDeferred: RecordBoundLegalMoveOccurrence,
+      vacatingMove: RecordBoundLegalMoveOccurrence,
+      immediateDeferredMove: RecordBoundLegalMoveOccurrence,
+      immediateCaptureReply: RecordBoundLegalMoveOccurrence,
+      laterDeferredMove: RecordBoundLegalMoveOccurrence,
       capturedTarget: RelationColoredPieceWitness,
-      referenceBranch: CausalBranchOccurrence,
-      playedBranch: CausalBranchOccurrence,
+      vacatingBranch: CausalBranchOccurrence,
+      immediateBranch: CausalBranchOccurrence,
       absenceAuthorities: List[(Int, ClosedRelationAbsenceAuthority)],
       stateAuthorities: List[StateAuthority],
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      vacating: CertifiedRootOccurrence,
+      immediate: CertifiedRootOccurrence,
       deferredIndex: Int
   ): CertifiedCaptureExclusionMoveOrder =
     val proposition = CaptureExclusionMoveOrderCausalAuthority.proposition(
       rootBoard,
-      referenceVacating.movement,
-      playedDeferred.movement,
-      playedReply.movement,
+      vacatingMove.movement,
+      immediateDeferredMove.movement,
+      immediateCaptureReply.movement,
       capturedTarget
     )
     val causalOccurrence = CausalOccurrenceIdentity.from(
       proposition,
-      List(referenceBranch, playedBranch)
+      List(vacatingBranch, immediateBranch)
     )
     val legalUses = List(
       CausalLegalMovePremiseUse.from(
-        CaptureExclusionMoveOrderPremiseRole.ReferenceVacatingMove,
-        referenceVacating,
-        referenceBranch,
+        CaptureExclusionMoveOrderPremiseRole.VacatingMove,
+        vacatingMove,
+        vacatingBranch,
         0
       ),
       CausalLegalMovePremiseUse.from(
-        CaptureExclusionMoveOrderPremiseRole.PlayedDeferredMove,
-        playedDeferred,
-        playedBranch,
+        CaptureExclusionMoveOrderPremiseRole.ImmediateDeferredMove,
+        immediateDeferredMove,
+        immediateBranch,
         0
       ),
       CausalLegalMovePremiseUse.from(
-        CaptureExclusionMoveOrderPremiseRole.PlayedCaptureReply,
-        playedReply,
-        playedBranch,
+        CaptureExclusionMoveOrderPremiseRole.ImmediateCaptureReply,
+        immediateCaptureReply,
+        immediateBranch,
         1
       ),
       CausalLegalMovePremiseUse.from(
-        CaptureExclusionMoveOrderPremiseRole.ReferenceDeferredMove,
-        referenceDeferred,
-        referenceBranch,
+        CaptureExclusionMoveOrderPremiseRole.LaterDeferredMove,
+        laterDeferredMove,
+        vacatingBranch,
         deferredIndex
       )
     )
     val absenceBindings = absenceAuthorities.map { case (index, authority) =>
       CausalClosedAbsenceBinding.afterStep(
-        CaptureExclusionMoveOrderAbsenceRole.ReferenceCaptureReplyAbsent,
+        CaptureExclusionMoveOrderAbsenceRole.CaptureReplyAbsent,
         authority,
-        referenceBranch,
+        vacatingBranch,
         index
       )
     }
@@ -680,15 +714,16 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
     )
     val semantic = CaptureExclusionMoveOrderSemanticProof(
       proposition,
-      referenceVacating.movement,
-      playedDeferred.movement,
-      playedReply.movement,
+      vacatingMove.movement,
+      immediateDeferredMove.movement,
+      immediateCaptureReply.movement,
       capturedTarget
     )
     val occurrence = CaptureExclusionMoveOrderOccurrence(proofSet)
     val dependencyManifest = CaptureExclusionMoveOrderDependencyManifest(
-      referenceLineRecord,
-      playedLineRecord,
+      subject,
+      vacating,
+      immediate,
       proofSet
     )
     val dependency = BoundedCausalDependencyFingerprint.from(dependencyManifest)
@@ -697,16 +732,17 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       occurrence,
       dependency,
       dependencyManifest,
-      referenceLineRecord,
-      playedLineRecord,
-      referenceReplay,
-      playedReplay,
-      legalUses.zip(List(referenceVacating, playedDeferred, playedReply, referenceDeferred)),
+      subject,
+      vacating,
+      immediate,
+      legalUses.zip(
+        List(vacatingMove, immediateDeferredMove, immediateCaptureReply, laterDeferredMove)
+      ),
       path.closedAbsenceUses.zip(absenceAuthorities.map(_._2)),
       path.closedStateUses.zip(stateAuthorities.map(_.authority))
     )
 
-  private def referenceAbsences(
+  private def vacatingBranchAbsences(
       lineRecord: EvidenceRecord,
       replay: CanonicalLineReplay,
       reply: RecordBoundLegalMoveOccurrence,
@@ -726,9 +762,9 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
     )
 
   private def retainedStates(
-      referenceLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      referenceBranch: CausalBranchOccurrence,
+      vacatingLineRecord: EvidenceRecord,
+      vacatingReplay: CanonicalLineReplay,
+      vacatingBranch: CausalBranchOccurrence,
       deferred: RecordBoundLegalMoveOccurrence,
       reply: RecordBoundLegalMoveOccurrence,
       target: RelationColoredPieceWitness,
@@ -736,37 +772,37 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
   ): Option[List[StateAuthority]] =
     val replyActor = coloredOrigin(reply.movement)
     val deferredActor = coloredOrigin(deferred.movement)
-    val referenceStates = (0 to deferredIndex).toList.flatMap { index =>
+    val vacatingStates = (0 to deferredIndex).toList.flatMap { index =>
       val exact = List(
         stateAt(
-          referenceLineRecord,
-          referenceReplay,
-          referenceBranch,
+          vacatingLineRecord,
+          vacatingReplay,
+          vacatingBranch,
           index,
-          CaptureExclusionMoveOrderStateRole.ReferenceVacatedTarget,
+          CaptureExclusionMoveOrderStateRole.VacatedTarget,
           (occurrence, scope) => occurrence.existingVacancyState(target.square, scope)
         ),
         stateAt(
-          referenceLineRecord,
-          referenceReplay,
-          referenceBranch,
+          vacatingLineRecord,
+          vacatingReplay,
+          vacatingBranch,
           index,
-          CaptureExclusionMoveOrderStateRole.ReferenceReplyActor,
+          CaptureExclusionMoveOrderStateRole.ReplyActor,
           (occurrence, scope) => occurrence.existingOccupantState(replyActor, scope)
         )
       )
       exact ++ Option.when(index < deferredIndex)(
         stateAt(
-          referenceLineRecord,
-          referenceReplay,
-          referenceBranch,
+          vacatingLineRecord,
+          vacatingReplay,
+          vacatingBranch,
           index,
-          CaptureExclusionMoveOrderStateRole.ReferenceDeferredActor,
+          CaptureExclusionMoveOrderStateRole.DeferredActor,
           (occurrence, scope) => occurrence.existingOccupantState(deferredActor, scope)
         )
       )
     }
-    traverse(referenceStates)(identity)
+    traverse(vacatingStates)(identity)
 
   private def stateAt(
       lineRecord: EvidenceRecord,

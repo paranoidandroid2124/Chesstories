@@ -135,12 +135,7 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
       .fromHistory(history.segmentReplaySteps)
       .getOrElse(fail("expected a canonical pawn-break replay"))
     val breakStep :: replyStep :: followUpStep :: Nil = replay.replaySteps: @unchecked
-    val line = LineNodeRef(
-      "pawn-break-follow-up-owner",
-      breakStep.moveUci,
-      1,
-      LineNodeRole.BestReference
-    )
+    val line = LineNodeRef("pawn-break-follow-up-owner", breakStep.moveUci)
     val lineRecord = EvidenceRecord(
       EvidenceRef(
         "pawn-break-follow-up-owner-evidence",
@@ -148,7 +143,7 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
         EvidenceLayer.Line,
         PositionNodeRef(fen, 0, replay.legalSteps.headOption.map(_.move.piece.color)),
         Some(line),
-        line.role.scope,
+        EvidenceScope.LegalLine,
         EvidenceConfidence.LegalReplayVerified
       ),
       LineFactEvidence.fromCertifiedReplay(line, replay)

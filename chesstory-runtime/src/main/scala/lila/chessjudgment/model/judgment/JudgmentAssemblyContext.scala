@@ -4,15 +4,41 @@ import chess.Color
 import lila.chessjudgment.analysis.position.PositionAnalysis
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
 
-final case class AdmittedReviewLine(
-    role: LineNodeRole,
-    rank: Int,
-    evaluation: CandidateLineEvaluation,
+final case class AdmittedLegalLine(
+    rootMove: String,
     replay: CanonicalLineReplay,
     predecessorReplay: Option[CanonicalLineReplay] = None
 ):
+  require(rootMove.nonEmpty, "an admitted LegalLine needs its canonical root move")
+  require(
+    rootMove == EvidenceRef.normalizeMove(rootMove),
+    "an admitted LegalLine root move must be canonical"
+  )
+  require(
+    replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, rootMove)),
+    "an admitted LegalLine replay must begin with its declared root move"
+  )
+
+final case class AdmittedAssessmentCandidate(
+    lineRootMove: String,
+    role: LineNodeRole,
+    rank: Int,
+    evaluation: CandidateLineEvaluation
+):
+  require(rank >= 1, "an assessment candidate rank must be positive")
+  require(lineRootMove.nonEmpty, "an assessment candidate needs its LegalLine root move")
+  require(
+    lineRootMove == EvidenceRef.normalizeMove(lineRootMove),
+    "an assessment candidate LegalLine root move must be canonical"
+  )
+
   def rootMove: Option[String] =
     evaluation.moves.headOption.map(_.trim.toLowerCase)
+
+  require(
+    rootMove.exists(EvidenceRef.sameMove(_, lineRootMove)),
+    "an assessment candidate must reference the LegalLine with the same root move"
+  )
 
 final case class LineRootOccurrence(
     start: PositionNodeRef,
@@ -21,6 +47,87 @@ final case class LineRootOccurrence(
 ):
   require(transitionEvidenceId.trim.nonEmpty, "a line-root occurrence requires its exact transition")
 
+final case class ExplanationSubjectOccurrence private[chessjudgment] (
+    occurrenceId: String,
+    line: LineNodeRef,
+    lineOwnerEvidenceId: String,
+    transitionEvidenceId: String,
+    moveUci: String,
+    start: PositionNodeRef,
+    destination: PositionNodeRef,
+    rootProvenance: CausalRootProvenance
+):
+  require(occurrenceId == transitionEvidenceId, "the subject occurrence id must be its exact transition owner")
+  require(lineOwnerEvidenceId.nonEmpty, "an explanation subject needs its LegalLine owner")
+  require(
+    rootProvenance == CausalRootProvenance.ObservedGameRoot,
+    "an explanation subject must be the history-observed root occurrence"
+  )
+
+  private[chessjudgment] val stableKey: String =
+    BoundedCausalIdentity.digest(List(
+      "explanation-subject-occurrence:v1",
+      occurrenceId,
+      BoundedCausalIdentity.lineKey(line),
+      lineOwnerEvidenceId,
+      transitionEvidenceId,
+      EvidenceRef.normalizeMove(moveUci),
+      PrincipalVariationEvidence.normalizeFen(start.fen),
+      start.ply.toString,
+      PrincipalVariationEvidence.normalizeFen(destination.fen),
+      destination.ply.toString,
+      rootProvenance.toString
+    ))
+
+/** One graph-owned line root with its exact LegalLine replay and transition.
+  * Selection roles and engine ranks do not decide whether the root was
+  * observed. That provenance is closed against the admitted history move.
+  */
+private[chessjudgment] final case class CertifiedRootOccurrence private[chessjudgment] (
+    line: LineNodeRef,
+    lineOwner: EvidenceRecord,
+    replay: CanonicalLineReplay,
+    occurrence: LineRootOccurrence,
+    transition: MoveTransitionEdge,
+    transitionOwner: EvidenceRecord,
+    rootProvenance: CausalRootProvenance
+):
+  val rootStep: LineReplayStep = replay.replaySteps.head
+
+  def isObserved: Boolean =
+    rootProvenance == CausalRootProvenance.ObservedGameRoot
+
+  def parentSources: List[EvidenceRef] =
+    List(lineOwner.ref, transitionOwner.ref).sortBy(_.id)
+
+  def publicOccurrence: ExplanationSubjectOccurrence =
+    ExplanationSubjectOccurrence(
+      occurrence.transitionEvidenceId,
+      line,
+      lineOwner.ref.id,
+      transitionOwner.ref.id,
+      EvidenceRef.normalizeMove(transition.moveUci),
+      transition.from,
+      transition.to,
+      rootProvenance
+    )
+
+  def remainsCertified: Boolean =
+    CertifiedLineReplayRecord.from(lineOwner).exists(authority =>
+      authority.line == line && authority.replay == replay
+    ) &&
+      transitionOwner.ref == transition.evidence &&
+      (transitionOwner.payload match
+        case payload @ MoveTransitionEvidence(moveUci, from, to, _) =>
+          moveUci == transition.moveUci && from == transition.from && to == transition.to &&
+            payload.canonicalTransitionProof.exists(
+              _.provesMove(moveUci, from, to, transitionOwner.ref.scope)
+            )
+        case _ => false) &&
+      occurrence.start == transition.from && occurrence.destination == transition.to &&
+      occurrence.transitionEvidenceId == transition.evidence.id &&
+      replay.replaySteps.headOption.contains(rootStep)
+
 final case class AdmittedMoveReviewInput(
     beforeFen: String,
     playedMoveUci: String,
@@ -28,23 +135,52 @@ final case class AdmittedMoveReviewInput(
     sideToMove: Option[Color],
     afterPlayedFen: String,
     afterReferenceFen: Option[String],
-    lines: List[AdmittedReviewLine],
+    legalLines: List[AdmittedLegalLine],
+    assessmentCandidates: List[AdmittedAssessmentCandidate],
     admittedRootRankingPair: Option[AdmittedRootRankingPair],
     positionHistory: CanonicalPositionHistory
 ):
-  private val admittedRootMoves = lines.flatMap(_.rootMove)
+  private val admittedRootMoves = legalLines.map(line => EvidenceRef.normalizeMove(line.rootMove))
   require(
-    admittedRootMoves.size == lines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,
+    admittedRootMoves.size == legalLines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,
     "one root move must have exactly one admitted LegalLine owner"
   )
+  require(
+    assessmentCandidates.map(candidate => EvidenceRef.normalizeMove(candidate.lineRootMove)).distinct.size ==
+      assessmentCandidates.size,
+    "one admitted LegalLine may have at most one assessment projection"
+  )
+  require(
+    assessmentCandidates.forall { candidate =>
+      legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, candidate.lineRootMove)) match
+        case line :: Nil =>
+          line.replay.replaySteps.map(step => EvidenceRef.normalizeMove(step.moveUci)) ==
+            candidate.evaluation.moves.map(EvidenceRef.normalizeMove)
+        case _ => false
+    },
+    "every assessment candidate must bind the full replay of one admitted LegalLine"
+  )
+  require(
+    assessmentCandidates.count(candidate => EvidenceRef.sameMove(candidate.lineRootMove, playedMoveUci)) == 1,
+    "the observed move needs exactly one assessment projection"
+  )
+  require(
+    assessmentCandidates.count(_.role == LineNodeRole.BestReference) == 1,
+    "an admitted review needs exactly one assessment reference projection"
+  )
 
-  def playedRootLineOwner: Option[AdmittedReviewLine] =
-    lines.filter(_.rootMove.exists(EvidenceRef.sameMove(_, playedMoveUci))) match
+  def playedRootLineOwner: Option[AdmittedLegalLine] =
+    legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, playedMoveUci)) match
       case line :: Nil => Some(line)
       case _           => None
 
-  def referenceLine: Option[AdmittedReviewLine] =
-    lines.filter(_.role == LineNodeRole.BestReference) match
+  def referenceCandidate: Option[AdmittedAssessmentCandidate] =
+    assessmentCandidates.filter(_.role == LineNodeRole.BestReference) match
+      case line :: Nil => Some(line)
+      case _           => None
+
+  def legalLineFor(candidate: AdmittedAssessmentCandidate): Option[AdmittedLegalLine] =
+    legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, candidate.lineRootMove)) match
       case line :: Nil => Some(line)
       case _           => None
 
@@ -52,13 +188,13 @@ final case class JudgmentAssemblyContext(
     input: AdmittedMoveReviewInput,
     positions: List[PositionNode],
     positionAnalyses: Map[PositionNodeRef, PositionAnalysis] = Map.empty,
+    legalLines: List[LegalLineNode],
     lines: List[CandidateLineNode],
     transitions: List[MoveTransitionEdge],
     lineReplays: Map[LineNodeRef, CanonicalLineReplay] = Map.empty,
     transitionReplays: Map[String, CanonicalLineReplay] = Map.empty,
     lineRootOccurrences: Map[LineNodeRef, LineRootOccurrence] = Map.empty,
-    evidenceGraph: TypedEvidenceGraph,
-    claims: List[JudgmentClaim]
+    evidenceGraph: TypedEvidenceGraph
 ):
   def position(role: PositionNodeRole): Option[PositionNode] =
     exactlyOne(positions.filter(_.role == role))
@@ -83,13 +219,67 @@ final case class JudgmentAssemblyContext(
   ): Option[LineRootOccurrence] =
     lineRootOccurrences.get(line)
 
+  /** Sole role-neutral authority for the root occurrence of one admitted
+    * line. It joins already registered owners only; no board fact is replayed
+    * or recomputed here.
+    */
+  private[chessjudgment] def certifiedRootOccurrence(
+      line: LineNodeRef
+  ): Option[CertifiedRootOccurrence] =
+    for
+      registeredLine <- legalLines.find(_.ref == line)
+      lineOwner <- evidenceGraph.uniqueProofEligibleLineFactRecordFor(line).map(_._1)
+      replay <- lineReplay(line)
+      occurrence <- lineRootOccurrence(line)
+      transition <- transitions.filter(_.evidence.id == occurrence.transitionEvidenceId) match
+        case exact :: Nil => Some(exact)
+        case _            => None
+      transitionOwner <- evidenceGraph.record(transition.evidence)
+      if evidenceGraph.proofEligible(transitionOwner)
+      transitionReplay <- transitionReplay(transition)
+      rootStep <- replay.replaySteps.headOption
+      exactTransitionStep <- transitionReplay.replaySteps match
+        case exact :: Nil => Some(exact)
+        case _            => None
+      if registeredLine.evidence == lineOwner.ref
+      if lineOwner.ref.line.contains(line)
+      if occurrence.start == transition.from && occurrence.destination == transition.to
+      if rootStep == exactTransitionStep
+      if EvidenceRef.sameMove(rootStep.moveUci, transition.moveUci)
+      if PrincipalVariationEvidence.sameBoardState(rootStep.fenBefore, transition.from.fen)
+      if PrincipalVariationEvidence.sameBoardState(rootStep.fenAfter, transition.to.fen)
+    yield
+      val provenance =
+        if isAdmittedObservedRoot(transition, rootStep) then CausalRootProvenance.ObservedGameRoot
+        else CausalRootProvenance.CounterfactualAnalyzedRoot
+      CertifiedRootOccurrence(
+        line,
+        lineOwner,
+        replay,
+        occurrence,
+        transition,
+        transitionOwner,
+        provenance
+      )
+
+  private[chessjudgment] def certifiedRootOccurrences: Option[List[CertifiedRootOccurrence]] =
+    val certified = legalLines.map(line => certifiedRootOccurrence(line.ref))
+    Option.when(certified.forall(_.nonEmpty)) {
+      val exact = certified.flatten
+      require(
+        exact.count(_.isObserved) == 1,
+        "an admitted review must have exactly one history-observed root occurrence"
+      )
+      exact
+    }
+
   private[chessjudgment] def lineForRootTransition(
       edge: MoveTransitionEdge
-  ): Option[CandidateLineNode] =
+  ): Option[LegalLineNode] =
     lineRootOccurrences.collect {
       case (line, occurrence) if occurrence.transitionEvidenceId == edge.evidence.id => line
     }.toList match
-      case lineRef :: Nil => lines.find(_.ref == lineRef)
+      case lineRef :: Nil => legalLines.find(_.ref == lineRef)
       case Nil            => None
       case _ =>
         throw IllegalArgumentException(
@@ -174,19 +364,18 @@ final case class JudgmentAssemblyContext(
           case None =>
             copy(positions = accepted, positionAnalyses = positionAnalyses.updated(node.ref, analysis))
 
-  def withLine(line: CandidateLineNode, replay: CanonicalLineReplay): JudgmentAssemblyContext =
+  def withLegalLine(line: LegalLineNode, replay: CanonicalLineReplay): JudgmentAssemblyContext =
     require(
       replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, line.ref.rootMove)),
-      "a candidate line replay must begin with its registered root move"
+      "a LegalLine replay must begin with its registered root move"
     )
     val updated = appendWithoutCollision(
-      items = lines,
+      items = legalLines,
       item = line,
       sameIdentity = (left, right) => left.ref.id == right.ref.id,
-      sameExclusiveRole = (left, right) =>
-        left.role == right.role && Set(LineNodeRole.Played, LineNodeRole.BestReference)(left.role),
+      sameExclusiveRole = (_, _) => false,
       identity = s"line '${line.ref.id}'",
-      role = s"line role '${line.role}'"
+      role = "LegalLine owner"
     )
     updated match
       case None =>
@@ -199,7 +388,25 @@ final case class JudgmentAssemblyContext(
       case Some(accepted) =>
         lineReplays.get(line.ref) match
           case Some(_) => throw IllegalArgumentException(s"line '${line.ref.id}' replay collision")
-          case None => copy(lines = accepted, lineReplays = lineReplays.updated(line.ref, replay))
+          case None => copy(legalLines = accepted, lineReplays = lineReplays.updated(line.ref, replay))
+
+  def withCandidateLine(line: CandidateLineNode): JudgmentAssemblyContext =
+    require(
+      legalLines.exists(owner => owner.ref == line.ref && owner.evidence == line.lineEvidence),
+      s"assessment candidate '${line.ref.id}' must reference its registered LegalLine owner"
+    )
+    val updated = appendWithoutCollision(
+      items = lines,
+      item = line,
+      sameIdentity = (left, right) => left.ref == right.ref,
+      sameExclusiveRole = (left, right) =>
+        left.role == right.role && Set(LineNodeRole.Played, LineNodeRole.BestReference)(left.role),
+      identity = s"assessment line '${line.ref.id}'",
+      role = s"assessment line role '${line.role}'"
+    )
+    updated match
+      case None           => this
+      case Some(accepted) => copy(lines = accepted)
 
   def withTransition(
       edge: MoveTransitionEdge,
@@ -252,14 +459,13 @@ final case class JudgmentAssemblyContext(
       line: LineNodeRef,
       edge: MoveTransitionEdge
   ): JudgmentAssemblyContext =
-    val exactLine = lines.find(_.ref == line)
+    val exactLine = legalLines.find(_.ref == line)
     val exactEdge = transitions.find(_.evidence.id == edge.evidence.id)
     val exactStep = lineReplays.get(line).flatMap(_.replaySteps.headOption)
     require(
-      exactLine.exists(candidate =>
-        edge.role.acceptsLineOwnerRole(candidate.role) &&
-          candidate.evidence.position == edge.from &&
-          EvidenceRef.sameMove(candidate.ref.rootMove, edge.moveUci)
+      exactLine.exists(owner =>
+        owner.evidence.position == edge.from &&
+          EvidenceRef.sameMove(owner.ref.rootMove, edge.moveUci)
       ) &&
         exactEdge.contains(edge) &&
         positions.exists(_.ref == edge.from) &&
@@ -293,21 +499,23 @@ final case class JudgmentAssemblyContext(
   def withEvidence(records: List[EvidenceRecord]): JudgmentAssemblyContext =
     copy(evidenceGraph = evidenceGraph.addAll(records))
 
-  def withClaim(claim: JudgmentClaim): JudgmentAssemblyContext =
-    claims.find(_.id == claim.id) match
-      case None =>
-        copy(claims = claims :+ claim)
-      case Some(existing) if existing == claim =>
-        this
-      case Some(_) =>
-        throw IllegalArgumentException(
-          s"claim id collision for '${claim.id}': existing claim differs from the attempted addition"
-        )
-
   private def exactlyOne[A](items: List[A]): Option[A] =
     items match
       case item :: Nil => Some(item)
       case _           => None
+
+  private def isAdmittedObservedRoot(
+      edge: MoveTransitionEdge,
+      rootStep: LineReplayStep
+  ): Boolean =
+    input.positionHistory.currentPly == input.beforePly &&
+      PrincipalVariationEvidence.sameBoardState(input.positionHistory.currentFen, input.beforeFen) &&
+      edge.from.ply == input.beforePly &&
+      PrincipalVariationEvidence.sameBoardState(edge.from.fen, input.beforeFen) &&
+      EvidenceRef.sameMove(edge.moveUci, input.playedMoveUci) &&
+      EvidenceRef.sameMove(rootStep.moveUci, input.playedMoveUci) &&
+      PrincipalVariationEvidence.sameBoardState(edge.to.fen, input.afterPlayedFen) &&
+      PrincipalVariationEvidence.sameBoardState(rootStep.fenAfter, input.afterPlayedFen)
 
   private def appendWithoutCollision[A](
       items: List[A],
@@ -336,11 +544,11 @@ object JudgmentAssemblyContext:
       input = input,
       positions = Nil,
       positionAnalyses = Map.empty,
+      legalLines = Nil,
       lines = Nil,
       transitions = Nil,
       lineReplays = Map.empty,
       transitionReplays = Map.empty,
       lineRootOccurrences = Map.empty,
-      evidenceGraph = evidenceGraph,
-      claims = Nil
+      evidenceGraph = evidenceGraph
     )

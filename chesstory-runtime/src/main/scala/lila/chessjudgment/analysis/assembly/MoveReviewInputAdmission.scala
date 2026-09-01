@@ -21,7 +21,8 @@ import lila.chessjudgment.model.judgment.{
   CanonicalLineReplay,
   AdmittedRootRankingPair,
   LineNodeRole,
-  AdmittedReviewLine,
+  AdmittedLegalLine,
+  AdmittedAssessmentCandidate,
   AdmittedMoveReviewInput,
   PlayerFacingPositionAction
 }
@@ -74,11 +75,11 @@ object MoveReviewInputAdmission:
       automaticTerminal: Option[AutomaticTerminal]
   )
 
-  /**
-   * Prepares the sole v6 player review. The unrestricted root bundle owns the
-   * reference ranking; a focused comparison is admitted only when the played
-   * move was outside that bundle.
-   */
+  /** Prepares the sole v6 player review. The root-search bundle owns the
+    * assessment ranking; a focused comparison is admitted only when the
+    * played move was outside that bundle. Every unique replay actually
+    * produced by those two reports remains available as a LegalLine.
+    */
   def prepareFocusedMoveReview(
       positionHistory: CanonicalPositionHistory,
       playedMoveUci: String,
@@ -155,26 +156,32 @@ object MoveReviewInputAdmission:
             )
           )
         else
-          val reviewEvaluations =
+          val (legalLineEvaluations, assessmentEvaluations) =
             if admittedComparison.nonEmpty then
               val comparisonByMove = admittedComparison.map(value =>
                 EvidenceRef.normalizeMove(value.evaluation.moves.head) -> value
               ).toMap
-              // Root owns the reference evaluation and trajectory. The focused
-              // best line has already certified the same evaluation point, so
-              // only its newly covered played line is consumed here.
-              List(best, comparisonByMove(playedMove)) ++
-                rankedRoot.filterNot(value =>
-                  Set(bestMove, playedMove)(EvidenceRef.normalizeMove(value.evaluation.moves.head))
-                )
-            else rankedRoot
+              val focusedPlayed = comparisonByMove(playedMove)
+              val rootWithoutBest = rankedRoot.filterNot(value =>
+                EvidenceRef.sameMove(value.evaluation.moves.head, bestMove)
+              )
+              // Root analysis and the focused played search are both real
+              // producers. Their unique replays form the LegalLine inventory,
+              // while every evaluation-ready input retains its assessment
+              // projection independently.
+              (
+                rankedRoot ++ List(focusedPlayed),
+                List(best, focusedPlayed) ++ rootWithoutBest
+              )
+            else (rankedRoot, rankedRoot)
           for
             prepared <- assembleAdmittedReview(
               positionHistory,
               playedMove,
-              reviewEvaluations
+              legalLineEvaluations,
+              assessmentEvaluations
             )
-            referenceMove <- prepared.referenceLine.flatMap(_.rootMove)
+            referenceMove <- prepared.referenceCandidate.flatMap(_.rootMove)
             _ <- Option.when(EvidenceRef.sameMove(referenceMove, bestMove))((): Unit)
             admittedRootRanking = rankedRoot.map(admitted =>
               EvidenceRef.normalizeMove(admitted.evaluation.moves.head)
@@ -221,6 +228,7 @@ object MoveReviewInputAdmission:
       assembleAdmittedReview(
         history,
         playedMove,
+        admitted,
         admitted
       )
     }
@@ -228,21 +236,44 @@ object MoveReviewInputAdmission:
   private def assembleAdmittedReview(
       history: CanonicalPositionHistory,
       playedMove: String,
-      variations: List[AdmittedEvaluation]
+      legalLineEvaluations: List[AdmittedEvaluation],
+      assessmentEvaluations: List[AdmittedEvaluation]
   ): Option[AdmittedMoveReviewInput] =
+    val legalRootMoves = legalLineEvaluations
+      .flatMap(_.evaluation.moves.headOption)
+      .map(EvidenceRef.normalizeMove)
+    val assessmentRootMoves = assessmentEvaluations
+      .flatMap(_.evaluation.moves.headOption)
+      .map(EvidenceRef.normalizeMove)
+    val assessmentReplaysOwned = assessmentEvaluations.forall { assessment =>
+      assessment.evaluation.moves.headOption.map(EvidenceRef.normalizeMove).exists { rootMove =>
+        legalLineEvaluations.filter(legal =>
+          legal.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, rootMove))
+        ) match
+          case legal :: Nil => legal.replay == assessment.replay
+          case _            => false
+      }
+    }
+    if legalRootMoves.size != legalLineEvaluations.size ||
+        legalRootMoves.distinct.size != legalRootMoves.size ||
+        assessmentRootMoves.size != assessmentEvaluations.size ||
+        assessmentRootMoves.distinct.size != assessmentRootMoves.size ||
+        !assessmentReplaysOwned
+    then None
+    else
       val canonicalBeforeFen = history.currentFen
       val beforePly = history.currentPly
       val side = Some(history.currentPosition.color)
       val ranked = preferredRankedEvaluations(
-        variations,
+        assessmentEvaluations,
         side
       ).zipWithIndex
       val reference = ranked.headOption.map { case (admitted, index) =>
-        AdmittedReviewLine(
-          LineNodeRole.BestReference,
-          index + 1,
-          admitted.evaluation,
-          admitted.replay
+        AdmittedAssessmentCandidate(
+          lineRootMove = EvidenceRef.normalizeMove(admitted.evaluation.moves.head),
+          role = LineNodeRole.BestReference,
+          rank = index + 1,
+          evaluation = admitted.evaluation
         )
       }
       val playedAdmission =
@@ -261,11 +292,11 @@ object MoveReviewInputAdmission:
             )
           }
           .map { case (admitted, index) =>
-            AdmittedReviewLine(
-              LineNodeRole.Played,
-              index + 1,
-              admitted.evaluation,
-              admitted.replay
+            AdmittedAssessmentCandidate(
+              lineRootMove = EvidenceRef.normalizeMove(admitted.evaluation.moves.head),
+              role = LineNodeRole.Played,
+              rank = index + 1,
+              evaluation = admitted.evaluation
             )
           }
       val alternatives =
@@ -274,17 +305,26 @@ object MoveReviewInputAdmission:
             reference.exists(_.rank == index + 1) || playedAdmission.exists(_._2 == index)
           }
           .map { case (admitted, index) =>
-            AdmittedReviewLine(
-              LineNodeRole.Alternative,
-              index + 1,
-              admitted.evaluation,
-              admitted.replay
+            AdmittedAssessmentCandidate(
+              lineRootMove = EvidenceRef.normalizeMove(admitted.evaluation.moves.head),
+              role = LineNodeRole.Alternative,
+              rank = index + 1,
+              evaluation = admitted.evaluation
             )
           }
-      val lines = reference.toList ++ played.toList ++ alternatives
+      val candidates = reference.toList ++ played.toList ++ alternatives
+      val legalLines = legalLineEvaluations.map { admitted =>
+        AdmittedLegalLine(
+          rootMove = EvidenceRef.normalizeMove(admitted.evaluation.moves.head),
+          replay = admitted.replay
+        )
+      }
       Option
-        .when(lines.map(line => line.role -> line.rank).distinct.size == lines.size)(lines)
-        .flatMap { exactLines =>
+        .when(
+          candidates.map(line => line.role -> line.rank).distinct.size == candidates.size &&
+            legalLines.map(_.rootMove).distinct.size == legalLines.size
+        )(candidates)
+        .flatMap { exactCandidates =>
           playedAdmission.flatMap { case (admittedPlayed, _) =>
             reference.flatMap { _ =>
               for
@@ -292,7 +332,11 @@ object MoveReviewInputAdmission:
                 graphAfterPlayed <- admittedPlayed.replay.replaySteps.headOption.map(_.fenAfter)
                 afterReference = reference
                   .filterNot(_.rootMove.exists(EvidenceRef.sameMove(_, graphPlayedMove)))
-                  .flatMap(_.replay.replaySteps.headOption)
+                  .flatMap(candidate =>
+                    legalLines
+                      .find(line => EvidenceRef.sameMove(line.rootMove, candidate.lineRootMove))
+                      .flatMap(_.replay.replaySteps.headOption)
+                  )
                   .map(_.fenAfter)
               yield AdmittedMoveReviewInput(
                 beforeFen = canonicalBeforeFen,
@@ -301,7 +345,8 @@ object MoveReviewInputAdmission:
                 sideToMove = side,
                 afterPlayedFen = graphAfterPlayed,
                 afterReferenceFen = afterReference,
-                lines = exactLines,
+                legalLines = legalLines,
+                assessmentCandidates = exactCandidates,
                 admittedRootRankingPair = None,
                 positionHistory = history
               )
@@ -417,9 +462,9 @@ object MoveReviewInputAdmission:
       case CandidateLineEvaluation.ExactAutomaticTerminal(moves, terminal) =>
         CandidateLineEvaluation.ExactAutomaticTerminal(moves.map(EvidenceRef.normalizeMove), terminal)
 
-  /** The focused best result is a comparison calibration, not a second
-    * reference owner. Different continuations are harmless only when they
-    * certify the exact same score/mate or automatic-terminal outcome.
+  /** The focused best result is a comparison calibration, not a second line
+    * owner. Its PV suffix may legitimately differ because it is not admitted
+    * into the LegalLine inventory.
     */
   private def sameReferenceEvaluationPoint(
       root: CandidateLineEvaluation,

@@ -71,20 +71,7 @@ private[chessjudgment] object CausalPropositionIdentity:
 private[chessjudgment] trait CausalBranchRole:
   def stableKey: String
 
-/** Shared roles for every exact BestReference-vs-Played causal occurrence.
-  * Family meaning stays in its typed manifest; branch identity is not
-  * redefined once per family.
-  */
-private[chessjudgment] enum ComparedLineBranchRole extends CausalBranchRole:
-  case CounterfactualReference
-  case PlayedRootAnalysisContinuation
-
-  def stableKey: String =
-    this match
-      case CounterfactualReference          => "counterfactual-reference"
-      case PlayedRootAnalysisContinuation   => "played-root-analysis-continuation"
-
-private[chessjudgment] enum CausalRootProvenance:
+enum CausalRootProvenance:
   case CounterfactualAnalyzedRoot
   case ObservedGameRoot
 
@@ -100,18 +87,26 @@ private[chessjudgment] final case class CausalStepOccurrence private[judgment] (
 ):
   require(index >= 0, "a causal step needs a non-negative branch index")
 
-/** Exact ordered path identity. A played branch records only its root move as
-  * observed; every continuation move remains certified analysis.
+/** Exact ordered path identity. An observed branch records only its
+  * history-owned root move as observed; every continuation move remains
+  * certified analysis.
   */
 private[chessjudgment] final case class CausalBranchOccurrence private (
     branchId: String,
     role: CausalBranchRole,
     rootProvenance: CausalRootProvenance,
     line: LineNodeRef,
+    lineOwnerEvidenceId: String,
+    rootTransitionEvidenceId: String,
     steps: List[CausalStepOccurrence],
     rootPositionIdentity: SemanticPositionIdentity
 ):
   require(branchId.matches("[0-9a-f]{64}"), "a causal branch needs a canonical id")
+  require(
+    lineOwnerEvidenceId.nonEmpty && rootTransitionEvidenceId.nonEmpty &&
+      lineOwnerEvidenceId != rootTransitionEvidenceId,
+    "a causal branch needs distinct exact LegalLine and root-transition owners"
+  )
   require(steps.nonEmpty, "a causal branch needs an exact root step")
   require(steps.map(_.index) == steps.indices.toList, "causal steps must preserve their exact order")
   require(
@@ -144,44 +139,30 @@ private[chessjudgment] final case class CausalBranchOccurrence private (
   def stepAt(index: Int): Option[CausalStepOccurrence] = steps.lift(index)
 
 private[chessjudgment] object CausalBranchOccurrence:
-  def certifiedCounterfactual(
+  def fromRootOccurrence(
       role: CausalBranchRole,
-      line: LineNodeRef,
-      replay: CanonicalLineReplay,
+      root: CertifiedRootOccurrence,
       retainedStepCount: Int
   ): CausalBranchOccurrence =
-    val steps = retainedSteps(replay, retainedStepCount)
-    fromCertifiedOccurrences(
-      role,
-      CausalRootProvenance.CounterfactualAnalyzedRoot,
-      line,
-      steps.zipWithIndex.map { case (step, index) =>
-        new CausalStepOccurrence(
-          index,
-          step,
-          line,
-          CausalStepProvenance.CertifiedAnalysisMove
-        )
-      }
+    val steps = retainedSteps(root.replay, retainedStepCount)
+    require(
+      root.line == root.lineOwner.ref.line.getOrElse(
+        throw IllegalArgumentException("a certified root occurrence lost its LegalLine owner")
+      ) && steps.head == root.rootStep,
+      "a causal branch must retain its certified graph-owned root occurrence"
     )
-
-  def observedRootWithAnalyzedContinuation(
-      role: CausalBranchRole,
-      line: LineNodeRef,
-      replay: CanonicalLineReplay,
-      retainedStepCount: Int
-  ): CausalBranchOccurrence =
-    val steps = retainedSteps(replay, retainedStepCount)
     fromCertifiedOccurrences(
       role,
-      CausalRootProvenance.ObservedGameRoot,
-      line,
+      root.rootProvenance,
+      root.line,
+      root.lineOwner.ref.id,
+      root.transitionOwner.ref.id,
       steps.zipWithIndex.map { case (step, index) =>
         new CausalStepOccurrence(
           index,
           step,
-          line,
-          if index == 0 then CausalStepProvenance.ObservedGameMove
+          root.line,
+          if root.isObserved && index == 0 then CausalStepProvenance.ObservedGameMove
           else CausalStepProvenance.CertifiedAnalysisMove
         )
       }
@@ -191,6 +172,8 @@ private[chessjudgment] object CausalBranchOccurrence:
       role: CausalBranchRole,
       rootProvenance: CausalRootProvenance,
       line: LineNodeRef,
+      lineOwnerEvidenceId: String,
+      rootTransitionEvidenceId: String,
       steps: List[CausalStepOccurrence]
   ): CausalBranchOccurrence =
     val rootPositionIdentity = SemanticPositionIdentity.fromFen(steps.headOption.map(_.step.fenBefore).getOrElse(""))
@@ -200,6 +183,8 @@ private[chessjudgment] object CausalBranchOccurrence:
         role.stableKey,
         rootProvenance.toString.toLowerCase,
         BoundedCausalIdentity.lineKey(line),
+        lineOwnerEvidenceId,
+        rootTransitionEvidenceId,
         steps
           .map(step =>
             List(
@@ -211,7 +196,16 @@ private[chessjudgment] object CausalBranchOccurrence:
           .mkString("[", ",", "]")
       )
     )
-    CausalBranchOccurrence(branchId, role, rootProvenance, line, steps, rootPositionIdentity)
+    CausalBranchOccurrence(
+      branchId,
+      role,
+      rootProvenance,
+      line,
+      lineOwnerEvidenceId,
+      rootTransitionEvidenceId,
+      steps,
+      rootPositionIdentity
+    )
 
   private def retainedSteps(
       replay: CanonicalLineReplay,
@@ -224,11 +218,6 @@ private[chessjudgment] object CausalBranchOccurrence:
       "a causal branch may retain only exact steps from its certified replay"
     )
     steps
-
-  private[judgment] def rootProvenanceFor(line: LineNodeRef): CausalRootProvenance =
-    line.role match
-      case LineNodeRole.Played => CausalRootProvenance.ObservedGameRoot
-      case _                   => CausalRootProvenance.CounterfactualAnalyzedRoot
 
 private[chessjudgment] trait CausalPremiseRole:
   def stableKey: String
@@ -284,7 +273,7 @@ private[chessjudgment] object CausalVerticalRelationPremiseUse:
     require(
       stepOccurrence.exists(step =>
         step.step == authority.step && step.line == authority.issuerLine &&
-          authority.scope == step.line.role.scope
+          authority.scope == EvidenceScope.LegalLine
       ),
       "a relation premise must bind its exact graph-owned replay occurrence"
     )
@@ -341,7 +330,6 @@ private[chessjudgment] final case class CausalClosedAbsenceBinding private (
       queryKey,
       PrincipalVariationEvidence.normalizeFen(position.fen),
       position.ply.toString,
-      scope.toString.toLowerCase,
       branchId,
       branchRole.toString.toLowerCase,
       s"after:$afterStepIndex"
@@ -364,7 +352,7 @@ private[chessjudgment] object CausalClosedAbsenceBinding:
     )
     require(
       authority.issuerLine == retainedOccurrence.line &&
-        authority.scope == branch.line.role.scope,
+        authority.scope == EvidenceScope.LegalLine,
       "a closed absence must retain its exact graph-owned branch inventory authority"
     )
     CausalClosedAbsenceBinding(
@@ -395,9 +383,18 @@ private[chessjudgment] object CertifiedLineReplayRecord:
           if ref.producer == EvidenceProducer.LegalLineProducer &&
             ref.layer == EvidenceLayer.Line &&
             ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-            ref.line.contains(line.line) && ref.scope == line.line.role.scope =>
+            ref.line.contains(line.line) && ref.scope == EvidenceScope.LegalLine =>
         line.certifiedReplay.map(CertifiedLineReplayRecord(issuerRecord, _))
       case _ => None
+
+  def exact(
+      source: EvidenceRecord,
+      line: LineNodeRef,
+      replay: CanonicalLineReplay
+  ): Boolean =
+    from(source).exists(authority =>
+      authority.line == line && authority.replay == replay
+    )
 
 /** Sole record-bound authority for one exact absence issued by a closed
   * LegalLine position inventory. L2 families consume this opaque authority;
@@ -478,7 +475,6 @@ private[chessjudgment] final case class RecordBoundVerticalRelationOccurrence pr
     List(
       BoundedCausalIdentity.evidenceRecordKey(issuerRecord),
       BoundedCausalIdentity.lineKey(issuerLine),
-      scope.toString.toLowerCase,
       binding.stableKey
     ).mkString("|")
 
@@ -681,7 +677,7 @@ private[chessjudgment] object CausalLegalMovePremiseUse:
     require(
       retained.exists(step =>
         step.step == authority.step && step.line == authority.issuerLine &&
-          authority.scope == step.line.role.scope
+          authority.scope == EvidenceScope.LegalLine
       ),
       "a legal-move premise must bind its exact graph-owned replay occurrence"
     )
@@ -784,7 +780,6 @@ private[chessjudgment] final case class CausalClosedStateBinding private (
       queryKey,
       PrincipalVariationEvidence.normalizeFen(position.fen),
       position.ply.toString,
-      scope.toString.toLowerCase,
       branchId,
       branchRole.toString.toLowerCase,
       s"after:$afterStepIndex"
@@ -836,7 +831,7 @@ private[chessjudgment] object CausalClosedStateBinding:
       "a closed state position must be the exact after occurrence of its branch step"
     )
     require(
-      authority.issuerLine == retainedOccurrence.line && authority.scope == retainedOccurrence.line.role.scope,
+      authority.issuerLine == retainedOccurrence.line && authority.scope == EvidenceScope.LegalLine,
       "a closed state must retain its exact branch inventory scope"
     )
     CausalClosedStateBinding(
@@ -1038,7 +1033,10 @@ final case class BoundedCausalPublicStep private[chessjudgment] (
 
 final case class BoundedCausalPublicBranch private[chessjudgment] (
     branchId: String,
-    line: LineNodeRef,
+    lineId: String,
+    lineOwnerEvidenceId: String,
+    rootTransitionEvidenceId: String,
+    rootMove: String,
     role: String,
     rootProvenance: String,
     steps: List[BoundedCausalPublicStep]
@@ -1130,7 +1128,10 @@ private[chessjudgment] object BoundedCausalPublicProjection:
   def branch(branch: CausalBranchOccurrence): BoundedCausalPublicBranch =
     BoundedCausalPublicBranch(
       branch.branchId,
-      branch.line,
+      branch.line.id,
+      branch.lineOwnerEvidenceId,
+      branch.rootTransitionEvidenceId,
+      EvidenceRef.normalizeMove(branch.line.rootMove),
       branch.role.stableKey,
       branch.rootProvenance.toString,
       branch.steps.map(step =>
@@ -1318,8 +1319,6 @@ private[chessjudgment] object BoundedCausalIdentity:
   def lineKey(line: LineNodeRef): String =
     List(
       line.id,
-      line.role.toString,
-      line.rank.toString,
       EvidenceRef.normalizeMove(line.rootMove)
     ).mkString(":")
 
@@ -1340,15 +1339,39 @@ private[chessjudgment] object BoundedCausalIdentity:
     ).getOrElse("noncapture")
 
   def evidenceRecordKey(record: EvidenceRecord): String =
-    val ref = record.ref
-    List(
-      ref.id,
-      ref.producer.toString,
-      ref.layer.toString,
-      PrincipalVariationEvidence.normalizeFen(ref.position.fen),
-      ref.position.ply.toString,
-      ref.line.map(lineKey).getOrElse(""),
-      ref.scope.toString,
-      ref.confidence.toString,
-      record.parents.map(_.id).sorted.mkString("[", ",", "]")
-    ).mkString("|")
+    record.payload match
+      case payload: LineFactEvidence =>
+        val line = record.ref.line.getOrElse(
+          throw IllegalArgumentException("a causal LegalLine dependency needs its line occurrence")
+        )
+        val replay = payload.canonicalReplay.getOrElse(
+          throw IllegalArgumentException("a causal LegalLine dependency needs its canonical replay")
+        )
+        List(
+          "legal-line-owner:v2",
+          PrincipalVariationEvidence.normalizeFen(record.ref.position.fen),
+          record.ref.position.ply.toString,
+          EvidenceRef.normalizeMove(line.rootMove),
+          replay.replaySteps.map(stepKey).mkString("[", ",", "]")
+        ).mkString("|")
+      case MoveTransitionEvidence(moveUci, from, to, _) =>
+        List(
+          "move-transition-owner:v2",
+          EvidenceRef.normalizeMove(moveUci),
+          PrincipalVariationEvidence.normalizeFen(from.fen),
+          from.ply.toString,
+          PrincipalVariationEvidence.normalizeFen(to.fen),
+          to.ply.toString
+        ).mkString("|")
+      case _ =>
+        val ref = record.ref
+        List(
+          ref.id,
+          ref.producer.toString,
+          ref.layer.toString,
+          PrincipalVariationEvidence.normalizeFen(ref.position.fen),
+          ref.position.ply.toString,
+          ref.line.map(lineKey).getOrElse(""),
+          ref.confidence.toString,
+          record.parents.map(_.id).sorted.mkString("[", ",", "]")
+        ).mkString("|")

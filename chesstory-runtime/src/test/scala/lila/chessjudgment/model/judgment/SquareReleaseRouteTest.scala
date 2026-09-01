@@ -3,6 +3,10 @@ package lila.chessjudgment.model.judgment
 import chess.White
 import lila.chessjudgment.analysis.assembly.{
   EvidenceFactAssembler,
+  ExplanationRequest,
+  JudgmentProvenanceAllocator,
+  OccurrenceExplanationAssembler,
+  OccurrenceExplanationDemand,
   RawMoveReviewInput,
   RelativeAssessmentAssembler
 }
@@ -17,7 +21,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
 
   test("canonical replay binds the exact position-owned LegalMove occurrence"):
     val replay = certifiedReplay(rootFen, referenceMoves)
-    val line = LineNodeRef("reference-legal-owner", referenceMoves.head, 1, LineNodeRole.BestReference)
+    val line = LineNodeRef("reference-legal-owner", referenceMoves.head)
     val record = lineRecord("reference-legal-owner-record", line, rootFen, replay)
     val occurrence = replay.legalMoveOccurrence(replay.replaySteps.head)
       .getOrElse(fail("expected the exact root LegalMove occurrence"))
@@ -52,16 +56,16 @@ class SquareReleaseRouteTest extends munit.FunSuite:
     assertEquals(exact.semantic.route.map(_.stableKey), List("white:rook>rook:d6-c6"))
     assertEquals(exact.semantic.routePiece, colored("d6", "rook", chess.White))
     assertEquals(exact.semantic.terminal, SquareReleaseRouteTerminal.Occupation)
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
-    assertEquals(exact.occurrence.playedSteps.map(_.moveUci), playedMoves)
+    assertEquals(exact.occurrence.releasedRouteSteps.map(_.moveUci), referenceMoves)
+    assertEquals(exact.occurrence.retainedBlockerSteps.map(_.moveUci), playedMoves)
 
     val path = exact.occurrence.proofPaths.head
     val manifest = path.manifest.asInstanceOf[SquareReleaseRouteManifest]
     assertEquals(
       manifest.supplementalPremiseUses.map(_.asInstanceOf[CausalLegalMovePremiseUse].role),
       List(
-        SquareReleaseRoutePremiseRole.ReferenceReleaseMove,
-        SquareReleaseRoutePremiseRole.ReferenceRouteMove(0)
+        SquareReleaseRoutePremiseRole.ReleaseMove,
+        SquareReleaseRoutePremiseRole.RouteMove(0)
       )
     )
     assertEquals(
@@ -140,8 +144,8 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       case other => fail(s"expected the exact terminal capture, found $other")
     assertEquals(exact.occurrence.routeStepIndices, List(2, 4, 10, 12))
     assertEquals(exact.occurrence.terminalReplyStep.map(_.moveUci), Some("h1b1"))
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), doknjasReference)
-    assertEquals(exact.occurrence.playedSteps.map(_.moveUci), doknjasSibling)
+    assertEquals(exact.occurrence.releasedRouteSteps.map(_.moveUci), doknjasReference)
+    assertEquals(exact.occurrence.retainedBlockerSteps.map(_.moveUci), doknjasSibling)
     assertEquals(exact.occurrence.proofPaths.head.closedStateUses.size, 17)
     assert(exact.remainsCertified)
 
@@ -206,7 +210,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
           EngineLine(siliconSibling, scoreCp = 0, depth = 24)
         )
       )
-    ).map(RelativeAssessmentAssembler.enrichFacts)
+    ).map(context => produceExplanations(RelativeAssessmentAssembler.enrichComparisonEvidence(context)))
       .getOrElse(fail("expected the exact Silicon Road lower facts"))
     val produced = facts.evidenceGraph.records.collect {
       case EvidenceRecord(_, payload: SquareReleaseRouteEvidence, _) => payload
@@ -305,7 +309,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       exactReferenceMoves = extended
     ).head
 
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
+    assertEquals(exact.occurrence.releasedRouteSteps.map(_.moveUci), referenceMoves)
     assertEquals(exact.occurrence.firstRouteStepIndex, 2)
 
   test("a delayed occupation retains every intervening exact vacancy without a horizon cap"):
@@ -339,7 +343,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       exactPlayedMoves = differentReply
     ).headOption.getOrElse(fail("expected the exact sibling obstruction without a same-reply heuristic"))
 
-    assertEquals(exact.occurrence.playedSteps.map(_.moveUci), differentReply)
+    assertEquals(exact.occurrence.retainedBlockerSteps.map(_.moveUci), differentReply)
     assertEquals(
       exact.occurrence.proofPaths.head.closedAbsenceUses.map(_.binding.queryKey),
       List("legal-move-from-to:white:d6:c6")
@@ -395,7 +399,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
         )
       )
     ).getOrElse(fail("expected both legal replay routes"))
-    val facts = RelativeAssessmentAssembler.enrichFacts(lower)
+    val facts = produceExplanations(RelativeAssessmentAssembler.enrichComparisonEvidence(lower))
     val proofs = facts.evidenceGraph.records.collect {
       case EvidenceRecord(_, payload: SquareReleaseRouteEvidence, _) => payload
     }
@@ -405,17 +409,9 @@ class SquareReleaseRouteTest extends munit.FunSuite:
     assertEquals(proofs.map(_.occurrenceId).distinct.size, 1)
     assertEquals(proofs.map(_.dependencyId).distinct.size, 1)
     assertEquals(proofs.flatMap(_.proofPaths.map(_.pathOccurrenceId)).distinct.size, 1)
-    assertEquals(proofs.head.occurrenceProof.map(_.occurrence.firstRouteStepIndex), Some(2))
-    assert(proofs.forall(_.resultSet.exactlyOwns(proofs.map(_.dependencyId))))
-    val reused = RelativeAssessmentAssembler.enrichFacts(facts).evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, _: SquareReleaseRouteEvidence, _) => record
-    }
-    val original = facts.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, _: SquareReleaseRouteEvidence, _) => record
-    }
-    assertEquals(reused.map(_.ref.id), original.map(_.ref.id))
+    assertEquals(proofs.head.occurrenceProof.occurrence.firstRouteStepIndex, 2)
 
-  test("the exact proof reaches MissedSquareRelease Cause and no broader family"):
+  test("the exact proof reaches its occurrence Cause directly"):
     val lower = EvidenceFactAssembler.assemble(
       RawMoveReviewInput(
         fen = rootFen,
@@ -426,31 +422,39 @@ class SquareReleaseRouteTest extends munit.FunSuite:
         )
       )
     ).getOrElse(fail("expected exact lower facts"))
-    val facts = RelativeAssessmentAssembler.enrichFacts(lower)
+    val facts = produceExplanations(RelativeAssessmentAssembler.enrichComparisonEvidence(lower))
     val proofRecords = facts.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, _: SquareReleaseRouteEvidence, _) => record
     }
     assertEquals(proofRecords.size, 1)
     assert(facts.evidenceGraph.proofEligible(proofRecords.head))
     val proofPayload = proofRecords.head.payload.asInstanceOf[SquareReleaseRouteEvidence]
-    assert(proofRecords.head.referencesLine(proofPayload.occurrence.referenceLine))
-    assert(proofRecords.head.referencesLine(proofPayload.occurrence.playedLine))
+    assert(proofRecords.head.referencesLine(proofPayload.occurrence.releasedRouteLine))
+    assert(proofRecords.head.referencesLine(proofPayload.occurrence.retainedBlockerLine))
 
-    val withCauses = RelativeAssessmentAssembler.enrichCauses(facts)
+    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
+      facts,
+      JudgmentProvenanceAllocator.forInput(facts.input),
+      exactDemand(facts)
+    )
     val exactCauses = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.MissedSquareRelease => cause
+      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
+          if cause.proofSource == proofRecords.head.ref => cause
     }
     assertEquals(exactCauses.size, 1)
-    assertEquals(exactCauses.head.sourceSide, RelativeCauseSourceSide.Reference)
-    assertEquals(ClaimFamily.fromCause(exactCauses.head.kind), ClaimFamily.BoundedCausal)
-    assertEquals(
-      withCauses.evidenceGraph.records.collect {
-        case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-            if cause.proofSources.exists(_.id == proofRecords.head.ref.id) => cause.kind
-      },
-      List(RelativeCauseKind.MissedSquareRelease)
+    assertEquals(exactCauses.head.subject, proofPayload.subjectOccurrence)
+
+  private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    OccurrenceExplanationAssembler.enrichProofs(
+      context,
+      JudgmentProvenanceAllocator.forInput(context.input),
+      exactDemand(context)
     )
+
+  private def exactDemand(context: JudgmentAssemblyContext): OccurrenceExplanationDemand =
+    OccurrenceExplanationDemand
+      .resolve(context, ExplanationRequest.forObservedMove(context.input))
+      .getOrElse(fail("expected the exact observed occurrence demand"))
 
   private def deriveProofs(
       route: String,
@@ -460,18 +464,8 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       exactPlayedMoves: List[String] = playedMoves,
       firstRouteIndex: Int = 2
   ): List[CertifiedSquareReleaseRoute] =
-    val referenceLine = LineNodeRef(
-      s"reference-$route",
-      exactReferenceMoves.head,
-      1,
-      LineNodeRole.BestReference
-    )
-    val playedLine = LineNodeRef(
-      s"played-$route",
-      exactPlayedMoves.head,
-      1,
-      LineNodeRole.Played
-    )
+    val referenceLine = LineNodeRef(s"reference-$route", exactReferenceMoves.head)
+    val playedLine = LineNodeRef(s"played-$route", exactPlayedMoves.head)
     val referenceRecord = lineRecord(
       s"reference-source-$route",
       referenceLine,
@@ -484,6 +478,18 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       rootFen,
       playedReplay
     )
+    val releasedRouteRoot = CertifiedRootOccurrenceTestFixture.from(
+      referenceLine,
+      referenceRecord,
+      referenceReplay,
+      CausalRootProvenance.CounterfactualAnalyzedRoot
+    )
+    val retainedBlockerRoot = CertifiedRootOccurrenceTestFixture.from(
+      playedLine,
+      playedRecord,
+      playedReplay,
+      CausalRootProvenance.ObservedGameRoot
+    )
     val demands = for
       releaseStep <- referenceReplay.replaySteps.headOption.toList
       release <- referenceReplay.legalMoveOccurrence(releaseStep).toList
@@ -491,12 +497,9 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       firstRouteLeg <- referenceReplay.legalMoveOccurrence(firstRouteStep).toList
     yield SquareReleaseRouteDemand.occupation(release, firstRouteLeg, firstRouteIndex)
     SquareReleaseRouteProof.certifyDemanded(
-      referenceLine,
-      playedLine,
-      referenceRecord,
-      playedRecord,
-      referenceReplay,
-      playedReplay,
+      retainedBlockerRoot,
+      releasedRouteRoot,
+      retainedBlockerRoot,
       demands.sortBy(_.stableKey)
     )
 
@@ -512,18 +515,8 @@ class SquareReleaseRouteTest extends munit.FunSuite:
   ): List[CertifiedSquareReleaseRoute] =
     val referenceReplay = certifiedReplay(root, referenceMoves)
     val playedReplay = certifiedReplay(root, playedMoves)
-    val referenceLine = LineNodeRef(
-      s"reference-$route",
-      referenceMoves.head,
-      1,
-      LineNodeRole.BestReference
-    )
-    val playedLine = LineNodeRef(
-      s"played-$route",
-      playedMoves.head,
-      1,
-      LineNodeRole.Played
-    )
+    val referenceLine = LineNodeRef(s"reference-$route", referenceMoves.head)
+    val playedLine = LineNodeRef(s"played-$route", playedMoves.head)
     val referenceRecord = lineRecord(
       s"reference-source-$route",
       referenceLine,
@@ -537,6 +530,18 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       root,
       playedReplay,
       rootSide
+    )
+    val releasedRouteRoot = CertifiedRootOccurrenceTestFixture.from(
+      referenceLine,
+      referenceRecord,
+      referenceReplay,
+      CausalRootProvenance.CounterfactualAnalyzedRoot
+    )
+    val retainedBlockerRoot = CertifiedRootOccurrenceTestFixture.from(
+      playedLine,
+      playedRecord,
+      playedReplay,
+      CausalRootProvenance.ObservedGameRoot
     )
     val routeOccurrences = routeIndices.flatMap(index =>
       referenceReplay.replaySteps.lift(index).flatMap(referenceReplay.legalMoveOccurrence)
@@ -558,12 +563,9 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       reply
     )
     SquareReleaseRouteProof.certifyDemanded(
-      referenceLine,
-      playedLine,
-      referenceRecord,
-      playedRecord,
-      referenceReplay,
-      playedReplay,
+      retainedBlockerRoot,
+      releasedRouteRoot,
+      retainedBlockerRoot,
       demands.sortBy(_.stableKey)
     )
 
@@ -579,14 +581,24 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       replay: CanonicalLineReplay,
       side: chess.Color = White
   ): EvidenceRecord =
+    val rootStep = replay.replaySteps.head
+    require(
+      PrincipalVariationEvidence.sameBoardState(fen, rootStep.fenBefore),
+      "a square-release fixture must retain its declared root board"
+    )
     EvidenceRecord(
       EvidenceRef(
         id = id,
         producer = EvidenceProducer.LegalLineProducer,
         layer = EvidenceLayer.Line,
-        position = PositionNodeRef(fen, 0, Some(side), Some("square-release-root")),
+        position = PositionNodeRef(
+          rootStep.fenBefore,
+          rootStep.ply - 1,
+          Some(side),
+          Some("square-release-root")
+        ),
         line = Some(line),
-        scope = line.role.scope,
+        scope = EvidenceScope.LegalLine,
         confidence = EvidenceConfidence.LegalReplayVerified
       ),
       LineFactEvidence.fromCertifiedReplay(line, replay)

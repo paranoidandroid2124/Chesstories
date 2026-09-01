@@ -17,11 +17,10 @@ object LineFactNormalizer:
       scope: EvidenceScope,
       materialSummary: Option[LineMaterialSummary] = None,
       predecessorReplay: Option[CanonicalLineReplay] = None,
-      whitePovMate: Option[Int] = None,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val events = lineEvents(facts, replay, materialSummary)
-    val consequences = lineConsequences(facts, replay, events, materialSummary, whitePovMate)
+    val consequences = lineConsequences(facts, replay, events, materialSummary)
     val ref =
       EvidenceRef(
         id = id,
@@ -168,8 +167,7 @@ object LineFactNormalizer:
       facts: PrincipalVariationEvidence.LineFacts,
       replay: CanonicalLineReplay,
       events: List[LineMoveEvent],
-      materialSummary: Option[LineMaterialSummary],
-      whitePovMate: Option[Int]
+      materialSummary: Option[LineMaterialSummary]
   ): List[LineConsequence] =
     val rootMove = facts.line.moves.headOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
     val rootSide = replay.legalSteps.headOption.map(_.move.piece.color)
@@ -196,7 +194,7 @@ object LineFactNormalizer:
                   _,
                   RelationCheckTerminalState.Checkmate,
                   _
-                ) if mateResultMatches(whitePovMate, mover.side) =>
+                ) =>
               Some(
               LineConsequence(
                 LineConsequenceKind.Mate,
@@ -390,6 +388,3 @@ object LineFactNormalizer:
         }.flatten
       }.flatten
     }
-
-  private def mateResultMatches(whitePovMate: Option[Int], winner: Color): Boolean =
-    whitePovMate.exists(mate => mate != 0 && (mate > 0) == winner.white)

@@ -42,7 +42,7 @@ private[chessjudgment] object CandidateComparisonRecordAuthority:
       case EvidenceRecord(ref, payload: LineFactEvidence, _) =>
         ref.producer == EvidenceProducer.LegalLineProducer && ref.layer == EvidenceLayer.Line &&
           ref.confidence == EvidenceConfidence.LegalReplayVerified && ref.position == root &&
-          ref.line.contains(line) && ref.scope == line.role.scope && payload.line == line &&
+          ref.line.contains(line) && ref.scope == EvidenceScope.LegalLine && payload.line == line &&
           payload.replayIsCertified &&
           payload.rootMove.exists(EvidenceRef.sameMove(_, line.rootMove)) &&
           payload.canonicalReplay.exists(_.replaySteps.headOption.exists(step =>
@@ -56,9 +56,13 @@ private[chessjudgment] object CandidateComparisonRecordAuthority:
       root: PositionNodeRef
   ): Boolean =
     val lines = Set(fact.referenceLine, fact.candidateLine)
+    def expectedScope(line: LineNodeRef): Option[EvidenceScope] =
+      if line == fact.referenceLine then Some(fact.referenceSelection.role.scope)
+      else if line == fact.candidateLine then Some(fact.candidateSelection.role.scope)
+      else None
     val exactRefs = parents.forall(parent =>
       parent.position == root && parent.line.exists(lines) &&
-        parent.line.exists(line => parent.scope == line.role.scope) &&
+        parent.line.flatMap(expectedScope).contains(parent.scope) &&
         ((parent.producer == EvidenceProducer.EngineEvalProducer &&
           parent.confidence == EvidenceConfidence.EngineBacked) ||
           (parent.producer == EvidenceProducer.LegalLineProducer &&

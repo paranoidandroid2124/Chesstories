@@ -2,234 +2,237 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** One graph-owned PlayedVsBest demand and its two admitted line occurrences.
-  * Family certifiers share this lookup; none may independently rediscover the
-  * comparison, line owners, or canonical replays.
+/** Family-private occurrence demands. They share only the graph-certified root
+  * inventory and requested subject. Each family orients branches from its own
+  * exact lower occurrences; selection role, rank, verdict, and comparison
+  * identity never participate.
   */
-private[assembly] final case class ExactPlayedVsBestCausalInput private (
-    comparison: CandidateComparisonFact,
-    demandSource: EvidenceRecord,
-    referenceSource: EvidenceRecord,
-    playedSource: EvidenceRecord,
-    referenceReplay: CanonicalLineReplay,
-    playedReplay: CanonicalLineReplay
-)
+private[assembly] final case class UniqueCheckReplyProofDemand private (
+    subject: CertifiedRootOccurrence,
+    displacementBranch: CertifiedRootOccurrence,
+    immediateCaptureBranch: CertifiedRootOccurrence,
+    lower: UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand
+):
+  require(subject == displacementBranch || subject == immediateCaptureBranch)
 
-private[assembly] object ExactPlayedVsBestCausalInput:
+  def stableKey: String = List(
+    subject.transitionOwner.ref.id,
+    displacementBranch.lineOwner.ref.id,
+    displacementBranch.transitionOwner.ref.id,
+    immediateCaptureBranch.lineOwner.ref.id,
+    immediateCaptureBranch.transitionOwner.ref.id,
+    lower.stableKey
+  ).mkString("|")
 
-  def from(
-      context: JudgmentAssemblyContext,
-      demandSource: EvidenceRecord
-  ): Option[ExactPlayedVsBestCausalInput] =
+private[assembly] object UniqueCheckReplyProofDemand:
+  def from(demand: OccurrenceExplanationDemand): List[UniqueCheckReplyProofDemand] =
+    val exact = for
+      displacement <- demand.availableBranches
+      immediate <- demand.availableBranches
+      if displacement.line != immediate.line
+      if demand.subject == displacement || demand.subject == immediate
+      lower <- lowerDemand(displacement.replay, immediate.replay).toList
+    yield UniqueCheckReplyProofDemand(demand.subject, displacement, immediate, lower)
+    canonical(exact, _.stableKey, "unique-check-reply")
+
+  private def lowerDemand(
+      displacement: CanonicalLineReplay,
+      immediate: CanonicalLineReplay
+  ): Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand] =
+    val displacementSteps = displacement.replaySteps
+    val immediateSteps = immediate.replaySteps
     for
-      registeredDemand <- context.evidenceGraph.record(demandSource.ref)
-      if registeredDemand == demandSource && context.evidenceGraph.proofEligible(registeredDemand)
-      comparison <- registeredDemand.payload match
-        case CandidateComparisonEvidence(exact) => Some(exact)
-        case _                                  => None
-      if ActionablePlayedVsBestCausalProofDemand.accepts(comparison)
-      referenceLine <- context.line(LineNodeRole.BestReference)
-      playedLine <- context.line(LineNodeRole.Played)
-      if referenceLine.ref == comparison.referenceLine
-      if playedLine.ref == comparison.candidateLine
-      if !EvidenceRef.sameMove(referenceLine.ref.rootMove, playedLine.ref.rootMove)
-      referenceOwner <- context.evidenceGraph
-        .uniqueProofEligibleLineFactRecordFor(referenceLine.ref)
-        .map(_._1)
-      playedOwner <- context.evidenceGraph
-        .uniqueProofEligibleLineFactRecordFor(playedLine.ref)
-        .map(_._1)
-      referenceReplay <- certifiedReplay(referenceOwner)
-      playedReplay <- certifiedReplay(playedOwner)
-      if CertifiedComparedLineAuthority.exactRecord(
-        referenceOwner,
-        comparison.referenceLine,
-        referenceReplay
+      delayedCapture <- displacementSteps.lift(2)
+      immediateCapture <- immediateSteps.headOption
+      if EvidenceRef.sameMove(delayedCapture.moveUci, immediateCapture.moveUci)
+      _ <- immediateSteps.lift(1)
+      if activates(displacement, 0, VerticalRelationContractKind.CreatedCheckResponseInventory)
+      if activates(displacement, 2, VerticalRelationContractKind.CaptureRecaptureInventory)
+      if activates(immediate, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
+      checkMembership <- for
+        trigger <- displacementSteps.headOption
+        reply <- displacementSteps.lift(1)
+        exact <- displacement.exactCheckResponseOccurrenceMembership(trigger, reply)
+      yield exact
+      captureOccurrence <- exactVerticalOccurrence(
+        displacement,
+        delayedCapture,
+        VerticalRelationContractKind.CaptureRecaptureInventory
       )
-      if CertifiedComparedLineAuthority.exactRecord(
-        playedOwner,
-        comparison.candidateLine,
-        playedReplay
-      )
-      if ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-        registeredDemand,
-        comparison,
-        referenceOwner.ref.position,
-        referenceOwner,
-        playedOwner
-      )
-    yield ExactPlayedVsBestCausalInput(
-      comparison,
-      registeredDemand,
-      referenceOwner,
-      playedOwner,
-      referenceReplay,
-      playedReplay
-    )
-
-  private def certifiedReplay(source: EvidenceRecord): Option[CanonicalLineReplay] =
-    source.payload match
-      case exact: LineFactEvidence => exact.certifiedReplay
-      case _                       => None
-
-/** Exact lower-contract predispatch. Changed L1 activations cheaply gate the
-  * families that require them. Route and move-order demands instead enumerate
-  * the complete admitted replays without a score, horizon, top-N, or radius
-  * cutoff. Every demand retains its exact occurrence witnesses; family
-  * authority still closes identity, absence, sibling, and later consumption.
-  */
-private[assembly] final case class RelationCausalProofDemand private (
-    input: ExactPlayedVsBestCausalInput,
-    uniqueCheckReplyDefenderDisplacementBeforeCaptureDemand: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand],
-    soleRecapturerRemovalBeforeTargetCaptureDemand: Option[SoleRecapturerRemovalBeforeTargetCaptureDemand],
-    vacatedGateEnablesUnrecapturableSliderCaptureDemands: List[VacatedGateEnablesUnrecapturableSliderCaptureDemand],
-    squareReleaseRouteDemands: List[SquareReleaseRouteDemand],
-    captureExclusionMoveOrderDemands: List[CaptureExclusionMoveOrderDemand]
-)
-
-private[assembly] object RelationCausalProofDemand:
-
-  def from(input: ExactPlayedVsBestCausalInput): RelationCausalProofDemand =
-    val reference = input.referenceReplay
-    val played = input.playedReplay
-    val referenceSteps = reference.replaySteps
-    val playedSteps = played.replaySteps
-    val commonImmediateExploitShape =
-      referenceSteps.lift(2).exists(referenceExploit =>
-        playedSteps.headOption.exists(playedExploit =>
-          EvidenceRef.sameMove(referenceExploit.moveUci, playedExploit.moveUci)
-        )
-      ) && playedSteps.lift(1).nonEmpty
-    lazy val referenceRootCheckChanged =
-      activates(reference, 0, VerticalRelationContractKind.CreatedCheckResponseInventory)
-    lazy val referenceRootCaptureChanged =
-      activates(reference, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
-    lazy val referenceImmediateExploitCaptureChanged =
-      activates(reference, 2, VerticalRelationContractKind.CaptureRecaptureInventory)
-    lazy val playedImmediateExploitCaptureChanged =
-      activates(played, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
-
-    val forcedChanged =
-      commonImmediateExploitShape &&
-        referenceRootCheckChanged &&
-        referenceImmediateExploitCaptureChanged &&
-        playedImmediateExploitCaptureChanged
-
-    val defenseChanged =
-      commonImmediateExploitShape &&
-        referenceRootCaptureChanged &&
-        referenceImmediateExploitCaptureChanged &&
-        playedImmediateExploitCaptureChanged
-
-    val directExploitIndices =
-      Option
-        .when(activates(reference, 0, VerticalRelationContractKind.SliderReachDelta))(
-          referenceSteps.indices.drop(2).filter(index =>
-            playedSteps.size >= index &&
-              activates(reference, index, VerticalRelationContractKind.CaptureRecaptureInventory)
-          ).toList
-        )
-        .getOrElse(Nil)
-
-    val referenceCaptureIndices =
-      (directExploitIndices ++ Option.when(
-        (forcedChanged || defenseChanged) && !directExploitIndices.contains(2)
-      )(2)).sorted
-    val referenceCaptureOccurrences = referenceCaptureIndices.map(index =>
-      index -> referenceSteps.lift(index).flatMap(step =>
-        exactVerticalOccurrence(
-          reference,
-          step,
-          VerticalRelationContractKind.CaptureRecaptureInventory
-        )
-      )
-    ).toMap
-    lazy val playedRecaptureMembership =
-      Option
-        .when(forcedChanged || defenseChanged)(
-          for
-            exploit <- playedSteps.headOption
-            reply <- playedSteps.lift(1)
-            exact <- played.exactRecaptureOccurrenceMembership(exploit, reply)
-          yield exact
-        )
-        .flatten
-    lazy val referenceCheckMembership =
-      Option
-        .when(forcedChanged)(
-          for
-            trigger <- referenceSteps.headOption
-            reply <- referenceSteps.lift(1)
-            exact <- reference.exactCheckResponseOccurrenceMembership(trigger, reply)
-          yield exact
-        )
-        .flatten
-    lazy val referenceRemovalMembership =
-      Option
-        .when(defenseChanged)(
-          for
-            removal <- referenceSteps.headOption
-            reply <- referenceSteps.lift(1)
-            exact <- reference.exactRecaptureOccurrenceMembership(removal, reply)
-          yield exact
-        )
-        .flatten
-
-    val forcedDemand = for
-      (checkOccurrence, forcedReply) <- referenceCheckMembership
-      referenceExploitOccurrence <- referenceCaptureOccurrences.get(2).flatten
-      (playedExploitOccurrence, playedRecapture) <- playedRecaptureMembership
+      immediateMembership <- for
+        reply <- immediateSteps.lift(1)
+        exact <- immediate.exactRecaptureOccurrenceMembership(immediateCapture, reply)
+      yield exact
     yield UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand(
-      checkOccurrence,
-      forcedReply,
-      referenceExploitOccurrence,
-      playedExploitOccurrence,
-      playedRecapture
+      checkMembership._1,
+      checkMembership._2,
+      captureOccurrence,
+      immediateMembership._1,
+      immediateMembership._2
     )
 
-    val defenseDemand = for
-      (removalOccurrence, removalRecapture) <- referenceRemovalMembership
-      referenceExploitOccurrence <- referenceCaptureOccurrences.get(2).flatten
-      (playedExploitOccurrence, playedRecapture) <- playedRecaptureMembership
+private[assembly] final case class SoleRecapturerRemovalProofDemand private (
+    subject: CertifiedRootOccurrence,
+    removalBranch: CertifiedRootOccurrence,
+    immediateCaptureBranch: CertifiedRootOccurrence,
+    lower: SoleRecapturerRemovalBeforeTargetCaptureDemand
+):
+  require(subject == removalBranch || subject == immediateCaptureBranch)
+
+  def stableKey: String = List(
+    subject.transitionOwner.ref.id,
+    removalBranch.lineOwner.ref.id,
+    removalBranch.transitionOwner.ref.id,
+    immediateCaptureBranch.lineOwner.ref.id,
+    immediateCaptureBranch.transitionOwner.ref.id,
+    lower.stableKey
+  ).mkString("|")
+
+private[assembly] object SoleRecapturerRemovalProofDemand:
+  def from(demand: OccurrenceExplanationDemand): List[SoleRecapturerRemovalProofDemand] =
+    val exact = for
+      removal <- demand.availableBranches
+      immediate <- demand.availableBranches
+      if removal.line != immediate.line
+      if demand.subject == removal || demand.subject == immediate
+      lower <- lowerDemand(removal.replay, immediate.replay).toList
+    yield SoleRecapturerRemovalProofDemand(demand.subject, removal, immediate, lower)
+    canonical(exact, _.stableKey, "sole-recapturer-removal")
+
+  private def lowerDemand(
+      removal: CanonicalLineReplay,
+      immediate: CanonicalLineReplay
+  ): Option[SoleRecapturerRemovalBeforeTargetCaptureDemand] =
+    val removalSteps = removal.replaySteps
+    val immediateSteps = immediate.replaySteps
+    for
+      delayedCapture <- removalSteps.lift(2)
+      immediateCapture <- immediateSteps.headOption
+      if EvidenceRef.sameMove(delayedCapture.moveUci, immediateCapture.moveUci)
+      _ <- immediateSteps.lift(1)
+      if activates(removal, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
+      if activates(removal, 2, VerticalRelationContractKind.CaptureRecaptureInventory)
+      if activates(immediate, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
+      removalMembership <- for
+        root <- removalSteps.headOption
+        reply <- removalSteps.lift(1)
+        exact <- removal.exactRecaptureOccurrenceMembership(root, reply)
+      yield exact
+      delayedOccurrence <- exactVerticalOccurrence(
+        removal,
+        delayedCapture,
+        VerticalRelationContractKind.CaptureRecaptureInventory
+      )
+      immediateMembership <- for
+        reply <- immediateSteps.lift(1)
+        exact <- immediate.exactRecaptureOccurrenceMembership(immediateCapture, reply)
+      yield exact
     yield SoleRecapturerRemovalBeforeTargetCaptureDemand(
-      removalOccurrence,
-      removalRecapture,
-      referenceExploitOccurrence,
-      playedExploitOccurrence,
-      playedRecapture
+      removalMembership._1,
+      removalMembership._2,
+      delayedOccurrence,
+      immediateMembership._1,
+      immediateMembership._2
     )
 
-    val rootReachOccurrences =
-      Option
-        .when(directExploitIndices.nonEmpty)(
-          referenceSteps.headOption.toList.flatMap(step =>
-            reference.verticalRelationOccurrences(
-              step,
-              List(VerticalRelationContractKind.SliderReachDelta)
-            )
-          )
-        )
-        .getOrElse(Nil)
-    val directDemands = for
-      exploitIndex <- directExploitIndices
-      exploitOccurrence <- referenceCaptureOccurrences.get(exploitIndex).flatten.toList
-      rootReachOccurrence <- rootReachOccurrences
-    yield VacatedGateEnablesUnrecapturableSliderCaptureDemand(
-      rootReachOccurrence,
-      exploitOccurrence,
-      exploitIndex
-    )
-    val directDemandKeys = directDemands.map(_.stableKey)
-    require(
-      directDemandKeys.distinct.size == directDemandKeys.size,
-      "one direct line-access occurrence demand may be dispatched only once"
-    )
+private[assembly] final case class VacatedGateCaptureProofDemand private (
+    subject: CertifiedRootOccurrence,
+    vacatedGateBranch: CertifiedRootOccurrence,
+    retainedGateBranch: CertifiedRootOccurrence,
+    lowers: List[VacatedGateEnablesUnrecapturableSliderCaptureDemand]
+):
+  require(subject == vacatedGateBranch || subject == retainedGateBranch)
+  require(lowers.nonEmpty)
 
-    val occupationDemands = referenceSteps.headOption.toList.flatMap(rootStep =>
-      reference.legalMoveOccurrence(rootStep).toList.flatMap(rootOccurrence =>
-        referenceSteps.indices.drop(2).filter(_ <= playedSteps.size).toList.flatMap(index =>
-          referenceSteps.lift(index).toList.flatMap(step =>
-            reference.legalMoveOccurrence(step).toList.collect {
+  def stableKey: String = List(
+    subject.transitionOwner.ref.id,
+    vacatedGateBranch.lineOwner.ref.id,
+    vacatedGateBranch.transitionOwner.ref.id,
+    retainedGateBranch.lineOwner.ref.id,
+    retainedGateBranch.transitionOwner.ref.id,
+    lowers.map(_.stableKey).mkString("[", ",", "]")
+  ).mkString("|")
+
+private[assembly] object VacatedGateCaptureProofDemand:
+  def from(demand: OccurrenceExplanationDemand): List[VacatedGateCaptureProofDemand] =
+    val exact = for
+      vacated <- demand.availableBranches
+      retained <- demand.availableBranches
+      if vacated.line != retained.line
+      if demand.subject == vacated || demand.subject == retained
+      lowers = lowerDemands(vacated.replay, retained.replay)
+      if lowers.nonEmpty
+    yield VacatedGateCaptureProofDemand(demand.subject, vacated, retained, lowers)
+    canonical(exact, _.stableKey, "vacated-gate-capture")
+
+  private def lowerDemands(
+      vacated: CanonicalLineReplay,
+      retained: CanonicalLineReplay
+  ): List[VacatedGateEnablesUnrecapturableSliderCaptureDemand] =
+    val vacatedSteps = vacated.replaySteps
+    val retainedSteps = retained.replaySteps
+    if !activates(vacated, 0, VerticalRelationContractKind.SliderReachDelta) then Nil
+    else
+      val reachOccurrences = vacatedSteps.headOption.toList.flatMap(step =>
+        vacated.verticalRelationOccurrences(step, List(VerticalRelationContractKind.SliderReachDelta))
+      )
+      val exploitIndices = vacatedSteps.indices.drop(2).filter(index =>
+        retainedSteps.size >= index &&
+          activates(vacated, index, VerticalRelationContractKind.CaptureRecaptureInventory)
+      ).toList
+      val exact = for
+        exploitIndex <- exploitIndices
+        exploitStep <- vacatedSteps.lift(exploitIndex).toList
+        exploit <- exactVerticalOccurrence(
+          vacated,
+          exploitStep,
+          VerticalRelationContractKind.CaptureRecaptureInventory
+        ).toList
+        reach <- reachOccurrences
+      yield VacatedGateEnablesUnrecapturableSliderCaptureDemand(reach, exploit, exploitIndex)
+      canonical(exact, _.stableKey, "vacated-gate lower")
+
+private[assembly] final case class SquareReleaseRouteProofDemand private (
+    subject: CertifiedRootOccurrence,
+    releasedSquareBranch: CertifiedRootOccurrence,
+    retainedSquareBranch: CertifiedRootOccurrence,
+    lowers: List[SquareReleaseRouteDemand]
+):
+  require(subject == releasedSquareBranch || subject == retainedSquareBranch)
+  require(lowers.nonEmpty)
+
+  def stableKey: String = List(
+    subject.transitionOwner.ref.id,
+    releasedSquareBranch.lineOwner.ref.id,
+    releasedSquareBranch.transitionOwner.ref.id,
+    retainedSquareBranch.lineOwner.ref.id,
+    retainedSquareBranch.transitionOwner.ref.id,
+    lowers.map(_.stableKey).mkString("[", ",", "]")
+  ).mkString("|")
+
+private[assembly] object SquareReleaseRouteProofDemand:
+  def from(demand: OccurrenceExplanationDemand): List[SquareReleaseRouteProofDemand] =
+    val exact = for
+      released <- demand.availableBranches
+      retained <- demand.availableBranches
+      if released.line != retained.line
+      if demand.subject == released || demand.subject == retained
+      lowers = lowerDemands(released, retained)
+      if lowers.nonEmpty
+    yield SquareReleaseRouteProofDemand(demand.subject, released, retained, lowers)
+    canonical(exact, _.stableKey, "square-release-route")
+
+  private def lowerDemands(
+      released: CertifiedRootOccurrence,
+      retained: CertifiedRootOccurrence
+  ): List[SquareReleaseRouteDemand] =
+    val releasedSteps = released.replay.replaySteps
+    val retainedSteps = retained.replay.replaySteps
+    val occupations = releasedSteps.headOption.toList.flatMap(rootStep =>
+      released.replay.legalMoveOccurrence(rootStep).toList.flatMap(rootOccurrence =>
+        releasedSteps.indices.drop(2).filter(_ <= retainedSteps.size).toList.flatMap(index =>
+          releasedSteps.lift(index).toList.flatMap(step =>
+            released.replay.legalMoveOccurrence(step).toList.collect {
               case firstRouteLeg
                   if firstRouteLeg.movement.capture.isEmpty &&
                     firstRouteLeg.movement.side == rootOccurrence.movement.side &&
@@ -240,96 +243,45 @@ private[assembly] object RelationCausalProofDemand:
         )
       )
     )
-    val terminalRouteDemands = occupationDemands.flatMap(demand =>
-      firstTerminalRouteDemands(input, demand)
-    )
-    val squareReleaseRouteDemands = (occupationDemands ++ terminalRouteDemands).sortBy(_.stableKey)
-    require(
-      squareReleaseRouteDemands.map(_.stableKey).distinct.size == squareReleaseRouteDemands.size,
-      "one exact square-release route occurrence may be dispatched only once"
-    )
+    val terminals = occupations.flatMap(firstTerminalRouteDemands(released, _))
+    canonical(occupations ++ terminals, _.stableKey, "square-release-route lower")
 
-    val captureExclusionMoveOrderDemands =
-      (for
-        referenceRootStep <- referenceSteps.headOption.toList
-        playedRootStep <- playedSteps.headOption.toList
-        playedReplyStep <- playedSteps.lift(1).toList
-        referenceRoot <- reference.legalMoveOccurrence(referenceRootStep).toList
-        playedRoot <- played.legalMoveOccurrence(playedRootStep).toList
-        playedReply <- played.legalMoveOccurrence(playedReplyStep).toList
-        replyCapture <- playedReply.movement.capture.toList
-        if replyCapture.capturedSquare == playedReply.movement.to
-        if referenceRoot.movement.witness.from == replyCapture.capturedSquare &&
-          referenceRoot.movement.witness.side == replyCapture.capturedSide &&
-          referenceRoot.movement.witness.beforeRole == replyCapture.capturedRole &&
-          referenceRoot.movement.witness.side == playedRoot.movement.witness.side &&
-          playedReply.movement.witness.side != playedRoot.movement.witness.side
-        deferredIndex <- referenceSteps.indices.drop(2).filter(_ % 2 == 0).toList
-        deferredStep <- referenceSteps.lift(deferredIndex).toList
-        referenceDeferred <- reference.legalMoveOccurrence(deferredStep).toList
-        if CaptureExclusionMoveOrderDemand.sameMove(playedRoot, referenceDeferred)
-      yield CaptureExclusionMoveOrderDemand(
-        referenceRoot,
-        playedRoot,
-        playedReply,
-        referenceDeferred,
-        deferredIndex
-      )).sortBy(_.stableKey)
-    require(
-      captureExclusionMoveOrderDemands.map(_.stableKey).distinct.size == captureExclusionMoveOrderDemands.size,
-      "one exact capture-exclusion move-order occurrence may be dispatched only once"
-    )
-
-    RelationCausalProofDemand(
-      input,
-      forcedDemand,
-      defenseDemand,
-      directDemands.sortBy(_.stableKey),
-      squareReleaseRouteDemands,
-      captureExclusionMoveOrderDemands
-    )
-
-  /** Follows the replay-owned same object until the first later leg that owns
-    * a closed capture or created-check result. There is no horizon or score
-    * filter: the admitted LegalLine continuation is the complete boundary.
-    */
   private def firstTerminalRouteDemands(
-      input: ExactPlayedVsBestCausalInput,
+      released: CertifiedRootOccurrence,
       occupation: SquareReleaseRouteDemand
   ): List[SquareReleaseRouteDemand] =
-    val replay = input.referenceReplay
+    val replay = released.replay
     val steps = replay.replaySteps
 
     def loop(
         route: List[ReplayLegalMoveOccurrence],
         indices: List[Int]
     ): List[SquareReleaseRouteDemand] =
-      RecordBoundObjectTrajectory.firstAfter(input.referenceSource, route.last.step).toList.flatMap {
-        trajectory =>
-          val next = trajectory.futureMovement.occurrence
-          val nextIndex = steps.indexOf(next.step)
-          if nextIndex <= indices.last then Nil
-          else
-            val extendedRoute = route :+ next
-            val extendedIndices = indices :+ nextIndex
-            val terminals = replay.verticalRelationOccurrences(
-              next.step,
-              List(
-                VerticalRelationContractKind.CaptureRecaptureInventory,
-                VerticalRelationContractKind.CreatedCheckResponseInventory
-              )
-            ).flatMap(terminal =>
-              exactTerminalReply(replay, nextIndex, terminal).map(reply =>
-                SquareReleaseRouteDemand.terminal(
-                  occupation.releaseOccurrence,
-                  extendedRoute,
-                  extendedIndices,
-                  terminal,
-                  reply
-                )
+      RecordBoundObjectTrajectory.firstAfter(released.lineOwner, route.last.step).toList.flatMap { trajectory =>
+        val next = trajectory.futureMovement.occurrence
+        val nextIndex = steps.indexOf(next.step)
+        if nextIndex <= indices.last then Nil
+        else
+          val extendedRoute = route :+ next
+          val extendedIndices = indices :+ nextIndex
+          val terminals = replay.verticalRelationOccurrences(
+            next.step,
+            List(
+              VerticalRelationContractKind.CaptureRecaptureInventory,
+              VerticalRelationContractKind.CreatedCheckResponseInventory
+            )
+          ).flatMap(terminal =>
+            exactTerminalReply(replay, nextIndex, terminal).map(reply =>
+              SquareReleaseRouteDemand.terminal(
+                occupation.releaseOccurrence,
+                extendedRoute,
+                extendedIndices,
+                terminal,
+                reply
               )
             )
-            if terminals.nonEmpty then terminals else loop(extendedRoute, extendedIndices)
+          )
+          if terminals.nonEmpty then terminals else loop(extendedRoute, extendedIndices)
       }
 
     loop(occupation.routeOccurrences, occupation.routeStepIndices)
@@ -341,18 +293,9 @@ private[assembly] object RelationCausalProofDemand:
   ): Option[Option[ReplayLegalMoveOccurrence]] =
     terminal.relation.detail match
       case _: RelationWitnessDetail.CaptureRecaptureInventory =>
-        replay.replaySteps.lift(terminalIndex + 1)
-          .flatMap(replay.legalMoveOccurrence)
-          .map(Some(_))
+        replay.replaySteps.lift(terminalIndex + 1).flatMap(replay.legalMoveOccurrence).map(Some(_))
       case RelationWitnessDetail.CreatedCheckResponseInventory(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            RelationCheckTerminalState.Checkmate,
-            _
+            _, _, _, _, _, _, RelationCheckTerminalState.Checkmate, _
           ) =>
         Some(None)
       case _: RelationWitnessDetail.CreatedCheckResponseInventory =>
@@ -364,18 +307,26 @@ private[assembly] object RelationCausalProofDemand:
         yield Some(reply)
       case _ => None
 
-  private def activates(
-      replay: CanonicalLineReplay,
-      stepIndex: Int,
-      contract: VerticalRelationContractKind
-  ): Boolean =
-    replay.replaySteps.lift(stepIndex).exists(replay.activatesVerticalRelation(_, contract))
+private def activates(
+    replay: CanonicalLineReplay,
+    stepIndex: Int,
+    contract: VerticalRelationContractKind
+): Boolean =
+  replay.replaySteps.lift(stepIndex).exists(replay.activatesVerticalRelation(_, contract))
 
-  private def exactVerticalOccurrence(
-      replay: CanonicalLineReplay,
-      step: LineReplayStep,
-      contract: VerticalRelationContractKind
-  ): Option[ReplayVerticalRelationOccurrence] =
-    replay.verticalRelationOccurrences(step, List(contract)) match
-      case exact :: Nil => Some(exact)
-      case _            => None
+private def exactVerticalOccurrence(
+    replay: CanonicalLineReplay,
+    step: LineReplayStep,
+    contract: VerticalRelationContractKind
+): Option[ReplayVerticalRelationOccurrence] =
+  replay.verticalRelationOccurrences(step, List(contract)) match
+    case exact :: Nil => Some(exact)
+    case _            => None
+
+private def canonical[A](values: List[A], key: A => String, label: String): List[A] =
+  val sorted = values.sortBy(key)
+  require(
+    sorted.map(key).distinct.size == sorted.size,
+    s"one exact $label occurrence demand may be dispatched only once"
+  )
+  sorted

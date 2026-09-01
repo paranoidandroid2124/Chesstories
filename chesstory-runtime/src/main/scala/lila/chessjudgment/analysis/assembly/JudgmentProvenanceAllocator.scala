@@ -7,7 +7,7 @@ import java.util.Locale
 import chess.Color
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.judgment.{
-  AdmittedReviewLine,
+  AdmittedLegalLine,
   AdmittedMoveReviewInput
 }
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
@@ -42,7 +42,7 @@ final case class JudgmentProvenanceAllocator(prefix: String):
     )
 
   def lineOccurrenceKey(
-      line: AdmittedReviewLine,
+      line: AdmittedLegalLine,
       root: PositionNodeRef
   ): String =
     exactKey(List(
@@ -50,35 +50,27 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       root.ply.toString,
       root.sideToMove.map(_.toString).getOrElse(""),
       occurrenceFen(root.fen),
-      key(line.role),
-      line.rank.toString,
-      line.rootMove.getOrElse("none")
+      line.rootMove
     ))
 
   def lineRef(
-      line: AdmittedReviewLine,
+      line: AdmittedLegalLine,
       occurrenceKey: String
   ): LineNodeRef =
     LineNodeRef(
       id = s"$prefix:line:$occurrenceKey",
-      rootMove = line.rootMove.getOrElse("none"),
-      rank = line.rank,
-      role = line.role
+      rootMove = line.rootMove
     )
 
   def transitionOccurrenceKey(
-      role: TransitionEdgeRole,
       from: PositionNodeRef,
       moveUci: String,
       to: PositionNodeRef
   ): String =
     exactKey(List(
-      key(role),
-      from.id.getOrElse(""),
       from.ply.toString,
       occurrenceFen(from.fen),
       EvidenceRef.normalizeMove(moveUci),
-      to.id.getOrElse(""),
       to.ply.toString,
       occurrenceFen(to.fen)
     ))
@@ -131,6 +123,26 @@ final case class JudgmentProvenanceAllocator(prefix: String):
 object JudgmentProvenanceAllocator:
 
   def forInput(input: AdmittedMoveReviewInput): JudgmentProvenanceAllocator =
+    val history = input.positionHistory
+    val historyOccurrence = BoundedCausalIdentity.digest(
+      List(
+        "canonical-history-occurrence:v1",
+        history.initialFen,
+        history.preInitialHistoryKnowledge.toString,
+        history.segmentReplaySteps
+          .map(step =>
+            List(
+              step.ply.toString,
+              PrincipalVariationEvidence.normalizeUci(step.uci),
+              step.beforeFen,
+              step.afterFen
+            ).mkString(":")
+          )
+          .mkString("[", ",", "]"),
+        history.currentFen,
+        history.currentPly.toString
+      )
+    )
     JudgmentProvenanceAllocator(
-      s"move-review:${input.beforePly}:${EvidenceRef.normalizeMove(input.playedMoveUci)}"
+      s"move-review:$historyOccurrence:${input.beforePly}:${EvidenceRef.normalizeMove(input.playedMoveUci)}"
     )

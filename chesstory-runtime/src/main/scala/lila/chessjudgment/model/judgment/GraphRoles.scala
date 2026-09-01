@@ -24,38 +24,10 @@ enum LineNodeRole:
       case BestReference => EvidenceScope.BestLine
       case Alternative   => EvidenceScope.CandidateLine
 
-  def claimSubject: Option[ClaimSubject] =
-    this match
-      case Played        => Some(ClaimSubject.PlayedMove)
-      case BestReference => Some(ClaimSubject.ReferenceMove)
-      case Alternative   => Some(ClaimSubject.CandidateLine)
-
-object LineNodeRole:
-
-  def fromMoveEvidenceScope(scope: EvidenceScope): Option[LineNodeRole] =
-    scope match
-      case EvidenceScope.PlayedTransition =>
-        Some(LineNodeRole.Played)
-      case EvidenceScope.ReferenceTransition =>
-        Some(LineNodeRole.BestReference)
-      case EvidenceScope.AlternativeTransition =>
-        Some(LineNodeRole.Alternative)
-      case _ =>
-        None
-
 enum TransitionEdgeRole:
   case Played
   case Reference
   case Alternative
-
-  def lineRole: LineNodeRole =
-    this match
-      case Played      => LineNodeRole.Played
-      case Reference   => LineNodeRole.BestReference
-      case Alternative => LineNodeRole.Alternative
-
-  def acceptsLineOwnerRole(role: LineNodeRole): Boolean =
-    role == lineRole || (this == Played && role == LineNodeRole.BestReference)
 
   def scope: EvidenceScope =
     this match
@@ -74,9 +46,4 @@ enum EvidenceLayer:
   case PassedPawnResultEvent
   case CandidateComparison
   case RelativeAssessment
-  case RelativeCause
-
-enum ClaimSubject:
-  case PlayedMove
-  case ReferenceMove
-  case CandidateLine
+  case OccurrenceExplanation

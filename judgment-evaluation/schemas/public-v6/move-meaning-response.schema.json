@@ -58,10 +58,11 @@
       "required": ["primary"],
       "properties": {
         "primary": {"$ref": "#/$defs/primary"},
-        "causal_explanations": {
+        "occurrence_explanations": {
           "type": "array",
           "minItems": 1,
-          "items": {"$ref": "#/$defs/causalFacet"}
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceExplanation"}
         }
       }
     },
@@ -320,148 +321,123 @@
         "kind": {"const": "seventy_five_move_rule"}
       }
     },
-    "causalFacet": {
+    "occurrenceExplanation": {
       "oneOf": [
-        {"$ref": "#/$defs/wrongMoveOrderCausalFacet"},
-        {"$ref": "#/$defs/passedPawnProgressFacet"},
-        {"$ref": "#/$defs/missedTacticalResourceCausalFacet"},
-        {"$ref": "#/$defs/missedSquareReleaseCausalFacet"}
+        {"$ref": "#/$defs/uniqueCheckReplyOccurrenceExplanation"},
+        {"$ref": "#/$defs/soleRecapturerOccurrenceExplanation"},
+        {"$ref": "#/$defs/vacatedGateOccurrenceExplanation"},
+        {"$ref": "#/$defs/squareReleaseRouteOccurrenceExplanation"},
+        {"$ref": "#/$defs/captureExclusionOccurrenceExplanation"},
+        {"$ref": "#/$defs/passedPawnProgressOccurrenceExplanation"}
       ]
     },
-    "wrongMoveOrderCausalFacet": {
+    "uniqueCheckReplyOccurrenceExplanation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "cause_evidence_id",
-        "kind",
-        "exposure",
-        "channels"
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
       ],
       "properties": {
         "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "kind": {"const": "wrong_move_order"},
-        "exposure": {"const": "primary"},
-        "channels": {
-          "type": "array",
-          "minItems": 1,
-          "items": {"$ref": "#/$defs/wrongMoveOrderCausalChannel"}
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "unique_check_reply_defender_displacement_before_capture"},
+        "proof": {
+          "$ref": "#/$defs/occurrenceUniqueCheckReplyProof"
         }
       }
     },
-    "passedPawnProgressFacet": {
+    "soleRecapturerOccurrenceExplanation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "cause_evidence_id",
-        "kind",
-        "exposure",
-        "channels"
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
       ],
       "properties": {
         "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "kind": {"const": "passed_pawn_progress"},
-        "exposure": {"const": "complementary"},
-        "channels": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "allOf": [
-              {"$ref": "#/$defs/passedPawnProgressChannel"},
-              {
-                "properties": {
-                  "passed_pawn_progress_realized_after_only_legal_reply_proof": {
-                    "properties": {
-                      "root_line": {"properties": {"line_role": {"const": "played"}}}
-                    }
-                  }
-                }
-              }
-            ]
-          }
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "sole_recapturer_removal_before_target_capture"},
+        "proof": {
+          "$ref": "#/$defs/occurrenceSoleRecapturerProof"
         }
       }
     },
-    "missedTacticalResourceCausalFacet": {
+    "vacatedGateOccurrenceExplanation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "cause_evidence_id",
-        "kind",
-        "exposure",
-        "channels"
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
       ],
       "properties": {
         "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "kind": {"const": "missed_tactical_resource"},
-        "exposure": {"const": "primary"},
-        "channels": {
-          "type": "array",
-          "minItems": 1,
-          "items": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureCausalChannel"}
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "vacated_gate_enables_unrecapturable_slider_capture"},
+        "proof": {
+          "$ref": "#/$defs/occurrenceVacatedGateProof"
         }
       }
     },
-    "missedSquareReleaseCausalFacet": {
+    "squareReleaseRouteOccurrenceExplanation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "cause_evidence_id",
-        "kind",
-        "exposure",
-        "channels"
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
       ],
       "properties": {
         "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "kind": {"const": "missed_square_release"},
-        "exposure": {"const": "primary"},
-        "channels": {
-          "type": "array",
-          "minItems": 1,
-          "items": {"$ref": "#/$defs/squareReleaseRouteCausalChannel"}
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "square_release_route"},
+        "proof": {"$ref": "#/$defs/occurrenceSquareReleaseRouteProof"}
+      }
+    },
+    "passedPawnProgressOccurrenceExplanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause_evidence_id",
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
+      ],
+      "properties": {
+        "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "passed_pawn_progress_realized_after_only_legal_reply"},
+        "proof": {
+          "$ref": "#/$defs/occurrencePassedPawnProgressProof"
         }
       }
     },
-    "wrongMoveOrderCausalChannel": {
-      "oneOf": [
-        {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCaptureCausalChannel"},
-        {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCaptureCausalChannel"},
-        {"$ref": "#/$defs/captureExclusionMoveOrderCausalChannel"}
-      ]
-    },
-    "uniqueCheckReplyDefenderDisplacementBeforeCaptureCausalChannel": {
+    "captureExclusionOccurrenceExplanation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "channel_id",
-        "unique_check_reply_defender_displacement_before_capture_proof"
+        "cause_evidence_id",
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
       ],
       "properties": {
-        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "unique_check_reply_defender_displacement_before_capture_proof": {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCaptureProof"}
+        "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "capture_exclusion_move_order"},
+        "proof": {
+          "$ref": "#/$defs/occurrenceCaptureExclusionMoveOrderProof"
+        }
       }
     },
-    "soleRecapturerRemovalBeforeTargetCaptureCausalChannel": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "channel_id",
-        "sole_recapturer_removal_before_target_capture_proof"
-      ],
-      "properties": {
-        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "sole_recapturer_removal_before_target_capture_proof": {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCaptureProof"}
-      }
-    },
-    "captureExclusionMoveOrderCausalChannel": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["channel_id", "capture_exclusion_move_order_proof"],
-      "properties": {
-        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "capture_exclusion_move_order_proof": {"$ref": "#/$defs/captureExclusionMoveOrderProof"}
-      }
-    },
-    "captureExclusionMoveOrderProof": {
+    "occurrenceUniqueCheckReplyProof": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -469,47 +445,36 @@
         "semantic_id",
         "occurrence_id",
         "dependency_fingerprint",
-        "counterfactual_reference_branch",
-        "played_root_branch",
-        "proof_paths"
+        "displacement_branch",
+        "immediate_capture_branch",
+        "proof_paths",
+        "participants",
+        "realizing_move",
+        "immediate_capture_branch_legal_defense_move"
       ],
       "properties": {
         "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
         "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "counterfactual_reference_branch": {
+        "displacement_branch": {
           "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
             {
               "properties": {
-                "line_role": {"const": "best_reference"},
-                "branch_role": {"const": "counterfactual_reference"},
-                "root_provenance": {"const": "counterfactual_analyzed_root"},
-                "steps": {
-                  "minItems": 3,
-                  "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-                }
+                "branch_role": {"const": "displacement_then_capture"},
+                "steps": {"minItems": 3, "maxItems": 3}
               }
             }
           ]
         },
-        "played_root_branch": {
+        "immediate_capture_branch": {
           "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
             {
               "properties": {
-                "line_role": {"const": "played"},
-                "branch_role": {"const": "played_root_analysis_continuation"},
-                "root_provenance": {"const": "observed_game_root"},
-                "steps": {
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "prefixItems": [
-                    {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
-                  ],
-                  "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-                }
+                "branch_role": {"const": "immediate_capture_with_defender"},
+                "steps": {"minItems": 2, "maxItems": 2}
               }
             }
           ]
@@ -519,11 +484,14 @@
           "minItems": 1,
           "maxItems": 1,
           "uniqueItems": true,
-          "items": {"$ref": "#/$defs/captureExclusionMoveOrderProofPath"}
-        }
+          "items": {"$ref": "#/$defs/occurrenceUniqueCheckReplyProofPath"}
+        },
+        "participants": {"$ref": "#/$defs/occurrenceUniqueCheckReplyParticipants"},
+        "realizing_move": {"$ref": "#/$defs/uciMove"},
+        "immediate_capture_branch_legal_defense_move": {"$ref": "#/$defs/uciMove"}
       }
     },
-    "captureExclusionMoveOrderProofPath": {
+    "occurrenceUniqueCheckReplyProofPath": {
       "type": "object",
       "additionalProperties": false,
       "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
@@ -531,106 +499,110 @@
         "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "premises": {
           "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
+          "minItems": 3,
+          "maxItems": 3,
           "prefixItems": [
             {
               "allOf": [
-                {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "reference_vacating_move"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
+                {"$ref": "#/$defs/occurrenceUniqueCheckReplyPremiseUse"},
+                {"properties": {
+                  "role": {"const": "displacement_check_response"},
+                  "contract": {"const": "created_check_response_inventory"},
+                  "result_id": {"pattern": "^created_check_response_inventory:[0-9a-f]{64}$"},
+                  "branch_role": {"const": "displacement_then_capture"},
+                  "step_index": {"const": 0}
+                }}
               ]
             },
             {
               "allOf": [
-                {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "played_deferred_move"}, "branch_role": {"const": "played_root_analysis_continuation"}, "step_index": {"const": 0}}}
+                {"$ref": "#/$defs/occurrenceUniqueCheckReplyPremiseUse"},
+                {"properties": {
+                  "role": {"const": "delayed_capture_recapture"},
+                  "contract": {"const": "capture_recapture_inventory"},
+                  "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
+                  "branch_role": {"const": "displacement_then_capture"},
+                  "step_index": {"const": 2}
+                }}
               ]
             },
             {
               "allOf": [
-                {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                {"required": ["capture"], "properties": {"role": {"const": "played_capture_reply"}, "branch_role": {"const": "played_root_analysis_continuation"}, "step_index": {"const": 1}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "reference_deferred_move"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"type": "integer", "minimum": 2}}}
+                {"$ref": "#/$defs/occurrenceUniqueCheckReplyPremiseUse"},
+                {"properties": {
+                  "role": {"const": "immediate_capture_recapture"},
+                  "contract": {"const": "capture_recapture_inventory"},
+                  "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
+                  "branch_role": {"const": "immediate_capture_with_defender"},
+                  "step_index": {"const": 0}
+                }}
               ]
             }
-          ]
+          ],
+          "items": false
         },
         "closed_absence_uses": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 1,
           "items": {
             "allOf": [
-              {"$ref": "#/$defs/boundedCausalClosureUse"},
+              {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
               {"properties": {
-                "role": {"const": "reference_capture_reply_absent"},
+                "role": {"const": "delayed_capture_recapture_absent"},
                 "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-                "query": {"type": "string", "pattern": "^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$"},
-                "branch_role": {"const": "counterfactual_reference"}
+                "query": {"type": "string", "pattern": "^legal-capture:(white|black):[a-h][1-8]$"},
+                "branch_role": {"const": "displacement_then_capture"},
+                "after_step_index": {"const": 2}
               }}
             ]
           }
         },
         "closed_state_uses": {
           "type": "array",
-          "minItems": 8,
+          "minItems": 4,
+          "maxItems": 4,
           "uniqueItems": true,
-          "items": {
-            "allOf": [
-              {"$ref": "#/$defs/boundedCausalClosureUse"},
-              {"properties": {
-                "role": {"enum": ["reference_vacated_target", "reference_reply_actor", "reference_deferred_actor"]},
-                "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
-                "query": {"type": "string", "pattern": "^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$"}
-              }}
-            ]
-          }
+          "items": {"$ref": "#/$defs/occurrenceUniqueCheckReplyStateUse"}
         }
       }
     },
-    "passedPawnProgressChannel": {
+    "occurrenceUniqueCheckReplyPremiseUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationRelationPremiseUse"},
+        {"properties": {
+          "role": {"enum": ["displacement_check_response", "delayed_capture_recapture", "immediate_capture_recapture"]},
+          "contract": {"enum": ["created_check_response_inventory", "capture_recapture_inventory"]},
+          "result_id": {"pattern": "^(created_check_response_inventory|capture_recapture_inventory):[0-9a-f]{64}$"},
+          "branch_role": {"enum": ["displacement_then_capture", "immediate_capture_with_defender"]}
+        }}
+      ]
+    },
+    "occurrenceUniqueCheckReplyStateUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+        {"properties": {
+          "role": {"enum": ["delayed_capture_actor_present", "delayed_target_present"]},
+          "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
+          "query": {"type": "string", "pattern": "^occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8]$"},
+          "branch_role": {"const": "displacement_then_capture"}
+        }}
+      ]
+    },
+    "occurrenceUniqueCheckReplyParticipants": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "channel_id",
-        "passed_pawn_progress_realized_after_only_legal_reply_proof"
-      ],
+      "required": ["trigger", "forced_reply", "realizer", "captured_target", "immediate_defense", "disabled_defender"],
       "properties": {
-        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "passed_pawn_progress_realized_after_only_legal_reply_proof": {"$ref": "#/$defs/passedPawnProgressRealizedAfterOnlyLegalReplyProof"}
+        "trigger": {"$ref": "#/$defs/boundedCausalMovement"},
+        "forced_reply": {"$ref": "#/$defs/boundedCausalLegalResource"},
+        "realizer": {"$ref": "#/$defs/boundedCausalMovement"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
+        "immediate_defense": {"$ref": "#/$defs/boundedCausalLegalResource"},
+        "disabled_defender": {"$ref": "#/$defs/boundedCausalPiece"}
       }
     },
-    "vacatedGateEnablesUnrecapturableSliderCaptureCausalChannel": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "channel_id",
-        "vacated_gate_enables_unrecapturable_slider_capture_proof"
-      ],
-      "properties": {
-        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "vacated_gate_enables_unrecapturable_slider_capture_proof": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureProof"}
-      }
-    },
-    "squareReleaseRouteCausalChannel": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "channel_id",
-        "square_release_route_proof"
-      ],
-      "properties": {
-        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "square_release_route_proof": {"$ref": "#/$defs/squareReleaseRouteProof"}
-      }
-    },
-    "squareReleaseRouteProof": {
+    "occurrenceSoleRecapturerProof": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -638,8 +610,309 @@
         "semantic_id",
         "occurrence_id",
         "dependency_fingerprint",
-        "counterfactual_reference_branch",
-        "played_root_branch",
+        "removal_branch",
+        "immediate_capture_branch",
+        "proof_paths",
+        "participants",
+        "post_removal_target_capture_move",
+        "immediate_sole_recapture_move"
+      ],
+      "properties": {
+        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "removal_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {"properties": {
+              "branch_role": {"const": "removal_then_target_capture"},
+              "steps": {"minItems": 3, "maxItems": 3}
+            }}
+          ]
+        },
+        "immediate_capture_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {"properties": {
+              "branch_role": {"const": "immediate_target_capture"},
+              "steps": {"minItems": 2, "maxItems": 2}
+            }}
+          ]
+        },
+        "proof_paths": {
+          "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceSoleRecapturerProofPath"}
+        },
+        "participants": {"$ref": "#/$defs/occurrenceSoleRecapturerParticipants"},
+        "post_removal_target_capture_move": {"$ref": "#/$defs/uciMove"},
+        "immediate_sole_recapture_move": {"$ref": "#/$defs/uciMove"}
+      }
+    },
+    "occurrenceSoleRecapturerProofPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
+      "properties": {
+        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "premises": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceSoleRecapturerPremiseUse"},
+                {"properties": {
+                  "role": {"const": "defender_removal"},
+                  "branch_role": {"const": "removal_then_target_capture"},
+                  "step_index": {"const": 0}
+                }}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceSoleRecapturerPremiseUse"},
+                {"properties": {
+                  "role": {"const": "post_removal_target_capture_inventory"},
+                  "branch_role": {"const": "removal_then_target_capture"},
+                  "step_index": {"const": 2}
+                }}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceSoleRecapturerPremiseUse"},
+                {"properties": {
+                  "role": {"const": "immediate_target_capture_inventory"},
+                  "branch_role": {"const": "immediate_target_capture"},
+                  "step_index": {"const": 0}
+                }}
+              ]
+            }
+          ],
+          "items": false
+        },
+        "closed_absence_uses": {
+          "type": "array", "minItems": 1, "maxItems": 1,
+          "items": {
+            "allOf": [
+              {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+              {"properties": {
+                "role": {"const": "post_removal_replacement_recapture_absent"},
+                "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
+                "query": {"type": "string", "pattern": "^legal-capture:(white|black):[a-h][1-8]$"},
+                "branch_role": {"const": "removal_then_target_capture"},
+                "after_step_index": {"const": 2}
+              }}
+            ]
+          }
+        },
+        "closed_state_uses": {
+          "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceSoleRecapturerStateUse"}
+        }
+      }
+    },
+    "occurrenceSoleRecapturerPremiseUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationRelationPremiseUse"},
+        {"properties": {
+          "role": {"enum": ["defender_removal", "post_removal_target_capture_inventory", "immediate_target_capture_inventory"]},
+          "contract": {"const": "capture_recapture_inventory"},
+          "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
+          "branch_role": {"enum": ["removal_then_target_capture", "immediate_target_capture"]}
+        }}
+      ]
+    },
+    "occurrenceSoleRecapturerStateUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+        {"properties": {
+          "role": {"enum": ["post_removal_exploit_actor_present", "post_removal_target_present"]},
+          "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
+          "query": {"type": "string", "pattern": "^occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8]$"},
+          "branch_role": {"const": "removal_then_target_capture"}
+        }}
+      ]
+    },
+    "occurrenceSoleRecapturerParticipants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "remover", "removed_defender", "removal_recapture", "post_removal_target_capture",
+        "captured_target", "immediate_sole_recapture"
+      ],
+      "properties": {
+        "remover": {"$ref": "#/$defs/boundedCausalMovement"},
+        "removed_defender": {"$ref": "#/$defs/boundedCausalPiece"},
+        "removal_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"},
+        "post_removal_target_capture": {"$ref": "#/$defs/boundedCausalMovement"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
+        "immediate_sole_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"}
+      }
+    },
+    "occurrenceVacatedGateProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_evidence_id", "semantic_id", "occurrence_id", "dependency_fingerprint",
+        "vacated_gate_branch", "retained_gate_branch", "proof_paths",
+        "participants", "exploit_move"
+      ],
+      "properties": {
+        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "vacated_gate_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {"properties": {
+              "branch_role": {"const": "gate_vacated_then_capture"},
+              "steps": {"minItems": 3}
+            }}
+          ]
+        },
+        "retained_gate_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {"properties": {
+              "branch_role": {"const": "gate_retained"},
+              "steps": {"minItems": 2}
+            }}
+          ]
+        },
+        "proof_paths": {
+          "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceVacatedGateProofPath"}
+        },
+        "participants": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureParticipants"},
+        "exploit_move": {"$ref": "#/$defs/uciMove"}
+      }
+    },
+    "occurrenceVacatedGateProofPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
+      "properties": {
+        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "premises": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceVacatedGatePremiseUse"},
+                {"properties": {
+                  "role": {"const": "gate_vacating_slider_reach"},
+                  "contract": {"const": "slider_reach_delta"},
+                  "result_id": {"pattern": "^slider_reach_delta:[0-9a-f]{64}$"},
+                  "step_index": {"const": 0}
+                }}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceVacatedGatePremiseUse"},
+                {"properties": {
+                  "role": {"const": "later_slider_capture"},
+                  "contract": {"const": "capture_recapture_inventory"},
+                  "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
+                  "step_index": {"type": "integer", "minimum": 2}
+                }}
+              ]
+            }
+          ],
+          "items": false
+        },
+        "closed_absence_uses": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceVacatedGateAbsenceUse"},
+                {"properties": {
+                  "role": {"const": "later_capture_immediate_recapture_absent"},
+                  "branch_role": {"const": "gate_vacated_then_capture"}
+                }}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceVacatedGateAbsenceUse"},
+                {"properties": {
+                  "role": {"const": "retained_gate_exploit_move_absent"},
+                  "branch_role": {"const": "gate_retained"}
+                }}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceVacatedGateAbsenceUse"},
+                {"properties": {
+                  "role": {"const": "retained_gate_replacement_capture_absent"},
+                  "branch_role": {"const": "gate_retained"}
+                }}
+              ]
+            }
+          ],
+          "items": false
+        },
+        "closed_state_uses": {
+          "type": "array", "minItems": 10, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceVacatedGateStateUse"}
+        }
+      }
+    },
+    "occurrenceVacatedGatePremiseUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationRelationPremiseUse"},
+        {"properties": {
+          "role": {"enum": ["gate_vacating_slider_reach", "later_slider_capture"]},
+          "contract": {"enum": ["slider_reach_delta", "capture_recapture_inventory"]},
+          "result_id": {"pattern": "^(slider_reach_delta|capture_recapture_inventory):[0-9a-f]{64}$"},
+          "branch_role": {"const": "gate_vacated_then_capture"}
+        }}
+      ]
+    },
+    "occurrenceVacatedGateAbsenceUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+        {"properties": {
+          "role": {"enum": [
+            "later_capture_immediate_recapture_absent",
+            "retained_gate_exploit_move_absent",
+            "retained_gate_replacement_capture_absent"
+          ]},
+          "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
+          "query": {"type": "string", "pattern": "^(legal-capture:(white|black):[a-h][1-8]|legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8])$"},
+          "after_step_index": {"type": "integer", "minimum": 1}
+        }}
+      ]
+    },
+    "occurrenceVacatedGateStateUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+        {"properties": {
+          "role": {"enum": [
+            "vacated_gate_intervening_slider_reach", "vacated_gate_target_persistence",
+            "retained_gate_slider_persistence", "retained_gate_target_persistence",
+            "retained_gate_blocker_persistence", "retained_gate_blocked_slider_reach"
+          ]},
+          "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
+          "query": {"type": "string", "pattern": "^(occupied-by|slider-reach):.+$"},
+          "branch_role": {"enum": ["gate_vacated_then_capture", "gate_retained"]}
+        }}
+      ]
+    },
+    "occurrenceSquareReleaseRouteProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "released_route_branch",
+        "retained_blocker_branch",
         "proof_paths",
         "participants",
         "route",
@@ -651,46 +924,29 @@
         "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "counterfactual_reference_branch": {
+        "released_route_branch": {
           "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "best_reference"},
-                "branch_role": {"const": "counterfactual_reference"},
-                "root_provenance": {"const": "counterfactual_analyzed_root"},
-                "steps": {
-                  "minItems": 3,
-                  "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-                }
-              }
-            }
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {"properties": {
+              "branch_role": {"const": "released_square_route"},
+              "steps": {"minItems": 3}
+            }}
           ]
         },
-        "played_root_branch": {
+        "retained_blocker_branch": {
           "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "played"},
-                "branch_role": {"const": "played_root_analysis_continuation"},
-                "root_provenance": {"const": "observed_game_root"},
-                "steps": {
-                  "minItems": 2,
-                  "prefixItems": [
-                    {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
-                  ],
-                  "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-                }
-              }
-            }
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {"properties": {
+              "branch_role": {"const": "retained_blocker"},
+              "steps": {"minItems": 2}
+            }}
           ]
         },
         "proof_paths": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"$ref": "#/$defs/squareReleaseRouteProofPath"}
+          "items": {"$ref": "#/$defs/occurrenceSquareReleaseRouteProofPath"}
         },
         "participants": {"$ref": "#/$defs/squareReleaseRouteParticipants"},
         "route": {
@@ -704,7 +960,7 @@
         "terminal": {"$ref": "#/$defs/squareReleaseRouteTerminal"}
       }
     },
-    "squareReleaseRouteProofPath": {
+    "occurrenceSquareReleaseRouteProofPath": {
       "type": "object",
       "additionalProperties": false,
       "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
@@ -715,16 +971,8 @@
           "minItems": 2,
           "items": {
             "oneOf": [
-              {"$ref": "#/$defs/squareReleaseRouteTerminalPremiseUse"},
-              {
-                "allOf": [
-                  {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                  {"properties": {
-                    "role": {"pattern": "^reference_(release_move|route_move_[0-9]+|terminal_reply)$"},
-                    "branch_role": {"const": "counterfactual_reference"}
-                  }}
-                ]
-              }
+              {"$ref": "#/$defs/occurrenceSquareReleaseRouteTerminalPremiseUse"},
+              {"$ref": "#/$defs/occurrenceSquareReleaseRouteLegalMovePremiseUse"}
             ]
           }
         },
@@ -732,39 +980,29 @@
           "type": "array",
           "minItems": 1,
           "maxItems": 1,
-          "items": {"$ref": "#/$defs/squareReleaseRouteAbsenceUse"}
+          "items": {"$ref": "#/$defs/occurrenceSquareReleaseRouteAbsenceUse"}
         },
         "closed_state_uses": {
           "type": "array",
           "minItems": 7,
           "uniqueItems": true,
-          "items": {"$ref": "#/$defs/squareReleaseRouteStateUse"}
+          "items": {"$ref": "#/$defs/occurrenceSquareReleaseRouteStateUse"}
         }
       }
     },
-    "squareReleaseRouteTerminalPremiseUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "role", "contract", "result_id", "issuer_evidence_id", "issuer_occurrence_id",
-        "source_premise_ids", "branch_id", "branch_role", "step_index"
-      ],
-      "properties": {
-        "role": {"const": "reference_terminal_resource"},
-        "contract": {"enum": ["capture_recapture_inventory", "created_check_response_inventory"]},
-        "result_id": {"type": "string", "pattern": "^(capture_recapture_inventory|created_check_response_inventory):[0-9a-f]{64}$"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "source_premise_ids": {
-          "type": "array", "minItems": 3, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"const": "counterfactual_reference"},
-        "step_index": {"type": "integer", "minimum": 2}
-      }
+    "occurrenceSquareReleaseRouteTerminalPremiseUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationRelationPremiseUse"},
+        {"properties": {
+          "role": {"const": "terminal_resource"},
+          "contract": {"enum": ["capture_recapture_inventory", "created_check_response_inventory"]},
+          "result_id": {"pattern": "^(capture_recapture_inventory|created_check_response_inventory):[0-9a-f]{64}$"},
+          "branch_role": {"const": "released_square_route"},
+          "step_index": {"type": "integer", "minimum": 2}
+        }}
+      ]
     },
-    "boundedCausalLegalMovePremiseUse": {
+    "occurrenceSquareReleaseRouteLegalMovePremiseUse": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -772,7 +1010,7 @@
         "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids", "branch_id", "branch_role", "step_index"
       ],
       "properties": {
-        "role": {"$ref": "#/$defs/nonEmptyString"},
+        "role": {"type": "string", "pattern": "^(release_move|route_move_[0-9]+|terminal_reply)$"},
         "contract": {"const": "legal_move"},
         "move_uci": {"$ref": "#/$defs/uciMove"},
         "movement": {"$ref": "#/$defs/boundedCausalMovement"},
@@ -785,7 +1023,7 @@
           "items": {"$ref": "#/$defs/nonEmptyString"}
         },
         "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"enum": ["counterfactual_reference", "played_root_analysis_continuation"]},
+        "branch_role": {"const": "released_square_route"},
         "step_index": {"type": "integer", "minimum": 0},
         "capture": {
           "type": "object",
@@ -799,26 +1037,637 @@
         }
       }
     },
-    "squareReleaseRouteAbsenceUse": {
+    "occurrenceSquareReleaseRouteAbsenceUse": {
       "allOf": [
-        {"$ref": "#/$defs/boundedCausalClosureUse"},
+        {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
         {"properties": {
-          "role": {"const": "played_first_route_leg_absent"},
+          "role": {"const": "retained_blocker_first_route_leg_absent"},
           "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
           "query": {"type": "string", "pattern": "^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$"},
-          "branch_role": {"const": "played_root_analysis_continuation"}
+          "branch_role": {"const": "retained_blocker"},
+          "after_step_index": {"type": "integer", "minimum": 1}
         }}
       ]
     },
-    "squareReleaseRouteStateUse": {
+    "occurrenceSquareReleaseRouteStateUse": {
       "allOf": [
-        {"$ref": "#/$defs/boundedCausalClosureUse"},
+        {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
         {"properties": {
-          "role": {"pattern": "^(reference_vacancy|reference_route_piece_[0-9]+|reference_route_persistence_[0-9]+|played_blocker_persistence|played_route_origin_persistence)$"},
+          "role": {"type": "string", "pattern": "^(released_square_vacancy|route_piece_[0-9]+|route_persistence_[0-9]+|retained_blocker_persistence|retained_route_origin_persistence)$"},
           "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
-          "query": {"type": "string", "pattern": "^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$"}
+          "query": {"type": "string", "pattern": "^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$"},
+          "branch_role": {"enum": ["released_square_route", "retained_blocker"]}
         }}
       ]
+    },
+    "occurrencePassedPawnProgressProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_evidence_id",
+        "event_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "result_target_subjects",
+        "root_actor",
+        "realizing_actor",
+        "root_line",
+        "root_move",
+        "root_ply",
+        "realizing_move",
+        "realizing_ply",
+        "result_ply_offset",
+        "closed_legal_reply_inventory",
+        "branches",
+        "proof_paths",
+        "lower_premise_ids"
+      ],
+      "properties": {
+        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "event_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "result_target_subjects": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/passedPawnResultSubject"}
+        },
+        "root_actor": {"$ref": "#/$defs/passedPawnResultActor"},
+        "realizing_actor": {"$ref": "#/$defs/passedPawnResultActor"},
+        "root_line": {"$ref": "#/$defs/occurrencePassedPawnResultLine"},
+        "root_move": {"$ref": "#/$defs/uciMove"},
+        "root_ply": {"type": "integer", "minimum": 1},
+        "realizing_move": {"$ref": "#/$defs/uciMove"},
+        "realizing_ply": {"type": "integer", "minimum": 1},
+        "result_ply_offset": {"type": "integer", "minimum": 1},
+        "closed_legal_reply_inventory": {"$ref": "#/$defs/passedPawnResultClosedReplyInventory"},
+        "branches": {
+          "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrencePassedPawnResultBranch"}
+        },
+        "proof_paths": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrencePassedPawnProgressProofPath"}
+        },
+        "lower_premise_ids": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        }
+      }
+    },
+    "occurrencePassedPawnResultLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line_id", "root_move"],
+      "properties": {
+        "line_id": {"$ref": "#/$defs/nonEmptyString"},
+        "root_move": {"$ref": "#/$defs/uciMove"}
+      }
+    },
+    "occurrencePassedPawnResultBranch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch_id", "role", "reply_move", "source_occurrence_id", "line",
+        "line_owner_evidence_id", "root_transition_evidence_id", "root_provenance", "steps"
+      ],
+      "properties": {
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "role": {"const": "observed_root_with_analyzed_continuation"},
+        "reply_move": {"$ref": "#/$defs/uciMove"},
+        "source_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "line": {"$ref": "#/$defs/occurrencePassedPawnResultLine"},
+        "line_owner_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "root_transition_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "root_provenance": {"const": "observed_game_root"},
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrencePassedPawnResultStep"},
+                {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
+              ]
+            }
+          ],
+          "items": {
+            "allOf": [
+              {"$ref": "#/$defs/occurrencePassedPawnResultStep"},
+              {"properties": {"provenance": {"const": "certified_analysis_move"}}}
+            ]
+          }
+        }
+      }
+    },
+    "occurrencePassedPawnResultStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_index", "step_key", "ply", "move_uci", "fen_before",
+        "fen_after", "line", "provenance"
+      ],
+      "properties": {
+        "step_index": {"type": "integer", "minimum": 0},
+        "step_key": {"$ref": "#/$defs/nonEmptyString"},
+        "ply": {"type": "integer", "minimum": 1},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "fen_before": {"$ref": "#/$defs/nonEmptyString"},
+        "fen_after": {"$ref": "#/$defs/nonEmptyString"},
+        "line": {"$ref": "#/$defs/occurrencePassedPawnResultLine"},
+        "provenance": {"enum": ["observed_game_move", "certified_analysis_move"]}
+      }
+    },
+    "occurrencePassedPawnProgressProofPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path_occurrence_id", "analysis_continuation_branch_id", "realization_actor",
+        "realization_move", "realization_ply", "premises", "closure_use_ids"
+      ],
+      "properties": {
+        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "analysis_continuation_branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "realization_actor": {"$ref": "#/$defs/passedPawnResultActor"},
+        "realization_move": {"$ref": "#/$defs/uciMove"},
+        "realization_ply": {"type": "integer", "minimum": 1},
+        "premises": {
+          "type": "array", "minItems": 1,
+          "items": {"$ref": "#/$defs/occurrencePassedPawnResultPremise"}
+        },
+        "closure_use_ids": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "occurrencePassedPawnResultPremise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role", "lower_kind", "lower_semantic_key", "source_premise_ids",
+        "branch_id", "branch_role", "from_step_index", "to_step_index"
+      ],
+      "properties": {
+        "role": {"enum": ["dependency", "result"]},
+        "lower_kind": {"enum": ["passed_pawn_progress_dependency", "passed_pawn_progress"]},
+        "lower_semantic_key": {"$ref": "#/$defs/nonEmptyString"},
+        "source_premise_ids": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"const": "observed_root_with_analyzed_continuation"},
+        "from_step_index": {"type": "integer", "minimum": 0},
+        "to_step_index": {"type": "integer", "minimum": 0},
+        "dependency_proof": {"$ref": "#/$defs/occurrencePassedPawnResultDependencyProof"}
+      },
+      "oneOf": [
+        {
+          "required": ["dependency_proof"],
+          "properties": {
+            "role": {"const": "dependency"},
+            "lower_kind": {"const": "passed_pawn_progress_dependency"}
+          }
+        },
+        {
+          "not": {"required": ["dependency_proof"]},
+          "properties": {
+            "role": {"const": "result"},
+            "lower_kind": {"const": "passed_pawn_progress"}
+          }
+        }
+      ]
+    },
+    "occurrencePassedPawnResultDependencyProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependency_kind", "proof_kind", "squares", "pieces",
+        "relation_issuers", "position_state_issuers"
+      ],
+      "properties": {
+        "dependency_kind": {
+          "enum": [
+            "object_state_precondition",
+            "line_access_precondition",
+            "response_continuation_precondition"
+          ]
+        },
+        "proof_kind": {
+          "enum": ["object_state", "line_access", "pawn_break_follow_up", "capture_follow_up"]
+        },
+        "squares": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/passedPawnResultDependencySquare"}
+        },
+        "pieces": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/passedPawnResultDependencyPiece"}
+        },
+        "relation_issuers": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrencePassedPawnResultRelationIssuer"}
+        },
+        "position_state_issuers": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrencePassedPawnResultPositionStateIssuer"}
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "dependency_kind": {"const": "object_state_precondition"},
+            "proof_kind": {"const": "object_state"}
+          }
+        },
+        {
+          "properties": {
+            "dependency_kind": {"const": "line_access_precondition"},
+            "proof_kind": {"const": "line_access"}
+          }
+        },
+        {
+          "properties": {
+            "dependency_kind": {"const": "response_continuation_precondition"},
+            "proof_kind": {"enum": ["pawn_break_follow_up", "capture_follow_up"]}
+          }
+        }
+      ]
+    },
+    "occurrencePassedPawnResultRelationIssuer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract", "result_key", "occurrence_id", "step_key", "source_premise_ids",
+        "issuer_evidence_id", "line", "scope"
+      ],
+      "properties": {
+        "contract": {
+          "enum": ["slider_reach_delta", "pawn_topology_transition", "capture_recapture_inventory"]
+        },
+        "result_key": {
+          "type": "string",
+          "pattern": "^(slider_reach_delta|pawn_topology_transition|capture_recapture_inventory):[0-9a-f]{64}$"
+        },
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "step_key": {"$ref": "#/$defs/nonEmptyString"},
+        "source_premise_ids": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "line": {"$ref": "#/$defs/occurrencePassedPawnResultLine"},
+        "scope": {"const": "legal_line"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "contract": {"const": "slider_reach_delta"},
+            "result_key": {"pattern": "^slider_reach_delta:[0-9a-f]{64}$"}
+          }
+        },
+        {
+          "properties": {
+            "contract": {"const": "pawn_topology_transition"},
+            "result_key": {"pattern": "^pawn_topology_transition:[0-9a-f]{64}$"}
+          }
+        },
+        {
+          "properties": {
+            "contract": {"const": "capture_recapture_inventory"},
+            "result_key": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}
+          }
+        }
+      ]
+    },
+    "occurrencePassedPawnResultPositionStateIssuer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state", "semantic_proof_id", "issuer_evidence_id", "issuer_occurrence_id",
+        "step_key", "ply", "move_uci", "fen_before", "fen_after", "line", "scope"
+      ],
+      "properties": {
+        "state": {"$ref": "#/$defs/passedPawnResultPositionStateWitness"},
+        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "step_key": {"$ref": "#/$defs/nonEmptyString"},
+        "ply": {"type": "integer", "minimum": 1},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "fen_before": {"$ref": "#/$defs/nonEmptyString"},
+        "fen_after": {"$ref": "#/$defs/nonEmptyString"},
+        "line": {"$ref": "#/$defs/occurrencePassedPawnResultLine"},
+        "scope": {"const": "legal_line"}
+      }
+    },
+    "explanationSubjectOccurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "occurrence_id",
+        "line_owner_evidence_id",
+        "transition_evidence_id",
+        "move_uci",
+        "root_provenance",
+        "line_id",
+        "start",
+        "destination"
+      ],
+      "properties": {
+        "occurrence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "line_owner_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "transition_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "root_provenance": {"const": "observed_game_root"},
+        "line_id": {"$ref": "#/$defs/nonEmptyString"},
+        "start": {"$ref": "#/$defs/explanationSubjectPosition"},
+        "destination": {"$ref": "#/$defs/explanationSubjectPosition"}
+      }
+    },
+    "explanationSubjectPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fen", "ply"],
+      "properties": {
+        "fen": {"$ref": "#/$defs/nonEmptyString"},
+        "ply": {"type": "integer", "minimum": 0}
+      }
+    },
+    "occurrenceCaptureExclusionMoveOrderProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "vacating_branch",
+        "immediate_capture_branch",
+        "proof_paths",
+        "participants",
+        "later_deferred_step_index"
+      ],
+      "properties": {
+        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "vacating_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {
+              "properties": {
+                "branch_role": {"const": "vacating_then_deferred"},
+                "steps": {"minItems": 3}
+              }
+            }
+          ]
+        },
+        "immediate_capture_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {
+              "properties": {
+                "branch_role": {"const": "immediate_deferred_capture"},
+                "steps": {"minItems": 2, "maxItems": 2}
+              }
+            }
+          ]
+        },
+        "proof_paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceCaptureExclusionProofPath"}
+        },
+        "participants": {"$ref": "#/$defs/occurrenceCaptureExclusionParticipants"},
+        "later_deferred_step_index": {"type": "integer", "minimum": 2}
+      }
+    },
+    "occurrenceExplanationBranch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch_id",
+        "line_id",
+        "line_owner_evidence_id",
+        "root_transition_evidence_id",
+        "branch_role",
+        "root_provenance",
+        "root_move",
+        "steps"
+      ],
+      "properties": {
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "line_id": {"$ref": "#/$defs/nonEmptyString"},
+        "line_owner_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "root_transition_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "branch_role": {"$ref": "#/$defs/nonEmptyString"},
+        "root_provenance": {"enum": ["counterfactual_analyzed_root", "observed_game_root"]},
+        "root_move": {"$ref": "#/$defs/uciMove"},
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/boundedCausalStep"}
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "root_provenance": {"const": "observed_game_root"},
+            "steps": {
+              "prefixItems": [
+                {"properties": {"provenance": {"const": "observed_game_move"}}}
+              ],
+              "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
+            }
+          }
+        },
+        {
+          "properties": {
+            "root_provenance": {"const": "counterfactual_analyzed_root"},
+            "steps": {
+              "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
+            }
+          }
+        }
+      ]
+    },
+    "occurrenceExplanationRelationPremiseUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role", "contract", "result_id", "issuer_evidence_id", "issuer_occurrence_id",
+        "source_premise_ids", "branch_id", "branch_role", "step_index"
+      ],
+      "properties": {
+        "role": {"$ref": "#/$defs/nonEmptyString"},
+        "contract": {"enum": ["created_check_response_inventory", "capture_recapture_inventory", "slider_reach_delta"]},
+        "result_id": {"type": "string", "pattern": "^(created_check_response_inventory|capture_recapture_inventory|slider_reach_delta):[0-9a-f]{64}$"},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_premise_ids": {
+          "type": "array", "minItems": 3, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"$ref": "#/$defs/nonEmptyString"},
+        "step_index": {"type": "integer", "minimum": 0}
+      }
+    },
+    "occurrenceCaptureExclusionProofPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
+      "properties": {
+        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "premises": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
+                {"properties": {"role": {"const": "vacating_move"}, "branch_role": {"const": "vacating_then_deferred"}, "step_index": {"const": 0}}}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
+                {"properties": {"role": {"const": "immediate_deferred_move"}, "branch_role": {"const": "immediate_deferred_capture"}, "step_index": {"const": 0}}}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
+                {"required": ["capture"], "properties": {"role": {"const": "immediate_capture_reply"}, "branch_role": {"const": "immediate_deferred_capture"}, "step_index": {"const": 1}}}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
+                {"properties": {"role": {"const": "later_deferred_move"}, "branch_role": {"const": "vacating_then_deferred"}, "step_index": {"type": "integer", "minimum": 2}}}
+              ]
+            }
+          ],
+          "items": false
+        },
+        "closed_absence_uses": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "allOf": [
+              {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+              {"properties": {
+                "role": {"const": "capture_reply_absent"},
+                "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
+                "query": {"type": "string", "pattern": "^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$"},
+                "branch_role": {"const": "vacating_then_deferred"}
+              }}
+            ]
+          }
+        },
+        "closed_state_uses": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "allOf": [
+              {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+              {"properties": {
+                "role": {"enum": ["vacated_target", "reply_actor", "deferred_actor"]},
+                "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
+                "query": {"type": "string", "pattern": "^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$"},
+                "branch_role": {"const": "vacating_then_deferred"}
+              }}
+            ]
+          }
+        }
+      }
+    },
+    "occurrenceCaptureExclusionLegalMovePremiseUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role", "contract", "move_uci", "movement", "movement_mode", "legal_move_semantic_id",
+        "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids", "branch_id", "branch_role", "step_index"
+      ],
+      "properties": {
+        "role": {"enum": ["vacating_move", "immediate_deferred_move", "immediate_capture_reply", "later_deferred_move"]},
+        "contract": {"const": "legal_move"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "movement": {"$ref": "#/$defs/boundedCausalMovement"},
+        "movement_mode": {"enum": ["controlled_destination", "pawn_advance", "pawn_double_advance", "castling"]},
+        "legal_move_semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_premise_ids": {
+          "type": "array", "minItems": 3, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"enum": ["vacating_then_deferred", "immediate_deferred_capture"]},
+        "step_index": {"type": "integer", "minimum": 0},
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["square", "piece", "side"],
+          "properties": {
+            "square": {"$ref": "#/$defs/square"},
+            "piece": {"$ref": "#/$defs/pieceRole"},
+            "side": {"$ref": "#/$defs/side"}
+          }
+        }
+      }
+    },
+    "occurrenceExplanationClosureUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_id", "role", "semantic_proof_id", "issuer", "issuer_evidence_id",
+        "issuer_occurrence_id", "query", "branch_id", "branch_role", "after_step_index", "position"
+      ],
+      "properties": {
+        "use_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "role": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "issuer": {"enum": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"]},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "query": {"$ref": "#/$defs/nonEmptyString"},
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"$ref": "#/$defs/nonEmptyString"},
+        "after_step_index": {"type": "integer", "minimum": 0},
+        "position": {"$ref": "#/$defs/occurrenceExplanationPosition"}
+      }
+    },
+    "occurrenceExplanationPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fen", "ply", "scope"],
+      "properties": {
+        "fen": {"$ref": "#/$defs/nonEmptyString"},
+        "ply": {"type": "integer", "minimum": 1},
+        "scope": {"const": "legal_line"}
+      }
+    },
+    "occurrenceCaptureExclusionParticipants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vacating_move", "deferred_move", "capture_reply", "captured_target"],
+      "properties": {
+        "vacating_move": {"$ref": "#/$defs/boundedCausalMovement"},
+        "deferred_move": {"$ref": "#/$defs/boundedCausalMovement"},
+        "capture_reply": {"$ref": "#/$defs/boundedCausalMovement"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"}
+      }
     },
     "squareReleaseRouteParticipants": {
       "type": "object",
@@ -979,154 +1828,6 @@
         }
       }
     },
-    "vacatedGateEnablesUnrecapturableSliderCaptureProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id",
-        "semantic_id",
-        "occurrence_id",
-        "dependency_fingerprint",
-        "counterfactual_reference_branch",
-        "played_root_branch",
-        "proof_paths",
-        "participants",
-        "exploit_move"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "counterfactual_reference_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "best_reference"},
-                "branch_role": {"const": "counterfactual_reference"},
-                "root_provenance": {"const": "counterfactual_analyzed_root"},
-                "steps": {
-                  "minItems": 3,
-                  "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-                }
-              }
-            }
-          ]
-        },
-        "played_root_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "played"},
-                "branch_role": {"const": "played_root_analysis_continuation"},
-                "root_provenance": {"const": "observed_game_root"},
-                "steps": {
-                  "minItems": 2,
-                  "prefixItems": [
-                    {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
-                  ],
-                  "items": {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-                }
-              }
-            }
-          ]
-        },
-        "proof_paths": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureProofPath"}
-        },
-        "participants": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureParticipants"},
-        "exploit_move": {"$ref": "#/$defs/uciMove"}
-      }
-    },
-    "vacatedGateEnablesUnrecapturableSliderCaptureProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCapturePremiseUse"},
-                {"properties": {"role": {"const": "reference_root_slider_reach"}, "contract": {"const": "slider_reach_delta"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCapturePremiseUse"},
-                {"properties": {"role": {"const": "reference_exploit_capture"}, "contract": {"const": "capture_recapture_inventory"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"minimum": 2}}}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureAbsenceUse"}
-        },
-        "closed_state_uses": {
-          "type": "array",
-          "minItems": 10,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureStateUse"}
-        }
-      }
-    },
-    "vacatedGateEnablesUnrecapturableSliderCapturePremiseUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "role", "contract", "result_id", "issuer_evidence_id", "issuer_occurrence_id",
-        "source_premise_ids", "branch_id", "branch_role", "step_index"
-      ],
-      "properties": {
-        "role": {"enum": ["reference_root_slider_reach", "reference_exploit_capture"]},
-        "contract": {"enum": ["slider_reach_delta", "capture_recapture_inventory"]},
-        "result_id": {"type": "string", "pattern": "^(slider_reach_delta|capture_recapture_inventory):[0-9a-f]{64}$"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "source_premise_ids": {
-          "type": "array", "minItems": 3, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"const": "counterfactual_reference"},
-        "step_index": {"type": "integer", "minimum": 0}
-      }
-    },
-    "vacatedGateEnablesUnrecapturableSliderCaptureAbsenceUse": {
-      "allOf": [
-        {"$ref": "#/$defs/boundedCausalClosureUse"},
-        {"properties": {
-          "role": {"enum": ["reference_immediate_recapture_absent", "played_exploit_move_absent", "played_replacement_capture_absent"]},
-          "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-          "query": {"type": "string", "pattern": "^(legal-capture:(white|black):[a-h][1-8]|legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8])$"},
-          "after_step_index": {"type": "integer", "minimum": 1}
-        }}
-      ]
-    },
-    "vacatedGateEnablesUnrecapturableSliderCaptureStateUse": {
-      "allOf": [
-        {"$ref": "#/$defs/boundedCausalClosureUse"},
-        {"properties": {
-          "role": {"enum": ["reference_intervening_slider_reach", "reference_target_persistence", "played_slider_persistence", "played_target_persistence", "played_gate_blocker_persistence", "played_blocked_slider_reach"]},
-          "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
-          "query": {"type": "string", "pattern": "^(occupied-by|slider-reach):.+$"},
-          "after_step_index": {"type": "integer", "minimum": 0}
-        }}
-      ]
-    },
     "vacatedGateEnablesUnrecapturableSliderCaptureParticipants": {
       "type": "object",
       "additionalProperties": false,
@@ -1137,71 +1838,6 @@
         "gate_blocker": {"$ref": "#/$defs/boundedCausalPiece"},
         "exploit": {"$ref": "#/$defs/boundedCausalMovement"},
         "captured_target": {"$ref": "#/$defs/boundedCausalPiece"}
-      }
-    },
-    "passedPawnProgressRealizedAfterOnlyLegalReplyProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id",
-        "event_evidence_id",
-        "semantic_id",
-        "occurrence_id",
-        "dependency_fingerprint",
-        "result_target_subjects",
-        "root_actor",
-        "realizing_actor",
-        "root_line",
-        "root_move",
-        "root_ply",
-        "realizing_move",
-        "realizing_ply",
-        "result_ply_offset",
-        "closed_legal_reply_inventory",
-        "branches",
-        "proof_paths",
-        "lower_premise_ids"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "event_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "result_target_subjects": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnResultSubject"}
-        },
-        "root_actor": {"$ref": "#/$defs/passedPawnResultActor"},
-        "realizing_actor": {"$ref": "#/$defs/passedPawnResultActor"},
-        "root_line": {"$ref": "#/$defs/passedPawnResultLine"},
-        "root_move": {"$ref": "#/$defs/uciMove"},
-        "root_ply": {"type": "integer", "minimum": 1},
-        "realizing_move": {"$ref": "#/$defs/uciMove"},
-        "realizing_ply": {"type": "integer", "minimum": 1},
-        "result_ply_offset": {"type": "integer", "minimum": 1},
-        "closed_legal_reply_inventory": {"$ref": "#/$defs/passedPawnResultClosedReplyInventory"},
-        "branches": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnResultBranch"}
-        },
-        "proof_paths": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnProgressRealizedAfterOnlyLegalReplyProofPath"}
-        },
-        "lower_premise_ids": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        }
       }
     },
     "passedPawnResultActor": {
@@ -1220,17 +1856,6 @@
     "passedPawnResultSubject": {
       "type": "string",
       "minLength": 1
-    },
-    "passedPawnResultLine": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["line_id", "line_role", "line_rank", "root_move"],
-      "properties": {
-        "line_id": {"$ref": "#/$defs/nonEmptyString"},
-        "line_role": {"const": "played"},
-        "line_rank": {"type": "integer", "minimum": 1},
-        "root_move": {"$ref": "#/$defs/uciMove"}
-      }
     },
     "passedPawnResultClosedReplyInventory": {
       "type": "object",
@@ -1255,99 +1880,6 @@
         },
         "legal_reply_move": {"$ref": "#/$defs/uciMove"},
         "analysis_continuation_branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
-      }
-    },
-    "passedPawnResultBranch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "branch_id",
-        "role",
-        "reply_move",
-        "source_occurrence_id",
-        "line",
-        "root_provenance",
-        "steps"
-      ],
-      "properties": {
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "role": {"const": "played_root_analysis_continuation"},
-        "reply_move": {"$ref": "#/$defs/uciMove"},
-        "source_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "line": {"$ref": "#/$defs/passedPawnResultLine"},
-        "root_provenance": {"const": "observed_game_root"},
-        "steps": {
-          "type": "array",
-          "minItems": 2,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/passedPawnResultStep"},
-                {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
-              ]
-            }
-          ],
-          "items": {
-            "allOf": [
-              {"$ref": "#/$defs/passedPawnResultStep"},
-              {"properties": {"provenance": {"const": "certified_analysis_move"}}}
-            ]
-          }
-        }
-      }
-    },
-    "passedPawnResultStep": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "step_index",
-        "step_key",
-        "ply",
-        "move_uci",
-        "fen_before",
-        "fen_after",
-        "line",
-        "provenance"
-      ],
-      "properties": {
-        "step_index": {"type": "integer", "minimum": 0},
-        "step_key": {"$ref": "#/$defs/nonEmptyString"},
-        "ply": {"type": "integer", "minimum": 1},
-        "move_uci": {"$ref": "#/$defs/uciMove"},
-        "fen_before": {"$ref": "#/$defs/nonEmptyString"},
-        "fen_after": {"$ref": "#/$defs/nonEmptyString"},
-        "line": {"$ref": "#/$defs/passedPawnResultLine"},
-        "provenance": {"enum": ["observed_game_move", "certified_analysis_move"]}
-      }
-    },
-    "passedPawnProgressRealizedAfterOnlyLegalReplyProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "path_occurrence_id",
-        "analysis_continuation_branch_id",
-        "realization_actor",
-        "realization_move",
-        "realization_ply",
-        "premises",
-        "closure_use_ids"
-      ],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "analysis_continuation_branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "realization_actor": {"$ref": "#/$defs/passedPawnResultActor"},
-        "realization_move": {"$ref": "#/$defs/uciMove"},
-        "realization_ply": {"type": "integer", "minimum": 1},
-        "premises": {
-          "type": "array",
-          "items": {"$ref": "#/$defs/passedPawnResultPremise"}
-        },
-        "closure_use_ids": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
-        }
       }
     },
     "passedPawnResultDependencySquare": {
@@ -1396,60 +1928,6 @@
         "side": {"$ref": "#/$defs/side"},
         "piece": {"$ref": "#/$defs/pieceRole"}
       }
-    },
-    "passedPawnResultRelationIssuer": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "contract",
-        "result_key",
-        "occurrence_id",
-        "step_key",
-        "source_premise_ids",
-        "issuer_evidence_id",
-        "line",
-        "scope"
-      ],
-      "properties": {
-        "contract": {
-          "enum": ["slider_reach_delta", "pawn_topology_transition", "capture_recapture_inventory"]
-        },
-        "result_key": {
-          "type": "string",
-          "pattern": "^(slider_reach_delta|pawn_topology_transition|capture_recapture_inventory):[0-9a-f]{64}$"
-        },
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "step_key": {"$ref": "#/$defs/nonEmptyString"},
-        "source_premise_ids": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "line": {"$ref": "#/$defs/passedPawnResultLine"},
-        "scope": {"const": "played_line"}
-      },
-      "oneOf": [
-        {
-          "properties": {
-            "contract": {"const": "slider_reach_delta"},
-            "result_key": {"type": "string", "pattern": "^slider_reach_delta:[0-9a-f]{64}$"}
-          }
-        },
-        {
-          "properties": {
-            "contract": {"const": "pawn_topology_transition"},
-            "result_key": {"type": "string", "pattern": "^pawn_topology_transition:[0-9a-f]{64}$"}
-          }
-        },
-        {
-          "properties": {
-            "contract": {"const": "capture_recapture_inventory"},
-            "result_key": {"type": "string", "pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}
-          }
-        }
-      ]
     },
     "passedPawnResultPositionStateWitness": {
       "oneOf": [
@@ -1519,212 +1997,6 @@
         }
       ]
     },
-    "passedPawnResultPositionStateIssuer": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "state",
-        "semantic_proof_id",
-        "issuer_evidence_id",
-        "issuer_occurrence_id",
-        "step_key",
-        "ply",
-        "move_uci",
-        "fen_before",
-        "fen_after",
-        "line",
-        "scope"
-      ],
-      "properties": {
-        "state": {"$ref": "#/$defs/passedPawnResultPositionStateWitness"},
-        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "step_key": {"$ref": "#/$defs/nonEmptyString"},
-        "ply": {"type": "integer", "minimum": 1},
-        "move_uci": {"$ref": "#/$defs/uciMove"},
-        "fen_before": {"$ref": "#/$defs/nonEmptyString"},
-        "fen_after": {"$ref": "#/$defs/nonEmptyString"},
-        "line": {"$ref": "#/$defs/passedPawnResultLine"},
-        "scope": {"const": "played_line"}
-      }
-    },
-    "passedPawnResultDependencyProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "dependency_kind",
-        "proof_kind",
-        "squares",
-        "pieces",
-        "relation_issuers",
-        "position_state_issuers"
-      ],
-      "properties": {
-        "dependency_kind": {
-          "enum": [
-            "object_state_precondition",
-            "line_access_precondition",
-            "response_continuation_precondition"
-          ]
-        },
-        "proof_kind": {
-          "enum": ["object_state", "line_access", "pawn_break_follow_up", "capture_follow_up"]
-        },
-        "squares": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnResultDependencySquare"}
-        },
-        "pieces": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnResultDependencyPiece"}
-        },
-        "relation_issuers": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnResultRelationIssuer"}
-        },
-        "position_state_issuers": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/passedPawnResultPositionStateIssuer"}
-        }
-      }
-    },
-    "passedPawnResultPremise": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "role",
-        "lower_kind",
-        "lower_semantic_key",
-        "source_premise_ids",
-        "branch_id",
-        "branch_role",
-        "from_step_index",
-        "to_step_index"
-      ],
-      "properties": {
-        "role": {"enum": ["dependency", "result"]},
-        "lower_kind": {
-          "enum": ["passed_pawn_progress_dependency", "passed_pawn_progress"]
-        },
-        "lower_semantic_key": {"$ref": "#/$defs/nonEmptyString"},
-        "source_premise_ids": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"const": "played_root_analysis_continuation"},
-        "from_step_index": {"type": "integer", "minimum": 0},
-        "to_step_index": {"type": "integer", "minimum": 0},
-        "dependency_proof": {"$ref": "#/$defs/passedPawnResultDependencyProof"}
-      }
-    },
-    "uniqueCheckReplyDefenderDisplacementBeforeCaptureProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id",
-        "semantic_id",
-        "occurrence_id",
-        "dependency_fingerprint",
-        "counterfactual_reference_branch",
-        "played_root_branch",
-        "proof_paths",
-        "participants",
-        "realizing_move",
-        "played_root_branch_legal_defense_move"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "counterfactual_reference_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "best_reference"},
-                "branch_role": {"const": "counterfactual_reference"},
-                "root_provenance": {"const": "counterfactual_analyzed_root"},
-                "steps": {
-                  "minItems": 3,
-                  "maxItems": 3,
-                  "items": {
-                    "properties": {"provenance": {"const": "certified_analysis_move"}}
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "played_root_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "played"},
-                "branch_role": {"const": "played_root_analysis_continuation"},
-                "root_provenance": {"const": "observed_game_root"},
-                "steps": {
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "prefixItems": [
-                    {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
-                  ],
-                  "items": {
-                    "properties": {"provenance": {"const": "certified_analysis_move"}}
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "proof_paths": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCaptureDisplacementProofPath"}
-        },
-        "participants": {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCaptureParticipants"},
-        "realizing_move": {"$ref": "#/$defs/uciMove"},
-        "played_root_branch_legal_defense_move": {"$ref": "#/$defs/uciMove"}
-      }
-    },
-    "boundedCausalBranch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "branch_id",
-        "line_id",
-        "line_role",
-        "branch_role",
-        "root_provenance",
-        "line_rank",
-        "root_move",
-        "steps"
-      ],
-      "properties": {
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "line_id": {"$ref": "#/$defs/nonEmptyString"},
-        "line_role": {"enum": ["best_reference", "played"]},
-        "branch_role": {"enum": ["counterfactual_reference", "played_root_analysis_continuation"]},
-        "root_provenance": {"enum": ["counterfactual_analyzed_root", "observed_game_root"]},
-        "line_rank": {"type": "integer", "minimum": 1},
-        "root_move": {"$ref": "#/$defs/uciMove"},
-        "steps": {
-          "type": "array",
-          "minItems": 2,
-          "items": {"$ref": "#/$defs/boundedCausalStep"}
-        }
-      }
-    },
     "boundedCausalStep": {
       "type": "object",
       "additionalProperties": false,
@@ -1736,373 +2008,6 @@
         "move_uci": {"$ref": "#/$defs/uciMove"},
         "fen_before": {"$ref": "#/$defs/nonEmptyString"},
         "fen_after": {"$ref": "#/$defs/nonEmptyString"}
-      }
-    },
-    "uniqueCheckReplyDefenderDisplacementBeforeCaptureDisplacementProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCapturePremiseUse"},
-                {"properties": {"role": {"const": "created_check_response"}, "contract": {"const": "created_check_response_inventory"}, "result_id": {"pattern": "^created_check_response_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCapturePremiseUse"},
-                {"properties": {"role": {"const": "reference_capture_recapture"}, "contract": {"const": "capture_recapture_inventory"}, "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 2}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCapturePremiseUse"},
-                {"properties": {"role": {"const": "played_capture_recapture"}, "contract": {"const": "capture_recapture_inventory"}, "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "played_root_analysis_continuation"}, "step_index": {"const": 0}}}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
-          "items": {"$ref": "#/$defs/uniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceUse"}
-        }
-      }
-    },
-    "uniqueCheckReplyDefenderDisplacementBeforeCapturePremiseUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "role",
-        "contract",
-        "result_id",
-        "issuer_evidence_id",
-        "issuer_occurrence_id",
-        "source_premise_ids",
-        "branch_id",
-        "branch_role",
-        "step_index"
-      ],
-      "properties": {
-        "role": {
-          "enum": ["created_check_response", "reference_capture_recapture", "played_capture_recapture"]
-        },
-        "contract": {"enum": ["created_check_response_inventory", "capture_recapture_inventory"]},
-        "result_id": {
-          "type": "string",
-          "pattern": "^(created_check_response_inventory|capture_recapture_inventory):[0-9a-f]{64}$"
-        },
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "source_premise_ids": {
-          "type": "array",
-          "minItems": 3,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"enum": ["counterfactual_reference", "played_root_analysis_continuation"]},
-        "step_index": {"type": "integer", "minimum": 0}
-      }
-    },
-    "uniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "use_id",
-        "role",
-        "semantic_proof_id",
-        "issuer",
-        "issuer_evidence_id",
-        "issuer_occurrence_id",
-        "query",
-        "branch_id",
-        "branch_role",
-        "after_step_index",
-        "position"
-      ],
-      "properties": {
-        "use_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "role": {"const": "reference_recapture_absent"},
-        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "query": {"type": "string", "pattern": "^legal-capture:(white|black):[a-h][1-8]$"},
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"const": "counterfactual_reference"},
-        "after_step_index": {"const": 2},
-        "position": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["fen", "ply", "scope"],
-          "properties": {
-            "fen": {"$ref": "#/$defs/nonEmptyString"},
-            "ply": {"type": "integer", "minimum": 1},
-            "scope": {"const": "best_line"}
-          }
-        }
-      }
-    },
-    "soleRecapturerRemovalBeforeTargetCaptureProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id",
-        "semantic_id",
-        "occurrence_id",
-        "dependency_fingerprint",
-        "counterfactual_reference_branch",
-        "played_root_branch",
-        "proof_paths",
-        "participants",
-        "later_exploit_move",
-        "played_sole_recapture_move"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "counterfactual_reference_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "best_reference"},
-                "branch_role": {"const": "counterfactual_reference"},
-                "root_provenance": {"const": "counterfactual_analyzed_root"},
-                "steps": {
-                  "minItems": 3,
-                  "maxItems": 3,
-                  "items": {
-                    "properties": {"provenance": {"const": "certified_analysis_move"}}
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "played_root_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/boundedCausalBranch"},
-            {
-              "properties": {
-                "line_role": {"const": "played"},
-                "branch_role": {"const": "played_root_analysis_continuation"},
-                "root_provenance": {"const": "observed_game_root"},
-                "steps": {
-                  "minItems": 2,
-                  "maxItems": 2,
-                  "prefixItems": [
-                    {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
-                  ],
-                  "items": {
-                    "properties": {"provenance": {"const": "certified_analysis_move"}}
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "proof_paths": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCaptureProofPath"}
-        },
-        "participants": {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCaptureParticipants"},
-        "later_exploit_move": {"$ref": "#/$defs/uciMove"},
-        "played_sole_recapture_move": {"$ref": "#/$defs/uciMove"}
-      }
-    },
-    "soleRecapturerRemovalBeforeTargetCaptureProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCapturePremiseUse"},
-                {"properties": {"role": {"const": "reference_defender_removal"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCapturePremiseUse"},
-                {"properties": {"role": {"const": "reference_later_exploit_inventory"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 2}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCapturePremiseUse"},
-                {"properties": {"role": {"const": "played_immediate_exploit_inventory"}, "branch_role": {"const": "played_root_analysis_continuation"}, "step_index": {"const": 0}}}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
-          "items": {"$ref": "#/$defs/soleRecapturerRemovalBeforeTargetCaptureAbsenceUse"}
-        }
-      }
-    },
-    "soleRecapturerRemovalBeforeTargetCapturePremiseUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "role",
-        "contract",
-        "result_id",
-        "issuer_evidence_id",
-        "issuer_occurrence_id",
-        "source_premise_ids",
-        "branch_id",
-        "branch_role",
-        "step_index"
-      ],
-      "properties": {
-        "role": {
-          "enum": [
-            "reference_defender_removal",
-            "reference_later_exploit_inventory",
-            "played_immediate_exploit_inventory"
-          ]
-        },
-        "contract": {"const": "capture_recapture_inventory"},
-        "result_id": {"type": "string", "pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "source_premise_ids": {
-          "type": "array",
-          "minItems": 3,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"enum": ["counterfactual_reference", "played_root_analysis_continuation"]},
-        "step_index": {"type": "integer", "minimum": 0}
-      }
-    },
-    "soleRecapturerRemovalBeforeTargetCaptureAbsenceUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "use_id",
-        "role",
-        "semantic_proof_id",
-        "issuer",
-        "issuer_evidence_id",
-        "issuer_occurrence_id",
-        "query",
-        "branch_id",
-        "branch_role",
-        "after_step_index",
-        "position"
-      ],
-      "properties": {
-        "use_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "role": {"const": "reference_replacement_recapture_absent"},
-        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "query": {"type": "string", "pattern": "^legal-capture:(white|black):[a-h][1-8]$"},
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"const": "counterfactual_reference"},
-        "after_step_index": {"const": 2},
-        "position": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["fen", "ply", "scope"],
-          "properties": {
-            "fen": {"$ref": "#/$defs/nonEmptyString"},
-            "ply": {"type": "integer", "minimum": 1},
-            "scope": {"const": "best_line"}
-          }
-        }
-      }
-    },
-    "soleRecapturerRemovalBeforeTargetCaptureParticipants": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "remover",
-        "removed_defender",
-        "removal_recapture",
-        "later_exploit",
-        "captured_target",
-        "played_sole_recapture"
-      ],
-      "properties": {
-        "remover": {"$ref": "#/$defs/boundedCausalMovement"},
-        "removed_defender": {"$ref": "#/$defs/boundedCausalPiece"},
-        "removal_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"},
-        "later_exploit": {"$ref": "#/$defs/boundedCausalMovement"},
-        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
-        "played_sole_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"}
-      }
-    },
-    "uniqueCheckReplyDefenderDisplacementBeforeCaptureParticipants": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["trigger", "forced_reply", "realizer", "captured_target", "played_defense", "disabled_defender"],
-      "properties": {
-        "trigger": {"$ref": "#/$defs/boundedCausalMovement"},
-        "forced_reply": {"$ref": "#/$defs/boundedCausalLegalResource"},
-        "realizer": {"$ref": "#/$defs/boundedCausalMovement"},
-        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
-        "played_defense": {"$ref": "#/$defs/boundedCausalLegalResource"},
-        "disabled_defender": {"$ref": "#/$defs/boundedCausalPiece"}
-      }
-    },
-    "boundedCausalClosureUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "use_id", "role", "semantic_proof_id", "issuer", "issuer_evidence_id",
-        "issuer_occurrence_id", "query", "branch_id", "branch_role", "after_step_index", "position"
-      ],
-      "properties": {
-        "use_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "role": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "issuer": {"enum": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"]},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "query": {"$ref": "#/$defs/nonEmptyString"},
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"enum": ["counterfactual_reference", "played_root_analysis_continuation"]},
-        "after_step_index": {"type": "integer", "minimum": 0},
-        "position": {"$ref": "#/$defs/boundedCausalPosition"}
-      }
-    },
-    "boundedCausalPosition": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["fen", "ply", "scope"],
-      "properties": {
-        "fen": {"$ref": "#/$defs/nonEmptyString"},
-        "ply": {"type": "integer", "minimum": 1},
-        "scope": {"enum": ["best_line", "played_line"]}
       }
     },
     "boundedCausalMovement": {

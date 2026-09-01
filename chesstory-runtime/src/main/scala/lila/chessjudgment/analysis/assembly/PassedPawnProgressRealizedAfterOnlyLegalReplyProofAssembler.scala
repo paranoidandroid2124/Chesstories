@@ -2,8 +2,9 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Seals one played root with its certified analysis-result continuation and
-  * all graph-owned dependency routes after an exact PlayedVsBest demand.
+/** Seals one history-observed root with its certified analysis-result
+  * continuation and all graph-owned dependency routes after an exact
+  * occurrence demand.
   */
 private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler:
 
@@ -26,6 +27,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
             exactRouteGroups(event).flatMap { case (semanticIdentity, routes) =>
               exactOwnersForDependencies(
                 proofOwnersBySemantic.getOrElse(semanticIdentity, Nil),
+                demand.subject,
                 source,
                 inventoryOwner,
                 routes
@@ -33,9 +35,9 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
                 case exact :: Nil => List(exact)
                 case Nil =>
                   PassedPawnProgressRealizedAfterOnlyLegalReplyProofDerivation
-                    .derive(source, inventoryOwner, routes)
+                    .derive(demand.subject, source, inventoryOwner, routes)
                     .map { proof =>
-                      val parents = List(source.ref, inventoryOwner.ref)
+                      val parents = proof.proofParentSources
                       require(
                         parents.map(_.id).distinct.size == parents.size,
                         "passed-pawn causal proof parents must have distinct derivation owners"
@@ -43,13 +45,13 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
                       EvidenceRecord(
                         ref = EvidenceRef(
                           id = allocator.evidenceId(
-                            s"causal-proof:passed-pawn-progress-realized-after-only-legal-reply:${proof.semanticId}:${proof.occurrenceId}:${proof.dependencyFingerprint}"
+                            s"causal-proof:${BoundedCausalContractKind.PassedPawnProgressRealizedAfterOnlyLegalReply.semanticNamespace}:${proof.semanticId}:${proof.occurrenceId}:${proof.dependencyFingerprint}:subject:${proof.subjectOccurrence.stableKey}"
                           ),
                           producer = EvidenceProducer.CausalProofProducer,
                           layer = EvidenceLayer.CausalProof,
-                          position = proof.event.rootTransition.from,
-                          line = Some(proof.rootLine),
-                          scope = proof.event.rootTransition.role.scope,
+                          position = demand.subject.transition.from,
+                          line = Some(demand.subject.line),
+                          scope = demand.subject.transition.role.scope,
                           confidence = EvidenceConfidence.LegalReplayVerified
                         ),
                         payload = proof,
@@ -80,12 +82,14 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
   private[assembly] def existingProofOwnersForExactDependencies(
       graph: TypedEvidenceGraph,
       line: LineNodeRef,
+      subject: CertifiedRootOccurrence,
       source: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): List[EvidenceRecord] =
     exactOwnersForDependencies(
       graph.recordsFor(line).filter(graph.proofEligible),
+      subject,
       source,
       inventory,
       routes
@@ -93,13 +97,14 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
 
   private def exactOwnersForDependencies(
       eligibleOwners: List[EvidenceRecord],
+      subject: CertifiedRootOccurrence,
       source: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): List[EvidenceRecord] =
     eligibleOwners.collect {
       case record @ EvidenceRecord(_, proof: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _)
-          if proof.consumesExactDependencies(source, inventory, routes) =>
+          if proof.consumesExactDependencies(subject, source, inventory, routes) =>
         record
     }
 

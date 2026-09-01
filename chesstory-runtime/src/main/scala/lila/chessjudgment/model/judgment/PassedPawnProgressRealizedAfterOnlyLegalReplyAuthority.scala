@@ -34,14 +34,21 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
       event.onlyLegalReplyMove.exists(EvidenceRef.sameMove(_, replyMove)),
       "a passed-pawn analysis continuation must begin with the StructuralDelta-certified only reply"
     )
-    val rootProvenance = CausalBranchOccurrence.rootProvenanceFor(event.rootLine)
+    val rootProvenance = event.subjectOccurrence.rootProvenance
+    require(
+      rootProvenance == CausalRootProvenance.ObservedGameRoot &&
+        event.subjectOccurrence.rootProvenance == rootProvenance,
+      "a passed-pawn occurrence explanation needs its certified history root"
+    )
     CausalBranchOccurrence.fromCertifiedOccurrences(
-      PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(
+      PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation(
         EvidenceRef.normalizeMove(replyMove),
         event.causalEpisode.root.structuralOccurrence.occurrenceId
       ),
       rootProvenance,
       event.rootLine,
+      event.subjectOccurrence.lineOwnerEvidenceId,
+      event.subjectOccurrence.transitionEvidenceId,
       steps.zipWithIndex.map { case (step, index) =>
         new CausalStepOccurrence(
           index,
@@ -62,11 +69,13 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
     scala.util.Try {
       val steps = exactAnalysisContinuationSteps(event, routes)
       val replyMove = steps(1).moveUci
-      val rootProvenance = CausalBranchOccurrence.rootProvenanceFor(event.rootLine)
-      branch.role == PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(
+      val rootProvenance = event.subjectOccurrence.rootProvenance
+      branch.role == PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation(
         EvidenceRef.normalizeMove(replyMove),
         event.causalEpisode.root.structuralOccurrence.occurrenceId
       ) && branch.rootProvenance == rootProvenance && branch.line == event.rootLine &&
+        branch.lineOwnerEvidenceId == event.subjectOccurrence.lineOwnerEvidenceId &&
+        branch.rootTransitionEvidenceId == event.subjectOccurrence.transitionEvidenceId &&
         branch.rootPositionIdentity == SemanticPositionIdentity.fromFen(event.causalEpisode.root.step.fenBefore) &&
         branch.steps.size == steps.size && branch.steps.zip(steps).zipWithIndex.forall {
           case ((occurrence, step), index) =>

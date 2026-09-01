@@ -3,38 +3,47 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
-private[chessjudgment] enum SquareReleaseRoutePremiseRole extends CausalPremiseRole:
-  case ReferenceReleaseMove
-  case ReferenceRouteMove(routeIndex: Int)
-  case ReferenceTerminalResource
-  case ReferenceTerminalReply
+private[chessjudgment] enum SquareReleaseRouteBranchRole extends CausalBranchRole:
+  case ReleasedSquareRoute
+  case RetainedBlocker
 
   def stableKey: String =
     this match
-      case ReferenceReleaseMove           => "reference-release-move"
-      case ReferenceRouteMove(routeIndex) => s"reference-route-move-$routeIndex"
-      case ReferenceTerminalResource      => "reference-terminal-resource"
-      case ReferenceTerminalReply         => "reference-terminal-reply"
+      case ReleasedSquareRoute => "released-square-route"
+      case RetainedBlocker     => "retained-blocker"
+
+private[chessjudgment] enum SquareReleaseRoutePremiseRole extends CausalPremiseRole:
+  case ReleaseMove
+  case RouteMove(routeIndex: Int)
+  case TerminalResource
+  case TerminalReply
+
+  def stableKey: String =
+    this match
+      case ReleaseMove           => "release-move"
+      case RouteMove(routeIndex) => s"route-move-$routeIndex"
+      case TerminalResource      => "terminal-resource"
+      case TerminalReply         => "terminal-reply"
 
 private[chessjudgment] enum SquareReleaseRouteAbsenceRole extends CausalAbsenceRole:
-  case PlayedFirstRouteLegAbsent
+  case RetainedBlockerFirstRouteLegAbsent
 
-  def stableKey: String = "played-first-route-leg-absent"
+  def stableKey: String = "retained-blocker-first-route-leg-absent"
 
 private[chessjudgment] enum SquareReleaseRouteStateRole extends CausalStateRole:
-  case ReferenceVacancy
-  case ReferenceRoutePiece(routeIndex: Int)
-  case ReferenceRoutePersistence(routeIndex: Int)
-  case PlayedBlockerPersistence
-  case PlayedRouteOriginPersistence
+  case ReleasedSquareVacancy
+  case RoutePiece(routeIndex: Int)
+  case RoutePersistence(routeIndex: Int)
+  case RetainedBlockerPersistence
+  case RetainedRouteOriginPersistence
 
   def stableKey: String =
     this match
-      case ReferenceVacancy                     => "reference-vacancy"
-      case ReferenceRoutePiece(routeIndex)       => s"reference-route-piece-$routeIndex"
-      case ReferenceRoutePersistence(routeIndex) => s"reference-route-persistence-$routeIndex"
-      case PlayedBlockerPersistence              => "played-blocker-persistence"
-      case PlayedRouteOriginPersistence          => "played-route-origin-persistence"
+      case ReleasedSquareVacancy      => "released-square-vacancy"
+      case RoutePiece(routeIndex)     => s"route-piece-$routeIndex"
+      case RoutePersistence(routeIndex) => s"route-persistence-$routeIndex"
+      case RetainedBlockerPersistence => "retained-blocker-persistence"
+      case RetainedRouteOriginPersistence => "retained-route-origin-persistence"
 
 /** Derivation-free terminal assertion. Exact L1 result ids stay in proof
   * paths, so independent derivations of one assertion are never collapsed.
@@ -183,19 +192,19 @@ private[chessjudgment] sealed trait SquareReleaseRouteManifest extends BoundedCa
   def routeMoves: List[CausalLegalMovePremiseUse]
   def terminalUse: Option[CausalVerticalRelationPremiseUse]
   def terminalReply: Option[CausalLegalMovePremiseUse]
-  def playedFirstLegAbsent: CausalClosedAbsenceBinding
-  def referenceVacancies: List[CausalClosedStateBinding]
-  def referenceRoutePieces: List[CausalClosedStateBinding]
-  def referencePersistence: List[CausalClosedStateBinding]
-  def playedBlockerPersistence: List[CausalClosedStateBinding]
-  def playedRouteOriginPersistence: List[CausalClosedStateBinding]
+  def retainedFirstLegAbsent: CausalClosedAbsenceBinding
+  def releasedVacancies: List[CausalClosedStateBinding]
+  def releasedRoutePieces: List[CausalClosedStateBinding]
+  def releasedPersistence: List[CausalClosedStateBinding]
+  def retainedBlockerPersistence: List[CausalClosedStateBinding]
+  def retainedRouteOriginPersistence: List[CausalClosedStateBinding]
 
   final val contractKind = BoundedCausalContractKind.SquareReleaseRoute
   final def premiseUses: List[CausalVerticalRelationPremiseUse] = terminalUse.toList
-  final def absenceBindings = List(playedFirstLegAbsent)
+  final def absenceBindings = List(retainedFirstLegAbsent)
   final override def stateBindings =
-    referenceVacancies ++ referenceRoutePieces ++ referencePersistence ++
-      playedBlockerPersistence ++ playedRouteOriginPersistence
+    releasedVacancies ++ releasedRoutePieces ++ releasedPersistence ++
+      retainedBlockerPersistence ++ retainedRouteOriginPersistence
   final override def supplementalPremiseUses: List[CausalSupplementalPremiseUse] =
     releaseMove :: (routeMoves ++ terminalReply.toList)
   final def stableKey: String =
@@ -213,12 +222,12 @@ private[chessjudgment] object SquareReleaseRouteManifest:
       routeMoves: List[CausalLegalMovePremiseUse],
       terminalUse: Option[CausalVerticalRelationPremiseUse],
       terminalReply: Option[CausalLegalMovePremiseUse],
-      playedFirstLegAbsent: CausalClosedAbsenceBinding,
-      referenceVacancies: List[CausalClosedStateBinding],
-      referenceRoutePieces: List[CausalClosedStateBinding],
-      referencePersistence: List[CausalClosedStateBinding],
-      playedBlockerPersistence: List[CausalClosedStateBinding],
-      playedRouteOriginPersistence: List[CausalClosedStateBinding]
+      retainedFirstLegAbsent: CausalClosedAbsenceBinding,
+      releasedVacancies: List[CausalClosedStateBinding],
+      releasedRoutePieces: List[CausalClosedStateBinding],
+      releasedPersistence: List[CausalClosedStateBinding],
+      retainedBlockerPersistence: List[CausalClosedStateBinding],
+      retainedRouteOriginPersistence: List[CausalClosedStateBinding]
   ) extends SquareReleaseRouteManifest
 
   def exact(
@@ -227,29 +236,29 @@ private[chessjudgment] object SquareReleaseRouteManifest:
       routeMoves: List[CausalLegalMovePremiseUse],
       terminalUse: Option[CausalVerticalRelationPremiseUse],
       terminalReply: Option[CausalLegalMovePremiseUse],
-      playedFirstLegAbsent: CausalClosedAbsenceBinding,
-      referenceVacancies: List[CausalClosedStateBinding],
-      referenceRoutePieces: List[CausalClosedStateBinding],
-      referencePersistence: List[CausalClosedStateBinding],
-      playedBlockerPersistence: List[CausalClosedStateBinding],
-      playedRouteOriginPersistence: List[CausalClosedStateBinding]
+      retainedFirstLegAbsent: CausalClosedAbsenceBinding,
+      releasedVacancies: List[CausalClosedStateBinding],
+      releasedRoutePieces: List[CausalClosedStateBinding],
+      releasedPersistence: List[CausalClosedStateBinding],
+      retainedBlockerPersistence: List[CausalClosedStateBinding],
+      retainedRouteOriginPersistence: List[CausalClosedStateBinding]
   ): SquareReleaseRouteManifest =
-    val referenceRole = ComparedLineBranchRole.CounterfactualReference
-    val playedRole = ComparedLineBranchRole.PlayedRootAnalysisContinuation
+    val releasedRole = SquareReleaseRouteBranchRole.ReleasedSquareRoute
+    val retainedRole = SquareReleaseRouteBranchRole.RetainedBlocker
     val routeIndices = routeMoves.map(_.stepIndex)
     val firstIndex = routeIndices.headOption.getOrElse(
       throw IllegalArgumentException("a square-release route needs one route movement premise")
     )
     require(
-      releaseMove.role == SquareReleaseRoutePremiseRole.ReferenceReleaseMove &&
-        releaseMove.branchRole == referenceRole && releaseMove.stepIndex == 0 &&
+      releaseMove.role == SquareReleaseRoutePremiseRole.ReleaseMove &&
+        releaseMove.branchRole == releasedRole && releaseMove.stepIndex == 0 &&
         releaseMove.movement == semantic.release,
-      "a square-release route needs the exact reference root release movement"
+      "a square-release route needs the exact released-route root movement"
     )
     require(
       routeMoves.zipWithIndex.forall { case (use, routeIndex) =>
-        use.role == SquareReleaseRoutePremiseRole.ReferenceRouteMove(routeIndex) &&
-          use.branchRole == referenceRole && use.branchId == releaseMove.branchId &&
+        use.role == SquareReleaseRoutePremiseRole.RouteMove(routeIndex) &&
+          use.branchRole == releasedRole && use.branchId == releaseMove.branchId &&
           use.movement == semantic.route(routeIndex)
       } && routeIndices == routeIndices.distinct.sorted && firstIndex >= 2 &&
         routeMoves.head.capture.isEmpty && routeMoves.head.movement.to == releaseMove.movement.from,
@@ -261,27 +270,27 @@ private[chessjudgment] object SquareReleaseRouteManifest:
           routeMoves.size == 1 && terminalUse.isEmpty && terminalReply.isEmpty
         case exact =>
           routeMoves.size >= 2 && terminalUse.exists(use =>
-            use.role == SquareReleaseRoutePremiseRole.ReferenceTerminalResource &&
-              use.branchRole == referenceRole && use.branchId == releaseMove.branchId &&
+            use.role == SquareReleaseRoutePremiseRole.TerminalResource &&
+              use.branchRole == releasedRole && use.branchId == releaseMove.branchId &&
               use.stepIndex == routeIndices.last && exact.contract.contains(use.contract)
           ) && (terminalReply.isDefined == exact.needsReply) && terminalReply.forall(reply =>
-            reply.role == SquareReleaseRoutePremiseRole.ReferenceTerminalReply &&
-              reply.branchRole == referenceRole && reply.branchId == releaseMove.branchId &&
+            reply.role == SquareReleaseRoutePremiseRole.TerminalReply &&
+              reply.branchRole == releasedRole && reply.branchId == releaseMove.branchId &&
               reply.stepIndex == routeIndices.last + 1
           ),
       "a multi-leg route needs its exact terminal L1 resource and actual reply occurrence"
     )
     require(
-      playedFirstLegAbsent.role == SquareReleaseRouteAbsenceRole.PlayedFirstRouteLegAbsent &&
-        playedFirstLegAbsent.branchRole == playedRole &&
-        playedFirstLegAbsent.afterStepIndex == firstIndex - 1,
+      retainedFirstLegAbsent.role == SquareReleaseRouteAbsenceRole.RetainedBlockerFirstRouteLegAbsent &&
+        retainedFirstLegAbsent.branchRole == retainedRole &&
+        retainedFirstLegAbsent.afterStepIndex == firstIndex - 1,
       "a square-release route needs the sibling's exact first-leg absence"
     )
     require(
-      referenceVacancies.size == firstIndex &&
-        referenceVacancies.zipWithIndex.forall { case (binding, stepIndex) =>
-          binding.role == SquareReleaseRouteStateRole.ReferenceVacancy &&
-            binding.branchRole == referenceRole && binding.branchId == releaseMove.branchId &&
+      releasedVacancies.size == firstIndex &&
+        releasedVacancies.zipWithIndex.forall { case (binding, stepIndex) =>
+          binding.role == SquareReleaseRouteStateRole.ReleasedSquareVacancy &&
+            binding.branchRole == releasedRole && binding.branchId == releaseMove.branchId &&
             binding.afterStepIndex == stepIndex &&
             binding.query == PositionRelationExtractor.ClosedPositionStateQuery.Vacant(
               releaseMove.movement.from
@@ -290,10 +299,10 @@ private[chessjudgment] object SquareReleaseRouteManifest:
       "the released square must remain exactly vacant until the first route leg"
     )
     require(
-      referenceRoutePieces.zip(routeMoves).zipWithIndex.forall {
+      releasedRoutePieces.zip(routeMoves).zipWithIndex.forall {
         case ((binding, routeMove), routeIndex) =>
-          binding.role == SquareReleaseRouteStateRole.ReferenceRoutePiece(routeIndex) &&
-            binding.branchRole == referenceRole && binding.branchId == releaseMove.branchId &&
+          binding.role == SquareReleaseRouteStateRole.RoutePiece(routeIndex) &&
+            binding.branchRole == releasedRole && binding.branchId == releaseMove.branchId &&
             binding.afterStepIndex == routeMove.stepIndex &&
             binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(
               RelationColoredPieceWitness(
@@ -302,14 +311,14 @@ private[chessjudgment] object SquareReleaseRouteManifest:
                 routeMove.movement.side
               )
             )
-      } && referenceRoutePieces.size == routeMoves.size,
+      } && releasedRoutePieces.size == routeMoves.size,
       "every route endpoint needs its exact post-move occupant state"
     )
     val expectedPersistence = routeMoves.zip(routeMoves.drop(1)).zipWithIndex.flatMap {
       case ((before, after), routeIndex) =>
         (before.stepIndex + 1 until after.stepIndex).map(stepIndex =>
           (
-            SquareReleaseRouteStateRole.ReferenceRoutePersistence(routeIndex),
+            SquareReleaseRouteStateRole.RoutePersistence(routeIndex),
             stepIndex,
             RelationColoredPieceWitness(
               before.movement.to,
@@ -320,12 +329,12 @@ private[chessjudgment] object SquareReleaseRouteManifest:
         )
     }
     require(
-      referencePersistence.zip(expectedPersistence).forall {
+      releasedPersistence.zip(expectedPersistence).forall {
         case (binding, (role, stepIndex, piece)) =>
-          binding.role == role && binding.branchRole == referenceRole &&
+          binding.role == role && binding.branchRole == releasedRole &&
             binding.branchId == releaseMove.branchId && binding.afterStepIndex == stepIndex &&
             binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece)
-      } && referencePersistence.size == expectedPersistence.size,
+      } && releasedPersistence.size == expectedPersistence.size,
       "same-object route continuity needs every intervening occupied state"
     )
     val firstRoute = routeMoves.head
@@ -340,16 +349,16 @@ private[chessjudgment] object SquareReleaseRouteManifest:
       firstRoute.movement.side
     )
     require(
-      playedBlockerPersistence.size == firstIndex &&
-        playedBlockerPersistence.zipWithIndex.forall { case (binding, stepIndex) =>
-          binding.role == SquareReleaseRouteStateRole.PlayedBlockerPersistence &&
-            binding.branchRole == playedRole && binding.branchId == playedFirstLegAbsent.branchId &&
+      retainedBlockerPersistence.size == firstIndex &&
+        retainedBlockerPersistence.zipWithIndex.forall { case (binding, stepIndex) =>
+          binding.role == SquareReleaseRouteStateRole.RetainedBlockerPersistence &&
+            binding.branchRole == retainedRole && binding.branchId == retainedFirstLegAbsent.branchId &&
             binding.afterStepIndex == stepIndex &&
             binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(blocker)
-        } && playedRouteOriginPersistence.size == firstIndex &&
-        playedRouteOriginPersistence.zipWithIndex.forall { case (binding, stepIndex) =>
-          binding.role == SquareReleaseRouteStateRole.PlayedRouteOriginPersistence &&
-            binding.branchRole == playedRole && binding.branchId == playedFirstLegAbsent.branchId &&
+        } && retainedRouteOriginPersistence.size == firstIndex &&
+        retainedRouteOriginPersistence.zipWithIndex.forall { case (binding, stepIndex) =>
+          binding.role == SquareReleaseRouteStateRole.RetainedRouteOriginPersistence &&
+            binding.branchRole == retainedRole && binding.branchId == retainedFirstLegAbsent.branchId &&
             binding.afterStepIndex == stepIndex &&
             binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(routeOrigin)
         },
@@ -360,12 +369,12 @@ private[chessjudgment] object SquareReleaseRouteManifest:
       routeMoves,
       terminalUse,
       terminalReply,
-      playedFirstLegAbsent,
-      referenceVacancies,
-      referenceRoutePieces,
-      referencePersistence,
-      playedBlockerPersistence,
-      playedRouteOriginPersistence
+      retainedFirstLegAbsent,
+      releasedVacancies,
+      releasedRoutePieces,
+      releasedPersistence,
+      retainedBlockerPersistence,
+      retainedRouteOriginPersistence
     )
 
 private[chessjudgment] final case class SquareReleaseRouteSemanticProof private[chessjudgment] (
@@ -394,54 +403,66 @@ private[chessjudgment] final case class SquareReleaseRouteSemanticProof private[
 
 private[chessjudgment] final case class SquareReleaseRouteOccurrence private[chessjudgment] (
     proofSet: BoundedCausalProofSet,
+    subjectOccurrence: ExplanationSubjectOccurrence,
     routeStepIndices: List[Int],
     terminalReplyStepIndex: Option[Int]
 ):
   require(proofSet.proposition.contractKind == BoundedCausalContractKind.SquareReleaseRoute)
   require(
     proofSet.occurrence.branches.size == 2 &&
-      proofSet.occurrence.branch(ComparedLineBranchRole.CounterfactualReference).exists(
-        _.line.role == LineNodeRole.BestReference
-      ) && proofSet.occurrence.branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation).exists(
-        _.line.role == LineNodeRole.Played
-      ),
-    "a square-release route occurrence needs one reference and one Played sibling"
+      proofSet.occurrence.branch(SquareReleaseRouteBranchRole.ReleasedSquareRoute).nonEmpty &&
+      proofSet.occurrence.branch(SquareReleaseRouteBranchRole.RetainedBlocker).nonEmpty,
+    "a square-release route occurrence needs its released-route and retained-blocker branches"
   )
   require(
     routeStepIndices.nonEmpty && routeStepIndices == routeStepIndices.distinct.sorted &&
-      routeStepIndices.head >= 2 && playedSteps.size == routeStepIndices.head &&
-      referenceSteps.size == terminalReplyStepIndex.map(_ + 1).getOrElse(routeStepIndices.last + 1) &&
+      routeStepIndices.head >= 2 && retainedBlockerSteps.size == routeStepIndices.head &&
+      releasedRouteSteps.size == terminalReplyStepIndex.map(_ + 1).getOrElse(routeStepIndices.last + 1) &&
       terminalReplyStepIndex.forall(_ == routeStepIndices.last + 1),
     "a square-release route occurrence must retain its ordered route and exact branch bounds"
   )
+  require(ownsSubject, "the proof occurrence must retain its exact requested root occurrence")
 
-  private def exactBranch(role: ComparedLineBranchRole): CausalBranchOccurrence =
+  private def exactBranch(role: SquareReleaseRouteBranchRole): CausalBranchOccurrence =
     proofSet.occurrence.branch(role).getOrElse(
       throw IllegalStateException(s"a square-release route occurrence lost its $role branch")
     )
 
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
-  def referenceBranch: CausalBranchOccurrence =
-    exactBranch(ComparedLineBranchRole.CounterfactualReference)
-  def playedBranch: CausalBranchOccurrence =
-    exactBranch(ComparedLineBranchRole.PlayedRootAnalysisContinuation)
-  def referenceLine: LineNodeRef = referenceBranch.line
-  def playedLine: LineNodeRef = playedBranch.line
-  def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
-  def playedSteps: List[LineReplayStep] = playedBranch.replaySteps
-  def releaseStep: LineReplayStep = referenceSteps.head
-  def routeSteps: List[LineReplayStep] = routeStepIndices.map(referenceSteps)
+  def releasedRouteBranch: CausalBranchOccurrence = exactBranch(SquareReleaseRouteBranchRole.ReleasedSquareRoute)
+  def retainedBlockerBranch: CausalBranchOccurrence = exactBranch(SquareReleaseRouteBranchRole.RetainedBlocker)
+  def releasedRouteLine: LineNodeRef = releasedRouteBranch.line
+  def retainedBlockerLine: LineNodeRef = retainedBlockerBranch.line
+  def releasedRouteSteps: List[LineReplayStep] = releasedRouteBranch.replaySteps
+  def retainedBlockerSteps: List[LineReplayStep] = retainedBlockerBranch.replaySteps
+  def releaseStep: LineReplayStep = releasedRouteSteps.head
+  def routeSteps: List[LineReplayStep] = routeStepIndices.map(releasedRouteSteps)
   def firstRouteStep: LineReplayStep = routeSteps.head
   def terminalStep: LineReplayStep = routeSteps.last
   def firstRouteStepIndex: Int = routeStepIndices.head
   def terminalStepIndex: Int = routeStepIndices.last
-  def terminalReplyStep: Option[LineReplayStep] = terminalReplyStepIndex.map(referenceSteps)
+  def terminalReplyStep: Option[LineReplayStep] = terminalReplyStepIndex.map(releasedRouteSteps)
   def proofPaths: List[CausalProofPathOccurrence] = proofSet.paths
 
+  private def ownsSubject: Boolean =
+    List(releasedRouteBranch, retainedBlockerBranch).exists { branch =>
+      branch.line.id == subjectOccurrence.line.id &&
+      branch.lineOwnerEvidenceId == subjectOccurrence.lineOwnerEvidenceId &&
+      branch.rootTransitionEvidenceId == subjectOccurrence.transitionEvidenceId &&
+      branch.rootProvenance == subjectOccurrence.rootProvenance &&
+      branch.steps.headOption.exists(root =>
+        EvidenceRef.sameMove(root.step.moveUci, subjectOccurrence.moveUci) &&
+          root.step.ply == subjectOccurrence.destination.ply &&
+          PrincipalVariationEvidence.sameBoardState(root.step.fenBefore, subjectOccurrence.start.fen) &&
+          PrincipalVariationEvidence.sameBoardState(root.step.fenAfter, subjectOccurrence.destination.fen)
+      )
+    }
+
 private[chessjudgment] final case class SquareReleaseRouteDependencyManifest private[chessjudgment] (
-    referenceLineRecord: EvidenceRecord,
-    playedLineRecord: EvidenceRecord,
+    subject: CertifiedRootOccurrence,
+    releasedRoute: CertifiedRootOccurrence,
+    retainedBlocker: CertifiedRootOccurrence,
     proofSet: BoundedCausalProofSet,
     trajectoryKeys: List[String]
 ) extends BoundedCausalDependencyManifest:
@@ -458,8 +479,15 @@ private[chessjudgment] final case class SquareReleaseRouteDependencyManifest pri
 
   val stableKey: String =
     List(
-      BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
-      BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
+      "subject-root",
+      BoundedCausalIdentity.evidenceRecordKey(subject.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(subject.transitionOwner),
+      "released-route-root",
+      BoundedCausalIdentity.evidenceRecordKey(releasedRoute.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(releasedRoute.transitionOwner),
+      "retained-blocker-root",
+      BoundedCausalIdentity.evidenceRecordKey(retainedBlocker.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(retainedBlocker.transitionOwner),
       contractKind.toString.toLowerCase,
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
@@ -467,8 +495,12 @@ private[chessjudgment] final case class SquareReleaseRouteDependencyManifest pri
       trajectoryKeys.mkString("[", ",", "]")
     ).mkString("|")
 
-  def consumes(reference: EvidenceRecord, played: EvidenceRecord): Boolean =
-    referenceLineRecord == reference && playedLineRecord == played
+  def consumes(
+      exactSubject: CertifiedRootOccurrence,
+      exactReleasedRoute: CertifiedRootOccurrence,
+      exactRetainedBlocker: CertifiedRootOccurrence
+  ): Boolean =
+    subject == exactSubject && releasedRoute == exactReleasedRoute && retainedBlocker == exactRetainedBlocker
 
 private[chessjudgment] final case class SquareReleaseRoutePathAuthority(
     pathOccurrenceId: String,
@@ -483,10 +515,9 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
     val occurrence: SquareReleaseRouteOccurrence,
     val dependency: BoundedCausalDependencyFingerprint,
     private val dependencyManifest: SquareReleaseRouteDependencyManifest,
-    private val referenceLineRecord: EvidenceRecord,
-    private val playedLineRecord: EvidenceRecord,
-    private val referenceReplay: CanonicalLineReplay,
-    private val playedReplay: CanonicalLineReplay,
+    val subject: CertifiedRootOccurrence,
+    private val releasedRoute: CertifiedRootOccurrence,
+    private val retainedBlocker: CertifiedRootOccurrence,
     private val releaseAuthority: RecordBoundLegalMoveOccurrence,
     private val routeAuthorities: List[RecordBoundLegalMoveOccurrence],
     private val trajectories: List[RecordBoundObjectTrajectory],
@@ -507,39 +538,45 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
   )
 
   def parentSources: List[EvidenceRef] =
-    List(referenceLineRecord.ref, playedLineRecord.ref).sortBy(_.id)
+    val sources = List(
+      releasedRoute.lineOwner.ref,
+      releasedRoute.transitionOwner.ref,
+      retainedBlocker.lineOwner.ref,
+      retainedBlocker.transitionOwner.ref
+    ).sortBy(_.id)
+    require(sources.map(_.id).distinct.size == sources.size, "the two roots need distinct line and transition owners")
+    sources
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(referenceLineRecord, playedLineRecord)
+    List(releasedRoute.lineOwner, releasedRoute.transitionOwner, retainedBlocker.lineOwner, retainedBlocker.transitionOwner)
 
-  def consumesDependencies(reference: EvidenceRecord, played: EvidenceRecord): Boolean =
-    dependencyManifest.consumes(reference, played)
+  def consumesDependencies(
+      exactSubject: CertifiedRootOccurrence,
+      exactReleasedRoute: CertifiedRootOccurrence,
+      exactRetainedBlocker: CertifiedRootOccurrence
+  ): Boolean = dependencyManifest.consumes(exactSubject, exactReleasedRoute, exactRetainedBlocker)
 
   def proves(record: EvidenceRecord, payload: SquareReleaseRouteEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
       record.ref.layer == EvidenceLayer.CausalProof &&
       record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-      record.ref.position == referenceLineRecord.ref.position &&
-      record.ref.line.contains(occurrence.referenceLine) &&
-      record.ref.scope == occurrence.referenceLine.role.scope &&
+      record.ref.position == subject.transition.from &&
+      record.ref.line.contains(subject.line) &&
+      record.ref.scope == subject.transitionOwner.ref.scope &&
       record.parents == parentSources && payload.semantic == semantic &&
       payload.occurrence == occurrence && payload.dependencyFingerprint == dependency.value &&
-      payload.occurrenceProof.contains(this) && remainsCertified
+      payload.subjectOccurrence == subject.publicOccurrence &&
+      payload.occurrenceProof == this && remainsCertified
 
   def remainsCertified: Boolean =
-    CertifiedComparedLineAuthority.exactRecord(
-      referenceLineRecord,
-      occurrence.referenceLine,
-      referenceReplay
-    ) && CertifiedComparedLineAuthority.exactRecord(
-      playedLineRecord,
-      occurrence.playedLine,
-      playedReplay
-    ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
-      referenceReplay.replaySteps.take(occurrence.referenceSteps.size) == occurrence.referenceSteps &&
-      playedReplay.replaySteps.take(occurrence.playedSteps.size) == occurrence.playedSteps &&
+    subject.remainsCertified && releasedRoute.remainsCertified && retainedBlocker.remainsCertified &&
+      (subject == releasedRoute || subject == retainedBlocker) &&
+      occurrence.subjectOccurrence == subject.publicOccurrence &&
+      occurrence.releasedRouteLine == releasedRoute.line && occurrence.retainedBlockerLine == retainedBlocker.line &&
+      releasedRoute.replay.replaySteps.take(occurrence.releasedRouteSteps.size) == occurrence.releasedRouteSteps &&
+      retainedBlocker.replay.replaySteps.take(occurrence.retainedBlockerSteps.size) == occurrence.retainedBlockerSteps &&
       semanticRemainsCertified && movesRemainCertified && trajectoriesRemainCertified &&
-      pathsRemainCertified && dependencyManifest.consumes(referenceLineRecord, playedLineRecord)
+      pathsRemainCertified && dependencyManifest.consumes(subject, releasedRoute, retainedBlocker)
 
   private def semanticRemainsCertified: Boolean =
     SquareReleaseRouteCausalAuthority.proposition(
@@ -552,12 +589,12 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
     ) == semantic.identity
 
   private def movesRemainCertified: Boolean =
-    referenceReplay.legalMoveOccurrence(occurrence.releaseStep)
-      .flatMap(RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, _))
+    releasedRoute.replay.legalMoveOccurrence(occurrence.releaseStep)
+      .flatMap(RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, _))
       .contains(releaseAuthority) &&
       occurrence.routeSteps.zip(routeAuthorities).forall { case (step, authority) =>
-        referenceReplay.legalMoveOccurrence(step)
-          .flatMap(RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, _))
+        releasedRoute.replay.legalMoveOccurrence(step)
+          .flatMap(RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, _))
           .contains(authority)
       } && routeAuthorities.size == occurrence.routeSteps.size
 
@@ -575,32 +612,32 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
         path.manifest match
           case manifest: SquareReleaseRouteManifest =>
             val expectedRelease = CausalLegalMovePremiseUse.from(
-              SquareReleaseRoutePremiseRole.ReferenceReleaseMove,
+              SquareReleaseRoutePremiseRole.ReleaseMove,
               releaseAuthority,
-              occurrence.referenceBranch,
+              occurrence.releasedRouteBranch,
               0
             )
             val expectedRoute = routeAuthorities.zipWithIndex.map { case (authority, routeIndex) =>
               CausalLegalMovePremiseUse.from(
-                SquareReleaseRoutePremiseRole.ReferenceRouteMove(routeIndex),
+                SquareReleaseRoutePremiseRole.RouteMove(routeIndex),
                 authority,
-                occurrence.referenceBranch,
+                occurrence.releasedRouteBranch,
                 occurrence.routeStepIndices(routeIndex)
               )
             }
             val expectedTerminal = authorities.terminalAuthority.map(authority =>
               CausalVerticalRelationPremiseUse.from(
-                SquareReleaseRoutePremiseRole.ReferenceTerminalResource,
+                SquareReleaseRoutePremiseRole.TerminalResource,
                 authority,
-                occurrence.referenceBranch,
+                occurrence.releasedRouteBranch,
                 occurrence.terminalStepIndex
               )
             )
             val expectedReply = authorities.replyAuthority.map(authority =>
               CausalLegalMovePremiseUse.from(
-                SquareReleaseRoutePremiseRole.ReferenceTerminalReply,
+                SquareReleaseRoutePremiseRole.TerminalReply,
                 authority,
-                occurrence.referenceBranch,
+                occurrence.releasedRouteBranch,
                 occurrence.terminalReplyStepIndex.getOrElse(
                   throw IllegalStateException("a retained terminal reply lost its branch index")
                 )
@@ -618,12 +655,12 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
                 semantic.route.head,
                 occurrence.firstRouteStep.moveUci,
                 semantic.routePiece,
-                occurrence.referenceBranch,
-                occurrence.playedBranch,
+                occurrence.releasedRouteBranch,
+                occurrence.retainedBlockerBranch,
                 occurrence.firstRouteStepIndex,
-                manifest.playedBlockerPersistence,
-                manifest.playedRouteOriginPersistence,
-                manifest.playedFirstLegAbsent
+                manifest.retainedBlockerPersistence,
+                manifest.retainedRouteOriginPersistence,
+                manifest.retainedFirstLegAbsent
               )
           case _ => false
       )
@@ -642,7 +679,7 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
       case (terminal, Some(authority)) =>
         SquareReleaseRouteTerminal.from(authority).contains(terminal) &&
           RecordBoundVerticalRelationOccurrence
-            .certified(referenceLineRecord, authority.occurrence)
+            .certified(releasedRoute.lineOwner, authority.occurrence)
             .contains(authority)
       case _ => false
     terminalCertified && ((semantic.terminal, authorities.replyAuthority) match
@@ -651,7 +688,7 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
         true
       case (SquareReleaseRouteTerminal.CreatedCheck(_, _, _, _, _, _, _, RelationCheckTerminalState.Ongoing), Some(reply)) =>
         occurrence.terminalReplyStep.exists(step =>
-          referenceReplay.exactCheckResponseOccurrenceMembership(occurrence.terminalStep, step)
+          releasedRoute.replay.exactCheckResponseOccurrenceMembership(occurrence.terminalStep, step)
             .exists { case (terminalOccurrence, response) =>
               authorities.terminalAuthority.exists(_.occurrence == terminalOccurrence) &&
                 response.resource.moveUci == reply.moveUci &&
@@ -660,8 +697,8 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
         )
       case (_: SquareReleaseRouteTerminal.Capture, Some(reply)) =>
         occurrence.terminalReplyStep.exists(step =>
-          referenceReplay.legalMoveOccurrence(step)
-            .flatMap(RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, _))
+          releasedRoute.replay.legalMoveOccurrence(step)
+            .flatMap(RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, _))
             .contains(reply)
         )
       case _ => false)
@@ -740,14 +777,14 @@ private[chessjudgment] object SquareReleaseRouteProof:
       terminal: SquareReleaseRouteTerminal,
       terminalAuthority: Option[RecordBoundVerticalRelationOccurrence],
       replyAuthority: Option[RecordBoundLegalMoveOccurrence],
-      referenceBranch: CausalBranchOccurrence,
-      playedBranch: CausalBranchOccurrence,
-      playedAbsenceAuthority: ClosedRelationAbsenceAuthority,
-      referenceVacancyAuthorities: List[ClosedPositionStateAuthority],
-      referenceRoutePieceAuthorities: List[ClosedPositionStateAuthority],
-      referencePersistence: List[PersistenceState],
-      playedBlockerAuthorities: List[ClosedPositionStateAuthority],
-      playedRouteOriginAuthorities: List[ClosedPositionStateAuthority],
+      releasedRouteBranch: CausalBranchOccurrence,
+      retainedBlockerBranch: CausalBranchOccurrence,
+      retainedFirstLegAbsenceAuthority: ClosedRelationAbsenceAuthority,
+      releasedVacancyAuthorities: List[ClosedPositionStateAuthority],
+      releasedRoutePieceAuthorities: List[ClosedPositionStateAuthority],
+      releasedPersistence: List[PersistenceState],
+      retainedBlockerAuthorities: List[ClosedPositionStateAuthority],
+      retainedRouteOriginAuthorities: List[ClosedPositionStateAuthority],
       vacancyClosure: Option[VacancySiblingClosure]
   )
 
@@ -757,25 +794,22 @@ private[chessjudgment] object SquareReleaseRouteProof:
   )
 
   private final case class ClosureBindings(
-      playedAbsence: CausalClosedAbsenceBinding,
-      referenceVacancies: List[CausalClosedStateBinding],
-      referenceRoutePieces: List[CausalClosedStateBinding],
-      referencePersistence: List[CausalClosedStateBinding],
-      playedBlockerPersistence: List[CausalClosedStateBinding],
-      playedRouteOriginPersistence: List[CausalClosedStateBinding]
+      retainedFirstLegAbsence: CausalClosedAbsenceBinding,
+      releasedVacancies: List[CausalClosedStateBinding],
+      releasedRoutePieces: List[CausalClosedStateBinding],
+      releasedPersistence: List[CausalClosedStateBinding],
+      retainedBlockerPersistence: List[CausalClosedStateBinding],
+      retainedRouteOriginPersistence: List[CausalClosedStateBinding]
   ):
     def stateAuthorities: List[ClosedPositionStateAuthority] =
-      referenceVacancies.map(_.authority) ++ referenceRoutePieces.map(_.authority) ++
-        referencePersistence.map(_.authority) ++ playedBlockerPersistence.map(_.authority) ++
-        playedRouteOriginPersistence.map(_.authority)
+      releasedVacancies.map(_.authority) ++ releasedRoutePieces.map(_.authority) ++
+        releasedPersistence.map(_.authority) ++ retainedBlockerPersistence.map(_.authority) ++
+        retainedRouteOriginPersistence.map(_.authority)
 
   private[chessjudgment] def certifyDemanded(
-      referenceLine: LineNodeRef,
-      playedLine: LineNodeRef,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      releasedRoute: CertifiedRootOccurrence,
+      retainedBlocker: CertifiedRootOccurrence,
       demands: List[SquareReleaseRouteDemand]
   ): List[CertifiedSquareReleaseRoute] =
     val demandKeys = demands.map(_.stableKey)
@@ -784,93 +818,85 @@ private[chessjudgment] object SquareReleaseRouteProof:
       "square-release route needs unique canonical exact occurrence demands"
     )
     val admitted =
-      CertifiedComparedLineAuthority.exactRecord(referenceLineRecord, referenceLine, referenceReplay) &&
-        CertifiedComparedLineAuthority.exactRecord(playedLineRecord, playedLine, playedReplay) &&
-        referenceLineRecord.ref.position == playedLineRecord.ref.position &&
-        !EvidenceRef.sameMove(referenceLine.rootMove, playedLine.rootMove)
+      (subject == releasedRoute || subject == retainedBlocker) &&
+        releasedRoute.line != retainedBlocker.line &&
+        releasedRoute.transition.from.ply == retainedBlocker.transition.from.ply &&
+        PrincipalVariationEvidence.sameBoardState(
+          releasedRoute.transition.from.fen,
+          retainedBlocker.transition.from.fen
+        )
     if !admitted then Nil
     else
       val inputs = demands.flatMap(demand =>
         exactInputs(
           demand,
-          referenceLine,
-          playedLine,
-          referenceLineRecord,
-          playedLineRecord,
-          referenceReplay,
-          playedReplay
+          releasedRoute,
+          retainedBlocker
         )
       )
       val grouped = inputs.groupBy(input =>
         val proposition = propositionFor(input)
         val occurrence = CausalOccurrenceIdentity.from(
           proposition,
-          List(input.referenceBranch, input.playedBranch)
+          List(input.releasedRouteBranch, input.retainedBlockerBranch)
         )
         proposition.semanticId -> occurrence.occurrenceId
       )
       grouped.toList.sortBy(_._1).map { case (_, exact) =>
         certify(
           exact.sortBy(input => input.terminalAuthority.map(_.stableKey).getOrElse("occupation")),
-          referenceLineRecord,
-          playedLineRecord,
-          referenceReplay,
-          playedReplay
+          subject,
+          releasedRoute,
+          retainedBlocker
         )
       }
 
   private def exactInputs(
       demand: SquareReleaseRouteDemand,
-      referenceLine: LineNodeRef,
-      playedLine: LineNodeRef,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay
+      releasedRoute: CertifiedRootOccurrence,
+      retainedBlocker: CertifiedRootOccurrence
   ): Option[ExactInputs] =
-    val referenceSteps = referenceReplay.replaySteps
-    val playedSteps = playedReplay.replaySteps
+    val releasedSteps = releasedRoute.replay.replaySteps
+    val retainedSteps = retainedBlocker.replay.replaySteps
     for
-      releaseStep <- referenceSteps.headOption
+      releaseStep <- releasedSteps.headOption
       rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(releaseStep.fenBefore)
-      playedRoot <- playedSteps.headOption
-      if PrincipalVariationEvidence.sameBoardState(releaseStep.fenBefore, playedRoot.fenBefore)
-      releaseOccurrence <- referenceReplay.legalMoveOccurrence(releaseStep)
+      retainedRoot <- retainedSteps.headOption
+      if PrincipalVariationEvidence.sameBoardState(releaseStep.fenBefore, retainedRoot.fenBefore)
+      releaseOccurrence <- releasedRoute.replay.legalMoveOccurrence(releaseStep)
       if releaseOccurrence == demand.releaseOccurrence
-      release <- RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, releaseOccurrence)
-      routeOccurrences <- exactRouteOccurrences(demand, referenceReplay)
-      route <- traverseOptions(routeOccurrences.map(RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, _)))
+      release <- RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, releaseOccurrence)
+      routeOccurrences <- exactRouteOccurrences(demand, releasedRoute.replay)
+      route <- traverseOptions(routeOccurrences.map(RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, _)))
       if route.head.capture.isEmpty && route.head.movement.side == release.movement.side &&
         route.head.movement.to == release.movement.from
-      trajectories <- exactTrajectories(referenceLineRecord, route)
-      terminalAuthority <- exactTerminalAuthority(demand, referenceLineRecord)
+      trajectories <- exactTrajectories(releasedRoute.lineOwner, route)
+      terminalAuthority <- exactTerminalAuthority(demand, releasedRoute.lineOwner)
       terminal <- terminalAuthority.map(SquareReleaseRouteTerminal.from).getOrElse(
         Some(SquareReleaseRouteTerminal.Occupation)
       )
       if terminal.terminalMover.forall(_ == route.last.movement)
-      replyAuthority <- exactReplyAuthority(demand, referenceLineRecord)
+      replyAuthority <- exactReplyAuthority(demand, releasedRoute.lineOwner)
       if replyAuthority.isDefined == terminal.needsReply
       if terminalReplyIsExact(
         terminal,
         terminalAuthority,
         replyAuthority,
-        referenceReplay,
+        releasedRoute.replay,
         route.last.step
       )
       firstIndex = demand.routeStepIndices.head
       terminalIndex = demand.routeStepIndices.last
       retainedReferenceCount = replyAuthority.map(_ => terminalIndex + 2).getOrElse(terminalIndex + 1)
-      if playedSteps.size >= firstIndex && referenceSteps.size >= retainedReferenceCount
-      referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
-        ComparedLineBranchRole.CounterfactualReference,
-        referenceLine,
-        referenceReplay,
+      if retainedSteps.size >= firstIndex && releasedSteps.size >= retainedReferenceCount
+      releasedRouteBranch = CausalBranchOccurrence.fromRootOccurrence(
+        SquareReleaseRouteBranchRole.ReleasedSquareRoute,
+        releasedRoute,
         retainedReferenceCount
       )
-      playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        ComparedLineBranchRole.PlayedRootAnalysisContinuation,
-        playedLine,
-        playedReplay,
+      retainedBlockerBranch = CausalBranchOccurrence.fromRootOccurrence(
+        SquareReleaseRouteBranchRole.RetainedBlocker,
+        retainedBlocker,
         firstIndex
       )
       blocker = RelationColoredPieceWitness(
@@ -884,15 +910,15 @@ private[chessjudgment] object SquareReleaseRouteProof:
         route.head.movement.side
       )
       vacancyPrefix = continuousVacancyPrefix(
-        referenceLineRecord,
-        referenceSteps,
+        releasedRoute.lineOwner,
+        releasedSteps,
         release.movement.from
       )
       if vacancyPrefix.size >= firstIndex
-      referenceVacancies = vacancyPrefix.take(firstIndex)
-      routePieceAuthorities <- traverseOptions(route.map(authority =>
+      releasedVacancies = vacancyPrefix.take(firstIndex)
+      releasedRoutePieceAuthorities <- traverseOptions(route.map(authority =>
         occupiedAuthority(
-          referenceLineRecord,
+          releasedRoute.lineOwner,
           authority.step,
           RelationColoredPieceWitness(
             authority.movement.to,
@@ -901,18 +927,18 @@ private[chessjudgment] object SquareReleaseRouteProof:
           )
         )
       ))
-      persistence <- exactPersistence(trajectories, referenceSteps)
-      playedPreStep <- playedSteps.lift(firstIndex - 1)
-      playedOccurrence <- playedReplay.positionAfter(playedPreStep)
-      playedBlockerAuthorities <- traverseOptions(playedSteps.take(firstIndex).map(step =>
-        occupiedAuthority(playedLineRecord, step, blocker)
+      persistence <- exactPersistence(trajectories, releasedSteps)
+      retainedPreStep <- retainedSteps.lift(firstIndex - 1)
+      retainedOccurrence <- retainedBlocker.replay.positionAfter(retainedPreStep)
+      retainedBlockerAuthorities <- traverseOptions(retainedSteps.take(firstIndex).map(step =>
+        occupiedAuthority(retainedBlocker.lineOwner, step, blocker)
       ))
-      playedRouteOriginAuthorities <- traverseOptions(playedSteps.take(firstIndex).map(step =>
-        occupiedAuthority(playedLineRecord, step, routePiece)
+      retainedRouteOriginAuthorities <- traverseOptions(retainedSteps.take(firstIndex).map(step =>
+        occupiedAuthority(retainedBlocker.lineOwner, step, routePiece)
       ))
-      playedAbsenceAuthority <- ClosedRelationAbsenceAuthority.forQuery(
-        playedLineRecord,
-        playedOccurrence,
+      retainedFirstLegAbsenceAuthority <- ClosedRelationAbsenceAuthority.forQuery(
+        retainedBlocker.lineOwner,
+        retainedOccurrence,
         PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(
           route.head.movement.side,
           route.head.movement.from,
@@ -930,14 +956,14 @@ private[chessjudgment] object SquareReleaseRouteProof:
         terminal,
         terminalAuthority,
         replyAuthority,
-        referenceBranch,
-        playedBranch,
-        playedAbsenceAuthority,
-        referenceVacancies,
-        routePieceAuthorities,
+        releasedRouteBranch,
+        retainedBlockerBranch,
+        retainedFirstLegAbsenceAuthority,
+        releasedVacancies,
+        releasedRoutePieceAuthorities,
         persistence,
-        playedBlockerAuthorities,
-        playedRouteOriginAuthorities,
+        retainedBlockerAuthorities,
+        retainedRouteOriginAuthorities,
         None
       )
       bindings = closureBindings(preliminary)
@@ -948,21 +974,20 @@ private[chessjudgment] object SquareReleaseRouteProof:
         route.head.movement,
         route.head.moveUci,
         routePiece,
-        referenceBranch,
-        playedBranch,
+        releasedRouteBranch,
+        retainedBlockerBranch,
         firstIndex,
-        bindings.playedBlockerPersistence,
-        bindings.playedRouteOriginPersistence,
-        bindings.playedAbsence
+        bindings.retainedBlockerPersistence,
+        bindings.retainedRouteOriginPersistence,
+        bindings.retainedFirstLegAbsence
       )
     yield preliminary.copy(vacancyClosure = Some(vacancyClosure))
 
   private def certify(
       inputs: List[ExactInputs],
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay
+      subject: CertifiedRootOccurrence,
+      releasedRoute: CertifiedRootOccurrence,
+      retainedBlocker: CertifiedRootOccurrence
   ): CertifiedSquareReleaseRoute =
     val first = inputs.headOption.getOrElse(
       throw IllegalArgumentException("a square-release occurrence needs one exact proof path")
@@ -984,13 +1009,14 @@ private[chessjudgment] object SquareReleaseRouteProof:
     )
     val occurrenceIdentity = CausalOccurrenceIdentity.from(
       proposition,
-      List(first.referenceBranch, first.playedBranch)
+      List(first.releasedRouteBranch, first.retainedBlockerBranch)
     )
     val boundPaths = inputs.map(input => boundPath(semantic, input))
     val paths = boundPaths.map(bound => CausalProofPathOccurrence.from(proposition, bound.manifest))
     val proofSet = BoundedCausalProofSet.from(proposition, occurrenceIdentity, paths)
     val occurrence = SquareReleaseRouteOccurrence(
       proofSet,
+      subject.publicOccurrence,
       first.routeStepIndices,
       first.replyAuthority.map(_ => first.routeStepIndices.last + 1)
     )
@@ -1002,8 +1028,9 @@ private[chessjudgment] object SquareReleaseRouteProof:
       )
     )
     val dependencyManifest = SquareReleaseRouteDependencyManifest(
-      referenceLineRecord,
-      playedLineRecord,
+      subject,
+      releasedRoute,
+      retainedBlocker,
       proofSet,
       first.trajectories.map(_.stableKey)
     )
@@ -1012,10 +1039,9 @@ private[chessjudgment] object SquareReleaseRouteProof:
       occurrence,
       BoundedCausalDependencyFingerprint.from(dependencyManifest),
       dependencyManifest,
-      referenceLineRecord,
-      playedLineRecord,
-      referenceReplay,
-      playedReplay,
+      subject,
+      releasedRoute,
+      retainedBlocker,
       first.release,
       first.route,
       first.trajectories,
@@ -1031,32 +1057,32 @@ private[chessjudgment] object SquareReleaseRouteProof:
   ): BoundPath =
     val bindings = closureBindings(input)
     val releaseUse = CausalLegalMovePremiseUse.from(
-      SquareReleaseRoutePremiseRole.ReferenceReleaseMove,
+      SquareReleaseRoutePremiseRole.ReleaseMove,
       input.release,
-      input.referenceBranch,
+      input.releasedRouteBranch,
       0
     )
     val routeUses = input.route.zipWithIndex.map { case (authority, routeIndex) =>
       CausalLegalMovePremiseUse.from(
-        SquareReleaseRoutePremiseRole.ReferenceRouteMove(routeIndex),
+        SquareReleaseRoutePremiseRole.RouteMove(routeIndex),
         authority,
-        input.referenceBranch,
+        input.releasedRouteBranch,
         input.routeStepIndices(routeIndex)
       )
     }
     val terminalUse = input.terminalAuthority.map(authority =>
       CausalVerticalRelationPremiseUse.from(
-        SquareReleaseRoutePremiseRole.ReferenceTerminalResource,
+        SquareReleaseRoutePremiseRole.TerminalResource,
         authority,
-        input.referenceBranch,
+        input.releasedRouteBranch,
         input.routeStepIndices.last
       )
     )
     val replyUse = input.replyAuthority.map(authority =>
       CausalLegalMovePremiseUse.from(
-        SquareReleaseRoutePremiseRole.ReferenceTerminalReply,
+        SquareReleaseRoutePremiseRole.TerminalReply,
         authority,
-        input.referenceBranch,
+        input.releasedRouteBranch,
         input.routeStepIndices.last + 1
       )
     )
@@ -1066,12 +1092,12 @@ private[chessjudgment] object SquareReleaseRouteProof:
       routeUses,
       terminalUse,
       replyUse,
-      bindings.playedAbsence,
-      bindings.referenceVacancies,
-      bindings.referenceRoutePieces,
-      bindings.referencePersistence,
-      bindings.playedBlockerPersistence,
-      bindings.playedRouteOriginPersistence
+      bindings.retainedFirstLegAbsence,
+      bindings.releasedVacancies,
+      bindings.releasedRoutePieces,
+      bindings.releasedPersistence,
+      bindings.retainedBlockerPersistence,
+      bindings.retainedRouteOriginPersistence
     )
     val path = CausalProofPathOccurrence.from(semantic.identity, manifest)
     BoundPath(
@@ -1080,7 +1106,7 @@ private[chessjudgment] object SquareReleaseRouteProof:
         path.pathOccurrenceId,
         input.terminalAuthority,
         input.replyAuthority,
-        input.playedAbsenceAuthority,
+        input.retainedFirstLegAbsenceAuthority,
         bindings.stateAuthorities
       )
     )
@@ -1089,48 +1115,48 @@ private[chessjudgment] object SquareReleaseRouteProof:
     val firstIndex = input.routeStepIndices.head
     ClosureBindings(
       CausalClosedAbsenceBinding.afterStep(
-        SquareReleaseRouteAbsenceRole.PlayedFirstRouteLegAbsent,
-        input.playedAbsenceAuthority,
-        input.playedBranch,
+        SquareReleaseRouteAbsenceRole.RetainedBlockerFirstRouteLegAbsent,
+        input.retainedFirstLegAbsenceAuthority,
+        input.retainedBlockerBranch,
         firstIndex - 1
       ),
-      input.referenceVacancyAuthorities.zipWithIndex.map { case (authority, stepIndex) =>
+      input.releasedVacancyAuthorities.zipWithIndex.map { case (authority, stepIndex) =>
         CausalClosedStateBinding.afterStep(
-          SquareReleaseRouteStateRole.ReferenceVacancy,
+          SquareReleaseRouteStateRole.ReleasedSquareVacancy,
           authority,
-          input.referenceBranch,
+          input.releasedRouteBranch,
           stepIndex
         )
       },
-      input.referenceRoutePieceAuthorities.zipWithIndex.map { case (authority, routeIndex) =>
+      input.releasedRoutePieceAuthorities.zipWithIndex.map { case (authority, routeIndex) =>
         CausalClosedStateBinding.afterStep(
-          SquareReleaseRouteStateRole.ReferenceRoutePiece(routeIndex),
+          SquareReleaseRouteStateRole.RoutePiece(routeIndex),
           authority,
-          input.referenceBranch,
+          input.releasedRouteBranch,
           input.routeStepIndices(routeIndex)
         )
       },
-      input.referencePersistence.map(state =>
+      input.releasedPersistence.map(state =>
         CausalClosedStateBinding.afterStep(
-          SquareReleaseRouteStateRole.ReferenceRoutePersistence(state.routeIndex),
+          SquareReleaseRouteStateRole.RoutePersistence(state.routeIndex),
           state.authority,
-          input.referenceBranch,
+          input.releasedRouteBranch,
           state.stepIndex
         )
       ),
-      input.playedBlockerAuthorities.zipWithIndex.map { case (authority, stepIndex) =>
+      input.retainedBlockerAuthorities.zipWithIndex.map { case (authority, stepIndex) =>
         CausalClosedStateBinding.afterStep(
-          SquareReleaseRouteStateRole.PlayedBlockerPersistence,
+          SquareReleaseRouteStateRole.RetainedBlockerPersistence,
           authority,
-          input.playedBranch,
+          input.retainedBlockerBranch,
           stepIndex
         )
       },
-      input.playedRouteOriginAuthorities.zipWithIndex.map { case (authority, stepIndex) =>
+      input.retainedRouteOriginAuthorities.zipWithIndex.map { case (authority, stepIndex) =>
         CausalClosedStateBinding.afterStep(
-          SquareReleaseRouteStateRole.PlayedRouteOriginPersistence,
+          SquareReleaseRouteStateRole.RetainedRouteOriginPersistence,
           authority,
-          input.playedBranch,
+          input.retainedBlockerBranch,
           stepIndex
         )
       }

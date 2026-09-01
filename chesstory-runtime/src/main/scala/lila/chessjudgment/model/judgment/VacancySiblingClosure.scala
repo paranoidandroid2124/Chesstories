@@ -5,8 +5,8 @@ import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 /** Internal shared theorem boundary for two exact vacancy families.
   *
-  * It certifies only this lower statement: a reference root mover leaves its
-  * exact square, a later same-side movement occurs, while the Played sibling
+  * It certifies only this lower statement: one root mover leaves its exact
+  * square, a later same-side movement occurs, while the retained sibling
   * retains the exact blocker and later mover and its closed inventory lacks
   * that same from/to legal movement. Slider geometry and destination
   * occupation remain typed obligations of their respective public families.
@@ -18,12 +18,12 @@ private[chessjudgment] final case class VacancySiblingClosure private (
     laterMove: RelationMoveTransitionWitness,
     laterMoveUci: String,
     laterMover: RelationColoredPieceWitness,
-    referenceBranchId: String,
-    playedBranchId: String,
+    enablingBranchId: String,
+    retainedBranchId: String,
     laterStepIndex: Int,
-    playedBlockerPersistence: List[CausalClosedStateBinding],
-    playedMoverPersistence: List[CausalClosedStateBinding],
-    playedMoveAbsence: CausalClosedAbsenceBinding
+    retainedBlockerPersistence: List[CausalClosedStateBinding],
+    retainedMoverPersistence: List[CausalClosedStateBinding],
+    retainedMoveAbsence: CausalClosedAbsenceBinding
 ):
   private[chessjudgment] def matches(
       exactEnabler: RelationMoveTransitionWitness,
@@ -32,12 +32,12 @@ private[chessjudgment] final case class VacancySiblingClosure private (
       exactLaterMove: RelationMoveTransitionWitness,
       exactLaterMoveUci: String,
       exactLaterMover: RelationColoredPieceWitness,
-      referenceBranch: CausalBranchOccurrence,
-      playedBranch: CausalBranchOccurrence,
+      enablingBranch: CausalBranchOccurrence,
+      retainedBranch: CausalBranchOccurrence,
       exactLaterStepIndex: Int,
-      exactPlayedBlockerPersistence: List[CausalClosedStateBinding],
-      exactPlayedMoverPersistence: List[CausalClosedStateBinding],
-      exactPlayedMoveAbsence: CausalClosedAbsenceBinding
+      exactRetainedBlockerPersistence: List[CausalClosedStateBinding],
+      exactRetainedMoverPersistence: List[CausalClosedStateBinding],
+      exactRetainedMoveAbsence: CausalClosedAbsenceBinding
   ): Boolean =
     VacancySiblingClosure.certified(
       exactEnabler,
@@ -46,12 +46,12 @@ private[chessjudgment] final case class VacancySiblingClosure private (
       exactLaterMove,
       exactLaterMoveUci,
       exactLaterMover,
-      referenceBranch,
-      playedBranch,
+      enablingBranch,
+      retainedBranch,
       exactLaterStepIndex,
-      exactPlayedBlockerPersistence,
-      exactPlayedMoverPersistence,
-      exactPlayedMoveAbsence
+      exactRetainedBlockerPersistence,
+      exactRetainedMoverPersistence,
+      exactRetainedMoveAbsence
     ).contains(this)
 
 private[chessjudgment] object VacancySiblingClosure:
@@ -62,14 +62,14 @@ private[chessjudgment] object VacancySiblingClosure:
       laterMove: RelationMoveTransitionWitness,
       laterMoveUci: String,
       laterMover: RelationColoredPieceWitness,
-      referenceBranch: CausalBranchOccurrence,
-      playedBranch: CausalBranchOccurrence,
+      enablingBranch: CausalBranchOccurrence,
+      retainedBranch: CausalBranchOccurrence,
       laterStepIndex: Int,
-      playedBlockerPersistence: List[CausalClosedStateBinding],
-      playedMoverPersistence: List[CausalClosedStateBinding],
-      playedMoveAbsence: CausalClosedAbsenceBinding
+      retainedBlockerPersistence: List[CausalClosedStateBinding],
+      retainedMoverPersistence: List[CausalClosedStateBinding],
+      retainedMoveAbsence: CausalClosedAbsenceBinding
   ): Option[VacancySiblingClosure] =
-    val playedPreUseIndex = laterStepIndex - 1
+    val retainedPreUseIndex = laterStepIndex - 1
     val exactBlocker = RelationColoredPieceWitness(
       enabler.from,
       enabler.beforeRole,
@@ -82,37 +82,37 @@ private[chessjudgment] object VacancySiblingClosure:
     )
     val sameRoot =
       for
-        referenceRoot <- referenceBranch.stepAt(0)
-        playedRoot <- playedBranch.stepAt(0)
-      yield referenceRoot.step.ply == playedRoot.step.ply &&
+        enablingRoot <- enablingBranch.stepAt(0)
+        retainedRoot <- retainedBranch.stepAt(0)
+      yield enablingRoot.step.ply == retainedRoot.step.ply &&
         PrincipalVariationEvidence.sameBoardState(
-          referenceRoot.step.fenBefore,
-          playedRoot.step.fenBefore
+          enablingRoot.step.fenBefore,
+          retainedRoot.step.fenBefore
         )
-    val referenceMovesMatch =
-      referenceBranch.stepAt(0).exists(step =>
+    val enablingMovesMatch =
+      enablingBranch.stepAt(0).exists(step =>
         EvidenceRef.sameMove(step.step.moveUci, enablerMoveUci)
-      ) && referenceBranch.stepAt(laterStepIndex).exists(step =>
+      ) && enablingBranch.stepAt(laterStepIndex).exists(step =>
         EvidenceRef.sameMove(step.step.moveUci, laterMoveUci)
       )
     def exactPersistence(bindings: List[CausalClosedStateBinding]): Boolean =
       bindings.size == laterStepIndex && bindings.zipWithIndex.forall { case (binding, stepIndex) =>
-        binding.branchId == playedBranch.branchId &&
-          binding.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
+        binding.branchId == retainedBranch.branchId &&
+          binding.branchRole == retainedBranch.role &&
           binding.afterStepIndex == stepIndex
       }
-    val playedCoordinatesMatch =
-      exactPersistence(playedBlockerPersistence) && exactPersistence(playedMoverPersistence) &&
-        playedMoveAbsence.branchId == playedBranch.branchId &&
-        playedMoveAbsence.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
-        playedMoveAbsence.afterStepIndex == playedPreUseIndex
+    val retainedCoordinatesMatch =
+      exactPersistence(retainedBlockerPersistence) && exactPersistence(retainedMoverPersistence) &&
+        retainedMoveAbsence.branchId == retainedBranch.branchId &&
+        retainedMoveAbsence.branchRole == retainedBranch.role &&
+        retainedMoveAbsence.afterStepIndex == retainedPreUseIndex
     val exactStates =
-      playedBlockerPersistence.forall(_.query ==
+      retainedBlockerPersistence.forall(_.query ==
         PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(blocker)) &&
-        playedMoverPersistence.forall(_.query ==
+        retainedMoverPersistence.forall(_.query ==
           PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(laterMover))
     val exactAbsence =
-      playedMoveAbsence.authority.query ==
+      retainedMoveAbsence.authority.query ==
         PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(
           laterMove.side,
           laterMove.from,
@@ -123,13 +123,11 @@ private[chessjudgment] object VacancySiblingClosure:
         EvidenceRef.normalizeMove(enablerMoveUci).nonEmpty &&
         EvidenceRef.normalizeMove(laterMoveUci).nonEmpty &&
         blocker == exactBlocker && laterMover == exactLaterMover &&
-        referenceBranch.role == ComparedLineBranchRole.CounterfactualReference &&
-        referenceBranch.line.role == LineNodeRole.BestReference &&
-        playedBranch.role == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
-        playedBranch.line.role == LineNodeRole.Played &&
-        referenceBranch.replaySteps.size > laterStepIndex &&
-        playedBranch.replaySteps.size == laterStepIndex &&
-        sameRoot.contains(true) && referenceMovesMatch && playedCoordinatesMatch &&
+        enablingBranch.branchId != retainedBranch.branchId &&
+        enablingBranch.role != retainedBranch.role && enablingBranch.line != retainedBranch.line &&
+        enablingBranch.replaySteps.size > laterStepIndex &&
+        retainedBranch.replaySteps.size == laterStepIndex &&
+        sameRoot.contains(true) && enablingMovesMatch && retainedCoordinatesMatch &&
         exactStates && exactAbsence
     )(
       VacancySiblingClosure(
@@ -139,11 +137,11 @@ private[chessjudgment] object VacancySiblingClosure:
         laterMove,
         EvidenceRef.normalizeMove(laterMoveUci),
         laterMover,
-        referenceBranch.branchId,
-        playedBranch.branchId,
+        enablingBranch.branchId,
+        retainedBranch.branchId,
         laterStepIndex,
-        playedBlockerPersistence,
-        playedMoverPersistence,
-        playedMoveAbsence
+        retainedBlockerPersistence,
+        retainedMoverPersistence,
+        retainedMoveAbsence
       )
     )

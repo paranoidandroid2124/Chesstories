@@ -116,12 +116,7 @@ class PassedPawnResultSemanticsTest extends munit.FunSuite:
     val movement = replay.onlyTransition
       .map(_.relationDelta.rootMove)
       .getOrElse(fail("expected one canonical root movement"))
-    val line = LineNodeRef(
-      s"passed-pawn-result-semantics:$move",
-      move,
-      1,
-      LineNodeRole.BestReference
-    )
+    val line = LineNodeRef(s"passed-pawn-result-semantics:$move", move)
     val binding = StructuralTransitionBinding(
       moveUci = move,
       role = TransitionEdgeRole.Reference,
@@ -143,7 +138,7 @@ class PassedPawnResultSemanticsTest extends munit.FunSuite:
         EvidenceLayer.Line,
         binding.from,
         Some(line),
-        line.role.scope,
+        EvidenceScope.LegalLine,
         EvidenceConfidence.LegalReplayVerified
       ),
       occurrence

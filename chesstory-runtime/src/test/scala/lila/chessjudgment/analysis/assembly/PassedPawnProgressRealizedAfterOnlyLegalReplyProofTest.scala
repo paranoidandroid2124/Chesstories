@@ -14,7 +14,7 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     )
   )
 
-  test("one played route plus the exact singleton reply closes one typed L2 occurrence"):
+  test("one observed root plus the exact singleton reply closes one typed L2 occurrence"):
     val resolved = MoveReviewJudgmentOrchestrator
       .execute(singletonAnalysisContinuation)
       .getOrElse(fail("expected the singleton analysis continuation to assemble"))
@@ -36,7 +36,7 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     val branch = proof.publicBranches match
       case exact :: Nil => exact
       case other        => fail(s"expected one analysis-continuation branch, found ${other.size}")
-    assertEquals(branch.role, "played_root_analysis_continuation")
+    assertEquals(branch.role, "observed_root_with_analyzed_continuation")
     assertEquals(branch.rootProvenance, "observed_game_root")
     assertEquals(branch.replyMove, "h8h7")
     assertEquals(branch.steps.map(_.moveUci), List("g6g7", "h8h7", "g7g8q"))
@@ -61,7 +61,7 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
       proof.publicProofPaths.forall(path =>
         path.premises.map(_.role).toSet == Set("dependency", "result") &&
           path.premises.forall(_.branchId == branch.branchId) &&
-          path.premises.forall(_.branchRole == "played_root_analysis_continuation")
+          path.premises.forall(_.branchRole == "observed_root_with_analyzed_continuation")
       )
     )
     assert(!proof.publicProofPaths.flatMap(_.premises).exists(premise =>
@@ -85,7 +85,12 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     )
     assertEquals(
       proofRecord.parents.map(_.id).toSet,
-      Set(eventRecord.ref.id, closure.issuerEvidenceId)
+      Set(
+        eventRecord.ref.id,
+        closure.issuerEvidenceId,
+        proof.subjectOccurrence.lineOwnerEvidenceId,
+        proof.subjectOccurrence.transitionEvidenceId
+      )
     )
 
   test("the exact dependency manifest reuses one owner and rejects a second owner"):
@@ -97,20 +102,23 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     }.getOrElse(fail("expected one exact passed-pawn L2 proof"))
     val proof = proofRecord.payload.asInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
     val eventRecord = resolved.evidenceGraph.record(proof.eventSource).get
-    val comparisonRecord = resolved.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.PlayedVsBest => record
-    }.getOrElse(fail("expected the exact PlayedVsBest dispatch demand"))
     val inventoryRecord = proofRecord.parents
       .flatMap(resolved.evidenceGraph.record)
       .collectFirst { case record @ EvidenceRecord(_, _: StructuralDeltaEvidence, _) => record }
       .getOrElse(fail("expected the exact StructuralDelta reply inventory"))
+    val resolvedDemand = OccurrenceExplanationDemand
+      .resolve(
+        resolved.assembly,
+        ExplanationRequest.forObservedMove(resolved.assembly.input)
+      )
+      .getOrElse(fail("expected the exact observed-occurrence demand"))
 
     assertEquals(
       PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler
         .existingProofOwnersForExactDependencies(
           resolved.evidenceGraph,
           proof.rootLine,
+          resolvedDemand.subject,
           eventRecord,
           inventoryRecord,
           proof.resultRoutes
@@ -118,15 +126,33 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
         .map(_.ref.id),
       List(proofRecord.ref.id)
     )
+    val sibling = resolvedDemand.availableBranches
+      .find(_ != resolvedDemand.subject)
+      .getOrElse(fail("expected one counterfactual sibling occurrence"))
+    assertEquals(
+      PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler
+        .existingProofOwnersForExactDependencies(
+          resolved.evidenceGraph,
+          proof.rootLine,
+          sibling,
+          eventRecord,
+          inventoryRecord,
+          proof.resultRoutes
+        ),
+      Nil
+    )
 
     val duplicate = proofRecord.copy(ref = proofRecord.ref.copy(id = s"${proofRecord.ref.id}-duplicate"))
     val ambiguous = resolved.evidenceGraph.add(duplicate)
     val ambiguousContext = resolved.assembly.copy(evidenceGraph = ambiguous)
-    val exactInput = ExactPlayedVsBestCausalInput
-      .from(ambiguousContext, comparisonRecord)
-      .getOrElse(fail("expected the exact played-vs-best demand"))
+    val occurrenceDemand = OccurrenceExplanationDemand
+      .resolve(
+        ambiguousContext,
+        ExplanationRequest.forObservedMove(ambiguousContext.input)
+      )
+      .getOrElse(fail("expected the exact observed-occurrence demand"))
     val demand = PassedPawnResultEventAssembler
-      .changedDependencyDemand(ambiguousContext, exactInput)
+      .changedDependencyDemand(ambiguousContext, occurrenceDemand)
       .getOrElse(fail("expected the exact passed-pawn changed-dependency demand"))
     val thrown = intercept[IllegalStateException] {
       PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand(
@@ -139,6 +165,59 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
       thrown.getMessage,
       "one exact passed-pawn analysis-continuation dependency manifest has multiple graph owners"
     )
+
+  test("an observed best move keeps BestReference ownership without losing history provenance"):
+    val observedBest = singletonAnalysisContinuation.copy(
+      variations = List(
+        EngineLine(List("g6g7", "h8h7", "g7g8q"), scoreCp = 600, depth = 20),
+        EngineLine(List("f7e7", "h8g8", "e7e8"), scoreCp = -600, depth = 20)
+      )
+    )
+    val admitted = MoveReviewInputAdmission
+      .admit(observedBest)
+      .getOrElse(fail("expected the observed-best review to admit"))
+    val rankingPair = AdmittedRootRankingPair
+      .fromAdmittedRanking(admitted.assessmentCandidates.sortBy(_.rank).flatMap(_.rootMove))
+      .getOrElse(fail("expected the observed-best root ranking"))
+    val prepared = admitted.copy(admittedRootRankingPair = Some(rankingPair))
+    val resolved = MoveReviewJudgmentOrchestrator
+      .executePreparedReview(
+        prepared,
+        Some(ExplanationRequest.forObservedMove(prepared))
+      )
+      .map(_.packet)
+      .getOrElse(fail("expected the observed best continuation to assemble"))
+    val proofRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
+    }.getOrElse(fail("expected a passed-pawn proof for the observed best move"))
+    val proof = proofRecord.payload.asInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
+    val eventRecord = resolved.evidenceGraph
+      .record(proof.eventSource)
+      .getOrElse(fail("expected the exact lower passed-pawn event"))
+    val event = eventRecord.payload.asInstanceOf[PassedPawnResultEventEvidence]
+    val branch = proof.publicBranches match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one observed-root branch, found ${other.size}")
+
+    assertEquals(
+      resolved.candidateLines.find(_.ref == proof.subjectOccurrence.line).map(_.role),
+      Some(LineNodeRole.BestReference)
+    )
+    assertEquals(proof.subjectOccurrence.rootProvenance, CausalRootProvenance.ObservedGameRoot)
+    assertEquals(event.rootTransition.role, TransitionEdgeRole.Played)
+    assertEquals(eventRecord.ref.scope, EvidenceScope.PlayedTransition)
+    assertEquals(proofRecord.ref.scope, EvidenceScope.PlayedTransition)
+    assertEquals(branch.lineId, proof.subjectOccurrence.line.id)
+    assertEquals(branch.lineOwnerEvidenceId, proof.subjectOccurrence.lineOwnerEvidenceId)
+    assertEquals(branch.rootTransitionEvidenceId, proof.subjectOccurrence.transitionEvidenceId)
+    assertEquals(branch.role, "observed_root_with_analyzed_continuation")
+    assertEquals(branch.rootProvenance, "observed_game_root")
+    assertEquals(
+      branch.steps.map(_.provenance),
+      List("observed_game_move", "certified_analysis_move", "certified_analysis_move")
+    )
+    assert(proofRecord.parents.exists(_.id == proof.subjectOccurrence.lineOwnerEvidenceId))
+    assert(proofRecord.parents.exists(_.id == proof.subjectOccurrence.transitionEvidenceId))
 
   test("evaluation-only changes do not change persisted event or proof identity"):
     def identities(input: RawMoveReviewInput): (String, List[String]) =
@@ -178,7 +257,7 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     assertNotEquals(changed._1, baseline._1)
     assertEquals(changed._2, baseline._2)
 
-  test("a non-actionable comparison does not dispatch passed-pawn event or proof production"):
+  test("a non-actionable comparison still produces the explicitly requested passed-pawn occurrence"):
     val quietInput = singletonAnalysisContinuation.copy(
       variations = List(
         EngineLine(List("f7e7", "h8g8", "e7e8"), scoreCp = 20, depth = 20),
@@ -190,11 +269,32 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
       case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
           if fact.kind == CandidateComparisonKind.PlayedVsBest => fact
     }.getOrElse(fail("expected a quiet PlayedVsBest comparison"))
-    assert(!ActionablePlayedVsBestCausalProofDemand.accepts(comparison))
-    assert(!resolved.evidenceGraph.records.exists(_.payload.isInstanceOf[PassedPawnResultEventEvidence]))
-    assert(!resolved.evidenceGraph.records.exists(
+    assert(!comparison.comparison.verdict.isActionableLoss)
+    assert(resolved.evidenceGraph.records.exists(_.payload.isInstanceOf[PassedPawnResultEventEvidence]))
+    val proofRecords = resolved.evidenceGraph.records.filter(
+      _.payload.isInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
+    )
+    assert(proofRecords.nonEmpty)
+    assert(resolved.evidenceGraph.records.exists {
+      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) =>
+        proofRecords.exists(_.ref == cause.proofSource)
+      case _ => false
+    })
+
+  test("without an occurrence request the passed-pawn event and L2 proof are not computed"):
+    val prepared = MoveReviewInputAdmission
+      .admit(singletonAnalysisContinuation)
+      .getOrElse(fail("expected the passed-pawn review to be admitted"))
+    val packet = MoveReviewJudgmentOrchestrator
+      .executePreparedReview(prepared, None)
+      .getOrElse(fail("assessment should close without an explanation request"))
+      .packet
+
+    assert(!packet.evidenceGraph.records.exists(_.payload.isInstanceOf[PassedPawnResultEventEvidence]))
+    assert(!packet.evidenceGraph.records.exists(
       _.payload.isInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
     ))
+    assertEquals(packet.occurrenceExplanations, Nil)
 
   test("more than one legal root reply remains fail closed"):
     val raw = RawMoveReviewInput(

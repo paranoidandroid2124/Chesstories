@@ -4,9 +4,7 @@ import lila.chessjudgment.model.line.CandidateLineEvaluation
 
 case class LineNodeRef(
     id: String,
-    rootMove: String,
-    rank: Int,
-    role: LineNodeRole
+    rootMove: String
 ):
   def rootMoveIn(normalizedMoves: Set[String]): Boolean =
     normalizedMoves(EvidenceRef.normalizeMove(rootMove))
@@ -22,22 +20,28 @@ final case class SemanticLineKey(
   def stableKey: String = s"$role:$rank:$rootMove"
 
 object SemanticLineKey:
-  def from(line: LineNodeRef): SemanticLineKey =
+  def from(line: CandidateLineNode): SemanticLineKey =
     SemanticLineKey(
       role = line.role,
       rank = line.rank,
-      rootMove = EvidenceRef.normalizeMove(line.rootMove)
+      rootMove = EvidenceRef.normalizeMove(line.ref.rootMove)
     )
 
-  def same(left: LineNodeRef, right: LineNodeRef): Boolean =
+  def same(left: CandidateLineNode, right: CandidateLineNode): Boolean =
     from(left) == from(right)
 
-  def sameOptional(left: Option[LineNodeRef], right: Option[LineNodeRef]): Boolean =
+  def sameOptional(left: Option[CandidateLineNode], right: Option[CandidateLineNode]): Boolean =
     left.map(from) == right.map(from)
+
+case class LegalLineNode(
+    ref: LineNodeRef,
+    evidence: EvidenceRef
+)
 
 case class CandidateLineNode(
     ref: LineNodeRef,
+    role: LineNodeRole,
+    rank: Int,
     evaluation: CandidateLineEvaluation,
-    evidence: EvidenceRef
-):
-  val role: LineNodeRole = ref.role
+    lineEvidence: EvidenceRef
+)

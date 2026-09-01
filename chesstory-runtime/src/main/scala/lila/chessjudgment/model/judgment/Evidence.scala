@@ -28,6 +28,7 @@ enum EvidenceProducer:
   case CausalProofProducer
   case PassedPawnResultEventProducer
   case RelativeMoveProducer
+  case OccurrenceExplanationProducer
 
 enum EvidenceScope:
   case BeforePosition
@@ -37,6 +38,7 @@ enum EvidenceScope:
   case PlayedTransition
   case ReferenceTransition
   case AlternativeTransition
+  case LegalLine
   case BestLine
   case PlayedLine
   case CandidateLine

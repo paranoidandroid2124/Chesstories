@@ -1,7 +1,6 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.variant.Standard
-import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.EngineLine
 
@@ -28,9 +27,12 @@ class BestChoiceProductionTest extends munit.FunSuite:
       .getOrElse(fail("expected the admitted root ranking"))
     val prepared = admitted.copy(admittedRootRankingPair = Some(rankingPair))
 
-    assertEquals(prepared.lines.flatMap(_.rootMove), ranking)
+    assertEquals(prepared.assessmentCandidates.flatMap(_.rootMove).toSet, ranking.toSet)
     MoveReviewJudgmentOrchestrator
-      .executePreparedReview(prepared)
+      .executePreparedReview(
+        prepared,
+        Some(ExplanationRequest.forObservedMove(prepared))
+      )
       .getOrElse(fail("expected the sole production pipeline to close BestChoice"))
       .packet
 
@@ -42,6 +44,13 @@ class BestChoiceProductionTest extends munit.FunSuite:
     } match
       case record :: Nil => record
       case records       => fail(s"expected one produced relative assessment, found ${records.size}")
+
+  private def soleComparison(packet: EvidenceBackedJudgmentPacket): CandidateComparisonFact =
+    packet.evidenceGraph.records.collect {
+      case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) => fact
+    } match
+      case fact :: Nil => fact
+      case facts       => fail(s"expected one quantitative primary comparison, found ${facts.size}")
 
   test("the observed best move reuses its sole LegalLine owner through packet production"):
     val packet = producedPacket(ranking.head)
@@ -55,26 +64,34 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(packet.assembly.referenceTransition, None)
     assertEquals(packet.assembly.lineForRootTransition(played).map(_.ref), Some(owner.ref))
     assertEquals(assessment.reference, assessment.candidate)
-    assertEquals(parents.count(_ == owner.evidence), 1)
+    assertEquals(soleComparison(packet).kind, CandidateComparisonKind.BestVsSecond)
+    assertEquals(parents.count(_ == owner.lineEvidence), 1)
     assertEquals(parents.map(_.id).distinct.size, parents.size)
 
-  test("a non-best played move preserves separate reference and candidate line parents"):
-    val packet = producedPacket(ranking(1))
+  test("a third-ranked played move produces only its primary assessment comparison"):
+    val packet = producedPacket(ranking(2))
     val (assessment, parents) = soleAssessmentRecord(packet)
 
     assertNotEquals(assessment.reference, assessment.candidate)
-    assertEquals(parents.count(_ == assessment.reference.evidence), 1)
-    assertEquals(parents.count(_ == assessment.candidate.evidence), 1)
+    assertEquals(soleComparison(packet).kind, CandidateComparisonKind.PlayedVsBest)
+    assertEquals(parents.count(_ == assessment.reference.lineEvidence), 1)
+    assertEquals(parents.count(_ == assessment.candidate.lineEvidence), 1)
     assertEquals(parents.map(_.id).distinct.size, parents.size)
 
-  test("relative assessment production rejects every non-owner duplicate or id collision"):
-    val (assessment, _) = soleAssessmentRecord(producedPacket(ranking.head))
-    val duplicate = assessment.copy(relativeCauseEvidence = List(assessment.primaryComparisonEvidence))
-    val collision = assessment.copy(
-      relativeCauseEvidence = List(
-        assessment.primaryComparisonEvidence.copy(scope = EvidenceScope.PlayedTransition)
-      )
+  test("packet admission rejects an extra CandidateComparison owner"):
+    val packet = producedPacket(ranking(2))
+    val comparisonRecord = packet.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, CandidateComparisonEvidence(_), _) => record
+    } match
+      case record :: Nil => record
+      case records       => fail(s"expected one quantitative primary comparison, found ${records.size}")
+    val extra = comparisonRecord.copy(
+      ref = comparisonRecord.ref.copy(id = s"${comparisonRecord.ref.id}:unconsumed")
     )
 
-    intercept[IllegalArgumentException](TransitionFactNormalizer.fromRelativeAssessment(duplicate))
-    intercept[IllegalArgumentException](TransitionFactNormalizer.fromRelativeAssessment(collision))
+    assertEquals(
+      EvidenceBackedJudgmentPacket.fromAssembly(
+        packet.assembly.withEvidence(extra)
+      ),
+      None
+    )

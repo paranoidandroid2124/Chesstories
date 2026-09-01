@@ -11,7 +11,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
 
   private val fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
   private val position = PositionNodeRef(fen, 0, Some(White), Some("identity-root"))
-  private val line = LineNodeRef("identity-line", "e2e4", 1, LineNodeRole.Played)
+  private val line = LineNodeRef("identity-line", "e2e4")
 
   private def hasCreatedDoubleCheck(relation: RelationFactEvidence): Boolean =
     relation.detail match
@@ -29,7 +29,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     val rootA = PositionNodeRef(afterE4, 1, Some(Black), Some("occurrence-root-a"))
     val rootB = PositionNodeRef(afterD4, 1, Some(Black), Some("occurrence-root-b"))
     val move = "g8f6"
-    def normalized(root: PositionNodeRef): AdmittedReviewLine =
+    def normalized(root: PositionNodeRef): AdmittedLegalLine =
       val history = CanonicalPositionHistory
         .from(root.fen, Nil, root.fen)
         .getOrElse(fail("expected an occurrence history"))
@@ -37,12 +37,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       val replay = CanonicalLineReplay
         .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
         .getOrElse(fail("expected a canonical occurrence replay"))
-      AdmittedReviewLine(
-        LineNodeRole.Alternative,
-        rank = 1,
-        CandidateLineEvaluation.EngineSearch(EngineLine(List(move), scoreCp = 0, depth = 18)),
-        replay
-      )
+      AdmittedLegalLine(move, replay)
     val allocator = JudgmentProvenanceAllocator.forInput(input)
     val lineA = normalized(rootA)
     val lineB = normalized(rootB)
@@ -71,8 +66,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       Some("occurrence-to-b")
     )
     assertNotEquals(
-      allocator.transitionOccurrenceKey(TransitionEdgeRole.Alternative, rootA, move, toA),
-      allocator.transitionOccurrenceKey(TransitionEdgeRole.Alternative, rootB, move, toB)
+      allocator.transitionOccurrenceKey(rootA, move, toA),
+      allocator.transitionOccurrenceKey(rootB, move, toB)
     )
 
   test("fresh double-check control stays on one transition occurrence"):
@@ -208,20 +203,15 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assertNotEquals(boundA.after.position, boundB.after.position)
 
   private def input: AdmittedMoveReviewInput =
-    val after = PrincipalVariationEvidence
-      .legalFenAfter(fen, line.rootMove)
-      .getOrElse(fail("expected legal root move"))
-    val history = CanonicalPositionHistory
-      .from(fen, Nil, fen)
-      .fold(error => fail(error.toString), identity)
-    AdmittedMoveReviewInput(
-      beforeFen = fen,
-      playedMoveUci = line.rootMove,
-      beforePly = 0,
-      sideToMove = Some(White),
-      afterPlayedFen = after,
-      afterReferenceFen = None,
-      lines = Nil,
-      admittedRootRankingPair = None,
-      positionHistory = history,
-    )
+    MoveReviewInputAdmission
+      .admit(
+        RawMoveReviewInput(
+          fen = fen,
+          playedMoveUci = line.rootMove,
+          variations = List(
+            EngineLine(List("e2e4", "e7e5"), scoreCp = 20, depth = 18),
+            EngineLine(List("d2d4", "d7d5"), scoreCp = 10, depth = 18)
+          )
+        )
+      )
+      .getOrElse(fail("expected a canonical allocator input"))

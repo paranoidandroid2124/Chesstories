@@ -2,8 +2,11 @@ package lila.chessjudgment.model.judgment
 
 import lila.chessjudgment.analysis.assembly.{
   EvidenceFactAssembler,
+  ExplanationRequest,
+  JudgmentProvenanceAllocator,
+  OccurrenceExplanationAssembler,
+  OccurrenceExplanationDemand,
   RawMoveReviewInput,
-  RelativeAssessmentAssembler
 }
 import lila.chessjudgment.model.line.EngineLine
 
@@ -11,11 +14,11 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
 
   private val rootFen =
     "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
-  private val referenceMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
-  private val playedMoves = List("b2b4", "e5d4")
+  private val vacatingMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
+  private val immediateMoves = List("b2b4", "e5d4")
 
   test("Doknjas Ruy move order closes the exact capture reply before the same deferred move"):
-    val context = enriched(rootFen, referenceMoves, playedMoves)
+    val context = enriched(rootFen, vacatingMoves, immediateMoves)
     val record = captureRecord(context)
     val proof = record.payload.asInstanceOf[CaptureExclusionMoveOrderEvidence]
 
@@ -23,9 +26,9 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
     assertEquals(proof.deferredMove.stableKey, "white:pawn>pawn:b2-b4")
     assertEquals(proof.captureReply.stableKey, "black:pawn>pawn:e5-d4")
     assertEquals(proof.capturedTarget, colored("d4", "pawn", chess.White))
-    assertEquals(proof.referenceDeferredStepIndex, 4)
-    assertEquals(proof.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
-    assertEquals(proof.occurrence.playedSteps.map(_.moveUci), playedMoves)
+    assertEquals(proof.laterDeferredStepIndex, 4)
+    assertEquals(proof.occurrence.vacatingSteps.map(_.moveUci), vacatingMoves)
+    assertEquals(proof.occurrence.immediateSteps.map(_.moveUci), immediateMoves)
 
     val path = proof.proofPaths match
       case one :: Nil => one
@@ -33,10 +36,10 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
     assertEquals(
       path.manifest.supplementalPremiseUses.map(_.asInstanceOf[CausalLegalMovePremiseUse].role),
       List(
-        CaptureExclusionMoveOrderPremiseRole.ReferenceVacatingMove,
-        CaptureExclusionMoveOrderPremiseRole.PlayedDeferredMove,
-        CaptureExclusionMoveOrderPremiseRole.PlayedCaptureReply,
-        CaptureExclusionMoveOrderPremiseRole.ReferenceDeferredMove
+        CaptureExclusionMoveOrderPremiseRole.VacatingMove,
+        CaptureExclusionMoveOrderPremiseRole.ImmediateDeferredMove,
+        CaptureExclusionMoveOrderPremiseRole.ImmediateCaptureReply,
+        CaptureExclusionMoveOrderPremiseRole.LaterDeferredMove
       )
     )
     assertEquals(
@@ -59,23 +62,27 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
     assertEquals(path.closedStateUses.size, 14)
     assertEquals(
       path.closedStateUses.count(
-        _.binding.role == CaptureExclusionMoveOrderStateRole.ReferenceVacatedTarget
+        _.binding.role == CaptureExclusionMoveOrderStateRole.VacatedTarget
       ),
       5
     )
     assertEquals(
       path.closedStateUses.count(
-        _.binding.role == CaptureExclusionMoveOrderStateRole.ReferenceReplyActor
+        _.binding.role == CaptureExclusionMoveOrderStateRole.ReplyActor
       ),
       5
     )
     assertEquals(
       path.closedStateUses.count(
-        _.binding.role == CaptureExclusionMoveOrderStateRole.ReferenceDeferredActor
+        _.binding.role == CaptureExclusionMoveOrderStateRole.DeferredActor
       ),
       4
     )
     assert(proof.hasCompleteProofPaths)
+    val certificate = proof.occurrenceProof
+    assert(certificate.remainsCertified)
+    assert(certificate.proves(record, proof))
+    assert(proof.lowerRecordsAreCanonical(context.evidenceGraph.byId))
     assert(context.evidenceGraph.proofEligible(record))
     assert(proof.semanticId.matches("[0-9a-f]{64}"))
     assert(proof.occurrenceId.matches("[0-9a-f]{64}"))
@@ -83,18 +90,18 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
 
   test("the shortest later occurrence retains both endpoint absences and the complete state interval"):
     val proof = captureRecord(
-      enriched(rootFen, List("d4d5", "c7c6", "b2b4"), playedMoves)
+      enriched(rootFen, List("d4d5", "c7c6", "b2b4"), immediateMoves)
     ).payload.asInstanceOf[CaptureExclusionMoveOrderEvidence]
     val path = proof.proofPaths.head
 
-    assertEquals(proof.referenceDeferredStepIndex, 2)
+    assertEquals(proof.laterDeferredStepIndex, 2)
     assertEquals(path.closedAbsenceUses.map(_.binding.afterStepIndex), List(0, 2))
     assertEquals(path.closedStateUses.size, 8)
     assert(proof.hasCompleteProofPaths)
 
   test("endpoint, state, and branch tampering cannot form the exact manifest"):
     val proof = captureRecord(
-      enriched(rootFen, referenceMoves, playedMoves)
+      enriched(rootFen, vacatingMoves, immediateMoves)
     ).payload.asInstanceOf[CaptureExclusionMoveOrderEvidence]
     val path = proof.proofPaths.head
     val legalMoves = path.manifest.supplementalPremiseUses.map(
@@ -127,29 +134,25 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
       CausalClosedStateBinding.afterStep(
         states.head.role,
         states.head.authority,
-        proof.playedBranch,
+        proof.immediateBranch,
         0
       )
     }
 
-  test("the family is demand-bounded and reuses its sole graph owner"):
-    val first = enriched(rootFen, referenceMoves, playedMoves)
+  test("the family is demand-bounded and produces one graph owner"):
+    val first = enriched(rootFen, vacatingMoves, immediateMoves)
     val original = first.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, _: CaptureExclusionMoveOrderEvidence, _) => record
     }
-    val repeated = RelativeAssessmentAssembler.enrichFacts(first).evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, _: CaptureExclusionMoveOrderEvidence, _) => record
-    }
     assertEquals(original.size, 1)
-    assertEquals(repeated.map(_.ref.id), original.map(_.ref.id))
 
-    val noReply = enriched(rootFen, referenceMoves, List("b2b4", "f8g7"))
+    val noReply = enriched(rootFen, vacatingMoves, List("b2b4", "f8g7"))
     assertEquals(
       noReply.evidenceGraph.records.count(_.payload.isInstanceOf[CaptureExclusionMoveOrderEvidence]),
       0
     )
 
-  test("transposed reference histories share semantics without losing occurrences"):
+  test("transposed vacating-branch histories share semantics without losing occurrences"):
     val kingFirst = List(
       "d4d5",
       "g8h8",
@@ -168,51 +171,67 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
       "h8g8",
       "b2b4"
     )
-    val first = captureRecord(enriched(rootFen, kingFirst, playedMoves)).payload
+    val first = captureRecord(enriched(rootFen, kingFirst, immediateMoves)).payload
       .asInstanceOf[CaptureExclusionMoveOrderEvidence]
-    val second = captureRecord(enriched(rootFen, knightFirst, playedMoves)).payload
+    val second = captureRecord(enriched(rootFen, knightFirst, immediateMoves)).payload
       .asInstanceOf[CaptureExclusionMoveOrderEvidence]
 
     assertEquals(
-      first.referenceBranch.replaySteps.last.fenAfter,
-      second.referenceBranch.replaySteps.last.fenAfter
+      first.vacatingBranch.replaySteps.last.fenAfter,
+      second.vacatingBranch.replaySteps.last.fenAfter
     )
     assertEquals(first.semanticId, second.semanticId)
     assertNotEquals(first.occurrenceId, second.occurrenceId)
     assertNotEquals(first.dependencyId, second.dependencyId)
-    assertNotEquals(first.referenceBranch.branchId, second.referenceBranch.branchId)
+    assertNotEquals(first.vacatingBranch.branchId, second.vacatingBranch.branchId)
 
-  test("the typed proof reaches the exact reference-side WrongMoveOrder Cause"):
-    val facts = enriched(rootFen, referenceMoves, playedMoves)
+  test("the typed proof reaches the requested subject occurrence Cause directly"):
+    val facts = enriched(rootFen, vacatingMoves, immediateMoves)
     val proofRecord = captureRecord(facts)
-    val withCauses = RelativeAssessmentAssembler.enrichCauses(facts)
+    val demand = exactDemand(facts)
+    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
+      facts,
+      JudgmentProvenanceAllocator.forInput(facts.input),
+      demand
+    )
     val causes = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder => cause
+      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) => cause
     }
 
     assertEquals(causes.size, 1)
-    assertEquals(causes.head.sourceSide, RelativeCauseSourceSide.Reference)
-    assert(causes.head.proofSources.exists(_.id == proofRecord.ref.id))
+    assertEquals(causes.head.subject.moveUci, immediateMoves.head)
+    assertEquals(causes.head.proofSource.id, proofRecord.ref.id)
 
   private def enriched(
       fen: String,
-      reference: List[String],
-      played: List[String]
+      vacating: List[String],
+      immediate: List[String]
   ): JudgmentAssemblyContext =
-    EvidenceFactAssembler
+    val facts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = fen,
-          playedMoveUci = played.head,
+          playedMoveUci = immediate.head,
           variations = List(
-            EngineLine(reference, scoreCp = 600, depth = 24),
-            EngineLine(played, scoreCp = 0, depth = 24)
+            EngineLine(vacating, scoreCp = 600, depth = 24),
+            EngineLine(immediate, scoreCp = 0, depth = 24)
           )
         )
       )
-      .map(RelativeAssessmentAssembler.enrichFacts)
       .getOrElse(fail("expected exact certified line facts"))
+    produceExplanations(facts)
+
+  private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    OccurrenceExplanationAssembler.enrichProofs(
+      context,
+      JudgmentProvenanceAllocator.forInput(context.input),
+      exactDemand(context)
+    )
+
+  private def exactDemand(context: JudgmentAssemblyContext): OccurrenceExplanationDemand =
+    OccurrenceExplanationDemand
+      .resolve(context, ExplanationRequest.forObservedMove(context.input))
+      .getOrElse(fail("expected the exact observed occurrence demand"))
 
   private def colored(
       square: String,

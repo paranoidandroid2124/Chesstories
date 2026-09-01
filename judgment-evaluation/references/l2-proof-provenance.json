@@ -1,44 +1,122 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
   "authority": "ci_only_reference_provenance_not_board_truth",
   "runtime_consumed": false,
   "cache_dependency": false,
+  "host": {
+    "demand": {
+      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationDemand.scala",
+      "symbol": "OccurrenceExplanationDemand"
+    },
+    "orchestrator": {
+      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/MoveReviewJudgmentOrchestrator.scala",
+      "symbol": "MoveReviewJudgmentOrchestrator",
+      "proof_entrypoint": "OccurrenceExplanationAssembler.enrichProofs",
+      "cause_entrypoint": "OccurrenceExplanationAssembler.enrichCauses"
+    },
+    "cause": {
+      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/OccurrenceExplanation.scala",
+      "symbol": "OccurrenceExplanationCause",
+      "evidence_file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+      "evidence_symbol": "OccurrenceExplanationCauseEvidence"
+    },
+    "packet": {
+      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/JudgmentPacket.scala",
+      "symbol": "EvidenceBackedJudgmentPacket",
+      "field": "occurrenceExplanations"
+    },
+    "runtime": {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "serializer_symbol": "occurrenceExplanationJson",
+      "field": "occurrence_explanations"
+    },
+    "schema": {
+      "file": "judgment-evaluation/schemas/public-v6/move-meaning-response.schema.json",
+      "root_property": "occurrence_explanations",
+      "union_definition": "occurrenceExplanation"
+    }
+  },
+  "coverage_categories": [
+    "current_exact_proof",
+    "lower_fact_gap",
+    "l2_join_or_demand_gap",
+    "higher_layer_responsibility"
+  ],
   "contracts": [
     {
       "contract_kind": "UniqueCheckReplyDefenderDisplacementBeforeCapture",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler"
+        "symbol": "RelationCausalProofAssembler",
+        "method": "uniqueCheckReply"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
         "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence"
       },
-      "public_consumer": {
-        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-        "serializer_symbol": "uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson",
-        "field": "unique_check_reply_defender_displacement_before_capture_proof",
-        "schema_channel_definition": "uniqueCheckReplyDefenderDisplacementBeforeCaptureCausalChannel",
-        "schema_proof_definition": "uniqueCheckReplyDefenderDisplacementBeforeCaptureProof"
+      "wire": {
+        "proof_kind": "unique_check_reply_defender_displacement_before_capture",
+        "variant_definition": "uniqueCheckReplyOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrenceUniqueCheckReplyProof"
       },
-      "browser_consumer": {
-        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
-        "projection_symbol": "projectUniqueCheckReplyDefenderDisplacementBeforeCapture",
-        "discriminant": "unique-check-reply-defender-displacement-before-capture"
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.uniqueCheckReply",
+        "coordinate_piece_identity_proposition": {
+          "statement": "An exact checking move has one certified reply that displaces the identified defender; the same identified actor then captures the same target, while the immediate-capture sibling retains the defender resource.",
+          "wire_fields": ["participants", "trigger", "forced_reply", "realizer", "captured_target", "immediate_defense", "disabled_defender"]
+        },
+        "lower_premises": {
+          "contracts": ["created_check_response_inventory", "capture_recapture_inventory"],
+          "dynamic_id_fields": ["result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["relation result owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
+          "fields": ["semantic_proof_id", "query", "position"],
+          "certified_absence_or_state": ["delayed_capture_recapture_absent", "delayed_capture_actor_present", "delayed_target_present"]
+        },
+        "branch_occurrence": {
+          "roles": ["displacement_then_capture", "immediate_capture_with_defender"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "exactly_one_current_contract",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
+          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "all lower result and source IDs", "closed absence and state IDs", "proof path occurrence IDs"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer deterministic graph record; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "uniqueCheckReplyOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 548,
+                "name": "v6 commentary serializes unique-check-reply defender displacement before capture"
+              }
+            ]
+          },
+          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
+          "ui_status": "pending_completion",
+          "ui_owner": "separate frontend task",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal-resource, relation, and position-state truth."
       },
-      "cause": {
-        "scala_symbol": "WrongMoveOrder",
-        "wire_kind": "wrong_move_order",
-        "schema_facet_definition": "wrongMoveOrderCausalFacet"
-      },
-      "coverage_status": "exact_ordered_skeleton",
+      "implementation_status": "current_exact_proof",
+      "reference_support": "motif_only",
       "references": [
         {
-          "coverage": "exact_ordered_skeleton",
-          "external_url": "https://www.chess.com/terms/deflection-chess"
-        },
-        {
-          "coverage": "motif_only",
+          "support": "motif_only",
           "locator": {
             "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
             "pdf_page": 178
@@ -59,54 +137,86 @@
       "contract_kind": "SoleRecapturerRemovalBeforeTargetCapture",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler"
+        "symbol": "RelationCausalProofAssembler",
+        "method": "soleRecapturerRemoval"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
         "symbol": "SoleRecapturerRemovalBeforeTargetCaptureEvidence"
       },
-      "public_consumer": {
-        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-        "serializer_symbol": "soleRecapturerRemovalBeforeTargetCaptureProofJson",
-        "field": "sole_recapturer_removal_before_target_capture_proof",
-        "schema_channel_definition": "soleRecapturerRemovalBeforeTargetCaptureCausalChannel",
-        "schema_proof_definition": "soleRecapturerRemovalBeforeTargetCaptureProof"
+      "wire": {
+        "proof_kind": "sole_recapturer_removal_before_target_capture",
+        "variant_definition": "soleRecapturerOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrenceSoleRecapturerProof"
       },
-      "browser_consumer": {
-        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
-        "projection_symbol": "projectSoleRecapturerRemovalBeforeTargetCapture",
-        "discriminant": "sole-recapturer-removal-before-target-capture"
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.soleRecapturerRemoval",
+        "coordinate_piece_identity_proposition": {
+          "statement": "The identified remover eliminates the identified sole recapturer before the identified actor captures the same target; the immediate sibling retains the exact sole recapture.",
+          "wire_fields": ["participants", "remover", "removed_defender", "removal_recapture", "post_removal_target_capture", "captured_target", "immediate_sole_recapture"]
+        },
+        "lower_premises": {
+          "contracts": ["capture_recapture_inventory"],
+          "dynamic_id_fields": ["result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["relation result owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
+          "fields": ["semantic_proof_id", "query", "position"],
+          "certified_absence_or_state": ["post_removal_replacement_recapture_absent", "post_removal_exploit_actor_present", "post_removal_target_present"]
+        },
+        "branch_occurrence": {
+          "roles": ["removal_then_target_capture", "immediate_target_capture"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "exactly_one_current_contract",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
+          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "all lower result and source IDs", "closed absence and state IDs", "proof path occurrence IDs"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer deterministic graph record; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "soleRecapturerOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 678,
+                "name": "v6 commentary serializes the exact sole-recapturer removal proof"
+              }
+            ]
+          },
+          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
+          "ui_status": "pending_completion",
+          "ui_owner": "separate frontend task",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of capture/recapture and position-state truth."
       },
-      "cause": {
-        "scala_symbol": "WrongMoveOrder",
-        "wire_kind": "wrong_move_order",
-        "schema_facet_definition": "wrongMoveOrderCausalFacet"
-      },
-      "coverage_status": "exact_ordered_skeleton",
+      "implementation_status": "current_exact_proof",
+      "reference_support": "motif_only",
       "references": [
         {
-          "coverage": "exact_ordered_skeleton",
-          "external_url": "https://www.chess.com/terms/removing-the-defender-chess"
-        },
-        {
-          "coverage": "motif_only",
+          "support": "motif_only",
           "locator": {
             "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
             "pdf_page": 154
           }
         },
         {
-          "coverage": "motif_only",
+          "support": "motif_only",
           "locator": {
             "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
             "pdf_page": 271
-          }
-        },
-        {
-          "coverage": "motif_only",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 131
           }
         }
       ],
@@ -120,125 +230,89 @@
       }
     },
     {
-      "contract_kind": "CaptureExclusionMoveOrder",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "CaptureExclusionMoveOrderEvidence"
-      },
-      "public_consumer": {
-        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-        "serializer_symbol": "captureExclusionMoveOrderProofJson",
-        "field": "capture_exclusion_move_order_proof",
-        "schema_channel_definition": "captureExclusionMoveOrderCausalChannel",
-        "schema_proof_definition": "captureExclusionMoveOrderProof"
-      },
-      "browser_consumer": {
-        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
-        "projection_symbol": "projectCaptureExclusionMoveOrder",
-        "discriminant": "capture-exclusion-move-order"
-      },
-      "cause": {
-        "scala_symbol": "WrongMoveOrder",
-        "wire_kind": "wrong_move_order",
-        "schema_facet_definition": "wrongMoveOrderCausalFacet"
-      },
-      "coverage_status": "exact_ordered_skeleton",
-      "references": [
-        {
-          "coverage": "exact_ordered_skeleton",
-          "locator": {
-            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
-            "pdf_page": 78
-          }
-        },
-        {
-          "coverage": "exact_ordered_skeleton",
-          "locator": {
-            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
-            "pdf_page": 79
-          }
-        },
-        {
-          "coverage": "exact_ordered_skeleton",
-          "locator": {
-            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
-            "pdf_page": 80
-          }
-        },
-        {
-          "coverage": "exact_ordered_skeleton",
-          "locator": {
-            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
-            "pdf_page": 81
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "best_plan",
-        "counterplay_value",
-        "general_prevention",
-        "generic_resource_exclusion",
-        "plan",
-        "preparation",
-        "sole_cause"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/CaptureExclusionMoveOrderTest.scala",
-        "symbol": "CaptureExclusionMoveOrderTest"
-      }
-    },
-    {
       "contract_kind": "VacatedGateEnablesUnrecapturableSliderCapture",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler"
+        "symbol": "RelationCausalProofAssembler",
+        "method": "vacatedGateCapture"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
         "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureEvidence"
       },
-      "public_consumer": {
-        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-        "serializer_symbol": "vacatedGateEnablesUnrecapturableSliderCaptureProofJson",
-        "field": "vacated_gate_enables_unrecapturable_slider_capture_proof",
-        "schema_channel_definition": "vacatedGateEnablesUnrecapturableSliderCaptureCausalChannel",
-        "schema_proof_definition": "vacatedGateEnablesUnrecapturableSliderCaptureProof"
+      "wire": {
+        "proof_kind": "vacated_gate_enables_unrecapturable_slider_capture",
+        "variant_definition": "vacatedGateOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrenceVacatedGateProof"
       },
-      "browser_consumer": {
-        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
-        "projection_symbol": "projectVacatedGateEnablesUnrecapturableSliderCapture",
-        "discriminant": "vacated-gate-enables-unrecapturable-slider-capture"
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.vacatedGateCapture",
+        "coordinate_piece_identity_proposition": {
+          "statement": "The identified enabler vacates the identified gate, changing the identified slider's exact reach so that its later capture of the same target has no immediate recapture; the retained-gate sibling lacks that exploit.",
+          "wire_fields": ["participants", "enabler", "slider", "gate_blocker", "exploit", "captured_target"]
+        },
+        "lower_premises": {
+          "contracts": ["slider_reach_delta", "capture_recapture_inventory"],
+          "dynamic_id_fields": ["result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["relation result owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
+          "fields": ["semantic_proof_id", "query", "position"],
+          "certified_absence_or_state": ["later_capture_immediate_recapture_absent", "retained_gate_exploit_move_absent", "retained_gate_replacement_capture_absent", "vacated_gate_intervening_slider_reach", "retained_gate_blocker_persistence"]
+        },
+        "branch_occurrence": {
+          "roles": ["gate_vacated_then_capture", "gate_retained"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "exactly_one_current_contract",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
+          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "all lower result and source IDs", "closed absence and state IDs", "proof path occurrence IDs"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer deterministic graph record; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "vacatedGateOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 907,
+                "name": "v6 commentary keeps direct line-access proof in its exact typed channel"
+              }
+            ]
+          },
+          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
+          "ui_status": "pending_completion",
+          "ui_owner": "separate frontend task",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of slider reach, capture resources, and position state."
       },
-      "cause": {
-        "scala_symbol": "MissedTacticalResource",
-        "wire_kind": "missed_tactical_resource",
-        "schema_facet_definition": "missedTacticalResourceCausalFacet"
-      },
-      "coverage_status": "motif_only",
+      "implementation_status": "current_exact_proof",
+      "reference_support": "motif_only",
       "references": [
         {
-          "coverage": "motif_only",
+          "support": "motif_only",
           "locator": {
             "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
             "pdf_page": 146
           }
         },
         {
-          "coverage": "motif_only",
+          "support": "motif_only",
           "locator": {
             "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
             "pdf_page": 156
-          }
-        },
-        {
-          "coverage": "motif_only",
-          "locator": {
-            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
-            "pdf_page": 271
           }
         }
       ],
@@ -256,113 +330,118 @@
       "contract_kind": "SquareReleaseRoute",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler"
+        "symbol": "RelationCausalProofAssembler",
+        "method": "squareReleaseRoute"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
         "symbol": "SquareReleaseRouteEvidence"
       },
-      "public_consumer": {
-        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-        "serializer_symbol": "squareReleaseRouteProofJson",
-        "field": "square_release_route_proof",
-        "schema_channel_definition": "squareReleaseRouteCausalChannel",
-        "schema_proof_definition": "squareReleaseRouteProof"
+      "wire": {
+        "proof_kind": "square_release_route",
+        "variant_definition": "squareReleaseRouteOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrenceSquareReleaseRouteProof"
       },
-      "browser_consumer": {
-        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
-        "projection_symbol": "projectSquareReleaseRoute",
-        "discriminant": "square-release-route"
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.squareReleaseRoute",
+        "coordinate_piece_identity_proposition": {
+          "statement": "The identified releaser vacates the identified square and the same identified route piece consumes it through ordered exact route squares to a certified occupation, capture, or check terminal; the retained-blocker sibling lacks the first leg.",
+          "wire_fields": ["participants", "releaser", "released_blocker", "route_piece", "route", "terminal"]
+        },
+        "lower_premises": {
+          "contracts": ["legal_move", "capture_recapture_inventory", "created_check_response_inventory"],
+          "dynamic_id_fields": ["legal_move_semantic_id", "result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["canonical LegalMove owner", "optional terminal relation result owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
+          "fields": ["semantic_proof_id", "query", "position"],
+          "certified_absence_or_state": ["retained_blocker_first_route_leg_absent", "released_square_vacancy", "route_piece_N", "route_persistence_N", "retained_blocker_persistence", "retained_route_origin_persistence"]
+        },
+        "branch_occurrence": {
+          "roles": ["released_square_route", "retained_blocker"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "one_or_more",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
+          "rule": "semantic_id may coincide after transposition; each route occurrence, branch owner, ordered step sequence, and independent path_occurrence_id remains distinct"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "every legal-move and terminal premise ID", "all vacancy, persistence, and absence IDs", "every proof path occurrence ID"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer deterministic graph record; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "squareReleaseRouteOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 1022,
+                "name": "v6 commentary serializes the exact one-leg square-release route proof"
+              },
+              {
+                "line": 1148,
+                "name": "v6 commentary preserves the Silicon Road multi-leg route and all five check replies"
+              }
+            ]
+          },
+          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
+          "ui_status": "pending_completion",
+          "ui_owner": "separate frontend task",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal moves, capture/check resources, vacancy, and piece state."
       },
-      "cause": {
-        "scala_symbol": "MissedSquareRelease",
-        "wire_kind": "missed_square_release",
-        "schema_facet_definition": "missedSquareReleaseCausalFacet"
-      },
-      "coverage_status": "exact_ordered_skeleton",
+      "implementation_status": "current_exact_proof",
+      "reference_support": "exact_proposition_anchor",
       "references": [
         {
-          "coverage": "exact_ordered_skeleton",
+          "support": "exact_occurrence_component",
           "locator": {
             "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
             "pdf_page": 124
           }
         },
         {
-          "coverage": "exact_ordered_skeleton",
+          "support": "exact_occurrence_component",
           "locator": {
             "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
             "pdf_page": 125
           }
         },
         {
-          "coverage": "exact_ordered_skeleton",
+          "support": "exact_proposition_anchor",
           "locator": {
             "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
             "pdf_page": 130
           }
         },
         {
-          "coverage": "exact_ordered_skeleton",
+          "support": "exact_proposition_anchor",
           "locator": {
             "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
             "pdf_page": 131
           }
         },
         {
-          "coverage": "exact_ordered_skeleton",
-          "locator": {
-            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
-            "pdf_page": 57
-          }
-        },
-        {
-          "coverage": "exact_ordered_skeleton",
-          "locator": {
-            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
-            "pdf_page": 58
-          }
-        },
-        {
-          "coverage": "exact_route_component",
+          "support": "exact_occurrence_component",
           "locator": {
             "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
             "pdf_page": 160
           }
         },
         {
-          "coverage": "exact_route_component",
+          "support": "exact_occurrence_component",
           "locator": {
             "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
             "pdf_page": 164
-          }
-        },
-        {
-          "coverage": "exact_route_component",
-          "locator": {
-            "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
-            "pdf_page": 379
-          }
-        },
-        {
-          "coverage": "exact_route_component",
-          "locator": {
-            "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
-            "pdf_page": 382
-          }
-        },
-        {
-          "coverage": "exact_route_component",
-          "locator": {
-            "document_id": "ref-03c77bd9c6c6ae987e07067822fd63b",
-            "pdf_page": 130
-          }
-        },
-        {
-          "coverage": "exact_route_component",
-          "locator": {
-            "document_id": "ref-03c77bd9c6c6ae987e07067822fd63b",
-            "pdf_page": 132
           }
         }
       ],
@@ -382,43 +461,196 @@
       }
     },
     {
+      "contract_kind": "CaptureExclusionMoveOrder",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
+        "symbol": "OccurrenceExplanationAssembler",
+        "method": "captureExclusionRecords"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "CaptureExclusionMoveOrderEvidence"
+      },
+      "wire": {
+        "proof_kind": "capture_exclusion_move_order",
+        "variant_definition": "captureExclusionOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrenceCaptureExclusionMoveOrderProof"
+      },
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala#OccurrenceExplanationAssembler.captureExclusionRecords",
+        "coordinate_piece_identity_proposition": {
+          "statement": "The identified vacating move removes the identified capture target before the identified deferred move; the immediate sibling plays that deferred move first and permits the identified reply actor to capture that same target.",
+          "wire_fields": ["participants", "vacating_move", "deferred_move", "capture_reply", "captured_target", "later_deferred_step_index"]
+        },
+        "lower_premises": {
+          "contracts": ["legal_move"],
+          "dynamic_id_fields": ["legal_move_semantic_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["canonical LegalMove owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
+          "fields": ["semantic_proof_id", "query", "position"],
+          "certified_absence_or_state": ["capture_reply_absent", "vacated_target", "reply_actor", "deferred_actor"]
+        },
+        "branch_occurrence": {
+          "roles": ["vacating_then_deferred", "immediate_deferred_capture"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "exactly_one_current_contract",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
+          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject occurrence", "vacating and immediate branch owners and replays", "all LegalMove semantic and source IDs", "all target, actor, and absence IDs", "proof path occurrence IDs"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer deterministic graph record; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "captureExclusionOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 745,
+                "name": "Scala producer matches the immutable occurrence-explanation public-v6 fixture"
+              },
+              {
+                "line": 810,
+                "name": "v6 commentary serializes the capture-exclusion occurrence result from its occurrence Cause"
+              }
+            ]
+          },
+          "direct_fixture": {
+            "file": "judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json",
+            "proof_kind": "capture_exclusion_move_order",
+            "producer_test_name": "Scala producer matches the immutable occurrence-explanation public-v6 fixture"
+          },
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and immutable Scala-produced fixture",
+          "ui_status": "pending_completion",
+          "ui_owner": "separate frontend task",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer joins canonical LegalMove occurrences and closed state/absence record IDs; it does not recalculate legal moves, capture maps, rays, or piece state."
+      },
+      "implementation_status": "current_exact_proof",
+      "reference_support": "exact_proposition_anchor",
+      "references": [
+        {
+          "support": "exact_proposition_anchor",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 78
+          }
+        },
+        {
+          "support": "exact_proposition_anchor",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 83
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "best_plan",
+        "counterplay_value",
+        "general_prevention",
+        "generic_resource_exclusion",
+        "plan",
+        "preparation",
+        "sole_cause"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/CaptureExclusionMoveOrderTest.scala",
+        "symbol": "CaptureExclusionMoveOrderTest"
+      }
+    },
+    {
       "contract_kind": "PassedPawnProgressRealizedAfterOnlyLegalReply",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.scala",
-        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler"
+        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler",
+        "method": "fromDemand"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
         "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence"
       },
-      "public_consumer": {
-        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-        "serializer_symbol": "passedPawnProgressRealizedAfterOnlyLegalReplyProofJson",
-        "field": "passed_pawn_progress_realized_after_only_legal_reply_proof",
-        "schema_channel_definition": "passedPawnProgressChannel",
-        "schema_proof_definition": "passedPawnProgressRealizedAfterOnlyLegalReplyProof"
+      "wire": {
+        "proof_kind": "passed_pawn_progress_realized_after_only_legal_reply",
+        "variant_definition": "passedPawnProgressOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrencePassedPawnProgressProof"
       },
-      "browser_consumer": {
-        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
-        "projection_symbol": "projectPassedPawnProgressRealizedAfterOnlyLegalReply",
-        "discriminant": "passed-pawn-progress-realized-after-only-legal-reply"
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.scala#PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand",
+        "coordinate_piece_identity_proposition": {
+          "statement": "For the identified observed root actor and its one certified legal reply, an identified actor on the certified analysis continuation realizes the exact passed-pawn result subject at the recorded later occurrence.",
+          "wire_fields": ["result_target_subjects", "root_actor", "realizing_actor", "root_move", "realizing_move", "root_ply", "realizing_ply"]
+        },
+        "lower_premises": {
+          "contracts": ["passed_pawn_progress_dependency", "passed_pawn_progress", "slider_reach_delta", "pawn_topology_transition", "capture_recapture_inventory"],
+          "dynamic_id_fields": ["lower_premise_ids", "lower_semantic_key", "result_key", "occurrence_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["passed-pawn event owner", "relation result owner", "position-state witness owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["closed_legal_reply_inventory", "relation_issuers", "position_state_issuers"],
+          "fields": ["issuer_evidence_id", "legal_reply_move", "analysis_continuation_branch_id", "semantic_proof_id"],
+          "certified_absence_or_state": ["exactly one legal root reply", "object-state precondition", "line-access precondition", "response-continuation precondition"]
+        },
+        "branch_occurrence": {
+          "roles": ["observed_root_with_analyzed_continuation"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "source_occurrence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "one_or_more",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id", "analysis_continuation_branch_id"],
+          "rule": "semantic_id may coincide after transposition; subject occurrence, continuation branch, realizing occurrence, and every path_occurrence_id remain distinct"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject transition occurrence", "line and transition owners", "closed singleton-reply inventory", "event owner", "all route premise and issuer IDs", "all closure and proof path IDs"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer may reuse only an exact graph owner whose full dependencies match; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "passedPawnProgressOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 1224,
+                "name": "v6 commentary serializes the closed passed-pawn occurrence result from its occurrence Cause"
+              }
+            ]
+          },
+          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
+          "ui_status": "pending_completion",
+          "ui_owner": "separate frontend task",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer consumes the existing passed-pawn event, relation issuers, position-state issuers, and singleton legal-reply inventory; it does not recompute pawn structure or legal replies."
       },
-      "cause": {
-        "scala_symbol": "PassedPawnProgress",
-        "wire_kind": "passed_pawn_progress",
-        "schema_facet_definition": "passedPawnProgressFacet"
-      },
-      "coverage_status": "exact_route_component",
+      "implementation_status": "current_exact_proof",
+      "reference_support": "exact_occurrence_component",
       "references": [
         {
-          "coverage": "exact_route_component",
+          "support": "exact_occurrence_component",
           "locator": {
             "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
             "pdf_page": 507
           }
         },
         {
-          "coverage": "exact_route_component",
+          "support": "exact_occurrence_component",
           "locator": {
             "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
             "pdf_page": 508
@@ -434,6 +666,707 @@
         "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest.scala",
         "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest"
       }
+    }
+  ],
+  "complete_game_ledger": [
+    {
+      "case_id": "ruy-lopez-game-12",
+      "locators": [
+        {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 78},
+        {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 83}
+      ],
+      "game": "Game 12, E. L'Ami-E. Van den Doel",
+      "position_anchor": "17.d5 and the immediate 17.b4 sibling",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "Before 17.d5, the white pawn on d4 remains the target of the black e-pawn capture in the immediate-b4 sibling.",
+        "Both lines contain exact legal continuations from the same root position."
+      ],
+      "current_move_change": [
+        "17.d5 moves the d4 pawn away before White plays b4, so the later branch no longer presents the d4 capture target."
+      ],
+      "actual_response": [
+        "17.d5 c6 18.dxc6 Bxc6 19.b4"
+      ],
+      "pedagogical_alternatives": [
+        "17.b4?! exd4 18.cxd4 c5"
+      ],
+      "later_consumer": [
+        "19.b4 occurs only after the d4 target was vacated by 17.d5."
+      ],
+      "needed_closed_absence": [
+        "The vacating branch must certify the relevant target vacancy through the later b4 occurrence.",
+        "The immediate branch must certify the exact e5xd4 capture and the corresponding actor and endpoint identities."
+      ],
+      "sibling_difference": [
+        "Without 17.d5 first, 17...exd4 exists and Black follows with ...c5 after cxd4."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed for this bounded sibling proof."
+      ],
+      "mapped_contracts": ["CaptureExclusionMoveOrder"],
+      "current_coverage_categories": ["current_exact_proof"]
+    },
+    {
+      "case_id": "najdorf-game-15",
+      "locators": [
+        {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 123},
+        {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 132}
+      ],
+      "game": "Game 15, Areshchenko-Dominguez",
+      "position_anchor": "The plans introduced after 9...Nc6 and realized at 14...Nc4 and 20...Bxc6",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "After 9...Nc6 the chapter identifies separate queenside piece-placement plans whose occurrences are later revisited."
+      ],
+      "current_move_change": [
+        "14...Nc4 places the knight on c4; 20...Bxc6 places the bishop on c6 after the knight exchange."
+      ],
+      "actual_response": [
+        "14...Nc4 15.Bc1 Rfd8 16.f4 Be8 17.Rd3 Qb6 18.b3 Na5 19.Bb2 Nc6 20.Nxc6 Bxc6"
+      ],
+      "pedagogical_alternatives": [
+        "The surrounding analysis includes 13...Rxc3 as a tactical improvement and 18.Bb3 as a different handling of the c4 knight, but neither is a rank-two proxy for the plan chain."
+      ],
+      "later_consumer": [
+        "20...Bxc6 is explicitly connected back to the earlier plan inventory rather than to a played-versus-best verdict."
+      ],
+      "needed_closed_absence": [
+        "An exact actual-line demand must bind the plan-origin occurrence to later consumers without inventing a root sibling.",
+        "Any stronger claim needs lower certificates for the concrete resource each placement enables."
+      ],
+      "sibling_difference": [
+        "The reviewed case does not supply one single root sibling that carries the whole two-consumer chain."
+      ],
+      "transposition_occurrence": [
+        "No transposition is required in the reviewed chain; both later occurrences must retain their own times."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "najdorf-game-16",
+      "locators": [
+        {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 132},
+        {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 145}
+      ],
+      "game": "Game 16, Naumann-Areshchenko",
+      "position_anchor": "11...Bb7 before ...Nc6 and the immediate 11...Nc6?! sibling",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "Black wants to develop ...Nc6 and answer Nxc6 with the bishop rather than the queen.",
+        "The bishop is not on b7 in the immediate 11...Nc6?! sibling."
+      ],
+      "current_move_change": [
+        "11...Bb7 makes the later ...Bxc6 recapture available while leaving the queen on b6."
+      ],
+      "actual_response": [
+        "11...Bb7 12.Qg3 Nc6 13.Nxc6 Qxc6?!"
+      ],
+      "pedagogical_alternatives": [
+        "11...Nc6?! 12.Nxc6 Qxc6 13.Qg3 b4 14.Bxf6 Bxf6 15.Rxd6",
+        "After 11...Bb7, 13...Bxc6! is the prepared recapture that the game did not use.",
+        "9...Qb6 is recommended for soundness and playability while 9...Qc7 is described as more theory-heavy, not as an L2 rank certificate."
+      ],
+      "later_consumer": [
+        "13...Bxc6 would consume the bishop placement established by 11...Bb7.",
+        "15.Rxd6 in the premature sibling consumes the queen recapture's tempo exposure."
+      ],
+      "needed_closed_absence": [
+        "The prepared branch needs exact bishop identity, legal recapture, and continuation ownership.",
+        "The premature sibling needs a closed statement of which recapturer exists and which tempo-gaining reply remains legal."
+      ],
+      "sibling_difference": [
+        "The same ...Nc6 idea before ...Bb7 forces a queen recapture; after ...Bb7 the bishop can recapture on c6."
+      ],
+      "transposition_occurrence": [
+        "The notes also identify a 12...Nc6 continuation that can transpose to the later ...Bxc6 variation; move-order occurrence must not be merged with its equal board state."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "najdorf-game-18",
+      "locators": [
+        {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 152},
+        {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 164}
+      ],
+      "game": "Game 18, Stupavski-Palac",
+      "position_anchor": "13...b4, 15.Nf4, 15...Kh8, and the two valid twentieth-move repairs",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "White's Nf3 plan is Bf4, then e5, then a c3-knight jump to d5.",
+        "After 15.Nf4 Black faces concrete kingside threats before the threatened ...a4 gain.",
+        "At move 20 White's trap depends on e5 and subsequent access to d5."
+      ],
+      "current_move_change": [
+        "13...b4 displaces the c3-knight before Bf4-e5-Nd5 can be realized.",
+        "15.Nf4 creates immediate threats that alter the order in which Black may play ...Kh8 and ...a4.",
+        "20...e5 removes White's e5 advance; 20...Ra5 instead controls d5 before ...e5."
+      ],
+      "actual_response": [
+        "13...b4 14.Ne2 a5 15.Nf4 Kh8 16.Bg5 Nc6 17.Bxe7 Nxe7 18.Qh4 Nf6 19.Rfe1 a4 20.Bc4 e5"
+      ],
+      "pedagogical_alternatives": [
+        "13...Nc6 14.Bf4 b4 15.e5 allows the plan to start.",
+        "15...a4?? 16.Bxg7 Nxg7 17.Nh5 shows the wrong order.",
+        "20...Ra5! is also a valid repair; 20...Qxc4? 21.e5 permits the trap."
+      ],
+      "later_consumer": [
+        "The absence of the c3 knight is consumed when the Bf4-e5-Nd5 route is considered.",
+        "15...Kh8 is consumed by the later ...a4 sequence.",
+        "The move after each twentieth-move repair must be tied to the exact d5 or e5 resource it removed."
+      ],
+      "needed_closed_absence": [
+        "Exact response inventories are needed before calling 15...Kh8 the only reply.",
+        "The two distinct valid repairs need independent proof paths rather than one rank-selected alternative.",
+        "Indirect defense needs a closed timing relation showing that Black has no legal tempo to take the b3 bishop."
+      ],
+      "sibling_difference": [
+        "Changing the order of ...Kh8 and ...a4 enables Bxg7 and Nh5.",
+        "Choosing either ...e5 or ...Ra5 preserves a different exact resource, while ...Qxc4 fails."
+      ],
+      "transposition_occurrence": [
+        "The chapter notes a separate transposition at 13.a3 Nc6 14.Be3 Bf6; that occurrence must remain distinct from the game occurrence even if the position matches."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "game-changer-bold-sir-lancelot",
+      "locators": [
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 158},
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 164}
+      ],
+      "game": "Bold Sir Lancelot, AlphaZero-Stockfish",
+      "position_anchor": "24.Kh2, 25.Rh1, 27.Ng1, 35.Ng6, and 47.Rxd5",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "The later rook and knight routes require g1 to be vacated and retained at the relevant times."
+      ],
+      "current_move_change": [
+        "24.Kh2 vacates g1 before 25.Rh1 and 27.Ng1 begin separated later routes."
+      ],
+      "actual_response": [
+        "The complete game preserves the ordered occurrences 24.Kh2, 25.Rh1, 27.Ng1, 35.Ng6, and 47.Rxd5."
+      ],
+      "pedagogical_alternatives": [
+        "The reviewed span does not provide one exact root sibling that certifies the whole long route as a bounded counterfactual."
+      ],
+      "later_consumer": [
+        "35.Ng6 and 47.Rxd5 are later consumers of earlier route and vacancy changes, not endpoints of a best-versus-second comparison."
+      ],
+      "needed_closed_absence": [
+        "A proof needs exact same-piece route identity, vacancy persistence, and an educational sibling or terminal closure for the claimed relation."
+      ],
+      "sibling_difference": [
+        "No exact sibling in the reviewed case establishes what fails if 24.Kh2 is omitted or reordered."
+      ],
+      "transposition_occurrence": [
+        "No transposition is used; every later occurrence must retain its own history position."
+      ],
+      "mapped_contracts": ["SquareReleaseRoute"],
+      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "silicon-road-game-33",
+      "locators": [
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 269},
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 272}
+      ],
+      "game": "Game 33",
+      "position_anchor": "The queen exchange, the knight on f5, 29.g6, and 35.Re7",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "After the queen exchange, the knight on f5 blocks access to e7 before the later pawn and rook sequence."
+      ],
+      "current_move_change": [
+        "29.g6 changes the kingside structure before the rook reaches e7 at move 35."
+      ],
+      "actual_response": [
+        "The complete game retains 29.g6 and the later 35.Re7 occurrence."
+      ],
+      "pedagogical_alternatives": [
+        "29...fxg6 is discussed, but the reviewed analysis does not close a full success-versus-failure sibling."
+      ],
+      "later_consumer": [
+        "35.Re7 consumes the earlier access and structure changes."
+      ],
+      "needed_closed_absence": [
+        "The route needs exact e7 access, same-rook identity, and a completed sibling showing which resource remains absent or present."
+      ],
+      "sibling_difference": [
+        "The available 29...fxg6 branch is incomplete for the claimed long causal relation."
+      ],
+      "transposition_occurrence": [
+        "No transposition is identified in the reviewed case."
+      ],
+      "mapped_contracts": ["SquareReleaseRoute"],
+      "current_coverage_categories": ["lower_fact_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "van-delft-game-24",
+      "locators": [
+        {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 124},
+        {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 129}
+      ],
+      "game": "Game 24, Vladimir Epishin-David Miedema",
+      "position_anchor": "13...Qxb3 and the later 40...b5 pawn break",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "13...Qxb3 accepts a material imbalance whose compensation is expressed through a long pawn-chain and manoeuvring phase."
+      ],
+      "current_move_change": [
+        "The exchange on b3 changes material and structure; 40...b5 begins the later pawn break."
+      ],
+      "actual_response": [
+        "The complete game carries the imbalance from 13...Qxb3 through the long continuation to 39.f3 Bd7 40.Kf2 b5."
+      ],
+      "pedagogical_alternatives": [
+        "40...a6 is a valid preparation; 41.cxb5 c4 is the concrete continuation behind 40...b5."
+      ],
+      "later_consumer": [
+        "40...b5 and the resulting pawn chain are later realizations, but they do not by themselves prove long-term compensation."
+      ],
+      "needed_closed_absence": [
+        "No current lower inventory certifies the long material-compensation balance or excludes all defensive restructurings over the intervening game."
+      ],
+      "sibling_difference": [
+        "The source does not provide a closed same-root sibling that proves the full long compensation proposition."
+      ],
+      "transposition_occurrence": [
+        "No transposition is identified in the reviewed case."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["lower_fact_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "ai-revolution-square-release-goryachkina-dubov",
+      "locators": [
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 124},
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 125}
+      ],
+      "game": "Goryachkina-Dubov",
+      "position_anchor": "...Rc6 vacates b6 before the d5-b6-c4-a3-b1 knight route",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "The rook occupies b6 before ...Rc6 and the same knight later needs b6 as its first route square."
+      ],
+      "current_move_change": [
+        "...Rc6 releases b6 for the knight route d5-b6-c4-a3-b1."
+      ],
+      "actual_response": [
+        "The same knight follows d5-b6-c4-a3-b1 and executes ...Nxb1; Rxb1 follows."
+      ],
+      "pedagogical_alternatives": [
+        "No complete same-root line preserving the blocker on b6 was directly verified in the reviewed pages."
+      ],
+      "later_consumer": [
+        "...Nb6 consumes the released b6 square; ...Nxb1 is the later capture terminal."
+      ],
+      "needed_closed_absence": [
+        "The actual line supplies the release and route occurrences, but a current SquareReleaseRoute proof additionally needs a certified retained-blocker sibling, blocker persistence, and first-leg absence."
+      ],
+      "sibling_difference": [
+        "The required blocker-preserving sibling difference is not established by the directly reviewed source material."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed for this route proof."
+      ],
+      "mapped_contracts": ["SquareReleaseRoute"],
+      "current_coverage_categories": ["lower_fact_gap"]
+    },
+    {
+      "case_id": "ai-revolution-square-release-prohaszka-wang",
+      "locators": [
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 130},
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 131}
+      ],
+      "game": "P. Prohaszka-K. Wang",
+      "position_anchor": "30.Bg2 before 31.Rc6 and the 30.R1d2 sibling",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "The bishop blocks the rook's route square before 30.Bg2."
+      ],
+      "current_move_change": [
+        "30.Bg2 releases the square needed for 31.Rc6."
+      ],
+      "actual_response": [
+        "30.Bg2 is followed by the exact 31.Rc6 route occurrence."
+      ],
+      "pedagogical_alternatives": [
+        "30.R1d2? is the retained-blocker sibling."
+      ],
+      "later_consumer": [
+        "31.Rc6 consumes the square released by 30.Bg2."
+      ],
+      "needed_closed_absence": [
+        "The released-square vacancy, exact rook route, retained blocker, and absence of the first route leg in the sibling must be certified."
+      ],
+      "sibling_difference": [
+        "30.R1d2 leaves the blocker relationship in place and does not realize 31.Rc6 through the released square."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed for this one-leg route proof."
+      ],
+      "mapped_contracts": ["SquareReleaseRoute"],
+      "current_coverage_categories": ["current_exact_proof"]
+    },
+    {
+      "case_id": "ai-revolution-passed-pawn-route",
+      "locators": [
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 507},
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 508}
+      ],
+      "game": "Passed-pawn route example",
+      "position_anchor": "37.Nxa6, 39.a6, and 41.a8=Q",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "The source records the exact later passed-pawn progress and promotion occurrences."
+      ],
+      "current_move_change": [
+        "37.Nxa6 changes the route conditions before the a-pawn advances at move 39."
+      ],
+      "actual_response": [
+        "37.Nxa6 is followed by 39.a6 and the later 41.a8=Q promotion occurrence."
+      ],
+      "pedagogical_alternatives": [
+        "The source does not issue the machine's singleton legal-reply inventory; that closure is a separate runtime premise."
+      ],
+      "later_consumer": [
+        "39.a6 and 41.a8=Q consume the certified continuation route."
+      ],
+      "needed_closed_absence": [
+        "The root must have exactly one legal reply in the closed lower inventory, and every progress/result occurrence must remain on its certified analysis continuation."
+      ],
+      "sibling_difference": [
+        "No sibling failure is inferred; the proof is admitted only when the runtime singleton-reply closure exists."
+      ],
+      "transposition_occurrence": [
+        "Semantic equality may be shared after transposition, but subject and route occurrences remain separate."
+      ],
+      "mapped_contracts": ["PassedPawnProgressRealizedAfterOnlyLegalReply"],
+      "current_coverage_categories": ["lower_fact_gap"]
+    },
+    {
+      "case_id": "ruy-lopez-game-15",
+      "locators": [
+        {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 98},
+        {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 105}
+      ],
+      "game": "Game 15, P. Leko-D. Navara",
+      "position_anchor": "Rg3 before ...f5 and the later Rg5, contrasted with immediate Rg5",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "The immediate Rg5 line permits ...Qh3+; the game first keeps the rook on g3."
+      ],
+      "current_move_change": [
+        "Black's intervening ...f5 creates a new condition before the later Rg5 occurrence."
+      ],
+      "actual_response": [
+        "The complete game records Rg3, the intervening ...f5, and only then Rg5."
+      ],
+      "pedagogical_alternatives": [
+        "Immediate Rg5 is compared with the ordered Rg3, ...f5, Rg5 sequence because it allows ...Qh3+."
+      ],
+      "later_consumer": [
+        "The later Rg5 consumes the condition changed by ...f5; Rg3 alone is not certified as its sole cause."
+      ],
+      "needed_closed_absence": [
+        "A proof must bind the exact ...Qh3+ resource and its later absence to the intervening ...f5 occurrence."
+      ],
+      "sibling_difference": [
+        "The pedagogical sibling changes both order and an intervening board condition, so it cannot be reduced to the first rook move."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed, but the two rook occurrences must remain temporally distinct."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "van-delft-game-20",
+      "locators": [
+        {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 106},
+        {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 109}
+      ],
+      "game": "Game 20",
+      "position_anchor": "Actual 15...Be6 before 16.Nd4, contrasted with prerequisite-first ...Na6 and only then ...Be6",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "The analysis inserts 15...Na6 16.Bxa6 bxa6 17.Rad1 before ...Be6; the game plays 15...Be6 immediately."
+      ],
+      "current_move_change": [
+        "The prerequisite-first sequence changes the pawn and piece arrangement before the same ...Be6 move is considered."
+      ],
+      "actual_response": [
+        "15...Be6 16.Nd4 initiates the positional piece sacrifice in the game."
+      ],
+      "pedagogical_alternatives": [
+        "15...Na6 16.Bxa6 bxa6 17.Rad1 and only then ...Be6 is the explicit after-prerequisite line."
+      ],
+      "later_consumer": [
+        "19.Rfd1, 20.Bf2, 21.Bg3, 22.Bf1, and 26.d5 are later occurrences in the compensation sequence."
+      ],
+      "needed_closed_absence": [
+        "No current family closes which exact legal resource the ...Na6 exchange sequence removes before ...Be6."
+      ],
+      "sibling_difference": [
+        "The same ...Be6 move has different consequences before and after the explicit ...Na6/Bxa6/bxa6 prerequisite."
+      ],
+      "transposition_occurrence": [
+        "No transposition is required; the identical move name must not erase its different occurrence history."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "van-delft-game-54",
+      "locators": [
+        {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 264},
+        {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 269}
+      ],
+      "game": "Game 54",
+      "position_anchor": "King's Indian move order transposing to a Benoni at 9.Be2 before 14.e5",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "The game reaches the later Benoni position through a distinct King's Indian history."
+      ],
+      "current_move_change": [
+        "14.e5 dxe5 15.f5 begins the concrete sacrifice and pawn advance sequence after the transposition."
+      ],
+      "actual_response": [
+        "14.e5 dxe5 15.f5, 16.d6, 17.Nd5/18.Ne4, and the later material gain remain ordered game occurrences."
+      ],
+      "pedagogical_alternatives": [
+        "The reviewed case is a move-order/transposition comparison, not a best-versus-second root pair."
+      ],
+      "later_consumer": [
+        "The d6 advance and knight transfers consume the changed central structure."
+      ],
+      "needed_closed_absence": [
+        "The current contracts do not close the long compensation proposition or all defensive resources across the sacrifice sequence."
+      ],
+      "sibling_difference": [
+        "Equal semantic positions reached by a different opening order must preserve the distinct historical occurrence."
+      ],
+      "transposition_occurrence": [
+        "The position at 9.Be2 is a transposition; semantic identity may be shared but the King's Indian history must remain separate."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "game-changer-not-so-quiet-game",
+      "locators": [
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 344},
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 353}
+      ],
+      "game": "Not-so-Quiet Game",
+      "position_anchor": "13...Ne7, 15...f5, 16...Ng6, and 17...Nf4 after the 13...f5 analysis sibling",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "The analysis contrasts immediate 13...f5 with a preparatory knight transfer beginning 13...Ne7."
+      ],
+      "current_move_change": [
+        "13...Ne7 begins an ordered transfer; 15...f5 changes the position before ...Ng6 and ...Nf4."
+      ],
+      "actual_response": [
+        "13...Ne7, 15...f5, 16...Ng6, and 17...Nf4 are exact ordered occurrences in the complete game."
+      ],
+      "pedagogical_alternatives": [
+        "13...f5 is the analysis sibling used to explain why the knight-transfer order matters."
+      ],
+      "later_consumer": [
+        "17...Nf4 consumes the earlier transfer and intervening pawn change."
+      ],
+      "needed_closed_absence": [
+        "No current family certifies the full time, initiative, or sacrificial compensation relation."
+      ],
+      "sibling_difference": [
+        "Immediate ...f5 omits the preceding ...Ne7 transfer occurrence."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed; the long actual-line chain itself is the missing host topology."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "game-changer-disruptive-bishop-resources",
+      "locators": [
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 417},
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 424}
+      ],
+      "game": "Disruptive ...Bg2/...Bf3 resource case",
+      "position_anchor": "13...Re8 14.Nf4 Qd7 15.Qh4 Bf3 and the 13...Nd7 and 13.Ne2 analysis branches",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "The source compares several educational branches that preserve different bishop-disruption resources."
+      ],
+      "current_move_change": [
+        "The ...Re8/...Qd7 sequence prepares ...Bf3 in one branch; ...Nd7 and the 13.Ne2-related line alter the same light-square contest differently."
+      ],
+      "actual_response": [
+        "13...Re8 14.Nf4 Qd7 15.Qh4 Bf3 is one exact practice line."
+      ],
+      "pedagogical_alternatives": [
+        "13...Nd7 14.Qh4 and the 13.Ne2-related elimination of the light-squared bishop are separate educational branches, not rank projections."
+      ],
+      "later_consumer": [
+        "...Bf3 or the alternative bishop elimination consumes each branch's preceding setup."
+      ],
+      "needed_closed_absence": [
+        "A current proof would need all exact branch owners and the closed presence or absence of each disruptive bishop resource."
+      ],
+      "sibling_difference": [
+        "There are more than two relevant branches and more than one valid repair; selecting one engine-ranked sibling would discard source structure."
+      ],
+      "transposition_occurrence": [
+        "No specific transposition is promoted; each analysis occurrence remains independently identified."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "silicon-road-game-64",
+      "locators": [
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 503},
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 520}
+      ],
+      "game": "Game 64, Semi-Slav",
+      "position_anchor": "Actual 20.Re1 -> 26.Rd6 -> 36.Rc3 chain, with multiple Black repair branches in the surrounding analysis",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "The source treats quiet 20.Re1 as the earlier change that opens the e-file before the later rook activity.",
+        "Before 36.Rc3, the other white rook attacks the bishop on a6; that attack is a premise for giving up one rook for the c-pawn continuation.",
+        "The complete analysis preserves several valid Black repairs and sacrificial continuations rather than one preferred sibling."
+      ],
+      "current_move_change": [
+        "20.Re1 is the quiet e-file-opening occurrence; 26.Rd6 is the source-identified move that consumes the preceding play; 36.Rc3 is a distinct later rook-sacrifice occurrence serving the c-pawn.",
+        "The ...g6, ...e5, and ...h5 alternatives change different defensive resources and are not collapsed into one ranked repair."
+      ],
+      "actual_response": [
+        "The complete actual line contains 20.Re1, then 26.Rd6, then 36.Rc3 in that temporal order; surrounding Black replies remain attached to their source occurrences rather than being replaced by an engine pair."
+      ],
+      "pedagogical_alternatives": [
+        "Several alternatives around ...g6, ...e5, and ...h5 remain valid repairs and must stay independent."
+      ],
+      "later_consumer": [
+        "26.Rd6 consumes the play prepared by 20.Re1, and 36.Rc3 later consumes the other rook's attack on the a6 bishop to give up a rook for the c-pawn continuation.",
+        "Later sacrifices also consume different Black repairs, but no single current family joins the full set."
+      ],
+      "needed_closed_absence": [
+        "A bounded proof needs exact lower records for the opened e-file, the a6-bishop attack, the c-pawn resource, and the presence or absence of every repair carried by the retained analysis branches.",
+        "Whole-board compensation and the completeness of every repair branch are not certified by current lower inventories."
+      ],
+      "sibling_difference": [
+        "A two-branch rank pair would lose valid alternative repairs and their independent causal paths."
+      ],
+      "transposition_occurrence": [
+        "No specific transposition is asserted from the retained direct-read judgment."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "silicon-road-game-97",
+      "locators": [
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 795},
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 812}
+      ],
+      "game": "Game 97, Sicilian",
+      "position_anchor": "Actual 32.Bc4 and 33.Bxf6 resource sequence, followed by c4/e2 coverage, the g-pawn threat, and the 47.Rd5+ / d8=Q plan",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "Before 32.Bc4, Black has the ...c5-c4 resource and pressure associated with the queen on the b-file and b2.",
+        "The directly reviewed game also connects the later c4-bishop/e2 coverage and g-pawn promotion threat to the long continuation."
+      ],
+      "current_move_change": [
+        "32.Bc4 blockades ...c5-c4 while threatening 33.Qb3.",
+        "33.Bxf6 attacks with tempo, drives the queen away from the b-file, and thereby reduces the pressure on b2; the long-term value of combining those functions remains a higher-layer judgment."
+      ],
+      "actual_response": [
+        "32.Bc4 and 33.Bxf6 are retained as ordered actual-game occurrences; their intervening opponent replies stay attached to the complete source line rather than being replaced by an invented sibling."
+      ],
+      "pedagogical_alternatives": [
+        "The source supplies many practical alternatives rather than one exact counterfactual pair."
+      ],
+      "later_consumer": [
+        "The later actual continuation uses the bishop on c4 and e2 coverage, carries a g-pawn promotion threat, and reaches the 47.Rd5+ and d8=Q plan.",
+        "Those exact occurrences are source-supported, but the current backend has no L2 join that proves their whole long-range defensive value."
+      ],
+      "needed_closed_absence": [
+        "A bounded proof needs exact lower records for the ...c5-c4 resource, Qb3 threat, queen displacement from the b-file, b2-pressure change, c4/e2 coverage, and the legal promotion resources in the later branch.",
+        "Current lower facts do not close king-safety value, counterplay balance, and all practical alternatives as one proposition."
+      ],
+      "sibling_difference": [
+        "No one sibling is certified as the unique contrast for the whole explanation."
+      ],
+      "transposition_occurrence": [
+        "No specific transposition is asserted from the retained direct-read judgment."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "silicon-road-game-101",
+      "locators": [
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 835},
+        {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 846}
+      ],
+      "game": "Game 101",
+      "position_anchor": "Actual 16...Bg4 prerequisite, 20...b5 queen-sacrifice occurrence, 21.Rf1 ...Rfd8 22.Rb1 ...a5 23.Bxc3 strengthening-before-queen-capture order, and the b4/c3/later a-pawn compensation",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "The source identifies 16...Bg4, placing the black bishop on g4 to block the h1-a8 diagonal, as a prerequisite for the later operation.",
+        "The reviewed imbalance after the queen sacrifice includes Black passed pawns on b4 and c3 and a later a-pawn; their compensation value is not itself a proof premise."
+      ],
+      "current_move_change": [
+        "20...b5 is the actual queen-sacrifice occurrence, made only after the 16...Bg4 diagonal-blocking prerequisite.",
+        "21.Rf1 and 22.Rb1 are strengthening occurrences that delay the queen capture until 23.Bxc3; 21.Rf1 is not itself a capture."
+      ],
+      "actual_response": [
+        "The actual line retains 16...Bg4, 20...b5 21.Rf1 ...Rfd8 22.Rb1 ...a5 23.Bxc3 as separate ordered occurrences, with White strengthening before capturing the queen. A promotion terminal shown only in analysis remains an analyzed terminal and is not promoted to the actual game."
+      ],
+      "pedagogical_alternatives": [
+        "The source's strengthening-before-queen-capture sequence is preserved; no capture-first sibling is asserted without an exact source analysis branch.",
+        "Material count and engine evaluation are not substituted for a causal sibling proof."
+      ],
+      "later_consumer": [
+        "The b4 and c3 passed pawns, followed by the a-pawn, consume the queen-sacrifice position over the later continuation.",
+        "Any promotion endpoint belongs to its certified analysis branch unless the game history independently certifies it; the long-term compensation judgment remains higher-layer."
+      ],
+      "needed_closed_absence": [
+        "A bounded proof needs exact lower records for the g4 bishop's diagonal block, the queen-capture transition, the b4/c3/a-pawn identities and legal resources, and the actual-versus-analysis terminal provenance.",
+        "Current lower inventories cannot certify whole-board compensation or exclude every defensive reorganization over the horizon."
+      ],
+      "sibling_difference": [
+        "No complete same-root sibling was retained that isolates one causal change."
+      ],
+      "transposition_occurrence": [
+        "No specific transposition is asserted from the retained direct-read judgment."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
     }
   ]
 }

@@ -3,30 +3,39 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
-private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCapturePremiseRole extends CausalPremiseRole:
-  case ReferenceDefenderRemoval
-  case ReferenceLaterExploitInventory
-  case PlayedImmediateExploitInventory
+private[chessjudgment] enum SoleRecapturerRemovalBranchRole extends CausalBranchRole:
+  case RemovalThenTargetCapture
+  case ImmediateTargetCapture
 
   def stableKey: String =
     this match
-      case ReferenceDefenderRemoval          => "reference-defender-removal"
-      case ReferenceLaterExploitInventory    => "reference-later-exploit-inventory"
-      case PlayedImmediateExploitInventory   => "played-immediate-exploit-inventory"
+      case RemovalThenTargetCapture => "removal-then-target-capture"
+      case ImmediateTargetCapture   => "immediate-target-capture"
+
+private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCapturePremiseRole extends CausalPremiseRole:
+  case DefenderRemoval
+  case PostRemovalTargetCaptureInventory
+  case ImmediateTargetCaptureInventory
+
+  def stableKey: String =
+    this match
+      case DefenderRemoval                    => "defender-removal"
+      case PostRemovalTargetCaptureInventory => "post-removal-target-capture-inventory"
+      case ImmediateTargetCaptureInventory   => "immediate-target-capture-inventory"
 
 private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole extends CausalAbsenceRole:
-  case ReferenceReplacementRecaptureAbsent
+  case PostRemovalReplacementRecaptureAbsent
 
-  def stableKey: String = "reference-replacement-recapture-absent"
+  def stableKey: String = "post-removal-replacement-recapture-absent"
 
 private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCaptureStateRole extends CausalStateRole:
-  case ReferenceExploitActorPresent
-  case ReferenceTargetPresent
+  case PostRemovalExploitActorPresent
+  case PostRemovalTargetPresent
 
   def stableKey: String =
     this match
-      case ReferenceExploitActorPresent => "reference-exploit-actor-present"
-      case ReferenceTargetPresent       => "reference-target-present"
+      case PostRemovalExploitActorPresent => "post-removal-exploit-actor-present"
+      case PostRemovalTargetPresent       => "post-removal-target-present"
 
 /** Sole family authority for the semantic identity. Its private descriptor is
   * constructed only after exact L1 membership and absence have been checked.
@@ -39,7 +48,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
       removalRecapture: RelationLegalMoveResourceWitness,
       exploit: RelationMoveTransitionWitness,
       capturedTarget: RelationColoredPieceWitness,
-      playedRecapture: RelationLegalMoveResourceWitness
+      immediateRecapture: RelationLegalMoveResourceWitness
   ) extends CausalSemanticDescriptor:
     require(
       remover.side != removedDefender.side && remover.to == removedDefender.square,
@@ -53,7 +62,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
             capture.capturedRole == remover.afterRole &&
             capture.capturedSquare == remover.to
         ),
-      "the reference reply must be the exact certified recapture of the remover"
+      "the removal-branch reply must be the exact certified recapture of the remover"
     )
     require(
       exploit.side != removedDefender.side && capturedTarget.side == removedDefender.side &&
@@ -61,14 +70,14 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
       "the exploit must retain its exact mover and captured target"
     )
     require(
-      sameInitialPiece(removedDefender, playedRecapture.movement) &&
-        playedRecapture.movement.to == exploit.to &&
-        playedRecapture.capture.exists(capture =>
+      sameInitialPiece(removedDefender, immediateRecapture.movement) &&
+        immediateRecapture.movement.to == exploit.to &&
+        immediateRecapture.capture.exists(capture =>
           capture.capturedSide == exploit.side &&
             capture.capturedRole == exploit.afterRole &&
             capture.capturedSquare == exploit.to
         ),
-      "the played reply must be the removed defender's exact recapture of the exploit"
+      "the immediate-capture reply must be the removed defender's exact recapture of the exploit"
     )
 
     val contractKind = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture
@@ -78,7 +87,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
       removalRecapture.stableKey,
       exploit.stableKey,
       BoundedCausalIdentity.coloredPieceKey(capturedTarget),
-      playedRecapture.stableKey
+      immediateRecapture.stableKey
     )
 
   def proposition(
@@ -88,7 +97,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
       removalRecapture: RelationLegalMoveResourceWitness,
       exploit: RelationMoveTransitionWitness,
       capturedTarget: RelationColoredPieceWitness,
-      playedRecapture: RelationLegalMoveResourceWitness
+      immediateRecapture: RelationLegalMoveResourceWitness
   ): CausalPropositionIdentity =
     CausalPropositionIdentity.from(
       PropositionDescriptor(
@@ -98,7 +107,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
         removalRecapture,
         exploit,
         capturedTarget,
-        playedRecapture
+        immediateRecapture
       )
     )
 
@@ -110,92 +119,92 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
 
 private[chessjudgment] sealed trait SoleRecapturerRemovalBeforeTargetCaptureManifest
     extends BoundedCausalContractManifest:
-  def referenceNoRecapture: CausalClosedAbsenceBinding
-  def referencePersistence: List[CausalClosedStateBinding]
+  def postRemovalNoRecapture: CausalClosedAbsenceBinding
+  def postRemovalPersistence: List[CausalClosedStateBinding]
   final def contractKind = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture
-  final def absenceBindings = List(referenceNoRecapture)
-  final override def stateBindings = referencePersistence
+  final def absenceBindings = List(postRemovalNoRecapture)
+  final override def stateBindings = postRemovalPersistence
   final def stableKey: String =
     List(
       contractKind.toString.toLowerCase,
       premiseUses.map(_.stableKey).mkString("[", ",", "]"),
-      referenceNoRecapture.stableKey,
-      referencePersistence.map(_.stableKey).mkString("[", ",", "]")
+      postRemovalNoRecapture.stableKey,
+      postRemovalPersistence.map(_.stableKey).mkString("[", ",", "]")
     ).mkString("|")
 
 private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureManifest:
   private final case class Exact(
-      referenceRemoval: CausalVerticalRelationPremiseUse,
-      referenceExploit: CausalVerticalRelationPremiseUse,
-      playedExploit: CausalVerticalRelationPremiseUse,
-      referenceNoRecapture: CausalClosedAbsenceBinding,
-      referencePersistence: List[CausalClosedStateBinding]
+      removalCapture: CausalVerticalRelationPremiseUse,
+      postRemovalCapture: CausalVerticalRelationPremiseUse,
+      immediateCapture: CausalVerticalRelationPremiseUse,
+      postRemovalNoRecapture: CausalClosedAbsenceBinding,
+      postRemovalPersistence: List[CausalClosedStateBinding]
   ) extends SoleRecapturerRemovalBeforeTargetCaptureManifest:
-    val premiseUses = List(referenceRemoval, referenceExploit, playedExploit)
+    val premiseUses = List(removalCapture, postRemovalCapture, immediateCapture)
 
   def exact(
-      referenceRemoval: CausalVerticalRelationPremiseUse,
-      referenceExploit: CausalVerticalRelationPremiseUse,
-      playedExploit: CausalVerticalRelationPremiseUse,
-      referenceNoRecapture: CausalClosedAbsenceBinding,
+      removalCapture: CausalVerticalRelationPremiseUse,
+      postRemovalCapture: CausalVerticalRelationPremiseUse,
+      immediateCapture: CausalVerticalRelationPremiseUse,
+      postRemovalNoRecapture: CausalClosedAbsenceBinding,
       exploitActor: RelationColoredPieceWitness,
       capturedTarget: RelationColoredPieceWitness,
-      referencePersistence: List[CausalClosedStateBinding]
+      postRemovalPersistence: List[CausalClosedStateBinding]
   ): SoleRecapturerRemovalBeforeTargetCaptureManifest =
     require(
-      referenceRemoval.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceDefenderRemoval &&
-        referenceRemoval.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
-        referenceRemoval.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        referenceRemoval.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-        referenceRemoval.stepIndex == 0,
-      "defender removal must consume the reference root capture inventory"
+      removalCapture.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.DefenderRemoval &&
+        removalCapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
+        removalCapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
+        removalCapture.branchRole == SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture &&
+        removalCapture.stepIndex == 0,
+      "defender removal must consume the removal-branch root capture inventory"
     )
     require(
-      referenceExploit.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceLaterExploitInventory &&
-        referenceExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
-        referenceExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        referenceExploit.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-        referenceExploit.branchId == referenceRemoval.branchId &&
-        referenceExploit.stepIndex == 2,
-      "the realized exploit must consume the reference third-ply capture inventory"
+      postRemovalCapture.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PostRemovalTargetCaptureInventory &&
+        postRemovalCapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
+        postRemovalCapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
+        postRemovalCapture.branchRole == SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture &&
+        postRemovalCapture.branchId == removalCapture.branchId &&
+        postRemovalCapture.stepIndex == 2,
+      "the realized exploit must consume the post-removal third-ply capture inventory"
     )
     require(
-      playedExploit.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PlayedImmediateExploitInventory &&
-        playedExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
-        playedExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        playedExploit.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
-        playedExploit.stepIndex == 0,
-      "the failed exploit must consume the played root capture inventory"
+      immediateCapture.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ImmediateTargetCaptureInventory &&
+        immediateCapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
+        immediateCapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
+        immediateCapture.branchRole == SoleRecapturerRemovalBranchRole.ImmediateTargetCapture &&
+        immediateCapture.stepIndex == 0,
+      "the failed exploit must consume the immediate-capture root inventory"
     )
     require(
-      referenceNoRecapture.role == SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.ReferenceReplacementRecaptureAbsent &&
-        referenceNoRecapture.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-        referenceNoRecapture.branchId == referenceExploit.branchId &&
-        referenceNoRecapture.afterStepIndex == referenceExploit.stepIndex,
-      "the closed recapture absence must belong to the reference exploit occurrence"
+      postRemovalNoRecapture.role == SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.PostRemovalReplacementRecaptureAbsent &&
+        postRemovalNoRecapture.branchRole == SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture &&
+        postRemovalNoRecapture.branchId == postRemovalCapture.branchId &&
+        postRemovalNoRecapture.afterStepIndex == postRemovalCapture.stepIndex,
+      "the closed recapture absence must belong to the post-removal target-capture occurrence"
     )
-    validatePersistence(referenceExploit, exploitActor, capturedTarget, referencePersistence)
-    Exact(referenceRemoval, referenceExploit, playedExploit, referenceNoRecapture, referencePersistence)
+    validatePersistence(postRemovalCapture, exploitActor, capturedTarget, postRemovalPersistence)
+    Exact(removalCapture, postRemovalCapture, immediateCapture, postRemovalNoRecapture, postRemovalPersistence)
 
   private def validatePersistence(
-      referenceExploit: CausalVerticalRelationPremiseUse,
+      postRemovalCapture: CausalVerticalRelationPremiseUse,
       exploitActor: RelationColoredPieceWitness,
       capturedTarget: RelationColoredPieceWitness,
       persistence: List[CausalClosedStateBinding]
   ): Unit =
-    val expected = (0 until referenceExploit.stepIndex).toList.flatMap(index =>
+    val expected = (0 until postRemovalCapture.stepIndex).toList.flatMap(index =>
       List(
-        (index, SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent, exploitActor),
-        (index, SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent, capturedTarget)
+        (index, SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalExploitActorPresent, exploitActor),
+        (index, SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalTargetPresent, capturedTarget)
       )
     )
     require(
       persistence.zip(expected).forall { case (binding, (index, role, piece)) =>
-        binding.role == role && binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-          binding.branchId == referenceExploit.branchId && binding.afterStepIndex == index &&
+        binding.role == role && binding.branchRole == SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture &&
+          binding.branchId == postRemovalCapture.branchId && binding.afterStepIndex == index &&
           binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece)
       } && persistence.size == expected.size,
-      "the reference exploit actor and target need exact occupied states after every pre-exploit step"
+      "the post-removal exploit actor and target need exact occupied states after every pre-exploit step"
     )
 
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureSemanticProof private[chessjudgment] (
@@ -205,7 +214,7 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
     removalRecapture: RelationLegalMoveResourceWitness,
     exploit: RelationMoveTransitionWitness,
     capturedTarget: RelationColoredPieceWitness,
-    playedRecapture: RelationLegalMoveResourceWitness
+    immediateRecapture: RelationLegalMoveResourceWitness
 ):
   require(
     identity.contractKind == BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture,
@@ -218,10 +227,10 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   )
   require(
     exploit.to == capturedTarget.square && capturedTarget.side == removedDefender.side &&
-      removedDefender.side == playedRecapture.movement.side &&
-      removedDefender.role == playedRecapture.movement.beforeRole &&
-      removedDefender.square == playedRecapture.movement.from &&
-      playedRecapture.movement.to == exploit.to,
+      removedDefender.side == immediateRecapture.movement.side &&
+      removedDefender.role == immediateRecapture.movement.beforeRole &&
+      removedDefender.square == immediateRecapture.movement.from &&
+      immediateRecapture.movement.to == exploit.to,
     "the semantic proof must retain the exact lost recapture obligation"
   )
 
@@ -229,7 +238,8 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   def rootBoardState: String = identity.rootPositionIdentity.value
 
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureOccurrence private[chessjudgment] (
-    proofSet: BoundedCausalProofSet
+    proofSet: BoundedCausalProofSet,
+    subjectOccurrence: ExplanationSubjectOccurrence
 ):
   require(
     proofSet.proposition.contractKind == BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture,
@@ -237,18 +247,15 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   )
   require(
     proofSet.occurrence.branches.size == 2 &&
-      proofSet.occurrence.branch(ComparedLineBranchRole.CounterfactualReference).exists(
-        _.line.role == LineNodeRole.BestReference
-      ) &&
-      proofSet.occurrence.branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation).exists(
-        _.line.role == LineNodeRole.Played
-      ),
-    "a sole-recapturer-removal-before-target-capture occurrence needs one BestReference and one played-root analysis continuation"
+      proofSet.occurrence.branch(SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture).nonEmpty &&
+      proofSet.occurrence.branch(SoleRecapturerRemovalBranchRole.ImmediateTargetCapture).nonEmpty,
+    "a sole-recapturer occurrence needs its removal and immediate-capture branches"
   )
-  require(referenceSteps.size == 3, "the reference occurrence needs removal, reply, and exploit")
-  require(playedSteps.size == 2, "the played-root analysis continuation needs exploit and recapture")
+  require(removalSteps.size == 3, "the removal branch needs removal, reply, and target capture")
+  require(immediateSteps.size == 2, "the immediate branch needs target capture and recapture")
+  require(ownsSubject, "the proof occurrence must retain its exact requested root occurrence")
 
-  private def exactBranch(role: ComparedLineBranchRole): CausalBranchOccurrence =
+  private def exactBranch(role: SoleRecapturerRemovalBranchRole): CausalBranchOccurrence =
     proofSet.occurrence
       .branch(role)
       .getOrElse(
@@ -259,23 +266,39 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
 
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
-  def referenceBranch: CausalBranchOccurrence = exactBranch(ComparedLineBranchRole.CounterfactualReference)
-  def playedBranch: CausalBranchOccurrence =
-    exactBranch(ComparedLineBranchRole.PlayedRootAnalysisContinuation)
-  def referenceLine: LineNodeRef = referenceBranch.line
-  def playedLine: LineNodeRef = playedBranch.line
-  def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
-  def playedSteps: List[LineReplayStep] = playedBranch.replaySteps
+  def removalBranch: CausalBranchOccurrence =
+    exactBranch(SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture)
+  def immediateCaptureBranch: CausalBranchOccurrence =
+    exactBranch(SoleRecapturerRemovalBranchRole.ImmediateTargetCapture)
+  def removalLine: LineNodeRef = removalBranch.line
+  def immediateCaptureLine: LineNodeRef = immediateCaptureBranch.line
+  def removalSteps: List[LineReplayStep] = removalBranch.replaySteps
+  def immediateSteps: List[LineReplayStep] = immediateCaptureBranch.replaySteps
   def proofPaths: List[CausalProofPathOccurrence] = proofSet.paths
-  def removalStep: LineReplayStep = referenceSteps.head
-  def removalRecaptureStep: LineReplayStep = referenceSteps(1)
-  def referenceExploitStep: LineReplayStep = referenceSteps(2)
-  def playedExploitStep: LineReplayStep = playedSteps.head
-  def playedRecaptureStep: LineReplayStep = playedSteps(1)
+  def removalStep: LineReplayStep = removalSteps.head
+  def removalRecaptureStep: LineReplayStep = removalSteps(1)
+  def postRemovalCaptureStep: LineReplayStep = removalSteps(2)
+  def immediateCaptureStep: LineReplayStep = immediateSteps.head
+  def immediateRecaptureStep: LineReplayStep = immediateSteps(1)
+
+  private def ownsSubject: Boolean =
+    List(removalBranch, immediateCaptureBranch).exists { branch =>
+      branch.line.id == subjectOccurrence.line.id &&
+      branch.lineOwnerEvidenceId == subjectOccurrence.lineOwnerEvidenceId &&
+      branch.rootTransitionEvidenceId == subjectOccurrence.transitionEvidenceId &&
+      branch.rootProvenance == subjectOccurrence.rootProvenance &&
+      branch.steps.headOption.exists(root =>
+        EvidenceRef.sameMove(root.step.moveUci, subjectOccurrence.moveUci) &&
+          root.step.ply == subjectOccurrence.destination.ply &&
+          PrincipalVariationEvidence.sameBoardState(root.step.fenBefore, subjectOccurrence.start.fen) &&
+          PrincipalVariationEvidence.sameBoardState(root.step.fenAfter, subjectOccurrence.destination.fen)
+      )
+    }
 
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest private[chessjudgment] (
-    referenceLineRecord: EvidenceRecord,
-    playedLineRecord: EvidenceRecord,
+    subject: CertifiedRootOccurrence,
+    removal: CertifiedRootOccurrence,
+    immediateCapture: CertifiedRootOccurrence,
     removedDefender: RelationColoredPieceWitness,
     proofSet: BoundedCausalProofSet
 ) extends BoundedCausalDependencyManifest:
@@ -288,16 +311,27 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
 
   val stableKey: String =
     List(
-      BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
-      BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
+      "subject-root",
+      BoundedCausalIdentity.evidenceRecordKey(subject.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(subject.transitionOwner),
+      "removal-root",
+      BoundedCausalIdentity.evidenceRecordKey(removal.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(removal.transitionOwner),
+      "immediate-capture-root",
+      BoundedCausalIdentity.evidenceRecordKey(immediateCapture.lineOwner),
+      BoundedCausalIdentity.evidenceRecordKey(immediateCapture.transitionOwner),
       BoundedCausalIdentity.coloredPieceKey(removedDefender),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
     ).mkString("|")
 
-  def consumes(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
-    referenceLineRecord == referenceSource && playedLineRecord == playedSource
+  def consumes(
+      exactSubject: CertifiedRootOccurrence,
+      exactRemoval: CertifiedRootOccurrence,
+      exactImmediateCapture: CertifiedRootOccurrence
+  ): Boolean =
+    subject == exactSubject && removal == exactRemoval && immediateCapture == exactImmediateCapture
 
 /** Opaque certified family result and sole graph-record proof authority. */
 private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCapture private (
@@ -305,10 +339,9 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
     val occurrence: SoleRecapturerRemovalBeforeTargetCaptureOccurrence,
     val dependency: BoundedCausalDependencyFingerprint,
     private val dependencyManifest: SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest,
-    private val referenceLineRecord: EvidenceRecord,
-    private val playedLineRecord: EvidenceRecord,
-    private val referenceReplay: CanonicalLineReplay,
-    private val playedReplay: CanonicalLineReplay,
+    val subject: CertifiedRootOccurrence,
+    private val removal: CertifiedRootOccurrence,
+    private val immediateCapture: CertifiedRootOccurrence,
     private val absenceUse: CausalClosedAbsenceUse,
     private val absenceAuthority: ClosedRelationAbsenceAuthority,
     private val stateAuthorities: List[
@@ -334,38 +367,43 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
   )
 
   def parentSources: List[EvidenceRef] =
-    List(referenceLineRecord.ref, playedLineRecord.ref).sortBy(_.id)
+    val sources = List(
+      removal.lineOwner.ref,
+      removal.transitionOwner.ref,
+      immediateCapture.lineOwner.ref,
+      immediateCapture.transitionOwner.ref
+    ).sortBy(_.id)
+    require(sources.map(_.id).distinct.size == sources.size, "the two roots need distinct line and transition owners")
+    sources
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(referenceLineRecord, playedLineRecord)
+    List(removal.lineOwner, removal.transitionOwner, immediateCapture.lineOwner, immediateCapture.transitionOwner)
 
-  def consumesDependencies(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
-    dependencyManifest.consumes(referenceSource, playedSource)
+  def consumesDependencies(
+      exactSubject: CertifiedRootOccurrence,
+      exactRemoval: CertifiedRootOccurrence,
+      exactImmediateCapture: CertifiedRootOccurrence
+  ): Boolean = dependencyManifest.consumes(exactSubject, exactRemoval, exactImmediateCapture)
 
   def proves(record: EvidenceRecord, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
       record.ref.layer == EvidenceLayer.CausalProof &&
       record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-      record.ref.position == referenceLineRecord.ref.position &&
-      record.ref.line.contains(occurrence.referenceLine) &&
-      record.ref.scope == occurrence.referenceLine.role.scope &&
+      record.ref.position == subject.transition.from &&
+      record.ref.line.contains(subject.line) &&
+      record.ref.scope == subject.transitionOwner.ref.scope &&
       record.parents == parentSources && payload.semantic == semantic &&
       payload.occurrence == occurrence && payload.dependencyFingerprint == dependency.value &&
-      payload.occurrenceProof.contains(this) && remainsCertified
+      payload.subjectOccurrence == subject.publicOccurrence &&
+      payload.occurrenceProof == this && remainsCertified
 
   def remainsCertified: Boolean =
-    CertifiedComparedLineAuthority.exactRecord(
-      referenceLineRecord,
-      occurrence.referenceLine,
-      referenceReplay
-    ) &&
-      CertifiedComparedLineAuthority.exactRecord(
-        playedLineRecord,
-        occurrence.playedLine,
-        playedReplay
-      ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
-      referenceReplay.replaySteps.take(3) == occurrence.referenceSteps &&
-      playedReplay.replaySteps.take(2) == occurrence.playedSteps &&
+    subject.remainsCertified && removal.remainsCertified && immediateCapture.remainsCertified &&
+      (subject == removal || subject == immediateCapture) &&
+      occurrence.subjectOccurrence == subject.publicOccurrence &&
+      occurrence.removalLine == removal.line && occurrence.immediateCaptureLine == immediateCapture.line &&
+      removal.replay.replaySteps.take(3) == occurrence.removalSteps &&
+      immediateCapture.replay.replaySteps.take(2) == occurrence.immediateSteps &&
       semanticIdentityRemainsCertified && captureSemanticsRemainCertified &&
       manifestRemainsCertified && premisesRemainCertified && absenceRemainsCertified &&
       statesRemainCertified
@@ -378,42 +416,46 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
       semantic.removalRecapture,
       semantic.exploit,
       semantic.capturedTarget,
-      semantic.playedRecapture
+      semantic.immediateRecapture
     ) == semantic.identity
 
   private def captureSemanticsRemainCertified: Boolean =
     val rebound = for
-      (removalOccurrence, removal) <- uniqueCapture(referenceReplay, occurrence.removalStep)
-      (removalResult, removalRecapture) <- referenceReplay.exactRecaptureMembership(
+      (removalOccurrence, removalInventory) <- uniqueCapture(removal.replay, occurrence.removalStep)
+      (removalResult, removalRecapture) <- removal.replay.exactRecaptureMembership(
         occurrence.removalStep,
         occurrence.removalRecaptureStep
       )
       if DerivedRelationResultKey.from(removalOccurrence.relation) == removalResult
-      if removal.mover == semantic.remover && removal.captured == semantic.removedDefender
-      if removal.legalRecaptures == List(semantic.removalRecapture)
+      if removalInventory.mover == semantic.remover && removalInventory.captured == semantic.removedDefender
+      if removalInventory.legalRecaptures == List(semantic.removalRecapture)
       if removalRecapture == semantic.removalRecapture
-      (referenceOccurrence, referenceExploit) <- uniqueCapture(
-        referenceReplay,
-        occurrence.referenceExploitStep
+      (postRemovalOccurrence, postRemovalCapture) <- uniqueCapture(
+        removal.replay,
+        occurrence.postRemovalCaptureStep
       )
-      if referenceExploit.mover == semantic.exploit &&
-        referenceExploit.captured == semantic.capturedTarget &&
-        referenceExploit.legalRecaptures.isEmpty
-      (playedOccurrence, playedExploit) <- uniqueCapture(playedReplay, occurrence.playedExploitStep)
-      (playedResult, playedRecapture) <- playedReplay.exactRecaptureMembership(
-        occurrence.playedExploitStep,
-        occurrence.playedRecaptureStep
+      if postRemovalCapture.mover == semantic.exploit &&
+        postRemovalCapture.captured == semantic.capturedTarget &&
+        postRemovalCapture.legalRecaptures.isEmpty
+      (immediateOccurrence, immediateCaptureInventory) <- uniqueCapture(
+        immediateCapture.replay,
+        occurrence.immediateCaptureStep
       )
-      if DerivedRelationResultKey.from(playedOccurrence.relation) == playedResult
-      if playedExploit.mover == semantic.exploit && playedExploit.captured == semantic.capturedTarget
-      if playedExploit.legalRecaptures == List(semantic.playedRecapture)
-      if playedRecapture == semantic.playedRecapture
+      (immediateResult, immediateRecapture) <- immediateCapture.replay.exactRecaptureMembership(
+        occurrence.immediateCaptureStep,
+        occurrence.immediateRecaptureStep
+      )
+      if DerivedRelationResultKey.from(immediateOccurrence.relation) == immediateResult
+      if immediateCaptureInventory.mover == semantic.exploit &&
+        immediateCaptureInventory.captured == semantic.capturedTarget
+      if immediateCaptureInventory.legalRecaptures == List(semantic.immediateRecapture)
+      if immediateRecapture == semantic.immediateRecapture
       if absenceAuthority.query ==
         PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalCaptureOf(
           semantic.removedDefender.side,
           semantic.exploit.to
         )
-    yield referenceOccurrence.occurrenceId != removalOccurrence.occurrenceId
+    yield postRemovalOccurrence.occurrenceId != removalOccurrence.occurrenceId
     rebound.contains(true)
 
   private def manifestRemainsCertified: Boolean =
@@ -421,31 +463,32 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
       case path :: Nil =>
         path.manifest.isInstanceOf[SoleRecapturerRemovalBeforeTargetCaptureManifest] &&
           (path.premiseUses match
-            case removal :: referenceExploit :: playedExploit :: Nil =>
-              removal.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceDefenderRemoval &&
+            case removal :: postRemovalCapture :: immediateCaptureUse :: Nil =>
+              removal.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.DefenderRemoval &&
                 removal.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
                 removal.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-                removal.branchId == occurrence.referenceBranch.branchId && removal.stepIndex == 0 &&
-                referenceExploit.role ==
-                  SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceLaterExploitInventory &&
-                referenceExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
-                referenceExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-                referenceExploit.branchId == occurrence.referenceBranch.branchId &&
-                referenceExploit.stepIndex == 2 &&
-                playedExploit.role ==
-                  SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PlayedImmediateExploitInventory &&
-                playedExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
-                playedExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-                playedExploit.branchId == occurrence.playedBranch.branchId && playedExploit.stepIndex == 0 &&
-                List(removal, referenceExploit, playedExploit).forall(_.sourcePremiseIds.nonEmpty)
+                removal.branchId == occurrence.removalBranch.branchId && removal.stepIndex == 0 &&
+                postRemovalCapture.role ==
+                  SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PostRemovalTargetCaptureInventory &&
+                postRemovalCapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
+                postRemovalCapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
+                postRemovalCapture.branchId == occurrence.removalBranch.branchId &&
+                postRemovalCapture.stepIndex == 2 &&
+                immediateCaptureUse.role ==
+                  SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ImmediateTargetCaptureInventory &&
+                immediateCaptureUse.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
+                immediateCaptureUse.result.kind == RelationFactKind.CaptureRecaptureInventory &&
+                immediateCaptureUse.branchId == occurrence.immediateCaptureBranch.branchId &&
+                immediateCaptureUse.stepIndex == 0 &&
+                List(removal, postRemovalCapture, immediateCaptureUse).forall(_.sourcePremiseIds.nonEmpty)
             case _ => false) &&
           path.closedAbsenceUses == List(absenceUse) &&
           absenceUse.binding.role ==
-            SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.ReferenceReplacementRecaptureAbsent &&
-          absenceUse.binding.branchId == occurrence.referenceBranch.branchId &&
+            SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.PostRemovalReplacementRecaptureAbsent &&
+          absenceUse.binding.branchId == occurrence.removalBranch.branchId &&
           absenceUse.binding.afterStepIndex == 2 &&
-          parentSources.map(_.id).distinct.size == 2 &&
-          dependencyManifest.consumes(referenceLineRecord, playedLineRecord)
+          parentSources.map(_.id).distinct.size == 4 &&
+          dependencyManifest.consumes(subject, removal, immediateCapture)
       case _ => false
 
   private def uniqueCapture(
@@ -464,13 +507,12 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
 
   private def premisesRemainCertified: Boolean =
     occurrence.proofPaths.flatMap(_.premiseUses).forall { use =>
-      val replayAndOwner = Option.when(
-        use.branchRole == ComparedLineBranchRole.CounterfactualReference
-      )(referenceReplay -> referenceLineRecord).orElse(
-        Option.when(use.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation)(
-          playedReplay -> playedLineRecord
-        )
-      )
+      val replayAndOwner = use.branchRole match
+        case SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture =>
+          Some(removal.replay -> removal.lineOwner)
+        case SoleRecapturerRemovalBranchRole.ImmediateTargetCapture =>
+          Some(immediateCapture.replay -> immediateCapture.lineOwner)
+        case _ => None
       replayAndOwner.exists { case (exactReplay, owner) =>
         occurrence.proofSet.occurrence.branch(use.branchRole).exists(branch =>
           branch.branchId == use.branchId && branch.stepAt(use.stepIndex).exists(stepOccurrence =>
@@ -489,8 +531,8 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
 
   private def absenceRemainsCertified: Boolean =
     val binding = absenceUse.binding
-    binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-      binding.authority == absenceAuthority && absenceAuthority.issuerRecord == referenceLineRecord &&
+    binding.branchRole == SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture &&
+      binding.authority == absenceAuthority && absenceAuthority.issuerRecord == removal.lineOwner &&
       absenceAuthority.remainsCertified &&
       occurrence.proofSet.occurrence.branch(binding.branchRole).exists(branch =>
         branch.branchId == binding.branchId &&
@@ -505,26 +547,26 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
       semantic.exploit.beforeRole,
       semantic.exploit.side
     )
-    val exploitIndex = occurrence.referenceSteps.size - 1
+    val exploitIndex = occurrence.removalSteps.size - 1
     stateAuthorities.size == exploitIndex * 2 &&
       stateAuthorities.forall { case (use, authority) =>
         val binding = use.binding
         val exactPiece = binding.role match
-          case SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent =>
+          case SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalExploitActorPresent =>
             Some(exploitActor)
-          case SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent =>
+          case SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalTargetPresent =>
             Some(semantic.capturedTarget)
           case _ => None
         exactPiece.exists(piece =>
-          binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
-            binding.branchId == occurrence.referenceBranch.branchId &&
+          binding.branchRole == SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture &&
+            binding.branchId == occurrence.removalBranch.branchId &&
             binding.afterStepIndex >= 0 && binding.afterStepIndex < exploitIndex &&
             binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece) &&
-            binding.authority == authority && authority.issuerRecord == referenceLineRecord &&
+            binding.authority == authority && authority.issuerRecord == removal.lineOwner &&
             ClosedPositionStateAuthority
-              .certified(referenceLineRecord, authority.occurrence, authority.proof)
+              .certified(removal.lineOwner, authority.occurrence, authority.proof)
               .contains(authority) &&
-            occurrence.referenceBranch.stepAt(binding.afterStepIndex).exists(stepOccurrence =>
+            occurrence.removalBranch.stepAt(binding.afterStepIndex).exists(stepOccurrence =>
               stepOccurrence.line == authority.issuerLine && stepOccurrence.step == authority.step
             )
         )
@@ -536,10 +578,9 @@ private[chessjudgment] object CertifiedSoleRecapturerRemovalBeforeTargetCapture:
       occurrence: SoleRecapturerRemovalBeforeTargetCaptureOccurrence,
       dependency: BoundedCausalDependencyFingerprint,
       dependencyManifest: SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      removal: CertifiedRootOccurrence,
+      immediateCapture: CertifiedRootOccurrence,
       absenceUse: CausalClosedAbsenceUse,
       absenceAuthority: ClosedRelationAbsenceAuthority,
       stateAuthorities: List[(CausalClosedStateUse, ClosedPositionStateAuthority)]
@@ -549,10 +590,9 @@ private[chessjudgment] object CertifiedSoleRecapturerRemovalBeforeTargetCapture:
       occurrence,
       dependency,
       dependencyManifest,
-      referenceLineRecord,
-      playedLineRecord,
-      referenceReplay,
-      playedReplay,
+      subject,
+      removal,
+      immediateCapture,
       absenceUse,
       absenceAuthority,
       stateAuthorities
@@ -570,12 +610,12 @@ private[chessjudgment] object CertifiedSoleRecapturerRemovalBeforeTargetCapture:
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureDemand private[chessjudgment] (
     removalOccurrence: ReplayVerticalRelationOccurrence,
     removalRecapture: RelationLegalMoveResourceWitness,
-    referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
-    playedExploitOccurrence: ReplayVerticalRelationOccurrence,
-    playedRecapture: RelationLegalMoveResourceWitness
+    postRemovalCaptureOccurrence: ReplayVerticalRelationOccurrence,
+    immediateCaptureOccurrence: ReplayVerticalRelationOccurrence,
+    immediateRecapture: RelationLegalMoveResourceWitness
 ):
   require(
-    List(removalOccurrence, referenceExploitOccurrence, playedExploitOccurrence).forall(
+    List(removalOccurrence, postRemovalCaptureOccurrence, immediateCaptureOccurrence).forall(
       _.contract == VerticalRelationContractKind.CaptureRecaptureInventory
     ),
     "a sole-recapturer-removal-before-target-capture demand must retain exact capture L1 occurrences"
@@ -585,9 +625,9 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
     List(
       removalOccurrence.occurrenceId,
       removalRecapture.stableKey,
-      referenceExploitOccurrence.occurrenceId,
-      playedExploitOccurrence.occurrenceId,
-      playedRecapture.stableKey
+      postRemovalCaptureOccurrence.occurrenceId,
+      immediateCaptureOccurrence.occurrenceId,
+      immediateRecapture.stableKey
     ).mkString("|")
 
 private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
@@ -602,49 +642,40 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       rootCapture: RelationWitnessDetail.CaptureRecaptureInventory,
       removalRecapture: RelationLegalMoveResourceWitness,
       rootCaptureOccurrence: ReplayVerticalRelationOccurrence,
-      referenceExploit: RelationWitnessDetail.CaptureRecaptureInventory,
-      referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
-      playedExploitOccurrence: ReplayVerticalRelationOccurrence,
-      playedRecapture: RelationLegalMoveResourceWitness,
-      referenceBranch: CausalBranchOccurrence,
-      playedBranch: CausalBranchOccurrence,
+      postRemovalCapture: RelationWitnessDetail.CaptureRecaptureInventory,
+      postRemovalCaptureOccurrence: ReplayVerticalRelationOccurrence,
+      immediateCaptureOccurrence: ReplayVerticalRelationOccurrence,
+      immediateRecapture: RelationLegalMoveResourceWitness,
+      removalCausalBranch: CausalBranchOccurrence,
+      immediateCausalBranch: CausalBranchOccurrence,
       absenceAuthority: ClosedRelationAbsenceAuthority,
       persistenceStates: List[PersistenceState]
   )
 
   def certifyDemanded(
-      referenceLine: LineNodeRef,
-      playedLine: LineNodeRef,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      subject: CertifiedRootOccurrence,
+      removal: CertifiedRootOccurrence,
+      immediateCapture: CertifiedRootOccurrence,
       demand: SoleRecapturerRemovalBeforeTargetCaptureDemand
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
+    val removalReplay = removal.replay
+    val immediateReplay = immediateCapture.replay
     val inputs = for
       _ <- Option.when(
-        CertifiedComparedLineAuthority.exactRecord(
-          referenceLineRecord,
-          referenceLine,
-          referenceReplay
-        )
+        subject.remainsCertified && removal.remainsCertified && immediateCapture.remainsCertified &&
+          subject.isObserved && (subject == removal || subject == immediateCapture)
       )((): Unit)
-      if CertifiedComparedLineAuthority.exactRecord(
-        playedLineRecord,
-        playedLine,
-        playedReplay
-      )
-      if referenceLineRecord.ref.position == playedLineRecord.ref.position
-      removalStep <- referenceReplay.replaySteps.headOption
-      removalRecaptureStep <- referenceReplay.replaySteps.lift(1)
-      referenceExploitStep <- referenceReplay.replaySteps.lift(2)
-      playedExploitStep <- playedReplay.replaySteps.headOption
-      playedRecaptureStep <- playedReplay.replaySteps.lift(1)
-      if EvidenceRef.sameMove(referenceExploitStep.moveUci, playedExploitStep.moveUci)
-      if !EvidenceRef.sameMove(removalStep.moveUci, playedExploitStep.moveUci)
+      if removal.transition.from == immediateCapture.transition.from
+      removalStep <- removalReplay.replaySteps.headOption
+      removalRecaptureStep <- removalReplay.replaySteps.lift(1)
+      postRemovalCaptureStep <- removalReplay.replaySteps.lift(2)
+      immediateCaptureStep <- immediateReplay.replaySteps.headOption
+      immediateRecaptureStep <- immediateReplay.replaySteps.lift(1)
+      if EvidenceRef.sameMove(postRemovalCaptureStep.moveUci, immediateCaptureStep.moveUci)
+      if !EvidenceRef.sameMove(removalStep.moveUci, immediateCaptureStep.moveUci)
       rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(removalStep.fenBefore)
-      playedRoot <- PrincipalVariationEvidence.semanticBoardStateFen(playedExploitStep.fenBefore)
-      if rootBoard == playedRoot
+      immediateRoot <- PrincipalVariationEvidence.semanticBoardStateFen(immediateCaptureStep.fenBefore)
+      if rootBoard == immediateRoot
       rootCaptureOccurrence = demand.removalOccurrence
       if rootCaptureOccurrence.step == removalStep
       rootCapture <- captureDetail(rootCaptureOccurrence)
@@ -652,47 +683,45 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       if EvidenceRef.sameMove(removalRecapture.moveUci, removalRecaptureStep.moveUci)
       if rootCapture.legalRecaptures == List(removalRecapture)
       if rootCapture.captured.square == rootCapture.mover.to
-      referenceExploitOccurrence = demand.referenceExploitOccurrence
-      if referenceExploitOccurrence.step == referenceExploitStep
-      referenceExploit <- captureDetail(referenceExploitOccurrence)
-      playedExploitOccurrence = demand.playedExploitOccurrence
-      if playedExploitOccurrence.step == playedExploitStep
-      playedExploit <- captureDetail(playedExploitOccurrence)
-      playedRecapture = demand.playedRecapture
-      if EvidenceRef.sameMove(playedRecapture.moveUci, playedRecaptureStep.moveUci)
-      if playedExploit.legalRecaptures == List(playedRecapture)
-      if sameExploit(referenceExploit, playedExploit)
-      persistenceStates <- referencePersistenceStates(
-        referenceLineRecord,
-        referenceReplay,
-        coloredPieceAtStart(referenceExploit.mover),
-        referenceExploit.captured
+      postRemovalCaptureOccurrence = demand.postRemovalCaptureOccurrence
+      if postRemovalCaptureOccurrence.step == postRemovalCaptureStep
+      postRemovalCapture <- captureDetail(postRemovalCaptureOccurrence)
+      immediateCaptureOccurrence = demand.immediateCaptureOccurrence
+      if immediateCaptureOccurrence.step == immediateCaptureStep
+      immediateCaptureInventory <- captureDetail(immediateCaptureOccurrence)
+      immediateRecapture = demand.immediateRecapture
+      if EvidenceRef.sameMove(immediateRecapture.moveUci, immediateRecaptureStep.moveUci)
+      if immediateCaptureInventory.legalRecaptures == List(immediateRecapture)
+      if sameExploit(postRemovalCapture, immediateCaptureInventory)
+      persistenceStates <- postRemovalPersistenceStates(
+        removal.lineOwner,
+        removalReplay,
+        coloredPieceAtStart(postRemovalCapture.mover),
+        postRemovalCapture.captured
       )
-      if sameInitialPiece(rootCapture.captured, playedRecapture.movement)
-      if referenceExploit.legalRecaptures.isEmpty
+      if sameInitialPiece(rootCapture.captured, immediateRecapture.movement)
+      if postRemovalCapture.legalRecaptures.isEmpty
       absenceQuery = PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalCaptureOf(
         rootCapture.captured.side,
-        referenceExploit.mover.to
+        postRemovalCapture.mover.to
       )
-      absenceOccurrence <- referenceReplay.positionAfter(referenceExploitStep)
+      absenceOccurrence <- removalReplay.positionAfter(postRemovalCaptureStep)
       absenceAuthority <- ClosedRelationAbsenceAuthority.forQuery(
-        referenceLineRecord,
+        removal.lineOwner,
         absenceOccurrence,
         absenceQuery
       )
       if rootCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
-      if referenceExploitOccurrence.certifiedSourcePremiseIds.nonEmpty
-      if playedExploitOccurrence.certifiedSourcePremiseIds.nonEmpty
-      referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
-        ComparedLineBranchRole.CounterfactualReference,
-        referenceLine,
-        referenceReplay,
+      if postRemovalCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
+      if immediateCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
+      removalCausalBranch = CausalBranchOccurrence.fromRootOccurrence(
+        SoleRecapturerRemovalBranchRole.RemovalThenTargetCapture,
+        removal,
         3
       )
-      playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        ComparedLineBranchRole.PlayedRootAnalysisContinuation,
-        playedLine,
-        playedReplay,
+      immediateCausalBranch = CausalBranchOccurrence.fromRootOccurrence(
+        SoleRecapturerRemovalBranchRole.ImmediateTargetCapture,
+        immediateCapture,
         2
       )
     yield ExactInputs(
@@ -700,12 +729,12 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       rootCapture,
       removalRecapture,
       rootCaptureOccurrence,
-      referenceExploit,
-      referenceExploitOccurrence,
-      playedExploitOccurrence,
-      playedRecapture,
-      referenceBranch,
-      playedBranch,
+      postRemovalCapture,
+      postRemovalCaptureOccurrence,
+      immediateCaptureOccurrence,
+      immediateRecapture,
+      removalCausalBranch,
+      immediateCausalBranch,
       absenceAuthority,
       persistenceStates
     )
@@ -713,78 +742,76 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
     inputs.toList.map(exact =>
       certify(
         exact,
-        referenceLineRecord,
-        playedLineRecord,
-        referenceReplay,
-        playedReplay
+        subject,
+        removal,
+        immediateCapture
       )
     )
 
   private def certify(
       inputs: ExactInputs,
-      referenceLineRecord: EvidenceRecord,
-      playedLineRecord: EvidenceRecord,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay
+      subject: CertifiedRootOccurrence,
+      removal: CertifiedRootOccurrence,
+      immediateCapture: CertifiedRootOccurrence
   ): CertifiedSoleRecapturerRemovalBeforeTargetCapture =
     val proposition = SoleRecapturerRemovalBeforeTargetCaptureCausalAuthority.proposition(
       inputs.rootBoard,
       inputs.rootCapture.mover,
       inputs.rootCapture.captured,
       inputs.removalRecapture,
-      inputs.referenceExploit.mover,
-      inputs.referenceExploit.captured,
-      inputs.playedRecapture
+      inputs.postRemovalCapture.mover,
+      inputs.postRemovalCapture.captured,
+      inputs.immediateRecapture
     )
     val causalOccurrence = CausalOccurrenceIdentity.from(
       proposition,
-      List(inputs.referenceBranch, inputs.playedBranch)
+      List(inputs.removalCausalBranch, inputs.immediateCausalBranch)
     )
-    val referenceRemovalUse = CausalVerticalRelationPremiseUse.from(
-      SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceDefenderRemoval,
-      RecordBoundVerticalRelationOccurrence.certified(referenceLineRecord, inputs.rootCaptureOccurrence).getOrElse(
+    val removalCaptureUse = CausalVerticalRelationPremiseUse.from(
+      SoleRecapturerRemovalBeforeTargetCapturePremiseRole.DefenderRemoval,
+      RecordBoundVerticalRelationOccurrence.certified(removal.lineOwner, inputs.rootCaptureOccurrence).getOrElse(
         throw IllegalArgumentException("defense obligation lost its graph-owned defender-removal occurrence")
       ),
-      inputs.referenceBranch,
+      inputs.removalCausalBranch,
       0
     )
-    val referenceExploitUse = CausalVerticalRelationPremiseUse.from(
-      SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceLaterExploitInventory,
-      RecordBoundVerticalRelationOccurrence.certified(referenceLineRecord, inputs.referenceExploitOccurrence).getOrElse(
-        throw IllegalArgumentException("defense obligation lost its graph-owned reference exploit occurrence")
+    val postRemovalCaptureUse = CausalVerticalRelationPremiseUse.from(
+      SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PostRemovalTargetCaptureInventory,
+      RecordBoundVerticalRelationOccurrence.certified(removal.lineOwner, inputs.postRemovalCaptureOccurrence).getOrElse(
+        throw IllegalArgumentException("defense obligation lost its graph-owned post-removal capture occurrence")
       ),
-      inputs.referenceBranch,
+      inputs.removalCausalBranch,
       2
     )
-    val playedExploitUse = CausalVerticalRelationPremiseUse.from(
-      SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PlayedImmediateExploitInventory,
-      RecordBoundVerticalRelationOccurrence.certified(playedLineRecord, inputs.playedExploitOccurrence).getOrElse(
-        throw IllegalArgumentException("defense obligation lost its graph-owned played exploit occurrence")
+    val immediateCaptureUse = CausalVerticalRelationPremiseUse.from(
+      SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ImmediateTargetCaptureInventory,
+      RecordBoundVerticalRelationOccurrence.certified(immediateCapture.lineOwner, inputs.immediateCaptureOccurrence).getOrElse(
+        throw IllegalArgumentException("defense obligation lost its graph-owned immediate capture occurrence")
       ),
-      inputs.playedBranch,
+      inputs.immediateCausalBranch,
       0
     )
     val absenceBinding = CausalClosedAbsenceBinding.afterStep(
-      SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.ReferenceReplacementRecaptureAbsent,
+      SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.PostRemovalReplacementRecaptureAbsent,
       inputs.absenceAuthority,
-      inputs.referenceBranch,
+      inputs.removalCausalBranch,
       2
     )
     val persistenceBindings = inputs.persistenceStates.map(state =>
       CausalClosedStateBinding.afterStep(
         state.role,
         state.authority,
-        inputs.referenceBranch,
+        inputs.removalCausalBranch,
         state.stepIndex
       )
     )
     val manifest = SoleRecapturerRemovalBeforeTargetCaptureManifest.exact(
-      referenceRemovalUse,
-      referenceExploitUse,
-      playedExploitUse,
+      removalCaptureUse,
+      postRemovalCaptureUse,
+      immediateCaptureUse,
       absenceBinding,
-      coloredPieceAtStart(inputs.referenceExploit.mover),
-      inputs.referenceExploit.captured,
+      coloredPieceAtStart(inputs.postRemovalCapture.mover),
+      inputs.postRemovalCapture.captured,
       persistenceBindings
     )
     val path = CausalProofPathOccurrence.from(proposition, manifest)
@@ -804,14 +831,15 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       inputs.rootCapture.mover,
       inputs.rootCapture.captured,
       inputs.removalRecapture,
-      inputs.referenceExploit.mover,
-      inputs.referenceExploit.captured,
-      inputs.playedRecapture
+      inputs.postRemovalCapture.mover,
+      inputs.postRemovalCapture.captured,
+      inputs.immediateRecapture
     )
-    val occurrence = SoleRecapturerRemovalBeforeTargetCaptureOccurrence(proofSet)
+    val occurrence = SoleRecapturerRemovalBeforeTargetCaptureOccurrence(proofSet, subject.publicOccurrence)
     val dependencyManifest = SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest(
-      referenceLineRecord,
-      playedLineRecord,
+      subject,
+      removal,
+      immediateCapture,
       semantic.removedDefender,
       proofSet
     )
@@ -821,10 +849,9 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       occurrence,
       dependency,
       dependencyManifest,
-      referenceLineRecord,
-      playedLineRecord,
-      referenceReplay,
-      playedReplay,
+      subject,
+      removal,
+      immediateCapture,
       absenceUse,
       inputs.absenceAuthority,
       path.closedStateUses.map(use => use -> use.binding.authority)
@@ -838,10 +865,10 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       case _                                                       => None
 
   private def sameExploit(
-      reference: RelationWitnessDetail.CaptureRecaptureInventory,
-      played: RelationWitnessDetail.CaptureRecaptureInventory
+      postRemoval: RelationWitnessDetail.CaptureRecaptureInventory,
+      immediate: RelationWitnessDetail.CaptureRecaptureInventory
   ): Boolean =
-    reference.mover == played.mover && reference.captured == played.captured
+    postRemoval.mover == immediate.mover && postRemoval.captured == immediate.captured
 
   private def sameInitialPiece(
       piece: RelationColoredPieceWitness,
@@ -854,19 +881,19 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
   ): RelationColoredPieceWitness =
     RelationColoredPieceWitness(movement.from, movement.beforeRole, movement.side)
 
-  private def referencePersistenceStates(
-      referenceLineRecord: EvidenceRecord,
+  private def postRemovalPersistenceStates(
+      removalLineRecord: EvidenceRecord,
       replay: CanonicalLineReplay,
       exploitActor: RelationColoredPieceWitness,
       target: RelationColoredPieceWitness
   ): Option[List[PersistenceState]] =
     val expected = replay.replaySteps.take(2).zipWithIndex.flatMap { case (step, index) =>
       List(
-        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent -> exploitActor,
-        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent -> target
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalExploitActorPresent -> exploitActor,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.PostRemovalTargetPresent -> target
       ).flatMap { case (role, piece) =>
         ClosedPositionStateAuthority
-          .atStep(referenceLineRecord, step)((occurrence, scope) =>
+          .atStep(removalLineRecord, step)((occurrence, scope) =>
             occurrence.existingOccupantState(piece, scope)
           )
           .map(PersistenceState(role, index, _))

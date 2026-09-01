@@ -5,11 +5,12 @@ import lila.chessjudgment.analysis.assembly.{
   EvidenceFactAssembler,
   JudgmentProvenanceAllocator,
   MoveReviewJudgmentOrchestrator,
+  OccurrenceExplanationAssembler,
+  OccurrenceExplanationDemand,
+  ExplanationRequest,
   RawMoveReviewInput,
   RelationCausalProofTestDispatch,
-  RelativeAssessmentAssembler,
-  RelativeCauseDraftPlanner,
-  RelativeCauseSignalProfile
+  RelativeAssessmentAssembler
 }
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.line.EngineLine
@@ -17,43 +18,43 @@ import lila.chessjudgment.model.line.EngineLine
 class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSuite:
 
   private val rootFen = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1"
-  private val referenceMoves = List("c4f7", "f8f7", "d1d8")
-  private val playedMoves = List("d1d8", "f8d8")
+  private val displacementMoves = List("c4f7", "f8f7", "d1d8")
+  private val immediateMoves = List("d1d8", "f8d8")
 
   test("forced reply proof consumes exact L1 inventories and a closed recapture absence"):
-    val referenceLine = LineNodeRef("reference-order", referenceMoves.head, 1, LineNodeRole.BestReference)
-    val playedLine = LineNodeRef("played-order", playedMoves.head, 1, LineNodeRole.Played)
-    val referenceReplay = certifiedReplay(referenceMoves)
-    val playedReplay = certifiedReplay(playedMoves)
+    val displacementLine = LineNodeRef("displacement-order", displacementMoves.head)
+    val immediateLine = LineNodeRef("immediate-order", immediateMoves.head)
+    val displacementReplay = certifiedReplay(displacementMoves)
+    val immediateReplay = certifiedReplay(immediateMoves)
 
     val proofs = deriveProofs(
       "exact",
-      referenceLine,
-      playedLine,
-      referenceReplay,
-      playedReplay
+      displacementLine,
+      immediateLine,
+      displacementReplay,
+      immediateReplay
     )
     val exact = proofs.headOption
       .getOrElse(fail("expected one unique-check-reply defender-displacement proof"))
 
-    assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
-    assertEquals(exact.occurrence.playedSteps.map(_.moveUci), playedMoves)
+    assertEquals(exact.occurrence.displacementSteps.map(_.moveUci), displacementMoves)
+    assertEquals(exact.occurrence.immediateCaptureSteps.map(_.moveUci), immediateMoves)
     assertEquals(exact.semantic.forcedReply.moveUci, "f8f7")
     assertEquals(exact.semantic.disabledDefender.side, chess.Black)
     assertEquals(exact.semantic.disabledDefender.role.name.toLowerCase, "rook")
     assertEquals(exact.semantic.disabledDefender.square.key.toLowerCase, "f8")
     assertEquals(exact.semantic.realizer.from.key.toLowerCase, "d1")
     assertEquals(exact.semantic.realizer.to.key.toLowerCase, "d8")
-    assertEquals(exact.semantic.playedDefense.moveUci, "f8d8")
+    assertEquals(exact.semantic.immediateDefense.moveUci, "f8d8")
     val path = exact.occurrence.proofPaths match
       case one :: Nil => one
       case other      => fail(s"expected one exact proof path, found ${other.size}")
     assertEquals(
       path.premiseUses.map(_.role),
       List(
-        UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.CreatedCheckResponse,
-        UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.ReferenceCaptureRecapture,
-        UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.PlayedCaptureRecapture
+        UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.DisplacementCheckResponse,
+        UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.DelayedCaptureRecapture,
+        UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.ImmediateCaptureRecapture
       )
     )
     assert(path.premiseUses.head.result.stableKey.startsWith("created_check_response_inventory:"))
@@ -67,10 +68,10 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertEquals(
       path.closedStateUses.map(_.binding.role),
       List(
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent,
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent,
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent,
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.DelayedCaptureActorPresent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.DelayedTargetPresent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.DelayedCaptureActorPresent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.DelayedTargetPresent
       )
     )
     assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(0, 0, 1, 1))
@@ -85,31 +86,42 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     )
     assertEquals(absenceUse.binding.queryKey, "legal-capture:black:d8")
     assertEquals(absenceUse.binding.afterStepIndex, 2)
-    assertEquals(absenceUse.binding.branchId, exact.occurrence.referenceBranch.branchId)
-    assertEquals(absenceUse.binding.issuerEvidenceId, "reference-source-exact")
-    val issuerOccurrence = referenceReplay
-      .positionAfter(referenceReplay.replaySteps(2))
+    assertEquals(absenceUse.binding.branchId, exact.occurrence.displacementBranch.branchId)
+    assertEquals(absenceUse.binding.issuerEvidenceId, "displacement-source-exact")
+    val issuerOccurrence = displacementReplay
+      .positionAfter(displacementReplay.replaySteps(2))
       .getOrElse(fail("expected the exact absence issuer occurrence"))
     assertEquals(absenceUse.binding.issuerOccurrenceId, issuerOccurrence.occurrenceId)
     assert(absenceUse.binding.semanticProofId.matches("[0-9a-f]{64}"))
     assert(exact.dependency.value.matches("[0-9a-f]{64}"))
     assertEquals(
       exact.proof.parentSources.map(_.id).toSet,
-      Set("reference-source-exact", "played-source-exact")
+      Set(
+        "displacement-source-exact",
+        "displacement-source-exact:transition",
+        "immediate-source-exact",
+        "immediate-source-exact:transition"
+      )
     )
-    assert(exact.proof.parentSources.forall(_.layer == EvidenceLayer.Line))
-    assert(exact.proof.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
+    assertEquals(
+      exact.proof.parentSources.map(_.layer).toSet,
+      Set(EvidenceLayer.Line, EvidenceLayer.MoveTransition)
+    )
+    assertEquals(
+      exact.proof.lowerIssuerRecords.map(_.ref).sortBy(_.id),
+      exact.proof.parentSources
+    )
     assert(exact.proof.remainsCertified)
 
   test("missing or role-tampered intermediate occupancy cannot form the forced-reply manifest"):
-    val referenceLine = LineNodeRef("reference-state-adversary", referenceMoves.head, 1, LineNodeRole.BestReference)
-    val playedLine = LineNodeRef("played-state-adversary", playedMoves.head, 1, LineNodeRole.Played)
+    val displacementLine = LineNodeRef("displacement-state-adversary", displacementMoves.head)
+    val immediateLine = LineNodeRef("immediate-state-adversary", immediateMoves.head)
     val exact = deriveProofs(
       "state-adversary",
-      referenceLine,
-      playedLine,
-      certifiedReplay(referenceMoves),
-      certifiedReplay(playedMoves)
+      displacementLine,
+      immediateLine,
+      certifiedReplay(displacementMoves),
+      certifiedReplay(immediateMoves)
     ).headOption.getOrElse(fail("expected the exact forced-reply proof"))
     val path = exact.occurrence.proofPaths.head
     val states = path.manifest.stateBindings
@@ -134,9 +146,9 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     }
     val actorAtRoot = states.head
     val targetRoleWithActorState = CausalClosedStateBinding.afterStep(
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent,
+      UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.DelayedTargetPresent,
       actorAtRoot.authority,
-      exact.occurrence.referenceBranch,
+      exact.occurrence.displacementBranch,
       actorAtRoot.afterStepIndex
     )
     intercept[IllegalArgumentException] {
@@ -144,13 +156,13 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     }
 
   test("the exact replay position owns one cached absence while line paths remain distinct"):
-    val replay = certifiedReplay(referenceMoves)
-    val captureStep = replay.replaySteps.lift(2).getOrElse(fail("missing reference capture"))
+    val replay = certifiedReplay(displacementMoves)
+    val captureStep = replay.replaySteps.lift(2).getOrElse(fail("missing delayed capture"))
     val occurrence = replay.positionAfter(captureStep).getOrElse(fail("missing capture destination"))
     val exactQuery = lila.chessjudgment.analysis.position.PositionRelationExtractor
       .ClosedRelationAbsenceQuery
       .LegalCaptureOf(chess.Black, EvidenceSquare("d8"))
-    val absenceScope = LineNodeRole.BestReference.scope
+    val absenceScope = EvidenceScope.LegalLine
     val bound = occurrence
       .closedAbsence(exactQuery, absenceScope)
       .getOrElse(fail("expected exact after-occurrence binding"))
@@ -169,42 +181,50 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     val secondCertificate = inventory.certifyAbsence(exactQuery).getOrElse(fail("missing repeated absence"))
     assert(firstCertificate eq secondCertificate)
 
-    val line = LineNodeRef("position-owner", referenceMoves.head, 1, LineNodeRole.BestReference)
-    val branch = CausalBranchOccurrence.certifiedCounterfactual(
-      ComparedLineBranchRole.CounterfactualReference,
-      line,
-      replay,
-      referenceMoves.size
-    )
+    val line = LineNodeRef("position-owner", displacementMoves.head)
     val record = EvidenceRecord(
       lineRef("position-owner-record", line, rootFen),
       LineFactEvidence.fromCertifiedReplay(line, replay)
+    )
+    val branch = CausalBranchOccurrence.fromRootOccurrence(
+      UniqueCheckReplyBranchRole.DisplacementThenCapture,
+      CertifiedRootOccurrenceTestFixture.from(
+        line,
+        record,
+        replay,
+        CausalRootProvenance.CounterfactualAnalyzedRoot
+      ),
+      displacementMoves.size
     )
     val authority = ClosedRelationAbsenceAuthority
       .certified(record, occurrence, bound)
       .getOrElse(fail("expected graph-owned absence authority"))
     val binding = CausalClosedAbsenceBinding.afterStep(
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.ReferenceRecaptureAbsent,
+      UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.DelayedCaptureRecaptureAbsent,
       authority,
       branch,
       2
     )
     val foreignLine = line.copy(id = "foreign-position-owner")
-    val foreignBranch = CausalBranchOccurrence.certifiedCounterfactual(
-      ComparedLineBranchRole.CounterfactualReference,
-      foreignLine,
-      replay,
-      referenceMoves.size
-    )
     val foreignRecord = EvidenceRecord(
       lineRef("foreign-position-owner-record", foreignLine, rootFen),
       LineFactEvidence.fromCertifiedReplay(foreignLine, replay)
+    )
+    val foreignBranch = CausalBranchOccurrence.fromRootOccurrence(
+      UniqueCheckReplyBranchRole.DisplacementThenCapture,
+      CertifiedRootOccurrenceTestFixture.from(
+        foreignLine,
+        foreignRecord,
+        replay,
+        CausalRootProvenance.CounterfactualAnalyzedRoot
+      ),
+      displacementMoves.size
     )
     val foreignAuthority = ClosedRelationAbsenceAuthority
       .certified(foreignRecord, occurrence, bound)
       .getOrElse(fail("expected foreign graph-owned absence authority"))
     val foreignBinding = CausalClosedAbsenceBinding.afterStep(
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.ReferenceRecaptureAbsent,
+      UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.DelayedCaptureRecaptureAbsent,
       foreignAuthority,
       foreignBranch,
       2
@@ -214,7 +234,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertNotEquals(binding.issuerEvidenceId, foreignBinding.issuerEvidenceId)
     intercept[IllegalArgumentException] {
       CausalClosedAbsenceBinding.afterStep(
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.ReferenceRecaptureAbsent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.DelayedCaptureRecaptureAbsent,
         foreignAuthority,
         branch,
         2
@@ -232,12 +252,12 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     )
 
   test("semantic proof survives line transposition identity while occurrences remain distinct"):
-    val referenceReplay = certifiedReplay(referenceMoves)
-    val playedReplay = certifiedReplay(playedMoves)
+    val displacementReplay = certifiedReplay(displacementMoves)
+    val immediateReplay = certifiedReplay(immediateMoves)
     def derive(path: String): CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture =
-      val referenceLine = LineNodeRef(s"reference-$path", referenceMoves.head, 1, LineNodeRole.BestReference)
-      val playedLine = LineNodeRef(s"played-$path", playedMoves.head, 1, LineNodeRole.Played)
-      deriveProofs(path, referenceLine, playedLine, referenceReplay, playedReplay)
+      val displacementLine = LineNodeRef(s"displacement-$path", displacementMoves.head)
+      val immediateLine = LineNodeRef(s"immediate-$path", immediateMoves.head)
+      deriveProofs(path, displacementLine, immediateLine, displacementReplay, immediateReplay)
         .headOption
         .getOrElse(fail(s"expected exact proof for $path"))
 
@@ -247,37 +267,41 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertNotEquals(first.occurrence.occurrenceId, second.occurrence.occurrenceId)
     assertNotEquals(first.dependency.value, second.dependency.value)
 
-  test("evaluation-only demand ownership reuses the structural proof identity"):
+  test("assessment records do not own the occurrence-demanded proof identity"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = rootFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = immediateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, mate = Some(1), depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(displacementMoves, scoreCp = 600, mate = Some(1), depth = 24),
+            EngineLine(immediateMoves, scoreCp = 0, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected exact lower facts"))
-    val initial = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
+    val assessed = RelativeAssessmentAssembler.enrichComparisonEvidence(lowerFacts)
+    assertEquals(
+      assessed.evidenceGraph.records.count(
+        _.payload.isInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence]
+      ),
+      0
+    )
+    val initial = produceExplanations(assessed)
     val oldProof = initial.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) => record
     }.getOrElse(fail("expected the first dependency-owned proof"))
-    val oldDemand = initial.evidenceGraph.records.collectFirst {
+    val assessmentRecord = initial.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
           if fact.kind == CandidateComparisonKind.PlayedVsBest => record
-    }.getOrElse(fail("expected the first exact comparison demand"))
-    val oldFact = oldDemand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val changedFact = oldFact
-    val changedDemand = oldDemand.copy(
-      ref = oldDemand.ref.copy(id = s"${oldDemand.ref.id}:changed")
+    }.getOrElse(fail("expected the first exact Assessment comparison"))
+    val changedAssessmentRecord = assessmentRecord.copy(
+      ref = assessmentRecord.ref.copy(id = s"${assessmentRecord.ref.id}:changed")
     )
-    val staleContext = initial.withEvidence(changedDemand)
+    val assessmentChangedContext = initial.withEvidence(changedAssessmentRecord)
     val dispatched = dispatchForcedReply(
-      staleContext,
-      JudgmentProvenanceAllocator.forInput(lowerFacts.input),
-      changedDemand
+      assessmentChangedContext,
+      JudgmentProvenanceAllocator.forInput(lowerFacts.input)
     ) match
       case exact :: Nil => exact
       case other        => fail(s"expected one changed-dependency dispatch, found ${other.size}")
@@ -287,65 +311,49 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertEquals(newPayload.occurrenceId, oldPayload.occurrenceId)
     assertEquals(newPayload.dependencyId, oldPayload.dependencyId)
     assertEquals(dispatched.ref.id, oldProof.ref.id)
-    assertEquals(dispatched.parents.map(_.layer).distinct, List(EvidenceLayer.Line))
+    assertEquals(
+      dispatched.parents.map(_.layer).toSet,
+      Set(EvidenceLayer.Line, EvidenceLayer.MoveTransition)
+    )
 
-    val current = staleContext
+    val current = assessmentChangedContext
     assertEquals(
       dispatchForcedReply(
         current,
-        JudgmentProvenanceAllocator.forInput(lowerFacts.input),
-        changedDemand
+        JudgmentProvenanceAllocator.forInput(lowerFacts.input)
       ).map(_.ref.id),
       List(oldProof.ref.id)
     )
-    assertEquals(
-      dispatchForcedReply(
-        current,
-        JudgmentProvenanceAllocator.forInput(lowerFacts.input),
-        oldDemand
-      ).map(_.ref.id),
-      List(oldProof.ref.id)
-    )
-    val referenceRecords = current.evidenceGraph.records.filter(_.referencesLine(changedFact.referenceLine))
-    val candidateRecords = current.evidenceGraph.records.filter(_.referencesLine(changedFact.candidateLine))
-    val profile = RelativeCauseSignalProfile.from(
-      changedFact,
-      changedDemand,
-      current.evidenceGraph,
-      referenceRecords,
-      candidateRecords
-    )
-    assertEquals(profile.referenceDirectProofs.map(_.ref.id), List(oldProof.ref.id))
 
   test("missing sibling defense fails closed"):
-    val referenceLine = LineNodeRef("reference-closed", referenceMoves.head, 1, LineNodeRole.BestReference)
-    val playedLine = LineNodeRef("played-open", playedMoves.head, 1, LineNodeRole.Played)
-    val incompletePlayed = certifiedReplay(playedMoves.take(1))
+    val displacementLine = LineNodeRef("displacement-closed", displacementMoves.head)
+    val immediateLine = LineNodeRef("immediate-open", immediateMoves.head)
+    val incompleteImmediate = certifiedReplay(immediateMoves.take(1))
 
     assertEquals(
       deriveProofs(
         "missing-defense",
-        referenceLine,
-        playedLine,
-        certifiedReplay(referenceMoves),
-        incompletePlayed
+        displacementLine,
+        immediateLine,
+        certifiedReplay(displacementMoves),
+        incompleteImmediate
       ),
       Nil
     )
 
   test("multiple sibling recapturers fail closed instead of over-attributing one forced displacement"):
     val multipleDefenseFen = "3qkb2/4pn2/8/8/2B5/8/8/3R2K1 w - - 0 1"
-    val multipleReferenceMoves = List("c4f7", "e8f7", "d1d8")
-    val multiplePlayedMoves = List("d1d8", "e8d8")
-    val referenceLine =
-      LineNodeRef("reference-multiple-defense", multipleReferenceMoves.head, 1, LineNodeRole.BestReference)
-    val playedLine =
-      LineNodeRef("played-multiple-defense", multiplePlayedMoves.head, 1, LineNodeRole.Played)
-    val referenceReplay = certifiedReplay(multipleDefenseFen, multipleReferenceMoves)
-    val playedReplay = certifiedReplay(multipleDefenseFen, multiplePlayedMoves)
-    val playedCapture = playedReplay
+    val multipleDisplacementMoves = List("c4f7", "e8f7", "d1d8")
+    val multipleImmediateMoves = List("d1d8", "e8d8")
+    val displacementLine =
+      LineNodeRef("displacement-multiple-defense", multipleDisplacementMoves.head)
+    val immediateLine =
+      LineNodeRef("immediate-multiple-defense", multipleImmediateMoves.head)
+    val displacementReplay = certifiedReplay(multipleDefenseFen, multipleDisplacementMoves)
+    val immediateReplay = certifiedReplay(multipleDefenseFen, multipleImmediateMoves)
+    val immediateCapture = immediateReplay
       .verticalRelationOccurrences(
-        playedReplay.replaySteps.head,
+        immediateReplay.replaySteps.head,
         List(VerticalRelationContractKind.CaptureRecaptureInventory)
       )
       .flatMap(_.relation.detail match
@@ -353,19 +361,19 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
         case _                                                       => Nil
       ) match
       case exact :: Nil => exact
-      case other        => fail(s"expected one played recapture inventory, found ${other.size}")
+      case other        => fail(s"expected one immediate recapture inventory, found ${other.size}")
 
     assertEquals(
-      playedCapture.legalRecaptures.map(_.moveUci).sorted,
+      immediateCapture.legalRecaptures.map(_.moveUci).sorted,
       List("e8d8", "f7d8")
     )
     assertEquals(
       deriveProofs(
         "multiple-defense",
-        referenceLine,
-        playedLine,
-        referenceReplay,
-        playedReplay,
+        displacementLine,
+        immediateLine,
+        displacementReplay,
+        immediateReplay,
         root = multipleDefenseFen
       ),
       Nil
@@ -373,61 +381,50 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
 
   test("a delayed realizer is not attributed without intervening dependency proofs"):
     val delayedMoves = List("c4f7", "f8f7", "g1h2", "h7h6", "d1d8")
-    val referenceLine = LineNodeRef("reference-delayed", delayedMoves.head, 1, LineNodeRole.BestReference)
-    val playedLine = LineNodeRef("played-immediate", playedMoves.head, 1, LineNodeRole.Played)
+    val displacementLine = LineNodeRef("displacement-delayed", delayedMoves.head)
+    val immediateLine = LineNodeRef("immediate-capture", immediateMoves.head)
 
     assertEquals(
       deriveProofs(
         "delayed-realizer",
-        referenceLine,
-        playedLine,
+        displacementLine,
+        immediateLine,
         certifiedReplay(delayedMoves),
-        certifiedReplay(playedMoves)
+        certifiedReplay(immediateMoves)
       ),
       Nil
     )
 
-  test("a canonical non-demand comparison does not dispatch the L2 producer"):
+  test("no explanation request performs no typed proof production"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = rootFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = immediateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, mate = Some(1), depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24),
+            EngineLine(displacementMoves, scoreCp = 600, mate = Some(1), depth = 24),
+            EngineLine(immediateMoves, scoreCp = 0, depth = 24),
             EngineLine(List("b3b7"), scoreCp = -100, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected the lower facts to assemble"))
-    val quietContext = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
-    val quietRecord = quietContext.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.ReferenceVsAlternative => record
-    }.getOrElse(fail("expected the canonical non-demand comparison"))
-    val quietComparison = quietRecord.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    assert(quietContext.evidenceGraph.proofEligible(quietRecord))
-    assert(!ActionablePlayedVsBestCausalProofDemand.accepts(quietComparison))
-
     assertEquals(
-      dispatchForcedReply(
-        quietContext,
-        JudgmentProvenanceAllocator.forInput(lowerFacts.input),
-        quietRecord
+      lowerFacts.evidenceGraph.records.count(
+        _.payload.isInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence]
       ),
-      Nil
+      0
     )
 
-  test("the exact L2 occurrence is the only WrongMoveOrder direct proof consumer"):
+  test("the exact L2 occurrence owns one requested Cause directly"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
           fen = rootFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = immediateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, mate = Some(1), depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(displacementMoves, scoreCp = 600, mate = Some(1), depth = 24),
+            EngineLine(immediateMoves, scoreCp = 0, depth = 24)
           )
         )
       )
@@ -436,169 +433,76 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       lowerFacts.evidenceGraph.records.count(_.payload.isInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence]),
       0
     )
-    val relativeFacts = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
-    val causalRecords = relativeFacts.evidenceGraph.records.collect {
+    val facts = produceExplanations(RelativeAssessmentAssembler.enrichComparisonEvidence(lowerFacts))
+    val causalRecords = facts.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) => record
     }
     assertEquals(causalRecords.size, 1)
-    assert(relativeFacts.evidenceGraph.proofEligible(causalRecords.head))
-    val reentered = RelativeAssessmentAssembler.enrichFacts(relativeFacts)
-    val reenteredCausal = reentered.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) => record
-    }
-    assertEquals(reenteredCausal.map(_.ref.id), causalRecords.map(_.ref.id))
-    assertEquals(
-      reenteredCausal.map(_.payload.asInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence].dependencyId),
-      causalRecords.map(_.payload.asInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence].dependencyId)
-    )
+    assert(facts.evidenceGraph.proofEligible(causalRecords.head))
 
-    val (comparisonRecord, comparisonRef, comparison) = relativeFacts.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(ref, CandidateComparisonEvidence(value), _) =>
-        (record, ref, value)
-    }.getOrElse(fail("expected the exact candidate comparison"))
     val duplicateOwner = causalRecords.head.copy(
       ref = causalRecords.head.ref.copy(id = s"${causalRecords.head.ref.id}:duplicate")
     )
-    val duplicated = relativeFacts.withEvidence(duplicateOwner)
+    val duplicated = facts.withEvidence(duplicateOwner)
     assert(duplicated.evidenceGraph.proofEligible(duplicateOwner))
-    val duplicateFailure = intercept[IllegalStateException] {
-      dispatchForcedReply(
+    val duplicateFailure = intercept[IllegalArgumentException] {
+      OccurrenceExplanationAssembler.enrichCauses(
         duplicated,
         JudgmentProvenanceAllocator.forInput(lowerFacts.input),
-        comparisonRecord
+        exactDemand(duplicated)
       )
     }
     assertEquals(
       duplicateFailure.getMessage,
-      "one exact unique-check-reply-defender-displacement-before-capture dependency has multiple graph owners"
+      "requirement failed: one demanded typed proof may own only one occurrence Cause"
     )
-    val referenceRecords = relativeFacts.evidenceGraph.records.filter(_.referencesLine(comparison.referenceLine))
-    val candidateRecords = relativeFacts.evidenceGraph.records.filter(_.referencesLine(comparison.candidateLine))
-    val profile = RelativeCauseSignalProfile.from(
-      comparison,
-      comparisonRecord,
-      relativeFacts.evidenceGraph,
-      referenceRecords,
-      candidateRecords
+    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
+      facts,
+      JudgmentProvenanceAllocator.forInput(facts.input),
+      exactDemand(facts)
     )
-    assertEquals(profile.referenceDirectProofs.map(_.ref.id), causalRecords.map(_.ref.id))
-    val drafts = RelativeCauseDraftPlanner.drafts(profile)
-    assertEquals(
-      drafts.filter(_.kind == RelativeCauseKind.MissedTacticalResource),
-      Nil,
-      "a root check/capture resource without an exact L2 family must not become a missed tactic"
-    )
-    val moveOrderDraft = drafts
-      .find(_.kind == RelativeCauseKind.WrongMoveOrder)
-      .getOrElse(fail("expected the L2-backed move-order draft"))
-    val binding = RelativeCauseFact.binding(
-      comparisonKind = comparison.kind,
-      referenceLine = comparison.referenceLine,
-      candidateLine = comparison.candidateLine,
-      sourceSide = moveOrderDraft.sourceSide
-    )
-    val provisionalCause = RelativeCauseFact(
-      kind = RelativeCauseKind.WrongMoveOrder,
-      comparisonEvidence = comparisonRef,
-      sourceSide = RelativeCauseSourceSide.Reference,
-      proofSources = moveOrderDraft.support.map(_.ref)
-    )
-    val rawChannels = DirectCauseChannel.certifiedForCause(
-      provisionalCause,
-      relativeFacts.evidenceGraph
-    )
-    assertEquals(
-      causalRecords.head.ref.position,
-      comparisonRef.position,
-      clues(causalRecords.head.ref.position, comparisonRef.position)
-    )
-    assertEquals(
-      relativeFacts.evidenceGraph.relativeCauseBinding(provisionalCause).map(_.eventLine),
-      Some(comparison.referenceLine)
-    )
-    assert(
-      relativeFacts.evidenceGraph.certifiedRootActorFor(comparison.referenceLine).nonEmpty,
-      clues(comparison.referenceLine)
-    )
-    assert(relativeFacts.evidenceGraph.proofEligible(causalRecords.head))
-    val rootActor = relativeFacts.evidenceGraph.certifiedRootActorFor(comparison.referenceLine).get
-    val causalPayload = causalRecords.head.payload.asInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence]
-    assertEquals(causalPayload.semantic.trigger.side, rootActor.color)
-    assertEquals(causalPayload.semantic.trigger.beforeRole, rootActor.role)
-    assertEquals(causalPayload.semantic.trigger.from, rootActor.from)
-    assertEquals(causalPayload.semantic.trigger.to, rootActor.to)
-    assert(rawChannels.nonEmpty)
-    assert(
-      rawChannels.forall(channel =>
-        channel.familyMetadata == DirectCauseFamilyMetadata(moveOrderDraft.kind, moveOrderDraft.sourceSide)
-      )
-    )
-    assert(rawChannels.forall(channel => channel.rootOwnedProof match
-      case _: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture => true
-      case _                                                       => false
-    ))
-    assertEquals(
-      DirectCauseChannel.certifiedForCause(
-        provisionalCause.copy(kind = RelativeCauseKind.MissedTacticalResource),
-        relativeFacts.evidenceGraph
-      ),
-      Nil,
-      "the typed direct-channel family must reject a second Cause-kind mapping"
-    )
-    intercept[IllegalArgumentException] {
-      DirectCauseChannel.validateAndOrder(rawChannels ++ rawChannels.take(1))
+    val causes = withCauses.evidenceGraph.records.collect {
+      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) => cause
     }
-
-    val withCauses = RelativeAssessmentAssembler.enrichCauses(relativeFacts)
-    val moveOrderCauses = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder => cause
-    }
-    assertEquals(moveOrderCauses.size, 1)
-    val cause = moveOrderCauses.head
-    val directChannels = DirectCauseChannel.certifiedForCause(cause, withCauses.evidenceGraph)
-    assert(directChannels.nonEmpty)
-    assert(directChannels.forall(channel => channel.rootOwnedProof match
-      case _: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture => true
-      case _                                                       => false
-    ))
-    assert(cause.proofSources.exists(_.id == causalRecords.head.ref.id))
+    assertEquals(causes.size, 1)
+    assertEquals(causes.head.proofSource, causalRecords.head.ref)
+    assertEquals(causes.head.subject, exactDemand(facts).subject.publicOccurrence)
 
   test("the certified player-facing Cause retains the exact L2 occurrence"):
     val packet = MoveReviewJudgmentOrchestrator
       .execute(
         RawMoveReviewInput(
           fen = rootFen,
-          playedMoveUci = playedMoves.head,
+          playedMoveUci = immediateMoves.head,
           variations = List(
-            EngineLine(referenceMoves, scoreCp = 600, mate = Some(1), depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(displacementMoves, scoreCp = 600, mate = Some(1), depth = 24),
+            EngineLine(immediateMoves, scoreCp = 0, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected an evidence-backed judgment packet"))
 
-    val selected = packet.causeExposureResolution.certifiedCauses
-      .find { idea =>
-        packet.evidenceGraph.record(idea.selection.causeEvidence).exists {
-          case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-            cause.kind == RelativeCauseKind.WrongMoveOrder
-          case _ => false
-        }
-      }
-      .getOrElse(fail("expected the L2-backed cause in the selected commentary"))
-
-    assert(packet.playerFacingClaimDecisions.exists(_.claimId == selected.ownerClaimId))
-    assert(selected.directChannels.nonEmpty)
-    assert(selected.directChannels.forall(channel => channel.rootOwnedProof match
-      case _: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture => true
-      case _                                                       => false
-    ))
-    assert(selected.directChannels.forall(channel => channel.rootOwnedProof match
+    val selected = packet.occurrenceExplanations match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one requested occurrence explanation, found ${other.size}")
+    assertEquals(selected.subject.moveUci, immediateMoves.head)
+    assert(selected.rootOwnedProof match
       case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) =>
-        result.proofPaths.nonEmpty
+        result.subjectOccurrence == selected.subject && result.proofPaths.nonEmpty
       case _ => false
-    ))
+    )
+
+  private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    OccurrenceExplanationAssembler.enrichProofs(
+      context,
+      JudgmentProvenanceAllocator.forInput(context.input),
+      exactDemand(context)
+    )
+
+  private def exactDemand(context: JudgmentAssemblyContext): OccurrenceExplanationDemand =
+    OccurrenceExplanationDemand
+      .resolve(context, ExplanationRequest.forObservedMove(context.input))
+      .getOrElse(fail("expected the exact observed occurrence demand"))
 
   private def certifiedReplay(moves: List[String]): CanonicalLineReplay =
     certifiedReplay(rootFen, moves)
@@ -611,61 +515,69 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
 
   private def deriveProofs(
       path: String,
-      referenceLine: LineNodeRef,
-      playedLine: LineNodeRef,
-      referenceReplay: CanonicalLineReplay,
-      playedReplay: CanonicalLineReplay,
+      displacementLine: LineNodeRef,
+      immediateLine: LineNodeRef,
+      displacementReplay: CanonicalLineReplay,
+      immediateReplay: CanonicalLineReplay,
       root: String = rootFen
   ): List[CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture] =
-    val referenceRecord = EvidenceRecord(
-      lineRef(s"reference-source-$path", referenceLine, root),
-      LineFactEvidence.fromCertifiedReplay(referenceLine, referenceReplay)
+    val displacementRecord = EvidenceRecord(
+      lineRef(s"displacement-source-$path", displacementLine, root),
+      LineFactEvidence.fromCertifiedReplay(displacementLine, displacementReplay)
     )
-    val playedRecord = EvidenceRecord(
-      lineRef(s"played-source-$path", playedLine, root),
-      LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
+    val immediateRecord = EvidenceRecord(
+      lineRef(s"immediate-source-$path", immediateLine, root),
+      LineFactEvidence.fromCertifiedReplay(immediateLine, immediateReplay)
+    )
+    val displacementRoot = CertifiedRootOccurrenceTestFixture.from(
+      displacementLine,
+      displacementRecord,
+      displacementReplay,
+      CausalRootProvenance.CounterfactualAnalyzedRoot
+    )
+    val immediateCaptureRoot = CertifiedRootOccurrenceTestFixture.from(
+      immediateLine,
+      immediateRecord,
+      immediateReplay,
+      CausalRootProvenance.ObservedGameRoot
     )
     val demand = for
-      trigger <- referenceReplay.replaySteps.headOption
-      forcedReplyStep <- referenceReplay.replaySteps.lift(1)
+      trigger <- displacementReplay.replaySteps.headOption
+      forcedReplyStep <- displacementReplay.replaySteps.lift(1)
       (checkOccurrence, forcedReply) <-
-        referenceReplay.exactCheckResponseOccurrenceMembership(trigger, forcedReplyStep)
-      referenceExploitStep <- referenceReplay.replaySteps.lift(2)
-      referenceExploitOccurrence <- referenceReplay.verticalRelationOccurrences(
-        referenceExploitStep,
+        displacementReplay.exactCheckResponseOccurrenceMembership(trigger, forcedReplyStep)
+      delayedCaptureStep <- displacementReplay.replaySteps.lift(2)
+      delayedCaptureOccurrence <- displacementReplay.verticalRelationOccurrences(
+        delayedCaptureStep,
         List(VerticalRelationContractKind.CaptureRecaptureInventory)
       ) match
         case exact :: Nil => Some(exact)
         case _            => None
-      playedExploitStep <- playedReplay.replaySteps.headOption
-      playedReplyStep <- playedReplay.replaySteps.lift(1)
-      (playedExploitOccurrence, playedRecapture) <-
-        playedReplay.exactRecaptureOccurrenceMembership(playedExploitStep, playedReplyStep)
+      immediateCaptureStep <- immediateReplay.replaySteps.headOption
+      immediateReplyStep <- immediateReplay.replaySteps.lift(1)
+      (immediateCaptureOccurrence, immediateRecapture) <-
+        immediateReplay.exactRecaptureOccurrenceMembership(immediateCaptureStep, immediateReplyStep)
     yield UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand(
       checkOccurrence,
       forcedReply,
-      referenceExploitOccurrence,
-      playedExploitOccurrence,
-      playedRecapture
+      delayedCaptureOccurrence,
+      immediateCaptureOccurrence,
+      immediateRecapture
     )
     demand.toList.flatMap(exactDemand =>
       UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.certifyDemanded(
-        referenceLine,
-        playedLine,
-        referenceRecord,
-        playedRecord,
-        referenceReplay,
-        playedReplay,
+        immediateCaptureRoot,
+        displacementRoot,
+        immediateCaptureRoot,
         exactDemand
       )
     )
 
   private def dispatchForcedReply(
       context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator,
-      demandSource: EvidenceRecord
+      allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
-    RelationCausalProofTestDispatch.forced(context, allocator, demandSource)
+    RelationCausalProofTestDispatch.forced(context, allocator)
 
   private def lineRef(id: String, line: LineNodeRef, root: String): EvidenceRef =
     EvidenceRef(
@@ -674,6 +586,6 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       layer = EvidenceLayer.Line,
       position = PositionNodeRef(root, 0, Some(White), Some("unique-check-reply-root")),
       line = Some(line),
-      scope = line.role.scope,
+      scope = EvidenceScope.LegalLine,
       confidence = EvidenceConfidence.LegalReplayVerified
     )

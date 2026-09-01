@@ -15,7 +15,12 @@ import lila.chessjudgment.model.line.{
   CandidateLineEvaluation,
   CanonicalPositionHistory
 }
-import lila.chessjudgment.analysis.assembly.{ MoveReviewJudgmentOrchestrator, RawMoveReviewInput }
+import lila.chessjudgment.analysis.assembly.{
+  ExplanationRequest,
+  MoveReviewInputAdmission,
+  MoveReviewJudgmentOrchestrator,
+  RawMoveReviewInput
+}
 import lila.chessjudgment.model.line.EngineLine
 import play.api.libs.json.*
 
@@ -50,6 +55,35 @@ class RuntimeProtocolTest extends munit.FunSuite:
       lines.map { case (moves, score) =>
         ReportedEngineLineSuffix(moves, ReportedWhiteEngineScore.Centipawns(score), work.requiredDepth)
       }
+    )
+
+  private def assertObservedBranchOwners(
+      branch: JsObject,
+      subject: JsObject
+  ): Unit =
+    assertEquals(branch.keys.intersect(Set("line_role", "line_rank")), Set.empty[String])
+    assertEquals(
+      (branch \ "line_owner_evidence_id").as[String],
+      (subject \ "line_owner_evidence_id").as[String]
+    )
+    assertEquals(
+      (branch \ "root_transition_evidence_id").as[String],
+      (subject \ "transition_evidence_id").as[String]
+    )
+    assertEquals((branch \ "line_id").as[String], (subject \ "line_id").as[String])
+
+  private def assertCounterfactualBranchOwners(
+      branch: JsObject,
+      subject: JsObject
+  ): Unit =
+    assertEquals(branch.keys.intersect(Set("line_role", "line_rank")), Set.empty[String])
+    assertNotEquals(
+      (branch \ "line_owner_evidence_id").as[String],
+      (subject \ "line_owner_evidence_id").as[String]
+    )
+    assertNotEquals(
+      (branch \ "root_transition_evidence_id").as[String],
+      (subject \ "transition_evidence_id").as[String]
     )
 
   private def rootLines: List[(List[String], Int)] = List(
@@ -191,7 +225,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
         StandardCharsets.UTF_8
       )
     )
-    assertEquals(response, fixture)
+    assertEquals(Json.parse(Json.stringify(response)), fixture)
     assertEquals((response \ "schema_version").as[String], "chesstory.position-commentary.response.v6")
     val selectedReviews = (response \ "result" \ "selected_move_reviews").as[List[JsObject]]
     assertEquals(selectedReviews.size, 1)
@@ -534,16 +568,23 @@ class RuntimeProtocolTest extends munit.FunSuite:
       commentary.keys.intersect(Set("structural_idea_units", "responsibility_links")),
       Set.empty[String]
     )
-    val moveOrderFacet = (commentary \ "causal_explanations").as[List[JsObject]]
-      .find(facet => (facet \ "kind").as[String] == "wrong_move_order")
-      .getOrElse(fail("expected the selected L2 cause in public commentary"))
-    val channel = (moveOrderFacet \ "channels").as[List[JsObject]] match
+    val occurrenceResult = (commentary \ "occurrence_explanations").as[List[JsObject]] match
       case exact :: Nil => exact
-      case other        => fail(s"expected one exact L2 channel, found ${other.size}")
+      case other        => fail(s"expected one L2 occurrence result, found ${other.size}")
 
-    assertEquals(moveOrderFacet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
-    assertEquals((moveOrderFacet \ "exposure").as[String], "primary")
-    assertEquals(channel.keys, Set("channel_id", "unique_check_reply_defender_displacement_before_capture_proof"))
+    assertEquals(
+      occurrenceResult.keys,
+      Set(
+        "cause_evidence_id",
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
+      )
+    )
+    assertEquals(
+      (occurrenceResult \ "proof_kind").as[String],
+      "unique_check_reply_defender_displacement_before_capture"
+    )
     val forbiddenDuplicateFields = Set(
       "actor",
       "targets",
@@ -554,41 +595,43 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "horizon",
       "proof_segment"
     )
-    assertEquals(channel.keys.intersect(forbiddenDuplicateFields), Set.empty[String])
-    val proof = (channel \ "unique_check_reply_defender_displacement_before_capture_proof").as[JsObject]
+    assertEquals(occurrenceResult.keys.intersect(forbiddenDuplicateFields), Set.empty[String])
+    val proof = (occurrenceResult \ "proof").as[JsObject]
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((proof \ "subject_occurrence").toOption, None)
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "dependency_fingerprint").as[String].matches("[0-9a-f]{64}"))
-    val referenceBranch = (proof \ "counterfactual_reference_branch").as[JsObject]
-    val playedBranch = (proof \ "played_root_branch").as[JsObject]
-    assertEquals((referenceBranch \ "line_role").as[String], "best_reference")
-    assertEquals((referenceBranch \ "branch_role").as[String], "counterfactual_reference")
+    val displacementBranch = (proof \ "displacement_branch").as[JsObject]
+    val immediateBranch = (proof \ "immediate_capture_branch").as[JsObject]
+    assertCounterfactualBranchOwners(displacementBranch, subject)
+    assertEquals((displacementBranch \ "branch_role").as[String], "displacement_then_capture")
     assertEquals(
-      (referenceBranch \ "root_provenance").as[String],
+      (displacementBranch \ "root_provenance").as[String],
       "counterfactual_analyzed_root"
     )
-    assert((referenceBranch \ "branch_id").as[String].matches("[0-9a-f]{64}"))
+    assert((displacementBranch \ "branch_id").as[String].matches("[0-9a-f]{64}"))
     assertEquals(
-      (referenceBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      (displacementBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
       List.fill(3)("certified_analysis_move")
     )
     assertEquals(
-      (referenceBranch \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      (displacementBranch \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       referenceMoves
     )
-    assertEquals((playedBranch \ "line_role").as[String], "played")
-    assertEquals((playedBranch \ "branch_role").as[String], "played_root_analysis_continuation")
-    assertEquals((playedBranch \ "root_provenance").as[String], "observed_game_root")
+    assertObservedBranchOwners(immediateBranch, subject)
+    assertEquals((immediateBranch \ "branch_role").as[String], "immediate_capture_with_defender")
+    assertEquals((immediateBranch \ "root_provenance").as[String], "observed_game_root")
     assertEquals(
-      (playedBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      (immediateBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
       List("observed_game_move", "certified_analysis_move")
     )
     assertEquals(
-      (playedBranch \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      (immediateBranch \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       playedMoves
     )
     assertEquals((proof \ "realizing_move").as[String], "d1d8")
-    assertEquals((proof \ "played_root_branch_legal_defense_move").as[String], "f8d8")
+    assertEquals((proof \ "immediate_capture_branch_legal_defense_move").as[String], "f8d8")
     assertEquals(proof.keys.intersect(Set("premise_ids", "closed_absence")), Set.empty[String])
     val proofPaths = (proof \ "proof_paths").as[List[JsObject]]
     assertEquals(proofPaths.size, 1)
@@ -598,14 +641,14 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(
       premises.map(premise => (premise \ "role").as[String]),
       List(
-        "created_check_response",
-        "reference_capture_recapture",
-        "played_capture_recapture"
+        "displacement_check_response",
+        "delayed_capture_recapture",
+        "immediate_capture_recapture"
       )
     )
-    assertEquals((premises.head \ "branch_id").as[String], (referenceBranch \ "branch_id").as[String])
+    assertEquals((premises.head \ "branch_id").as[String], (displacementBranch \ "branch_id").as[String])
     assertEquals((premises(1) \ "step_index").as[Int], 2)
-    assertEquals((premises(2) \ "branch_id").as[String], (playedBranch \ "branch_id").as[String])
+    assertEquals((premises(2) \ "branch_id").as[String], (immediateBranch \ "branch_id").as[String])
     premises.foreach { premise =>
       val sources = (premise \ "source_premise_ids").as[List[String]]
       assert(sources.contains((premise \ "issuer_evidence_id").as[String]))
@@ -621,13 +664,13 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assert((absenceUse \ "issuer_evidence_id").as[String].nonEmpty)
     assert((absenceUse \ "issuer_occurrence_id").as[String].matches("[0-9a-f]{64}"))
     assertEquals((absenceUse \ "query").as[String], "legal-capture:black:d8")
-    assertEquals((absenceUse \ "branch_id").as[String], (referenceBranch \ "branch_id").as[String])
+    assertEquals((absenceUse \ "branch_id").as[String], (displacementBranch \ "branch_id").as[String])
     assertEquals((absenceUse \ "after_step_index").as[Int], 2)
-    assertEquals((absenceUse \ "position" \ "scope").as[String], "best_line")
+    assertEquals((absenceUse \ "position" \ "scope").as[String], "legal_line")
     assertEquals((proof \ "participants" \ "trigger" \ "from").as[String], "c4")
     assertEquals((proof \ "participants" \ "realizer" \ "to").as[String], "d8")
     assertEquals((proof \ "participants" \ "captured_target" \ "square").as[String], "d8")
-    assertEquals((proof \ "participants" \ "played_defense" \ "move_uci").as[String], "f8d8")
+    assertEquals((proof \ "participants" \ "immediate_defense" \ "move_uci").as[String], "f8d8")
     assertEquals((proof \ "participants" \ "disabled_defender" \ "side").as[String], "black")
     assertEquals((proof \ "participants" \ "disabled_defender" \ "piece").as[String], "rook")
     assertEquals((proof \ "participants" \ "disabled_defender" \ "square").as[String], "f8")
@@ -649,58 +692,36 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an evidence-backed sole-recapturer-removal packet"))
 
-    val moveOrderProofRecords = packet.evidenceGraph.records.filter(_.ref.layer == EvidenceLayer.CausalProof)
-    assertEquals(moveOrderProofRecords.size, 1)
-    val defenseCauseRecords = packet.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder &&
-            cause.proofSources.exists(source => moveOrderProofRecords.exists(_.ref == source)) => record
-    }
-    assertEquals(
-      defenseCauseRecords.size,
-      1,
-      clues(
-        moveOrderProofRecords.map(record => record.ref -> packet.evidenceGraph.proofEligible(record)),
-        packet.evidenceGraph.records.collect {
-          case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
-            (ref, cause.kind, cause.proofSources)
-        }
-      )
-    )
-    val selectedCauseIds = packet.playerFacingClaimDecisions.flatMap(_.causeSelections.map(_.causeEvidence.id)).toSet
-    assert(
-      defenseCauseRecords.exists(record => selectedCauseIds(record.ref.id)),
-      clues(defenseCauseRecords.map(_.ref.id), packet.playerFacingClaimDecisions, packet.causeDispositionLedger)
-    )
-
-    val channel = RuntimeProtocol.moveCommentaryJson(packet)
-      .value("causal_explanations")
-      .as[List[JsObject]]
-      .find(facet => (facet \ "kind").as[String] == "wrong_move_order")
-      .toList
-      .flatMap(facet => (facet \ "channels").as[List[JsObject]])
-      .filter(channel => (channel \ "sole_recapturer_removal_before_target_capture_proof").asOpt[JsObject].nonEmpty) match
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+      .as[List[JsObject]] match
         case exact :: Nil => exact
-        case other        => fail(s"expected one public removal channel, found ${other.size}")
-    assertEquals(channel.keys, Set("channel_id", "sole_recapturer_removal_before_target_capture_proof"))
-    val proof = (channel \ "sole_recapturer_removal_before_target_capture_proof").as[JsObject]
+        case other        => fail(s"expected one removal occurrence result, found ${other.size}")
+    assertEquals((occurrenceResult \ "proof_kind").as[String], "sole_recapturer_removal_before_target_capture")
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((subject \ "move_uci").as[String], "d1d5")
+    assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
+    val proof = (occurrenceResult \ "proof").as[JsObject]
+    assertEquals((proof \ "subject_occurrence").toOption, None)
 
-    assertEquals((proof \ "later_exploit_move").as[String], "d1d5")
-    assertEquals((proof \ "played_sole_recapture_move").as[String], "f6d5")
-    val playedBranch = (proof \ "played_root_branch").as[JsObject]
-    assertEquals((playedBranch \ "branch_role").as[String], "played_root_analysis_continuation")
-    assertEquals((playedBranch \ "root_provenance").as[String], "observed_game_root")
+    assertEquals((proof \ "post_removal_target_capture_move").as[String], "d1d5")
+    assertEquals((proof \ "immediate_sole_recapture_move").as[String], "f6d5")
+    val removalBranch = (proof \ "removal_branch").as[JsObject]
+    val immediateBranch = (proof \ "immediate_capture_branch").as[JsObject]
+    assertCounterfactualBranchOwners(removalBranch, subject)
+    assertObservedBranchOwners(immediateBranch, subject)
+    assertEquals((immediateBranch \ "branch_role").as[String], "immediate_target_capture")
+    assertEquals((immediateBranch \ "root_provenance").as[String], "observed_game_root")
     assertEquals(
-      (playedBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      (immediateBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
       List("observed_game_move", "certified_analysis_move")
     )
     val premises = (proof \ "proof_paths" \ 0 \ "premises").as[List[JsObject]]
     assertEquals(
       premises.map(premise => (premise \ "role").as[String]),
       List(
-        "reference_defender_removal",
-        "reference_later_exploit_inventory",
-        "played_immediate_exploit_inventory"
+        "defender_removal",
+        "post_removal_target_capture_inventory",
+        "immediate_target_capture_inventory"
       )
     )
     assertEquals(premises.map(premise => (premise \ "step_index").as[Int]), List(0, 2, 0))
@@ -713,15 +734,80 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((proof \ "participants" \ "removal_recapture" \ "move_uci").as[String], "e7f6")
     assertEquals((proof \ "participants" \ "removed_defender" \ "piece").as[String], "knight")
     assertEquals((proof \ "participants" \ "removed_defender" \ "square").as[String], "f6")
-    assertEquals((proof \ "participants" \ "later_exploit" \ "to").as[String], "d5")
+    assertEquals((proof \ "participants" \ "post_removal_target_capture" \ "to").as[String], "d5")
     assertEquals((proof \ "participants" \ "captured_target" \ "piece").as[String], "rook")
-    assertEquals((proof \ "participants" \ "played_sole_recapture" \ "move_uci").as[String], "f6d5")
+    assertEquals((proof \ "participants" \ "immediate_sole_recapture" \ "move_uci").as[String], "f6d5")
     assertEquals(
       (proof \ "proof_paths" \ 0 \ "closed_absence_uses" \ 0 \ "query").as[String],
       "legal-capture:black:d5"
     )
 
-  test("v6 commentary serializes only the common capture-exclusion move-order proof"):
+  test("Scala producer matches the immutable occurrence-explanation public-v6 fixture"):
+    val rootFen =
+      "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
+    val vacatingMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
+    val immediateMoves = List("b2b4", "e5d4")
+    val rootHistory = CanonicalPositionHistory
+      .from(rootFen, Nil, rootFen)
+      .toOption
+      .getOrElse(fail("expected the fixture root history"))
+    val resulting = rootHistory
+      .extend(List(immediateMoves.head))
+      .toOption
+      .map(_.currentFen)
+      .getOrElse(fail("expected the fixture played move"))
+    val started = CommentaryJobReducer
+      .startJob(
+        rootFen,
+        Nil,
+        rootFen,
+        immediateMoves.head,
+        resulting,
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .getOrElse(fail("expected the fixture root search"))
+    val finished = CommentaryJobReducer
+      .submitIssuedWorkReport(
+        started,
+        completedReport(
+          started.issuedWork,
+          List(
+            vacatingMoves -> 600,
+            immediateMoves -> 0,
+            List("c1g5") -> -200
+          )
+        ),
+        nowEpochMs = 1L
+      )
+      .toOption
+      .collect { case value: CompletedCommentaryJob => value }
+      .getOrElse(fail("expected the fixture review to complete from the root report"))
+    val response = RuntimeProtocol.encodePositionCommentaryResponse(
+      CommentaryJobSnapshot("c" * 32, "request-occurrence-explanation", Long.MaxValue, finished),
+      finished
+    )
+    val playedReview = (response \ "result" \ "selected_move_reviews")
+      .as[List[JsObject]]
+      .find(review => (review \ "move_uci").as[String] == immediateMoves.head)
+      .getOrElse(fail("expected the played review in the produced fixture"))
+    val occurrenceResults = (playedReview \ "commentary" \ "occurrence_explanations").as[List[JsObject]]
+    assertEquals(occurrenceResults.size, 1)
+    assertEquals((occurrenceResults.head \ "proof_kind").as[String], "capture_exclusion_move_order")
+
+    val fixturePath = Paths.get(
+      "..",
+      "judgment-evaluation",
+      "fixtures",
+      "public-commentary-v6",
+      "occurrence-explanation-produced.json"
+    )
+    val fixture = Json.parse(Files.readString(fixturePath, StandardCharsets.UTF_8))
+    assertEquals(Json.parse(Json.stringify(response)), fixture)
+
+  test("v6 commentary serializes the capture-exclusion occurrence result from its occurrence Cause"):
     val rootFen =
       "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
     val referenceMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
@@ -739,18 +825,26 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an evidence-backed capture-exclusion packet"))
 
-    val channel = (RuntimeProtocol.moveCommentaryJson(packet) \ "causal_explanations")
-      .as[List[JsObject]]
-      .filter(facet => (facet \ "kind").as[String] == "wrong_move_order")
-      .flatMap(facet => (facet \ "channels").as[List[JsObject]])
-      .filter(channel =>
-        (channel \ "capture_exclusion_move_order_proof").asOpt[JsObject].nonEmpty
-      ) match
-        case exact :: Nil => exact
-        case other        => fail(s"expected one public capture-exclusion channel, found ${other.size}")
-    assertEquals(channel.keys, Set("channel_id", "capture_exclusion_move_order_proof"))
+    val commentary = RuntimeProtocol.moveCommentaryJson(packet)
+    assertEquals((commentary \ "causal_explanations").asOpt[List[JsObject]].getOrElse(Nil), Nil)
+    val occurrenceResult = (commentary \ "occurrence_explanations").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one capture-exclusion occurrence result, found ${other.size}")
+    assertEquals(
+      occurrenceResult.keys,
+      Set(
+        "cause_evidence_id",
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
+      )
+    )
+    assertEquals((occurrenceResult \ "proof_kind").as[String], "capture_exclusion_move_order")
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((subject \ "move_uci").as[String], "b2b4")
+    assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
 
-    val proof = (channel \ "capture_exclusion_move_order_proof").as[JsObject]
+    val proof = (occurrenceResult \ "proof").as[JsObject]
     assertEquals(
       proof.keys,
       Set(
@@ -758,10 +852,25 @@ class RuntimeProtocolTest extends munit.FunSuite:
         "semantic_id",
         "occurrence_id",
         "dependency_fingerprint",
-        "counterfactual_reference_branch",
-        "played_root_branch",
-        "proof_paths"
+        "vacating_branch",
+        "immediate_capture_branch",
+        "proof_paths",
+        "participants",
+        "later_deferred_step_index"
       )
+    )
+    assertEquals((proof \ "subject_occurrence").toOption, None)
+    val vacating = (proof \ "vacating_branch").as[JsObject]
+    val immediate = (proof \ "immediate_capture_branch").as[JsObject]
+    assertCounterfactualBranchOwners(vacating, subject)
+    assertObservedBranchOwners(immediate, subject)
+    assertEquals((vacating \ "branch_role").as[String], "vacating_then_deferred")
+    assertEquals((vacating \ "root_provenance").as[String], "counterfactual_analyzed_root")
+    assertEquals((immediate \ "branch_role").as[String], "immediate_deferred_capture")
+    assertEquals((immediate \ "root_provenance").as[String], "observed_game_root")
+    assertEquals(
+      (immediate \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      List("observed_game_move", "certified_analysis_move")
     )
     val path = (proof \ "proof_paths").as[List[JsObject]] match
       case exact :: Nil => exact
@@ -769,7 +878,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
         fail(s"expected one independent capture-exclusion path, found ${other.size}")
     val premises = (path \ "premises").as[List[JsObject]]
     val deferredMoves = premises.filter(premise =>
-      Set("played_deferred_move", "reference_deferred_move")((premise \ "role").as[String])
+      Set("immediate_deferred_move", "later_deferred_move")((premise \ "role").as[String])
     )
     assertEquals(deferredMoves.map(move => (move \ "move_uci").as[String]), List.fill(2)("b2b4"))
     assertEquals(
@@ -789,9 +898,11 @@ class RuntimeProtocolTest extends munit.FunSuite:
     )
     val states = (path \ "closed_state_uses").as[List[JsObject]]
     assertEquals(states.size, 14)
-    assertEquals(states.count(use => (use \ "role").as[String] == "reference_vacated_target"), 5)
-    assertEquals(states.count(use => (use \ "role").as[String] == "reference_reply_actor"), 5)
-    assertEquals(states.count(use => (use \ "role").as[String] == "reference_deferred_actor"), 4)
+    assertEquals(states.count(use => (use \ "role").as[String] == "vacated_target"), 5)
+    assertEquals(states.count(use => (use \ "role").as[String] == "reply_actor"), 5)
+    assertEquals(states.count(use => (use \ "role").as[String] == "deferred_actor"), 4)
+    assertEquals((proof \ "participants" \ "captured_target" \ "square").as[String], "d4")
+    assertEquals((proof \ "later_deferred_step_index").as[Int], 4)
 
   test("v6 commentary keeps direct line-access proof in its exact typed channel"):
     val rootFen = "7k/q7/8/8/8/8/N7/R6K w - - 0 1"
@@ -810,40 +921,43 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an exact direct line-access packet"))
 
-    val facet = (RuntimeProtocol.moveCommentaryJson(packet) \ "causal_explanations")
-      .as[List[JsObject]]
-      .find(facet => (facet \ "kind").as[String] == "missed_tactical_resource")
-      .getOrElse(fail("expected the selected direct line-access cause"))
-    val channel = (facet \ "channels").as[List[JsObject]] match
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+      .as[List[JsObject]] match
       case exact :: Nil => exact
-      case other        => fail(s"expected one direct line-access channel, found ${other.size}")
-    assertEquals(facet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
-    assertEquals((facet \ "exposure").as[String], "primary")
-    assertEquals(channel.keys, Set("channel_id", "vacated_gate_enables_unrecapturable_slider_capture_proof"))
+      case other        => fail(s"expected one line-access occurrence result, found ${other.size}")
     assertEquals(
-      channel.keys.intersect(
+      (occurrenceResult \ "proof_kind").as[String],
+      "vacated_gate_enables_unrecapturable_slider_capture"
+    )
+    assertEquals(
+      occurrenceResult.keys.intersect(
         Set("actor", "targets", "mechanisms", "consequences", "witnesses", "proof_line_moves", "horizon", "proof_segment")
       ),
       Set.empty[String],
       "the exact L2 proof must never fall through the generic channel"
     )
 
-    val proof = (channel \ "vacated_gate_enables_unrecapturable_slider_capture_proof").as[JsObject]
+    val proof = (occurrenceResult \ "proof").as[JsObject]
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((proof \ "subject_occurrence").toOption, None)
     assertEquals((proof \ "exploit_move").as[String], "a1a7")
-    val reference = (proof \ "counterfactual_reference_branch").as[JsObject]
-    val played = (proof \ "played_root_branch").as[JsObject]
+    val vacatedGate = (proof \ "vacated_gate_branch").as[JsObject]
+    val retainedGate = (proof \ "retained_gate_branch").as[JsObject]
+    assertCounterfactualBranchOwners(vacatedGate, subject)
+    assertObservedBranchOwners(retainedGate, subject)
     assertEquals(
-      (reference \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      (vacatedGate \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       referenceSourceMoves
     )
     assertEquals(
-      (played \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      (retainedGate \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       playedMoves
     )
-    assertEquals((played \ "branch_role").as[String], "played_root_analysis_continuation")
-    assertEquals((played \ "root_provenance").as[String], "observed_game_root")
+    assertEquals((vacatedGate \ "branch_role").as[String], "gate_vacated_then_capture")
+    assertEquals((retainedGate \ "branch_role").as[String], "gate_retained")
+    assertEquals((retainedGate \ "root_provenance").as[String], "observed_game_root")
     assertEquals(
-      (played \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      (retainedGate \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
       List("observed_game_move", "certified_analysis_move")
     )
 
@@ -853,7 +967,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val premises = (path \ "premises").as[List[JsObject]]
     assertEquals(
       premises.map(premise => (premise \ "role").as[String]),
-      List("reference_root_slider_reach", "reference_exploit_capture")
+      List("gate_vacating_slider_reach", "later_slider_capture")
     )
     assertEquals(premises.map(premise => (premise \ "step_index").as[Int]), List(0, 2))
     premises.foreach { premise =>
@@ -865,17 +979,17 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(
       absences.map(use => (use \ "role").as[String]),
       List(
-        "reference_immediate_recapture_absent",
-        "played_exploit_move_absent",
-        "played_replacement_capture_absent"
+        "later_capture_immediate_recapture_absent",
+        "retained_gate_exploit_move_absent",
+        "retained_gate_replacement_capture_absent"
       )
     )
     assertEquals(
       absences.map(use => (use \ "branch_id").as[String]),
       List(
-        (reference \ "branch_id").as[String],
-        (played \ "branch_id").as[String],
-        (played \ "branch_id").as[String]
+        (vacatedGate \ "branch_id").as[String],
+        (retainedGate \ "branch_id").as[String],
+        (retainedGate \ "branch_id").as[String]
       )
     )
     assert(absences.forall(use => (use \ "issuer_occurrence_id").as[String].matches("[0-9a-f]{64}")))
@@ -884,20 +998,20 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(
       states.map(use => (use \ "role").as[String]),
       List(
-        "reference_intervening_slider_reach",
-        "reference_target_persistence",
-        "reference_target_persistence",
-        "played_slider_persistence",
-        "played_target_persistence",
-        "played_gate_blocker_persistence",
-        "played_slider_persistence",
-        "played_target_persistence",
-        "played_gate_blocker_persistence",
-        "played_blocked_slider_reach"
+        "vacated_gate_intervening_slider_reach",
+        "vacated_gate_target_persistence",
+        "vacated_gate_target_persistence",
+        "retained_gate_slider_persistence",
+        "retained_gate_target_persistence",
+        "retained_gate_blocker_persistence",
+        "retained_gate_slider_persistence",
+        "retained_gate_target_persistence",
+        "retained_gate_blocker_persistence",
+        "retained_gate_blocked_slider_reach"
       )
     )
-    assert(states.take(3).forall(use => (use \ "branch_id").as[String] == (reference \ "branch_id").as[String]))
-    assert(states.drop(3).forall(use => (use \ "branch_id").as[String] == (played \ "branch_id").as[String]))
+    assert(states.take(3).forall(use => (use \ "branch_id").as[String] == (vacatedGate \ "branch_id").as[String]))
+    assert(states.drop(3).forall(use => (use \ "branch_id").as[String] == (retainedGate \ "branch_id").as[String]))
     assert(states.forall(use => (use \ "issuer_occurrence_id").as[String].matches("[0-9a-f]{64}")))
     assertEquals((proof \ "participants" \ "enabler" \ "from").as[String], "a2")
     assertEquals((proof \ "participants" \ "slider" \ "square").as[String], "a1")
@@ -922,24 +1036,21 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an exact square-release route packet"))
 
-    val facet = (RuntimeProtocol.moveCommentaryJson(packet) \ "causal_explanations")
-      .as[List[JsObject]]
-      .find(facet => (facet \ "kind").as[String] == "missed_square_release")
-      .getOrElse(fail("expected the selected square-release cause"))
-    val channel = (facet \ "channels").as[List[JsObject]] match
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+      .as[List[JsObject]] match
       case exact :: Nil => exact
-      case other        => fail(s"expected one square-release route channel, found ${other.size}")
-    assertEquals(facet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
-    assertEquals((facet \ "exposure").as[String], "primary")
-    assertEquals(channel.keys, Set("channel_id", "square_release_route_proof"))
+      case other        => fail(s"expected one square-release occurrence result, found ${other.size}")
+    assertEquals((occurrenceResult \ "proof_kind").as[String], "square_release_route")
     assertEquals(
-      channel.keys.intersect(
+      occurrenceResult.keys.intersect(
         Set("actor", "targets", "mechanisms", "consequences", "witnesses", "proof_line_moves", "horizon", "proof_segment")
       ),
       Set.empty[String]
     )
 
-    val proof = (channel \ "square_release_route_proof").as[JsObject]
+    val proof = (occurrenceResult \ "proof").as[JsObject]
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((proof \ "subject_occurrence").toOption, None)
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "dependency_fingerprint").as[String].matches("[0-9a-f]{64}"))
@@ -953,20 +1064,23 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((route.head \ "from").as[String], "d6")
     assertEquals((route.head \ "to").as[String], "c6")
 
-    val reference = (proof \ "counterfactual_reference_branch").as[JsObject]
-    val played = (proof \ "played_root_branch").as[JsObject]
+    val releasedRoute = (proof \ "released_route_branch").as[JsObject]
+    val retainedBlocker = (proof \ "retained_blocker_branch").as[JsObject]
+    assertCounterfactualBranchOwners(releasedRoute, subject)
+    assertObservedBranchOwners(retainedBlocker, subject)
     assertEquals(
-      (reference \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      (releasedRoute \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       referenceMoves
     )
     assertEquals(
-      (played \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      (retainedBlocker \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       playedMoves
     )
-    assertEquals((played \ "branch_role").as[String], "played_root_analysis_continuation")
-    assertEquals((played \ "root_provenance").as[String], "observed_game_root")
+    assertEquals((releasedRoute \ "branch_role").as[String], "released_square_route")
+    assertEquals((retainedBlocker \ "branch_role").as[String], "retained_blocker")
+    assertEquals((retainedBlocker \ "root_provenance").as[String], "observed_game_root")
     assertEquals(
-      (played \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      (retainedBlocker \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
       List("observed_game_move", "certified_analysis_move")
     )
 
@@ -976,7 +1090,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val premises = (path \ "premises").as[List[JsObject]]
     assertEquals(
       premises.map(premise => (premise \ "role").as[String]),
-      List("reference_release_move", "reference_route_move_0")
+      List("release_move", "route_move_0")
     )
     assertEquals(premises.map(premise => (premise \ "contract").as[String]).distinct, List("legal_move"))
     assertEquals(
@@ -993,21 +1107,21 @@ class RuntimeProtocolTest extends munit.FunSuite:
     }
 
     val absences = (path \ "closed_absence_uses").as[List[JsObject]]
-    assertEquals(absences.map(use => (use \ "role").as[String]), List("played_first_route_leg_absent"))
+    assertEquals(absences.map(use => (use \ "role").as[String]), List("retained_blocker_first_route_leg_absent"))
     assertEquals(absences.map(use => (use \ "query").as[String]), List("legal-move-from-to:white:d6:c6"))
-    assertEquals((absences.head \ "branch_id").as[String], (played \ "branch_id").as[String])
+    assertEquals((absences.head \ "branch_id").as[String], (retainedBlocker \ "branch_id").as[String])
 
     val states = (path \ "closed_state_uses").as[List[JsObject]]
     assertEquals(
       states.map(use => (use \ "role").as[String]),
       List(
-        "reference_vacancy",
-        "reference_vacancy",
-        "reference_route_piece_0",
-        "played_blocker_persistence",
-        "played_blocker_persistence",
-        "played_route_origin_persistence",
-        "played_route_origin_persistence"
+        "released_square_vacancy",
+        "released_square_vacancy",
+        "route_piece_0",
+        "retained_blocker_persistence",
+        "retained_blocker_persistence",
+        "retained_route_origin_persistence",
+        "retained_route_origin_persistence"
       )
     )
     assertEquals(
@@ -1022,8 +1136,8 @@ class RuntimeProtocolTest extends munit.FunSuite:
         "occupied-by:white:rook@d6"
       )
     )
-    assert(states.take(3).forall(use => (use \ "branch_id").as[String] == (reference \ "branch_id").as[String]))
-    assert(states.drop(3).forall(use => (use \ "branch_id").as[String] == (played \ "branch_id").as[String]))
+    assert(states.take(3).forall(use => (use \ "branch_id").as[String] == (releasedRoute \ "branch_id").as[String]))
+    assert(states.drop(3).forall(use => (use \ "branch_id").as[String] == (retainedBlocker \ "branch_id").as[String]))
 
     assertEquals((proof \ "participants" \ "releaser" \ "from").as[String], "c6")
     assertEquals((proof \ "participants" \ "releaser" \ "piece_before").as[String], "bishop")
@@ -1059,15 +1173,13 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected the exact Silicon Road route packet"))
 
-    val facets = (RuntimeProtocol.moveCommentaryJson(packet) \ "causal_explanations")
+    val occurrenceResults = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
       .as[List[JsObject]]
-      .filter(facet => (facet \ "kind").as[String] == "missed_square_release")
-    val proofs = facets.flatMap(facet =>
-      (facet \ "channels").as[List[JsObject]].map(channel =>
-        (channel \ "square_release_route_proof").as[JsObject]
-      )
+      .filter(occurrenceResult => (occurrenceResult \ "proof_kind").as[String] == "square_release_route")
+    val proofs = occurrenceResults.map(occurrenceResult =>
+      (occurrenceResult \ "proof").as[JsObject]
     )
-    assertEquals(facets.size, 2)
+    assertEquals(occurrenceResults.size, 2)
     assertEquals(proofs.size, 2)
     val proof = proofs.find(value => (value \ "terminal" \ "kind").as[String] == "created_check")
       .getOrElse(fail("expected the multi-leg created-check route"))
@@ -1098,18 +1210,18 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(
       (path \ "premises").as[List[JsObject]].map(premise => (premise \ "role").as[String]),
       List(
-        "reference_terminal_resource",
-        "reference_release_move",
-        "reference_route_move_0",
-        "reference_route_move_1",
-        "reference_route_move_2",
-        "reference_route_move_3",
-        "reference_terminal_reply"
+        "terminal_resource",
+        "release_move",
+        "route_move_0",
+        "route_move_1",
+        "route_move_2",
+        "route_move_3",
+        "terminal_reply"
       )
     )
     assertEquals((path \ "closed_state_uses").as[List[JsObject]].size, 13)
 
-  test("v6 commentary serializes the closed passed-pawn result without a generic proof segment"):
+  test("v6 commentary serializes the closed passed-pawn occurrence result from its occurrence Cause"):
     val raw = RawMoveReviewInput(
       fen = "7k/5K2/6P1/8/8/8/8/8 w - - 0 1",
       playedMoveUci = "g6g7",
@@ -1125,12 +1237,14 @@ class RuntimeProtocolTest extends munit.FunSuite:
       case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
     }
     assert(passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords.nonEmpty, "the closed passed-pawn result must reach the typed L2 producer")
-    val passedPawnResultCauseRecords = resolved.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.PassedPawnProgress => record
+    val certifiedOccurrenceExplanations = resolved.occurrenceExplanations.collect {
+      case certified
+          if certified.rootOwnedProof.isInstanceOf[
+            RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply
+          ] => certified
     }
     assert(
-      passedPawnResultCauseRecords.nonEmpty,
+      certifiedOccurrenceExplanations.nonEmpty,
       clues(
         passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords.map(_.ref.id),
         resolved.evidenceGraph.records.collect {
@@ -1139,34 +1253,38 @@ class RuntimeProtocolTest extends munit.FunSuite:
         }
       )
     )
-    val selectedCauseIds = resolved.playerFacingClaimDecisions.flatMap(_.causeSelections.map(_.causeEvidence.id)).toSet
-    assert(
-      passedPawnResultCauseRecords.exists(record => selectedCauseIds(record.ref.id)),
-      clues(passedPawnResultCauseRecords.map(_.ref.id), resolved.playerFacingClaimDecisions, resolved.causeDispositionLedger)
-    )
     val commentary = RuntimeProtocol.moveCommentaryJson(resolved)
     assertEquals(
       commentary.keys.intersect(Set("structural_idea_units", "responsibility_links")),
       Set.empty[String]
     )
-    val passedPawnProgressFacet = (commentary \ "causal_explanations").as[List[JsObject]]
-      .find(facet => (facet \ "kind").as[String] == "passed_pawn_progress")
-      .getOrElse(fail("expected the selected typed passed-pawn result in public commentary"))
-    val channel = (passedPawnProgressFacet \ "channels").as[List[JsObject]] match
-      case exact :: Nil => exact
-      case other =>
-        fail(s"expected one passed-pawn-progress-realized-after-only-legal-reply channel, found ${other.size}")
-
-    assertEquals(passedPawnProgressFacet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
-    assertEquals((passedPawnProgressFacet \ "exposure").as[String], "complementary")
-    assertEquals(channel.keys, Set("channel_id", "passed_pawn_progress_realized_after_only_legal_reply_proof"))
+    assertEquals((commentary \ "causal_explanations").asOpt[List[JsObject]].getOrElse(Nil), Nil)
+    val occurrenceResult = (commentary \ "occurrence_explanations").as[List[JsObject]]
+      .find(item =>
+        (item \ "proof_kind").as[String] == "passed_pawn_progress_realized_after_only_legal_reply"
+      )
+      .getOrElse(fail("expected the typed passed-pawn occurrence result in public commentary"))
     assertEquals(
-      channel.keys.intersect(
+      occurrenceResult.keys,
+      Set(
+        "cause_evidence_id",
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
+      )
+    )
+    assertEquals((occurrenceResult \ "subject_occurrence" \ "move_uci").as[String], "g6g7")
+    assertEquals(
+      (occurrenceResult \ "subject_occurrence" \ "root_provenance").as[String],
+      "observed_game_root"
+    )
+    assertEquals(
+      occurrenceResult.keys.intersect(
         Set("actor", "targets", "mechanisms", "consequences", "witnesses", "proof_line_moves", "horizon", "proof_segment")
       ),
       Set.empty[String]
     )
-    val proof = (channel \ "passed_pawn_progress_realized_after_only_legal_reply_proof").as[JsObject]
+    val proof = (occurrenceResult \ "proof").as[JsObject]
     assert(!proof.keys.contains("comparison_evidence_id"))
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
@@ -1192,7 +1310,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val branches = (proof \ "branches").as[List[JsObject]]
     assertEquals(branches.size, 1)
     val analysisContinuation = branches.head
-    assertEquals((analysisContinuation \ "role").as[String], "played_root_analysis_continuation")
+    assertEquals((analysisContinuation \ "role").as[String], "observed_root_with_analyzed_continuation")
     assertEquals((analysisContinuation \ "root_provenance").as[String], "observed_game_root")
     assertEquals((analysisContinuation \ "reply_move").as[String], "h8h7")
     assert((analysisContinuation \ "source_occurrence_id").as[String].nonEmpty)
@@ -1231,16 +1349,13 @@ class RuntimeProtocolTest extends munit.FunSuite:
       val state = (issuer \ "state").as[JsObject]
       val evidenceOwner = (issuer \ "issuer_evidence_id").as[String]
       val sourceIds = (premise \ "source_premise_ids").as[List[String]]
-      val lineRole = (issuer \ "line" \ "line_role").as[String]
-      val expectedScope = lineRole match
-        case "played"        => "played_line"
-        case "best_reference" => "best_line"
-        case "alternative"    => "candidate_line"
+      val issuerLine = (issuer \ "line").as[JsObject]
       Set("occupied_by", "slider_reach", "pawn_topology")((state \ "kind").as[String]) &&
+        issuerLine.keys == Set("line_id", "root_move") &&
         !issuer.keys.contains("query") && sourceIds.contains(evidenceOwner) &&
         !sourceIds.contains((issuer \ "semantic_proof_id").as[String]) &&
         sourceIds.contains((issuer \ "issuer_occurrence_id").as[String]) &&
-        (issuer \ "scope").as[String] == expectedScope
+        (issuer \ "scope").as[String] == "legal_line"
     })
     assert(proofPaths.forall(path => (path \ "closure_use_ids").as[List[String]].nonEmpty))
     assert(proofPaths.forall(path =>
@@ -1263,6 +1378,62 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assert(positionStateUses.forall { case (_, issuer) =>
       lowerPremiseIds.contains((issuer \ "issuer_evidence_id").as[String])
     })
+
+  test("v6 passed-pawn projection keeps an observed BestReference root distinct from its analyzed suffix"):
+    val raw = RawMoveReviewInput(
+      fen = "7k/5K2/6P1/8/8/8/8/8 w - - 0 1",
+      playedMoveUci = "g6g7",
+      variations = List(
+        EngineLine(List("g6g7", "h8h7", "g7g8q"), scoreCp = 600, depth = 20),
+        EngineLine(List("f7e7", "h8g8", "e7e8"), scoreCp = -600, depth = 20)
+      )
+    )
+    val admitted = MoveReviewInputAdmission
+      .admit(raw)
+      .getOrElse(fail("expected the observed-best passed-pawn review to admit"))
+    val rankingPair = AdmittedRootRankingPair
+      .fromAdmittedRanking(admitted.assessmentCandidates.sortBy(_.rank).flatMap(_.rootMove))
+      .getOrElse(fail("expected the observed-best passed-pawn ranking"))
+    val prepared = admitted.copy(admittedRootRankingPair = Some(rankingPair))
+    val packet = MoveReviewJudgmentOrchestrator
+      .executePreparedReview(
+        prepared,
+        Some(ExplanationRequest.forObservedMove(prepared))
+      )
+      .map(_.packet)
+      .getOrElse(fail("expected the observed best passed-pawn occurrence"))
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+      .as[List[JsObject]]
+      .find(item =>
+        (item \ "proof_kind").as[String] == "passed_pawn_progress_realized_after_only_legal_reply"
+      )
+      .getOrElse(fail("expected the passed-pawn occurrence result"))
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    val proof = (occurrenceResult \ "proof").as[JsObject]
+    val branch = (proof \ "branches").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one observed-root branch, found ${other.size}")
+
+    assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
+    assertEquals((branch \ "role").as[String], "observed_root_with_analyzed_continuation")
+    assertEquals((branch \ "line" \ "line_id").as[String], (subject \ "line_id").as[String])
+    assertEquals(
+      (branch \ "line_owner_evidence_id").as[String],
+      (subject \ "line_owner_evidence_id").as[String]
+    )
+    assertEquals(
+      (branch \ "root_transition_evidence_id").as[String],
+      (subject \ "transition_evidence_id").as[String]
+    )
+    assertEquals((branch \ "root_provenance").as[String], "observed_game_root")
+    assertEquals(
+      (branch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      List("observed_game_move", "certified_analysis_move", "certified_analysis_move")
+    )
+    assertEquals(
+      (proof \ "closed_legal_reply_inventory" \ "root_after" \ "scope").as[String],
+      "played_transition"
+    )
 
   test("hundreds of concurrent v6 creations preserve exact capacity and independent ledgers"):
     val registry = CommentaryJobRegistry(maximumRetainedJobs = 128, terminalJobRetentionMillis = 120000L)

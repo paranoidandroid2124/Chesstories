@@ -145,28 +145,3 @@ object TransitionFactNormalizer:
       payload = RelativeAssessmentEvidence(assessment),
       parents = parents
     )
-
-  def fromRelativeCause(
-      id: String,
-      cause: RelativeCauseFact,
-      binding: RelativeCauseBinding,
-      position: PositionNodeRef,
-      scope: EvidenceScope,
-      confidence: EvidenceConfidence,
-      parents: List[EvidenceRef] = Nil
-  ): EvidenceRecord =
-    val ref =
-      EvidenceRef(
-        id = id,
-        producer = EvidenceProducer.RelativeMoveProducer,
-        layer = EvidenceLayer.RelativeCause,
-        position = position,
-        line = Some(binding.eventLine),
-        scope = scope,
-        confidence = confidence
-      )
-    EvidenceRecord(
-      ref = ref,
-      payload = RelativeCauseFactEvidence(cause),
-      parents = parents
-    )

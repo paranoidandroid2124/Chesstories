@@ -112,6 +112,7 @@ object EvidenceFactAssembler:
         canonicalRelationDeltas(edge.evidence.id)
       )
       val lineEvidence = lineOwner.map(line => requiredLineFactRecord(context, line.ref).ref)
+      val relationScope = lineOwner.fold(edge.role.scope)(_ => EvidenceScope.LegalLine)
       val provisional = production.relations.map { relation =>
         val occurrenceOwner = lineOwner.map(_.ref.id).getOrElse(edge.evidence.id)
         RelationFactEvidence.record(
@@ -121,7 +122,7 @@ object EvidenceFactAssembler:
           payload = relation,
           position = edge.from,
           line = lineOwner.map(_.ref),
-          scope = edge.role.scope,
+          scope = relationScope,
           confidence = EvidenceConfidence.LegalReplayVerified
         )
       }
@@ -169,10 +170,17 @@ object EvidenceFactAssembler:
           canonicalRelations = canonicalRelationDeltas(edge.evidence.id)
         )
         consequenceKeys = consequences.flatMap(_.relationKeys).toSet
-        relationSources = delta.canonicalRelations.changes
+        relationSourceOccurrences = delta.canonicalRelations.changes
           .filter(change => consequenceKeys(change.key))
           .map(_.source)
-          .distinctBy(_.id)
+        relationSourcesById = relationSourceOccurrences.groupBy(_.id)
+        _ = require(
+          relationSourcesById.values.forall(_.distinct.size == 1),
+          "canonical relation changes cannot collide distinct evidence owners under one id"
+        )
+        // One exact carrier may certify several consumed change keys. Project
+        // that proven shared edge once; equal ids with unequal owners failed above.
+        relationSources = relationSourcesById.toList.sortBy(_._1).map(_._2.head)
         expectedResultKeys = consequences.flatMap(_.resultPremiseKeys).toSet
         resultOutputRecords = resultOutputsByTransitionId
           .getOrElse(edge.evidence.id, Nil)
@@ -185,6 +193,17 @@ object EvidenceFactAssembler:
         resultPremiseSources = resultOutputRecords.sortBy(_._1.stableKey).map { case (key, output) =>
           TransitionResultPremiseSource(key, output.ref)
         }
+        parentOccurrences =
+          List(edge.evidence) ++
+            line.toList.flatMap(lineParents(context, _)) ++
+            evidenceRefs(context, EvidenceLayer.PositionOccurrence, Some(edge.from), None) ++
+            evidenceRefs(context, EvidenceLayer.PositionOccurrence, Some(edge.to), None) ++
+            relationSources ++
+            resultPremiseSources.map(_.source)
+        _ = require(
+          parentOccurrences.map(_.id).distinct.size == parentOccurrences.size,
+          "a structural delta cannot silently merge duplicate or colliding parent edges"
+        )
         record = TransitionFactNormalizer.fromStructuralDelta(
           id = allocator.evidenceId(s"structural-delta:${edge.evidence.id}"),
           delta = delta,
@@ -192,14 +211,7 @@ object EvidenceFactAssembler:
           replay = transitionReplay,
           line = line.map(_.ref),
           resultPremiseSources = resultPremiseSources,
-          parents = (
-            List(edge.evidence) ++
-              line.toList.flatMap(lineParents(context, _)) ++
-              evidenceRefs(context, EvidenceLayer.PositionOccurrence, Some(edge.from), None) ++
-              evidenceRefs(context, EvidenceLayer.PositionOccurrence, Some(edge.to), None) ++
-              relationSources ++
-              resultPremiseSources.map(_.source)
-          ).distinctBy(_.id)
+          parents = parentOccurrences
         )
       yield record
     }
@@ -217,10 +229,9 @@ object EvidenceFactAssembler:
 
   private def lineParents(
       context: JudgmentAssemblyContext,
-      line: CandidateLineNode
+      line: LegalLineNode
   ): List[EvidenceRef] =
-    evidenceRefs(context, EvidenceLayer.Line, None, Some(line.ref)) ++
-      evidenceRefs(context, EvidenceLayer.Eval, None, Some(line.ref))
+    evidenceRefs(context, EvidenceLayer.Line, None, Some(line.ref))
 
   private def evidenceRefs(
       context: JudgmentAssemblyContext,
@@ -239,5 +250,5 @@ object EvidenceFactAssembler:
   private def lineForTransition(
       context: JudgmentAssemblyContext,
       edge: MoveTransitionEdge
-  ): Option[CandidateLineNode] =
+  ): Option[LegalLineNode] =
     context.lineForRootTransition(edge)

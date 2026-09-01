@@ -1,11 +1,11 @@
 package lila.chessjudgment.model.judgment
 
 private[chessjudgment] enum PassedPawnProgressBranchRole extends CausalBranchRole:
-  case PlayedRootAnalysisContinuation(replyMove: String, sourceOccurrenceId: String)
+  case ObservedRootWithAnalyzedContinuation(replyMove: String, sourceOccurrenceId: String)
 
   def stableKey: String = this match
-    case PlayedRootAnalysisContinuation(replyMove, sourceOccurrenceId) =>
-      s"played_root_analysis_continuation:${EvidenceRef.normalizeMove(replyMove)}:$sourceOccurrenceId"
+    case ObservedRootWithAnalyzedContinuation(replyMove, sourceOccurrenceId) =>
+      s"observed_root_with_analyzed_continuation:${EvidenceRef.normalizeMove(replyMove)}:$sourceOccurrenceId"
 
 private[chessjudgment] enum PassedPawnProgressPremiseRole extends CausalPremiseRole:
   case Dependency(index: Int)
@@ -51,6 +51,7 @@ private[chessjudgment] final case class PassedPawnProgressPathManifest(
     ).mkString("|")
 
 private[chessjudgment] final case class PassedPawnProgressDependencyManifest(
+    subjectOccurrence: ExplanationSubjectOccurrence,
     sourceRecord: EvidenceRecord,
     replyInventoryRecord: EvidenceRecord,
     resultRoutes: List[PassedPawnResultRoute],
@@ -63,6 +64,7 @@ private[chessjudgment] final case class PassedPawnProgressDependencyManifest(
 
   def stableKey: String =
     List(
+      subjectOccurrence.stableKey,
       BoundedCausalIdentity.evidenceRecordKey(sourceRecord),
       BoundedCausalIdentity.evidenceRecordKey(replyInventoryRecord),
       resultRoutes.map(_.stableKey).mkString("[", ",", "]"),
@@ -77,6 +79,7 @@ private[chessjudgment] final case class PassedPawnProgressDependencyManifest(
   * occurrence and all of its independent graph-owned dependency routes.
   */
 private[chessjudgment] final class PassedPawnProgressOccurrenceProof private[chessjudgment] (
+    val subject: CertifiedRootOccurrence,
     val event: PassedPawnResultEventEvidence,
     val resultRoutes: List[PassedPawnResultRoute],
     val semanticIdentity: PassedPawnProgressSemanticIdentity,
@@ -87,15 +90,18 @@ private[chessjudgment] final class PassedPawnProgressOccurrenceProof private[che
     private val sourceRecord: EvidenceRecord,
     private val replyInventoryRecord: EvidenceRecord
 ):
-  private val exactParentSources = List(sourceRecord.ref, replyInventoryRecord.ref)
+  private val exactParentSources =
+    List(sourceRecord.ref, replyInventoryRecord.ref) ++ subject.parentSources
   require(
     exactParentSources.map(_.id).distinct.size == exactParentSources.size,
-    "a passed-pawn proof needs distinct event and reply-inventory owners"
+    "a passed-pawn proof needs distinct event, reply-inventory, and subject owners"
   )
   require(
-    sourceRecord.payload == event && event.retainsLineOccurrenceOwners(sourceRecord) &&
+    subject.isObserved && subject.remainsCertified && event.subjectOccurrence == subject.publicOccurrence &&
+      sourceRecord.payload == event && event.retainsLineOccurrenceOwners(sourceRecord) &&
       resultRoutes.forall(event.exactOnlyReplyResultRoutes.contains) &&
       semanticIdentity == PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.exactSemanticIdentity(event, resultRoutes) &&
+      dependencyManifest.subjectOccurrence == subject.publicOccurrence &&
       dependencyManifest.sourceRecord == sourceRecord &&
       dependencyManifest.replyInventoryRecord == replyInventoryRecord &&
       dependencyManifest.resultRoutes == resultRoutes &&
@@ -111,38 +117,42 @@ private[chessjudgment] final class PassedPawnProgressOccurrenceProof private[che
   def parentSources: List[EvidenceRef] = exactParentSources.sortBy(_.id)
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(sourceRecord, replyInventoryRecord)
+    List(sourceRecord, replyInventoryRecord, subject.lineOwner, subject.transitionOwner)
 
   def consumesExactDependencies(
+      requestedSubject: CertifiedRootOccurrence,
       source: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): Boolean =
-    sourceRecord == source && replyInventoryRecord == inventory && resultRoutes == routes
+    subject == requestedSubject && sourceRecord == source && replyInventoryRecord == inventory && resultRoutes == routes
 
   def proves(record: EvidenceRecord, payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
       record.ref.layer == EvidenceLayer.CausalProof &&
       record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-      record.ref.position == event.rootTransition.from && record.ref.line.contains(event.rootLine) &&
-      record.ref.scope == event.rootTransition.role.scope && record.parents == parentSources &&
+      record.ref.position == subject.transition.from && record.ref.line.contains(subject.line) &&
+      record.ref.scope == subject.transition.role.scope && record.parents == parentSources &&
       sourceRecord.ref.producer == EvidenceProducer.PassedPawnResultEventProducer &&
       sourceRecord.ref.layer == EvidenceLayer.PassedPawnResultEvent &&
       sourceRecord.ref.position == event.rootTransition.from && sourceRecord.ref.line.contains(event.rootLine) &&
       sourceRecord.parents.contains(replyInventoryRecord.ref) &&
-      event.retainsLineOccurrenceOwners(sourceRecord) && event.rootTransitionIsCertified &&
+      event.subjectOccurrence == subject.publicOccurrence && event.retainsLineOccurrenceOwners(sourceRecord) &&
+      event.rootTransitionIsCertified &&
       event.onlyLegalReplyRealized && resultRoutes.forall(event.exactOnlyReplyResultRoutes.contains) &&
       payload.eventSource == sourceRecord.ref && payload.event == event &&
+      payload.subjectOccurrence == subject.publicOccurrence &&
       payload.resultRoutes == resultRoutes && payload.semanticIdentity == semanticIdentity &&
       payload.proofSet == proofSet && payload.closedReplyInventory == replyInventory &&
       payload.dependencyFingerprint == dependency.value && payload.lowerPremiseIds == lowerPremiseIds &&
-      payload.occurrenceProof.contains(this) && payload.hasCompleteProofPaths
+      payload.occurrenceProof == this && payload.hasCompleteProofPaths
 
   private val lowerPremiseIds: List[String] =
-    (List(sourceRecord.ref.id, replyInventoryRecord.ref.id) ++ sourceRecord.parents.map(_.id)).distinct.sorted
+    (exactParentSources.map(_.id) ++ sourceRecord.parents.map(_.id)).distinct.sorted
 
 private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProofDerivation:
   def derive(
+      subject: CertifiedRootOccurrence,
       sourceRecord: EvidenceRecord,
       replyInventoryRecord: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
@@ -151,6 +161,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
       event <- sourceRecord.payload match
         case exact: PassedPawnResultEventEvidence => Some(exact)
         case _                                    => None
+      if subject.isObserved && subject.remainsCertified && event.subjectOccurrence == subject.publicOccurrence
       canonicalRoutes = routes.sortBy(_.stableKey)
       if canonicalRoutes == routes && canonicalRoutes.nonEmpty && canonicalRoutes.forall(event.exactOnlyReplyResultRoutes.contains)
       semanticIdentity = PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.exactSemanticIdentity(event, canonicalRoutes)
@@ -175,6 +186,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
       paths = manifests.map(CausalProofPathOccurrence.from(proposition, _))
       proofSet = BoundedCausalProofSet.from(proposition, occurrence, paths)
       dependencyManifest = PassedPawnProgressDependencyManifest(
+        subject.publicOccurrence,
         sourceRecord,
         replyInventoryRecord,
         canonicalRoutes,
@@ -184,6 +196,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
       )
       dependency = BoundedCausalDependencyFingerprint.from(dependencyManifest)
       authority = new PassedPawnProgressOccurrenceProof(
+        subject,
         event,
         canonicalRoutes,
         semanticIdentity,
@@ -202,8 +215,9 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
         proofSet,
         replyInventory,
         dependency.value,
-        (List(sourceRecord.ref.id, replyInventoryRecord.ref.id) ++ sourceRecord.parents.map(_.id)).distinct.sorted,
-        Some(authority)
+        ((List(sourceRecord.ref, replyInventoryRecord.ref) ++ subject.parentSources).map(_.id) ++
+          sourceRecord.parents.map(_.id)).distinct.sorted,
+        authority
       )
       if result.hasCompleteProofPaths
     yield result

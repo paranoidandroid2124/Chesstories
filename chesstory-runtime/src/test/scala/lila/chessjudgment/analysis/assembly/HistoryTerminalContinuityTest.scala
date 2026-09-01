@@ -28,7 +28,9 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       .getOrElse(fail("expected the automatic-terminal line to normalize"))
 
     assertEquals(
-      prepared.playedRootLineOwner.map(_.evaluation),
+      prepared.assessmentCandidates
+        .find(candidate => candidate.rootMove.exists(_ == prepared.playedMoveUci))
+        .map(_.evaluation),
       Some(
         CandidateLineEvaluation.ExactAutomaticTerminal(
           List("a4b3"),
@@ -81,7 +83,7 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       .extend(List("f2e3"))
       .toOption
       .getOrElse(fail("expected the candidate recapture"))
-    val recaptureSummary = CandidateLineAssembler
+    val recaptureSummary = LegalLineAssembler
       .lineMaterialSummary(capturedPredecessor, recaptureLine)
       .getOrElse(fail("expected material knowledge from the stored predecessor"))
 
@@ -98,7 +100,7 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       .getOrElse(fail("expected the legal first capture"))
 
     assertEquals(unknownPrehistory.preInitialHistoryKnowledge, PreInitialHistoryKnowledge.Unknown)
-    assertEquals(CandidateLineAssembler.lineMaterialSummary(unknownPrehistory, unknownFirstCapture), None)
+    assertEquals(LegalLineAssembler.lineMaterialSummary(unknownPrehistory, unknownFirstCapture), None)
 
     val standardCurrent = "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2"
     val knownPredecessor = CanonicalPositionHistory
@@ -109,7 +111,7 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       .extend(List("d8d5"))
       .toOption
       .getOrElse(fail("expected the standard-root immediate recapture"))
-    val immediateSummary = CandidateLineAssembler
+    val immediateSummary = LegalLineAssembler
       .lineMaterialSummary(knownPredecessor, immediateRecapture)
       .getOrElse(fail("expected the known predecessor material summary"))
 

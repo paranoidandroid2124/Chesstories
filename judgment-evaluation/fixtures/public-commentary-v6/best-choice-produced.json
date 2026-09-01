@@ -32,7 +32,7 @@
         "commentary": {
           "primary": {
             "kind": "best_choice",
-            "comparison_evidence_id": "move-review:0:e2e4:evidence:candidate-comparison:MTA1OkJlc3RWc1NlY29uZHxXaGl0ZXxCZXN0UmVmZXJlbmNlOjE6ZTJlNHxBbHRlcm5hdGl2ZToyOmQyZDR8LTB4MS5kNjRiYzkxYjQ0OThwLTF8UGxheWFibGVMb3NzfEVuZ2luZUJhY2tlZA",
+            "comparison_evidence_id": "move-review:74092311100646a61eafc85a7d9cfa459d5eff5cd569c68beab955129b3f64c1:0:e2e4:evidence:candidate-comparison:MTA1OkJlc3RWc1NlY29uZHxXaGl0ZXxCZXN0UmVmZXJlbmNlOjE6ZTJlNHxBbHRlcm5hdGl2ZToyOmQyZDR8LTB4MS5kNjRiYzkxYjQ0OThwLTF8UGxheWFibGVMb3NzfEVuZ2luZUJhY2tlZA",
             "runner_up_verdict_code": "playable_loss",
             "verdict_confidence": "engine_backed",
             "mover": "white",
