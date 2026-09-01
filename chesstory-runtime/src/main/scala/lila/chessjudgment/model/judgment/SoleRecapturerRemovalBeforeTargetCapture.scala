@@ -567,7 +567,7 @@ private[chessjudgment] object CertifiedSoleRecapturerRemovalBeforeTargetCapture:
   * Defense proof construction consumes these occurrences directly; it does not
   * scan the canonical replay a second time to rediscover them.
   */
-private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureChangedSeed private[chessjudgment] (
+private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureDemand private[chessjudgment] (
     removalOccurrence: ReplayVerticalRelationOccurrence,
     removalRecapture: RelationLegalMoveResourceWitness,
     referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
@@ -578,7 +578,7 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
     List(removalOccurrence, referenceExploitOccurrence, playedExploitOccurrence).forall(
       _.contract == VerticalRelationContractKind.CaptureRecaptureInventory
     ),
-    "a sole-recapturer-removal-before-target-capture seed must retain exact capture L1 occurrences"
+    "a sole-recapturer-removal-before-target-capture demand must retain exact capture L1 occurrences"
   )
 
   private[chessjudgment] def stableKey: String =
@@ -612,14 +612,14 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       persistenceStates: List[PersistenceState]
   )
 
-  def deriveImmediate(
+  def certifyDemanded(
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      changedSeed: SoleRecapturerRemovalBeforeTargetCaptureChangedSeed
+      demand: SoleRecapturerRemovalBeforeTargetCaptureDemand
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
     val inputs = for
       _ <- Option.when(
@@ -645,20 +645,20 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(removalStep.fenBefore)
       playedRoot <- PrincipalVariationEvidence.semanticBoardStateFen(playedExploitStep.fenBefore)
       if rootBoard == playedRoot
-      rootCaptureOccurrence = changedSeed.removalOccurrence
+      rootCaptureOccurrence = demand.removalOccurrence
       if rootCaptureOccurrence.step == removalStep
       rootCapture <- captureDetail(rootCaptureOccurrence)
-      removalRecapture = changedSeed.removalRecapture
+      removalRecapture = demand.removalRecapture
       if EvidenceRef.sameMove(removalRecapture.moveUci, removalRecaptureStep.moveUci)
       if rootCapture.legalRecaptures == List(removalRecapture)
       if rootCapture.captured.square == rootCapture.mover.to
-      referenceExploitOccurrence = changedSeed.referenceExploitOccurrence
+      referenceExploitOccurrence = demand.referenceExploitOccurrence
       if referenceExploitOccurrence.step == referenceExploitStep
       referenceExploit <- captureDetail(referenceExploitOccurrence)
-      playedExploitOccurrence = changedSeed.playedExploitOccurrence
+      playedExploitOccurrence = demand.playedExploitOccurrence
       if playedExploitOccurrence.step == playedExploitStep
       playedExploit <- captureDetail(playedExploitOccurrence)
-      playedRecapture = changedSeed.playedRecapture
+      playedRecapture = demand.playedRecapture
       if EvidenceRef.sameMove(playedRecapture.moveUci, playedRecaptureStep.moveUci)
       if playedExploit.legalRecaptures == List(playedRecapture)
       if sameExploit(referenceExploit, playedExploit)

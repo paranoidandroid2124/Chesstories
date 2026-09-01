@@ -451,7 +451,7 @@ private[chessjudgment] object CertifiedCaptureExclusionMoveOrder:
     require(exact.remainsCertified, "capture-exclusion move order must retain every lower authority")
     exact
 
-private[chessjudgment] final case class CaptureExclusionMoveOrderChangedSeed private[chessjudgment] (
+private[chessjudgment] final case class CaptureExclusionMoveOrderDemand private[chessjudgment] (
     referenceVacating: ReplayLegalMoveOccurrence,
     playedDeferred: ReplayLegalMoveOccurrence,
     playedReply: ReplayLegalMoveOccurrence,
@@ -459,7 +459,7 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderChangedSeed pri
     referenceDeferredStepIndex: Int
 ):
   require(referenceDeferredStepIndex >= 2 && referenceDeferredStepIndex % 2 == 0)
-  require(CaptureExclusionMoveOrderChangedSeed.sameMove(playedDeferred, referenceDeferred))
+  require(CaptureExclusionMoveOrderDemand.sameMove(playedDeferred, referenceDeferred))
 
   def stableKey: String =
     List(
@@ -470,7 +470,7 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderChangedSeed pri
       referenceDeferredStepIndex.toString
     ).mkString("|")
 
-private[chessjudgment] object CaptureExclusionMoveOrderChangedSeed:
+private[chessjudgment] object CaptureExclusionMoveOrderDemand:
   def sameMove(left: ReplayLegalMoveOccurrence, right: ReplayLegalMoveOccurrence): Boolean =
     left.movement.witness == right.movement.witness &&
       EvidenceRef.sameMove(left.movement.moveUci, right.movement.moveUci) &&
@@ -484,16 +484,16 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       authority: ClosedPositionStateAuthority
   )
 
-  def deriveChangedDependencies(
+  def certifyDemanded(
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      seeds: List[CaptureExclusionMoveOrderChangedSeed]
+      demands: List[CaptureExclusionMoveOrderDemand]
   ): List[CertifiedCaptureExclusionMoveOrder] =
-    seeds.flatMap(seed =>
+    demands.flatMap(demand =>
       derive(
         referenceLine,
         playedLine,
@@ -501,7 +501,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
         playedLineRecord,
         referenceReplay,
         playedReplay,
-        seed
+        demand
       )
     )
 
@@ -512,7 +512,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       playedLineRecord: EvidenceRecord,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      seed: CaptureExclusionMoveOrderChangedSeed
+      demand: CaptureExclusionMoveOrderDemand
   ): Option[CertifiedCaptureExclusionMoveOrder] =
     for
       _ <- Option.when(
@@ -523,22 +523,22 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       referenceRoot <- referenceReplay.replaySteps.headOption
       playedRoot <- playedReplay.replaySteps.headOption
       playedReplyStep <- playedReplay.replaySteps.lift(1)
-      referenceDeferredStep <- referenceReplay.replaySteps.lift(seed.referenceDeferredStepIndex)
-      if seed.referenceDeferredStepIndex >= 2 && seed.referenceDeferredStepIndex % 2 == 0
-      if seed.referenceVacating.step == referenceRoot && seed.playedDeferred.step == playedRoot &&
-        seed.playedReply.step == playedReplyStep && seed.referenceDeferred.step == referenceDeferredStep
+      referenceDeferredStep <- referenceReplay.replaySteps.lift(demand.referenceDeferredStepIndex)
+      if demand.referenceDeferredStepIndex >= 2 && demand.referenceDeferredStepIndex % 2 == 0
+      if demand.referenceVacating.step == referenceRoot && demand.playedDeferred.step == playedRoot &&
+        demand.playedReply.step == playedReplyStep && demand.referenceDeferred.step == referenceDeferredStep
       rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(referenceRoot.fenBefore)
       playedBoard <- PrincipalVariationEvidence.semanticBoardStateFen(playedRoot.fenBefore)
       if rootBoard == playedBoard
       referenceVacating <- RecordBoundLegalMoveOccurrence.certified(
         referenceLineRecord,
-        seed.referenceVacating
+        demand.referenceVacating
       )
-      playedDeferred <- RecordBoundLegalMoveOccurrence.certified(playedLineRecord, seed.playedDeferred)
-      playedReply <- RecordBoundLegalMoveOccurrence.certified(playedLineRecord, seed.playedReply)
+      playedDeferred <- RecordBoundLegalMoveOccurrence.certified(playedLineRecord, demand.playedDeferred)
+      playedReply <- RecordBoundLegalMoveOccurrence.certified(playedLineRecord, demand.playedReply)
       referenceDeferred <- RecordBoundLegalMoveOccurrence.certified(
         referenceLineRecord,
-        seed.referenceDeferred
+        demand.referenceDeferred
       )
       if sameMove(playedDeferred, referenceDeferred)
       replyCapture <- playedReply.capture
@@ -557,7 +557,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
         ComparedLineBranchRole.CounterfactualReference,
         referenceLine,
         referenceReplay,
-        seed.referenceDeferredStepIndex + 1
+        demand.referenceDeferredStepIndex + 1
       )
       playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
         ComparedLineBranchRole.PlayedRootAnalysisContinuation,
@@ -569,7 +569,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
         referenceLineRecord,
         referenceReplay,
         playedReply,
-        seed.referenceDeferredStepIndex
+        demand.referenceDeferredStepIndex
       )
       stateAuthorities <- retainedStates(
         referenceLineRecord,
@@ -578,7 +578,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
         playedDeferred,
         playedReply,
         capturedTarget,
-        seed.referenceDeferredStepIndex
+        demand.referenceDeferredStepIndex
       )
     yield certify(
       rootBoard,
@@ -595,7 +595,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       playedLineRecord,
       referenceReplay,
       playedReplay,
-      seed.referenceDeferredStepIndex
+      demand.referenceDeferredStepIndex
     )
 
   private def certify(

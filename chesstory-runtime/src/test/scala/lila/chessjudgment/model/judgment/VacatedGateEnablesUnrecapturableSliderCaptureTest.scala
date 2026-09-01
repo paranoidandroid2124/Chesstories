@@ -368,7 +368,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       lineRef(s"played-source-$path", playedLine, fen),
       LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
     )
-    val changedSeeds = for
+    val demands = for
       enablingStep <- referenceReplay.replaySteps.headOption.toList
       rootReachOccurrence <- referenceReplay.verticalRelationOccurrences(
         enablingStep,
@@ -381,15 +381,15 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       ) match
         case exact :: Nil => List(exact)
         case _            => Nil)
-    yield VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed(rootReachOccurrence, exploitOccurrence, 2)
-    VacatedGateEnablesUnrecapturableSliderCaptureProof.deriveChangedDependencies(
+    yield VacatedGateEnablesUnrecapturableSliderCaptureDemand(rootReachOccurrence, exploitOccurrence, 2)
+    VacatedGateEnablesUnrecapturableSliderCaptureProof.certifyDemanded(
       referenceLine,
       playedLine,
       referenceRecord,
       playedRecord,
       referenceReplay,
       playedReplay,
-      changedSeeds.sortBy(_.stableKey)
+      demands.sortBy(_.stableKey)
     )
 
   private def lineRef(id: String, line: LineNodeRef, fen: String): EvidenceRef =

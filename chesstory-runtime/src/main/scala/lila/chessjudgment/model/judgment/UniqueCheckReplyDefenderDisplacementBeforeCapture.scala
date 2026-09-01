@@ -437,7 +437,7 @@ private[chessjudgment] final case class CertifiedUniqueCheckReplyDefenderDisplac
   * The family proof may close higher causal obligations around these owners,
   * but it must not rediscover their transitions from a boolean demand.
   */
-private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed private[chessjudgment] (
+private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand private[chessjudgment] (
     checkOccurrence: ReplayVerticalRelationOccurrence,
     forcedReply: RelationCheckResponseWitness,
     referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
@@ -448,7 +448,7 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
     checkOccurrence.contract == VerticalRelationContractKind.CreatedCheckResponseInventory &&
       referenceExploitOccurrence.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
       playedExploitOccurrence.contract == VerticalRelationContractKind.CaptureRecaptureInventory,
-    "a unique-check-reply defender-displacement seed must retain its exact check and capture L1 occurrences"
+    "a unique-check-reply defender-displacement demand must retain its exact check and capture L1 occurrences"
   )
 
   private[chessjudgment] def stableKey: String =
@@ -483,14 +483,14 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       persistenceStates: List[PersistenceState]
   )
 
-  def deriveImmediate(
+  def certifyDemanded(
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      changedSeed: UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed
+      demand: UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand
   ): List[CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture] =
     val playedMove = playedReplay.replaySteps.headOption.map(_.moveUci)
     referenceReplay.replaySteps
@@ -505,7 +505,7 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
           referenceReplay,
           playedReplay,
           referenceRealizerIndex = 2,
-          changedSeed = changedSeed
+          demand = demand
         )
       )
       .getOrElse(Nil)
@@ -518,7 +518,7 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       referenceRealizerIndex: Int,
-      changedSeed: UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed
+      demand: UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand
   ): List[CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture] =
     val inputs = for
       _ <- Option.when(
@@ -545,27 +545,27 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(triggerStep.fenBefore)
       playedRoot <- PrincipalVariationEvidence.semanticBoardStateFen(playedRealizerStep.fenBefore)
       if rootBoard == playedRoot
-      checkOccurrence = changedSeed.checkOccurrence
+      checkOccurrence = demand.checkOccurrence
       if checkOccurrence.step == triggerStep
       check <- checkOccurrence.relation.detail match
         case value: RelationWitnessDetail.CreatedCheckResponseInventory => Some(value)
         case _                                                          => None
       response <- check.responses match
-        case exact :: Nil if exact == changedSeed.forcedReply => Some(exact)
+        case exact :: Nil if exact == demand.forcedReply => Some(exact)
         case _                                           => None
       if EvidenceRef.sameMove(response.resource.moveUci, forcedReplyStep.moveUci)
       if check.terminal == RelationCheckTerminalState.Ongoing
-      referenceCaptureOccurrence = changedSeed.referenceExploitOccurrence
+      referenceCaptureOccurrence = demand.referenceExploitOccurrence
       if referenceCaptureOccurrence.step == realizerStep
       referenceCapture <- referenceCaptureOccurrence.relation.detail match
         case value: RelationWitnessDetail.CaptureRecaptureInventory => Some(value)
         case _                                                       => None
-      playedCaptureOccurrence = changedSeed.playedExploitOccurrence
+      playedCaptureOccurrence = demand.playedExploitOccurrence
       if playedCaptureOccurrence.step == playedRealizerStep
       playedCapture <- playedCaptureOccurrence.relation.detail match
         case value: RelationWitnessDetail.CaptureRecaptureInventory => Some(value)
         case _                                                       => None
-      defense = changedSeed.playedRecapture
+      defense = demand.playedRecapture
       if EvidenceRef.sameMove(defense.moveUci, playedReplyStep.moveUci)
       if sameRealizerAndTarget(referenceCapture, playedCapture)
       persistenceStates <- referencePersistenceStates(

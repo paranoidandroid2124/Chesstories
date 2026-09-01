@@ -350,7 +350,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       lineRef(s"played-source-$path", playedLine, rootFen),
       LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
     )
-    val changedSeed = for
+    val demand = for
       removalStep <- referenceReplay.replaySteps.headOption
       removalReplyStep <- referenceReplay.replaySteps.lift(1)
       (removalOccurrence, removalRecapture) <-
@@ -366,22 +366,22 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       playedReplyStep <- playedReplay.replaySteps.lift(1)
       (playedExploitOccurrence, playedRecapture) <-
         playedReplay.exactRecaptureOccurrenceMembership(playedExploitStep, playedReplyStep)
-    yield SoleRecapturerRemovalBeforeTargetCaptureChangedSeed(
+    yield SoleRecapturerRemovalBeforeTargetCaptureDemand(
       removalOccurrence,
       removalRecapture,
       referenceExploitOccurrence,
       playedExploitOccurrence,
       playedRecapture
     )
-    changedSeed.toList.flatMap(seed =>
-      SoleRecapturerRemovalBeforeTargetCaptureProof.deriveImmediate(
+    demand.toList.flatMap(exactDemand =>
+      SoleRecapturerRemovalBeforeTargetCaptureProof.certifyDemanded(
         referenceLine,
         playedLine,
         referenceRecord,
         playedRecord,
         referenceReplay,
         playedReplay,
-        seed
+        exactDemand
       )
     )
 

@@ -80,14 +80,12 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertIs(self.manifest["cache_dependency"], False)
 
         contract_kinds = [contract["contract_kind"] for contract in self.contracts]
-        producer_symbols = [contract["producer"]["symbol"] for contract in self.contracts]
         proof_types = [contract["proof_type"]["symbol"] for contract in self.contracts]
         public_fields = [contract["public_consumer"]["field"] for contract in self.contracts]
         browser_symbols = [contract["browser_consumer"]["projection_symbol"] for contract in self.contracts]
         browser_discriminants = [contract["browser_consumer"]["discriminant"] for contract in self.contracts]
         for values in (
             contract_kinds,
-            producer_symbols,
             proof_types,
             public_fields,
             browser_symbols,
@@ -149,11 +147,11 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 (path.relative_to(REPO).as_posix(), symbol)
                 for symbol in symbols
             )
-        declared_producers = [
+        declared_producers = {
             (contract["producer"]["file"], contract["producer"]["symbol"])
             for contract in self.contracts
-        ]
-        self.assertCountEqual(declared_producers, discovered_producers)
+        }
+        self.assertEqual(declared_producers, set(discovered_producers))
 
     def test_references_are_registered_and_do_not_claim_more_than_the_sources(self) -> None:
         required_unsupported = {
@@ -237,6 +235,52 @@ class L2ProofProvenanceTest(unittest.TestCase):
             proof_type = contract["proof_type"]
             proof_text = _repo_path(proof_type["file"]).read_text(encoding="utf-8")
             self.assertEqual(len(re.findall(rf"\bclass {re.escape(proof_type['symbol'])}\b", proof_text)), 1)
+            self.assertIn(
+                proof_type["symbol"],
+                producer_text,
+                f"{producer['symbol']} must construct or match the typed proof payload",
+            )
+            contracts_with_producer = [
+                candidate
+                for candidate in self.contracts
+                if candidate["producer"] == producer
+            ]
+            if len(contracts_with_producer) > 1:
+                declared_proof_types = {
+                    candidate["proof_type"]["symbol"]
+                    for candidate in contracts_with_producer
+                }
+                dispatch_start = producer_text.index("def fromDemand(")
+                dispatch_end = producer_text.index("\n  private def ", dispatch_start)
+                called_handlers = set(
+                    re.findall(
+                        r"\b([a-z]\w*)\(context, allocator, demand\)",
+                        producer_text[dispatch_start:dispatch_end],
+                    )
+                )
+                handled_proof_types = []
+                for handler in called_handlers:
+                    handler_start = producer_text.index(f"\n  private def {handler}(")
+                    handler_end = producer_text.find("\n  private def ", handler_start + 1)
+                    handler_text = producer_text[
+                        handler_start : handler_end if handler_end >= 0 else len(producer_text)
+                    ]
+                    constructed = [
+                        symbol
+                        for symbol in declared_proof_types
+                        if re.search(rf"\b{re.escape(symbol)}\s*\(", handler_text)
+                    ]
+                    self.assertEqual(
+                        len(constructed),
+                        1,
+                        f"{handler} must construct exactly one declared typed proof payload",
+                    )
+                    handled_proof_types.extend(constructed)
+                self.assertCountEqual(
+                    handled_proof_types,
+                    declared_proof_types,
+                    f"{producer['symbol']} dispatch and manifest contracts must be bijective",
+                )
 
             cause = contract["cause"]
             self.assertEqual(

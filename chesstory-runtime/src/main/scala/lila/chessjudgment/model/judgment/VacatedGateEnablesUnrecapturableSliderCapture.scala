@@ -532,10 +532,10 @@ private[chessjudgment] object CertifiedVacatedGateEnablesUnrecapturableSliderCap
     certificate
 
 /** One independent changed-dependency route selected by the shared demand
-  * dispatcher. Multiple root reach occurrences remain separate seeds and are
+  * dispatcher. Multiple root reach occurrences remain separate demands and are
   * each allowed to prove (or fail to prove) their own physical path.
   */
-private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed private[chessjudgment] (
+private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCaptureDemand private[chessjudgment] (
     rootReachOccurrence: ReplayVerticalRelationOccurrence,
     referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
     referenceExploitIndex: Int
@@ -544,7 +544,7 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
       rootReachOccurrence.contract == VerticalRelationContractKind.SliderReachDelta &&
       referenceExploitOccurrence.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
       referenceExploitIndex >= 2,
-    "a vacated-gate-enables-unrecapturable-slider-capture seed needs one exact root reach and later capture occurrence"
+    "a vacated-gate-enables-unrecapturable-slider-capture demand needs one exact root reach and later capture occurrence"
   )
 
   private[chessjudgment] def stableKey: String =
@@ -578,20 +578,20 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
     * every semantic, state, absence, and sibling obligation is still closed
     * below without rediscovering those selected occurrences.
     */
-  private[chessjudgment] def deriveChangedDependencies(
+  private[chessjudgment] def certifyDemanded(
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      changedSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed]
+      demands: List[VacatedGateEnablesUnrecapturableSliderCaptureDemand]
   ): List[CertifiedVacatedGateEnablesUnrecapturableSliderCapture] =
-    val seedKeys = changedSeeds.map(_.stableKey)
+    val demandKeys = demands.map(_.stableKey)
     require(
-      seedKeys == seedKeys.distinct.sorted &&
-        changedSeeds.forall(seed => referenceReplay.replaySteps.indices.contains(seed.referenceExploitIndex)),
-      "vacated-gate-enables-unrecapturable-slider-capture demand needs unique, canonical exact occurrence seeds"
+      demandKeys == demandKeys.distinct.sorted &&
+        demands.forall(demand => referenceReplay.replaySteps.indices.contains(demand.referenceExploitIndex)),
+      "vacated-gate-enables-unrecapturable-slider-capture needs unique canonical exact occurrence demands"
     )
     val admitted =
       CertifiedComparedLineAuthority.exactRecord(
@@ -616,10 +616,10 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           PrincipalVariationEvidence.semanticBoardStateFen(step.fenBefore).toList
         )
         if rootBoard == playedRoot
-        changedSeed <- changedSeeds
-        exploitIndex = changedSeed.referenceExploitIndex
+        demand <- demands
+        exploitIndex = demand.referenceExploitIndex
         exploitStep = referenceSteps(exploitIndex)
-        exploitOccurrence = changedSeed.referenceExploitOccurrence
+        exploitOccurrence = demand.referenceExploitOccurrence
         if exploitOccurrence.step == exploitStep
         exploitCapture <- captureDetail(exploitOccurrence).toList
         if exploitCapture.legalRecaptures.isEmpty
@@ -632,9 +632,9 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           referenceIntervening,
           referenceReplay,
           _ => Some(referenceLineRecord),
-          changedSeed.rootReachOccurrence
+          demand.rootReachOccurrence
         ).toList
-        rootReachOccurrence = changedSeed.rootReachOccurrence
+        rootReachOccurrence = demand.rootReachOccurrence
         rootReach <- sliderReachDetail(rootReachOccurrence).toList
         slider = RelationColoredPieceWitness(
           trajectory.enabledFrom,

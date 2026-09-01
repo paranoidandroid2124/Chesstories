@@ -3,7 +3,7 @@ package lila.chessjudgment.analysis.assembly
 import lila.chessjudgment.model.judgment.*
 
 /** One graph-owned PlayedVsBest demand and its two admitted line occurrences.
-  * Family producers share this lookup; none may independently rediscover the
+  * Family certifiers share this lookup; none may independently rediscover the
   * comparison, line owners, or canonical replays.
   */
 private[assembly] final case class ExactPlayedVsBestCausalInput private (
@@ -72,19 +72,19 @@ private[assembly] object ExactPlayedVsBestCausalInput:
       case exact: LineFactEvidence => exact.certifiedReplay
       case _                       => None
 
-/** Exact lower-contract predispatch. Cheap changed keys decide which closed L1
-  * occurrences are materialized; those occurrences and their exact membership
-  * witnesses are then retained as family seeds. The family authority still
-  * closes identity, absence, sibling, and later-consumption obligations, but it
-  * never rediscovers a selected transition from a boolean or integer address.
+/** Exact lower-contract predispatch. Changed L1 activations cheaply gate the
+  * families that require them. Route and move-order demands instead enumerate
+  * the complete admitted replays without a score, horizon, top-N, or radius
+  * cutoff. Every demand retains its exact occurrence witnesses; family
+  * authority still closes identity, absence, sibling, and later consumption.
   */
 private[assembly] final case class RelationCausalProofDemand private (
     input: ExactPlayedVsBestCausalInput,
-    uniqueCheckReplyDefenderDisplacementBeforeCaptureSeed: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed],
-    soleRecapturerRemovalBeforeTargetCaptureSeed: Option[SoleRecapturerRemovalBeforeTargetCaptureChangedSeed],
-    vacatedGateEnablesUnrecapturableSliderCaptureSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed],
-    squareReleaseRouteSeeds: List[SquareReleaseRouteChangedSeed],
-    captureExclusionMoveOrderSeeds: List[CaptureExclusionMoveOrderChangedSeed]
+    uniqueCheckReplyDefenderDisplacementBeforeCaptureDemand: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand],
+    soleRecapturerRemovalBeforeTargetCaptureDemand: Option[SoleRecapturerRemovalBeforeTargetCaptureDemand],
+    vacatedGateEnablesUnrecapturableSliderCaptureDemands: List[VacatedGateEnablesUnrecapturableSliderCaptureDemand],
+    squareReleaseRouteDemands: List[SquareReleaseRouteDemand],
+    captureExclusionMoveOrderDemands: List[CaptureExclusionMoveOrderDemand]
 )
 
 private[assembly] object RelationCausalProofDemand:
@@ -175,11 +175,11 @@ private[assembly] object RelationCausalProofDemand:
         )
         .flatten
 
-    val forcedSeed = for
+    val forcedDemand = for
       (checkOccurrence, forcedReply) <- referenceCheckMembership
       referenceExploitOccurrence <- referenceCaptureOccurrences.get(2).flatten
       (playedExploitOccurrence, playedRecapture) <- playedRecaptureMembership
-    yield UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed(
+    yield UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand(
       checkOccurrence,
       forcedReply,
       referenceExploitOccurrence,
@@ -187,11 +187,11 @@ private[assembly] object RelationCausalProofDemand:
       playedRecapture
     )
 
-    val defenseSeed = for
+    val defenseDemand = for
       (removalOccurrence, removalRecapture) <- referenceRemovalMembership
       referenceExploitOccurrence <- referenceCaptureOccurrences.get(2).flatten
       (playedExploitOccurrence, playedRecapture) <- playedRecaptureMembership
-    yield SoleRecapturerRemovalBeforeTargetCaptureChangedSeed(
+    yield SoleRecapturerRemovalBeforeTargetCaptureDemand(
       removalOccurrence,
       removalRecapture,
       referenceExploitOccurrence,
@@ -210,22 +210,22 @@ private[assembly] object RelationCausalProofDemand:
           )
         )
         .getOrElse(Nil)
-    val directSeeds = for
+    val directDemands = for
       exploitIndex <- directExploitIndices
       exploitOccurrence <- referenceCaptureOccurrences.get(exploitIndex).flatten.toList
       rootReachOccurrence <- rootReachOccurrences
-    yield VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed(
+    yield VacatedGateEnablesUnrecapturableSliderCaptureDemand(
       rootReachOccurrence,
       exploitOccurrence,
       exploitIndex
     )
-    val directSeedKeys = directSeeds.map(_.stableKey)
+    val directDemandKeys = directDemands.map(_.stableKey)
     require(
-      directSeedKeys.distinct.size == directSeedKeys.size,
-      "one direct line-access changed occurrence route may be dispatched only once"
+      directDemandKeys.distinct.size == directDemandKeys.size,
+      "one direct line-access occurrence demand may be dispatched only once"
     )
 
-    val occupationSeeds = referenceSteps.headOption.toList.flatMap(rootStep =>
+    val occupationDemands = referenceSteps.headOption.toList.flatMap(rootStep =>
       reference.legalMoveOccurrence(rootStep).toList.flatMap(rootOccurrence =>
         referenceSteps.indices.drop(2).filter(_ <= playedSteps.size).toList.flatMap(index =>
           referenceSteps.lift(index).toList.flatMap(step =>
@@ -234,22 +234,22 @@ private[assembly] object RelationCausalProofDemand:
                   if firstRouteLeg.movement.capture.isEmpty &&
                     firstRouteLeg.movement.side == rootOccurrence.movement.side &&
                     firstRouteLeg.movement.to == rootOccurrence.movement.from =>
-                SquareReleaseRouteChangedSeed.occupation(rootOccurrence, firstRouteLeg, index)
+                SquareReleaseRouteDemand.occupation(rootOccurrence, firstRouteLeg, index)
             }
           )
         )
       )
     )
-    val terminalRouteSeeds = occupationSeeds.flatMap(seed =>
-      firstTerminalRouteSeeds(input, seed)
+    val terminalRouteDemands = occupationDemands.flatMap(demand =>
+      firstTerminalRouteDemands(input, demand)
     )
-    val squareReleaseRouteSeeds = (occupationSeeds ++ terminalRouteSeeds).sortBy(_.stableKey)
+    val squareReleaseRouteDemands = (occupationDemands ++ terminalRouteDemands).sortBy(_.stableKey)
     require(
-      squareReleaseRouteSeeds.map(_.stableKey).distinct.size == squareReleaseRouteSeeds.size,
+      squareReleaseRouteDemands.map(_.stableKey).distinct.size == squareReleaseRouteDemands.size,
       "one exact square-release route occurrence may be dispatched only once"
     )
 
-    val captureExclusionMoveOrderSeeds =
+    val captureExclusionMoveOrderDemands =
       (for
         referenceRootStep <- referenceSteps.headOption.toList
         playedRootStep <- playedSteps.headOption.toList
@@ -267,8 +267,8 @@ private[assembly] object RelationCausalProofDemand:
         deferredIndex <- referenceSteps.indices.drop(2).filter(_ % 2 == 0).toList
         deferredStep <- referenceSteps.lift(deferredIndex).toList
         referenceDeferred <- reference.legalMoveOccurrence(deferredStep).toList
-        if CaptureExclusionMoveOrderChangedSeed.sameMove(playedRoot, referenceDeferred)
-      yield CaptureExclusionMoveOrderChangedSeed(
+        if CaptureExclusionMoveOrderDemand.sameMove(playedRoot, referenceDeferred)
+      yield CaptureExclusionMoveOrderDemand(
         referenceRoot,
         playedRoot,
         playedReply,
@@ -276,34 +276,34 @@ private[assembly] object RelationCausalProofDemand:
         deferredIndex
       )).sortBy(_.stableKey)
     require(
-      captureExclusionMoveOrderSeeds.map(_.stableKey).distinct.size == captureExclusionMoveOrderSeeds.size,
+      captureExclusionMoveOrderDemands.map(_.stableKey).distinct.size == captureExclusionMoveOrderDemands.size,
       "one exact capture-exclusion move-order occurrence may be dispatched only once"
     )
 
     RelationCausalProofDemand(
       input,
-      forcedSeed,
-      defenseSeed,
-      directSeeds.sortBy(_.stableKey),
-      squareReleaseRouteSeeds,
-      captureExclusionMoveOrderSeeds
+      forcedDemand,
+      defenseDemand,
+      directDemands.sortBy(_.stableKey),
+      squareReleaseRouteDemands,
+      captureExclusionMoveOrderDemands
     )
 
   /** Follows the replay-owned same object until the first later leg that owns
     * a closed capture or created-check result. There is no horizon or score
     * filter: the admitted LegalLine continuation is the complete boundary.
     */
-  private def firstTerminalRouteSeeds(
+  private def firstTerminalRouteDemands(
       input: ExactPlayedVsBestCausalInput,
-      occupation: SquareReleaseRouteChangedSeed
-  ): List[SquareReleaseRouteChangedSeed] =
+      occupation: SquareReleaseRouteDemand
+  ): List[SquareReleaseRouteDemand] =
     val replay = input.referenceReplay
     val steps = replay.replaySteps
 
     def loop(
         route: List[ReplayLegalMoveOccurrence],
         indices: List[Int]
-    ): List[SquareReleaseRouteChangedSeed] =
+    ): List[SquareReleaseRouteDemand] =
       RecordBoundObjectTrajectory.firstAfter(input.referenceSource, route.last.step).toList.flatMap {
         trajectory =>
           val next = trajectory.futureMovement.occurrence
@@ -320,7 +320,7 @@ private[assembly] object RelationCausalProofDemand:
               )
             ).flatMap(terminal =>
               exactTerminalReply(replay, nextIndex, terminal).map(reply =>
-                SquareReleaseRouteChangedSeed.terminal(
+                SquareReleaseRouteDemand.terminal(
                   occupation.releaseOccurrence,
                   extendedRoute,
                   extendedIndices,

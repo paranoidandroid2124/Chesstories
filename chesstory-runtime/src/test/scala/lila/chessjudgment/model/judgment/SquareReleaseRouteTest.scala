@@ -484,20 +484,20 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       rootFen,
       playedReplay
     )
-    val seeds = for
+    val demands = for
       releaseStep <- referenceReplay.replaySteps.headOption.toList
       release <- referenceReplay.legalMoveOccurrence(releaseStep).toList
       firstRouteStep <- referenceReplay.replaySteps.lift(firstRouteIndex).toList
       firstRouteLeg <- referenceReplay.legalMoveOccurrence(firstRouteStep).toList
-    yield SquareReleaseRouteChangedSeed.occupation(release, firstRouteLeg, firstRouteIndex)
-    SquareReleaseRouteProof.deriveChangedDependencies(
+    yield SquareReleaseRouteDemand.occupation(release, firstRouteLeg, firstRouteIndex)
+    SquareReleaseRouteProof.certifyDemanded(
       referenceLine,
       playedLine,
       referenceRecord,
       playedRecord,
       referenceReplay,
       playedReplay,
-      seeds.sortBy(_.stableKey)
+      demands.sortBy(_.stableKey)
     )
 
   private def deriveTerminalProofs(
@@ -541,7 +541,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
     val routeOccurrences = routeIndices.flatMap(index =>
       referenceReplay.replaySteps.lift(index).flatMap(referenceReplay.legalMoveOccurrence)
     )
-    val seeds = for
+    val demands = for
       releaseStep <- referenceReplay.replaySteps.headOption.toList
       release <- referenceReplay.legalMoveOccurrence(releaseStep).toList
       if routeOccurrences.size == routeIndices.size
@@ -550,21 +550,21 @@ class SquareReleaseRouteTest extends munit.FunSuite:
       reply = terminalReplyIndex.flatMap(index =>
         referenceReplay.replaySteps.lift(index).flatMap(referenceReplay.legalMoveOccurrence)
       )
-    yield SquareReleaseRouteChangedSeed.terminal(
+    yield SquareReleaseRouteDemand.terminal(
       release,
       routeOccurrences,
       routeIndices,
       terminal,
       reply
     )
-    SquareReleaseRouteProof.deriveChangedDependencies(
+    SquareReleaseRouteProof.certifyDemanded(
       referenceLine,
       playedLine,
       referenceRecord,
       playedRecord,
       referenceReplay,
       playedReplay,
-      seeds.sortBy(_.stableKey)
+      demands.sortBy(_.stableKey)
     )
 
   private def certifiedReplay(fen: String, moves: List[String]): CanonicalLineReplay =

@@ -625,7 +625,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       lineRef(s"played-source-$path", playedLine, root),
       LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
     )
-    val changedSeed = for
+    val demand = for
       trigger <- referenceReplay.replaySteps.headOption
       forcedReplyStep <- referenceReplay.replaySteps.lift(1)
       (checkOccurrence, forcedReply) <-
@@ -641,22 +641,22 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       playedReplyStep <- playedReplay.replaySteps.lift(1)
       (playedExploitOccurrence, playedRecapture) <-
         playedReplay.exactRecaptureOccurrenceMembership(playedExploitStep, playedReplyStep)
-    yield UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed(
+    yield UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand(
       checkOccurrence,
       forcedReply,
       referenceExploitOccurrence,
       playedExploitOccurrence,
       playedRecapture
     )
-    changedSeed.toList.flatMap(seed =>
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.deriveImmediate(
+    demand.toList.flatMap(exactDemand =>
+      UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.certifyDemanded(
         referenceLine,
         playedLine,
         referenceRecord,
         playedRecord,
         referenceReplay,
         playedReplay,
-        seed
+        exactDemand
       )
     )
 

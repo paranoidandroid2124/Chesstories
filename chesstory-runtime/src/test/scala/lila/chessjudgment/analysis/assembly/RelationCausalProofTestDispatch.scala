@@ -13,7 +13,15 @@ private[chessjudgment] object RelationCausalProofTestDispatch:
       demandSource: EvidenceRecord
   ): List[EvidenceRecord] =
     exactDemand(context, demandSource).flatMap(demand =>
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler.fromDemand(context, allocator, demand)
+      RelationCausalProofAssembler
+        .fromDemand(context, allocator, demand)
+        .collect {
+          case record @ EvidenceRecord(
+                _,
+                _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence,
+                _
+              ) => record
+        }
     )
 
   def defense(
@@ -21,7 +29,7 @@ private[chessjudgment] object RelationCausalProofTestDispatch:
       demandSource: EvidenceRecord
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
     exactDemand(context, demandSource).flatMap(demand =>
-      SoleRecapturerRemovalBeforeTargetCaptureAssembler
+      RelationCausalProofAssembler
         .fromDemand(
           context,
           JudgmentProvenanceAllocator.forInput(context.input),

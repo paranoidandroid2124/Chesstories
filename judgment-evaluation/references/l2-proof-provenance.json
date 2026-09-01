@@ -7,8 +7,8 @@
     {
       "contract_kind": "UniqueCheckReplyDefenderDisplacementBeforeCapture",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler.scala",
-        "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler"
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
+        "symbol": "RelationCausalProofAssembler"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
@@ -58,8 +58,8 @@
     {
       "contract_kind": "SoleRecapturerRemovalBeforeTargetCapture",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/SoleRecapturerRemovalBeforeTargetCaptureAssembler.scala",
-        "symbol": "SoleRecapturerRemovalBeforeTargetCaptureAssembler"
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
+        "symbol": "RelationCausalProofAssembler"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
@@ -122,8 +122,8 @@
     {
       "contract_kind": "CaptureExclusionMoveOrder",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/CaptureExclusionMoveOrderAssembler.scala",
-        "symbol": "CaptureExclusionMoveOrderAssembler"
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
+        "symbol": "RelationCausalProofAssembler"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
@@ -194,8 +194,8 @@
     {
       "contract_kind": "VacatedGateEnablesUnrecapturableSliderCapture",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/VacatedGateEnablesUnrecapturableSliderCaptureAssembler.scala",
-        "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureAssembler"
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
+        "symbol": "RelationCausalProofAssembler"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
@@ -255,8 +255,8 @@
     {
       "contract_kind": "SquareReleaseRoute",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/SquareReleaseRouteAssembler.scala",
-        "symbol": "SquareReleaseRouteAssembler"
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
+        "symbol": "RelationCausalProofAssembler"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",

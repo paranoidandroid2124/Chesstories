@@ -8,8 +8,9 @@ import lila.chessjudgment.model.judgment.*
 private[assembly] object ExactCausalProofOwnerReuse:
 
   /** Family-neutral record identity for one certified compared-line proof.
-    * The family producer still owns chess derivation and payload construction;
-    * this value only centralizes graph/cache ownership shared by every family.
+    * The family proof object still owns chess certification, while the common
+    * producer owns payload construction; this value only centralizes graph/cache
+    * ownership shared by every family.
     */
   final case class ComparedLineProofRecord(
       semanticId: String,
@@ -44,9 +45,9 @@ private[assembly] object ExactCausalProofOwnerReuse:
     def evidenceIdInput(family: String): String =
       s"causal-proof:$family:$semanticId:$occurrenceId:$dependencyId:${proofPathOccurrenceIds.mkString(":")}"
 
-  /** Shared graph/cache kernel for exact compared-line L2 producers. It does
+  /** Shared graph/cache kernel for exact compared-line L2 contracts. It does
     * not derive a chess fact, reinterpret a payload, or act as another
-    * producer; the calling family supplies its typed certificate and payload.
+    * producer; the caller supplies a typed family certificate and payload constructor.
     */
   def comparedLineRecords[A, S](
       family: String,

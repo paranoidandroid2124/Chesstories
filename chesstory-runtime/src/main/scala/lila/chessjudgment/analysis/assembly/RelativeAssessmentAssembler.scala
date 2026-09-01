@@ -50,36 +50,8 @@ object RelativeAssessmentAssembler:
               )
             )
             val causalDemand = exactCausalInput.map(RelationCausalProofDemand.from)
-            val defenderDisplacementProofRecords = causalDemand.toList.flatMap(demand =>
-              UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler.fromDemand(
-                comparisonContext,
-                inputs.allocator,
-                demand
-              )
-            )
-            val soleRecapturerRemovalProofRecords = causalDemand.toList.flatMap(demand =>
-              SoleRecapturerRemovalBeforeTargetCaptureAssembler.fromDemand(
-                comparisonContext,
-                inputs.allocator,
-                demand
-              )
-            )
-            val vacatedGateCaptureProofRecords = causalDemand.toList.flatMap(demand =>
-              VacatedGateEnablesUnrecapturableSliderCaptureAssembler.fromDemand(
-                comparisonContext,
-                inputs.allocator,
-                demand
-              )
-            )
-            val squareReleaseRouteProofRecords = causalDemand.toList.flatMap(demand =>
-              SquareReleaseRouteAssembler.fromDemand(
-                comparisonContext,
-                inputs.allocator,
-                demand
-              )
-            )
-            val captureExclusionMoveOrderProofRecords = causalDemand.toList.flatMap(demand =>
-              CaptureExclusionMoveOrderAssembler.fromDemand(
+            val relationCausalProofRecords = causalDemand.toList.flatMap(demand =>
+              RelationCausalProofAssembler.fromDemand(
                 comparisonContext,
                 inputs.allocator,
                 demand
@@ -101,9 +73,7 @@ object RelativeAssessmentAssembler:
               )
             )
             passedPawnResultContext.withEvidence(
-              passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords ++ defenderDisplacementProofRecords ++
-                soleRecapturerRemovalProofRecords ++ vacatedGateCaptureProofRecords ++
-                squareReleaseRouteProofRecords ++ captureExclusionMoveOrderProofRecords
+              passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords ++ relationCausalProofRecords
             )
           }
         }

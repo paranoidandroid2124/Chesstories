@@ -666,7 +666,7 @@ private[chessjudgment] final class CertifiedSquareReleaseRoute private[chessjudg
         )
       case _ => false)
 
-private[chessjudgment] final case class SquareReleaseRouteChangedSeed private[chessjudgment] (
+private[chessjudgment] final case class SquareReleaseRouteDemand private[chessjudgment] (
     releaseOccurrence: ReplayLegalMoveOccurrence,
     routeOccurrences: List[ReplayLegalMoveOccurrence],
     routeStepIndices: List[Int],
@@ -676,7 +676,7 @@ private[chessjudgment] final case class SquareReleaseRouteChangedSeed private[ch
   require(
     routeOccurrences.nonEmpty && routeOccurrences.size == routeStepIndices.size &&
       routeStepIndices == routeStepIndices.distinct.sorted && routeStepIndices.head >= 2,
-    "a square-release seed needs one ordered route occurrence"
+    "a square-release demand needs one ordered route occurrence"
   )
   require(
     terminalOccurrence match
@@ -687,7 +687,7 @@ private[chessjudgment] final case class SquareReleaseRouteChangedSeed private[ch
             VerticalRelationContractKind.CaptureRecaptureInventory,
             VerticalRelationContractKind.CreatedCheckResponseInventory
           )(terminal.contract),
-    "a multi-leg square-release seed needs a capture or created-check terminal on its last route leg"
+    "a multi-leg square-release demand needs a capture or created-check terminal on its last route leg"
   )
 
   private[chessjudgment] def stableKey: String =
@@ -699,13 +699,13 @@ private[chessjudgment] final case class SquareReleaseRouteChangedSeed private[ch
       terminalReplyOccurrence.map(_.occurrenceId).getOrElse("no-reply")
     ).mkString("|")
 
-private[chessjudgment] object SquareReleaseRouteChangedSeed:
+private[chessjudgment] object SquareReleaseRouteDemand:
   def occupation(
       release: ReplayLegalMoveOccurrence,
       firstRouteLeg: ReplayLegalMoveOccurrence,
       firstRouteStepIndex: Int
-  ): SquareReleaseRouteChangedSeed =
-    SquareReleaseRouteChangedSeed(
+  ): SquareReleaseRouteDemand =
+    SquareReleaseRouteDemand(
       release,
       List(firstRouteLeg),
       List(firstRouteStepIndex),
@@ -719,8 +719,8 @@ private[chessjudgment] object SquareReleaseRouteChangedSeed:
       routeStepIndices: List[Int],
       terminal: ReplayVerticalRelationOccurrence,
       reply: Option[ReplayLegalMoveOccurrence]
-  ): SquareReleaseRouteChangedSeed =
-    SquareReleaseRouteChangedSeed(release, route, routeStepIndices, Some(terminal), reply)
+  ): SquareReleaseRouteDemand =
+    SquareReleaseRouteDemand(release, route, routeStepIndices, Some(terminal), reply)
 
 private[chessjudgment] object SquareReleaseRouteProof:
   private final case class PersistenceState(
@@ -769,19 +769,19 @@ private[chessjudgment] object SquareReleaseRouteProof:
         referencePersistence.map(_.authority) ++ playedBlockerPersistence.map(_.authority) ++
         playedRouteOriginPersistence.map(_.authority)
 
-  private[chessjudgment] def deriveChangedDependencies(
+  private[chessjudgment] def certifyDemanded(
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      changedSeeds: List[SquareReleaseRouteChangedSeed]
+      demands: List[SquareReleaseRouteDemand]
   ): List[CertifiedSquareReleaseRoute] =
-    val seedKeys = changedSeeds.map(_.stableKey)
+    val demandKeys = demands.map(_.stableKey)
     require(
-      seedKeys == seedKeys.distinct.sorted,
-      "square-release demand needs unique canonical exact occurrence seeds"
+      demandKeys == demandKeys.distinct.sorted,
+      "square-release route needs unique canonical exact occurrence demands"
     )
     val admitted =
       CertifiedComparedLineAuthority.exactRecord(referenceLineRecord, referenceLine, referenceReplay) &&
@@ -790,9 +790,9 @@ private[chessjudgment] object SquareReleaseRouteProof:
         !EvidenceRef.sameMove(referenceLine.rootMove, playedLine.rootMove)
     if !admitted then Nil
     else
-      val inputs = changedSeeds.flatMap(seed =>
+      val inputs = demands.flatMap(demand =>
         exactInputs(
-          seed,
+          demand,
           referenceLine,
           playedLine,
           referenceLineRecord,
@@ -820,7 +820,7 @@ private[chessjudgment] object SquareReleaseRouteProof:
       }
 
   private def exactInputs(
-      seed: SquareReleaseRouteChangedSeed,
+      demand: SquareReleaseRouteDemand,
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
@@ -836,19 +836,19 @@ private[chessjudgment] object SquareReleaseRouteProof:
       playedRoot <- playedSteps.headOption
       if PrincipalVariationEvidence.sameBoardState(releaseStep.fenBefore, playedRoot.fenBefore)
       releaseOccurrence <- referenceReplay.legalMoveOccurrence(releaseStep)
-      if releaseOccurrence == seed.releaseOccurrence
+      if releaseOccurrence == demand.releaseOccurrence
       release <- RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, releaseOccurrence)
-      routeOccurrences <- exactRouteOccurrences(seed, referenceReplay)
+      routeOccurrences <- exactRouteOccurrences(demand, referenceReplay)
       route <- traverseOptions(routeOccurrences.map(RecordBoundLegalMoveOccurrence.certified(referenceLineRecord, _)))
       if route.head.capture.isEmpty && route.head.movement.side == release.movement.side &&
         route.head.movement.to == release.movement.from
       trajectories <- exactTrajectories(referenceLineRecord, route)
-      terminalAuthority <- exactTerminalAuthority(seed, referenceLineRecord)
+      terminalAuthority <- exactTerminalAuthority(demand, referenceLineRecord)
       terminal <- terminalAuthority.map(SquareReleaseRouteTerminal.from).getOrElse(
         Some(SquareReleaseRouteTerminal.Occupation)
       )
       if terminal.terminalMover.forall(_ == route.last.movement)
-      replyAuthority <- exactReplyAuthority(seed, referenceLineRecord)
+      replyAuthority <- exactReplyAuthority(demand, referenceLineRecord)
       if replyAuthority.isDefined == terminal.needsReply
       if terminalReplyIsExact(
         terminal,
@@ -857,8 +857,8 @@ private[chessjudgment] object SquareReleaseRouteProof:
         referenceReplay,
         route.last.step
       )
-      firstIndex = seed.routeStepIndices.head
-      terminalIndex = seed.routeStepIndices.last
+      firstIndex = demand.routeStepIndices.head
+      terminalIndex = demand.routeStepIndices.last
       retainedReferenceCount = replyAuthority.map(_ => terminalIndex + 2).getOrElse(terminalIndex + 1)
       if playedSteps.size >= firstIndex && referenceSteps.size >= retainedReferenceCount
       referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
@@ -923,7 +923,7 @@ private[chessjudgment] object SquareReleaseRouteProof:
         rootBoard,
         release,
         route,
-        seed.routeStepIndices,
+        demand.routeStepIndices,
         trajectories,
         blocker,
         routePiece,
@@ -1147,13 +1147,13 @@ private[chessjudgment] object SquareReleaseRouteProof:
     )
 
   private def exactRouteOccurrences(
-      seed: SquareReleaseRouteChangedSeed,
+      demand: SquareReleaseRouteDemand,
       replay: CanonicalLineReplay
   ): Option[List[ReplayLegalMoveOccurrence]] =
-    val rebound = seed.routeStepIndices.zip(seed.routeOccurrences).flatMap { case (stepIndex, expected) =>
+    val rebound = demand.routeStepIndices.zip(demand.routeOccurrences).flatMap { case (stepIndex, expected) =>
       replay.replaySteps.lift(stepIndex).flatMap(replay.legalMoveOccurrence).filter(_ == expected)
     }
-    Option.when(rebound.size == seed.routeOccurrences.size)(rebound)
+    Option.when(rebound.size == demand.routeOccurrences.size)(rebound)
 
   private def exactTrajectories(
       record: EvidenceRecord,
@@ -1165,19 +1165,19 @@ private[chessjudgment] object SquareReleaseRouteProof:
     Option.when(exact.size == route.size - 1)(exact)
 
   private def exactTerminalAuthority(
-      seed: SquareReleaseRouteChangedSeed,
+      demand: SquareReleaseRouteDemand,
       record: EvidenceRecord
   ): Option[Option[RecordBoundVerticalRelationOccurrence]] =
-    seed.terminalOccurrence match
+    demand.terminalOccurrence match
       case None => Some(None)
       case Some(occurrence) =>
         RecordBoundVerticalRelationOccurrence.certified(record, occurrence).map(Some(_))
 
   private def exactReplyAuthority(
-      seed: SquareReleaseRouteChangedSeed,
+      demand: SquareReleaseRouteDemand,
       record: EvidenceRecord
   ): Option[Option[RecordBoundLegalMoveOccurrence]] =
-    seed.terminalReplyOccurrence match
+    demand.terminalReplyOccurrence match
       case None => Some(None)
       case Some(occurrence) => RecordBoundLegalMoveOccurrence.certified(record, occurrence).map(Some(_))
 
