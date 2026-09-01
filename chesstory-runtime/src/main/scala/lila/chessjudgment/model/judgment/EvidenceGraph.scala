@@ -86,9 +86,9 @@ enum RootOwnedEffectProof:
       source: EvidenceRef,
       result: VacatedGateEnablesUnrecapturableSliderCaptureEvidence
   )
-  case VacancyEnablesOccupation(
+  case SquareReleaseRoute(
       source: EvidenceRef,
-      result: VacancyEnablesOccupationEvidence
+      result: SquareReleaseRouteEvidence
   )
   case PassedPawnProgressRealizedAfterOnlyLegalReply(
       source: EvidenceRef,
@@ -101,7 +101,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(source, _) => source
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(source, _)         => source
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(source, _)     => source
-      case RootOwnedEffectProof.VacancyEnablesOccupation(source, _)                          => source
+      case RootOwnedEffectProof.SquareReleaseRoute(source, _)                          => source
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(source, _)               => source
 
   final def provenance: List[EvidenceRef] =
@@ -109,7 +109,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) => result.proofParentSources
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(_, result)         => result.proofParentSources
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result)     => result.proofParentSources
-      case RootOwnedEffectProof.VacancyEnablesOccupation(_, result)                          => result.proofParentSources
+      case RootOwnedEffectProof.SquareReleaseRoute(_, result)                          => result.proofParentSources
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result)                => result.proofParentSources
 
   final def eventLine: LineNodeRef =
@@ -117,7 +117,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) => result.occurrence.referenceLine
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(_, result)         => result.occurrence.referenceLine
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result)     => result.occurrence.referenceLine
-      case RootOwnedEffectProof.VacancyEnablesOccupation(_, result)                          => result.occurrence.referenceLine
+      case RootOwnedEffectProof.SquareReleaseRoute(_, result)                          => result.occurrence.referenceLine
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result)                => result.rootLine
 
   /** Compact producer-issued identity for one exact proof occurrence. */
@@ -150,9 +150,9 @@ enum RootOwnedEffectProof:
           dependencyFingerprint = result.dependencyId,
           proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
         )
-      case RootOwnedEffectProof.VacancyEnablesOccupation(source, result) =>
+      case RootOwnedEffectProof.SquareReleaseRoute(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
-          family = "vacancy-enables-occupation",
+          family = "square-release-route",
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -278,8 +278,8 @@ object DirectCauseChannel:
         Some(DirectCauseChannel(RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(ref, payload)))
       case EvidenceRecord(ref, payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(ref, payload)))
-      case EvidenceRecord(ref, payload: VacancyEnablesOccupationEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.VacancyEnablesOccupation(ref, payload)))
+      case EvidenceRecord(ref, payload: SquareReleaseRouteEvidence, _) =>
+        Some(DirectCauseChannel(RootOwnedEffectProof.SquareReleaseRoute(ref, payload)))
       case EvidenceRecord(ref, payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(ref, payload)))
       case _ => None
@@ -1568,25 +1568,89 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
   ): Boolean =
     occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
 
-/** Exact bounded square release: the BestReference root moves one blocker,
-  * a later non-capture move occupies that square, and the Played sibling's
-  * closed inventory retains blocker and occupier while excluding that move.
+/** Derivation-free public detail for the exact route terminal. Lower result
+  * ids and sources remain in each public proof path.
   */
-private[chessjudgment] final case class VacancyEnablesOccupationEvidence private[chessjudgment] (
-    semantic: VacancyEnablesOccupationSemanticProof,
-    occurrence: VacancyEnablesOccupationOccurrence,
+enum SquareReleaseRoutePublicTerminal:
+  case Occupation
+  case Capture(
+      assertionId: String,
+      captured: RelationColoredPieceWitness,
+      geometricRecapturers: List[RelationPieceWitness],
+      legalRecaptures: List[RelationLegalMoveResourceWitness],
+      restrictedRecaptures: List[RelationRestrictedResourceWitness]
+  )
+  case CreatedCheck(
+      assertionId: String,
+      checkedSide: Color,
+      kingSquare: EvidenceSquare,
+      checkers: List[RelationPieceWitness],
+      responses: List[RelationCheckResponseWitness],
+      controlledKingDestinations: List[RelationControlledKingDestinationWitness],
+      terminal: RelationCheckTerminalState
+  )
+
+object SquareReleaseRoutePublicTerminal:
+  private[chessjudgment] def from(
+      terminal: SquareReleaseRouteTerminal
+  ): SquareReleaseRoutePublicTerminal =
+    terminal match
+      case SquareReleaseRouteTerminal.Occupation => Occupation
+      case SquareReleaseRouteTerminal.Capture(
+            assertionId,
+            _,
+            captured,
+            geometricRecapturers,
+            legalRecaptures,
+            restrictedRecaptures
+          ) =>
+        Capture(
+          assertionId,
+          captured,
+          geometricRecapturers,
+          legalRecaptures,
+          restrictedRecaptures
+        )
+      case SquareReleaseRouteTerminal.CreatedCheck(
+            assertionId,
+            _,
+            checkedSide,
+            kingSquare,
+            checkers,
+            responses,
+            controlledKingDestinations,
+            terminal
+          ) =>
+        CreatedCheck(
+          assertionId,
+          checkedSide,
+          kingSquare,
+          checkers,
+          responses,
+          controlledKingDestinations,
+          terminal
+        )
+
+/** Exact bounded square release consumed by an ordered same-object route.
+  * The Played sibling is closed immediately before the first route leg; a
+  * multi-leg reference occurrence additionally retains its exact L1 terminal
+  * and actual reply when that terminal is ongoing.
+  */
+private[chessjudgment] final case class SquareReleaseRouteEvidence private[chessjudgment] (
+    semantic: SquareReleaseRouteSemanticProof,
+    occurrence: SquareReleaseRouteOccurrence,
     dependencyFingerprint: String,
     private[chessjudgment] val resultSet: ExactCausalProofResultSet,
-    private[chessjudgment] val occurrenceProof: Option[CertifiedVacancyEnablesOccupation] = None
+    private[chessjudgment] val occurrenceProof: Option[CertifiedSquareReleaseRoute] = None
 ) extends EvidencePayload:
   require(occurrence.semanticId == semantic.semanticId)
   require(
     dependencyFingerprint.matches("[0-9a-f]{64}"),
-    "a vacancy-enables-occupation result needs its complete dependency fingerprint"
+    "a square-release-route result needs its complete dependency fingerprint"
   )
   require(
     resultSet.contains(dependencyFingerprint),
-    "a vacancy-enables-occupation result must belong to its demand's complete result set"
+    "a square-release-route result must belong to its demand's complete result set"
   )
 
   def semanticId: String = semantic.semanticId
@@ -1604,19 +1668,33 @@ private[chessjudgment] final case class VacancyEnablesOccupationEvidence private
   def publicPlayedBranch: BoundedCausalPublicBranch =
     BoundedCausalPublicProjection.branch(playedBranch)
   def publicProofPaths: List[BoundedCausalPublicProofPath] =
-    BoundedCausalPublicProjection.legalMovePaths(proofPaths)
+    BoundedCausalPublicProjection.mixedPaths(proofPaths)
   def hasCompleteProofPaths: Boolean =
+    val persistenceCount = occurrence.routeStepIndices.zip(occurrence.routeStepIndices.drop(1))
+      .map { case (before, after) => after - before - 1 }
+      .sum
+    val expectedStates =
+      occurrence.firstRouteStepIndex + occurrence.routeStepIndices.size + persistenceCount +
+        occurrence.firstRouteStepIndex * 2
     proofPaths.nonEmpty && proofPaths.forall(path =>
-      path.manifest.supplementalPremiseUses.size == 2 &&
+      path.manifest.supplementalPremiseUses.size ==
+        1 + occurrence.routeStepIndices.size + occurrence.terminalReplyStepIndex.size &&
         path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse]) &&
-        path.closedAbsenceUses.size == 1 &&
-        path.closedStateUses.size == occurrence.occupationStepIndex + 3
+        path.premiseUses.size == (semantic.terminal match
+          case SquareReleaseRouteTerminal.Occupation => 0
+          case _                                     => 1) &&
+        path.closedAbsenceUses.size == 1 && path.closedStateUses.size == expectedStates
     )
   def releaser: RelationMoveTransitionWitness = semantic.release
   def releasedBlocker: RelationColoredPieceWitness = semantic.blocker
-  def occupier: RelationColoredPieceWitness = semantic.occupier
-  def occupation: RelationMoveTransitionWitness = semantic.occupation
-  def occupationMove: String = occurrence.occupationStep.moveUci
+  def routePiece: RelationColoredPieceWitness = semantic.routePiece
+  def route: List[RelationMoveTransitionWitness] = semantic.route
+  def routeMoves: List[String] = occurrence.routeSteps.map(_.moveUci)
+  def routeStepIndices: List[Int] = occurrence.routeStepIndices
+  def terminalStepIndex: Int = occurrence.terminalStepIndex
+  def terminalReplyMove: Option[String] = occurrence.terminalReplyStep.map(_.moveUci)
+  def publicTerminal: SquareReleaseRoutePublicTerminal =
+    SquareReleaseRoutePublicTerminal.from(semantic.terminal)
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
     occurrenceProof.exists(_.proves(record, this))
@@ -5493,7 +5571,7 @@ final case class EvidenceRecord(
         List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
       case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence =>
         List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
-      case payload: VacancyEnablesOccupationEvidence =>
+      case payload: SquareReleaseRouteEvidence =>
         List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
       case CandidateLineEvaluationEvidence(payloadLine, _) =>
         List(payloadLine)
@@ -5950,7 +6028,7 @@ final class TypedEvidenceGraph private (
         case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
-        case payload: VacancyEnablesOccupationEvidence =>
+        case payload: SquareReleaseRouteEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence =>

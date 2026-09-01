@@ -21,8 +21,8 @@ private[chessjudgment] final case class VacancySiblingClosure private (
     referenceBranchId: String,
     playedBranchId: String,
     laterStepIndex: Int,
-    playedBlockerState: CausalClosedStateBinding,
-    playedMoverState: CausalClosedStateBinding,
+    playedBlockerPersistence: List[CausalClosedStateBinding],
+    playedMoverPersistence: List[CausalClosedStateBinding],
     playedMoveAbsence: CausalClosedAbsenceBinding
 ):
   private[chessjudgment] def matches(
@@ -35,8 +35,8 @@ private[chessjudgment] final case class VacancySiblingClosure private (
       referenceBranch: CausalBranchOccurrence,
       playedBranch: CausalBranchOccurrence,
       exactLaterStepIndex: Int,
-      exactPlayedBlockerState: CausalClosedStateBinding,
-      exactPlayedMoverState: CausalClosedStateBinding,
+      exactPlayedBlockerPersistence: List[CausalClosedStateBinding],
+      exactPlayedMoverPersistence: List[CausalClosedStateBinding],
       exactPlayedMoveAbsence: CausalClosedAbsenceBinding
   ): Boolean =
     VacancySiblingClosure.certified(
@@ -49,8 +49,8 @@ private[chessjudgment] final case class VacancySiblingClosure private (
       referenceBranch,
       playedBranch,
       exactLaterStepIndex,
-      exactPlayedBlockerState,
-      exactPlayedMoverState,
+      exactPlayedBlockerPersistence,
+      exactPlayedMoverPersistence,
       exactPlayedMoveAbsence
     ).contains(this)
 
@@ -65,8 +65,8 @@ private[chessjudgment] object VacancySiblingClosure:
       referenceBranch: CausalBranchOccurrence,
       playedBranch: CausalBranchOccurrence,
       laterStepIndex: Int,
-      playedBlockerState: CausalClosedStateBinding,
-      playedMoverState: CausalClosedStateBinding,
+      playedBlockerPersistence: List[CausalClosedStateBinding],
+      playedMoverPersistence: List[CausalClosedStateBinding],
       playedMoveAbsence: CausalClosedAbsenceBinding
   ): Option[VacancySiblingClosure] =
     val playedPreUseIndex = laterStepIndex - 1
@@ -95,19 +95,22 @@ private[chessjudgment] object VacancySiblingClosure:
       ) && referenceBranch.stepAt(laterStepIndex).exists(step =>
         EvidenceRef.sameMove(step.step.moveUci, laterMoveUci)
       )
-    val playedCoordinatesMatch =
-      List(playedBlockerState, playedMoverState).forall(binding =>
+    def exactPersistence(bindings: List[CausalClosedStateBinding]): Boolean =
+      bindings.size == laterStepIndex && bindings.zipWithIndex.forall { case (binding, stepIndex) =>
         binding.branchId == playedBranch.branchId &&
           binding.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
-          binding.afterStepIndex == playedPreUseIndex
-      ) && playedMoveAbsence.branchId == playedBranch.branchId &&
+          binding.afterStepIndex == stepIndex
+      }
+    val playedCoordinatesMatch =
+      exactPersistence(playedBlockerPersistence) && exactPersistence(playedMoverPersistence) &&
+        playedMoveAbsence.branchId == playedBranch.branchId &&
         playedMoveAbsence.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
         playedMoveAbsence.afterStepIndex == playedPreUseIndex
     val exactStates =
-      playedBlockerState.query ==
-        PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(blocker) &&
-        playedMoverState.query ==
-          PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(laterMover)
+      playedBlockerPersistence.forall(_.query ==
+        PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(blocker)) &&
+        playedMoverPersistence.forall(_.query ==
+          PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(laterMover))
     val exactAbsence =
       playedMoveAbsence.authority.query ==
         PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(
@@ -139,8 +142,8 @@ private[chessjudgment] object VacancySiblingClosure:
         referenceBranch.branchId,
         playedBranch.branchId,
         laterStepIndex,
-        playedBlockerState,
-        playedMoverState,
+        playedBlockerPersistence,
+        playedMoverPersistence,
         playedMoveAbsence
       )
     )

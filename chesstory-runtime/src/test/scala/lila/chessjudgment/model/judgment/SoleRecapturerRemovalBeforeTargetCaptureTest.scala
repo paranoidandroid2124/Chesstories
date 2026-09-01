@@ -62,6 +62,25 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     )
     assertEquals(path.premiseUses.map(_.stepIndex), List(0, 2, 0))
     assert(path.premiseUses.forall(_.sourcePremiseIds.nonEmpty))
+    assertEquals(
+      path.closedStateUses.map(_.binding.role),
+      List(
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceExploitActorPresent,
+        SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent
+      )
+    )
+    assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(0, 0, 1, 1))
+    assertEquals(
+      path.closedStateUses.map(_.binding.queryKey),
+      List(
+        "occupied-by:white:queen@d1",
+        "occupied-by:black:rook@d5",
+        "occupied-by:white:queen@d1",
+        "occupied-by:black:rook@d5"
+      )
+    )
     val absence = path.closedAbsenceUses match
       case one :: Nil => one.binding
       case other      => fail(s"expected one exact closed absence, found ${other.size}")
@@ -80,6 +99,45 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     )
     assert(exact.parentSources.forall(_.layer == EvidenceLayer.Line))
     assert(exact.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
+
+  test("missing or query-tampered intermediate occupancy cannot form the sole-recapturer manifest"):
+    val exact = deriveProofs(
+      "state-adversary",
+      positiveFen,
+      certifiedReplay(positiveFen, referenceMoves),
+      certifiedReplay(positiveFen, playedMoves)
+    ).headOption.getOrElse(fail("expected the exact sole-recapturer proof"))
+    val path = exact.occurrence.proofPaths.head
+    val states = path.manifest.stateBindings
+    val exploitActor = RelationColoredPieceWitness(
+      exact.semantic.exploit.from,
+      exact.semantic.exploit.beforeRole,
+      exact.semantic.exploit.side
+    )
+    def rebuild(candidateStates: List[CausalClosedStateBinding]) =
+      SoleRecapturerRemovalBeforeTargetCaptureManifest.exact(
+        path.premiseUses(0),
+        path.premiseUses(1),
+        path.premiseUses(2),
+        path.closedAbsenceUses.head.binding,
+        exploitActor,
+        exact.semantic.capturedTarget,
+        candidateStates
+      )
+
+    intercept[IllegalArgumentException] {
+      rebuild(states.dropRight(1))
+    }
+    val actorAtRoot = states.head
+    val targetRoleWithActorState = CausalClosedStateBinding.afterStep(
+      SoleRecapturerRemovalBeforeTargetCaptureStateRole.ReferenceTargetPresent,
+      actorAtRoot.authority,
+      exact.occurrence.referenceBranch,
+      actorAtRoot.afterStepIndex
+    )
+    intercept[IllegalArgumentException] {
+      rebuild(states.updated(1, targetRoleWithActorState))
+    }
 
   test("the specified bishop alternative prevents a sole-recapturer certificate"):
     val referenceReplay = certifiedReplay(negativeFen, referenceMoves)

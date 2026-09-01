@@ -64,17 +64,31 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       path.closedStateUses.map(_.binding.role),
       List(
         VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceInterveningSliderReach,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetOccupied,
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence,
         VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedBlockedSliderReach
       )
     )
-    assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(1, 1, 1, 1, 1))
+    assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(1, 0, 1, 0, 0, 0, 1, 1, 1, 1))
     assert(path.closedStateUses.forall(_.binding.issuerOccurrenceId.matches("[0-9a-f]{64}")))
     assertEquals(
       path.closedStateUses.map(_.binding.queryKey).filter(_.startsWith("occupied-by:")),
-      List("occupied-by:white:rook@a1", "occupied-by:black:queen@a7", "occupied-by:white:knight@a2")
+      List(
+        "occupied-by:black:queen@a7",
+        "occupied-by:black:queen@a7",
+        "occupied-by:white:rook@a1",
+        "occupied-by:black:queen@a7",
+        "occupied-by:white:knight@a2",
+        "occupied-by:white:rook@a1",
+        "occupied-by:black:queen@a7",
+        "occupied-by:white:knight@a2"
+      )
     )
     assert(path.closedStateUses.last.binding.queryKey.startsWith("slider-reach:white:rook@a1:"))
     assert(!path.closedStateUses.last.binding.queryKey.contains("a7:enemy"))

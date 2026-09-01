@@ -222,6 +222,52 @@ interface MoveReviewLegalMovePremise {
   stepIndex: number;
 }
 
+interface MoveReviewPieceWitness {
+  piece: MoveReviewPieceRole;
+  square: Key;
+}
+
+interface MoveReviewSquareReleaseRouteStep extends MoveReviewTypedActor {
+  moveUci: Uci;
+  stepIndex: number;
+}
+
+interface MoveReviewSquareReleaseRouteResource extends MoveReviewTypedActor {
+  moveUci: Uci;
+  capture?: { square: Key; piece: MoveReviewPieceRole; side: 'white' | 'black' };
+}
+
+type MoveReviewSquareReleaseRouteTerminal =
+  | { kind: 'occupation' }
+  | {
+      kind: 'capture';
+      assertionId: string;
+      capturedTarget: { square: Key; piece: MoveReviewPieceRole; side: 'white' | 'black' };
+      geometricRecapturers: MoveReviewPieceWitness[];
+      legalRecaptures: MoveReviewSquareReleaseRouteResource[];
+      restrictedRecaptures: {
+        piece: MoveReviewPieceWitness;
+        destination: Key;
+        kingSquare: Key;
+        postMoveControllers: MoveReviewPieceWitness[];
+      }[];
+    }
+  | {
+      kind: 'created-check';
+      assertionId: string;
+      checkedSide: 'white' | 'black';
+      kingSquare: Key;
+      checkers: MoveReviewPieceWitness[];
+      responses: {
+        resource: MoveReviewSquareReleaseRouteResource;
+        modes: ('capture_checker' | 'interpose' | 'king_move')[];
+      }[];
+      controlledKingDestinations: { destination: Key; controllers: MoveReviewPieceWitness[] }[];
+      terminalState: 'ongoing' | 'checkmate';
+    };
+
+type MoveReviewSquareReleaseRoutePremise = MoveReviewTypedPremise | MoveReviewLegalMovePremise;
+
 interface MoveReviewTypedLine {
   id: string;
   role: 'played' | 'best_reference' | 'alternative';
@@ -324,7 +370,7 @@ export type MoveReviewReasonMessage =
       states: MoveReviewCausalClosureUse[];
     }
   | {
-      kind: 'vacancy-enables-occupation';
+      kind: 'square-release-route';
       channelId: string;
       causeEvidenceId: string;
       causeKind: 'missed_square_release';
@@ -336,9 +382,13 @@ export type MoveReviewReasonMessage =
       branch: MoveReviewTypedBranch;
       counterpart: MoveReviewTypedBranch;
       releaser: MoveReviewTypedActor;
-      occupier: MoveReviewTypedActor;
-      occupationMove: Uci;
-      premises: MoveReviewLegalMovePremise[];
+      releasedBlocker: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      routePiece: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      route: MoveReviewSquareReleaseRouteStep[];
+      terminalStepIndex: number;
+      terminal: MoveReviewSquareReleaseRouteTerminal;
+      terminalReplyMove?: Uci;
+      premises: MoveReviewSquareReleaseRoutePremise[];
       absences: MoveReviewCausalClosureUse[];
       states: MoveReviewCausalClosureUse[];
     }
@@ -821,25 +871,47 @@ export function moveReviewReasonText(
       ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 관계 전제 ${message.premises.length}개, 폐쇄 부재 ${message.absences.length}개, 폐쇄 상태 ${message.states.length}개를 정확한 발생 위치에 보존합니다.`
       : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains ${message.premises.length} relation premises, ${message.absences.length} closed absences, and ${message.states.length} closed states at their exact occurrences.`;
   }
-  if (message.kind === 'vacancy-enables-occupation') {
+  if (message.kind === 'square-release-route') {
+    const routeMoves = message.route.map(step => step.moveUci).join(' → ');
+    const terminal =
+      message.terminal.kind === 'occupation'
+        ? locale === 'ko-KR'
+          ? `해방된 ${message.releaser.from} 점유로 끝납니다`
+          : `ends by occupying the released square ${message.releaser.from}`
+        : message.terminal.kind === 'capture'
+          ? locale === 'ko-KR'
+            ? `보존 수순 인덱스 ${message.terminalStepIndex}의 ${message.terminal.capturedTarget.square} 포획으로 끝나며, 인증된 합법 재포획 자원은 ${message.terminal.legalRecaptures.length}개입니다`
+            : `ends with the capture on ${message.terminal.capturedTarget.square} at retained step index ${message.terminalStepIndex}, with ${message.terminal.legalRecaptures.length} certified legal recapture resources`
+          : locale === 'ko-KR'
+            ? `보존 수순 인덱스 ${message.terminalStepIndex}에서 체크를 만들며, 인증된 합법 응수는 ${message.terminal.responses.length}개이고 상태는 ${message.terminal.terminalState}입니다`
+            : `creates check at retained step index ${message.terminalStepIndex}, with ${message.terminal.responses.length} certified legal responses and terminal state ${message.terminal.terminalState}`;
+    const reply = message.terminalReplyMove
+      ? locale === 'ko-KR'
+        ? `; 기준 가지의 다음 실제 응수는 ${message.terminalReplyMove}입니다`
+        : `; the reference branch then records the actual reply ${message.terminalReplyMove}`
+      : '';
     const reference =
       locale === 'ko-KR'
-        ? `반사실 기준 분석에서 ${message.releaser.from}의 ${message.releaser.pieceBefore}가 ${message.releaser.to}로 이동해 ${message.releaser.from}을 비우고, 뒤의 ${message.occupationMove}가 ${message.occupier.from}의 ${message.occupier.pieceBefore}를 ${message.occupier.to}에 놓습니다`
-        : `in the counterfactual reference analysis, the ${message.releaser.pieceBefore} moves ${message.releaser.from}–${message.releaser.to}, vacating ${message.releaser.from}, and the later ${message.occupationMove} places the ${message.occupier.pieceBefore} from ${message.occupier.from} on ${message.occupier.to}`;
+        ? `반사실 기준 분석에서 ${message.releaser.from}의 ${message.releaser.pieceBefore}가 ${message.releaser.to}로 이동해 ${message.releaser.from}을 비우고, 동일한 ${message.routePiece.piece}의 인증 경로 ${routeMoves}가 이어져 ${terminal}${reply}`
+        : `in the counterfactual reference analysis, the ${message.releaser.pieceBefore} moves ${message.releaser.from}–${message.releaser.to}, vacating ${message.releaser.from}, and the certified same-piece route ${routeMoves} ${terminal}${reply}`;
     const played =
       locale === 'ko-KR'
-        ? `관측된 실전 첫 수 이후 인증 분석 후속 수순에서는 ${message.releaser.from}의 ${message.releaser.pieceBefore}가 남고 정확한 ${message.occupationMove} 합법 수가 없습니다`
-        : `from the observed played root, the certified analysis continuation retains the ${message.releaser.pieceBefore} on ${message.releaser.from}, and the exact legal move ${message.occupationMove} is absent`;
+        ? `관측된 실전 첫 수 이후 인증 분석 후속 수순에서는 ${message.releasedBlocker.square}의 ${message.releasedBlocker.piece}과 ${message.routePiece.square}의 ${message.routePiece.piece}이 첫 경로 수 직전까지 계속 남고, 정확한 첫 경로 수 ${message.route[0]!.moveUci}가 없습니다`
+        : `from the observed played root, the certified analysis continuation retains the ${message.releasedBlocker.piece} on ${message.releasedBlocker.square} and the ${message.routePiece.piece} on ${message.routePiece.square} through the pre-route occurrence, and the exact first route move ${message.route[0]!.moveUci} is absent`;
     const occurrenceComparison =
       message.branch.role === 'counterfactual_reference'
         ? `${reference}; ${played}`
         : `${played}; ${reference}`;
-    const legalMoves = message.premises
-      .map(premise => `${premise.moveUci}:${premise.legalMoveSemanticId.slice(0, 8)}`)
+    const lowerPremises = message.premises
+      .map(premise =>
+        isSquareReleaseRouteLegalPremise(premise)
+          ? `${premise.role}:${premise.moveUci}:${premise.legalMoveSemanticId.slice(0, 8)}`
+          : `${premise.role}:${premise.resultId.slice(0, 8)}`,
+      )
       .join(', ');
     return locale === 'ko-KR'
-      ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 인증 합법 수 ${legalMoves}, 폐쇄 부재 ${message.absences[0]!.query}, 폐쇄 상태 ${message.states.map(state => state.query).join(', ')}를 정확한 발생 위치에 보존합니다.`
-      : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains certified legal moves ${legalMoves}, closed absence ${message.absences[0]!.query}, and closed states ${message.states.map(state => state.query).join(', ')} at their exact occurrences.`;
+      ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 순서 있는 하위 전제 ${lowerPremises}, 폐쇄 부재 ${message.absences[0]!.query}, 폐쇄 상태 ${message.states.map(state => state.query).join(', ')}를 정확한 발생 위치에 보존합니다.`
+      : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains ordered lower premises ${lowerPremises}, closed absence ${message.absences[0]!.query}, and closed states ${message.states.map(state => state.query).join(', ')} at their exact occurrences.`;
   }
   const targets = message.resultTargetSubjects.join(', ');
   const premises = message.premises.map(premise => premise.resultId.slice(0, 8)).join(', ');
@@ -1748,9 +1820,9 @@ function projectCausalChannel(
       startFen,
     );
   }
-  if (Object.prototype.hasOwnProperty.call(value, 'vacancy_enables_occupation_proof')) {
+  if (Object.prototype.hasOwnProperty.call(value, 'square_release_route_proof')) {
     if (causeKind !== 'missed_square_release') return;
-    return projectVacancyEnablesOccupation(value, causeEvidenceId, candidateMove, bestMove, startFen);
+    return projectSquareReleaseRoute(value, causeEvidenceId, candidateMove, bestMove, startFen);
   }
   if (
     Object.prototype.hasOwnProperty.call(value, 'passed_pawn_progress_realized_after_only_legal_reply_proof')
@@ -1839,7 +1911,7 @@ interface MoveReviewCausalPath<Premise> {
 }
 
 type MoveReviewRelationCausalPath = MoveReviewCausalPath<MoveReviewTypedPremise>;
-type MoveReviewVacancyOccupationPath = MoveReviewCausalPath<MoveReviewLegalMovePremise>;
+type MoveReviewSquareReleaseRoutePath = MoveReviewCausalPath<MoveReviewSquareReleaseRoutePremise>;
 
 type MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath = {
   id: string;
@@ -1855,7 +1927,7 @@ type MoveReviewTypedProofKey =
   | 'unique_check_reply_defender_displacement_before_capture_proof'
   | 'sole_recapturer_removal_before_target_capture_proof'
   | 'vacated_gate_enables_unrecapturable_slider_capture_proof'
-  | 'vacancy_enables_occupation_proof'
+  | 'square_release_route_proof'
   | 'passed_pawn_progress_realized_after_only_legal_reply_proof';
 
 function typedChannelProof(
@@ -1872,6 +1944,7 @@ function projectVariableTwoBranchProof(
   candidateMove: Uci,
   bestMove: Uci,
   startFen: FEN,
+  optionalFields: string[] = [],
 ):
   | {
       wire: Record<string, unknown> & { proof_paths: unknown[] };
@@ -1880,18 +1953,19 @@ function projectVariableTwoBranchProof(
     }
   | undefined {
   const wire = typedChannelProof(channel, key);
+  const requiredFields = [
+    'source_evidence_id',
+    'semantic_id',
+    'occurrence_id',
+    'dependency_fingerprint',
+    'counterfactual_reference_branch',
+    'played_root_branch',
+    'proof_paths',
+    ...extraFields,
+  ];
   if (
     !wire ||
-    !hasExactKeys(wire, [
-      'source_evidence_id',
-      'semantic_id',
-      'occurrence_id',
-      'dependency_fingerprint',
-      'counterfactual_reference_branch',
-      'played_root_branch',
-      'proof_paths',
-      ...extraFields,
-    ]) ||
+    !hasOnlyKeys(wire, [...requiredFields, ...optionalFields], requiredFields) ||
     !nonEmptyWireString(wire.source_evidence_id) ||
     !typedHash(wire.semantic_id) ||
     !typedHash(wire.occurrence_id) ||
@@ -2416,7 +2490,7 @@ function projectVacatedGateEnablesUnrecapturableSliderCapturePath(
     value,
     reference,
     played,
-    { premises: 2, absences: 3, minStates: 5 },
+    { premises: 2, absences: 3, minStates: 10 },
     premise => projectVacatedGateEnablesUnrecapturableSliderCapturePremise(premise, [reference, played]),
     premise => premise.resultId,
     premise => premise.issuerOccurrenceId!,
@@ -2458,7 +2532,7 @@ function projectVacatedGateEnablesUnrecapturableSliderCapturePath(
     exploit.pieceAfter !== slider.piece ||
     exploit.to !== capturedTarget.square ||
     capturedTarget.side === slider.side ||
-    path.states.length !== exploitIndex + 3
+    path.states.length !== exploitIndex * 5
   )
     return;
   const preExploitIndex = exploitIndex - 1;
@@ -2472,30 +2546,40 @@ function projectVacatedGateEnablesUnrecapturableSliderCapturePath(
       query: sliderQueryPrefix,
       prefix: true,
     })),
-    {
-      role: 'played_slider_occupied',
-      branchId: played.id,
-      branchRole: played.role,
-      afterStepIndex: preExploitIndex,
-      query: `occupied-by:${slider.side}:${slider.piece}@${slider.square}`,
-      prefix: false,
-    },
-    {
-      role: 'played_target_occupied',
-      branchId: played.id,
-      branchRole: played.role,
-      afterStepIndex: preExploitIndex,
+    ...Array.from({ length: exploitIndex }, (_, stepIndex) => ({
+      role: 'reference_target_persistence',
+      branchId: reference.id,
+      branchRole: reference.role,
+      afterStepIndex: stepIndex,
       query: `occupied-by:${capturedTarget.side}:${capturedTarget.piece}@${capturedTarget.square}`,
       prefix: false,
-    },
-    {
-      role: 'played_gate_blocker_occupied',
-      branchId: played.id,
-      branchRole: played.role,
-      afterStepIndex: preExploitIndex,
-      query: `occupied-by:${gateBlocker.side}:${gateBlocker.piece}@${gateBlocker.square}`,
-      prefix: false,
-    },
+    })),
+    ...Array.from({ length: exploitIndex }, (_, stepIndex) => [
+      {
+        role: 'played_slider_persistence',
+        branchId: played.id,
+        branchRole: played.role,
+        afterStepIndex: stepIndex,
+        query: `occupied-by:${slider.side}:${slider.piece}@${slider.square}`,
+        prefix: false,
+      },
+      {
+        role: 'played_target_persistence',
+        branchId: played.id,
+        branchRole: played.role,
+        afterStepIndex: stepIndex,
+        query: `occupied-by:${capturedTarget.side}:${capturedTarget.piece}@${capturedTarget.square}`,
+        prefix: false,
+      },
+      {
+        role: 'played_gate_blocker_persistence',
+        branchId: played.id,
+        branchRole: played.role,
+        afterStepIndex: stepIndex,
+        query: `occupied-by:${gateBlocker.side}:${gateBlocker.piece}@${gateBlocker.square}`,
+        prefix: false,
+      },
+    ]).flat(),
     {
       role: 'played_blocked_slider_reach',
       branchId: played.id,
@@ -2738,7 +2822,7 @@ function projectCausalPath<Premise>(
   };
 }
 
-function projectVacancyEnablesOccupation(
+function projectSquareReleaseRoute(
   channel: Record<string, unknown>,
   causeEvidenceId: string,
   candidateMove: Uci,
@@ -2747,38 +2831,82 @@ function projectVacancyEnablesOccupation(
 ): MoveReviewReason[] | undefined {
   const projected = projectVariableTwoBranchProof(
     channel,
-    'vacancy_enables_occupation_proof',
-    ['participants', 'occupation_move'],
+    'square_release_route_proof',
+    ['participants', 'route', 'terminal_step_index', 'terminal'],
     candidateMove,
     bestMove,
     startFen,
+    ['terminal_reply_move'],
   );
   if (!projected) return;
-  const participants = projected.wire.participants;
-  if (!isObject(participants) || !hasExactKeys(participants, ['releaser', 'occupier'])) return;
   const { wire, reference, played } = projected;
-  const releaser = projectTypedActor(participants.releaser);
-  const occupier = projectTypedActor(participants.occupier);
-  const occupationMove = uci(wire.occupation_move);
+  const participants = projectSquareReleaseRouteParticipants(wire.participants);
+  const projectedRoute = Array.isArray(wire.route) ? wire.route.map(projectSquareReleaseRouteStep) : [];
   if (
-    !releaser ||
-    !occupier ||
-    !occupationMove ||
-    played.steps.length !== reference.steps.length - 1 ||
-    releaser.side !== occupier.side ||
-    releaser.from !== occupier.to ||
-    reference.steps[reference.steps.length - 1]?.move !== occupationMove ||
+    !participants ||
+    !projectedRoute.length ||
+    !projectedRoute.every((step): step is MoveReviewSquareReleaseRouteStep => !!step)
+  )
+    return;
+  const route = projectedRoute;
+  const terminalStepIndex = nonNegativeInteger(wire.terminal_step_index);
+  const terminal = projectSquareReleaseRouteTerminal(wire.terminal, route[route.length - 1]!);
+  const hasTerminalReply = Object.prototype.hasOwnProperty.call(wire, 'terminal_reply_move');
+  const terminalReplyMove = hasTerminalReply ? uci(wire.terminal_reply_move) : undefined;
+  const { releaser, releasedBlocker, routePiece } = participants;
+  const firstRoute = route[0]!;
+  const lastRoute = route[route.length - 1]!;
+  const needsReply =
+    !!terminal &&
+    (terminal.kind === 'capture' ||
+      (terminal.kind === 'created-check' && terminal.terminalState === 'ongoing'));
+  if (
+    terminalStepIndex === undefined ||
+    !terminal ||
+    hasTerminalReply !== needsReply ||
+    (hasTerminalReply && !terminalReplyMove) ||
+    releasedBlocker.side !== releaser.side ||
+    releasedBlocker.piece !== releaser.pieceBefore ||
+    releasedBlocker.square !== releaser.from ||
+    routePiece.side !== firstRoute.side ||
+    routePiece.piece !== firstRoute.pieceBefore ||
+    routePiece.square !== firstRoute.from ||
+    firstRoute.side !== releaser.side ||
+    firstRoute.to !== releaser.from ||
+    firstRoute.stepIndex < 2 ||
+    firstRoute.stepIndex !== played.steps.length ||
+    route.some((step, index) =>
+      index === 0
+        ? false
+        : step.stepIndex <= route[index - 1]!.stepIndex ||
+          step.side !== route[index - 1]!.side ||
+          step.from !== route[index - 1]!.to ||
+          step.pieceBefore !== route[index - 1]!.pieceAfter,
+    ) ||
+    terminalStepIndex !== lastRoute.stepIndex ||
+    reference.steps.length !== terminalStepIndex + (terminalReplyMove ? 2 : 1) ||
+    route.some(step => reference.steps[step.stepIndex]?.move !== step.moveUci) ||
     !typedActorMatchesMove(releaser, reference.steps[0]?.move) ||
-    !typedActorMatchesMove(occupier, occupationMove)
+    (terminalReplyMove && reference.steps[terminalStepIndex + 1]?.move !== terminalReplyMove) ||
+    (terminal.kind === 'occupation' ? route.length !== 1 : route.length < 2)
   )
     return;
   const paths = wire.proof_paths.map(path =>
-    projectVacancyOccupationPath(path, reference, played, releaser, occupier, occupationMove),
+    projectSquareReleaseRoutePath(
+      path,
+      reference,
+      played,
+      releaser,
+      releasedBlocker,
+      routePiece,
+      route,
+      terminal,
+      terminalReplyMove,
+    ),
   );
   if (
-    !paths.every((path): path is MoveReviewVacancyOccupationPath => !!path) ||
-    !canonicalStrings(paths.map(path => path.id)) ||
-    !unique(paths.flatMap(path => [...path.absences, ...path.states]).map(use => use.useId))
+    !paths.every((path): path is MoveReviewSquareReleaseRoutePath => !!path) ||
+    !canonicalStrings(paths.map(path => path.id))
   )
     return;
   return paths.flatMap(path =>
@@ -2788,7 +2916,7 @@ function projectVacancyEnablesOccupation(
         id: proof.id,
         messageSlots: { candidateUci: candidateMove },
         message: {
-          kind: 'vacancy-enables-occupation' as const,
+          kind: 'square-release-route' as const,
           channelId: channel.channel_id as string,
           causeEvidenceId,
           causeKind: 'missed_square_release' as const,
@@ -2800,8 +2928,12 @@ function projectVacancyEnablesOccupation(
           branch: wireBranchIdentity(branch),
           counterpart: wireBranchIdentity(branch === reference ? played : reference),
           releaser,
-          occupier,
-          occupationMove,
+          releasedBlocker,
+          routePiece,
+          route,
+          terminalStepIndex,
+          terminal,
+          ...(terminalReplyMove ? { terminalReplyMove } : {}),
           premises: path.premises,
           absences: path.absences,
           states: path.states,
@@ -2812,78 +2944,144 @@ function projectVacancyEnablesOccupation(
   );
 }
 
-function projectVacancyOccupationPath(
+function projectSquareReleaseRouteParticipants(value: unknown):
+  | {
+      releaser: MoveReviewTypedActor;
+      releasedBlocker: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      routePiece: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+    }
+  | undefined {
+  if (!isObject(value) || !hasExactKeys(value, ['releaser', 'released_blocker', 'route_piece'])) return;
+  const releaser = projectTypedActor(value.releaser);
+  const releasedBlocker = projectColoredPiece(value.released_blocker);
+  const routePiece = projectColoredPiece(value.route_piece);
+  return releaser && releasedBlocker && routePiece ? { releaser, releasedBlocker, routePiece } : undefined;
+}
+
+function projectSquareReleaseRoutePath(
   value: unknown,
   reference: MoveReviewWireBranch,
   played: MoveReviewWireBranch,
   releaser: MoveReviewTypedActor,
-  occupier: MoveReviewTypedActor,
-  occupationMove: Uci,
-): MoveReviewVacancyOccupationPath | undefined {
-  const occupationIndex = reference.steps.length - 1;
+  releasedBlocker: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key },
+  routePiece: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key },
+  route: MoveReviewSquareReleaseRouteStep[],
+  terminal: MoveReviewSquareReleaseRouteTerminal,
+  terminalReplyMove: Uci | undefined,
+): MoveReviewSquareReleaseRoutePath | undefined {
+  const firstRouteIndex = route[0]!.stepIndex;
+  const terminalStepIndex = route[route.length - 1]!.stepIndex;
+  const verticalPremiseCount = terminal.kind === 'occupation' ? 0 : 1;
+  const premiseCount = verticalPremiseCount + 1 + route.length + (terminalReplyMove ? 1 : 0);
+  const persistenceCount = route
+    .slice(0, -1)
+    .reduce((count, step, index) => count + route[index + 1]!.stepIndex - step.stepIndex - 1, 0);
   const path = projectCausalPath(
     value,
     reference,
     played,
-    { premises: 2, absences: 1, states: occupationIndex + 3 },
-    premise => projectLegalMovePremise(premise, reference),
-    premise => premise.legalMoveSemanticId,
-    premise => premise.issuerOccurrenceId,
+    { premises: premiseCount, absences: 1, states: firstRouteIndex * 3 + route.length + persistenceCount },
+    premise =>
+      isObject(premise) && premise.contract === 'legal_move'
+        ? projectLegalMovePremise(premise, reference)
+        : projectTypedPremise(premise, [reference]),
+    premise => (isSquareReleaseRouteLegalPremise(premise) ? premise.legalMoveSemanticId : premise.resultId),
+    premise => premise.issuerOccurrenceId!,
   );
   if (!path) return;
-  const release = path.premises[0]!;
-  const occupation = path.premises[1]!;
+  let premiseIndex = 0;
+  const terminalPremise = terminal.kind === 'occupation' ? undefined : path.premises[premiseIndex++];
+  const release = path.premises[premiseIndex++];
+  const routePremises = path.premises.slice(premiseIndex, premiseIndex + route.length);
+  premiseIndex += route.length;
+  const replyPremise = terminalReplyMove ? path.premises[premiseIndex++] : undefined;
+  const firstRoutePremise = routePremises[0];
+  const finalRoutePremise = routePremises[routePremises.length - 1];
   if (
+    !release ||
+    !isSquareReleaseRouteLegalPremise(release) ||
     release.role !== 'reference_release_move' ||
     release.stepIndex !== 0 ||
     release.moveUci !== reference.steps[0]?.move ||
     !sameTypedActor(release.movement, releaser) ||
-    occupation.role !== 'reference_occupation_move' ||
-    occupation.stepIndex !== occupationIndex ||
-    occupation.moveUci !== occupationMove ||
-    occupation.capture !== undefined ||
-    !sameTypedActor(occupation.movement, occupier)
+    premiseIndex !== path.premises.length ||
+    routePremises.some((premise, routeIndex) => {
+      const step = route[routeIndex]!;
+      return (
+        !isSquareReleaseRouteLegalPremise(premise) ||
+        premise.role !== `reference_route_move_${routeIndex}` ||
+        premise.stepIndex !== step.stepIndex ||
+        premise.moveUci !== step.moveUci ||
+        !sameTypedActor(premise.movement, step) ||
+        (routeIndex === 0 && premise.capture !== undefined)
+      );
+    }) ||
+    !squareReleaseRouteTerminalPremiseMatches(terminalPremise, terminal, reference, terminalStepIndex) ||
+    !squareReleaseRouteReplyPremiseMatches(
+      replyPremise,
+      terminal,
+      terminalReplyMove,
+      reference,
+      terminalStepIndex,
+    ) ||
+    (terminal.kind === 'occupation' &&
+      (!firstRoutePremise ||
+        !isSquareReleaseRouteLegalPremise(firstRoutePremise) ||
+        firstRoutePremise.capture !== undefined)) ||
+    (terminal.kind === 'capture' &&
+      (!finalRoutePremise ||
+        !isSquareReleaseRouteLegalPremise(finalRoutePremise) ||
+        !sameColoredPiece(finalRoutePremise.capture, terminal.capturedTarget)))
   )
     return;
   const absence = path.absences[0]!;
-  const expectedState = [
-    ...Array.from({ length: occupationIndex }, (_, stepIndex) => ({
+  const expectedStates = [
+    ...Array.from({ length: firstRouteIndex }, (_, stepIndex) => ({
       role: 'reference_vacancy',
       branchId: reference.id,
       branchRole: reference.role,
       stepIndex,
       query: `vacant:${releaser.from}`,
     })),
-    {
-      role: 'reference_occupation',
+    ...route.map((step, routeIndex) => ({
+      role: `reference_route_piece_${routeIndex}`,
       branchId: reference.id,
       branchRole: reference.role,
-      stepIndex: occupationIndex,
-      query: `occupied-by:${occupier.side}:${occupier.pieceAfter}@${occupier.to}`,
-    },
-    {
-      role: 'played_blocker',
+      stepIndex: step.stepIndex,
+      query: `occupied-by:${step.side}:${step.pieceAfter}@${step.to}`,
+    })),
+    ...route.slice(0, -1).flatMap((step, routeIndex) =>
+      Array.from({ length: route[routeIndex + 1]!.stepIndex - step.stepIndex - 1 }, (_, offset) => ({
+        role: `reference_route_persistence_${routeIndex}`,
+        branchId: reference.id,
+        branchRole: reference.role,
+        stepIndex: step.stepIndex + offset + 1,
+        query: `occupied-by:${step.side}:${step.pieceAfter}@${step.to}`,
+      })),
+    ),
+    ...Array.from({ length: firstRouteIndex }, (_, stepIndex) => ({
+      role: 'played_blocker_persistence',
       branchId: played.id,
       branchRole: played.role,
-      stepIndex: occupationIndex - 1,
-      query: `occupied-by:${releaser.side}:${releaser.pieceBefore}@${releaser.from}`,
-    },
-    {
-      role: 'played_occupier',
+      stepIndex,
+      query: `occupied-by:${releasedBlocker.side}:${releasedBlocker.piece}@${releasedBlocker.square}`,
+    })),
+    ...Array.from({ length: firstRouteIndex }, (_, stepIndex) => ({
+      role: 'played_route_origin_persistence',
       branchId: played.id,
       branchRole: played.role,
-      stepIndex: occupationIndex - 1,
-      query: `occupied-by:${occupier.side}:${occupier.pieceBefore}@${occupier.from}`,
-    },
+      stepIndex,
+      query: `occupied-by:${routePiece.side}:${routePiece.piece}@${routePiece.square}`,
+    })),
   ];
   if (
-    absence.role !== 'played_occupation_move_absent' ||
+    absence.role !== 'played_first_route_leg_absent' ||
     absence.branchId !== played.id ||
     absence.branchRole !== played.role ||
-    absence.afterStepIndex !== occupationIndex - 1 ||
-    absence.query !== `legal-move-from-to:${occupier.side}:${occupier.from}:${occupier.to}` ||
+    absence.afterStepIndex !== firstRouteIndex - 1 ||
+    absence.query !== `legal-move-from-to:${route[0]!.side}:${route[0]!.from}:${route[0]!.to}` ||
     path.states.some((state, index) => {
-      const expected = expectedState[index]!;
+      const expected = expectedStates[index]!;
       return (
         state.role !== expected.role ||
         state.branchId !== expected.branchId ||
@@ -2895,6 +3093,338 @@ function projectVacancyOccupationPath(
   )
     return;
   return path;
+}
+
+function isSquareReleaseRouteLegalPremise(
+  premise: MoveReviewSquareReleaseRoutePremise,
+): premise is MoveReviewLegalMovePremise {
+  return 'legalMoveSemanticId' in premise;
+}
+
+function squareReleaseRouteTerminalPremiseMatches(
+  premise: MoveReviewSquareReleaseRoutePremise | undefined,
+  terminal: MoveReviewSquareReleaseRouteTerminal,
+  reference: MoveReviewWireBranch,
+  terminalStepIndex: number,
+): boolean {
+  if (terminal.kind === 'occupation') return premise === undefined;
+  const contract =
+    terminal.kind === 'capture' ? 'capture_recapture_inventory' : 'created_check_response_inventory';
+  return (
+    !!premise &&
+    !isSquareReleaseRouteLegalPremise(premise) &&
+    premise.contract === contract &&
+    matchesTypedPremiseOccurrence(
+      premise,
+      'reference_terminal_resource',
+      contract,
+      reference,
+      terminalStepIndex,
+    ) &&
+    premise.resultId.slice(contract.length + 1) !== terminal.assertionId
+  );
+}
+
+function squareReleaseRouteReplyPremiseMatches(
+  premise: MoveReviewSquareReleaseRoutePremise | undefined,
+  terminal: MoveReviewSquareReleaseRouteTerminal,
+  replyMove: Uci | undefined,
+  reference: MoveReviewWireBranch,
+  terminalStepIndex: number,
+): boolean {
+  if (!replyMove) return premise === undefined;
+  if (
+    !premise ||
+    !isSquareReleaseRouteLegalPremise(premise) ||
+    premise.role !== 'reference_terminal_reply' ||
+    premise.stepIndex !== terminalStepIndex + 1 ||
+    premise.moveUci !== replyMove ||
+    reference.steps[premise.stepIndex]?.move !== replyMove ||
+    (terminal.kind === 'capture' && premise.movement.side !== terminal.capturedTarget.side) ||
+    (terminal.kind === 'created-check' && premise.movement.side !== terminal.checkedSide)
+  )
+    return false;
+  return (
+    terminal.kind !== 'created-check' ||
+    terminal.responses.some(response =>
+      sameSquareReleaseRouteResource(response.resource, {
+        ...premise.movement,
+        moveUci: premise.moveUci,
+        ...(premise.capture ? { capture: premise.capture } : {}),
+      }),
+    )
+  );
+}
+
+function projectSquareReleaseRouteStep(value: unknown): MoveReviewSquareReleaseRouteStep | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['side', 'from', 'to', 'piece_before', 'piece_after', 'move_uci', 'step_index'])
+  )
+    return;
+  const actor = projectTypedActor({
+    side: value.side,
+    from: value.from,
+    to: value.to,
+    piece_before: value.piece_before,
+    piece_after: value.piece_after,
+  });
+  const moveUci = uci(value.move_uci);
+  const stepIndex = nonNegativeInteger(value.step_index);
+  return actor && moveUci && stepIndex !== undefined && typedActorMatchesMove(actor, moveUci)
+    ? { ...actor, moveUci, stepIndex }
+    : undefined;
+}
+
+function projectSquareReleaseRouteTerminal(
+  value: unknown,
+  lastRoute: MoveReviewSquareReleaseRouteStep,
+): MoveReviewSquareReleaseRouteTerminal | undefined {
+  if (!isObject(value) || typeof value.kind !== 'string') return;
+  if (value.kind === 'occupation') return hasExactKeys(value, ['kind']) ? { kind: 'occupation' } : undefined;
+  if (value.kind === 'capture') {
+    if (
+      !hasExactKeys(value, [
+        'kind',
+        'assertion_id',
+        'captured_target',
+        'geometric_recapturers',
+        'legal_recaptures',
+        'restricted_recaptures',
+      ]) ||
+      !typedHash(value.assertion_id) ||
+      !Array.isArray(value.geometric_recapturers) ||
+      !Array.isArray(value.legal_recaptures) ||
+      !Array.isArray(value.restricted_recaptures)
+    )
+      return;
+    const capturedTarget = projectColoredPiece(value.captured_target);
+    const geometricRecapturers = value.geometric_recapturers.map(projectPieceWitness);
+    const legalRecaptures = value.legal_recaptures.map(projectSquareReleaseRouteResource);
+    const restrictedRecaptures = value.restricted_recaptures.map(restriction => {
+      if (
+        !isObject(restriction) ||
+        !hasExactKeys(restriction, ['piece', 'destination', 'king_square', 'post_move_controllers']) ||
+        !key(restriction.destination) ||
+        !key(restriction.king_square) ||
+        !Array.isArray(restriction.post_move_controllers)
+      )
+        return;
+      const piece = projectPieceWitness(restriction.piece);
+      const controllers = restriction.post_move_controllers.map(projectPieceWitness);
+      return piece &&
+        controllers.length > 0 &&
+        controllers.every((controller): controller is MoveReviewPieceWitness => !!controller) &&
+        canonicalStrings(controllers.map(pieceWitnessKey))
+        ? {
+            piece,
+            destination: restriction.destination as Key,
+            kingSquare: restriction.king_square as Key,
+            postMoveControllers: controllers,
+          }
+        : undefined;
+    });
+    if (
+      !capturedTarget ||
+      capturedTarget.side === lastRoute.side ||
+      capturedTarget.square !== lastRoute.to ||
+      !geometricRecapturers.every((piece): piece is MoveReviewPieceWitness => !!piece) ||
+      !canonicalStrings(geometricRecapturers.map(pieceWitnessKey)) ||
+      !legalRecaptures.every((resource): resource is MoveReviewSquareReleaseRouteResource => !!resource) ||
+      !canonicalStrings(legalRecaptures.map(squareReleaseRouteResourceKey)) ||
+      !restrictedRecaptures.every(
+        (restriction): restriction is NonNullable<(typeof restrictedRecaptures)[number]> => !!restriction,
+      ) ||
+      legalRecaptures.some(
+        resource =>
+          resource.side !== capturedTarget.side ||
+          resource.to !== lastRoute.to ||
+          !geometricRecapturers.some(
+            piece => piece.square === resource.from && piece.piece === resource.pieceBefore,
+          ) ||
+          !sameColoredPiece(resource.capture, {
+            side: lastRoute.side,
+            piece: lastRoute.pieceAfter,
+            square: lastRoute.to,
+          }),
+      ) ||
+      restrictedRecaptures.some(
+        restriction =>
+          restriction.destination !== lastRoute.to ||
+          !geometricRecapturers.some(
+            piece => piece.square === restriction.piece.square && piece.piece === restriction.piece.piece,
+          ),
+      )
+    )
+      return;
+    return {
+      kind: 'capture',
+      assertionId: value.assertion_id as string,
+      capturedTarget,
+      geometricRecapturers,
+      legalRecaptures,
+      restrictedRecaptures,
+    };
+  }
+  if (
+    value.kind !== 'created_check' ||
+    !hasExactKeys(value, [
+      'kind',
+      'assertion_id',
+      'checked_side',
+      'king_square',
+      'checkers',
+      'responses',
+      'controlled_king_destinations',
+      'terminal_state',
+    ]) ||
+    !typedHash(value.assertion_id) ||
+    (value.checked_side !== 'white' && value.checked_side !== 'black') ||
+    value.checked_side === lastRoute.side ||
+    !key(value.king_square) ||
+    (value.terminal_state !== 'ongoing' && value.terminal_state !== 'checkmate') ||
+    !Array.isArray(value.checkers) ||
+    !Array.isArray(value.responses) ||
+    !Array.isArray(value.controlled_king_destinations)
+  )
+    return;
+  const checkers = value.checkers.map(projectPieceWitness);
+  const responses = value.responses.map(projectSquareReleaseRouteCheckResponse);
+  const controlledKingDestinations = value.controlled_king_destinations.map(destination => {
+    if (
+      !isObject(destination) ||
+      !hasExactKeys(destination, ['destination', 'controllers']) ||
+      !key(destination.destination) ||
+      !Array.isArray(destination.controllers)
+    )
+      return;
+    const controllers = destination.controllers.map(projectPieceWitness);
+    return controllers.length > 0 &&
+      controllers.every((controller): controller is MoveReviewPieceWitness => !!controller) &&
+      canonicalStrings(controllers.map(pieceWitnessKey))
+      ? { destination: destination.destination as Key, controllers }
+      : undefined;
+  });
+  if (
+    checkers.length < 1 ||
+    !checkers.every((piece): piece is MoveReviewPieceWitness => !!piece) ||
+    !canonicalStrings(checkers.map(pieceWitnessKey)) ||
+    !responses.every((response): response is NonNullable<(typeof responses)[number]> => !!response) ||
+    !canonicalStrings(responses.map(squareReleaseRouteCheckResponseKey)) ||
+    responses.some(response => response.resource.side !== value.checked_side) ||
+    !controlledKingDestinations.every(
+      (destination): destination is NonNullable<(typeof controlledKingDestinations)[number]> => !!destination,
+    ) ||
+    !canonicalStrings(controlledKingDestinations.map(destination => destination.destination)) ||
+    (value.terminal_state === 'checkmate') !== (responses.length === 0)
+  )
+    return;
+  return {
+    kind: 'created-check',
+    assertionId: value.assertion_id as string,
+    checkedSide: value.checked_side,
+    kingSquare: value.king_square as Key,
+    checkers,
+    responses,
+    controlledKingDestinations,
+    terminalState: value.terminal_state,
+  };
+}
+
+function projectSquareReleaseRouteCheckResponse(
+  value: unknown,
+): Extract<MoveReviewSquareReleaseRouteTerminal, { kind: 'created-check' }>['responses'][number] | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['resource', 'modes']) ||
+    !Array.isArray(value.modes) ||
+    value.modes.length < 1 ||
+    !value.modes.every(mode => mode === 'capture_checker' || mode === 'interpose' || mode === 'king_move') ||
+    !canonicalStrings(value.modes)
+  )
+    return;
+  const resource = projectSquareReleaseRouteResource(value.resource);
+  return resource
+    ? {
+        resource,
+        modes: value.modes as ('capture_checker' | 'interpose' | 'king_move')[],
+      }
+    : undefined;
+}
+
+function projectSquareReleaseRouteResource(value: unknown): MoveReviewSquareReleaseRouteResource | undefined {
+  if (
+    !isObject(value) ||
+    !hasOnlyKeys(
+      value,
+      ['side', 'from', 'to', 'piece_before', 'piece_after', 'move_uci', 'capture'],
+      ['side', 'from', 'to', 'piece_before', 'piece_after', 'move_uci'],
+    )
+  )
+    return;
+  const actor = projectTypedActor({
+    side: value.side,
+    from: value.from,
+    to: value.to,
+    piece_before: value.piece_before,
+    piece_after: value.piece_after,
+  });
+  const moveUci = uci(value.move_uci);
+  const hasCapture = Object.prototype.hasOwnProperty.call(value, 'capture');
+  const capture = hasCapture ? projectColoredPiece(value.capture) : undefined;
+  return actor && moveUci && typedActorMatchesMove(actor, moveUci) && (!hasCapture || capture)
+    ? { ...actor, moveUci, ...(capture ? { capture } : {}) }
+    : undefined;
+}
+
+function projectPieceWitness(value: unknown): MoveReviewPieceWitness | undefined {
+  return isObject(value) &&
+    hasExactKeys(value, ['piece', 'square']) &&
+    pieceRole(value.piece) &&
+    key(value.square)
+    ? { piece: value.piece as MoveReviewPieceRole, square: value.square as Key }
+    : undefined;
+}
+
+function pieceWitnessKey(piece: MoveReviewPieceWitness): string {
+  return `${piece.square}:${piece.piece}`;
+}
+
+function squareReleaseRouteResourceKey(resource: MoveReviewSquareReleaseRouteResource): string {
+  const capture = resource.capture
+    ? `${resource.capture.side}:${resource.capture.piece}@${resource.capture.square}`
+    : 'quiet';
+  return `${resource.side}:${resource.from}:${resource.to}:${resource.pieceBefore}:${resource.pieceAfter}:${resource.moveUci}:${capture}`;
+}
+
+function squareReleaseRouteCheckResponseKey(
+  response: Extract<MoveReviewSquareReleaseRouteTerminal, { kind: 'created-check' }>['responses'][number],
+): string {
+  return `${squareReleaseRouteResourceKey(response.resource)}:${response.modes.join(',')}`;
+}
+
+function sameSquareReleaseRouteResource(
+  left: MoveReviewSquareReleaseRouteResource,
+  right: MoveReviewSquareReleaseRouteResource,
+): boolean {
+  return (
+    left.moveUci === right.moveUci &&
+    sameTypedActor(left, right) &&
+    ((!left.capture && !right.capture) || sameColoredPiece(left.capture, right.capture))
+  );
+}
+
+function sameColoredPiece(
+  left: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key } | undefined,
+  right: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key } | undefined,
+): boolean {
+  return (
+    !!left &&
+    !!right &&
+    left.side === right.side &&
+    left.piece === right.piece &&
+    left.square === right.square
+  );
 }
 
 function projectLegalMovePremise(

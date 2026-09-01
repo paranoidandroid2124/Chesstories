@@ -158,12 +158,12 @@ class L2ProofProvenanceTest(unittest.TestCase):
     def test_references_are_registered_and_do_not_claim_more_than_the_sources(self) -> None:
         required_unsupported = {
             "VacatedGateEnablesUnrecapturableSliderCapture": {"general_preparation", "plan"},
-            "VacancyEnablesOccupation": {
+            "SquareReleaseRoute": {
                 "general_preparation",
+                "global_unbounded_piece_token_identity",
                 "good_move",
                 "maneuver",
                 "outpost",
-                "physical_token_identity",
                 "plan",
                 "sole_cause",
                 "unbounded_vacancy",

@@ -2,36 +2,37 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Sole graph owner for the immediate unique-check-reply displacement proof. */
-private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler:
+/** Sole graph owner for exact square-release route results. */
+private[chessjudgment] object SquareReleaseRouteAssembler:
 
   private[assembly] def fromDemand(
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
       demand: RelationCausalProofDemand
   ): List[EvidenceRecord] =
-    demand.uniqueCheckReplyDefenderDisplacementBeforeCaptureSeed.toList.flatMap { changedSeed =>
+    if demand.squareReleaseRouteSeeds.isEmpty then Nil
+    else
       val input = demand.input
-      val family = "unique-check-reply-defender-displacement-before-capture"
+      val family = "square-release-route"
       ExactCausalProofOwnerReuse.comparedLineRecords(
         family = family,
         context = context,
         input = input,
         existingPayload = {
-          case payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence
+          case payload: SquareReleaseRouteEvidence
               if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
             Some(payload.dependencyId -> payload.resultSet)
           case _ => None
         }
       )(
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.deriveImmediate(
+        SquareReleaseRouteProof.deriveChangedDependencies(
           input.comparison.referenceLine,
           input.comparison.candidateLine,
           input.referenceSource,
           input.playedSource,
           input.referenceReplay,
           input.playedReplay,
-          changedSeed
+          demand.squareReleaseRouteSeeds
         )
       )(
         semantic = _.semantic,
@@ -41,16 +42,16 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureA
             exact.occurrence.occurrenceId,
             exact.dependency.value,
             exact.occurrence.referenceLine,
-            exact.proof.parentSources,
+            exact.parentSources,
             exact.occurrence.proofPaths.map(_.pathOccurrenceId).sorted
           ),
         create = (exact, proofRecord, resultSet) =>
-          val payload = UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence(
+          val payload = SquareReleaseRouteEvidence(
             semantic = exact.semantic,
             occurrence = exact.occurrence,
             dependencyFingerprint = exact.dependency.value,
             resultSet = resultSet,
-            occurrenceProof = Some(exact.proof)
+            occurrenceProof = Some(exact)
           )
           EvidenceRecord(
             ref = EvidenceRef(
@@ -66,4 +67,3 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureA
             parents = proofRecord.parentSources
           )
       )
-    }

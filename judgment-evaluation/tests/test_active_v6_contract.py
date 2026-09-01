@@ -542,10 +542,15 @@ def _vacated_gate_enables_unrecapturable_slider_capture_proof() -> dict[str, obj
         ],
         "closed_state_uses": [
             closure("d" * 64, "reference_intervening_slider_reach", "position_relation_extractor.closed_position_state_inventory", "line.reference", "d" * 64, "slider-reach:white:rook@a1:north:open", reference_id, "counterfactual_reference", 1, reference_fens[1], 2, "best_line"),
-            closure("e" * 64, "played_slider_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:rook@a1", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
-            closure("f" * 64, "played_target_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:black:queen@a7", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
-            closure("0" * 64, "played_gate_blocker_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:knight@a2", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
-            closure("1" * 63 + "0", "played_blocked_slider_reach", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "slider-reach:white:rook@a1:north:blocked-a2", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("e" * 64, "reference_target_persistence", "position_relation_extractor.closed_position_state_inventory", "line.reference", reference_occurrence, "occupied-by:black:queen@a7", reference_id, "counterfactual_reference", 0, reference_fens[0], 1, "best_line"),
+            closure("f" * 64, "reference_target_persistence", "position_relation_extractor.closed_position_state_inventory", "line.reference", "d" * 64, "occupied-by:black:queen@a7", reference_id, "counterfactual_reference", 1, reference_fens[1], 2, "best_line"),
+            closure("0" * 64, "played_slider_persistence", "position_relation_extractor.closed_position_state_inventory", "line.played", "8" * 64, "occupied-by:white:rook@a1", played_id, "played_root_analysis_continuation", 0, played_fens[0], 1, "played_line"),
+            closure("0" * 63 + "1", "played_target_persistence", "position_relation_extractor.closed_position_state_inventory", "line.played", "8" * 64, "occupied-by:black:queen@a7", played_id, "played_root_analysis_continuation", 0, played_fens[0], 1, "played_line"),
+            closure("0" * 63 + "2", "played_gate_blocker_persistence", "position_relation_extractor.closed_position_state_inventory", "line.played", "8" * 64, "occupied-by:white:knight@a2", played_id, "played_root_analysis_continuation", 0, played_fens[0], 1, "played_line"),
+            closure("0" * 63 + "3", "played_slider_persistence", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:rook@a1", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("0" * 63 + "4", "played_target_persistence", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:black:queen@a7", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("0" * 63 + "5", "played_gate_blocker_persistence", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:knight@a2", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("0" * 63 + "6", "played_blocked_slider_reach", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "slider-reach:white:rook@a1:north:blocked-a2", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
         ],
     }
     return {
@@ -585,7 +590,7 @@ def _vacated_gate_enables_unrecapturable_slider_capture_proof() -> dict[str, obj
     }
 
 
-def _vacancy_enables_occupation_proof() -> dict[str, object]:
+def _square_release_route_proof() -> dict[str, object]:
     root = "1r4k1/p1q2p1p/2BRbp1B/4p3/P1p4P/6P1/1P2PP1K/3R4 w - - 0 30"
     reference_moves = ["c6g2", "e6f5", "d6c6"]
     played_moves = ["d1d2", "e6f5"]
@@ -676,7 +681,12 @@ def _vacancy_enables_occupation_proof() -> dict[str, object]:
         "piece_before": "bishop",
         "piece_after": "bishop",
     }
-    occupier = {
+    route_piece = {
+        "side": "white",
+        "piece": "rook",
+        "square": "d6",
+    }
+    first_leg = {
         "side": "white",
         "from": "d6",
         "to": "c6",
@@ -684,7 +694,7 @@ def _vacancy_enables_occupation_proof() -> dict[str, object]:
         "piece_after": "rook",
     }
     return {
-        "source_evidence_id": "vacancy.source",
+        "source_evidence_id": "route.source",
         "semantic_id": "e" * 64,
         "occurrence_id": "f" * 64,
         "dependency_fingerprint": "0" * 64,
@@ -713,12 +723,12 @@ def _vacancy_enables_occupation_proof() -> dict[str, object]:
                 "path_occurrence_id": "3" * 64,
                 "premises": [
                     legal_move("reference_release_move", "c6g2", releaser, 0, "4"),
-                    legal_move("reference_occupation_move", "d6c6", occupier, 2, "6"),
+                    legal_move("reference_route_move_0", "d6c6", first_leg, 2, "6"),
                 ],
                 "closed_absence_uses": [
                     closure(
                         "8" * 64,
-                        "played_occupation_move_absent",
+                        "played_first_route_leg_absent",
                         "position_relation_extractor.closed_relation_inventory",
                         "legal-move-from-to:white:d6:c6",
                         played_id,
@@ -731,15 +741,215 @@ def _vacancy_enables_occupation_proof() -> dict[str, object]:
                 "closed_state_uses": [
                     closure("5" * 64, "reference_vacancy", "position_relation_extractor.closed_position_state_inventory", "vacant:c6", reference_id, "counterfactual_reference", 0, reference_fens[0], "best_line"),
                     closure("7" * 64, "reference_vacancy", "position_relation_extractor.closed_position_state_inventory", "vacant:c6", reference_id, "counterfactual_reference", 1, reference_fens[1], "best_line"),
-                    closure("9" * 64, "reference_occupation", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@c6", reference_id, "counterfactual_reference", 2, reference_fens[2], "best_line"),
-                    closure("a" * 64, "played_blocker", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:bishop@c6", played_id, "played_root_analysis_continuation", 1, played_fens[1], "played_line"),
-                    closure("b" * 64, "played_occupier", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@d6", played_id, "played_root_analysis_continuation", 1, played_fens[1], "played_line"),
+                    closure("9" * 64, "reference_route_piece_0", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@c6", reference_id, "counterfactual_reference", 2, reference_fens[2], "best_line"),
+                    closure("a" * 64, "played_blocker_persistence", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:bishop@c6", played_id, "played_root_analysis_continuation", 0, played_fens[0], "played_line"),
+                    closure("b" * 64, "played_blocker_persistence", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:bishop@c6", played_id, "played_root_analysis_continuation", 1, played_fens[1], "played_line"),
+                    closure("c" * 64, "played_route_origin_persistence", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@d6", played_id, "played_root_analysis_continuation", 0, played_fens[0], "played_line"),
+                    closure("d" * 64, "played_route_origin_persistence", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@d6", played_id, "played_root_analysis_continuation", 1, played_fens[1], "played_line"),
                 ],
             }
         ],
-        "participants": {"releaser": releaser, "occupier": occupier},
-        "occupation_move": "d6c6",
+        "participants": {
+            "releaser": releaser,
+            "released_blocker": {"side": "white", "piece": "bishop", "square": "c6"},
+            "route_piece": route_piece,
+        },
+        "route": [{**first_leg, "move_uci": "d6c6", "step_index": 2}],
+        "terminal_step_index": 2,
+        "terminal": {"kind": "occupation"},
     }
+
+
+def _square_release_route_capture_proof() -> dict[str, object]:
+    proof = _square_release_route_proof()
+    reference = proof["counterfactual_reference_branch"]
+    path = proof["proof_paths"][0]
+    steps = reference["steps"]
+    after_intervening = (
+        "1r4k1/2q2p1p/p1R2p1B/4pb2/P1p4P/6P1/1P2PPBK/8 w - - 4 32"
+    )
+    after_capture = (
+        "1r4k1/2R2p1p/p4p1B/4pb2/P1p4P/6P1/1P2PPBK/8 b - - 0 32"
+    )
+    after_reply = (
+        "6k1/2r2p1p/p4p1B/4pb2/P1p4P/6P1/1P2PPBK/8 w - - 0 33"
+    )
+    steps.extend(
+        [
+            {
+                "step_index": 3,
+                "provenance": "certified_analysis_move",
+                "ply": 62,
+                "move_uci": "a7a6",
+                "fen_before": steps[2]["fen_after"],
+                "fen_after": after_intervening,
+            },
+            {
+                "step_index": 4,
+                "provenance": "certified_analysis_move",
+                "ply": 63,
+                "move_uci": "c6c7",
+                "fen_before": after_intervening,
+                "fen_after": after_capture,
+            },
+            {
+                "step_index": 5,
+                "provenance": "certified_analysis_move",
+                "ply": 64,
+                "move_uci": "b8c7",
+                "fen_before": after_capture,
+                "fen_after": after_reply,
+            },
+        ]
+    )
+    terminal_use = {
+        "role": "reference_terminal_resource",
+        "contract": "capture_recapture_inventory",
+        "result_id": f"capture_recapture_inventory:{'2' * 64}",
+        "issuer_evidence_id": "line.reference",
+        "issuer_occurrence_id": "8" * 64,
+        "source_premise_ids": sorted(["line.reference", "8" * 64, "lower.capture"]),
+        "branch_id": reference["branch_id"],
+        "branch_role": "counterfactual_reference",
+        "step_index": 4,
+    }
+    route_capture = {
+        "role": "reference_route_move_1",
+        "contract": "legal_move",
+        "move_uci": "c6c7",
+        "movement": {
+            "side": "white",
+            "from": "c6",
+            "to": "c7",
+            "piece_before": "rook",
+            "piece_after": "rook",
+        },
+        "movement_mode": "controlled_destination",
+        "legal_move_semantic_id": "9" * 64,
+        "issuer_evidence_id": "line.reference",
+        "issuer_occurrence_id": "a" * 64,
+        "source_premise_ids": sorted(
+            ["line.reference", "a" * 64, f"legal-move:{'9' * 64}"]
+        ),
+        "branch_id": reference["branch_id"],
+        "branch_role": "counterfactual_reference",
+        "step_index": 4,
+        "capture": {"side": "black", "piece": "queen", "square": "c7"},
+    }
+    reply = {
+        "role": "reference_terminal_reply",
+        "contract": "legal_move",
+        "move_uci": "b8c7",
+        "movement": {
+            "side": "black",
+            "from": "b8",
+            "to": "c7",
+            "piece_before": "rook",
+            "piece_after": "rook",
+        },
+        "movement_mode": "controlled_destination",
+        "legal_move_semantic_id": "b" * 64,
+        "issuer_evidence_id": "line.reference",
+        "issuer_occurrence_id": "c" * 64,
+        "source_premise_ids": sorted(
+            ["line.reference", "c" * 64, f"legal-move:{'b' * 64}"]
+        ),
+        "branch_id": reference["branch_id"],
+        "branch_role": "counterfactual_reference",
+        "step_index": 5,
+        "capture": {"side": "white", "piece": "rook", "square": "c7"},
+    }
+    path["premises"] = [terminal_use, *path["premises"], route_capture, reply]
+    base_states = path["closed_state_uses"]
+    route_endpoint = copy.deepcopy(base_states[2])
+    route_endpoint.update(
+        role="reference_route_piece_1",
+        query="occupied-by:white:rook@c7",
+        after_step_index=4,
+        position={"fen": after_capture, "ply": 63, "scope": "best_line"},
+    )
+    route_persistence = copy.deepcopy(base_states[2])
+    route_persistence.update(
+        role="reference_route_persistence_0",
+        query="occupied-by:white:rook@c6",
+        after_step_index=3,
+        position={"fen": after_intervening, "ply": 62, "scope": "best_line"},
+    )
+    path["closed_state_uses"] = [
+        *base_states[:3],
+        route_endpoint,
+        route_persistence,
+        *base_states[3:],
+    ]
+    for index, state in enumerate(path["closed_state_uses"], start=1):
+        state["use_id"] = f"{index:064x}"
+    proof["route"].append(
+        {
+            "side": "white",
+            "from": "c6",
+            "to": "c7",
+            "piece_before": "rook",
+            "piece_after": "rook",
+            "move_uci": "c6c7",
+            "step_index": 4,
+        }
+    )
+    proof["terminal_step_index"] = 4
+    proof["terminal_reply_move"] = "b8c7"
+    proof["terminal"] = {
+        "kind": "capture",
+        "assertion_id": "1" * 64,
+        "captured_target": {"side": "black", "piece": "queen", "square": "c7"},
+        "geometric_recapturers": [{"piece": "rook", "square": "b8"}],
+        "legal_recaptures": [
+            {
+                "side": "black",
+                "from": "b8",
+                "to": "c7",
+                "piece_before": "rook",
+                "piece_after": "rook",
+                "move_uci": "b8c7",
+                "capture": {"side": "white", "piece": "rook", "square": "c7"},
+            }
+        ],
+        "restricted_recaptures": [],
+    }
+    return proof
+
+
+def _square_release_route_check_proof(*, checkmate: bool = False) -> dict[str, object]:
+    proof = _square_release_route_capture_proof()
+    reference = proof["counterfactual_reference_branch"]
+    path = proof["proof_paths"][0]
+    terminal_use = path["premises"][0]
+    terminal_use.update(
+        contract="created_check_response_inventory",
+        result_id=f"created_check_response_inventory:{'2' * 64}",
+    )
+    route_terminal = path["premises"][-2]
+    route_terminal.pop("capture")
+    reply_resource = {
+        **path["premises"][-1]["movement"],
+        "move_uci": path["premises"][-1]["move_uci"],
+        "capture": path["premises"][-1]["capture"],
+    }
+    proof["terminal"] = {
+        "kind": "created_check",
+        "assertion_id": "1" * 64,
+        "checked_side": "black",
+        "king_square": "g8",
+        "checkers": [{"piece": "rook", "square": "c7"}],
+        "responses": []
+        if checkmate
+        else [{"resource": reply_resource, "modes": ["capture_checker"]}],
+        "controlled_king_destinations": [],
+        "terminal_state": "checkmate" if checkmate else "ongoing",
+    }
+    if checkmate:
+        reference["steps"].pop()
+        path["premises"].pop()
+        proof.pop("terminal_reply_move")
+    return proof
 
 
 def _sole_recapturer_removal_before_target_capture_proof() -> dict[str, object]:
@@ -1146,36 +1356,37 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             with self.subTest(kind=kind, exposure=exposure):
                 self.assertTrue(any(".exposure:" in error for error in errors))
 
-    def test_vacancy_enables_occupation_binds_exact_moves_and_sibling_closure(self) -> None:
+    def test_square_release_route_binds_exact_moves_and_sibling_closure(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
-        proof_schema = registry.load(move_path)["$defs"]["vacancyEnablesOccupationProof"]
+        proof_schema = registry.load(move_path)["$defs"]["squareReleaseRouteProof"]
 
         def validation_errors(candidate: dict[str, object]) -> list[str]:
             errors: list[str] = []
             registry._validate(candidate, proof_schema, move_path, "$", errors)
             if not errors:
-                registry._validate_vacancy_enables_occupation_proof_identifiers(
+                registry._validate_square_release_route_proof_identifiers(
                     candidate, "$", errors
                 )
             return errors
 
-        proof = _vacancy_enables_occupation_proof()
+        proof = _square_release_route_proof()
         self.assertEqual(validation_errors(proof), [])
 
         def collapse_legal_move_occurrences(candidate: dict[str, object]) -> None:
-            release, occupation = candidate["proof_paths"][0]["premises"]
-            previous = occupation["issuer_occurrence_id"]
-            occupation["issuer_occurrence_id"] = release["issuer_occurrence_id"]
-            occupation["source_premise_ids"] = sorted(
+            release, first_leg = candidate["proof_paths"][0]["premises"]
+            previous = first_leg["issuer_occurrence_id"]
+            first_leg["issuer_occurrence_id"] = release["issuer_occurrence_id"]
+            first_leg["source_premise_ids"] = sorted(
                 release["issuer_occurrence_id"] if item == previous else item
-                for item in occupation["source_premise_ids"]
+                for item in first_leg["source_premise_ids"]
             )
 
         def detach_move_coordinates(candidate: dict[str, object]) -> None:
             path = candidate["proof_paths"][0]
             candidate["participants"]["releaser"]["from"] = "b6"
-            candidate["participants"]["occupier"]["to"] = "b6"
+            candidate["participants"]["released_blocker"]["square"] = "b6"
+            candidate["route"][0]["to"] = "b6"
             path["premises"][0]["movement"]["from"] = "b6"
             path["premises"][1]["movement"]["to"] = "b6"
             path["closed_absence_uses"][0]["query"] = "legal-move-from-to:white:d6:b6"
@@ -1183,14 +1394,15 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             path["closed_state_uses"][1]["query"] = "vacant:b6"
             path["closed_state_uses"][2]["query"] = "occupied-by:white:rook@b6"
             path["closed_state_uses"][3]["query"] = "occupied-by:white:bishop@b6"
+            path["closed_state_uses"][4]["query"] = "occupied-by:white:bishop@b6"
 
         def add_false_promotion_suffix(candidate: dict[str, object]) -> None:
-            candidate["occupation_move"] = "d6c6q"
+            candidate["route"][0]["move_uci"] = "d6c6q"
             candidate["counterfactual_reference_branch"]["steps"][2]["move_uci"] = "d6c6q"
             candidate["proof_paths"][0]["premises"][1]["move_uci"] = "d6c6q"
 
         def hide_piece_change_without_suffix(candidate: dict[str, object]) -> None:
-            candidate["participants"]["occupier"]["piece_after"] = "queen"
+            candidate["route"][0]["piece_after"] = "queen"
             path = candidate["proof_paths"][0]
             path["premises"][1]["movement"]["piece_after"] = "queen"
             path["closed_state_uses"][2]["query"] = "occupied-by:white:queen@c6"
@@ -1202,7 +1414,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             lambda candidate: candidate["proof_paths"][0]["closed_absence_uses"][0].update(
                 query="legal-move-from-to:white:d6:d5"
             ),
-            lambda candidate: candidate["participants"]["occupier"].update(to="b6"),
+            lambda candidate: candidate["route"][0].update(to="b6"),
             lambda candidate: candidate["played_root_branch"]["steps"].append(
                 copy.deepcopy(candidate["counterfactual_reference_branch"]["steps"][2])
             ),
@@ -1215,6 +1427,113 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             candidate = copy.deepcopy(proof)
             mutate(candidate)
             with self.subTest(mutation=index):
+                self.assertTrue(validation_errors(candidate))
+
+    def test_square_release_route_retains_typed_terminals_and_independent_paths(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+        move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
+        proof_schema = registry.load(move_path)["$defs"]["squareReleaseRouteProof"]
+
+        def validation_errors(candidate: dict[str, object]) -> list[str]:
+            errors: list[str] = []
+            registry._validate(candidate, proof_schema, move_path, "$", errors)
+            if not errors:
+                registry._validate_square_release_route_proof_identifiers(
+                    candidate, "$", errors
+                )
+            return errors
+
+        capture = _square_release_route_capture_proof()
+        ongoing_check = _square_release_route_check_proof()
+        checkmate = _square_release_route_check_proof(checkmate=True)
+        for terminal in (capture, ongoing_check, checkmate):
+            with self.subTest(terminal=terminal["terminal"]["kind"], checkmate=terminal is checkmate):
+                self.assertEqual(validation_errors(terminal), [])
+
+        terminal_use = capture["proof_paths"][0]["premises"][0]
+        self.assertNotEqual(
+            capture["terminal"]["assertion_id"],
+            terminal_use["result_id"].split(":", 1)[1],
+        )
+
+        independent = copy.deepcopy(capture)
+        second_path = copy.deepcopy(independent["proof_paths"][0])
+        second_path["path_occurrence_id"] = "4" * 64
+        second_terminal = second_path["premises"][0]
+        previous_occurrence = second_terminal["issuer_occurrence_id"]
+        second_terminal["issuer_occurrence_id"] = "e" * 64
+        second_terminal["result_id"] = f"capture_recapture_inventory:{'f' * 64}"
+        second_terminal["source_premise_ids"] = sorted(
+            "e" * 64 if value == previous_occurrence else value
+            for value in second_terminal["source_premise_ids"]
+        )
+        independent["proof_paths"].append(second_path)
+        self.assertEqual(validation_errors(independent), [])
+
+        missing_actual_reply = copy.deepcopy(capture)
+        missing_actual_reply.pop("terminal_reply_move")
+
+        renamed_actual_reply = copy.deepcopy(capture)
+        renamed_actual_reply["terminal_reply_move"] = "g8f7"
+
+        wrong_terminal_authority = copy.deepcopy(capture)
+        wrong_terminal_authority["proof_paths"][0]["premises"][0].update(
+            contract="created_check_response_inventory",
+            result_id=f"created_check_response_inventory:{'2' * 64}",
+        )
+
+        lost_gap_persistence = copy.deepcopy(capture)
+        lost_gap_persistence["proof_paths"][0]["closed_state_uses"].pop(4)
+
+        forged_recapture_inventory = copy.deepcopy(capture)
+        forged_recapture_inventory["terminal"]["legal_recaptures"][0]["to"] = "c6"
+        forged_recapture_inventory["terminal"]["legal_recaptures"][0][
+            "move_uci"
+        ] = "b8c6"
+
+        forged_recaptured_mover = copy.deepcopy(capture)
+        forged_recaptured_mover["terminal"]["legal_recaptures"][0]["capture"] = {
+            "side": "white",
+            "piece": "bishop",
+            "square": "c7",
+        }
+
+        sibling_replacement = copy.deepcopy(capture)
+        sibling_replacement["proof_paths"][0]["closed_state_uses"][5][
+            "query"
+        ] = "occupied-by:white:rook@c6"
+
+        unlisted_check_reply = copy.deepcopy(ongoing_check)
+        unlisted_check_reply["terminal"]["responses"][0]["resource"] = {
+            "side": "black",
+            "from": "g8",
+            "to": "f7",
+            "piece_before": "king",
+            "piece_after": "king",
+            "move_uci": "g8f7",
+        }
+
+        reply_after_checkmate = copy.deepcopy(checkmate)
+        reply_after_checkmate["terminal_reply_move"] = "g8f7"
+
+        relabeled_duplicate_path = copy.deepcopy(capture)
+        duplicate_path = copy.deepcopy(relabeled_duplicate_path["proof_paths"][0])
+        duplicate_path["path_occurrence_id"] = "4" * 64
+        relabeled_duplicate_path["proof_paths"].append(duplicate_path)
+
+        for candidate in (
+            missing_actual_reply,
+            renamed_actual_reply,
+            wrong_terminal_authority,
+            lost_gap_persistence,
+            forged_recapture_inventory,
+            forged_recaptured_mover,
+            sibling_replacement,
+            unlisted_check_reply,
+            reply_after_checkmate,
+            relabeled_duplicate_path,
+        ):
+            with self.subTest(invalid=candidate):
                 self.assertTrue(validation_errors(candidate))
 
     def test_legacy_two_branch_families_reject_coordinated_semantic_forgery(self) -> None:
@@ -1716,27 +2035,27 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             move_path,
             label="public v6 exact vacated-gate slider capture",
         )
-        vacancy_ready = copy.deepcopy(direct_ready)
-        vacancy_primary = vacancy_ready["move_commentary"]["primary"]
-        vacancy_primary["reference_endpoint"]["moves"] = ["c6g2", "e6f5", "d6c6"]
-        vacancy_primary["played_endpoint"]["moves"] = ["d1d2", "e6f5"]
-        vacancy_facet = vacancy_ready["move_commentary"]["causal_explanations"][0]
-        vacancy_facet.update(kind="missed_square_release", exposure="primary")
-        vacancy_facet["channels"] = [
+        route_ready = copy.deepcopy(direct_ready)
+        route_primary = route_ready["move_commentary"]["primary"]
+        route_primary["reference_endpoint"]["moves"] = ["c6g2", "e6f5", "d6c6"]
+        route_primary["played_endpoint"]["moves"] = ["d1d2", "e6f5"]
+        route_facet = route_ready["move_commentary"]["causal_explanations"][0]
+        route_facet.update(kind="missed_square_release", exposure="primary")
+        route_facet["channels"] = [
             {
-                "channel_id": "channel-vacancy-enables-occupation",
-                "vacancy_enables_occupation_proof": _vacancy_enables_occupation_proof(),
+                "channel_id": "channel-square-release-route",
+                "square_release_route_proof": _square_release_route_proof(),
             }
         ]
         registry.validate_document(
-            vacancy_ready,
+            route_ready,
             move_path,
             label="public v6 exact square-release occupation",
         )
         for label, document, exposure in (
             ("wrong move order", defense_ready, "complementary"),
             ("missed tactical resource", direct_ready, "complementary"),
-            ("missed square release", vacancy_ready, "complementary"),
+            ("missed square release", route_ready, "complementary"),
             ("passed pawn progress", ready, "primary"),
         ):
             invalid = copy.deepcopy(document)

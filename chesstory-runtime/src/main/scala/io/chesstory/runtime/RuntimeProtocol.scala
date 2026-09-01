@@ -323,10 +323,10 @@ object RuntimeProtocol:
             "vacated_gate_enables_unrecapturable_slider_capture_proof" ->
               vacatedGateEnablesUnrecapturableSliderCaptureProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.VacancyEnablesOccupation =>
+        case proof: RootOwnedEffectProof.SquareReleaseRoute =>
           Json.obj(
             "channel_id" -> selected.channelId,
-            "vacancy_enables_occupation_proof" -> vacancyEnablesOccupationProofJson(proof)
+            "square_release_route_proof" -> squareReleaseRouteProofJson(proof)
           )
         case proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
           Json.obj(
@@ -536,8 +536,8 @@ object RuntimeProtocol:
         "exploit_move" -> EvidenceRef.normalizeMove(result.exploitMove)
       )
 
-    private def vacancyEnablesOccupationProofJson(
-        proof: RootOwnedEffectProof.VacancyEnablesOccupation
+    private def squareReleaseRouteProofJson(
+        proof: RootOwnedEffectProof.SquareReleaseRoute
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -551,10 +551,79 @@ object RuntimeProtocol:
         "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
         "participants" -> Json.obj(
           "releaser" -> movementWitnessJson(result.releaser),
-          "occupier" -> movementWitnessJson(result.occupation)
+          "released_blocker" -> coloredPieceWitnessJson(result.releasedBlocker),
+          "route_piece" -> coloredPieceWitnessJson(result.routePiece)
         ),
-        "occupation_move" -> EvidenceRef.normalizeMove(result.occupationMove)
-      )
+        "route" -> result.route.zip(result.routeMoves).zip(result.routeStepIndices).map {
+          case ((movement, move), stepIndex) =>
+            movementWitnessJson(movement) ++ Json.obj(
+              "move_uci" -> EvidenceRef.normalizeMove(move),
+              "step_index" -> stepIndex
+            )
+        },
+        "terminal_step_index" -> result.terminalStepIndex,
+        "terminal" -> squareReleaseRouteTerminalJson(result.publicTerminal)
+      ) ++ result.terminalReplyMove.map(move =>
+        Json.obj("terminal_reply_move" -> EvidenceRef.normalizeMove(move))
+      ).getOrElse(Json.obj())
+
+    private def squareReleaseRouteTerminalJson(
+        terminal: SquareReleaseRoutePublicTerminal
+    ): JsObject =
+      terminal match
+        case SquareReleaseRoutePublicTerminal.Occupation =>
+          Json.obj("kind" -> "occupation")
+        case SquareReleaseRoutePublicTerminal.Capture(
+              assertionId,
+              captured,
+              geometricRecapturers,
+              legalRecaptures,
+              restrictedRecaptures
+            ) =>
+          Json.obj(
+            "kind" -> "capture",
+            "assertion_id" -> assertionId,
+            "captured_target" -> coloredPieceWitnessJson(captured),
+            "geometric_recapturers" -> geometricRecapturers.map(pieceWitnessJson),
+            "legal_recaptures" -> legalRecaptures.map(routeLegalResourceWitnessJson),
+            "restricted_recaptures" -> restrictedRecaptures.map(restriction =>
+              Json.obj(
+                "piece" -> pieceWitnessJson(restriction.piece),
+                "destination" -> restriction.resource.destination.key.toLowerCase,
+                "king_square" -> restriction.kingSquare.key.toLowerCase,
+                "post_move_controllers" -> restriction.postMoveControllers.map(pieceWitnessJson)
+              )
+            )
+          )
+        case SquareReleaseRoutePublicTerminal.CreatedCheck(
+              assertionId,
+              checkedSide,
+              kingSquare,
+              checkers,
+              responses,
+              controlledKingDestinations,
+              terminalState
+            ) =>
+          Json.obj(
+            "kind" -> "created_check",
+            "assertion_id" -> assertionId,
+            "checked_side" -> colorCode(checkedSide),
+            "king_square" -> kingSquare.key.toLowerCase,
+            "checkers" -> checkers.map(pieceWitnessJson),
+            "responses" -> responses.map(response =>
+              Json.obj(
+                "resource" -> routeLegalResourceWitnessJson(response.resource),
+                "modes" -> response.modes.map(mode => causalEnumCode(mode.toString))
+              )
+            ),
+            "controlled_king_destinations" -> controlledKingDestinations.map(destination =>
+              Json.obj(
+                "destination" -> destination.resource.destination.key.toLowerCase,
+                "controllers" -> destination.controllers.map(pieceWitnessJson)
+              )
+            ),
+            "terminal_state" -> causalEnumCode(terminalState.toString)
+          )
 
     private def passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(
         proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply
@@ -787,6 +856,23 @@ object RuntimeProtocol:
     private def legalResourceWitnessJson(witness: RelationLegalMoveResourceWitness): JsObject =
       movementWitnessJson(witness.movement) ++ Json.obj(
         "move_uci" -> EvidenceRef.normalizeMove(witness.moveUci)
+      )
+
+    private def routeLegalResourceWitnessJson(witness: RelationLegalMoveResourceWitness): JsObject =
+      legalResourceWitnessJson(witness) ++ witness.capture.map(capture =>
+        Json.obj(
+          "capture" -> Json.obj(
+            "side" -> colorCode(capture.capturedSide),
+            "piece" -> capture.capturedRole.name.toLowerCase,
+            "square" -> capture.capturedSquare.key.toLowerCase
+          )
+        )
+      ).getOrElse(Json.obj())
+
+    private def pieceWitnessJson(witness: RelationPieceWitness): JsObject =
+      Json.obj(
+        "piece" -> witness.role.name.toLowerCase,
+        "square" -> witness.square.key.toLowerCase
       )
 
     private def coloredPieceWitnessJson(witness: RelationColoredPieceWitness): JsObject =

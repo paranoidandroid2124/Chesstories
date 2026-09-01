@@ -1,11 +1,99 @@
 package lila.chessjudgment.analysis.assembly
 
-import lila.chessjudgment.model.judgment.ExactCausalProofResultSet
+import lila.chessjudgment.model.judgment.*
 
 /** Reuses one deterministic causal-family result set without recomputing a
   * complete cache hit or mistaking a partial graph for a complete result.
   */
 private[assembly] object ExactCausalProofOwnerReuse:
+
+  /** Family-neutral record identity for one certified compared-line proof.
+    * The family producer still owns chess derivation and payload construction;
+    * this value only centralizes graph/cache ownership shared by every family.
+    */
+  final case class ComparedLineProofRecord(
+      semanticId: String,
+      occurrenceId: String,
+      dependencyId: String,
+      referenceLine: LineNodeRef,
+      parentSources: List[EvidenceRef],
+      proofPathOccurrenceIds: List[String]
+  ):
+    require(semanticId.matches("[0-9a-f]{64}"), "a compared-line proof needs one semantic id")
+    require(occurrenceId.matches("[0-9a-f]{64}"), "a compared-line proof needs one occurrence id")
+    require(dependencyId.matches("[0-9a-f]{64}"), "a compared-line proof needs one dependency id")
+    require(
+      parentSources.nonEmpty && parentSources == parentSources.sortBy(_.id) &&
+        parentSources.map(_.id).distinct.size == parentSources.size,
+      "a compared-line proof needs canonical distinct parents"
+    )
+    require(
+      proofPathOccurrenceIds.nonEmpty &&
+        proofPathOccurrenceIds == proofPathOccurrenceIds.sorted &&
+        proofPathOccurrenceIds.distinct.size == proofPathOccurrenceIds.size,
+      "a compared-line proof needs canonical distinct proof paths"
+    )
+
+    val referencePosition = parentSources
+      .find(_.line.contains(referenceLine))
+      .map(_.position)
+      .getOrElse(
+        throw IllegalArgumentException("a compared-line proof needs its reference-line parent")
+      )
+
+    def evidenceIdInput(family: String): String =
+      s"causal-proof:$family:$semanticId:$occurrenceId:$dependencyId:${proofPathOccurrenceIds.mkString(":")}"
+
+  /** Shared graph/cache kernel for exact compared-line L2 producers. It does
+    * not derive a chess fact, reinterpret a payload, or act as another
+    * producer; the calling family supplies its typed certificate and payload.
+    */
+  def comparedLineRecords[A, S](
+      family: String,
+      context: JudgmentAssemblyContext,
+      input: ExactPlayedVsBestCausalInput,
+      existingPayload: EvidencePayload => Option[(String, ExactCausalProofResultSet)]
+  )(
+      derive: => List[A]
+  )(
+      semantic: A => S,
+      record: A => ComparedLineProofRecord,
+      create: (A, ComparedLineProofRecord, ExactCausalProofResultSet) => EvidenceRecord
+  ): List[EvidenceRecord] =
+    val existing = context.evidenceGraph.recordsFor(input.comparison.referenceLine).flatMap { owner =>
+      if context.evidenceGraph.proofEligible(owner) then
+        existingPayload(owner.payload).map { case (dependencyId, resultSet) =>
+          (dependencyId, resultSet, owner)
+        }
+      else None
+    }
+    lazy val derivedDependencies =
+      val certified = derive
+      certified.groupBy(exact => record(exact).semanticId).foreach { case (semanticId, occurrences) =>
+        require(
+          occurrences.map(semantic).distinct.size == 1,
+          s"$family semantic id '$semanticId' resolved to conflicting proofs"
+        )
+      }
+      require(
+        certified.map(exact => record(exact).occurrenceId).distinct.size == certified.size,
+        s"one exact $family occurrence may be produced only once"
+      )
+      certified.map(exact => record(exact).dependencyId -> exact)
+
+    resolve(
+      family = family,
+      existing = existing
+    )(
+      derivedDependencies
+    ) { (exact, resultSet) =>
+      val exactRecord = record(exact)
+      require(
+        exactRecord.referenceLine == input.comparison.referenceLine,
+        s"a $family proof must remain on its demanded reference line"
+      )
+      create(exact, exactRecord, resultSet)
+    }.sortBy(_.ref.id)
 
   def resolve[A, B](
       family: String,

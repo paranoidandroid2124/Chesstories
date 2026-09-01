@@ -83,7 +83,7 @@ private[assembly] final case class RelationCausalProofDemand private (
     uniqueCheckReplyDefenderDisplacementBeforeCaptureSeed: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed],
     soleRecapturerRemovalBeforeTargetCaptureSeed: Option[SoleRecapturerRemovalBeforeTargetCaptureChangedSeed],
     vacatedGateEnablesUnrecapturableSliderCaptureSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed],
-    vacancyEnablesOccupationSeeds: List[VacancyEnablesOccupationChangedSeed]
+    squareReleaseRouteSeeds: List[SquareReleaseRouteChangedSeed]
 )
 
 private[assembly] object RelationCausalProofDemand:
@@ -229,23 +229,23 @@ private[assembly] object RelationCausalProofDemand:
         referenceSteps.indices.drop(2).filter(_ <= playedSteps.size).toList.flatMap(index =>
           referenceSteps.lift(index).toList.flatMap(step =>
             reference.legalMoveOccurrence(step).toList.collect {
-              case occupationOccurrence
-                  if occupationOccurrence.movement.capture.isEmpty &&
-                    occupationOccurrence.movement.side == rootOccurrence.movement.side &&
-                    occupationOccurrence.movement.to == rootOccurrence.movement.from =>
-                VacancyEnablesOccupationChangedSeed(
-                  rootOccurrence,
-                  occupationOccurrence,
-                  index
-                )
+              case firstRouteLeg
+                  if firstRouteLeg.movement.capture.isEmpty &&
+                    firstRouteLeg.movement.side == rootOccurrence.movement.side &&
+                    firstRouteLeg.movement.to == rootOccurrence.movement.from =>
+                SquareReleaseRouteChangedSeed.occupation(rootOccurrence, firstRouteLeg, index)
             }
           )
         )
       )
-    ).sortBy(_.stableKey)
+    )
+    val terminalRouteSeeds = occupationSeeds.flatMap(seed =>
+      firstTerminalRouteSeeds(input, seed)
+    )
+    val squareReleaseRouteSeeds = (occupationSeeds ++ terminalRouteSeeds).sortBy(_.stableKey)
     require(
-      occupationSeeds.map(_.stableKey).distinct.size == occupationSeeds.size,
-      "one vacancy-to-occupation changed occurrence route may be dispatched only once"
+      squareReleaseRouteSeeds.map(_.stableKey).distinct.size == squareReleaseRouteSeeds.size,
+      "one exact square-release route occurrence may be dispatched only once"
     )
 
     RelationCausalProofDemand(
@@ -253,8 +253,83 @@ private[assembly] object RelationCausalProofDemand:
       forcedSeed,
       defenseSeed,
       directSeeds.sortBy(_.stableKey),
-      occupationSeeds
+      squareReleaseRouteSeeds
     )
+
+  /** Follows the replay-owned same object until the first later leg that owns
+    * a closed capture or created-check result. There is no horizon or score
+    * filter: the admitted LegalLine continuation is the complete boundary.
+    */
+  private def firstTerminalRouteSeeds(
+      input: ExactPlayedVsBestCausalInput,
+      occupation: SquareReleaseRouteChangedSeed
+  ): List[SquareReleaseRouteChangedSeed] =
+    val replay = input.referenceReplay
+    val steps = replay.replaySteps
+
+    def loop(
+        route: List[ReplayLegalMoveOccurrence],
+        indices: List[Int]
+    ): List[SquareReleaseRouteChangedSeed] =
+      RecordBoundObjectTrajectory.firstAfter(input.referenceSource, route.last.step).toList.flatMap {
+        trajectory =>
+          val next = trajectory.futureMovement.occurrence
+          val nextIndex = steps.indexOf(next.step)
+          if nextIndex <= indices.last then Nil
+          else
+            val extendedRoute = route :+ next
+            val extendedIndices = indices :+ nextIndex
+            val terminals = replay.verticalRelationOccurrences(
+              next.step,
+              List(
+                VerticalRelationContractKind.CaptureRecaptureInventory,
+                VerticalRelationContractKind.CreatedCheckResponseInventory
+              )
+            ).flatMap(terminal =>
+              exactTerminalReply(replay, nextIndex, terminal).map(reply =>
+                SquareReleaseRouteChangedSeed.terminal(
+                  occupation.releaseOccurrence,
+                  extendedRoute,
+                  extendedIndices,
+                  terminal,
+                  reply
+                )
+              )
+            )
+            if terminals.nonEmpty then terminals else loop(extendedRoute, extendedIndices)
+      }
+
+    loop(occupation.routeOccurrences, occupation.routeStepIndices)
+
+  private def exactTerminalReply(
+      replay: CanonicalLineReplay,
+      terminalIndex: Int,
+      terminal: ReplayVerticalRelationOccurrence
+  ): Option[Option[ReplayLegalMoveOccurrence]] =
+    terminal.relation.detail match
+      case _: RelationWitnessDetail.CaptureRecaptureInventory =>
+        replay.replaySteps.lift(terminalIndex + 1)
+          .flatMap(replay.legalMoveOccurrence)
+          .map(Some(_))
+      case RelationWitnessDetail.CreatedCheckResponseInventory(
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            RelationCheckTerminalState.Checkmate,
+            _
+          ) =>
+        Some(None)
+      case _: RelationWitnessDetail.CreatedCheckResponseInventory =>
+        for
+          replyStep <- replay.replaySteps.lift(terminalIndex + 1)
+          reply <- replay.legalMoveOccurrence(replyStep)
+          membership <- replay.exactCheckResponseOccurrenceMembership(terminal.step, replyStep)
+          if membership._1 == terminal
+        yield Some(reply)
+      case _ => None
 
   private def activates(
       replay: CanonicalLineReplay,

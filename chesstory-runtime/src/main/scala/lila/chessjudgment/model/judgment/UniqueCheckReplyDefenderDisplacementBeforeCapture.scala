@@ -62,6 +62,15 @@ private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCaptureAbs
 
   def stableKey: String = "reference-recapture-absent"
 
+private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole extends CausalStateRole:
+  case ReferenceRealizerPresent
+  case ReferenceTargetPresent
+
+  def stableKey: String =
+    this match
+      case ReferenceRealizerPresent => "reference-realizer-present"
+      case ReferenceTargetPresent   => "reference-target-present"
+
 /** Complete named lower-premise manifest for this contract. The common core
   * accepts only typed manifests; this family is the sole authority for which
   * lower occurrences and absence boundary prove its proposition.
@@ -69,13 +78,16 @@ private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCaptureAbs
 private[chessjudgment] sealed trait UniqueCheckReplyDefenderDisplacementBeforeCaptureManifest
     extends BoundedCausalContractManifest:
   def referenceNoRecapture: CausalClosedAbsenceBinding
+  def referencePersistence: List[CausalClosedStateBinding]
   final def contractKind = BoundedCausalContractKind.UniqueCheckReplyDefenderDisplacementBeforeCapture
   final def absenceBindings = List(referenceNoRecapture)
+  final override def stateBindings = referencePersistence
   final def stableKey: String =
     List(
       contractKind.toString.toLowerCase,
       premiseUses.map(_.stableKey).mkString("[", ",", "]"),
-      referenceNoRecapture.stableKey
+      referenceNoRecapture.stableKey,
+      referencePersistence.map(_.stableKey).mkString("[", ",", "]")
     ).mkString("|")
 
 private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureManifest:
@@ -83,7 +95,8 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
       checkResponse: CausalVerticalRelationPremiseUse,
       referenceRecapture: CausalVerticalRelationPremiseUse,
       playedRecapture: CausalVerticalRelationPremiseUse,
-      referenceNoRecapture: CausalClosedAbsenceBinding
+      referenceNoRecapture: CausalClosedAbsenceBinding,
+      referencePersistence: List[CausalClosedStateBinding]
   ) extends UniqueCheckReplyDefenderDisplacementBeforeCaptureManifest:
     val premiseUses = List(checkResponse, referenceRecapture, playedRecapture)
 
@@ -91,10 +104,14 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
       checkResponse: CausalVerticalRelationPremiseUse,
       referenceRecapture: CausalVerticalRelationPremiseUse,
       playedRecapture: CausalVerticalRelationPremiseUse,
-      referenceNoRecapture: CausalClosedAbsenceBinding
+      referenceNoRecapture: CausalClosedAbsenceBinding,
+      referenceRealizer: RelationColoredPieceWitness,
+      referenceTarget: RelationColoredPieceWitness,
+      referencePersistence: List[CausalClosedStateBinding]
   ): UniqueCheckReplyDefenderDisplacementBeforeCaptureManifest =
     validateShared(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
-    Exact(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
+    validatePersistence(referenceRecapture, referenceRealizer, referenceTarget, referencePersistence)
+    Exact(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture, referencePersistence)
 
   private def validateShared(
       checkResponse: CausalVerticalRelationPremiseUse,
@@ -133,6 +150,35 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
         referenceNoRecapture.branchId == referenceRecapture.branchId &&
         referenceNoRecapture.afterStepIndex == referenceRecapture.stepIndex,
       "the closed absence must belong to the reference realizer occurrence"
+    )
+
+  private def validatePersistence(
+      referenceRecapture: CausalVerticalRelationPremiseUse,
+      referenceRealizer: RelationColoredPieceWitness,
+      referenceTarget: RelationColoredPieceWitness,
+      persistence: List[CausalClosedStateBinding]
+  ): Unit =
+    val expected = (0 until referenceRecapture.stepIndex).toList.flatMap(index =>
+      List(
+        (
+          index,
+          UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent,
+          referenceRealizer
+        ),
+        (
+          index,
+          UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent,
+          referenceTarget
+        )
+      )
+    )
+    require(
+      persistence.zip(expected).forall { case (binding, (index, role, piece)) =>
+        binding.role == role && binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
+          binding.branchId == referenceRecapture.branchId && binding.afterStepIndex == index &&
+          binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece)
+      } && persistence.size == expected.size,
+      "the reference realizer and target need exact occupied states after every pre-realizer step"
     )
 
 /** Transposition-shared meaning. Lower result ids and proof paths do not live
@@ -266,10 +312,15 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
     private val playedReplay: CanonicalLineReplay,
     private val absenceAuthorities: List[
       (CausalClosedAbsenceUse, ClosedRelationAbsenceAuthority)
+    ],
+    private val stateAuthorities: List[
+      (CausalClosedStateUse, ClosedPositionStateAuthority)
     ]
 ):
   private val expectedAbsenceUses =
     occurrence.proofPaths.flatMap(_.closedAbsenceUses).sortBy(_.useId)
+  private val expectedStateUses =
+    occurrence.proofPaths.flatMap(_.closedStateUses).sortBy(_.useId)
   require(
     semantic.identity == occurrence.proofSet.proposition &&
       dependencyManifest.disabledDefender == semantic.disabledDefender &&
@@ -281,6 +332,11 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
     absenceAuthorities.map(_._1).sortBy(_.useId) == expectedAbsenceUses &&
       absenceAuthorities.map(_._1.useId).distinct.size == absenceAuthorities.size,
     "every closed absence use must retain one exact lower-inventory authority"
+  )
+  require(
+    stateAuthorities.map(_._1).sortBy(_.useId) == expectedStateUses &&
+      stateAuthorities.map(_._1.useId).distinct.size == stateAuthorities.size,
+    "every closed state use must retain one exact lower-inventory authority"
   )
 
   def parentSources: List[EvidenceRef] =
@@ -301,8 +357,10 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
       record.ref.scope == occurrence.referenceLine.role.scope &&
       record.parents == parentSources && payload.semantic == semantic &&
       payload.occurrence == occurrence && payload.dependencyFingerprint == dependency.value &&
-      payload.occurrenceProof.contains(this) &&
-      CertifiedComparedLineAuthority.exactRecord(
+      payload.occurrenceProof.contains(this) && remainsCertified
+
+  def remainsCertified: Boolean =
+    CertifiedComparedLineAuthority.exactRecord(
         referenceLineRecord,
         occurrence.referenceLine,
         referenceReplay
@@ -314,7 +372,7 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
       ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
       referenceReplay.replaySteps.take(occurrence.referenceSteps.size) == occurrence.referenceSteps &&
       playedReplay.replaySteps.take(occurrence.playedSteps.size) == occurrence.playedSteps &&
-      closedAbsencesRemainCertified
+      closedAbsencesRemainCertified && closedStatesRemainCertified
 
   private def closedAbsencesRemainCertified: Boolean =
     absenceAuthorities.forall { case (use, authority) =>
@@ -337,6 +395,36 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
             )
         )
     }
+
+  private def closedStatesRemainCertified: Boolean =
+    val realizer = RelationColoredPieceWitness(
+      semantic.realizer.from,
+      semantic.realizer.beforeRole,
+      semantic.realizer.side
+    )
+    stateAuthorities.size == occurrence.referenceRealizerIndex * 2 &&
+      stateAuthorities.forall { case (use, authority) =>
+        val binding = use.binding
+        val exactPiece = binding.role match
+          case UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent =>
+            Some(realizer)
+          case UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent =>
+            Some(semantic.capturedTarget)
+          case _ => None
+        exactPiece.exists(piece =>
+          binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
+            binding.branchId == occurrence.referenceBranch.branchId &&
+            binding.afterStepIndex >= 0 && binding.afterStepIndex < occurrence.referenceRealizerIndex &&
+            binding.query == PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece) &&
+            binding.authority == authority && authority.issuerRecord == referenceLineRecord &&
+            ClosedPositionStateAuthority
+              .certified(referenceLineRecord, authority.occurrence, authority.proof)
+              .contains(authority) &&
+            occurrence.referenceBranch.stepAt(binding.afterStepIndex).exists(stepOccurrence =>
+              stepOccurrence.line == authority.issuerLine && stepOccurrence.step == authority.step
+            )
+        )
+      }
 
 private[chessjudgment] final case class CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture private[chessjudgment] (
     semantic: UniqueCheckReplyDefenderDisplacementBeforeCaptureSemanticProof,
@@ -374,6 +462,12 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
 
 private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureProof:
 
+  private final case class PersistenceState(
+      role: UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole,
+      stepIndex: Int,
+      authority: ClosedPositionStateAuthority
+  )
+
   private final case class ImmediateInputs(
       rootBoard: String,
       check: RelationWitnessDetail.CreatedCheckResponseInventory,
@@ -385,7 +479,8 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       playedDefense: RelationLegalMoveResourceWitness,
       referenceBranch: CausalBranchOccurrence,
       playedBranch: CausalBranchOccurrence,
-      absenceAuthority: ClosedRelationAbsenceAuthority
+      absenceAuthority: ClosedRelationAbsenceAuthority,
+      persistenceStates: List[PersistenceState]
   )
 
   def deriveImmediate(
@@ -473,10 +568,12 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       defense = changedSeed.playedRecapture
       if EvidenceRef.sameMove(defense.moveUci, playedReplyStep.moveUci)
       if sameRealizerAndTarget(referenceCapture, playedCapture)
-      if actorAndTargetUnchangedBeforeRealizer(
+      persistenceStates <- referencePersistenceStates(
+        referenceLineRecord,
         referenceReplay,
         referenceRealizerIndex,
-        referenceCapture
+        coloredPieceAtStart(referenceCapture.mover),
+        referenceCapture.captured
       )
       if playedCapture.legalRecaptures == List(defense)
       if referenceCapture.legalRecaptures.isEmpty
@@ -516,7 +613,8 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       defense,
       referenceBranch,
       playedBranch,
-      absenceAuthority
+      absenceAuthority,
+      persistenceStates
     )
 
     inputs.toList.flatMap { exact =>
@@ -587,11 +685,22 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       referenceBranch,
       referenceRealizerIndex
     )
+    val persistenceBindings = inputs.persistenceStates.map(state =>
+      CausalClosedStateBinding.afterStep(
+        state.role,
+        state.authority,
+        referenceBranch,
+        state.stepIndex
+      )
+    )
     val manifest = UniqueCheckReplyDefenderDisplacementBeforeCaptureManifest.exact(
       checkUse,
       referenceRecaptureUse,
       playedRecaptureUse,
-      absenceBinding
+      absenceBinding,
+      coloredPieceAtStart(inputs.referenceCapture.mover),
+      inputs.referenceCapture.captured,
+      persistenceBindings
     )
     val path = CausalProofPathOccurrence.from(proposition, manifest)
     val absenceUse = path.closedAbsenceUses match
@@ -631,7 +740,8 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       playedLineRecord,
       referenceReplay,
       playedReplay,
-      List(absenceUse -> inputs.absenceAuthority)
+      List(absenceUse -> inputs.absenceAuthority),
+      path.closedStateUses.map(use => use -> use.binding.authority)
     )
     CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture(semantic, occurrence, dependency, proof)
 
@@ -657,19 +767,23 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
   ): Boolean =
     reference.mover == played.mover && reference.captured == played.captured
 
-  private def actorAndTargetUnchangedBeforeRealizer(
+  private def referencePersistenceStates(
+      referenceLineRecord: EvidenceRecord,
       replay: CanonicalLineReplay,
       referenceRealizerIndex: Int,
-      capture: RelationWitnessDetail.CaptureRecaptureInventory
-  ): Boolean =
-    val protectedSquares = Set(
-      capture.mover.from.key.toLowerCase,
-      capture.captured.square.key.toLowerCase
-    )
-    replay.replaySteps.take(referenceRealizerIndex).forall(step =>
-      replay.transition(step).exists(transition =>
-        transition.boardFootprint.changedSquareSet.forall(square =>
-          !protectedSquares(square.key.toLowerCase)
-        )
-      )
-    )
+      realizer: RelationColoredPieceWitness,
+      target: RelationColoredPieceWitness
+  ): Option[List[PersistenceState]] =
+    val expected = replay.replaySteps.take(referenceRealizerIndex).zipWithIndex.flatMap { case (step, index) =>
+      List(
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent -> realizer,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent -> target
+      ).flatMap { case (role, piece) =>
+        ClosedPositionStateAuthority
+          .atStep(referenceLineRecord, step)((occurrence, scope) =>
+            occurrence.existingOccupantState(piece, scope)
+          )
+          .map(PersistenceState(role, index, _))
+      }
+    }
+    Option.when(expected.size == referenceRealizerIndex * 2)(expected)

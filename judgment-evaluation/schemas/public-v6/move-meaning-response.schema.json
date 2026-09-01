@@ -417,7 +417,7 @@
         "channels": {
           "type": "array",
           "minItems": 1,
-          "items": {"$ref": "#/$defs/vacancyEnablesOccupationCausalChannel"}
+          "items": {"$ref": "#/$defs/squareReleaseRouteCausalChannel"}
         }
       }
     },
@@ -475,19 +475,19 @@
         "vacated_gate_enables_unrecapturable_slider_capture_proof": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureProof"}
       }
     },
-    "vacancyEnablesOccupationCausalChannel": {
+    "squareReleaseRouteCausalChannel": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "channel_id",
-        "vacancy_enables_occupation_proof"
+        "square_release_route_proof"
       ],
       "properties": {
         "channel_id": {"$ref": "#/$defs/nonEmptyString"},
-        "vacancy_enables_occupation_proof": {"$ref": "#/$defs/vacancyEnablesOccupationProof"}
+        "square_release_route_proof": {"$ref": "#/$defs/squareReleaseRouteProof"}
       }
     },
-    "vacancyEnablesOccupationProof": {
+    "squareReleaseRouteProof": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -499,7 +499,9 @@
         "played_root_branch",
         "proof_paths",
         "participants",
-        "occupation_move"
+        "route",
+        "terminal_step_index",
+        "terminal"
       ],
       "properties": {
         "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
@@ -545,13 +547,21 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"$ref": "#/$defs/vacancyEnablesOccupationProofPath"}
+          "items": {"$ref": "#/$defs/squareReleaseRouteProofPath"}
         },
-        "participants": {"$ref": "#/$defs/vacancyEnablesOccupationParticipants"},
-        "occupation_move": {"$ref": "#/$defs/uciMove"}
+        "participants": {"$ref": "#/$defs/squareReleaseRouteParticipants"},
+        "route": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/squareReleaseRouteStep"}
+        },
+        "terminal_step_index": {"type": "integer", "minimum": 2},
+        "terminal_reply_move": {"$ref": "#/$defs/uciMove"},
+        "terminal": {"$ref": "#/$defs/squareReleaseRouteTerminal"}
       }
     },
-    "vacancyEnablesOccupationProofPath": {
+    "squareReleaseRouteProofPath": {
       "type": "object",
       "additionalProperties": false,
       "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
@@ -560,35 +570,55 @@
         "premises": {
           "type": "array",
           "minItems": 2,
-          "maxItems": 2,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "reference_release_move"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "reference_occupation_move"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"minimum": 2}}, "not": {"required": ["capture"]}}
-              ]
-            }
-          ],
-          "items": false
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/squareReleaseRouteTerminalPremiseUse"},
+              {
+                "allOf": [
+                  {"$ref": "#/$defs/boundedCausalLegalMovePremiseUse"},
+                  {"properties": {
+                    "role": {"pattern": "^reference_(release_move|route_move_[0-9]+|terminal_reply)$"},
+                    "branch_role": {"const": "counterfactual_reference"}
+                  }}
+                ]
+              }
+            ]
+          }
         },
         "closed_absence_uses": {
           "type": "array",
           "minItems": 1,
           "maxItems": 1,
-          "items": {"$ref": "#/$defs/vacancyEnablesOccupationAbsenceUse"}
+          "items": {"$ref": "#/$defs/squareReleaseRouteAbsenceUse"}
         },
         "closed_state_uses": {
           "type": "array",
-          "minItems": 5,
+          "minItems": 7,
           "uniqueItems": true,
-          "items": {"$ref": "#/$defs/vacancyEnablesOccupationStateUse"}
+          "items": {"$ref": "#/$defs/squareReleaseRouteStateUse"}
         }
+      }
+    },
+    "squareReleaseRouteTerminalPremiseUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role", "contract", "result_id", "issuer_evidence_id", "issuer_occurrence_id",
+        "source_premise_ids", "branch_id", "branch_role", "step_index"
+      ],
+      "properties": {
+        "role": {"const": "reference_terminal_resource"},
+        "contract": {"enum": ["capture_recapture_inventory", "created_check_response_inventory"]},
+        "result_id": {"type": "string", "pattern": "^(capture_recapture_inventory|created_check_response_inventory):[0-9a-f]{64}$"},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_premise_ids": {
+          "type": "array", "minItems": 3, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"const": "counterfactual_reference"},
+        "step_index": {"type": "integer", "minimum": 2}
       }
     },
     "boundedCausalLegalMovePremiseUse": {
@@ -626,34 +656,184 @@
         }
       }
     },
-    "vacancyEnablesOccupationAbsenceUse": {
+    "squareReleaseRouteAbsenceUse": {
       "allOf": [
         {"$ref": "#/$defs/boundedCausalClosureUse"},
         {"properties": {
-          "role": {"const": "played_occupation_move_absent"},
+          "role": {"const": "played_first_route_leg_absent"},
           "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
           "query": {"type": "string", "pattern": "^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$"},
           "branch_role": {"const": "played_root_analysis_continuation"}
         }}
       ]
     },
-    "vacancyEnablesOccupationStateUse": {
+    "squareReleaseRouteStateUse": {
       "allOf": [
         {"$ref": "#/$defs/boundedCausalClosureUse"},
         {"properties": {
-          "role": {"enum": ["reference_vacancy", "reference_occupation", "played_blocker", "played_occupier"]},
+          "role": {"pattern": "^(reference_vacancy|reference_route_piece_[0-9]+|reference_route_persistence_[0-9]+|played_blocker_persistence|played_route_origin_persistence)$"},
           "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
           "query": {"type": "string", "pattern": "^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$"}
         }}
       ]
     },
-    "vacancyEnablesOccupationParticipants": {
+    "squareReleaseRouteParticipants": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["releaser", "occupier"],
+      "required": ["releaser", "released_blocker", "route_piece"],
       "properties": {
         "releaser": {"$ref": "#/$defs/boundedCausalMovement"},
-        "occupier": {"$ref": "#/$defs/boundedCausalMovement"}
+        "released_blocker": {"$ref": "#/$defs/boundedCausalPiece"},
+        "route_piece": {"$ref": "#/$defs/boundedCausalPiece"}
+      }
+    },
+    "squareReleaseRouteStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "from", "to", "piece_before", "piece_after", "move_uci", "step_index"],
+      "properties": {
+        "side": {"$ref": "#/$defs/side"},
+        "from": {"$ref": "#/$defs/square"},
+        "to": {"$ref": "#/$defs/square"},
+        "piece_before": {"$ref": "#/$defs/pieceRole"},
+        "piece_after": {"$ref": "#/$defs/pieceRole"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "step_index": {"type": "integer", "minimum": 2}
+      }
+    },
+    "squareReleaseRouteTerminal": {
+      "oneOf": [
+        {"$ref": "#/$defs/squareReleaseRouteOccupationTerminal"},
+        {"$ref": "#/$defs/squareReleaseRouteCaptureTerminal"},
+        {"$ref": "#/$defs/squareReleaseRouteCreatedCheckTerminal"}
+      ]
+    },
+    "squareReleaseRouteOccupationTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {"kind": {"const": "occupation"}}
+    },
+    "squareReleaseRouteCaptureTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind", "assertion_id", "captured_target", "geometric_recapturers",
+        "legal_recaptures", "restricted_recaptures"
+      ],
+      "properties": {
+        "kind": {"const": "capture"},
+        "assertion_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
+        "geometric_recapturers": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalUncoloredPiece"}
+        },
+        "legal_recaptures": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalLegalResourceWithCapture"}
+        },
+        "restricted_recaptures": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalRestrictedRecapture"}
+        }
+      }
+    },
+    "squareReleaseRouteCreatedCheckTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind", "assertion_id", "checked_side", "king_square", "checkers",
+        "responses", "controlled_king_destinations", "terminal_state"
+      ],
+      "properties": {
+        "kind": {"const": "created_check"},
+        "assertion_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "checked_side": {"$ref": "#/$defs/side"},
+        "king_square": {"$ref": "#/$defs/square"},
+        "checkers": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalUncoloredPiece"}
+        },
+        "responses": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalCheckResponse"}
+        },
+        "controlled_king_destinations": {
+          "type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalControlledKingDestination"}
+        },
+        "terminal_state": {"enum": ["ongoing", "checkmate"]}
+      }
+    },
+    "boundedCausalUncoloredPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["piece", "square"],
+      "properties": {
+        "piece": {"$ref": "#/$defs/pieceRole"},
+        "square": {"$ref": "#/$defs/square"}
+      }
+    },
+    "boundedCausalLegalResourceWithCapture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "from", "to", "piece_before", "piece_after", "move_uci"],
+      "properties": {
+        "side": {"$ref": "#/$defs/side"},
+        "from": {"$ref": "#/$defs/square"},
+        "to": {"$ref": "#/$defs/square"},
+        "piece_before": {"$ref": "#/$defs/pieceRole"},
+        "piece_after": {"$ref": "#/$defs/pieceRole"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["side", "piece", "square"],
+          "properties": {
+            "side": {"$ref": "#/$defs/side"},
+            "piece": {"$ref": "#/$defs/pieceRole"},
+            "square": {"$ref": "#/$defs/square"}
+          }
+        }
+      }
+    },
+    "boundedCausalRestrictedRecapture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["piece", "destination", "king_square", "post_move_controllers"],
+      "properties": {
+        "piece": {"$ref": "#/$defs/boundedCausalUncoloredPiece"},
+        "destination": {"$ref": "#/$defs/square"},
+        "king_square": {"$ref": "#/$defs/square"},
+        "post_move_controllers": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalUncoloredPiece"}
+        }
+      }
+    },
+    "boundedCausalCheckResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource", "modes"],
+      "properties": {
+        "resource": {"$ref": "#/$defs/boundedCausalLegalResourceWithCapture"},
+        "modes": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"enum": ["king_move", "capture_checker", "interpose"]}
+        }
+      }
+    },
+    "boundedCausalControlledKingDestination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination", "controllers"],
+      "properties": {
+        "destination": {"$ref": "#/$defs/square"},
+        "controllers": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/boundedCausalUncoloredPiece"}
+        }
       }
     },
     "vacatedGateEnablesUnrecapturableSliderCaptureProof": {
@@ -754,7 +934,7 @@
         },
         "closed_state_uses": {
           "type": "array",
-          "minItems": 5,
+          "minItems": 10,
           "uniqueItems": true,
           "items": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureStateUse"}
         }
@@ -797,10 +977,10 @@
       "allOf": [
         {"$ref": "#/$defs/boundedCausalClosureUse"},
         {"properties": {
-          "role": {"enum": ["reference_intervening_slider_reach", "played_slider_occupied", "played_target_occupied", "played_gate_blocker_occupied", "played_blocked_slider_reach"]},
+          "role": {"enum": ["reference_intervening_slider_reach", "reference_target_persistence", "played_slider_persistence", "played_target_persistence", "played_gate_blocker_persistence", "played_blocked_slider_reach"]},
           "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
           "query": {"type": "string", "pattern": "^(occupied-by|slider-reach):.+$"},
-          "after_step_index": {"type": "integer", "minimum": 1}
+          "after_step_index": {"type": "integer", "minimum": 0}
         }}
       ]
     },

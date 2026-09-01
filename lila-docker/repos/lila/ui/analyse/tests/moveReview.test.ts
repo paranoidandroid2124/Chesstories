@@ -1067,7 +1067,77 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
       ),
       closure(
         pathUseId('d', suffix),
-        'played_slider_occupied',
+        'reference_target_persistence',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.reference',
+        hash('d'),
+        'occupied-by:black:queen@a7',
+        referenceId,
+        'counterfactual_reference',
+        0,
+        referenceFens[0]!,
+        1,
+        'best_line',
+      ),
+      closure(
+        pathUseId('e', suffix),
+        'reference_target_persistence',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.reference',
+        hash('d'),
+        'occupied-by:black:queen@a7',
+        referenceId,
+        'counterfactual_reference',
+        1,
+        referenceFens[1]!,
+        2,
+        'best_line',
+      ),
+      closure(
+        pathUseId('f', suffix),
+        'played_slider_persistence',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'occupied-by:white:rook@a1',
+        playedId,
+        'played_root_analysis_continuation',
+        0,
+        playedFens[0]!,
+        1,
+        'played_line',
+      ),
+      closure(
+        pathUseId('0', suffix),
+        'played_target_persistence',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'occupied-by:black:queen@a7',
+        playedId,
+        'played_root_analysis_continuation',
+        0,
+        playedFens[0]!,
+        1,
+        'played_line',
+      ),
+      closure(
+        pathUseId('1', suffix),
+        'played_gate_blocker_persistence',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'occupied-by:white:knight@a2',
+        playedId,
+        'played_root_analysis_continuation',
+        0,
+        playedFens[0]!,
+        1,
+        'played_line',
+      ),
+      closure(
+        pathUseId('2', suffix),
+        'played_slider_persistence',
         'position_relation_extractor.closed_position_state_inventory',
         'line.played',
         hash('a'),
@@ -1080,8 +1150,8 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
         'played_line',
       ),
       closure(
-        pathUseId('e', suffix),
-        'played_target_occupied',
+        pathUseId('3', suffix),
+        'played_target_persistence',
         'position_relation_extractor.closed_position_state_inventory',
         'line.played',
         hash('a'),
@@ -1094,8 +1164,8 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
         'played_line',
       ),
       closure(
-        pathUseId('f', suffix),
-        'played_gate_blocker_occupied',
+        pathUseId('4', suffix),
+        'played_gate_blocker_persistence',
         'position_relation_extractor.closed_position_state_inventory',
         'line.played',
         hash('a'),
@@ -1108,7 +1178,7 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
         'played_line',
       ),
       closure(
-        pathUseId('0', suffix),
+        pathUseId('5', suffix),
         'played_blocked_slider_reach',
         'position_relation_extractor.closed_position_state_inventory',
         'line.played',
@@ -1227,26 +1297,78 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
       object(absence).after_step_index = 3;
       object(absence).position = position(longPlayedFens[3]!, 4, 'played_line');
     }
-    const states = candidate.closed_state_uses as JsonObject[];
-    const referenceState = object(states[0]);
-    referenceState.position = position(longReferenceFens[1]!, 2, 'best_line');
-    const secondReferenceState = structuredClone(referenceState);
-    secondReferenceState.use_id = pathUseId('3', pathIndex === 0 ? 'one' : 'two');
-    secondReferenceState.after_step_index = 2;
-    secondReferenceState.position = position(longReferenceFens[2]!, 3, 'best_line');
-    const thirdReferenceState = structuredClone(referenceState);
-    thirdReferenceState.use_id = pathUseId('4', pathIndex === 0 ? 'one' : 'two');
-    thirdReferenceState.after_step_index = 3;
-    thirdReferenceState.position = position(longReferenceFens[3]!, 4, 'best_line');
-    for (const state of states.slice(1)) {
-      object(state).after_step_index = 3;
-      object(state).position = position(longPlayedFens[3]!, 4, 'played_line');
-    }
+    let useIndex = 0;
+    const nextUseId = () => `${(useIndex++).toString(16).padStart(63, '0')}${pathIndex + 1}`;
     candidate.closed_state_uses = [
-      referenceState,
-      secondReferenceState,
-      thirdReferenceState,
-      ...states.slice(1),
+      ...Array.from({ length: 3 }, (_, offset) => {
+        const stepIndex = offset + 1;
+        return closure(
+          nextUseId(),
+          'reference_intervening_slider_reach',
+          'position_relation_extractor.closed_position_state_inventory',
+          'line.reference',
+          hash('d'),
+          'slider-reach:white:rook@a1:north:[a2:empty,a7:enemy:queen]:black:queen@a7',
+          referenceId,
+          'counterfactual_reference',
+          stepIndex,
+          longReferenceFens[stepIndex]!,
+          stepIndex + 1,
+          'best_line',
+        );
+      }),
+      ...Array.from({ length: 4 }, (_, stepIndex) =>
+        closure(
+          nextUseId(),
+          'reference_target_persistence',
+          'position_relation_extractor.closed_position_state_inventory',
+          'line.reference',
+          hash('d'),
+          'occupied-by:black:queen@a7',
+          referenceId,
+          'counterfactual_reference',
+          stepIndex,
+          longReferenceFens[stepIndex]!,
+          stepIndex + 1,
+          'best_line',
+        ),
+      ),
+      ...Array.from({ length: 4 }, (_, stepIndex) =>
+        [
+          ['played_slider_persistence', 'occupied-by:white:rook@a1'],
+          ['played_target_persistence', 'occupied-by:black:queen@a7'],
+          ['played_gate_blocker_persistence', 'occupied-by:white:knight@a2'],
+        ].map(([role, query]) =>
+          closure(
+            nextUseId(),
+            role!,
+            'position_relation_extractor.closed_position_state_inventory',
+            'line.played',
+            hash('a'),
+            query!,
+            playedId,
+            'played_root_analysis_continuation',
+            stepIndex,
+            longPlayedFens[stepIndex]!,
+            stepIndex + 1,
+            'played_line',
+          ),
+        ),
+      ).flat(),
+      closure(
+        nextUseId(),
+        'played_blocked_slider_reach',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'slider-reach:white:rook@a1:north:[a2:friendly:knight]:white:knight@a2',
+        playedId,
+        'played_root_analysis_continuation',
+        3,
+        longPlayedFens[3]!,
+        4,
+        'played_line',
+      ),
     ];
   }
   const longFocus = typedSubject(longRoot, longPlayedMoves[0]!, longPlayedFens[0]!);
@@ -1271,7 +1393,7 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
         longReasons.every(
           reason =>
             reason.message.kind === 'vacated-gate-enables-unrecapturable-slider-capture' &&
-            reason.message.states.length === 7 &&
+            reason.message.states.length === 20 &&
             reason.message.states.filter(state => state.role === 'reference_intervening_slider_reach')
               .length === 3,
         ),
@@ -1372,7 +1494,7 @@ test('projects exact vacated-gate slider-capture paths and rejects transport-int
   );
 });
 
-test('projects exact square release and rejects a forged move or sibling closure', () => {
+test('projects the exact occupation SquareReleaseRoute and rejects legacy or forged fields', () => {
   const root = '1r4k1/p1q2p1p/2BRbp1B/4p3/P1p4P/6P1/1P2PP1K/3R4 w - - 0 30' as FEN;
   const referenceMoves = ['c6g2', 'e6f5', 'd6c6'] as Uci[];
   const playedMoves = ['d1d2', 'e6f5'] as Uci[];
@@ -1397,7 +1519,7 @@ test('projects exact square release and rejects a forged move or sibling closure
   const referenceId = hash('1');
   const playedId = hash('2');
   const releaser = { side: 'white', from: 'c6', to: 'g2', piece_before: 'bishop', piece_after: 'bishop' };
-  const occupier = { side: 'white', from: 'd6', to: 'c6', piece_before: 'rook', piece_after: 'rook' };
+  const routeLeg = { side: 'white', from: 'd6', to: 'c6', piece_before: 'rook', piece_after: 'rook' };
   const legalMove = (role: string, move: Uci, movement: JsonObject, stepIndex: number, digit: string) => {
     const semanticId = hash(digit);
     const occurrenceId = hash(digit === '4' ? '5' : '7');
@@ -1440,9 +1562,9 @@ test('projects exact square release and rejects a forged move or sibling closure
     position: { fen, ply: 59 + stepIndex, scope },
   });
   const channel = {
-    channel_id: 'typed.vacancy-occupation',
-    vacancy_enables_occupation_proof: {
-      source_evidence_id: 'vacancy.source',
+    channel_id: 'typed.square-release-route-occupation',
+    square_release_route_proof: {
+      source_evidence_id: 'square-release.source',
       semantic_id: hash('e'),
       occurrence_id: hash('f'),
       dependency_fingerprint: hash('0'),
@@ -1471,12 +1593,12 @@ test('projects exact square release and rejects a forged move or sibling closure
           path_occurrence_id: hash('3'),
           premises: [
             legalMove('reference_release_move', 'c6g2' as Uci, releaser, 0, '4'),
-            legalMove('reference_occupation_move', 'd6c6' as Uci, occupier, 2, '6'),
+            legalMove('reference_route_move_0', 'd6c6' as Uci, routeLeg, 2, '6'),
           ],
           closed_absence_uses: [
             closure(
               hash('8'),
-              'played_occupation_move_absent',
+              'played_first_route_leg_absent',
               'position_relation_extractor.closed_relation_inventory',
               'legal-move-from-to:white:d6:c6',
               playedId,
@@ -1511,7 +1633,7 @@ test('projects exact square release and rejects a forged move or sibling closure
             ),
             closure(
               hash('9'),
-              'reference_occupation',
+              'reference_route_piece_0',
               'position_relation_extractor.closed_position_state_inventory',
               'occupied-by:white:rook@c6',
               referenceId,
@@ -1522,7 +1644,18 @@ test('projects exact square release and rejects a forged move or sibling closure
             ),
             closure(
               hash('a'),
-              'played_blocker',
+              'played_blocker_persistence',
+              'position_relation_extractor.closed_position_state_inventory',
+              'occupied-by:white:bishop@c6',
+              playedId,
+              'played_root_analysis_continuation',
+              0,
+              playedFens[0]!,
+              'played_line',
+            ),
+            closure(
+              hash('b'),
+              'played_blocker_persistence',
               'position_relation_extractor.closed_position_state_inventory',
               'occupied-by:white:bishop@c6',
               playedId,
@@ -1532,8 +1665,19 @@ test('projects exact square release and rejects a forged move or sibling closure
               'played_line',
             ),
             closure(
-              hash('b'),
-              'played_occupier',
+              hash('c'),
+              'played_route_origin_persistence',
+              'position_relation_extractor.closed_position_state_inventory',
+              'occupied-by:white:rook@d6',
+              playedId,
+              'played_root_analysis_continuation',
+              0,
+              playedFens[0]!,
+              'played_line',
+            ),
+            closure(
+              hash('d'),
+              'played_route_origin_persistence',
               'position_relation_extractor.closed_position_state_inventory',
               'occupied-by:white:rook@d6',
               playedId,
@@ -1545,8 +1689,14 @@ test('projects exact square release and rejects a forged move or sibling closure
           ],
         },
       ],
-      participants: { releaser, occupier },
-      occupation_move: 'd6c6',
+      participants: {
+        releaser,
+        released_blocker: { side: 'white', piece: 'bishop', square: 'c6' },
+        route_piece: { side: 'white', piece: 'rook', square: 'd6' },
+      },
+      route: [{ ...routeLeg, move_uci: 'd6c6', step_index: 2 }],
+      terminal_step_index: 2,
+      terminal: { kind: 'occupation' },
     },
   };
   const focus = typedSubject(root, playedMoves[0], playedFens[0]!);
@@ -1561,13 +1711,11 @@ test('projects exact square release and rejects a forged move or sibling closure
   const reviewed = selectedMoveReviewCandidate(decoded.evidence);
   assert.equal(reviewed?.review.kind, 'move-verdict');
   if (reviewed?.review.kind !== 'move-verdict') return;
-  const reasons = reviewed.review.reasons.filter(
-    reason => reason.message.kind === 'vacancy-enables-occupation',
-  );
+  const reasons = reviewed.review.reasons.filter(reason => reason.message.kind === 'square-release-route');
   assert.equal(reasons.length, 2, 'the reference and Played occurrences stay distinct');
   const englishReason = moveReviewReasonText(reasons[0]!, reviewed, 'en-US');
   assert.match(englishReason, /vacating c6/);
-  assert.match(englishReason, /d6c6/);
+  assert.match(englishReason, /same-piece route d6c6/);
   assert.match(moveReviewReasonText(reasons[0]!, reviewed, 'ko-KR'), /c6을 비우고/);
 
   const mutations: Array<(proof: JsonObject) => void> = [
@@ -1582,7 +1730,7 @@ test('projects exact square release and rejects a forged move or sibling closure
       object((path.closed_absence_uses as JsonObject[])[0]).query = 'legal-move-from-to:white:d6:d5';
     },
     proof => {
-      object(object(proof.participants).occupier).to = 'b6';
+      object(object(proof.participants).route_piece).square = 'b6';
     },
     proof => {
       const path = object((proof.proof_paths as JsonObject[])[0]);
@@ -1590,27 +1738,29 @@ test('projects exact square release and rejects a forged move or sibling closure
     },
     proof => {
       const path = object((proof.proof_paths as JsonObject[])[0]);
-      const [release, occupation] = path.premises as JsonObject[];
-      const previous = occupation!.issuer_occurrence_id as string;
-      occupation!.issuer_occurrence_id = release!.issuer_occurrence_id;
-      occupation!.source_premise_ids = (occupation!.source_premise_ids as string[])
+      const [release, route] = path.premises as JsonObject[];
+      const previous = route!.issuer_occurrence_id as string;
+      route!.issuer_occurrence_id = release!.issuer_occurrence_id;
+      route!.source_premise_ids = (route!.source_premise_ids as string[])
         .map(id => (id === previous ? (release!.issuer_occurrence_id as string) : id))
         .sort();
     },
     proof => {
       const participants = object(proof.participants);
       object(participants.releaser).from = 'b6';
-      object(participants.occupier).to = 'b6';
+      object(participants.released_blocker).square = 'b6';
+      object((proof.route as JsonObject[])[0]).to = 'b6';
       const path = object((proof.proof_paths as JsonObject[])[0]);
-      const [release, occupation] = path.premises as JsonObject[];
+      const [release, route] = path.premises as JsonObject[];
       object(release!.movement).from = 'b6';
-      object(occupation!.movement).to = 'b6';
+      object(route!.movement).to = 'b6';
       object((path.closed_absence_uses as JsonObject[])[0]).query = 'legal-move-from-to:white:d6:b6';
       const states = path.closed_state_uses as JsonObject[];
       object(states[0]).query = 'vacant:b6';
       object(states[1]).query = 'vacant:b6';
       object(states[2]).query = 'occupied-by:white:rook@b6';
       object(states[3]).query = 'occupied-by:white:bishop@b6';
+      object(states[4]).query = 'occupied-by:white:bishop@b6';
     },
     proof => {
       const participants = object(proof.participants);
@@ -1618,17 +1768,439 @@ test('projects exact square release and rejects a forged move or sibling closure
       const path = object((proof.proof_paths as JsonObject[])[0]);
       object(object((path.premises as JsonObject[])[0]).movement).piece_after = 'queen';
     },
+    proof => {
+      proof.unexpected_field = 'd6c6';
+    },
+    proof => {
+      proof.terminal_reply_move = 'g8h8';
+    },
   ];
   for (const [index, mutate] of mutations.entries()) {
     const malformed = structuredClone(channel);
-    mutate(object(malformed.vacancy_enables_occupation_proof));
-    assert.equal(decode(malformed), undefined, `vacancy occupation mutation ${index}`);
+    mutate(object(malformed.square_release_route_proof));
+    assert.equal(decode(malformed), undefined, `square-release occupation mutation ${index}`);
   }
   assert.equal(
     decode(channel, 'missed_tactical_resource'),
     undefined,
     'the exact proof cannot change Cause kind',
   );
+});
+
+test('preserves every multi-leg CreatedCheck route path and labels five responses without forcedness', () => {
+  const root = '7k/p2rb3/6q1/8/8/8/8/K1BR4 w - - 0 1' as FEN;
+  const referenceMoves = ['c1g5', 'a7a6', 'd1c1', 'a6a5', 'c1c8', 'h8g7'] as Uci[];
+  const playedMoves = ['a1a2', 'a7a6'] as Uci[];
+  const referenceFens = [
+    '7k/p2rb3/6q1/6B1/8/8/8/K2R4 b - - 1 1',
+    '7k/3rb3/p5q1/6B1/8/8/8/K2R4 w - - 0 2',
+    '7k/3rb3/p5q1/6B1/8/8/8/K1R5 b - - 1 2',
+    '7k/3rb3/6q1/p5B1/8/8/8/K1R5 w - - 0 3',
+    '2R4k/3rb3/6q1/p5B1/8/8/8/K7 b - - 1 3',
+    '2R5/3rb1k1/6q1/p5B1/8/8/8/K7 w - - 2 4',
+  ] as FEN[];
+  const playedFens = [
+    '7k/p2rb3/6q1/8/8/8/K7/2BR4 b - - 1 1',
+    '7k/3rb3/p5q1/8/8/8/K7/2BR4 w - - 0 2',
+  ] as FEN[];
+  const stepWire = (moves: Uci[], fens: FEN[], observed: boolean) =>
+    moves.map((move, index) => ({
+      step_index: index,
+      provenance: observed && index === 0 ? 'observed_game_move' : 'certified_analysis_move',
+      ply: 1 + index,
+      move_uci: move,
+      fen_before: index === 0 ? root : fens[index - 1],
+      fen_after: fens[index],
+    }));
+  const referenceId = hash('1');
+  const playedId = hash('2');
+  const releaser = { side: 'white', from: 'c1', to: 'g5', piece_before: 'bishop', piece_after: 'bishop' };
+  const route = [
+    { side: 'white', from: 'd1', to: 'c1', piece_before: 'rook', piece_after: 'rook' },
+    { side: 'white', from: 'c1', to: 'c8', piece_before: 'rook', piece_after: 'rook' },
+  ];
+  const responseResources = [
+    { side: 'black', from: 'd7', to: 'd8', piece_before: 'rook', piece_after: 'rook', move_uci: 'd7d8' },
+    { side: 'black', from: 'e7', to: 'f8', piece_before: 'bishop', piece_after: 'bishop', move_uci: 'e7f8' },
+    { side: 'black', from: 'g6', to: 'g8', piece_before: 'queen', piece_after: 'queen', move_uci: 'g6g8' },
+    { side: 'black', from: 'h8', to: 'g7', piece_before: 'king', piece_after: 'king', move_uci: 'h8g7' },
+    { side: 'black', from: 'h8', to: 'h7', piece_before: 'king', piece_after: 'king', move_uci: 'h8h7' },
+  ];
+  const legalMove = (
+    role: string,
+    move: Uci,
+    movement: JsonObject,
+    stepIndex: number,
+    semanticDigit: string,
+    occurrenceDigit: string,
+  ) => {
+    const semanticId = hash(semanticDigit);
+    const occurrenceId = hash(occurrenceDigit);
+    return {
+      role,
+      contract: 'legal_move',
+      move_uci: move,
+      movement,
+      movement_mode: 'controlled_destination',
+      legal_move_semantic_id: semanticId,
+      issuer_evidence_id: 'line.reference',
+      issuer_occurrence_id: occurrenceId,
+      source_premise_ids: ['line.reference', occurrenceId, `legal-move:${semanticId}`].sort(),
+      branch_id: referenceId,
+      branch_role: 'counterfactual_reference',
+      step_index: stepIndex,
+    };
+  };
+  const verticalPremise = (resultDigit: string, occurrenceDigit: string) => ({
+    role: 'reference_terminal_resource',
+    contract: 'created_check_response_inventory',
+    result_id: `created_check_response_inventory:${hash(resultDigit)}`,
+    issuer_evidence_id: 'line.reference',
+    issuer_occurrence_id: hash(occurrenceDigit),
+    source_premise_ids: ['line.reference', hash(occurrenceDigit), `vertical.${resultDigit}`].sort(),
+    branch_id: referenceId,
+    branch_role: 'counterfactual_reference',
+    step_index: 4,
+  });
+  const closure = (
+    useId: string,
+    role: string,
+    issuer: string,
+    query: string,
+    branchId: string,
+    branchRole: string,
+    stepIndex: number,
+    fen: FEN,
+    scope: 'best_line' | 'played_line',
+  ) => ({
+    use_id: useId,
+    role,
+    semantic_proof_id: hash('f'),
+    issuer,
+    issuer_evidence_id: branchId === referenceId ? 'line.reference' : 'line.played',
+    issuer_occurrence_id: hash(branchId === referenceId ? 'e' : 'd'),
+    query,
+    branch_id: branchId,
+    branch_role: branchRole,
+    after_step_index: stepIndex,
+    position: { fen, ply: 1 + stepIndex, scope },
+  });
+  const closedAbsenceUses = [
+    closure(
+      hash('0'),
+      'played_first_route_leg_absent',
+      'position_relation_extractor.closed_relation_inventory',
+      'legal-move-from-to:white:d1:c1',
+      playedId,
+      'played_root_analysis_continuation',
+      1,
+      playedFens[1]!,
+      'played_line',
+    ),
+  ];
+  const closedStateUses = [
+    closure(
+      hash('1'),
+      'reference_vacancy',
+      'position_relation_extractor.closed_position_state_inventory',
+      'vacant:c1',
+      referenceId,
+      'counterfactual_reference',
+      0,
+      referenceFens[0]!,
+      'best_line',
+    ),
+    closure(
+      hash('2'),
+      'reference_vacancy',
+      'position_relation_extractor.closed_position_state_inventory',
+      'vacant:c1',
+      referenceId,
+      'counterfactual_reference',
+      1,
+      referenceFens[1]!,
+      'best_line',
+    ),
+    closure(
+      hash('3'),
+      'reference_route_piece_0',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:rook@c1',
+      referenceId,
+      'counterfactual_reference',
+      2,
+      referenceFens[2]!,
+      'best_line',
+    ),
+    closure(
+      hash('4'),
+      'reference_route_piece_1',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:rook@c8',
+      referenceId,
+      'counterfactual_reference',
+      4,
+      referenceFens[4]!,
+      'best_line',
+    ),
+    closure(
+      hash('5'),
+      'reference_route_persistence_0',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:rook@c1',
+      referenceId,
+      'counterfactual_reference',
+      3,
+      referenceFens[3]!,
+      'best_line',
+    ),
+    closure(
+      hash('6'),
+      'played_blocker_persistence',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:bishop@c1',
+      playedId,
+      'played_root_analysis_continuation',
+      0,
+      playedFens[0]!,
+      'played_line',
+    ),
+    closure(
+      hash('7'),
+      'played_blocker_persistence',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:bishop@c1',
+      playedId,
+      'played_root_analysis_continuation',
+      1,
+      playedFens[1]!,
+      'played_line',
+    ),
+    closure(
+      hash('8'),
+      'played_route_origin_persistence',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:rook@d1',
+      playedId,
+      'played_root_analysis_continuation',
+      0,
+      playedFens[0]!,
+      'played_line',
+    ),
+    closure(
+      hash('9'),
+      'played_route_origin_persistence',
+      'position_relation_extractor.closed_position_state_inventory',
+      'occupied-by:white:rook@d1',
+      playedId,
+      'played_root_analysis_continuation',
+      1,
+      playedFens[1]!,
+      'played_line',
+    ),
+  ];
+  const path = (id: string, vertical: JsonObject) => ({
+    path_occurrence_id: id,
+    premises: [
+      vertical,
+      legalMove('reference_release_move', 'c1g5' as Uci, releaser, 0, '0', '1'),
+      legalMove('reference_route_move_0', 'd1c1' as Uci, route[0]!, 2, '2', '3'),
+      legalMove('reference_route_move_1', 'c1c8' as Uci, route[1]!, 4, '4', '5'),
+      legalMove(
+        'reference_terminal_reply',
+        'h8g7' as Uci,
+        { side: 'black', from: 'h8', to: 'g7', piece_before: 'king', piece_after: 'king' },
+        5,
+        '6',
+        '7',
+      ),
+    ],
+    closed_absence_uses: structuredClone(closedAbsenceUses),
+    closed_state_uses: structuredClone(closedStateUses),
+  });
+  const channel = {
+    channel_id: 'typed.square-release-route-created-check',
+    square_release_route_proof: {
+      source_evidence_id: 'square-release.source',
+      semantic_id: hash('a'),
+      occurrence_id: hash('b'),
+      dependency_fingerprint: hash('c'),
+      counterfactual_reference_branch: {
+        branch_id: referenceId,
+        line_id: 'line.reference',
+        line_role: 'best_reference',
+        branch_role: 'counterfactual_reference',
+        root_provenance: 'counterfactual_analyzed_root',
+        line_rank: 1,
+        root_move: referenceMoves[0],
+        steps: stepWire(referenceMoves, referenceFens, false),
+      },
+      played_root_branch: {
+        branch_id: playedId,
+        line_id: 'line.played',
+        line_role: 'played',
+        branch_role: 'played_root_analysis_continuation',
+        root_provenance: 'observed_game_root',
+        line_rank: 1,
+        root_move: playedMoves[0],
+        steps: stepWire(playedMoves, playedFens, true),
+      },
+      proof_paths: [path(hash('3'), verticalPremise('a', '8')), path(hash('4'), verticalPremise('b', '9'))],
+      participants: {
+        releaser,
+        released_blocker: { side: 'white', piece: 'bishop', square: 'c1' },
+        route_piece: { side: 'white', piece: 'rook', square: 'd1' },
+      },
+      route: [
+        { ...route[0], move_uci: 'd1c1', step_index: 2 },
+        { ...route[1], move_uci: 'c1c8', step_index: 4 },
+      ],
+      terminal_step_index: 4,
+      terminal: {
+        kind: 'created_check',
+        assertion_id: hash('9'),
+        checked_side: 'black',
+        king_square: 'h8',
+        checkers: [{ piece: 'rook', square: 'c8' }],
+        responses: responseResources.map((resource, index) => ({
+          resource,
+          modes: [index < 3 ? 'interpose' : 'king_move'],
+        })),
+        controlled_king_destinations: [],
+        terminal_state: 'ongoing',
+      },
+      terminal_reply_move: 'h8g7',
+    },
+  };
+  const focus = typedSubject(root, playedMoves[0]!, playedFens[0]!);
+  const decode = (candidate: JsonObject) =>
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(focus, referenceMoves, playedMoves, 'missed_square_release', candidate),
+      {
+        ...decodeContext(),
+        subject: focus,
+      },
+    );
+  const decoded = decode(channel);
+  assert.equal(decoded?.kind, 'completed');
+  if (decoded?.kind !== 'completed') return;
+  const reviewed = selectedMoveReviewCandidate(decoded.evidence);
+  assert.equal(reviewed?.review.kind, 'move-verdict');
+  if (reviewed?.review.kind !== 'move-verdict') return;
+  const reasons = reviewed.review.reasons.filter(reason => reason.message.kind === 'square-release-route');
+  assert.equal(reasons.length, 4, 'two independent proof paths retain both time-ordered branch occurrences');
+  assert.deepEqual(
+    reasons.map(reason =>
+      reason.message.kind === 'square-release-route' ? reason.message.pathOccurrenceId : undefined,
+    ),
+    [hash('3'), hash('3'), hash('4'), hash('4')],
+  );
+  assert.ok(
+    reasons.every(
+      reason =>
+        reason.message.kind === 'square-release-route' &&
+        reason.message.terminal.kind === 'created-check' &&
+        reason.message.terminal.responses.length === 5 &&
+        reason.message.terminalReplyMove === 'h8g7' &&
+        reason.message.states.some(state => state.role === 'reference_route_persistence_0'),
+    ),
+  );
+  const english = moveReviewReasonText(reasons[0]!, reviewed, 'en-US');
+  assert.match(english, /5 certified legal responses/);
+  assert.doesNotMatch(english, /\b(?:unique|forced|only)\b/i);
+  assert.doesNotMatch(moveReviewReasonText(reasons[0]!, reviewed, 'ko-KR'), /유일|강제/);
+
+  const captureChannel = structuredClone(channel);
+  const captureProof = object(captureChannel.square_release_route_proof);
+  captureProof.terminal = {
+    kind: 'capture',
+    assertion_id: hash('9'),
+    captured_target: { side: 'black', piece: 'queen', square: 'c8' },
+    geometric_recapturers: [],
+    legal_recaptures: [],
+    restricted_recaptures: [],
+  };
+  for (const candidatePath of captureProof.proof_paths as JsonObject[]) {
+    const premises = object(candidatePath).premises as JsonObject[];
+    const terminalPremise = object(premises[0]);
+    terminalPremise.contract = 'capture_recapture_inventory';
+    terminalPremise.result_id = `capture_recapture_inventory:${
+      terminalPremise.issuer_occurrence_id === hash('8') ? hash('a') : hash('b')
+    }`;
+    object(premises[3]).capture = { side: 'black', piece: 'queen', square: 'c8' };
+  }
+  const captured = decode(captureChannel);
+  assert.equal(
+    captured?.kind,
+    'completed',
+    'a capture terminal retains its actual next reply without recapture inference',
+  );
+  if (captured?.kind === 'completed') {
+    const capturedReview = selectedMoveReviewCandidate(captured.evidence);
+    assert.equal(capturedReview?.review.kind, 'move-verdict');
+    if (capturedReview?.review.kind === 'move-verdict') {
+      assert.equal(
+        capturedReview.review.reasons.filter(
+          reason =>
+            reason.message.kind === 'square-release-route' && reason.message.terminal.kind === 'capture',
+        ).length,
+        4,
+      );
+    }
+  }
+
+  const mateChannel = structuredClone(channel);
+  const mateProof = object(mateChannel.square_release_route_proof);
+  delete mateProof.terminal_reply_move;
+  object(mateProof.counterfactual_reference_branch).steps = (
+    object(mateProof.counterfactual_reference_branch).steps as JsonObject[]
+  ).slice(0, 5);
+  const mateTerminal = object(mateProof.terminal);
+  mateTerminal.responses = [];
+  mateTerminal.terminal_state = 'checkmate';
+  for (const candidatePath of mateProof.proof_paths as JsonObject[]) {
+    const pathWire = object(candidatePath);
+    pathWire.premises = (pathWire.premises as JsonObject[]).slice(0, 4);
+  }
+  const mateDecoded = decodeMoveReviewSnapshot(
+    rawTypedResponse(focus, referenceMoves.slice(0, 5), playedMoves, 'missed_square_release', mateChannel),
+    { ...decodeContext(), subject: focus },
+  );
+  assert.equal(mateDecoded?.kind, 'completed', 'checkmate terminates the route without a reply occurrence');
+
+  const mutations: Array<(proof: JsonObject) => void> = [
+    proof => delete proof.terminal_reply_move,
+    proof => {
+      proof.terminal_reply_move = 'h8h7';
+    },
+    proof => {
+      object(proof.terminal).terminal_state = 'checkmate';
+    },
+    proof => {
+      const pathWire = object((proof.proof_paths as JsonObject[])[0]);
+      const premises = pathWire.premises as JsonObject[];
+      [premises[0], premises[1]] = [premises[1]!, premises[0]!];
+    },
+    proof => {
+      const pathWire = object((proof.proof_paths as JsonObject[])[0]);
+      const states = pathWire.closed_state_uses as JsonObject[];
+      pathWire.closed_state_uses = states.filter(state => state.role !== 'reference_route_persistence_0');
+    },
+    proof => {
+      const reply = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[4]);
+      reply.move_uci = 'h8h7';
+      object(reply.movement).to = 'h7';
+    },
+    proof => {
+      const pathWire = object((proof.proof_paths as JsonObject[])[0]);
+      object(object((pathWire.premises as JsonObject[])[4]).movement).side = 'white';
+    },
+  ];
+  for (const [index, mutate] of mutations.entries()) {
+    const malformed = structuredClone(channel);
+    mutate(object(malformed.square_release_route_proof));
+    assert.equal(decode(malformed), undefined, `created-check route mutation ${index}`);
+  }
 });
 
 test('keeps every independent passed-pawn analysis-continuation proof path and its exact reply closure', () => {

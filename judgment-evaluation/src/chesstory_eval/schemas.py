@@ -368,11 +368,11 @@ class SchemaRegistry:
                     f"{location}.vacated_gate_enables_unrecapturable_slider_capture_proof",
                     errors,
                 )
-            vacancy = value.get("vacancy_enables_occupation_proof")
-            if isinstance(vacancy, Mapping):
-                self._validate_vacancy_enables_occupation_proof_identifiers(
-                    vacancy,
-                    f"{location}.vacancy_enables_occupation_proof",
+            route = value.get("square_release_route_proof")
+            if isinstance(route, Mapping):
+                self._validate_square_release_route_proof_identifiers(
+                    route,
+                    f"{location}.square_release_route_proof",
                     errors,
                 )
             for key, child in value.items():
@@ -943,18 +943,20 @@ class SchemaRegistry:
                 f"legal-capture:{slider.get('side')}:{exploit.get('to')}",
             ),
         )
-        expected_played_states = (
+        target_query = (
+            f"occupied-by:{captured_target.get('side')}:{captured_target.get('piece')}"
+            f"@{captured_target.get('square')}"
+        )
+        played_queries = (
             (
-                "played_slider_occupied",
+                "played_slider_persistence",
                 f"occupied-by:{slider.get('side')}:{slider.get('piece')}@{slider.get('square')}",
             ),
+            ("played_target_persistence", target_query),
             (
-                "played_target_occupied",
-                f"occupied-by:{captured_target.get('side')}:{captured_target.get('piece')}@{captured_target.get('square')}",
-            ),
-            (
-                "played_gate_blocker_occupied",
-                f"occupied-by:{gate_blocker.get('side')}:{gate_blocker.get('piece')}@{gate_blocker.get('square')}",
+                "played_gate_blocker_persistence",
+                f"occupied-by:{gate_blocker.get('side')}:{gate_blocker.get('piece')}"
+                f"@{gate_blocker.get('square')}",
             ),
         )
         for path_index, path in enumerate(paths):
@@ -993,174 +995,470 @@ class SchemaRegistry:
                 for use, expected in zip(absences, expected_absences)
             ):
                 errors.append(f"{path_location}.closed_absence_uses: exact sibling closure was lost")
-            reference_states = states[: exploit_index - 1]
-            played_states = states[exploit_index - 1 :]
-            if (
-                len(states) != exploit_index + 3
-                or any(
-                    not isinstance(state, Mapping)
-                    or state.get("role") != "reference_intervening_slider_reach"
-                    or state.get("branch_id") != reference_id
-                    or state.get("branch_role") != reference.get("branch_role")
-                    or state.get("after_step_index") != step_index
-                    or not isinstance(state.get("query"), str)
-                    or not state.get("query").startswith(slider_prefix)
-                    for step_index, state in enumerate(reference_states, start=1)
+            expected_states: list[tuple[str, Any, Any, int, str, bool]] = [
+                (
+                    "reference_intervening_slider_reach",
+                    reference_id,
+                    reference.get("branch_role"),
+                    step_index,
+                    slider_prefix,
+                    True,
                 )
-                or any(
-                    not isinstance(state, Mapping)
-                    or state.get("role") != expected[0]
-                    or state.get("branch_id") != played_id
-                    or state.get("branch_role") != played.get("branch_role")
-                    or state.get("after_step_index") != exploit_index - 1
-                    or state.get("query") != expected[1]
-                    for state, expected in zip(played_states[:3], expected_played_states)
+                for step_index in range(1, exploit_index)
+            ]
+            expected_states.extend(
+                (
+                    "reference_target_persistence",
+                    reference_id,
+                    reference.get("branch_role"),
+                    step_index,
+                    target_query,
+                    False,
                 )
-                or len(played_states) != 4
-                or not isinstance(played_states[-1], Mapping)
-                or played_states[-1].get("role") != "played_blocked_slider_reach"
-                or played_states[-1].get("branch_id") != played_id
-                or played_states[-1].get("branch_role") != played.get("branch_role")
-                or played_states[-1].get("after_step_index") != exploit_index - 1
-                or not isinstance(played_states[-1].get("query"), str)
-                or not played_states[-1].get("query").startswith(slider_prefix)
+                for step_index in range(exploit_index)
+            )
+            expected_states.extend(
+                (
+                    role,
+                    played_id,
+                    played.get("branch_role"),
+                    step_index,
+                    query,
+                    False,
+                )
+                for step_index in range(exploit_index)
+                for role, query in played_queries
+            )
+            expected_states.append(
+                (
+                    "played_blocked_slider_reach",
+                    played_id,
+                    played.get("branch_role"),
+                    exploit_index - 1,
+                    slider_prefix,
+                    True,
+                )
+            )
+            if len(states) != len(expected_states) or any(
+                not isinstance(state, Mapping)
+                or state.get("role") != expected[0]
+                or state.get("branch_id") != expected[1]
+                or state.get("branch_role") != expected[2]
+                or state.get("after_step_index") != expected[3]
+                or not isinstance(state.get("query"), str)
+                or (
+                    not state.get("query").startswith(expected[4])
+                    if expected[5]
+                    else state.get("query") != expected[4]
+                )
+                for state, expected in zip(states, expected_states, strict=True)
             ):
                 errors.append(f"{path_location}.closed_state_uses: exact state route was lost")
 
-    def _validate_vacancy_enables_occupation_proof_identifiers(
+    def _validate_square_release_route_proof_identifiers(
         self,
         proof: Mapping[str, Any],
         location: str,
         errors: list[str],
     ) -> None:
-        """Close only cross-field identities; fixed roles/counts stay in Schema."""
+        """Bind the typed route wire contract to its retained occurrences."""
         self._validate_two_branch_causal_proof_identifiers(proof, location, errors)
         reference = proof.get("counterfactual_reference_branch")
         played = proof.get("played_root_branch")
         participants = proof.get("participants")
         paths = proof.get("proof_paths")
+        route = proof.get("route")
+        terminal = proof.get("terminal")
         if not (
             isinstance(reference, Mapping)
             and isinstance(played, Mapping)
             and isinstance(participants, Mapping)
             and isinstance(paths, list)
+            and isinstance(route, list)
+            and route
+            and all(isinstance(step, Mapping) for step in route)
+            and isinstance(terminal, Mapping)
             and isinstance(reference.get("steps"), list)
             and isinstance(played.get("steps"), list)
             and isinstance(participants.get("releaser"), Mapping)
-            and isinstance(participants.get("occupier"), Mapping)
+            and isinstance(participants.get("released_blocker"), Mapping)
+            and isinstance(participants.get("route_piece"), Mapping)
         ):
             return
         reference_steps = reference.get("steps")
         played_steps = played.get("steps")
         releaser = participants.get("releaser")
-        occupier = participants.get("occupier")
-        occupation_index = len(reference_steps) - 1
-        if len(played_steps) != occupation_index:
-            errors.append(
-                f"{location}: Played must retain every pre-occupation occurrence and no occupation step"
-            )
+        released_blocker = participants.get("released_blocker")
+        route_piece = participants.get("route_piece")
+        if not all(
+            isinstance(step, Mapping) for step in reference_steps + played_steps
+        ):
             return
+        route_indices = [step.get("step_index") for step in route]
+        if not (
+            all(isinstance(index, int) for index in route_indices)
+            and route_indices == sorted(set(route_indices))
+            and route_indices[0] >= 2
+        ):
+            errors.append(f"{location}.route: route occurrences are not strictly ordered")
+            return
+        first_route_index = route_indices[0]
+        terminal_index = route_indices[-1]
+        terminal_kind = terminal.get("kind")
+        terminal_state = terminal.get("terminal_state")
+        needs_terminal_resource = terminal_kind in ("capture", "created_check")
+        needs_reply = terminal_kind == "capture" or (
+            terminal_kind == "created_check" and terminal_state == "ongoing"
+        )
+        reply_move = proof.get("terminal_reply_move")
+        if len(played_steps) != first_route_index:
+            errors.append(
+                f"{location}: Played must end immediately before the first route leg"
+            )
+        if len(reference_steps) != terminal_index + 1 + int(needs_reply):
+            errors.append(
+                f"{location}: reference branch does not end at the terminal or its actual reply"
+            )
         if (
-            occupier.get("side") != releaser.get("side")
-            or occupier.get("to") != releaser.get("from")
+            proof.get("terminal_step_index") != terminal_index
+            or (needs_reply and not isinstance(reply_move, str))
+            or (not needs_reply and reply_move is not None)
+            or (
+                needs_reply
+                and terminal_index + 1 < len(reference_steps)
+                and reply_move
+                != reference_steps[terminal_index + 1].get("move_uci")
+            )
         ):
             errors.append(
-                f"{location}.participants: occupation must enter the exact same-side released square"
+                f"{location}: terminal bounds do not match the typed terminal"
             )
         movement_fields = ("side", "from", "to", "piece_before", "piece_after")
+        first_route = route[0]
+        if (
+            _colored_piece_identity(released_blocker) != _movement_origin(releaser)
+            or _colored_piece_identity(route_piece) != _movement_origin(first_route)
+            or first_route.get("side") != releaser.get("side")
+            or first_route.get("to") != releaser.get("from")
+            or not _movement_matches_uci(releaser, reference_steps[0].get("move_uci"))
+            or any(
+                not _movement_matches_uci(step, step.get("move_uci"))
+                or step.get("move_uci")
+                != reference_steps[index].get("move_uci")
+                for step, index in zip(route, route_indices, strict=True)
+                if 0 <= index < len(reference_steps)
+            )
+            or any(
+                before.get("side") != after.get("side")
+                or before.get("to") != after.get("from")
+                or before.get("piece_after") != after.get("piece_before")
+                for before, after in zip(route, route[1:])
+            )
+        ):
+            errors.append(
+                f"{location}.participants: release and ordered same-piece route identities diverge"
+            )
+
+        if terminal_kind == "occupation":
+            if len(route) != 1 or needs_terminal_resource or needs_reply:
+                errors.append(f"{location}.terminal: occupation must be the one-leg terminal")
+        elif terminal_kind == "capture":
+            captured = terminal.get("captured_target")
+            geometric = terminal.get("geometric_recapturers")
+            legal = terminal.get("legal_recaptures")
+            restricted = terminal.get("restricted_recaptures")
+            last_route = route[-1]
+            captured_mover = {
+                "side": last_route.get("side"),
+                "piece": last_route.get("piece_after"),
+                "square": last_route.get("to"),
+            }
+            if not (
+                len(route) >= 2
+                and isinstance(captured, Mapping)
+                and captured.get("square") == last_route.get("to")
+                and captured.get("side") != last_route.get("side")
+                and isinstance(geometric, list)
+                and isinstance(legal, list)
+                and isinstance(restricted, list)
+                and all(
+                    isinstance(resource, Mapping)
+                    and _movement_matches_uci(resource, resource.get("move_uci"))
+                    and resource.get("side") == captured.get("side")
+                    and resource.get("to") == last_route.get("to")
+                    and resource.get("capture") == captured_mover
+                    and any(
+                        isinstance(piece, Mapping)
+                        and piece.get("piece") == resource.get("piece_before")
+                        and piece.get("square") == resource.get("from")
+                        for piece in geometric
+                    )
+                    for resource in legal
+                )
+                and all(
+                    isinstance(resource, Mapping)
+                    and isinstance(resource.get("piece"), Mapping)
+                    and resource.get("destination") == last_route.get("to")
+                    and any(
+                        isinstance(piece, Mapping)
+                        and piece == resource.get("piece")
+                        for piece in geometric
+                    )
+                    for resource in restricted
+                )
+            ):
+                errors.append(
+                    f"{location}.terminal: capture does not bind the final route movement and target"
+                )
+        elif terminal_kind == "created_check":
+            responses = terminal.get("responses")
+            if not (
+                len(route) >= 2
+                and terminal.get("checked_side") != route[-1].get("side")
+                and isinstance(responses, list)
+                and ((terminal_state == "checkmate") == (not responses))
+                and all(
+                    isinstance(response, Mapping)
+                    and isinstance(response.get("resource"), Mapping)
+                    and response["resource"].get("side")
+                    == terminal.get("checked_side")
+                    and _movement_matches_uci(
+                        response["resource"], response["resource"].get("move_uci")
+                    )
+                    for response in responses
+                )
+            ):
+                errors.append(
+                    f"{location}.terminal: created-check inventory has inconsistent mover, responses, or terminal state"
+                )
+
+        expected_states: list[tuple[str, Any, Any, int, str]] = [
+            (
+                "reference_vacancy",
+                reference.get("branch_id"),
+                reference.get("branch_role"),
+                step_index,
+                f"vacant:{releaser.get('from')}",
+            )
+            for step_index in range(first_route_index)
+        ]
+        expected_states.extend(
+            (
+                f"reference_route_piece_{route_index}",
+                reference.get("branch_id"),
+                reference.get("branch_role"),
+                step_index,
+                f"occupied-by:{movement.get('side')}:{movement.get('piece_after')}@{movement.get('to')}",
+            )
+            for route_index, (movement, step_index) in enumerate(
+                zip(route, route_indices, strict=True)
+            )
+        )
+        expected_states.extend(
+            (
+                f"reference_route_persistence_{route_index}",
+                reference.get("branch_id"),
+                reference.get("branch_role"),
+                step_index,
+                f"occupied-by:{movement.get('side')}:{movement.get('piece_after')}@{movement.get('to')}",
+            )
+            for route_index, (movement, before_index, after_index) in enumerate(
+                zip(route, route_indices, route_indices[1:])
+            )
+            for step_index in range(before_index + 1, after_index)
+        )
+        expected_states.extend(
+            (
+                "played_blocker_persistence",
+                played.get("branch_id"),
+                played.get("branch_role"),
+                step_index,
+                f"occupied-by:{released_blocker.get('side')}:{released_blocker.get('piece')}"
+                f"@{released_blocker.get('square')}",
+            )
+            for step_index in range(first_route_index)
+        )
+        expected_states.extend(
+            (
+                "played_route_origin_persistence",
+                played.get("branch_id"),
+                played.get("branch_role"),
+                step_index,
+                f"occupied-by:{route_piece.get('side')}:{route_piece.get('piece')}"
+                f"@{route_piece.get('square')}",
+            )
+            for step_index in range(first_route_index)
+        )
+
         for path_index, path in enumerate(paths):
             if not isinstance(path, Mapping):
                 continue
             path_location = f"{location}.proof_paths[{path_index}]"
             premises = path.get("premises")
-            if not isinstance(premises, list) or not all(
-                isinstance(premise, Mapping) for premise in premises
+            absences = path.get("closed_absence_uses")
+            states = path.get("closed_state_uses")
+            if not (
+                isinstance(premises, list)
+                and all(isinstance(premise, Mapping) for premise in premises)
+                and isinstance(absences, list)
+                and isinstance(states, list)
             ):
                 continue
-            release_use, occupation_use = premises
-            for premise, step_index, participant in (
-                (release_use, 0, releaser),
-                (occupation_use, occupation_index, occupier),
+
+            terminal_uses = premises[:1] if needs_terminal_resource else []
+            legal_uses = premises[1:] if needs_terminal_resource else premises
+            expected_legal = [
+                ("reference_release_move", 0, releaser, reference_steps[0].get("move_uci"))
+            ]
+            expected_legal.extend(
+                (
+                    f"reference_route_move_{route_index}",
+                    step_index,
+                    movement,
+                    movement.get("move_uci"),
+                )
+                for route_index, (movement, step_index) in enumerate(
+                    zip(route, route_indices, strict=True)
+                )
+            )
+            if needs_reply and terminal_index + 1 < len(reference_steps):
+                reply_step = reference_steps[terminal_index + 1]
+                expected_legal.append(
+                    (
+                        "reference_terminal_reply",
+                        terminal_index + 1,
+                        None,
+                        reply_step.get("move_uci"),
+                    )
+                )
+            expected_contract = (
+                "capture_recapture_inventory"
+                if terminal_kind == "capture"
+                else "created_check_response_inventory"
+            )
+            if needs_terminal_resource and (
+                len(terminal_uses) != 1
+                or terminal_uses[0].get("role") != "reference_terminal_resource"
+                or terminal_uses[0].get("contract") != expected_contract
+                or not isinstance(terminal_uses[0].get("result_id"), str)
+                or not terminal_uses[0].get("result_id").startswith(
+                    f"{expected_contract}:"
+                )
+                or terminal_uses[0].get("branch_id") != reference.get("branch_id")
+                or terminal_uses[0].get("branch_role") != reference.get("branch_role")
+                or terminal_uses[0].get("step_index") != terminal_index
             ):
+                errors.append(
+                    f"{path_location}.premises: exact terminal L1 occurrence was lost"
+                )
+            if len(legal_uses) != len(expected_legal):
+                errors.append(
+                    f"{path_location}.premises: ordered release, route, and reply occurrences were lost"
+                )
+                continue
+            for premise, expected in zip(legal_uses, expected_legal, strict=True):
                 movement = premise.get("movement")
                 if (
-                    premise.get("step_index") != step_index
+                    premise.get("role") != expected[0]
+                    or premise.get("branch_id") != reference.get("branch_id")
+                    or premise.get("branch_role") != reference.get("branch_role")
+                    or premise.get("step_index") != expected[1]
+                    or premise.get("move_uci") != expected[3]
                     or not isinstance(movement, Mapping)
-                    or any(
-                        movement.get(field) != participant.get(field)
-                        for field in movement_fields
+                    or (
+                        expected[2] is not None
+                        and any(
+                            movement.get(field) != expected[2].get(field)
+                            for field in movement_fields
+                        )
                     )
                 ):
                     errors.append(
                         f"{path_location}.premises: legal movement does not equal its exact reference occurrence"
                     )
-            if (
-                proof.get("occupation_move") != occupation_use.get("move_uci")
-                or reference_steps[occupation_index].get("move_uci") != proof.get("occupation_move")
+
+            first_route_use = legal_uses[1]
+            if "capture" in first_route_use:
+                errors.append(
+                    f"{path_location}.premises: the first occupation leg cannot be a capture"
+                )
+
+            terminal_route_use = legal_uses[len(route)]
+            if terminal_kind == "capture":
+                captured = terminal.get("captured_target")
+                if terminal_route_use.get("capture") != captured:
+                    errors.append(
+                        f"{path_location}.premises: capture terminal lost its exact captured target"
+                    )
+            elif terminal_kind == "created_check" and needs_reply:
+                reply_use = legal_uses[-1]
+                reply_resource = {
+                    **(
+                        dict(reply_use.get("movement"))
+                        if isinstance(reply_use.get("movement"), Mapping)
+                        else {}
+                    ),
+                    "move_uci": reply_use.get("move_uci"),
+                }
+                if isinstance(reply_use.get("capture"), Mapping):
+                    reply_resource["capture"] = dict(reply_use.get("capture"))
+                responses = terminal.get("responses")
+                if not isinstance(responses, list) or not any(
+                    isinstance(response, Mapping)
+                    and response.get("resource") == reply_resource
+                    for response in responses
+                ):
+                    errors.append(
+                        f"{path_location}.premises: actual check reply is absent from the exact response inventory"
+                    )
+            if needs_reply:
+                reply_side = legal_uses[-1].get("movement", {}).get("side")
+                expected_reply_side = (
+                    terminal.get("captured_target", {}).get("side")
+                    if terminal_kind == "capture"
+                    else terminal.get("checked_side")
+                )
+                if reply_side != expected_reply_side:
+                    errors.append(
+                        f"{path_location}.premises: actual terminal reply has the wrong side identity"
+                    )
+
+            expected_absence = (
+                "played_first_route_leg_absent",
+                played.get("branch_id"),
+                played.get("branch_role"),
+                first_route_index - 1,
+                f"legal-move-from-to:{first_route.get('side')}:{first_route.get('from')}:{first_route.get('to')}",
+            )
+            if len(absences) != 1 or any(
+                not isinstance(use, Mapping)
+                or use.get("role") != expected_absence[0]
+                or use.get("branch_id") != expected_absence[1]
+                or use.get("branch_role") != expected_absence[2]
+                or use.get("after_step_index") != expected_absence[3]
+                or use.get("query") != expected_absence[4]
+                for use in absences
             ):
                 errors.append(
-                    f"{path_location}: occupation_move does not identify the terminal reference occurrence"
+                    f"{path_location}.closed_absence_uses: sibling first-leg absence was lost"
                 )
-            absences = path.get("closed_absence_uses")
-            states = path.get("closed_state_uses")
-            expected = [
-                (
-                    "played_occupation_move_absent",
-                    played.get("branch_id"),
-                    played.get("branch_role"),
-                    occupation_index - 1,
-                    f"legal-move-from-to:{occupier.get('side')}:{occupier.get('from')}:{occupier.get('to')}",
-                )
-            ]
-            expected.extend([
-                (
-                    "reference_vacancy",
-                    reference.get("branch_id"),
-                    reference.get("branch_role"),
-                    step_index,
-                    f"vacant:{releaser.get('from')}",
-                )
-                for step_index in range(occupation_index)
-            ])
-            expected.extend([
-                (
-                    "reference_occupation",
-                    reference.get("branch_id"),
-                    reference.get("branch_role"),
-                    occupation_index,
-                    f"occupied-by:{occupier.get('side')}:{occupier.get('piece_after')}@{occupier.get('to')}",
-                ),
-                (
-                    "played_blocker",
-                    played.get("branch_id"),
-                    played.get("branch_role"),
-                    occupation_index - 1,
-                    f"occupied-by:{releaser.get('side')}:{releaser.get('piece_before')}@{releaser.get('from')}",
-                ),
-                (
-                    "played_occupier",
-                    played.get("branch_id"),
-                    played.get("branch_role"),
-                    occupation_index - 1,
-                    f"occupied-by:{occupier.get('side')}:{occupier.get('piece_before')}@{occupier.get('from')}",
-                ),
-            ])
-            closures = absences + states
-            if len(states) != occupation_index + 3:
+            if len(states) != len(expected_states):
                 errors.append(
-                    f"{path_location}.closed_state_uses: every reference pre-occupation occurrence needs one vacancy state"
+                    f"{path_location}.closed_state_uses: exact route persistence inventory was lost"
                 )
                 continue
             if any(
-                not isinstance(closure, Mapping)
-                or closure.get("role") != binding[0]
-                or closure.get("branch_id") != binding[1]
-                or closure.get("branch_role") != binding[2]
-                or closure.get("after_step_index") != binding[3]
-                or closure.get("query") != binding[4]
-                for closure, binding in zip(closures, expected, strict=True)
+                not isinstance(state, Mapping)
+                or state.get("role") != expected[0]
+                or state.get("branch_id") != expected[1]
+                or state.get("branch_role") != expected[2]
+                or state.get("after_step_index") != expected[3]
+                or state.get("query") != expected[4]
+                for state, expected in zip(states, expected_states, strict=True)
             ):
-                errors.append(f"{path_location}: closure does not bind its exact occurrence")
+                errors.append(
+                    f"{path_location}.closed_state_uses: state does not bind its exact route occurrence"
+                )
 
     def _validate_resource_proof_identifiers(
         self,
@@ -1418,14 +1716,28 @@ class SchemaRegistry:
             errors.append(
                 f"{location}.proof_paths: path_occurrence_id values must be canonical"
             )
+        path_bodies = [
+            json.dumps(
+                {key: value for key, value in path.items() if key != "path_occurrence_id"},
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            for path in paths
+            if isinstance(path, Mapping)
+        ]
+        if len(path_bodies) != len(set(path_bodies)):
+            errors.append(
+                f"{location}.proof_paths: an identical proof path cannot be relabeled as independent"
+            )
 
-        closed_use_ids: list[str] = []
         for path_index, path in enumerate(paths):
             if not isinstance(path, Mapping):
                 continue
             path_location = f"{location}.proof_paths[{path_index}]"
             uses: list[tuple[str, int, Any]] = []
             premise_occurrence_routes: dict[str, tuple[Any, Any]] = {}
+            path_closed_use_ids: list[str] = []
             for collection in (
                 "premises",
                 "closed_absence_uses",
@@ -1479,7 +1791,7 @@ class SchemaRegistry:
                 else:
                     use_id = use.get("use_id")
                     if isinstance(use_id, str):
-                        closed_use_ids.append(use_id)
+                        path_closed_use_ids.append(use_id)
 
                 branch_id = use.get("branch_id")
                 self._validate_branch_reference(
@@ -1568,11 +1880,10 @@ class SchemaRegistry:
                 errors.append(
                     f"{path_location}.premises: result_id values must be unique"
                 )
-
-        if len(closed_use_ids) != len(set(closed_use_ids)):
-            errors.append(
-                f"{location}.proof_paths: closed use_id values must be globally unique"
-            )
+            if len(path_closed_use_ids) != len(set(path_closed_use_ids)):
+                errors.append(
+                    f"{path_location}: closed use_id values must be unique within the proof path"
+                )
 
     def validate_registry(self) -> None:
         roots: list[tuple[Mapping[str, Any], Path]] = []

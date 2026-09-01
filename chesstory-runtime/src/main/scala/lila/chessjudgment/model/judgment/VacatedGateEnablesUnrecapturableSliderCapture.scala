@@ -25,17 +25,19 @@ private[chessjudgment] enum VacatedGateEnablesUnrecapturableSliderCaptureAbsence
 
 private[chessjudgment] enum VacatedGateEnablesUnrecapturableSliderCaptureStateRole extends CausalStateRole:
   case ReferenceInterveningSliderReach
-  case PlayedSliderOccupied
-  case PlayedTargetOccupied
-  case PlayedGateBlockerOccupied
+  case ReferenceTargetPersistence
+  case PlayedSliderPersistence
+  case PlayedTargetPersistence
+  case PlayedGateBlockerPersistence
   case PlayedBlockedSliderReach
 
   def stableKey: String =
     this match
       case ReferenceInterveningSliderReach => "reference-intervening-slider-reach"
-      case PlayedSliderOccupied            => "played-slider-occupied"
-      case PlayedTargetOccupied            => "played-target-occupied"
-      case PlayedGateBlockerOccupied       => "played-gate-blocker-occupied"
+      case ReferenceTargetPersistence      => "reference-target-persistence"
+      case PlayedSliderPersistence         => "played-slider-persistence"
+      case PlayedTargetPersistence         => "played-target-persistence"
+      case PlayedGateBlockerPersistence    => "played-gate-blocker-persistence"
       case PlayedBlockedSliderReach        => "played-blocked-slider-reach"
 
 private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureCausalAuthority:
@@ -159,25 +161,35 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureManif
         playedCaptureAbsent.role == VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.PlayedReplacementCaptureAbsent,
       "played sibling exploit absences must share the exact pre-exploit occurrence"
     )
+    def indicesFor(
+        bindings: List[CausalClosedStateBinding],
+        role: VacatedGateEnablesUnrecapturableSliderCaptureStateRole
+    ): List[Int] = bindings.filter(_.role == role).map(_.afterStepIndex)
     require(
-      referencePersistence.map(_.afterStepIndex) == (1 until exploitIndex).toList &&
-        referencePersistence.forall(binding =>
-          binding.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceInterveningSliderReach &&
-            binding.branchRole == referenceRole && binding.branchId == referenceRootReach.branchId
-        ),
-      "every intervening reference occurrence must retain its exact slider-reach state"
+      referencePersistence.forall(binding =>
+        binding.branchRole == referenceRole && binding.branchId == referenceRootReach.branchId
+      ) && indicesFor(
+        referencePersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceInterveningSliderReach
+      ) == (1 until exploitIndex).toList && indicesFor(
+        referencePersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence
+      ) == (0 until exploitIndex).toList,
+      "the reference path needs continuous slider reach and exact target persistence"
     )
-    val playedRoles = playedPositionStates.map(_.role)
     require(
-      playedPositionStates.nonEmpty && playedPositionStates.forall(binding =>
-        binding.branchRole == playedRole && binding.branchId == playedMoveAbsent.branchId &&
-          binding.afterStepIndex == playedPreExploitIndex
-      ) &&
-        playedRoles.count(_ == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied) == 1 &&
-        playedRoles.count(_ == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetOccupied) == 1 &&
-        playedRoles.count(_ == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedBlockedSliderReach) == 1 &&
-        playedRoles.count(_ == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied) == 1,
-      "played sibling state closure needs slider, target, the exact blocker, and blocked reach"
+      playedPositionStates.forall(binding =>
+        binding.branchRole == playedRole && binding.branchId == playedMoveAbsent.branchId
+      ) && List(
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence,
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence
+      ).forall(role => indicesFor(playedPositionStates, role) == (0 until exploitIndex).toList) &&
+        indicesFor(
+          playedPositionStates,
+          VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedBlockedSliderReach
+        ) == List(playedPreExploitIndex),
+      "the sibling needs continuous slider, target, blocker, and final blocked reach states"
     )
     Exact(
       referenceRootReach,
@@ -424,11 +436,17 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
     occurrence.proofPaths match
       case path :: Nil =>
         val stateBindings = path.closedStateUses.map(_.binding)
-        val blockerState = stateBindings.filter(
-          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied
+        val blockerStates = stateBindings.filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence
         )
-        val moverState = stateBindings.filter(
-          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied
+        val moverStates = stateBindings.filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence
+        )
+        val referenceTargetStates = stateBindings.filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence
+        )
+        val playedTargetStates = stateBindings.filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence
         )
         val moveAbsence = path.closedAbsenceUses.map(_.binding).filter(
           _.role == VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.PlayedExploitMoveAbsent
@@ -441,7 +459,13 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
           path.closedAbsenceUses.map(_.binding.role) == absenceAuthorities.map(_.role) &&
           path.closedAbsenceUses.map(_.binding.authority) == absenceAuthorities.map(_.authority) &&
           path.closedStateUses.map(_.binding.role) == stateAuthorities.map(_.role) &&
-          blockerState.size == 1 && moverState.size == 1 && moveAbsence.size == 1 &&
+          blockerStates.size == occurrence.referenceSteps.size - 1 &&
+          moverStates.size == occurrence.referenceSteps.size - 1 &&
+          referenceTargetStates.size == occurrence.referenceSteps.size - 1 &&
+          playedTargetStates.size == occurrence.referenceSteps.size - 1 &&
+          (referenceTargetStates ++ playedTargetStates).forall(_.query ==
+            PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(semantic.capturedTarget)) &&
+          moveAbsence.size == 1 &&
           vacancyClosure.matches(
             semantic.enabler,
             occurrence.enablingStep.moveUci,
@@ -452,8 +476,8 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
             occurrence.referenceBranch,
             occurrence.playedBranch,
             occurrence.referenceSteps.size - 1,
-            blockerState.head,
-            moverState.head,
+            blockerStates,
+            moverStates,
             moveAbsence.head
           ) &&
           parentSources.map(_.id).distinct.size == 2 &&
@@ -641,13 +665,38 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           slider.side,
           exploitCapture.mover.to
         )
-        playedSliderState <- occupiedState(playedOccurrence, slider, playedLine.role.scope).toList
-        playedTargetState <- occupiedState(
-          playedOccurrence,
-          exploitCapture.captured,
-          playedLine.role.scope
-        ).toList
-        playedGateState <- occupiedState(playedOccurrence, gateBlocker, playedLine.role.scope).toList
+        referenceTargetStates = referenceSteps.take(exploitIndex).flatMap(step =>
+          referenceReplay.positionAfter(step).flatMap(occurrence =>
+            occupiedState(
+              occurrence,
+              exploitCapture.captured,
+              referenceLine.role.scope
+            ).map(proof =>
+              (
+                VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceTargetPersistence,
+                occurrence,
+                proof
+              )
+            )
+          )
+        )
+        if referenceTargetStates.size == exploitIndex
+        playedPrefixStates = playedSteps.take(exploitIndex).flatMap(step =>
+          playedReplay.positionAfter(step).toList.flatMap(occurrence =>
+            List(
+              VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence -> slider,
+              VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetPersistence ->
+                exploitCapture.captured,
+              VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence ->
+                gateBlocker
+            ).flatMap { case (role, piece) =>
+              occupiedState(occurrence, piece, playedLine.role.scope).map(proof =>
+                (role, occurrence, proof)
+              )
+            }
+          )
+        )
+        if playedPrefixStates.size == exploitIndex * 3
         playedBlockedReach <- playedOccurrence.existingSliderReachState(
           slider.side,
           RelationPieceWitness(slider.square, slider.role),
@@ -679,27 +728,14 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
               state.occurrence,
               state.proof
             )
-          )
+          ) ++ referenceTargetStates
         ).toList
-        if referenceStateAuthorities.map(_.occurrence.step) == referenceIntervening
+        if referenceStateAuthorities.count(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.ReferenceInterveningSliderReach
+        ) == referenceIntervening.size
         playedStateAuthorities <- certifiedStates(
           playedLineRecord,
-          List(
-            (
-              VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied,
-              playedOccurrence,
-              playedSliderState
-            ),
-            (
-              VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedTargetOccupied,
-              playedOccurrence,
-              playedTargetState
-            ),
-            (
-              VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied,
-              playedOccurrence,
-              playedGateState
-            ),
+          playedPrefixStates ++ List(
             (
               VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedBlockedSliderReach,
               playedOccurrence,
@@ -821,13 +857,15 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
         exactBranchStepIndex(inputs.playedBranch, authority.occurrence.step)
       )
     )
-    def exactPlayedState(
+    def exactPlayedStates(
         role: VacatedGateEnablesUnrecapturableSliderCaptureStateRole
-    ): CausalClosedStateBinding =
-      playedStateBindings.filter(_.role == role) match
-        case exact :: Nil => exact
-        case _ =>
-          throw IllegalArgumentException(s"a vacated-gate proof lost its exact $role played state")
+    ): List[CausalClosedStateBinding] =
+      val exact = playedStateBindings.filter(_.role == role).sortBy(_.afterStepIndex)
+      require(
+        exact.map(_.afterStepIndex) == (0 until exploitIndex).toList,
+        s"a vacated-gate proof lost its continuous $role played states"
+      )
+      exact
     val vacancyClosure = VacancySiblingClosure.certified(
       inputs.rootReach.mover,
       inputs.referenceBranch.replaySteps.head.moveUci,
@@ -838,11 +876,11 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
       inputs.referenceBranch,
       inputs.playedBranch,
       exploitIndex,
-      exactPlayedState(
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied
+      exactPlayedStates(
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerPersistence
       ),
-      exactPlayedState(
-        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied
+      exactPlayedStates(
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderPersistence
       ),
       playedExploitMoveAbsence
     ).getOrElse(

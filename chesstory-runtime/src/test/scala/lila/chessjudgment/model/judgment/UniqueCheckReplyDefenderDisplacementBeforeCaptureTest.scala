@@ -64,7 +64,25 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     val absenceUse = path.closedAbsenceUses match
       case one :: Nil => one
       case other      => fail(s"expected one exact closed-absence use, found ${other.size}")
-    assertEquals(path.closedStateUses, Nil)
+    assertEquals(
+      path.closedStateUses.map(_.binding.role),
+      List(
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceRealizerPresent,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent
+      )
+    )
+    assertEquals(path.closedStateUses.map(_.binding.afterStepIndex), List(0, 0, 1, 1))
+    assertEquals(
+      path.closedStateUses.map(_.binding.queryKey),
+      List(
+        "occupied-by:white:rook@d1",
+        "occupied-by:black:queen@d8",
+        "occupied-by:white:rook@d1",
+        "occupied-by:black:queen@d8"
+      )
+    )
     assertEquals(absenceUse.binding.queryKey, "legal-capture:black:d8")
     assertEquals(absenceUse.binding.afterStepIndex, 2)
     assertEquals(absenceUse.binding.branchId, exact.occurrence.referenceBranch.branchId)
@@ -81,6 +99,49 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     )
     assert(exact.proof.parentSources.forall(_.layer == EvidenceLayer.Line))
     assert(exact.proof.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
+    assert(exact.proof.remainsCertified)
+
+  test("missing or role-tampered intermediate occupancy cannot form the forced-reply manifest"):
+    val referenceLine = LineNodeRef("reference-state-adversary", referenceMoves.head, 1, LineNodeRole.BestReference)
+    val playedLine = LineNodeRef("played-state-adversary", playedMoves.head, 1, LineNodeRole.Played)
+    val exact = deriveProofs(
+      "state-adversary",
+      referenceLine,
+      playedLine,
+      certifiedReplay(referenceMoves),
+      certifiedReplay(playedMoves)
+    ).headOption.getOrElse(fail("expected the exact forced-reply proof"))
+    val path = exact.occurrence.proofPaths.head
+    val states = path.manifest.stateBindings
+    val realizer = RelationColoredPieceWitness(
+      exact.semantic.realizer.from,
+      exact.semantic.realizer.beforeRole,
+      exact.semantic.realizer.side
+    )
+    def rebuild(candidateStates: List[CausalClosedStateBinding]) =
+      UniqueCheckReplyDefenderDisplacementBeforeCaptureManifest.exact(
+        path.premiseUses(0),
+        path.premiseUses(1),
+        path.premiseUses(2),
+        path.closedAbsenceUses.head.binding,
+        realizer,
+        exact.semantic.capturedTarget,
+        candidateStates
+      )
+
+    intercept[IllegalArgumentException] {
+      rebuild(states.dropRight(1))
+    }
+    val actorAtRoot = states.head
+    val targetRoleWithActorState = CausalClosedStateBinding.afterStep(
+      UniqueCheckReplyDefenderDisplacementBeforeCaptureStateRole.ReferenceTargetPresent,
+      actorAtRoot.authority,
+      exact.occurrence.referenceBranch,
+      actorAtRoot.afterStepIndex
+    )
+    intercept[IllegalArgumentException] {
+      rebuild(states.updated(1, targetRoleWithActorState))
+    }
 
   test("the exact replay position owns one cached absence while line paths remain distinct"):
     val replay = certifiedReplay(referenceMoves)

@@ -2,7 +2,7 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Exact demand-to-family derivation and graph-ownership boundary. */
+/** Sole graph owner for exact sole-recapturer removal results. */
 private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureAssembler:
 
   private[assembly] def fromDemand(
@@ -12,86 +12,58 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureAssembler:
   ): List[EvidenceRecord] =
     demand.soleRecapturerRemovalBeforeTargetCaptureSeed.toList.flatMap { changedSeed =>
       val input = demand.input
-      val existingOwners =
-        context.evidenceGraph.recordsFor(input.comparison.referenceLine).collect {
-          case record @ EvidenceRecord(_, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _)
-              if payload.consumesDependencies(
-                input.referenceSource,
-                input.playedSource
-              ) && context.evidenceGraph.proofEligible(record) =>
-            record
+      val family = "sole-recapturer-removal-before-target-capture"
+      ExactCausalProofOwnerReuse.comparedLineRecords(
+        family = family,
+        context = context,
+        input = input,
+        existingPayload = {
+          case payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence
+              if payload.consumesDependencies(input.referenceSource, input.playedSource) =>
+            Some(payload.dependencyId -> payload.resultSet)
+          case _ => None
         }
-      val existing = existingOwners.map {
-        case record @ EvidenceRecord(_, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) =>
-          (payload.dependencyId, payload.resultSet, record)
-        case _ =>
-          throw IllegalStateException(
-            "a sole-recapturer-removal-before-target-capture lookup returned a foreign payload"
-          )
-      }
-
-      ExactCausalProofOwnerReuse.resolve(
-        family = "sole-recapturer-removal-before-target-capture",
-        existing = existing
       )(
-        derive(input, changedSeed).map(exact => exact.dependency.value -> exact)
-      ) { (exact, resultSet) =>
-        val payload = SoleRecapturerRemovalBeforeTargetCaptureEvidence(
-          semantic = exact.semantic,
-          occurrence = exact.occurrence,
-          dependencyFingerprint = exact.dependency.value,
-          resultSet = resultSet,
-          occurrenceProof = Some(exact)
+        SoleRecapturerRemovalBeforeTargetCaptureProof.deriveImmediate(
+          input.comparison.referenceLine,
+          input.comparison.candidateLine,
+          input.referenceSource,
+          input.playedSource,
+          input.referenceReplay,
+          input.playedReplay,
+          changedSeed
         )
-        val pathIds = payload.proofPaths.map(_.pathOccurrenceId).mkString(":")
-        EvidenceRecord(
-          ref = EvidenceRef(
-            id = allocator.evidenceId(
-              s"causal-proof:sole-recapturer-removal-before-target-capture:${payload.semanticId}:${payload.occurrenceId}:${payload.dependencyId}:$pathIds"
-            ),
-            producer = EvidenceProducer.CausalProofProducer,
-            layer = EvidenceLayer.CausalProof,
-            position = exact.parentSources
-              .find(_.line.contains(exact.occurrence.referenceLine))
-              .map(_.position)
-              .getOrElse(
-                throw IllegalStateException(
-                  "a sole-recapturer-removal-before-target-capture proof lost its reference line parent"
-                )
-              ),
-            line = Some(exact.occurrence.referenceLine),
-            scope = exact.occurrence.referenceLine.role.scope,
-            confidence = EvidenceConfidence.LegalReplayVerified
+      )(
+        semantic = _.semantic,
+        record = exact =>
+          ExactCausalProofOwnerReuse.ComparedLineProofRecord(
+            exact.semantic.semanticId,
+            exact.occurrence.occurrenceId,
+            exact.dependency.value,
+            exact.occurrence.referenceLine,
+            exact.parentSources,
+            exact.occurrence.proofPaths.map(_.pathOccurrenceId).sorted
           ),
-          payload = payload,
-          parents = exact.parentSources
-        )
-      }.sortBy(_.ref.id)
+        create = (exact, proofRecord, resultSet) =>
+          val payload = SoleRecapturerRemovalBeforeTargetCaptureEvidence(
+            semantic = exact.semantic,
+            occurrence = exact.occurrence,
+            dependencyFingerprint = exact.dependency.value,
+            resultSet = resultSet,
+            occurrenceProof = Some(exact)
+          )
+          EvidenceRecord(
+            ref = EvidenceRef(
+              id = allocator.evidenceId(proofRecord.evidenceIdInput(family)),
+              producer = EvidenceProducer.CausalProofProducer,
+              layer = EvidenceLayer.CausalProof,
+              position = proofRecord.referencePosition,
+              line = Some(proofRecord.referenceLine),
+              scope = proofRecord.referenceLine.role.scope,
+              confidence = EvidenceConfidence.LegalReplayVerified
+            ),
+            payload = payload,
+            parents = proofRecord.parentSources
+          )
+      )
     }
-
-  private def derive(
-      input: ExactPlayedVsBestCausalInput,
-      changedSeed: SoleRecapturerRemovalBeforeTargetCaptureChangedSeed
-  ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =
-    val certified = SoleRecapturerRemovalBeforeTargetCaptureProof.deriveImmediate(
-      input.comparison.referenceLine,
-      input.comparison.candidateLine,
-      input.referenceSource,
-      input.playedSource,
-      input.referenceReplay,
-      input.playedReplay,
-      changedSeed
-    )
-    certified
-      .groupBy(_.semantic.semanticId)
-      .foreach { case (semanticId, occurrences) =>
-        require(
-          occurrences.map(_.semantic).distinct.size == 1,
-          s"sole-recapturer-removal-before-target-capture semantic id '$semanticId' resolved to conflicting proofs"
-        )
-      }
-    require(
-      certified.map(_.occurrence.occurrenceId).distinct.size == certified.size,
-      "one sole-recapturer-removal-before-target-capture occurrence may be produced only once"
-    )
-    certified.sortBy(_.occurrence.occurrenceId)

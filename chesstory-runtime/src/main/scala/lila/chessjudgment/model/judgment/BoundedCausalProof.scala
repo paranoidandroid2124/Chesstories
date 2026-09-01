@@ -10,7 +10,7 @@ private[chessjudgment] enum BoundedCausalContractKind:
   case UniqueCheckReplyDefenderDisplacementBeforeCapture
   case SoleRecapturerRemovalBeforeTargetCapture
   case VacatedGateEnablesUnrecapturableSliderCapture
-  case VacancyEnablesOccupation
+  case SquareReleaseRoute
   case PassedPawnProgressRealizedAfterOnlyLegalReply
 
   def semanticNamespace: String =
@@ -21,8 +21,8 @@ private[chessjudgment] enum BoundedCausalContractKind:
         "causal-proposition:sole-recapturer-removal-before-target-capture:v1"
       case VacatedGateEnablesUnrecapturableSliderCapture =>
         "causal-proposition:vacated-gate-enables-unrecapturable-slider-capture:v1"
-      case VacancyEnablesOccupation =>
-        "causal-proposition:vacancy-enables-occupation:v1"
+      case SquareReleaseRoute =>
+        "causal-proposition:square-release-route:v1"
       case PassedPawnProgressRealizedAfterOnlyLegalReply =>
         "causal-proposition:passed-pawn-progress-realized-after-only-legal-reply:v1"
 
@@ -528,6 +528,98 @@ private[chessjudgment] object RecordBoundLegalMoveOccurrence:
       rebound <- lineRecord.replay.legalMoveOccurrence(occurrence.step)
       if rebound == occurrence
     yield RecordBoundLegalMoveOccurrence(lineRecord, rebound)
+
+/** One exact same-object trajectory edge issued by the canonical replay and
+  * bound to its sole LegalLine owner. The shared trajectory authority uses
+  * every intervening `OccupiedBy` certificate; L2 families must not infer
+  * physical identity from matching role names or recompute board changes.
+  */
+private[chessjudgment] final case class RecordBoundObjectTrajectory private (
+    lineRecord: CertifiedLineReplayRecord,
+    trajectory: LineObjectTrajectory,
+    rootMovement: RecordBoundLegalMoveOccurrence,
+    futureMovement: RecordBoundLegalMoveOccurrence
+):
+  require(
+    rootMovement.issuerRecord == lineRecord.issuerRecord &&
+      futureMovement.issuerRecord == lineRecord.issuerRecord &&
+      rootMovement.step == trajectory.rootStep &&
+      futureMovement.step == trajectory.futureStep,
+    "an object trajectory needs exact graph-owned endpoint movements"
+  )
+  require(
+    rootMovement.movement.side == trajectory.color &&
+      rootMovement.movement.from == trajectory.rootFrom &&
+      rootMovement.movement.to == trajectory.rootTo &&
+      rootMovement.movement.beforeRole == trajectory.rootBeforeRole &&
+      rootMovement.movement.afterRole == trajectory.pieceRole &&
+      futureMovement.movement.side == trajectory.color &&
+      futureMovement.movement.from == trajectory.futureFrom &&
+      futureMovement.movement.to == trajectory.futureTo &&
+      futureMovement.movement.beforeRole == trajectory.pieceRole &&
+      futureMovement.movement.afterRole == trajectory.futureAfterRole,
+    "an object trajectory must retain one exact physical mover across its endpoints"
+  )
+
+  def persistenceStates: List[ClosedPositionStateAuthority] = trajectory.persistenceStates
+
+  def stableKey: String =
+    List(
+      BoundedCausalIdentity.evidenceRecordKey(lineRecord.issuerRecord),
+      BoundedCausalIdentity.stepKey(trajectory.rootStep),
+      BoundedCausalIdentity.stepKey(trajectory.futureStep),
+      trajectory.interveningSteps.map(BoundedCausalIdentity.stepKey).mkString("[", ",", "]"),
+      trajectory.color.toString.toLowerCase,
+      trajectory.rootBeforeRole.name.toLowerCase,
+      trajectory.pieceRole.name.toLowerCase,
+      trajectory.futureAfterRole.name.toLowerCase,
+      trajectory.rootFrom.key.toLowerCase,
+      trajectory.rootTo.key.toLowerCase,
+      trajectory.futureFrom.key.toLowerCase,
+      trajectory.futureTo.key.toLowerCase,
+      persistenceStates.map(state =>
+        List(
+          state.issuerEvidenceId,
+          state.occurrence.occurrenceId,
+          state.semanticProofId
+        ).mkString(":")
+      ).mkString("[", ",", "]")
+    ).mkString("|")
+
+  def remainsCertified: Boolean =
+    RecordBoundObjectTrajectory
+      .firstAfter(lineRecord.issuerRecord, trajectory.rootStep)
+      .exists(_.stableKey == stableKey)
+
+private[chessjudgment] object RecordBoundObjectTrajectory:
+  /** Finds the first later movement of the exact object moved by `rootStep`.
+    * No horizon is supplied: the canonical replay owns the complete retained
+    * continuation, and `LineObjectTrajectory` fails closed on any intervening
+    * touch or missing occupant certificate.
+    */
+  def firstAfter(
+      issuerRecord: EvidenceRecord,
+      rootStep: LineReplayStep
+  ): Option[RecordBoundObjectTrajectory] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      rootIndex = lineRecord.replay.replaySteps.indexOf(rootStep)
+      if rootIndex >= 0
+      rootOccurrence <- lineRecord.replay.legalMoveOccurrence(rootStep)
+      rootMovement <- RecordBoundLegalMoveOccurrence.certified(issuerRecord, rootOccurrence)
+      continuation = lineRecord.replay.replaySteps.drop(rootIndex + 1)
+      trajectory <- LineObjectTrajectory
+        .findAll(rootStep, continuation, lineRecord.replay, _ => Some(issuerRecord))
+        .find(value =>
+          value.color == rootMovement.movement.side &&
+            value.rootFrom == rootMovement.movement.from &&
+            value.rootTo == rootMovement.movement.to &&
+            value.rootBeforeRole == rootMovement.movement.beforeRole &&
+            value.pieceRole == rootMovement.movement.afterRole
+        )
+      futureOccurrence <- lineRecord.replay.legalMoveOccurrence(trajectory.futureStep)
+      futureMovement <- RecordBoundLegalMoveOccurrence.certified(issuerRecord, futureOccurrence)
+    yield RecordBoundObjectTrajectory(lineRecord, trajectory, rootMovement, futureMovement)
 
 /** One exact use of a replay-owned legal movement in a causal proof path. */
 private[chessjudgment] final case class CausalLegalMovePremiseUse private (
@@ -1155,6 +1247,34 @@ private[chessjudgment] object BoundedCausalPublicProjection:
           case exact: CausalLegalMovePremiseUse => legalMoveUse(exact)
           case _ =>
             throw IllegalStateException("a legal-move proof path lost its typed lower premise")
+        },
+        path.closedAbsenceUses.map(closedAbsenceUse),
+        path.closedStateUses.map(closedStateUse)
+      )
+    )
+
+  /** Projects a path that deliberately combines closed vertical L1 results
+    * with replay-owned legal movements. Family code still owns the semantic
+    * relationship between those exact uses; this common projection only
+    * preserves every typed premise on the wire.
+    */
+  def mixedPaths(
+      paths: List[CausalProofPathOccurrence]
+  ): List[BoundedCausalPublicProofPath] =
+    require(
+      paths.forall(path =>
+        path.supplementalClosureUses.isEmpty &&
+          path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse])
+      ),
+      "the mixed public causal projection accepts only vertical and exact legal-move premises"
+    )
+    paths.map(path =>
+      BoundedCausalPublicProofPath(
+        path.pathOccurrenceId,
+        path.premiseUses.map(verticalRelationUse) ++ path.manifest.supplementalPremiseUses.map {
+          case exact: CausalLegalMovePremiseUse => legalMoveUse(exact)
+          case _ =>
+            throw IllegalStateException("a mixed proof path lost its typed legal-move premise")
         },
         path.closedAbsenceUses.map(closedAbsenceUse),
         path.closedStateUses.map(closedStateUse)
