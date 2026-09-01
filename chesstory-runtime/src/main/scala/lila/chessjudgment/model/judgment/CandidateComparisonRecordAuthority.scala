@@ -28,7 +28,7 @@ private[chessjudgment] object CandidateComparisonRecordAuthority:
           lineParents.size == 2 &&
           lineParents.toSet == Set(referenceSource.ref, candidateSource.ref) &&
           exactEvaluationParents(evaluationParents, fact, root) &&
-          exactCandidateSetOwnerParent(comparisonParents, fact, root) &&
+          comparisonParents.isEmpty &&
           parents.map(_.id).distinct.size == parents.size &&
           parents.size == lineParents.size + evaluationParents.size + comparisonParents.size
       case _ => false
@@ -73,18 +73,3 @@ private[chessjudgment] object CandidateComparisonRecordAuthority:
         parents.map(_.confidence).toSet ==
           Set(EvidenceConfidence.EngineBacked, EvidenceConfidence.LegalReplayVerified)
     parents.size == 2 && parents.flatMap(_.line).toSet == lines && exactRefs && exactConfidence
-
-  private def exactCandidateSetOwnerParent(
-      parents: List[EvidenceRef],
-      fact: CandidateComparisonFact,
-      root: PositionNodeRef
-  ): Boolean =
-    parents match
-      case Nil => true
-      case parent :: Nil =>
-        fact.kind == CandidateComparisonKind.PlayedVsBest && fact.candidateSet.isEmpty &&
-          parent.producer == EvidenceProducer.RelativeMoveProducer &&
-          parent.layer == EvidenceLayer.CandidateComparison && parent.position == root &&
-          parent.scope == EvidenceScope.Counterfactual &&
-          parent.line.exists(line => line.role == LineNodeRole.Alternative && line.rank == 2)
-      case _ => false

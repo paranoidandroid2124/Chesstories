@@ -10,12 +10,6 @@ import lila.chessjudgment.analysis.assembly.{
   PreparedFocusedMoveReview,
   PreparedFocusedPositionCommentary
 }
-import lila.chessjudgment.model.{
-  ProbeContractValidator,
-  ProbeRequest,
-  ProbeResolution,
-  ProbeResult
-}
 import lila.chessjudgment.model.judgment.{
   EvidenceBackedJudgmentPacket,
   EvidenceRef,
@@ -59,7 +53,6 @@ enum CommentaryJobStopCondition:
 enum CommentaryJobPhase(val wireId: String):
   case RootSearch extends CommentaryJobPhase("root_search")
   case FocusComparison extends CommentaryJobPhase("focus_comparison")
-  case CausalProbe extends CommentaryJobPhase("causal_probe")
   case Completed extends CommentaryJobPhase("completed")
   case Stopped extends CommentaryJobPhase("stopped")
 
@@ -69,7 +62,6 @@ enum EngineWorkReportRejection:
 enum EngineWorkPurpose(val wireId: String):
   case RootSearch extends EngineWorkPurpose("root_search")
   case FocusComparison extends EngineWorkPurpose("focus_comparison")
-  case CausalProbe extends EngineWorkPurpose("causal_probe")
 
 enum EngineRootRestriction:
   case Unrestricted
@@ -378,8 +370,7 @@ final case class CommentaryJobProgress(
     rootCandidateLinesAdmitted: Int,
     selectedCommentariesCompleted: Int,
     physicalWorksIssued: Int,
-    physicalReportsAccepted: Int,
-    causalWavesCompleted: Int
+    physicalReportsAccepted: Int
 )
 
 sealed trait CommentaryJobState:
@@ -428,9 +419,6 @@ object CommentaryJobReducer:
   private val FocusNodes = 2_000_000
   private val FocusMovetimeMs = 2_500
   private val FocusElapsedMs = 3_500
-  private val ProbeNodes = 2_000_000
-  private val ProbeMovetimeMs = 2_500
-  private val ProbeElapsedMs = 3_500
 
   def startJob(
       initialFen: String,
@@ -515,16 +503,6 @@ object CommentaryJobReducer:
 
   private final case class RootPending(work: IssuedEngineWork) extends PendingWork
   private final case class FocusPending(work: IssuedEngineWork) extends PendingWork
-  private final case class ProbePending(
-      request: ProbeRequest,
-      identity: PhysicalSearchIdentity,
-      work: IssuedEngineWork
-  ) extends PendingWork
-
-  private final case class CertifiedProbeResolution(
-      result: ProbeResult,
-      admissions: List[AdmittedCandidateLine]
-  )
 
   private sealed trait JobPhase
   private case object CollectingRoot extends JobPhase
@@ -535,31 +513,12 @@ object CommentaryJobReducer:
   private final case class ReviewContext(
       review: PreparedFocusedMoveReview,
       preparedInput: AdmittedMoveReviewInput,
-      rootEvaluations: List[AdmittedCandidateLine],
-      focusEvaluations: List[AdmittedCandidateLine],
-      fulfilledProbeIds: List[String],
-      wavesCompleted: Int
-  )
-
-  private final case class CollectingProbeWave(
-      context: ReviewContext,
-      remaining: List[ProbeRequest]
-  ) extends JobPhase
-
-  private final case class PhysicalSearchIdentity(
-      engineProfile: CommentaryEngineProfile,
-      enginePositionInitialFen: String,
-      enginePositionMovesUci: List[String],
-      searchFen: String,
-      rootRestriction: EngineRootRestriction,
-      searchLimits: EngineSearchLimits,
-      maxSearchElapsedMs: Int
+      rootEvaluations: List[AdmittedCandidateLine]
   )
 
   private final case class EngineWorkLedger(
       physicalWorksIssued: Int,
-      physicalReportsAccepted: Int,
-      validatedPhysicalSearches: Map[PhysicalSearchIdentity, List[AdmittedPhysicalEngineLine]]
+      physicalReportsAccepted: Int
   ):
     def issuedWorkId: String = s"work:$physicalWorksIssued"
     def afterIssuing: EngineWorkLedger = copy(physicalWorksIssued = physicalWorksIssued + 1)
@@ -567,7 +526,7 @@ object CommentaryJobReducer:
       copy(physicalReportsAccepted = physicalReportsAccepted + 1)
 
   private object EngineWorkLedger:
-    val empty: EngineWorkLedger = EngineWorkLedger(0, 0, Map.empty)
+    val empty: EngineWorkLedger = EngineWorkLedger(0, 0)
 
   private final case class ActiveCommentaryJob(
       positionHistory: CanonicalPositionHistory,
@@ -662,7 +621,7 @@ object CommentaryJobReducer:
     yield physical -> evaluations
     admittedReport match
       case None => Right(stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport))
-      case Some((physicalLines, evaluations)) =>
+      case Some((_, evaluations)) =>
         val acceptedLedger = active.ledger.afterAcceptedReport
         val acceptedActive = active.copy(ledger = acceptedLedger)
         active.pending match
@@ -674,34 +633,6 @@ object CommentaryJobReducer:
             active.phase match
               case focus: CollectingFocus =>
                 Right(beginPreparedReview(acceptedActive, focus.rootEvaluations, evaluations, acceptedLedger))
-              case _ => Right(stop(acceptedActive, CommentaryJobStopCondition.ReviewConstructionFailed))
-          case probe: ProbePending =>
-            active.phase match
-              case wave: CollectingProbeWave =>
-                val resolution = ProbeResolution.EngineSearch(evaluations.map(_.evaluation), suffixes.map(_.depth).min)
-                val cachedLedger = acceptedLedger.copy(
-                  validatedPhysicalSearches = acceptedLedger.validatedPhysicalSearches.updated(
-                    probe.identity,
-                    physicalLines
-                  )
-                )
-                val result = canonicalProbeResult(probe.request, resolution)
-                contextAfterCertifiedProbe(
-                  wave.context,
-                  probe.request,
-                  CertifiedProbeResolution(result, evaluations)
-                ) match
-                  case Some(updated) =>
-                    Right(
-                      continueProbeWave(
-                        acceptedActive,
-                        updated,
-                        wave.remaining,
-                        cachedLedger
-                      )
-                    )
-                  case None =>
-                    Right(stop(acceptedActive, CommentaryJobStopCondition.InvalidEngineWorkReport))
               case _ => Right(stop(acceptedActive, CommentaryJobStopCondition.ReviewConstructionFailed))
 
   private def afterRootReport(
@@ -759,7 +690,7 @@ object CommentaryJobReducer:
       case Some(PreparedFocusedPositionCommentary.MoveReview(review)) =>
         runReview(
           active,
-          ReviewContext(review, review.preparedInput, rootEvaluations, focusEvaluations, Nil, 0),
+          ReviewContext(review, review.preparedInput, rootEvaluations),
           ledger
         )
 
@@ -772,184 +703,13 @@ object CommentaryJobReducer:
       context.preparedInput
     ) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
-      case Some(execution)
-          if execution.admittedProbeResultIds.toSet != context.fulfilledProbeIds.toSet =>
-        stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport)
-      case Some(execution) if execution.packet.probeRequests.isEmpty =>
+      case Some(execution) =>
         completeReview(
           active,
           context.copy(preparedInput = execution.preparedInput),
           execution.packet,
           ledger
         )
-      case Some(execution) =>
-        beginProbeWave(
-          active,
-          context.copy(preparedInput = execution.preparedInput),
-          execution.packet.probeRequests,
-          ledger
-        )
-
-  private def beginProbeWave(
-      active: ActiveCommentaryJob,
-      context: ReviewContext,
-      requests: List[ProbeRequest],
-      ledger: EngineWorkLedger
-  ): CommentaryJobState =
-    val requestIds = requests.map(_.id)
-    if requests.isEmpty ||
-      requests.exists(request => !ProbeContractValidator.validateRequest(request).isValid) ||
-      requestIds.exists(_.trim.isEmpty) ||
-      requestIds.distinct.size != requestIds.size ||
-      requestIds.exists(context.fulfilledProbeIds.toSet)
-    then stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
-    else continueProbeWave(active, context, requests, ledger)
-
-  private def continueProbeWave(
-      active: ActiveCommentaryJob,
-      context: ReviewContext,
-      remaining: List[ProbeRequest],
-      ledger: EngineWorkLedger
-  ): CommentaryJobState = remaining match
-    case Nil =>
-      runReview(
-        active,
-        context.copy(
-          wavesCompleted = context.wavesCompleted + 1
-        ),
-        ledger
-      )
-    case request :: tail =>
-      resolveProbe(active, context, request, ledger) match
-        case Left(condition) => stop(active, condition)
-        case Right(Left(resolution)) =>
-          contextAfterCertifiedProbe(context, request, resolution) match
-            case Some(updated) => continueProbeWave(active, updated, tail, ledger)
-            case None          => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
-        case Right(Right((pending, identity))) =>
-          ledger.validatedPhysicalSearches.get(identity) match
-            case Some(cachedLines) =>
-              EngineLineAdmission.bindAdmittedLineSuffixes(pending.work, cachedLines) match
-                case Some(evaluations) =>
-                  val result = canonicalProbeResult(
-                    request,
-                    ProbeResolution.EngineSearch(
-                      evaluations.map(_.evaluation),
-                      cachedLines.map(_.reported.depth).min
-                    )
-                  )
-                  contextAfterCertifiedProbe(
-                    context,
-                    request,
-                    CertifiedProbeResolution(result, evaluations)
-                  ) match
-                    case Some(updated) => continueProbeWave(active, updated, tail, ledger)
-                    case None          => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
-                case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
-            case None =>
-              issue(
-                active,
-                CollectingProbeWave(context, tail),
-                  pending,
-                  ledger
-                )
-
-  private def contextAfterCertifiedProbe(
-      context: ReviewContext,
-      request: ProbeRequest,
-      resolution: CertifiedProbeResolution
-  ): Option[ReviewContext] =
-    MoveReviewInputAdmission
-      .admitCertifiedProbeResult(
-        context.preparedInput,
-        request,
-        resolution.result,
-        resolution.admissions
-      )
-      .map(preparedInput =>
-        context.copy(
-          preparedInput = preparedInput,
-          fulfilledProbeIds = context.fulfilledProbeIds :+ request.id
-        )
-      )
-
-  private def resolveProbe(
-      active: ActiveCommentaryJob,
-      context: ReviewContext,
-      request: ProbeRequest,
-      ledger: EngineWorkLedger
-  ): Either[
-    CommentaryJobStopCondition,
-    Either[CertifiedProbeResolution, (ProbePending, PhysicalSearchIdentity)]
-  ] =
-    for
-      _ <- Either.cond(
-        ProbeContractValidator.validateRequest(request).isValid &&
-          EngineLineAdmission.acceptsRequiredDepth(request.depth),
-        (),
-        CommentaryJobStopCondition.ReviewConstructionFailed
-      )
-      candidateMove = EvidenceRef.normalizeMove(request.candidateMove)
-      branchHistory <- active.positionHistory
-        .extend(List(candidateMove))
-        .left.map(_ => CommentaryJobStopCondition.ReviewConstructionFailed)
-      _ <- Either.cond(
-        CanonicalPositionHistory.sameBoardState(branchHistory.currentFen, request.fen),
-        (),
-        CommentaryJobStopCondition.ReviewConstructionFailed
-      )
-      resolution <- PositionRuleAssessment.assess(branchHistory) match
-        case PositionRuleAssessment.Terminal(_) =>
-          Left(CommentaryJobStopCondition.ReviewConstructionFailed)
-        case PositionRuleAssessment.Nonterminal(
-              FivefoldRepetitionKnowledge.CertifiedNonterminal,
-              ThreefoldClaimKnowledge.Known(_),
-              _
-            ) =>
-          branchHistory.admitToFirstAutomaticTerminal(request.moves.map(EvidenceRef.normalizeMove))
-            .left.map(_ => CommentaryJobStopCondition.ReviewConstructionFailed)
-            .flatMap { continuation =>
-              val searchHistory = continuation.resultingHistory
-              continuation.resultingRuleAssessment match
-                case PositionRuleAssessment.Terminal(terminal) =>
-                  val evaluation: CandidateLineEvaluation.ExactAutomaticTerminal =
-                    CandidateLineEvaluation.ExactAutomaticTerminal(
-                      continuation.moves,
-                      terminal
-                    )
-                  continuation.bind(evaluation) match
-                    case Some(admission) =>
-                      val result = canonicalProbeResult(
-                        request,
-                        ProbeResolution.ExactAutomaticTerminal(evaluation)
-                      )
-                      Right(Left(CertifiedProbeResolution(result, List(admission))))
-                    case None => Left(CommentaryJobStopCondition.ReviewConstructionFailed)
-                case PositionRuleAssessment.Nonterminal(
-                      FivefoldRepetitionKnowledge.CertifiedNonterminal,
-                      ThreefoldClaimKnowledge.Known(_),
-                      _
-                    ) =>
-                  val limits = EngineSearchLimits(request.depth, ProbeNodes, ProbeMovetimeMs, 1)
-                  val work = issuedWork(
-                    active.engineProfile,
-                    ledger.issuedWorkId,
-                    EngineWorkPurpose.CausalProbe,
-                    searchHistory,
-                    EngineRootRestriction.Unrestricted,
-                    branchHistory.currentFen,
-                    request.moves.map(EvidenceRef.normalizeMove),
-                    limits,
-                    ProbeElapsedMs
-                  )
-                  val identity = physicalIdentity(work)
-                  Right(Right(ProbePending(request, identity, work) -> identity))
-                case PositionRuleAssessment.Nonterminal(_, _, _) =>
-                  Left(CommentaryJobStopCondition.RepetitionHistoryUnavailable)
-            }
-        case PositionRuleAssessment.Nonterminal(_, _, _) =>
-          Left(CommentaryJobStopCondition.RepetitionHistoryUnavailable)
-    yield resolution
 
   private def completePositionAction(
       active: ActiveCommentaryJob,
@@ -968,8 +728,7 @@ object CommentaryJobReducer:
         active.legalMoves.size,
         rootLineCount,
         0,
-        ledger,
-        0
+        ledger
       )
     )
 
@@ -1001,8 +760,7 @@ object CommentaryJobReducer:
         active.legalMoves.size,
         context.rootEvaluations.size,
         1,
-        ledger,
-        context.wavesCompleted
+        ledger
       )
     )
 
@@ -1039,47 +797,20 @@ object CommentaryJobReducer:
       maxSearchElapsedMs
     )
 
-  private def physicalIdentity(work: IssuedEngineWork): PhysicalSearchIdentity =
-    PhysicalSearchIdentity(
-      work.engineProfile,
-      work.enginePositionInitialFen,
-      work.enginePositionMovesUci,
-      work.searchFen,
-      work.rootRestriction,
-      work.searchLimits,
-      work.maxSearchElapsedMs
-    )
-
-  private def canonicalProbeResult(request: ProbeRequest, resolution: ProbeResolution): ProbeResult =
-    ProbeResult(
-      id = request.id,
-      resolution = resolution
-    )
-
   private def progressFor(
       active: ActiveCommentaryJob,
       phase: JobPhase,
       ledger: EngineWorkLedger
   ): CommentaryJobProgress = phase match
     case CollectingRoot =>
-      progress(CommentaryJobPhase.RootSearch, active.legalMoves.size, 0, 0, ledger, 0)
+      progress(CommentaryJobPhase.RootSearch, active.legalMoves.size, 0, 0, ledger)
     case focus: CollectingFocus =>
       progress(
         CommentaryJobPhase.FocusComparison,
         active.legalMoves.size,
         focus.rootEvaluations.size,
         0,
-        ledger,
-        0
-      )
-    case wave: CollectingProbeWave =>
-      progress(
-        CommentaryJobPhase.CausalProbe,
-        active.legalMoves.size,
-        wave.context.rootEvaluations.size,
-        0,
-        ledger,
-        wave.context.wavesCompleted
+        ledger
       )
 
   private def progress(
@@ -1087,8 +818,7 @@ object CommentaryJobReducer:
       legalMoveCount: Int,
       rootLineCount: Int,
       selectedCompleted: Int,
-      ledger: EngineWorkLedger,
-      wavesCompleted: Int
+      ledger: EngineWorkLedger
   ): CommentaryJobProgress =
     CommentaryJobProgress(
       phase,
@@ -1096,15 +826,14 @@ object CommentaryJobReducer:
       rootLineCount,
       selectedCompleted,
       ledger.physicalWorksIssued,
-      ledger.physicalReportsAccepted,
-      wavesCompleted
+      ledger.physicalReportsAccepted
     )
 
   private def initialProgress(
       legalMoveCount: Int,
       phase: CommentaryJobPhase
   ): CommentaryJobProgress =
-    progress(phase, legalMoveCount, 0, 0, EngineWorkLedger.empty, 0)
+    progress(phase, legalMoveCount, 0, 0, EngineWorkLedger.empty)
 
   private def stop(
       active: ActiveCommentaryJob,

@@ -69,7 +69,6 @@ def _configure_cause_audit_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--provider-timeout-seconds", type=float, default=300.0)
-    parser.add_argument("--max-probe-rounds", type=int, default=6)
     parser.add_argument(
         "--oracle-label",
         action="append",
@@ -227,7 +226,7 @@ def _parser() -> argparse.ArgumentParser:
 
     cause_audit = subparsers.add_parser(
         "cause-audit",
-        help="capture public RuntimeProtocol responses while closing runtime probes",
+        help="capture one terminal public RuntimeProtocol response per case",
     )
     _configure_cause_audit_parser(cause_audit)
     return parser

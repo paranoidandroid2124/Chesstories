@@ -13,25 +13,16 @@ import lila.chessjudgment.model.line.{
   FivefoldRepetitionKnowledge,
   PositionRuleAssessment,
   PrincipalVariationEvidence,
-  RankedCandidateLineEvaluation,
   ThreefoldClaimKnowledge
-}
-import lila.chessjudgment.model.{
-  BranchReplyProbeBinding,
-  ProbeContractValidator,
-  ProbeRequest,
-  ProbeResolution,
-  ProbeResult
 }
 import lila.chessjudgment.model.line.EngineLine
 import lila.chessjudgment.model.judgment.{
   EvidenceRef,
   CanonicalLineReplay,
-  CandidateSetDescriptor,
+  AdmittedRootRankingPair,
   LineNodeRole,
   AdmittedReviewLine,
   AdmittedMoveReviewInput,
-  AdmittedReviewBranchReply,
   PlayerFacingPositionAction
 }
 
@@ -41,8 +32,7 @@ final case class RawMoveReviewInput(
     playedMoveUci: String,
     variations: List[EngineLine],
     ply: Option[Int] = None,
-    movePrefixUci: List[String] = Nil,
-    probeResults: List[ProbeResult] = Nil
+    movePrefixUci: List[String] = Nil
 )
 
 /** The v6 player path owns one reviewed move and one engine-ranked reference. */
@@ -84,7 +74,6 @@ object MoveReviewInputAdmission:
       automaticTerminal: Option[AutomaticTerminal]
   )
 
-  private[assembly] final case class AdmittedProbeBranch(branch: AdmittedReviewBranchReply)
   /**
    * Prepares the sole v6 player review. The unrestricted root bundle owns the
    * reference ranking; a focused comparison is admitted only when the played
@@ -187,17 +176,10 @@ object MoveReviewInputAdmission:
             )
             referenceMove <- prepared.referenceLine.flatMap(_.rootMove)
             _ <- Option.when(EvidenceRef.sameMove(referenceMove, bestMove))((): Unit)
-            rankedDescriptors = rankedRoot.zipWithIndex.map { case (admitted, index) =>
-              RankedCandidateLineEvaluation(
-                index + 1,
-                EvidenceRef.normalizeMove(admitted.evaluation.moves.head),
-                admitted.evaluation
-              )
-            }
-            completeCandidateSet <- CandidateSetDescriptor.fromCompleteRanking(
-              rootPosition.color,
-              rankedDescriptors
+            admittedRootRanking = rankedRoot.map(admitted =>
+              EvidenceRef.normalizeMove(admitted.evaluation.moves.head)
             )
+            admittedRootRankingPair <- AdmittedRootRankingPair.fromAdmittedRanking(admittedRootRanking)
           yield
             PreparedFocusedPositionCommentary.MoveReview(
               PreparedFocusedMoveReview.materialized(
@@ -207,51 +189,11 @@ object MoveReviewInputAdmission:
                 rankedRoot.indexWhere(_.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, playedMove))) match
                   case -1    => None
                   case index => Some(index + 1),
-                prepared.copy(completeCandidateSet = Some(completeCandidateSet)),
+                prepared.copy(admittedRootRankingPair = Some(admittedRootRankingPair)),
                 drawClaims
               )
             )
     yield result
-
-  /** Adds already certified branches without replaying or revalidating them. */
-  private[assembly] def withAdmittedProbeBranches(
-      preparedInput: AdmittedMoveReviewInput,
-      admissions: List[AdmittedProbeBranch]
-  ): AdmittedMoveReviewInput =
-    val branches = preparedInput.branchReplies ++ admissions.map(_.branch)
-    require(
-      branches.map(_.sourceProbeId).distinct.size == branches.size,
-      "admitted probe branches must have unique source ids"
-    )
-    preparedInput.copy(branchReplies = branches)
-
-  /** Test/development boundary for an exact issued request/result handoff. */
-  private[assembly] def withAdmittedProbeResults(
-      preparedInput: AdmittedMoveReviewInput,
-      fulfilledProbeResults: List[(ProbeRequest, ProbeResult)]
-  ): AdmittedMoveReviewInput =
-    val admissions = fulfilledProbeResults.foldLeft(List.empty[AdmittedProbeBranch]) {
-      case (accepted, (request, result)) =>
-        val firstRank = nextBranchReplyRank(preparedInput, accepted)
-        admitIssuedProbeResult(preparedInput, request, result, firstRank) match
-          case Some(admission) => accepted :+ admission
-          case None =>
-            throw IllegalArgumentException(
-              s"issued probe ${request.id} was rejected"
-            )
-    }
-    withAdmittedProbeBranches(preparedInput, admissions)
-
-  private[assembly] def nextBranchReplyRank(
-      preparedInput: AdmittedMoveReviewInput,
-      admissions: List[AdmittedProbeBranch]
-  ): Int =
-    (
-      preparedInput.lines.map(_.rank) ++
-        preparedInput.branchReplies.flatMap(_.lines.map(_.rank)) ++
-        admissions.flatMap(_.branch.lines.map(_.rank))
-    ).maxOption
-      .getOrElse(0) + 1
 
   def admit(raw: RawMoveReviewInput): Option[AdmittedMoveReviewInput] =
     val beforeFen = PrincipalVariationEvidence.normalizeFen(raw.fen)
@@ -261,7 +203,6 @@ object MoveReviewInputAdmission:
       if movePrefix.nonEmpty then CanonicalPositionHistory.from(Standard.initialFen.value, movePrefix, beforeFen)
       else CanonicalPositionHistory.from(beforeFen, Nil, beforeFen)
     for
-      _ <- Option.when(raw.probeResults.isEmpty)(())
       history <- positionHistory.toOption
       _ <- Option.when(raw.ply.forall(_ == history.currentPly))((): Unit)
       input <- admitPrepared(
@@ -333,27 +274,30 @@ object MoveReviewInputAdmission:
               admitted.replay
             )
           }
-      val lines = (reference.toList ++ played.toList ++ alternatives).distinctBy(line => line.role -> line.rank)
-      played.flatMap { playedLine =>
-        reference.flatMap { _ =>
-          val graphPlayedMove = playedLine.rootMove.getOrElse(playedMove)
-          for
-            graphAfterPlayed <- playedLine.replay.replaySteps.headOption.map(_.fenAfter)
-            afterReference = reference.flatMap(_.replay.replaySteps.headOption).map(_.fenAfter)
-          yield AdmittedMoveReviewInput(
-            beforeFen = canonicalBeforeFen,
-            playedMoveUci = graphPlayedMove,
-            beforePly = beforePly,
-            sideToMove = side,
-            afterPlayedFen = graphAfterPlayed,
-            afterReferenceFen = afterReference,
-            lines = lines,
-            completeCandidateSet = None,
-            positionHistory = history,
-            branchReplies = Nil
-          )
+      val lines = reference.toList ++ played.toList ++ alternatives
+      Option
+        .when(lines.map(line => line.role -> line.rank).distinct.size == lines.size)(lines)
+        .flatMap { exactLines =>
+          played.flatMap { playedLine =>
+            reference.flatMap { _ =>
+              val graphPlayedMove = playedLine.rootMove.getOrElse(playedMove)
+              for
+                graphAfterPlayed <- playedLine.replay.replaySteps.headOption.map(_.fenAfter)
+                afterReference = reference.flatMap(_.replay.replaySteps.headOption).map(_.fenAfter)
+              yield AdmittedMoveReviewInput(
+                beforeFen = canonicalBeforeFen,
+                playedMoveUci = graphPlayedMove,
+                beforePly = beforePly,
+                sideToMove = side,
+                afterPlayedFen = graphAfterPlayed,
+                afterReferenceFen = afterReference,
+                lines = exactLines,
+                admittedRootRankingPair = None,
+                positionHistory = history
+              )
+            }
+          }
         }
-      }
 
   private def admitEvaluations(
       history: CanonicalPositionHistory,
@@ -491,16 +435,13 @@ object MoveReviewInputAdmission:
       }
     byRootMove.foreach { case (rootMove, entries) =>
       require(
-        entries.map(_._1.evaluation).distinct.size == 1,
-        s"conflicting evaluations for one root move: $rootMove"
+        entries.size == 1,
+        s"one admitted root move must have one evaluation owner: $rootMove"
       )
     }
     val selectedEvaluations = byRootMove
       .values
-      .map { entries =>
-        val earliestRank = entries.map(_._2).min
-        entries.minBy(_._2)._1 -> earliestRank
-      }
+      .map(_.head)
       .toList
     val ordered = sideToMove match
       case Some(side) =>
@@ -509,229 +450,6 @@ object MoveReviewInputAdmission:
         }
       case None => selectedEvaluations.sortBy(_._2)
     ordered.map(_._1)
-
-  private enum ProbeCandidateLines:
-    case Raw(override val evaluations: List[CandidateLineEvaluation])
-    case Certified(admissions: List[AdmittedCandidateLine])
-
-    def evaluations: List[CandidateLineEvaluation] = this match
-      case Raw(values)       => values
-      case Certified(values) => values.map(_.evaluation)
-
-  private final case class ProbeAdmissionInput(
-      request: ProbeRequest,
-      result: ProbeResult,
-      lines: ProbeCandidateLines
-  )
-
-  private final case class BranchReplySeed(
-      sourceProbeId: String,
-      probedMoveUci: String,
-      replyMoveUci: String,
-      branchFen: String,
-      branchHistory: CanonicalPositionHistory,
-      predecessorReplay: CanonicalLineReplay,
-      lines: ProbeCandidateLines,
-      certifiedHorizonPlyOffset: Int,
-      requiredReplyCount: Int,
-      depthFloor: Int
-  )
-
-  private[assembly] def admitIssuedProbeResult(
-      preparedInput: AdmittedMoveReviewInput,
-      request: ProbeRequest,
-      result: ProbeResult,
-      firstBranchReplyRank: Int
-  ): Option[AdmittedProbeBranch] =
-    val evaluations = result.resolution match
-      case ProbeResolution.EngineSearch(values, _) => values
-      case ProbeResolution.ExactAutomaticTerminal(evaluation) => List(evaluation)
-    admitBranchReplies(
-      List(ProbeAdmissionInput(request, result, ProbeCandidateLines.Raw(evaluations))),
-      beforeFen = preparedInput.beforeFen,
-      rootLines = preparedInput.lines.filterNot(_.role == LineNodeRole.BranchReply),
-      firstBranchReplyRank = firstBranchReplyRank,
-      positionHistory = preparedInput.positionHistory
-    ) match
-      case branch :: Nil => Some(AdmittedProbeBranch(branch))
-      case _             => None
-
-  /** Production handoff for lines whose history occurrence was already
-    * admitted when the browser report was accepted. No UCI move is replayed.
-    */
-  def admitCertifiedProbeResult(
-      preparedInput: AdmittedMoveReviewInput,
-      request: ProbeRequest,
-      result: ProbeResult,
-      admissions: List[AdmittedCandidateLine]
-  ): Option[AdmittedMoveReviewInput] =
-    admitBranchReplies(
-      List(ProbeAdmissionInput(request, result, ProbeCandidateLines.Certified(admissions))),
-      beforeFen = preparedInput.beforeFen,
-      rootLines = preparedInput.lines.filterNot(_.role == LineNodeRole.BranchReply),
-      firstBranchReplyRank = nextBranchReplyRank(preparedInput, Nil),
-      positionHistory = preparedInput.positionHistory
-    ) match
-      case branch :: Nil =>
-        Some(withAdmittedProbeBranches(preparedInput, List(AdmittedProbeBranch(branch))))
-      case _ => None
-
-  private def admitBranchReplies(
-      probes: List[ProbeAdmissionInput],
-      beforeFen: String,
-      rootLines: List[AdmittedReviewLine],
-      firstBranchReplyRank: Int,
-      positionHistory: CanonicalPositionHistory
-  ): List[AdmittedReviewBranchReply] =
-    val branches = List.newBuilder[AdmittedReviewBranchReply]
-    var nextRank = firstBranchReplyRank
-    probes.foreach { probe =>
-      branchReplySeed(beforeFen, rootLines, positionHistory, probe) match
-        case None => ()
-        case Some(seed) =>
-          val side = Some(seed.branchHistory.currentPosition.color)
-          val depthFloor = seed.depthFloor
-          val materializedLines = seed.lines match
-            case ProbeCandidateLines.Raw(evaluations) =>
-              evaluations.flatMap(admitEvaluation(seed.branchHistory, _, Some(seed.predecessorReplay)))
-            case ProbeCandidateLines.Certified(admissions) =>
-              admissions.flatMap(materializeAdmission(seed.branchHistory, _, Some(seed.predecessorReplay)))
-          val legalLines = preferredRankedEvaluations(
-            materializedLines,
-            side
-          )
-          val requiredReplyCount = seed.requiredReplyCount
-          val topLegalLines = legalLines.take(requiredReplyCount)
-          val topLinesDepthReady = topLegalLines.forall {
-            case AdmittedEvaluation(CandidateLineEvaluation.EngineSearch(line), _, _) =>
-              line.depth >= depthFloor
-            case AdmittedEvaluation(CandidateLineEvaluation.ExactAutomaticTerminal(_, _), _, _) =>
-              true
-          }
-          val replyLineBound = topLegalLines match
-            case exact :: Nil => exact.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, seed.replyMoveUci))
-            case _            => false
-          val horizonCovered = topLegalLines.forall(admitted =>
-            admitted.replay.legalSteps.size >= seed.certifiedHorizonPlyOffset ||
-              admitted.automaticTerminal.nonEmpty
-          )
-          if requiredReplyCount > 0 &&
-            topLegalLines.size == requiredReplyCount &&
-            topLinesDepthReady &&
-            replyLineBound &&
-            horizonCovered
-          then
-            val branchLines = topLegalLines.map { admitted =>
-              val rank = nextRank
-              nextRank += 1
-              AdmittedReviewLine(
-                role = LineNodeRole.BranchReply,
-                rank = rank,
-                evaluation = admitted.evaluation,
-                replay = admitted.replay,
-                predecessorReplay = Some(seed.predecessorReplay)
-              )
-            }
-            branches += AdmittedReviewBranchReply(
-              sourceProbeId = seed.sourceProbeId,
-              probedMoveUci = seed.probedMoveUci,
-              branchFen = seed.branchFen,
-              branchPly = plyFromFen(seed.branchFen),
-              certifiedHorizonPlyOffset = seed.certifiedHorizonPlyOffset,
-              lines = branchLines
-            )
-    }
-    branches.result()
-
-  private def branchReplySeed(
-      beforeFen: String,
-      rootLines: List[AdmittedReviewLine],
-      positionHistory: CanonicalPositionHistory,
-      input: ProbeAdmissionInput
-  ): Option[BranchReplySeed] =
-    val request = input.request
-    val probe = input.result
-    val evaluations = probe.resolution match
-      case ProbeResolution.EngineSearch(values, _) => values
-      case ProbeResolution.ExactAutomaticTerminal(evaluation) => List(evaluation)
-    val branchFen = Option(request.fen).map(PrincipalVariationEvidence.normalizeFen).filter(_.nonEmpty)
-    val probedMove = Option(EvidenceRef.normalizeMove(request.candidateMove)).filter(_.nonEmpty)
-    val replyMove = request.moves match
-      case exact :: Nil => Option(EvidenceRef.normalizeMove(exact)).filter(_.nonEmpty)
-      case _            => None
-    val certifiedHorizonPlyOffset = request.horizon.flatMap(BranchReplyProbeBinding.horizonPlyOffset)
-    val depthFloor = Option.when(request.depthFloor > 0)(request.depthFloor)
-    val contract = ProbeContractValidator.validateAgainstRequest(request, probe)
-    if !contract.isValid || input.lines.evaluations != evaluations then None
-    else (branchFen, probedMove, replyMove, certifiedHorizonPlyOffset, depthFloor) match
-      case (None, _, _, _, _) => None
-      case (_, None, _, _, _) => None
-      case (_, _, None, _, _) => None
-      case (_, _, _, None, _) => None
-      case (_, _, _, _, None) => None
-      case (Some(fen), Some(move), Some(reply), Some(horizon), Some(floor)) =>
-        val moveLines = rootLines
-          .filter(_.rootMove.exists(EvidenceRef.sameMove(_, move)))
-        val matchingMoveLines = moveLines.flatMap { line =>
-          for
-            first <- line.replay.replaySteps.headOption
-            if PrincipalVariationEvidence.sameBoardState(first.fenBefore, beforeFen)
-            if PrincipalVariationEvidence.sameBoardState(first.fenAfter, fen)
-            predecessor <- line.replay.subset(List(first))
-            branchHistory <- positionHistory.extendAdmitted(predecessor.legalSteps).toOption
-            if PrincipalVariationEvidence.sameBoardState(branchHistory.currentFen, fen)
-            (_, expectedHash) <- branchHash(
-              beforeFen,
-              line,
-              move,
-              reply,
-              horizon
-            )
-            if request.variationHash == expectedHash
-          yield (predecessor, branchHistory)
-        }
-        if moveLines.isEmpty then None
-        else matchingMoveLines match
-          case (predecessor, branchHistory) :: Nil =>
-            Some(
-              BranchReplySeed(
-                sourceProbeId = request.id,
-                probedMoveUci = move,
-                replyMoveUci = reply,
-                branchFen = branchHistory.currentFen,
-                branchHistory = branchHistory,
-                predecessorReplay = predecessor,
-                lines = input.lines,
-                certifiedHorizonPlyOffset = horizon,
-                requiredReplyCount = 1,
-                depthFloor = floor
-              )
-            )
-          case Nil => None
-          case _   => None
-
-  private def branchHash(
-      beforeFen: String,
-      line: AdmittedReviewLine,
-      probedMove: String,
-      replyMove: String,
-      certifiedHorizonPlyOffset: Int
-  ): Option[(EngineLine, String)] =
-    line.evaluation.engineLine.flatMap { engineLine =>
-      Some(
-        engineLine -> BranchReplyProbeBinding.variationHash(
-          rootFen = beforeFen,
-          role = line.role,
-          rootMove = probedMove,
-          whitePovEvalCp = engineLine.scoreCp,
-          mate = engineLine.mate,
-          depth = engineLine.depth,
-          moves = engineLine.moves,
-          replyMove = replyMove,
-          certifiedHorizonPlyOffset = certifiedHorizonPlyOffset
-        )
-      )
-    }
 
   private def automaticTerminal(history: CanonicalPositionHistory): Option[AutomaticTerminal] =
     PositionRuleAssessment.assess(history) match
@@ -754,9 +472,3 @@ object MoveReviewInputAdmission:
           ) =>
         line.mate.isEmpty && line.scoreCp.abs <= 1
       case None => true
-
-  private def plyFromFen(fen: String): Int =
-    val parts = fen.split("\\s+")
-    val fullMove = parts.lift(5).flatMap(_.toIntOption).getOrElse(1).max(1)
-    val blackToMove = parts.lift(1).contains("b")
-    (fullMove - 1) * 2 + Option.when(blackToMove)(1).getOrElse(0)

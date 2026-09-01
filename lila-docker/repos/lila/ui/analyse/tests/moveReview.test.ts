@@ -83,20 +83,10 @@ function rawTypedResponse(
       },
       causal_explanations: [
         {
-          kind: 'single_cause',
-          facets: [
-            {
-              facet_role: 'lead',
-              cause_evidence_id: `cause.${facetKind}`,
-              kind: facetKind,
-              proof_confidence: 'legal_replay_verified',
-              effect_mode: facetKind === 'wrong_move_order' ? 'alternative_resource' : 'played_value',
-              exposure: 'primary',
-              source_side: facetKind === 'wrong_move_order' ? 'reference' : 'candidate',
-              comparison_kind: 'played_vs_best',
-              channels: [channel],
-            },
-          ],
+          cause_evidence_id: `cause.${facetKind}`,
+          kind: facetKind,
+          exposure: facetKind === 'passed_pawn_progress' ? 'complementary' : 'primary',
+          channels: [channel],
         },
       ],
     }),
@@ -117,7 +107,7 @@ test('emits the sole v6 standard played-focus request', () => {
   });
 });
 
-test('decodes root, focused comparison, and arbitrary later causal work', () => {
+test('decodes the root and focused comparison work', () => {
   const root = decodeMoveReviewSnapshot(rawSnapshot('awaiting_core'), decodeContext());
   assert.equal(root?.kind, 'awaiting-core');
   if (root?.kind !== 'awaiting-core') return;
@@ -134,12 +124,17 @@ test('decodes root, focused comparison, and arbitrary later causal work', () => 
     movesUci: ['c7c5', 'e7e5'],
   });
 
-  const causal = decodeMoveReviewSnapshot(rawSnapshot('awaiting_causal'), decodeContext());
-  assert.equal(causal?.kind, 'awaiting-evidence');
-  if (causal?.kind !== 'awaiting-evidence') return;
-  assert.equal(causal.issuedEngineWork.workId, 'work:2');
-  assert.equal(causal.issuedEngineWork.purpose, 'causal_probe');
-  assert.equal(causal.issuedEngineWork.searchFen, afterFen);
+  const stopped = rawSnapshot('stopped');
+  object(stopped.progress).legal_move_count = 0;
+  assert.equal(decodeMoveReviewSnapshot(stopped, decodeContext())?.kind, 'abstained');
+
+  const causalWaves = structuredClone(stopped);
+  object(causalWaves.progress).causal_waves = 0;
+  assert.equal(decodeMoveReviewSnapshot(causalWaves, decodeContext()), undefined);
+
+  const inventedStopCondition = structuredClone(stopped);
+  inventedStopCondition.stop_condition = 'no_legal_moves';
+  assert.equal(decodeMoveReviewSnapshot(inventedStopCondition, decodeContext()), undefined);
 });
 
 test('fails closed on unknown schemas, Chess960, execution drift, and illegal engine history', () => {
@@ -155,43 +150,25 @@ test('fails closed on unknown schemas, Chess960, execution drift, and illegal en
   object(drift.issued_engine_work).execution_key_sha256 = 'not-a-key';
   assert.equal(decodeMoveReviewSnapshot(drift, decodeContext()), undefined);
 
-  const illegal = rawSnapshot('awaiting_causal');
+  const illegal = rawSnapshot('awaiting_evidence');
   object(illegal.issued_engine_work).engine_position_moves_uci = ['e2e5'];
   assert.equal(decodeMoveReviewSnapshot(illegal, decodeContext()), undefined);
 });
 
-test('projects the real primary → causal facet → channel → proof segment structure', () => {
+test('projects an exact primary while withholding an unproved L2 cause', () => {
   const decoded = decodeMoveReviewSnapshot(rawResponse(), decodeContext());
   assert.equal(decoded?.kind, 'completed');
   if (decoded?.kind !== 'completed') return;
-  assert.equal(decoded.evidence.candidates.length, 2);
   const played = selectedMoveReviewCandidate(decoded.evidence);
   assert.equal(played?.uci, 'e7e5');
-  assert.equal(played?.label, 'e5');
   assert.equal(played?.review.kind, 'move-verdict');
   if (!played || played.review.kind !== 'move-verdict') return;
   assert.equal(played.review.core.bestUci, 'c7c5');
   assert.equal(played.review.core.verdictSymbol, '?!');
-  assert.equal(played.review.reasons.length, 2);
-  const cause = played.review.reasons.find(reason => reason.message.kind === 'causal');
-  assert.ok(cause);
-  assert.equal(cause.message.kind, 'causal');
-  if (cause.message.kind !== 'causal') return;
-  assert.equal(cause.message.causeKind, 'candidate_tactical_liability');
-  assert.equal(cause.message.actor.side, 'black');
-  assert.deepEqual(cause.message.witnesses, ['line:played']);
-  assert.deepEqual(
-    cause.message.proofSegment?.steps.map(step => step.role),
-    ['root_action', 'terminal_event'],
-  );
-  assert.deepEqual(
-    cause.proof.moves.map(move => move.uci),
-    ['e7e5', 'g1f3'],
-  );
-  assert.equal(moveReviewReasonRole(played.review.core, cause.id), 'primary');
-  const pv = played.review.reasons.find(reason => reason.message.kind === 'line');
-  assert.ok(pv);
-  assert.equal(moveReviewReasonRole(played.review.core, pv!.id), 'support');
+  assert.equal(played.review.reasons.length, 1);
+  const line = played.review.reasons[0]!;
+  assert.equal(line.message.kind, 'line');
+  assert.equal(moveReviewReasonRole(played.review.core, line.id), 'primary');
 });
 
 test('preserves BestChoice and its transmitted runner-up comparison without synthesizing improves', () => {
@@ -221,9 +198,9 @@ test('preserves BestChoice and its transmitted runner-up comparison without synt
         win_percent_for_mover: 52,
         depth: 16,
       },
-      candidate_set: { type: 'narrow_choice' },
     },
   });
+  delete object(combined.commentary).causal_explanations;
   result.selected_move_reviews = [combined];
   const decoded = decodeMoveReviewSnapshot(raw, decodeContext());
   assert.equal(decoded?.kind, 'completed');
@@ -239,13 +216,11 @@ test('preserves BestChoice and its transmitted runner-up comparison without synt
   assert.deepEqual(core.bestChoice, {
     runnerUpVerdictCode: 'inaccuracy',
     runnerUpUci: 'c7c5',
-    candidateSet: 'narrow_choice',
   });
   assert.equal(core.winChance?.changePercentagePoints, 3.25);
 
   for (const mutate of [
     (primary: JsonObject) => (primary.runner_up_verdict_code = 'improves_on_reference'),
-    (primary: JsonObject) => (primary.candidate_set = { type: 'invented_choice' }),
   ]) {
     const malformed = structuredClone(raw);
     const malformedResult = object(malformed.result);
@@ -255,120 +230,7 @@ test('preserves BestChoice and its transmitted runner-up comparison without synt
   }
 });
 
-test('fails the whole commentary on malformed explanation, facet, or channel wire shapes', () => {
-  const mutations: Array<(explanation: JsonObject, facet: JsonObject, channel: JsonObject) => void> = [
-    explanation => {
-      explanation.kind = 'invented_explanation';
-    },
-    (_explanation, facet) => {
-      facet.kind = 'invented_cause';
-    },
-    (_explanation, facet) => {
-      facet.extra = true;
-    },
-    (_explanation, _facet, channel) => {
-      delete channel.witnesses;
-    },
-    (_explanation, _facet, channel) => {
-      object(channel.actor).side = 'green';
-    },
-    (_explanation, _facet, channel) => {
-      channel.horizon = 'ply:01';
-    },
-    (_explanation, _facet, channel) => {
-      channel.direct_change = 'prevented';
-    },
-    (_explanation, _facet, channel) => {
-      channel.direct_change = 'refuted';
-    },
-    (_explanation, _facet, channel) => {
-      channel.direct_change = 'missed';
-    },
-    (_explanation, _facet, channel) => {
-      channel.played_change = 'prevented';
-    },
-    (_explanation, _facet, channel) => {
-      channel.played_change = 'refuted';
-    },
-    (_explanation, _facet, channel) => {
-      const segment = object(channel.proof_segment);
-      object((segment.steps as JsonObject[])[0]).role = 'invented_role';
-    },
-    (_explanation, _facet, channel) => {
-      channel.extra = true;
-    },
-  ];
-  for (const [index, mutate] of mutations.entries()) {
-    const raw = rawResponse();
-    const selected = object(raw.result).selected_move_reviews as JsonObject[];
-    const commentary = object(selected[1]!.commentary);
-    const explanation = (commentary.causal_explanations as JsonObject[])[0]!;
-    const facet = (explanation.facets as JsonObject[])[0]!;
-    const channel = (facet.channels as JsonObject[])[0]!;
-    mutate(explanation, facet, channel);
-    assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined, `wire mutation ${index}`);
-  }
-});
-
-test('accepts unbounded semantic IDs and more than eight public causal explanations', () => {
-  const raw = rawResponse();
-  const selected = object(raw.result).selected_move_reviews as JsonObject[];
-  const commentary = object(selected[1]!.commentary);
-  const template = (commentary.causal_explanations as JsonObject[])[0]!;
-  commentary.causal_explanations = Array.from({ length: 9 }, (_, index) => {
-    const explanation = structuredClone(template);
-    const facet = (explanation.facets as JsonObject[])[0]!;
-    facet.cause_evidence_id = `${'cause'.repeat(70)}:${index}`;
-    const channel = (facet.channels as JsonObject[])[0]!;
-    channel.channel_id = `${'channel'.repeat(50)}:${index}`;
-    channel.causal_signature = `${'signature'.repeat(40)}:${index}`;
-    return explanation;
-  });
-  const decoded = decodeMoveReviewSnapshot(raw, decodeContext());
-  assert.equal(decoded?.kind, 'completed');
-  if (decoded?.kind !== 'completed') return;
-  const played = selectedMoveReviewCandidate(decoded.evidence);
-  assert.equal(played?.review.kind, 'move-verdict');
-  if (played?.review.kind !== 'move-verdict') return;
-  const causal = played.review.reasons.filter(reason => reason.message.kind === 'causal');
-  assert.equal(causal.length, 9);
-  assert.ok(causal.every(reason => moveReviewReasonRole(played.review.core, reason.id) === 'proof-route'));
-});
-
-test('keeps two exact channels with one semantic signature as separate legal proofs', () => {
-  const raw = rawResponse();
-  const selected = object(raw.result).selected_move_reviews as JsonObject[];
-  const commentary = selected[1]!.commentary as JsonObject;
-  const explanation = (commentary.causal_explanations as JsonObject[])[0]!;
-  const facet = (explanation.facets as JsonObject[])[0]!;
-  const first = (facet.channels as JsonObject[])[0]!;
-  const second = structuredClone(first);
-  second.channel_id = 'cause-channel:second-exact-route';
-  second.proof_line_moves = ['e7e5', 'f1c4'];
-  const proof = second.proof_segment as JsonObject;
-  (proof.steps as JsonObject[])[1]!.move_uci = 'f1c4';
-  facet.channels = [first, second];
-
-  const decoded = decodeMoveReviewSnapshot(raw, decodeContext());
-  assert.equal(decoded?.kind, 'completed');
-  if (decoded?.kind !== 'completed') return;
-  const played = selectedMoveReviewCandidate(decoded.evidence);
-  assert.equal(played?.review.kind, 'move-verdict');
-  if (!played || played.review.kind !== 'move-verdict') return;
-  const causal = played.review.reasons.filter(reason => reason.message.kind === 'causal');
-  assert.equal(causal.length, 2);
-  assert.equal(new Set(causal.map(reason => reason.id)).size, 2);
-  assert.deepEqual(
-    causal.map(reason => reason.proof.moves.map(move => move.uci)),
-    [
-      ['e7e5', 'g1f3'],
-      ['e7e5', 'f1c4'],
-    ],
-  );
-  assert.ok(causal.every(reason => moveReviewReasonRole(played.review.core, reason.id) === 'proof-route'));
-});
-
-test('projects every resource and defense-obligation proof path across both exact branch occurrences', () => {
+test('projects every unique-check-reply and sole-recapturer-removal proof path across both exact branch occurrences', () => {
   const root = '3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1' as FEN;
   const referenceMoves = ['c4f7', 'f8f7', 'd1d8'] as Uci[];
   const playedMoves = ['d1d8', 'f8d8'] as Uci[];
@@ -399,7 +261,9 @@ test('projects every resource and defense-obligation proof path across both exac
         role: 'created_check_response',
         contract: 'created_check_response_inventory',
         result_id: `created_check_response_inventory:${hash('7')}`,
-        source_premise_ids: [`created:${suffix}`],
+        issuer_evidence_id: 'reference-line-evidence',
+        issuer_occurrence_id: hash(suffix),
+        source_premise_ids: [`created:${suffix}`, 'reference-line-evidence', hash(suffix)].sort(),
         branch_id: referenceBranchId,
         branch_role: 'counterfactual_reference',
         step_index: 0,
@@ -408,7 +272,13 @@ test('projects every resource and defense-obligation proof path across both exac
         role: 'reference_capture_recapture',
         contract: 'capture_recapture_inventory',
         result_id: `capture_recapture_inventory:${hash('8')}`,
-        source_premise_ids: [`reference:${suffix}`],
+        issuer_evidence_id: 'reference-line-evidence',
+        issuer_occurrence_id: hash(suffix === '3' ? '4' : '5'),
+        source_premise_ids: [
+          `reference:${suffix}`,
+          'reference-line-evidence',
+          hash(suffix === '3' ? '4' : '5'),
+        ].sort(),
         branch_id: referenceBranchId,
         branch_role: 'counterfactual_reference',
         step_index: 2,
@@ -417,7 +287,13 @@ test('projects every resource and defense-obligation proof path across both exac
         role: 'played_capture_recapture',
         contract: 'capture_recapture_inventory',
         result_id: `capture_recapture_inventory:${hash('9')}`,
-        source_premise_ids: [`played:${suffix}`],
+        issuer_evidence_id: 'played-line-evidence',
+        issuer_occurrence_id: hash(suffix === '3' ? '5' : '6'),
+        source_premise_ids: [
+          `played:${suffix}`,
+          'played-line-evidence',
+          hash(suffix === '3' ? '5' : '6'),
+        ].sort(),
         branch_id: playedBranchId,
         branch_role: 'observed_played_root',
         step_index: 0,
@@ -441,12 +317,7 @@ test('projects every resource and defense-obligation proof path across both exac
   });
   const channel = {
     channel_id: 'typed.resource',
-    causal_signature: 'typed.resource.signature',
-    direct_change: 'occurred',
-    played_change: 'missed',
-    resource_differential_proof: {
-      family: 'immediate_forced_reply_resource_differential',
-      trigger_mechanism: 'forced_displacement',
+    unique_check_reply_defender_displacement_before_capture_proof: {
       source_evidence_id: 'resource.source',
       semantic_id: hash('a'),
       occurrence_id: hash('b'),
@@ -512,11 +383,21 @@ test('projects every resource and defense-obligation proof path across both exac
   const played = selectedMoveReviewCandidate(decoded.evidence);
   assert.equal(played?.review.kind, 'move-verdict');
   if (!played || played.review.kind !== 'move-verdict') return;
-  const reasons = played.review.reasons.filter(reason => reason.message.kind === 'resource-differential');
+  const reasons = played.review.reasons.filter(
+    reason => reason.message.kind === 'unique-check-reply-defender-displacement-before-capture',
+  );
   assert.equal(reasons.length, 4);
-  assert.ok(reasons.every(reason => moveReviewReasonRole(played.review.core, reason.id) === 'proof-route'));
   assert.deepEqual(
-    reasons.map(reason => reason.message.kind === 'resource-differential' && reason.message.branch.role),
+    reasons.map(reason => moveReviewReasonRole(played.review.core, reason.id)),
+    ['primary', 'proof-route', 'proof-route', 'proof-route'],
+    'one server-primary Cause owns one UI anchor while every additional occurrence remains a proof route',
+  );
+  assert.deepEqual(
+    reasons.map(
+      reason =>
+        reason.message.kind === 'unique-check-reply-defender-displacement-before-capture' &&
+        reason.message.branch.role,
+    ),
     ['counterfactual_reference', 'observed_played_root', 'counterfactual_reference', 'observed_played_root'],
   );
   assert.deepEqual(
@@ -524,24 +405,121 @@ test('projects every resource and defense-obligation proof path across both exac
     [referenceMoves, playedMoves, referenceMoves, playedMoves],
   );
   assert.deepEqual(
-    reasons.map(reason => reason.message.kind === 'resource-differential' && reason.message.pathOccurrenceId),
+    reasons.map(
+      reason =>
+        reason.message.kind === 'unique-check-reply-defender-displacement-before-capture' &&
+        reason.message.pathOccurrenceId,
+    ),
     [hash('3'), hash('3'), hash('4'), hash('4')],
   );
   assert.ok(
     reasons.every(
       reason =>
-        reason.message.kind === 'resource-differential' &&
+        reason.message.kind === 'unique-check-reply-defender-displacement-before-capture' &&
         reason.message.counterpart.id !== reason.message.branch.id &&
         reason.message.branch.steps?.[0]?.provenance !== undefined &&
         reason.message.counterpart.steps?.[0]?.provenance !== undefined &&
-        reason.message.triggerMechanism === 'forced_displacement' &&
         reason.message.disabledDefender.square === 'f8' &&
         reason.message.absence.issuerEvidenceId === 'reference-line-evidence' &&
         reason.message.absence.issuerOccurrenceId === hash('5') &&
         reason.message.absence.fen === referenceFens[2] &&
-        reason.message.premises.length === 3,
+        reason.message.premises.length === 3 &&
+        reason.message.premises.every(
+          premise =>
+            premise.issuerEvidenceId !== undefined &&
+            premise.issuerOccurrenceId !== undefined &&
+            premise.sourcePremiseIds.includes(premise.issuerEvidenceId) &&
+            premise.sourcePremiseIds.includes(premise.issuerOccurrenceId),
+        ),
     ),
   );
+  const originalReasonIds = new Map(
+    reasons.map(reason => [`${reason.message.pathOccurrenceId}:${reason.message.branch.id}`, reason.id]),
+  );
+  const expandedChannel = structuredClone(channel);
+  const expandedProof = object(expandedChannel.unique_check_reply_defender_displacement_before_capture_proof);
+  (expandedProof.proof_paths as JsonObject[]).unshift(proofPath(hash('2'), '2'));
+  const expandedDecoded = decodeMoveReviewSnapshot(
+    rawTypedResponse(focus, referenceMoves, playedMoves, 'wrong_move_order', expandedChannel),
+    { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+  );
+  assert.equal(expandedDecoded?.kind, 'completed');
+  if (expandedDecoded?.kind !== 'completed') return;
+  const expandedPlayed = selectedMoveReviewCandidate(expandedDecoded.evidence);
+  assert.equal(expandedPlayed?.review.kind, 'move-verdict');
+  if (!expandedPlayed || expandedPlayed.review.kind !== 'move-verdict') return;
+  const expandedReasons = expandedPlayed.review.reasons.filter(
+    reason => reason.message.kind === 'unique-check-reply-defender-displacement-before-capture',
+  );
+  assert.equal(expandedReasons.length, 6);
+  for (const reason of expandedReasons) {
+    const key = `${reason.message.pathOccurrenceId}:${reason.message.branch.id}`;
+    const originalId = originalReasonIds.get(key);
+    if (originalId) assert.equal(reason.id, originalId, `stable occurrence-owned reason id for ${key}`);
+  }
+  for (const exposure of [undefined, 'guessed_from_path_count'] as const) {
+    const malformed = rawTypedResponse(focus, referenceMoves, playedMoves, 'wrong_move_order', channel);
+    const selected = object(malformed.result).selected_move_reviews as JsonObject[];
+    const facet = (object(selected[1]!.commentary).causal_explanations as JsonObject[])[0]!;
+    if (exposure === undefined) delete facet.exposure;
+    else facet.exposure = exposure;
+    assert.equal(
+      decodeMoveReviewSnapshot(malformed, {
+        requestId,
+        subject: focus,
+        engineProfile: moveReviewEngineProfile,
+      }),
+      undefined,
+      'the UI requires the server-owned Cause exposure value',
+    );
+  }
+  const secondPrimaryChannel = structuredClone(channel);
+  secondPrimaryChannel.channel_id = 'typed.unique-check-reply.second-cause';
+  const secondPrimaryProof = object(
+    secondPrimaryChannel.unique_check_reply_defender_displacement_before_capture_proof,
+  );
+  (secondPrimaryProof.proof_paths as JsonObject[]).forEach((path, index) => {
+    path.path_occurrence_id = hash(String(index + 7));
+  });
+  const multiplePrimary = rawTypedResponse(
+    focus,
+    referenceMoves,
+    playedMoves,
+    'wrong_move_order',
+    channel,
+  );
+  const multiplePrimarySelected = object(multiplePrimary.result).selected_move_reviews as JsonObject[];
+  const multiplePrimaryCommentary = object(multiplePrimarySelected[1]!.commentary);
+  (multiplePrimaryCommentary.causal_explanations as JsonObject[]).push({
+    cause_evidence_id: 'cause.wrong_move_order.second',
+    kind: 'wrong_move_order',
+    exposure: 'primary',
+    channels: [secondPrimaryChannel],
+  });
+  const multiplePrimaryDecoded = decodeMoveReviewSnapshot(multiplePrimary, {
+    requestId,
+    subject: focus,
+    engineProfile: moveReviewEngineProfile,
+  });
+  assert.equal(multiplePrimaryDecoded?.kind, 'completed');
+  if (multiplePrimaryDecoded?.kind === 'completed') {
+    const multiplePrimaryPlayed = selectedMoveReviewCandidate(multiplePrimaryDecoded.evidence);
+    assert.equal(multiplePrimaryPlayed?.review.kind, 'move-verdict');
+    if (multiplePrimaryPlayed?.review.kind === 'move-verdict') {
+      assert.equal(
+        multiplePrimaryPlayed.review.core.reasonRefs.primary.length,
+        2,
+        'each server-primary Cause retains one UI anchor',
+      );
+      assert.equal(
+        multiplePrimaryPlayed.review.reasons.filter(
+          reason => moveReviewReasonRole(multiplePrimaryPlayed.review.core, reason.id) === 'proof-route',
+        ).length,
+        6,
+        'all remaining branch and proof-path occurrences stay available as routes',
+      );
+    }
+  }
 
   const removalRoot = '7k/4p3/5n2/3r2B1/8/8/2B5/K2Q2R1 w - - 0 1' as FEN;
   const removalReferenceMoves = ['g5f6', 'e7f6', 'd1d5'] as Uci[];
@@ -571,7 +549,9 @@ test('projects every resource and defense-obligation proof path across both exac
         role: 'reference_defender_removal',
         contract: 'capture_recapture_inventory',
         result_id: `capture_recapture_inventory:${hash('0')}`,
-        source_premise_ids: ['reference-removal:d'],
+        issuer_evidence_id: 'reference-line-evidence',
+        issuer_occurrence_id: hash('0'),
+        source_premise_ids: ['reference-removal:d', 'reference-line-evidence', hash('0')].sort(),
         branch_id: referenceBranchId,
         branch_role: 'counterfactual_reference',
         step_index: 0,
@@ -580,7 +560,9 @@ test('projects every resource and defense-obligation proof path across both exac
         role: 'reference_later_exploit_inventory',
         contract: 'capture_recapture_inventory',
         result_id: `capture_recapture_inventory:${hash('1')}`,
-        source_premise_ids: ['reference-exploit:d'],
+        issuer_evidence_id: 'reference-line-evidence',
+        issuer_occurrence_id: hash('1'),
+        source_premise_ids: ['reference-exploit:d', 'reference-line-evidence', hash('1')].sort(),
         branch_id: referenceBranchId,
         branch_role: 'counterfactual_reference',
         step_index: 2,
@@ -589,7 +571,9 @@ test('projects every resource and defense-obligation proof path across both exac
         role: 'played_immediate_exploit_inventory',
         contract: 'capture_recapture_inventory',
         result_id: `capture_recapture_inventory:${hash('2')}`,
-        source_premise_ids: ['played-exploit:d'],
+        issuer_evidence_id: 'played-line-evidence',
+        issuer_occurrence_id: hash('2'),
+        source_premise_ids: ['played-exploit:d', 'played-line-evidence', hash('2')].sort(),
         branch_id: playedBranchId,
         branch_role: 'observed_played_root',
         step_index: 0,
@@ -614,18 +598,17 @@ test('projects every resource and defense-obligation proof path across both exac
   const secondDefensePath = structuredClone(defensePath);
   secondDefensePath.path_occurrence_id = hash('4');
   secondDefensePath.premises.forEach(premise => {
-    premise.source_premise_ids = premise.source_premise_ids.map(id => `${id}:independent`);
+    premise.source_premise_ids = premise.source_premise_ids
+      .map(id =>
+        id === premise.issuer_evidence_id || id === premise.issuer_occurrence_id ? id : `${id}:independent`,
+      )
+      .sort();
   });
   secondDefensePath.closed_absence_uses[0]!.use_id = hash('8');
   secondDefensePath.closed_absence_uses[0]!.issuer_occurrence_id = hash('9');
   const defenseChannel = {
-    channel_id: 'typed.defense-obligation-change',
-    causal_signature: 'typed.defense-obligation-change.signature',
-    direct_change: 'occurred',
-    played_change: 'missed',
-    defense_obligation_change_proof: {
-      contract: 'defense_obligation_change',
-      mechanism: 'sole_recapturer_removal',
+    channel_id: 'typed.sole-recapturer-removal-before-target-capture',
+    sole_recapturer_removal_before_target_capture_proof: {
       source_evidence_id: 'defense-obligation.source',
       semantic_id: hash('d'),
       occurrence_id: hash('e'),
@@ -700,21 +683,29 @@ test('projects every resource and defense-obligation proof path across both exac
   assert.equal(removalCandidate?.review.kind, 'move-verdict');
   if (!removalCandidate || removalCandidate.review.kind !== 'move-verdict') return;
   const defenseReasons = removalCandidate.review.reasons.filter(
-    reason => reason.message.kind === 'defense-obligation-change',
+    reason => reason.message.kind === 'sole-recapturer-removal-before-target-capture',
   );
   assert.equal(defenseReasons.length, 4);
   assert.ok(
     defenseReasons.every(
       reason =>
-        reason.message.kind === 'defense-obligation-change' &&
-        reason.message.mechanism === 'sole_recapturer_removal' &&
+        reason.message.kind === 'sole-recapturer-removal-before-target-capture' &&
         reason.message.premises.map(premise => premise.role).join(',') ===
-          'reference_defender_removal,reference_later_exploit_inventory,played_immediate_exploit_inventory',
+          'reference_defender_removal,reference_later_exploit_inventory,played_immediate_exploit_inventory' &&
+        reason.message.premises.every(
+          premise =>
+            premise.issuerEvidenceId !== undefined &&
+            premise.issuerOccurrenceId !== undefined &&
+            premise.sourcePremiseIds.includes(premise.issuerEvidenceId) &&
+            premise.sourcePremiseIds.includes(premise.issuerOccurrenceId),
+        ),
     ),
   );
   assert.deepEqual(
     defenseReasons.map(
-      reason => reason.message.kind === 'defense-obligation-change' && reason.message.pathOccurrenceId,
+      reason =>
+        reason.message.kind === 'sole-recapturer-removal-before-target-capture' &&
+        reason.message.pathOccurrenceId,
     ),
     [hash('3'), hash('3'), hash('4'), hash('4')],
   );
@@ -731,19 +722,61 @@ test('projects every resource and defense-obligation proof path across both exac
     /observed played branch,.*d1d5.*f6d5.*counterfactual reference branch,.*g5.*f6/s,
   );
 
-  const invalidForcedMechanism = structuredClone(channel);
-  object(invalidForcedMechanism.resource_differential_proof).trigger_mechanism = 'unsupported_mechanism';
+  const mismatchedResourceEndpoint = rawTypedResponse(
+    focus,
+    referenceMoves,
+    playedMoves,
+    'wrong_move_order',
+    channel,
+  );
+  const resourceSelected = object(mismatchedResourceEndpoint.result).selected_move_reviews as JsonObject[];
+  resourceSelected[0]!.move_uci = 'c4b3';
+  object(object(resourceSelected[0]!.line_insight).endpoint).moves = ['c4b3'];
+  object(object(resourceSelected[1]!.commentary).primary).reference_endpoint = {
+    kind: 'engine_search',
+    moves: ['c4b3'],
+    win_percent_for_mover: 54,
+    depth: 16,
+  };
   assert.equal(
-    decodeMoveReviewSnapshot(
-      rawTypedResponse(focus, referenceMoves, playedMoves, 'wrong_move_order', invalidForcedMechanism),
-      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
-    ),
+    decodeMoveReviewSnapshot(mismatchedResourceEndpoint, {
+      requestId,
+      subject: focus,
+      engineProfile: moveReviewEngineProfile,
+    }),
     undefined,
+    'resource proof must belong to the primary reference endpoint',
+  );
+
+  const mismatchedDefenseEndpoint = rawTypedResponse(
+    removalFocus,
+    removalReferenceMoves,
+    removalPlayedMoves,
+    'wrong_move_order',
+    defenseChannel,
+  );
+  const defenseSelected = object(mismatchedDefenseEndpoint.result).selected_move_reviews as JsonObject[];
+  defenseSelected[0]!.move_uci = 'g5h4';
+  object(object(defenseSelected[0]!.line_insight).endpoint).moves = ['g5h4'];
+  object(object(defenseSelected[1]!.commentary).primary).reference_endpoint = {
+    kind: 'engine_search',
+    moves: ['g5h4'],
+    win_percent_for_mover: 54,
+    depth: 16,
+  };
+  assert.equal(
+    decodeMoveReviewSnapshot(mismatchedDefenseEndpoint, {
+      requestId,
+      subject: removalFocus,
+      engineProfile: moveReviewEngineProfile,
+    }),
+    undefined,
+    'defense proof must belong to the primary reference endpoint',
   );
 
   const assertInvalidDefense = (mutate: (proof: JsonObject) => void) => {
     const invalid = structuredClone(defenseChannel);
-    mutate(object(invalid.defense_obligation_change_proof));
+    mutate(object(invalid.sole_recapturer_removal_before_target_capture_proof));
     assert.equal(
       decodeMoveReviewSnapshot(
         rawTypedResponse(
@@ -759,23 +792,6 @@ test('projects every resource and defense-obligation proof path across both exac
     );
   };
   assertInvalidDefense(proof => {
-    const participants = object(proof.participants);
-    participants.played_sole_recapture = {
-      side: 'black',
-      from: 'e7',
-      to: 'd5',
-      piece_before: 'pawn',
-      piece_after: 'pawn',
-      move_uci: 'e7d5',
-    };
-    proof.played_sole_recapture_move = 'e7d5';
-    object((object(proof.played_root_branch).steps as JsonObject[])[1]).move_uci = 'e7d5';
-  });
-  assertInvalidDefense(proof => {
-    object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]).role =
-      'played_immediate_exploit_inventory';
-  });
-  assertInvalidDefense(proof => {
     object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[2]).branch_id =
       referenceBranchId;
   });
@@ -783,16 +799,10 @@ test('projects every resource and defense-obligation proof path across both exac
     const premises = object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[];
     object(premises[2]).result_id = object(premises[0]).result_id;
   });
-  assertInvalidDefense(proof => {
-    object((object((proof.proof_paths as JsonObject[])[0]).closed_absence_uses as JsonObject[])[0]).query =
-      'legal-capture:black:e5';
-  });
-  assertInvalidDefense(proof => {
-    object((object((proof.proof_paths as JsonObject[])[0]).closed_absence_uses as JsonObject[])[0]).role =
-      'reference_recapture_absent';
-  });
   const mixedTypedFamilies = structuredClone(defenseChannel);
-  mixedTypedFamilies.resource_differential_proof = structuredClone(channel.resource_differential_proof);
+  mixedTypedFamilies.unique_check_reply_defender_displacement_before_capture_proof = structuredClone(
+    channel.unique_check_reply_defender_displacement_before_capture_proof,
+  );
   assert.equal(
     decodeMoveReviewSnapshot(
       rawTypedResponse(
@@ -812,7 +822,7 @@ test('projects every resource and defense-obligation proof path across both exac
         removalFocus,
         removalReferenceMoves,
         removalPlayedMoves,
-        'passed_pawn_result',
+        'passed_pawn_progress',
         defenseChannel,
       ),
       { requestId, subject: removalFocus, engineProfile: moveReviewEngineProfile },
@@ -821,7 +831,7 @@ test('projects every resource and defense-obligation proof path across both exac
   );
 
   const partial = structuredClone(channel);
-  const partialProof = object(partial.resource_differential_proof);
+  const partialProof = object(partial.unique_check_reply_defender_displacement_before_capture_proof);
   delete object((partialProof.proof_paths as JsonObject[])[0]).closed_absence_uses;
   const rejected = decodeMoveReviewSnapshot(
     rawTypedResponse(focus, referenceMoves, playedMoves, 'wrong_move_order', partial),
@@ -831,44 +841,25 @@ test('projects every resource and defense-obligation proof path across both exac
 
   const assertRequiredProofField = (mutate: (proof: JsonObject) => void) => {
     const invalid = structuredClone(channel);
-    mutate(object(invalid.resource_differential_proof));
+    mutate(object(invalid.unique_check_reply_defender_displacement_before_capture_proof));
     const result = decodeMoveReviewSnapshot(
       rawTypedResponse(focus, referenceMoves, playedMoves, 'wrong_move_order', invalid),
       { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
     );
     assert.equal(result, undefined);
   };
-  assertRequiredProofField(proof => delete proof.trigger_mechanism);
   assertRequiredProofField(proof => delete object(proof.participants).disabled_defender);
   assertRequiredProofField(proof => {
     const path = object((proof.proof_paths as JsonObject[])[0]);
     delete object((path.closed_absence_uses as JsonObject[])[0]).issuer_occurrence_id;
   });
   assertRequiredProofField(proof => {
-    object(proof.participants).trigger = {
-      side: 'white',
-      from: 'c4',
-      to: 'e6',
-      piece_before: 'bishop',
-      piece_after: 'bishop',
-    };
-  });
-  assertRequiredProofField(proof => {
-    object(object(proof.participants).captured_target).side = 'white';
-  });
-  assertRequiredProofField(proof => {
-    object(object(proof.participants).played_defense).move_uci = 'f8e8';
-  });
-  assertRequiredProofField(proof => {
-    proof.played_root_branch_legal_defense_move = 'f8e8';
-    const playedDefense = object(object(proof.participants).played_defense);
-    playedDefense.to = 'e8';
-    playedDefense.move_uci = 'f8e8';
-    object((object(proof.played_root_branch).steps as JsonObject[])[1]).move_uci = 'f8e8';
+    const path = object((proof.proof_paths as JsonObject[])[0]);
+    delete object((path.premises as JsonObject[])[0]).issuer_evidence_id;
   });
   assertRequiredProofField(proof => {
     const path = object((proof.proof_paths as JsonObject[])[0]);
-    object((path.closed_absence_uses as JsonObject[])[0]).query = 'legal-capture:black:e8';
+    object((path.premises as JsonObject[])[0]).issuer_occurrence_id = hash('f');
   });
   assertRequiredProofField(proof => {
     const path = object((proof.proof_paths as JsonObject[])[0]);
@@ -897,7 +888,316 @@ test('projects every resource and defense-obligation proof path across both exac
   });
 });
 
-test('keeps every independent passed-pawn-result proof path while projecting the certified reply closure', () => {
+test('projects exact direct line-access paths and rejects transport-integrity faults or generic mixing', () => {
+  const root = '7k/q7/8/8/8/8/N7/R6K w - - 0 1' as FEN;
+  const referenceMoves = ['a2b4', 'h8g8', 'a1a7'] as Uci[];
+  const playedMoves = ['h1h2', 'h8g8'] as Uci[];
+  const referenceFens = [
+    '7k/q7/8/8/1N6/8/8/R6K b - - 1 1',
+    '6k1/q7/8/8/1N6/8/8/R6K w - - 2 2',
+    '6k1/R7/8/8/1N6/8/8/7K b - - 0 2',
+  ] as FEN[];
+  const playedFens = ['7k/q7/8/8/8/8/N6K/R7 b - - 1 1', '6k1/q7/8/8/8/8/N6K/R7 w - - 2 2'] as FEN[];
+  const steps = (moves: Uci[], fens: FEN[], observed: boolean) =>
+    moves.map((move, index) => ({
+      step_index: index,
+      provenance: observed && index === 0 ? 'observed_game_move' : 'certified_analysis_move',
+      ply: index + 1,
+      move_uci: move,
+      fen_before: index === 0 ? root : fens[index - 1],
+      fen_after: fens[index],
+    }));
+  const referenceId = hash('1');
+  const playedId = hash('2');
+  const sourceIds = (occurrence: string, lower: string) => ['line.reference', occurrence, lower].sort();
+  const position = (fen: FEN, ply: number, scope: 'best_line' | 'played_line') => ({ fen, ply, scope });
+  const closure = (
+    useId: string,
+    role: string,
+    issuer: string,
+    issuerEvidenceId: string,
+    issuerOccurrenceId: string,
+    query: string,
+    branchId: string,
+    branchRole: string,
+    afterStepIndex: number,
+    fen: FEN,
+    ply: number,
+    scope: 'best_line' | 'played_line',
+  ) => ({
+    use_id: useId,
+    role,
+    semantic_proof_id: hash(useId[0] === 'a' ? 'a' : 'b'),
+    issuer,
+    issuer_evidence_id: issuerEvidenceId,
+    issuer_occurrence_id: issuerOccurrenceId,
+    query,
+    branch_id: branchId,
+    branch_role: branchRole,
+    after_step_index: afterStepIndex,
+    position: position(fen, ply, scope),
+  });
+  const pathUseId = (digit: string, suffix: string) => `${digit.repeat(63)}${suffix === 'one' ? '1' : '2'}`;
+  const path = (pathId: string, suffix: string) => ({
+    path_occurrence_id: pathId,
+    premises: [
+      {
+        role: 'reference_root_slider_reach',
+        contract: 'slider_reach_delta',
+        result_id: `slider_reach_delta:${hash('3')}`,
+        issuer_evidence_id: 'line.reference',
+        issuer_occurrence_id: hash('4'),
+        source_premise_ids: sourceIds(hash('4'), `lower.reach.${suffix}`),
+        branch_id: referenceId,
+        branch_role: 'counterfactual_reference',
+        step_index: 0,
+      },
+      {
+        role: 'reference_exploit_capture',
+        contract: 'capture_recapture_inventory',
+        result_id: `capture_recapture_inventory:${hash('5')}`,
+        issuer_evidence_id: 'line.reference',
+        issuer_occurrence_id: hash('6'),
+        source_premise_ids: sourceIds(hash('6'), `lower.capture.${suffix}`),
+        branch_id: referenceId,
+        branch_role: 'counterfactual_reference',
+        step_index: 2,
+      },
+    ],
+    closed_absence_uses: [
+      closure(
+        pathUseId('7', suffix),
+        'reference_immediate_recapture_absent',
+        'position_relation_extractor.closed_relation_inventory',
+        'line.reference',
+        hash('8'),
+        'legal-capture:black:a7',
+        referenceId,
+        'counterfactual_reference',
+        2,
+        referenceFens[2]!,
+        3,
+        'best_line',
+      ),
+      closure(
+        pathUseId('9', suffix),
+        'played_exploit_move_absent',
+        'position_relation_extractor.closed_relation_inventory',
+        'line.played',
+        hash('a'),
+        'legal-move-from-to:white:a1:a7',
+        playedId,
+        'observed_played_sibling',
+        1,
+        playedFens[1]!,
+        2,
+        'played_line',
+      ),
+      closure(
+        pathUseId('b', suffix),
+        'played_replacement_capture_absent',
+        'position_relation_extractor.closed_relation_inventory',
+        'line.played',
+        hash('a'),
+        'legal-capture:white:a7',
+        playedId,
+        'observed_played_sibling',
+        1,
+        playedFens[1]!,
+        2,
+        'played_line',
+      ),
+    ],
+    closed_state_uses: [
+      closure(
+        pathUseId('c', suffix),
+        'reference_intervening_slider_reach',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.reference',
+        hash('d'),
+        'slider-reach:white:rook@a1:north:open',
+        referenceId,
+        'counterfactual_reference',
+        1,
+        referenceFens[1]!,
+        2,
+        'best_line',
+      ),
+      closure(
+        pathUseId('d', suffix),
+        'played_slider_occupied',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'occupied-by:white:rook@a1',
+        playedId,
+        'observed_played_sibling',
+        1,
+        playedFens[1]!,
+        2,
+        'played_line',
+      ),
+      closure(
+        pathUseId('e', suffix),
+        'played_target_occupied',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'occupied-by:black:queen@a7',
+        playedId,
+        'observed_played_sibling',
+        1,
+        playedFens[1]!,
+        2,
+        'played_line',
+      ),
+      closure(
+        pathUseId('f', suffix),
+        'played_gate_blocker_occupied',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'occupied-by:white:knight@a2',
+        playedId,
+        'observed_played_sibling',
+        1,
+        playedFens[1]!,
+        2,
+        'played_line',
+      ),
+      closure(
+        pathUseId('0', suffix),
+        'played_blocked_slider_reach',
+        'position_relation_extractor.closed_position_state_inventory',
+        'line.played',
+        hash('a'),
+        'slider-reach:white:rook@a1:north:blocked-a2',
+        playedId,
+        'observed_played_sibling',
+        1,
+        playedFens[1]!,
+        2,
+        'played_line',
+      ),
+    ],
+  });
+  const channel = {
+    channel_id: 'typed.direct-line-access',
+    vacated_gate_enables_unrecapturable_slider_capture_proof: {
+      source_evidence_id: 'direct.source',
+      semantic_id: hash('1'),
+      occurrence_id: hash('2'),
+      dependency_fingerprint: hash('3'),
+      counterfactual_reference_branch: {
+        branch_id: referenceId,
+        line_id: 'line.reference',
+        line_role: 'best_reference',
+        branch_role: 'counterfactual_reference',
+        root_provenance: 'counterfactual_analyzed_root',
+        line_rank: 1,
+        root_move: referenceMoves[0],
+        steps: steps(referenceMoves, referenceFens, false),
+      },
+      played_root_branch: {
+        branch_id: playedId,
+        line_id: 'line.played',
+        line_role: 'played',
+        branch_role: 'observed_played_sibling',
+        root_provenance: 'observed_game_root',
+        line_rank: 1,
+        root_move: playedMoves[0],
+        steps: steps(playedMoves, playedFens, true),
+      },
+      proof_paths: [path(hash('1'), 'one'), path(hash('2'), 'two')],
+      participants: {
+        enabler: { side: 'white', from: 'a2', to: 'b4', piece_before: 'knight', piece_after: 'knight' },
+        slider: { side: 'white', piece: 'rook', square: 'a1' },
+        gate_blocker: { side: 'white', piece: 'knight', square: 'a2' },
+        exploit: { side: 'white', from: 'a1', to: 'a7', piece_before: 'rook', piece_after: 'rook' },
+        captured_target: { side: 'black', piece: 'queen', square: 'a7' },
+      },
+      exploit_move: 'a1a7',
+    },
+  };
+  const focus = typedSubject(root, playedMoves[0], playedFens[0]!);
+  const decode = (candidate: JsonObject) =>
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(focus, referenceMoves, playedMoves, 'missed_tactical_resource', candidate),
+      { ...decodeContext(), subject: focus },
+    );
+  const decoded = decode(channel);
+  assert.equal(decoded?.kind, 'completed');
+  if (decoded?.kind !== 'completed') return;
+  const reviewed = selectedMoveReviewCandidate(decoded.evidence);
+  assert.equal(reviewed?.review.kind, 'move-verdict');
+  if (reviewed?.review.kind !== 'move-verdict') return;
+  const reasons = reviewed.review.reasons.filter(
+    reason => reason.message.kind === 'vacated-gate-enables-unrecapturable-slider-capture',
+  );
+  assert.equal(reasons.length, 4, 'two proof paths retain both branch occurrences');
+  assert.deepEqual(
+    [
+      ...new Set(
+        reasons.map(
+          reason =>
+            reason.message.kind === 'vacated-gate-enables-unrecapturable-slider-capture' &&
+            reason.message.exploitMove,
+        ),
+      ),
+    ],
+    ['a1a7'],
+  );
+
+  const duplicateFacetMetadata = rawTypedResponse(
+    focus,
+    referenceMoves,
+    playedMoves,
+    'missed_tactical_resource',
+    channel,
+  );
+  const duplicateMetadataSelected = object(duplicateFacetMetadata.result)
+    .selected_move_reviews as JsonObject[];
+  const duplicateMetadataExplanation = (
+    object(duplicateMetadataSelected[1]!.commentary).causal_explanations as JsonObject[]
+  )[0]!;
+  duplicateMetadataExplanation.proof_confidence = 'legal_replay_verified';
+  assert.equal(
+    decodeMoveReviewSnapshot(duplicateFacetMetadata, { ...decodeContext(), subject: focus }),
+    undefined,
+    'retired duplicate facet metadata is rejected',
+  );
+
+  const mutations: Array<(proof: JsonObject, channel: JsonObject) => void> = [
+    proof => {
+      const paths = proof.proof_paths as JsonObject[];
+      const absences = paths[0]!.closed_absence_uses as JsonObject[];
+      absences[1]!.branch_id = referenceId;
+    },
+    (_proof, mutatedChannel) => {
+      mutatedChannel.actor = { move_uci: 'a2b4', side: 'white', piece: 'knight', from: 'a2', to: 'b4' };
+    },
+  ];
+  for (const [index, mutate] of mutations.entries()) {
+    const malformed = structuredClone(channel);
+    mutate(object(malformed.vacated_gate_enables_unrecapturable_slider_capture_proof), malformed);
+    assert.equal(decode(malformed), undefined, `direct line-access mutation ${index}`);
+  }
+  assert.equal(
+    decode({
+      channel_id: 'generic.missed-tactical-resource',
+      actor: { move_uci: 'a2b4', side: 'white', piece: 'knight', from: 'a2', to: 'b4' },
+      targets: [],
+      mechanisms: [],
+      consequences: [],
+      witnesses: [],
+      proof_line_moves: ['a2b4'],
+    }),
+    undefined,
+    'missed tactical resource requires the typed direct line-access proof',
+  );
+});
+
+test('keeps every independent passed-pawn actual-route proof path and its exact reply closure', () => {
   const root = '7k/8/P7/1P6/8/8/8/4K3 w - - 0 1' as FEN;
   const referenceMoves = ['b5b6', 'h8g8', 'b6b7'] as Uci[];
   const playedMoves = ['a6a7', 'h8g8', 'a7a8q'] as Uci[];
@@ -907,43 +1207,23 @@ test('keeps every independent passed-pawn-result proof path while projecting the
     'Q5k1/8/8/1P6/8/8/8/4K3 b - - 0 2',
   ] as FEN[];
   const line = { line_id: 'line.played', line_role: 'played', line_rank: 1, root_move: 'a6a7' };
-  const replyLine = { line_id: 'line.reply.h8g8', line_role: 'alternative', line_rank: 1, root_move: 'h8g8' };
-  const stepKey = (ply: number, move: Uci, before: FEN, after: FEN) => `${ply}:${move}:${before}:${after}`;
+  const stepKey = (ply: number, move: Uci, before: FEN, after: FEN) =>
+    ply + ':' + move + ':' + before + ':' + after;
   const rootStepKey = stepKey(1, 'a6a7' as Uci, root, fens[0]!);
   const replyStepKey = stepKey(2, 'h8g8' as Uci, fens[0]!, fens[1]!);
   const resultStepKey = stepKey(3, 'a7a8q' as Uci, fens[1]!, fens[2]!);
-  const expectedDependencyKey = 'expected-passed-pawn-result-dependency';
-  const rootStep = {
-    step_index: 0,
-    step_key: rootStepKey,
-    ply: 1,
-    move_uci: 'a6a7',
-    fen_before: root,
-    fen_after: fens[0],
-    line,
-    provenance: 'observed_game_move',
-  };
-  const expectedSteps = [
-    rootStep,
+  const actualBranchId = hash('1');
+  const steps = [
     {
-      step_index: 1,
-      step_key: resultStepKey,
-      ply: 3,
-      move_uci: 'a7a8q',
-      fen_before: fens[1],
-      fen_after: fens[2],
+      step_index: 0,
+      step_key: rootStepKey,
+      ply: 1,
+      move_uci: 'a6a7',
+      fen_before: root,
+      fen_after: fens[0],
       line,
-      provenance: 'certified_analysis_move',
-      incoming_link: {
-        kind: 'certified_causal_dependency',
-        from_step_key: rootStepKey,
-        to_step_key: resultStepKey,
-        occurrence_link_key: expectedDependencyKey,
-      },
+      provenance: 'observed_game_move',
     },
-  ];
-  const replySteps = [
-    rootStep,
     {
       step_index: 1,
       step_key: replyStepKey,
@@ -951,14 +1231,8 @@ test('keeps every independent passed-pawn-result proof path while projecting the
       move_uci: 'h8g8',
       fen_before: fens[0],
       fen_after: fens[1],
-      line: replyLine,
+      line,
       provenance: 'certified_analysis_move',
-      incoming_link: {
-        kind: 'adjacent_legal_replay',
-        from_step_key: rootStepKey,
-        to_step_key: replyStepKey,
-        occurrence_link_key: 'adjacent-reply-step',
-      },
     },
     {
       step_index: 2,
@@ -967,149 +1241,104 @@ test('keeps every independent passed-pawn-result proof path while projecting the
       move_uci: 'a7a8q',
       fen_before: fens[1],
       fen_after: fens[2],
-      line: replyLine,
+      line,
       provenance: 'certified_analysis_move',
-      incoming_link: {
-        kind: 'adjacent_legal_replay',
-        from_step_key: replyStepKey,
-        to_step_key: resultStepKey,
-        occurrence_link_key: 'adjacent-result-step',
-      },
     },
   ];
-  const expectedBranchId = hash('1');
-  const replyBranchId = hash('2');
-  const path = (id: string, suffix: string) => ({
-    path_occurrence_id: id,
-    reply_branch_id: replyBranchId,
-    realization_actor: {
-      side: 'white',
-      piece_before: 'pawn',
-      piece_after: 'queen',
-      from: 'a7',
-      to: 'a8',
-      legal_move_relation: hash('e'),
-    },
-    realization_move: 'a7a8q',
-    realization_ply: 3,
-    realization_match_kind: 'exact_move',
-    premises: [
-      {
-        role: 'comparison_demand',
-        lower_kind: 'played_vs_best_demand',
-        lower_semantic_key: 'comparison-key',
-        source_premise_ids: ['comparison.played-vs-best'],
-        branch_id: expectedBranchId,
-        branch_role: 'expected_result_route',
-        related_branch_ids: [],
-        from_step_index: 0,
-        to_step_index: 0,
+  const path = (id: string, suffix: string, occurrence: string) => {
+    const stateOwner = 'object-state-owner.' + suffix;
+    return {
+      path_occurrence_id: id,
+      actual_branch_id: actualBranchId,
+      realization_actor: {
+        side: 'white',
+        piece_before: 'pawn',
+        piece_after: 'queen',
+        from: 'a7',
+        to: 'a8',
+        legal_move_relation: hash('e'),
       },
-      {
-        role: 'expected_dependency',
-        lower_kind: 'passed_pawn_result_dependency',
-        lower_semantic_key: expectedDependencyKey,
-        source_premise_ids: ['passed-pawn-result.event'],
-        branch_id: expectedBranchId,
-        branch_role: 'expected_result_route',
-        related_branch_ids: [],
-        from_step_index: 0,
-        to_step_index: 1,
-        dependency_proof: {
-          dependency_kind: 'object_state_precondition',
-          proof_kind: 'object_state',
-          squares: [
-            { role: 'root_from', square: 'a6' },
-            { role: 'root_to', square: 'a7' },
-            { role: 'future_from', square: 'a7' },
-            { role: 'future_to', square: 'a8' },
-          ],
-          pieces: [
-            { role: 'root_before', side: 'white', piece: 'pawn' },
-            { role: 'tracked', side: 'white', piece: 'pawn' },
-            { role: 'future_after', side: 'white', piece: 'queen' },
-          ],
-          relation_issuers: [],
+      realization_move: 'a7a8q',
+      realization_ply: 3,
+      premises: [
+        {
+          role: 'comparison_demand',
+          lower_kind: 'played_vs_best_demand',
+          lower_semantic_key: 'comparison-key',
+          source_premise_ids: ['comparison.played-vs-best'],
+          branch_id: actualBranchId,
+          branch_role: 'actual_result_route',
+          from_step_index: 0,
+          to_step_index: 0,
         },
-      },
-      {
-        role: 'expected_result',
-        lower_kind: 'passed_pawn_result',
-        lower_semantic_key: 'expected-result-key',
-        source_premise_ids: ['passed-pawn-result.event'],
-        branch_id: expectedBranchId,
-        branch_role: 'expected_result_route',
-        related_branch_ids: [],
-        from_step_index: 1,
-        to_step_index: 1,
-      },
-      {
-        role: 'observed_dependency',
-        lower_kind: 'observed_passed_pawn_result_dependency',
-        lower_semantic_key: `observed-dependency:${suffix}`,
-        source_premise_ids: ['passed-pawn-result.event'],
-        branch_id: replyBranchId,
-        branch_role: 'legal_reply',
-        related_branch_ids: [],
-        from_step_index: 0,
-        to_step_index: 2,
-        dependency_proof: {
-          dependency_kind: 'object_state_precondition',
-          proof_kind: 'object_state',
-          squares: [
-            { role: 'root_from', square: 'a6' },
-            { role: 'root_to', square: 'a7' },
-            { role: 'future_from', square: 'a7' },
-            { role: 'future_to', square: 'a8' },
-          ],
-          pieces: [
-            { role: 'root_before', side: 'white', piece: 'pawn' },
-            { role: 'tracked', side: 'white', piece: 'pawn' },
-            { role: 'future_after', side: 'white', piece: 'queen' },
-          ],
-          relation_issuers: [],
+        {
+          role: 'dependency',
+          lower_kind: 'passed_pawn_progress_dependency',
+          lower_semantic_key: 'actual-dependency:' + suffix,
+          source_premise_ids: [stateOwner, occurrence, 'passed-pawn-result.event'].sort(),
+          branch_id: actualBranchId,
+          branch_role: 'actual_result_route',
+          from_step_index: 0,
+          to_step_index: 2,
+          dependency_proof: {
+            dependency_kind: 'object_state_precondition',
+            proof_kind: 'object_state',
+            squares: [
+              { role: 'root_from', square: 'a6' },
+              { role: 'root_to', square: 'a7' },
+              { role: 'future_from', square: 'a7' },
+              { role: 'future_to', square: 'a8' },
+            ],
+            pieces: [
+              { role: 'root_before', side: 'white', piece: 'pawn' },
+              { role: 'tracked', side: 'white', piece: 'pawn' },
+              { role: 'future_after', side: 'white', piece: 'queen' },
+            ],
+            relation_issuers: [],
+            position_state_issuers: [
+              {
+                state: { kind: 'occupied_by', side: 'white', square: 'a7', piece: 'pawn' },
+                semantic_proof_id: hash('7'),
+                issuer_evidence_id: stateOwner,
+                issuer_occurrence_id: occurrence,
+                step_key: replyStepKey,
+                ply: 2,
+                move_uci: 'h8g8',
+                fen_before: fens[0],
+                fen_after: fens[1],
+                line,
+                scope: 'played_line',
+              },
+            ],
+          },
         },
-      },
-      {
-        role: 'observed_result',
-        lower_kind: 'observed_passed_pawn_result',
-        lower_semantic_key: `observed-result:${suffix}`,
-        source_premise_ids: ['passed-pawn-result.event'],
-        branch_id: replyBranchId,
-        branch_role: 'legal_reply',
-        related_branch_ids: [],
-        from_step_index: 2,
-        to_step_index: 2,
-      },
-      {
-        role: 'functional_match',
-        lower_kind: 'passed_pawn_result_functional_match',
-        lower_semantic_key: `functional-match:${suffix}`,
-        source_premise_ids: ['passed-pawn-result.event'],
-        branch_id: replyBranchId,
-        branch_role: 'legal_reply',
-        related_branch_ids: [expectedBranchId],
-        from_step_index: 2,
-        to_step_index: 2,
-      },
-    ],
-    closure_use_ids: [hash(suffix)],
-  });
+        {
+          role: 'result',
+          lower_kind: 'passed_pawn_progress',
+          lower_semantic_key: 'actual-result',
+          source_premise_ids: ['passed-pawn-result.event'],
+          branch_id: actualBranchId,
+          branch_role: 'actual_result_route',
+          from_step_index: 2,
+          to_step_index: 2,
+        },
+      ],
+      closure_use_ids: [hash(suffix)],
+    };
+  };
   const channel = {
     channel_id: 'typed.passed-pawn-result',
-    causal_signature: 'typed.passed-pawn-result.signature',
-    direct_change: 'occurred',
-    passed_pawn_result_proof: {
-      contract: 'passed_pawn_result_under_closed_replies',
+    passed_pawn_progress_realized_after_only_legal_reply_proof: {
       source_evidence_id: 'passed-pawn-result.source',
       event_evidence_id: 'passed-pawn-result.event',
       comparison_evidence_id: 'comparison.played-vs-best',
       semantic_id: hash('a'),
       occurrence_id: hash('b'),
       dependency_fingerprint: hash('c'),
-      consequence_kind: 'passed_pawn_progress',
       result_target_subjects: [
-        `20:passed-pawn-promoted5:white2:a72:a8:relations:[removed:pawn_passage:${hash('f')}]:derived:[]`,
+        '20:passed-pawn-promoted5:white2:a72:a8:relations:[removed:pawn_passage:' +
+          hash('f') +
+          ']:derived:[]',
       ],
       root_actor: {
         side: 'white',
@@ -1134,34 +1363,23 @@ test('keeps every independent passed-pawn-result proof path while projecting the
       realizing_ply: 3,
       result_ply_offset: 2,
       closed_legal_reply_inventory: {
-        issuer: 'structural_delta.canonical_legal_reply_inventory',
         issuer_evidence_id: 'structural.delta.reply.inventory',
-        coverage_issuer: 'passed_pawn_result_event.branch_complete_reply_coverage',
-        coverage_evidence_id: 'passed-pawn-result.event',
         root_after: { fen: fens[0], ply: 1, scope: 'played_transition' },
-        legal_reply_moves: ['h8g8'],
-        branch_by_reply: [{ reply_move: 'h8g8', branch_id: replyBranchId }],
-        certified_horizon_ply_offset: 2,
+        legal_reply_move: 'h8g8',
+        actual_branch_id: actualBranchId,
       },
       branches: [
         {
-          branch_id: expectedBranchId,
-          role: 'expected_result_route',
-          line,
-          root_provenance: 'observed_game_root',
-          steps: expectedSteps,
-        },
-        {
-          branch_id: replyBranchId,
-          role: 'legal_reply',
+          branch_id: actualBranchId,
+          role: 'actual_result_route',
           reply_move: 'h8g8',
-          source_probe_id: 'probe.h8g8',
+          source_occurrence_id: hash('6'),
           line,
           root_provenance: 'observed_game_root',
-          steps: replySteps,
+          steps,
         },
       ],
-      proof_paths: [path(hash('3'), '3'), path(hash('4'), '4')],
+      proof_paths: [path(hash('3'), '3', hash('8')), path(hash('4'), '4', hash('9'))],
       lower_premise_ids: [
         'comparison.played-vs-best',
         'passed-pawn-result.event',
@@ -1170,603 +1388,136 @@ test('keeps every independent passed-pawn-result proof path while projecting the
     },
   };
   const focus = typedSubject(root, playedMoves[0]!, fens[0]!);
-  const decoded = decodeMoveReviewSnapshot(
-    rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', channel),
-    { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
-  );
+  const decode = (candidate: JsonObject) =>
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_progress', candidate),
+      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+    );
+  const decoded = decode(channel);
   assert.equal(decoded?.kind, 'completed');
   if (decoded?.kind !== 'completed') return;
   const played = selectedMoveReviewCandidate(decoded.evidence);
   assert.equal(played?.review.kind, 'move-verdict');
   if (!played || played.review.kind !== 'move-verdict') return;
-  const reasons = played.review.reasons.filter(reason => reason.message.kind === 'passed-pawn-result');
+  const reasons = played.review.reasons.filter(
+    reason => reason.message.kind === 'passed-pawn-progress-realized-after-only-legal-reply',
+  );
   assert.equal(reasons.length, 2);
-  assert.ok(reasons.every(reason => moveReviewReasonRole(played.review.core, reason.id) === 'proof-route'));
   assert.deepEqual(
-    reasons.map(reason => reason.message.kind === 'passed-pawn-result' && reason.message.pathOccurrenceId),
+    reasons.map(reason => reason.message.kind === 'passed-pawn-progress-realized-after-only-legal-reply' && reason.message.pathOccurrenceId),
     [hash('3'), hash('4')],
   );
-  assert.deepEqual(
-    reasons.map(reason => reason.proof.moves.map(move => move.uci)),
-    [playedMoves, playedMoves],
+  assert.deepEqual(reasons.map(reason => reason.proof.moves.map(move => move.uci)), [playedMoves, playedMoves]);
+  assert.ok(
+    reasons.every(reason => moveReviewReasonRole(played.review.core, reason.id) === 'support'),
+    'a complementary Cause stays supporting regardless of independent proof-path count',
   );
   assert.ok(
     reasons.every(
       reason =>
-        reason.message.kind === 'passed-pawn-result' &&
-        reason.message.replyBranch.id === replyBranchId &&
-        reason.message.replyBranch.sourceProbeId === 'probe.h8g8' &&
-        reason.message.replyBranch.steps?.[1]?.provenance === 'certified_analysis_move' &&
-        reason.message.expectedBranches[0]?.id === expectedBranchId &&
-        reason.message.expectedBranches[0]?.steps?.[1]?.provenance === 'certified_analysis_move' &&
-        reason.message.replyClosure.legalReplyMoves[0] === 'h8g8' &&
-        reason.message.replyClosure.issuer === 'structural_delta.canonical_legal_reply_inventory' &&
-        reason.message.replyClosure.issuerEvidenceId === 'structural.delta.reply.inventory' &&
-        reason.message.replyClosure.coverageIssuer ===
-          'passed_pawn_result_event.branch_complete_reply_coverage' &&
-        reason.message.replyClosure.coverageEvidenceId === 'passed-pawn-result.event' &&
-        reason.message.replyClosure.certifiedHorizonPlyOffset === 2 &&
-        reason.message.rootActor.from === 'a6' &&
-        reason.message.realizingActor.to === 'a8' &&
-        reason.message.pathRealizationActor.to === 'a8' &&
+        reason.message.kind === 'passed-pawn-progress-realized-after-only-legal-reply' &&
+        reason.message.actualBranch.id === actualBranchId &&
+        reason.message.actualBranch.sourceOccurrenceId === hash('6') &&
+        reason.message.actualOccurrenceSteps[1]?.provenance === 'certified_analysis_move' &&
+        reason.message.replyClosure.legalReplyMove === 'h8g8' &&
+        reason.message.replyClosure.actualBranchId === actualBranchId &&
+        reason.message.eventEvidenceId === 'passed-pawn-result.event' &&
         reason.message.pathRealizationMove === 'a7a8q' &&
         reason.message.pathRealizationPly === 3 &&
-        reason.message.pathRealizationMatchKind === 'exact_move' &&
-        reason.message.expectedOccurrenceSteps.length === 2 &&
-        reason.message.expectedOccurrenceSteps[1]?.incomingLink?.kind === 'certified_causal_dependency' &&
-        reason.message.premises
-          .filter(premise => premise.role.endsWith('_dependency'))
-          .every(premise => premise.dependencyProof?.proofKind === 'object_state') &&
-        reason.message.replyOccurrenceSteps[1]?.line.rootMove === 'h8g8' &&
-        reason.message.occurrenceLinkKeys.length === 2,
+        reason.message.premises.filter(premise => premise.role === 'dependency').length === 1,
     ),
   );
 
-  const assertMovementWitnessRejected = (mutate: (proof: JsonObject) => void, label: string) => {
-    const malformed = structuredClone(channel);
-    mutate(object(malformed.passed_pawn_result_proof));
-    assert.equal(
-      decodeMoveReviewSnapshot(
-        rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', malformed),
-        { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
-      ),
-      undefined,
-      label,
-    );
-  };
-  assertMovementWitnessRejected(proof => {
-    proof.realizing_move = 'a7a8';
-  }, 'promotion suffix is required');
-  assertMovementWitnessRejected(proof => {
-    object(proof.realizing_actor).piece_after = 'rook';
-  }, 'promotion suffix must match the after piece');
-  assertMovementWitnessRejected(proof => {
-    const actor = object(proof.realizing_actor);
-    actor.piece_before = 'queen';
-    actor.piece_after = 'queen';
-  }, 'non-promotion movement rejects a promotion suffix');
-
-  const accessRoot = '7k/8/8/8/p7/1pP5/P7/R3K3 w - - 0 1' as FEN;
-  const accessFens = [
-    '7k/8/8/8/p7/1PP5/8/R3K3 b - - 0 1',
-    '6k1/8/8/8/p7/1PP5/8/R3K3 w - - 1 2',
-    '6k1/8/8/8/R7/1PP5/8/4K3 b - - 0 2',
-  ] as FEN[];
-  const accessReferenceMoves = ['e1e2', 'h8g8', 'e2e3'] as Uci[];
-  const accessPlayedMoves = ['a2b3', 'h8g8', 'a1a4'] as Uci[];
-  const accessLine = { line_id: 'line.played.access', line_role: 'played', line_rank: 1, root_move: 'a2b3' };
-  const accessReplyLine = {
-    line_id: 'line.reply.access.h8g8',
-    line_role: 'alternative',
-    line_rank: 1,
-    root_move: 'h8g8',
-  };
-  const accessRootKey = stepKey(1, 'a2b3' as Uci, accessRoot, accessFens[0]!);
-  const accessReplyKey = stepKey(2, 'h8g8' as Uci, accessFens[0]!, accessFens[1]!);
-  const accessResultKey = stepKey(3, 'a1a4' as Uci, accessFens[1]!, accessFens[2]!);
-  const accessDependencyKey = 'expected-line-access-dependency';
-  const relationOccurrenceId = hash('6');
-  const dependencyProof = () => ({
-    dependency_kind: 'line_access_precondition',
-    proof_kind: 'line_access',
-    squares: [
-      { role: 'vacated_gate', square: 'a2' },
-      { role: 'enabled_from', square: 'a1' },
-      { role: 'enabled_to', square: 'a4' },
-    ],
-    pieces: [{ role: 'enabled_piece', side: 'white', piece: 'rook' }],
-    relation_issuers: [
-      {
-        contract: 'slider_reach_delta',
-        relation_kind: 'slider_reach_delta',
-        result_key: `slider_reach_delta:${hash('7')}`,
-        occurrence_id: relationOccurrenceId,
-        step_key: accessRootKey,
-        source_premise_ids: ['l1.slider-reach'],
-      },
-    ],
-  });
-  const accessRootStep = {
-    step_index: 0,
-    step_key: accessRootKey,
-    ply: 1,
-    move_uci: 'a2b3',
-    fen_before: accessRoot,
-    fen_after: accessFens[0],
-    line: accessLine,
-    provenance: 'observed_game_move',
-  };
-  const accessExpectedSteps = [
-    accessRootStep,
-    {
-      step_index: 1,
-      step_key: accessResultKey,
-      ply: 3,
-      move_uci: 'a1a4',
-      fen_before: accessFens[1],
-      fen_after: accessFens[2],
-      line: accessLine,
-      provenance: 'certified_analysis_move',
-      incoming_link: {
-        kind: 'certified_causal_dependency',
-        from_step_key: accessRootKey,
-        to_step_key: accessResultKey,
-        occurrence_link_key: accessDependencyKey,
-      },
-    },
-  ];
-  const accessReplySteps = [
-    accessRootStep,
-    {
-      step_index: 1,
-      step_key: accessReplyKey,
-      ply: 2,
-      move_uci: 'h8g8',
-      fen_before: accessFens[0],
-      fen_after: accessFens[1],
-      line: accessReplyLine,
-      provenance: 'certified_analysis_move',
-      incoming_link: {
-        kind: 'adjacent_legal_replay',
-        from_step_key: accessRootKey,
-        to_step_key: accessReplyKey,
-        occurrence_link_key: 'adjacent-access-reply-step',
-      },
-    },
-    {
-      step_index: 2,
-      step_key: accessResultKey,
-      ply: 3,
-      move_uci: 'a1a4',
-      fen_before: accessFens[1],
-      fen_after: accessFens[2],
-      line: accessReplyLine,
-      provenance: 'certified_analysis_move',
-      incoming_link: {
-        kind: 'adjacent_legal_replay',
-        from_step_key: accessReplyKey,
-        to_step_key: accessResultKey,
-        occurrence_link_key: 'adjacent-access-result-step',
-      },
-    },
-  ];
-  const lineAccessChannel = structuredClone(channel);
-  const lineAccessProof = object(lineAccessChannel.passed_pawn_result_proof);
-  lineAccessProof.result_target_subjects = [
-    `21:passed-status-created5:white2:b32:b31:3:relations:[established:pawn_passage:${hash('f')}]:derived:[]`,
-  ];
-  lineAccessProof.root_actor = {
-    side: 'white',
-    piece_before: 'pawn',
-    piece_after: 'pawn',
-    from: 'a2',
-    to: 'b3',
-    legal_move_relation: hash('d'),
-  };
-  lineAccessProof.realizing_actor = {
-    side: 'white',
-    piece_before: 'rook',
-    piece_after: 'rook',
-    from: 'a1',
-    to: 'a4',
-    legal_move_relation: hash('e'),
-  };
-  lineAccessProof.root_line = accessLine;
-  lineAccessProof.root_move = 'a2b3';
-  lineAccessProof.realizing_move = 'a1a4';
-  const accessInventory = object(lineAccessProof.closed_legal_reply_inventory);
-  accessInventory.root_after = { fen: accessFens[0], ply: 1, scope: 'played_transition' };
-  lineAccessProof.branches = [
-    {
-      branch_id: expectedBranchId,
-      role: 'expected_result_route',
-      line: accessLine,
-      root_provenance: 'observed_game_root',
-      steps: accessExpectedSteps,
-    },
-    {
-      branch_id: replyBranchId,
-      role: 'legal_reply',
-      reply_move: 'h8g8',
-      source_probe_id: 'probe.h8g8',
-      line: accessLine,
-      root_provenance: 'observed_game_root',
-      steps: accessReplySteps,
-    },
-  ];
-  for (const rawPath of lineAccessProof.proof_paths as JsonObject[]) {
-    const accessPath = object(rawPath);
-    accessPath.realization_actor = {
-      side: 'white',
-      piece_before: 'rook',
-      piece_after: 'rook',
-      from: 'a1',
-      to: 'a4',
-      legal_move_relation: hash('e'),
-    };
-    accessPath.realization_move = 'a1a4';
-    const premises = accessPath.premises as JsonObject[];
-    const expectedDependency = object(premises[1]);
-    expectedDependency.lower_semantic_key = accessDependencyKey;
-    expectedDependency.source_premise_ids = [
-      relationOccurrenceId,
-      'l1.slider-reach',
-      'passed-pawn-result.event',
-    ];
-    expectedDependency.dependency_proof = dependencyProof();
-    const observedDependency = object(premises[3]);
-    observedDependency.source_premise_ids = [
-      relationOccurrenceId,
-      'l1.slider-reach',
-      'passed-pawn-result.event',
-    ];
-    observedDependency.dependency_proof = dependencyProof();
-  }
-  const accessFocus = typedSubject(accessRoot, accessPlayedMoves[0]!, accessFens[0]!);
+  const withoutRejudgedManifest = structuredClone(channel) as JsonObject;
+  const manifestPath = object(
+    (object(withoutRejudgedManifest.passed_pawn_progress_realized_after_only_legal_reply_proof)
+      .proof_paths as JsonObject[])[0],
+  );
+  const manifestPremises = manifestPath.premises as JsonObject[];
+  delete object(manifestPremises[1]).dependency_proof;
+  manifestPath.premises = [manifestPremises[2]!, manifestPremises[0]!, manifestPremises[1]!];
+  (manifestPath.closure_use_ids as string[]).push(hash('5'));
   assert.equal(
-    decodeMoveReviewSnapshot(
-      rawTypedResponse(
-        accessFocus,
-        accessReferenceMoves,
-        accessPlayedMoves,
-        'passed_pawn_result',
-        lineAccessChannel,
-      ),
-      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
-    )?.kind,
+    decode(withoutRejudgedManifest)?.kind,
     'completed',
-  );
-  const unownedRelationOccurrence = structuredClone(lineAccessChannel);
-  const unownedProof = object(unownedRelationOccurrence.passed_pawn_result_proof);
-  const unownedPremise = object(
-    (object((unownedProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
-  );
-  unownedPremise.source_premise_ids = ['l1.slider-reach', 'passed-pawn-result.event'];
-  assert.equal(
-    decodeMoveReviewSnapshot(
-      rawTypedResponse(
-        accessFocus,
-        accessReferenceMoves,
-        accessPlayedMoves,
-        'passed_pawn_result',
-        unownedRelationOccurrence,
-      ),
-      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
-    ),
-    undefined,
-  );
-  const mismatchedRelationResult = structuredClone(lineAccessChannel);
-  const mismatchedProof = object(mismatchedRelationResult.passed_pawn_result_proof);
-  const mismatchedPremise = object(
-    (object((mismatchedProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
-  );
-  const mismatchedIssuer = object(
-    (object(mismatchedPremise.dependency_proof).relation_issuers as JsonObject[])[0],
-  );
-  mismatchedIssuer.result_key = `pawn_topology_transition:${hash('7')}`;
-  assert.equal(
-    decodeMoveReviewSnapshot(
-      rawTypedResponse(
-        accessFocus,
-        accessReferenceMoves,
-        accessPlayedMoves,
-        'passed_pawn_result',
-        mismatchedRelationResult,
-      ),
-      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
-    ),
-    undefined,
+    'the browser preserves supplied premise order, optional witnesses, and closure uses without re-adjudicating the family theorem',
   );
 
-  const detachedRelationOccurrence = structuredClone(lineAccessChannel);
-  const detachedProof = object(detachedRelationOccurrence.passed_pawn_result_proof);
-  const detachedPremise = object(
-    (object((detachedProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
-  );
-  const detachedIssuer = object(
-    (object(detachedPremise.dependency_proof).relation_issuers as JsonObject[])[0],
-  );
-  detachedIssuer.step_key = accessResultKey;
-  assert.equal(
-    decodeMoveReviewSnapshot(
-      rawTypedResponse(
-        accessFocus,
-        accessReferenceMoves,
-        accessPlayedMoves,
-        'passed_pawn_result',
-        detachedRelationOccurrence,
-      ),
-      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
-    ),
-    undefined,
-  );
-
-  for (const invalidate of [
-    (inventory: JsonObject) => delete inventory.coverage_evidence_id,
-    (inventory: JsonObject) => {
-      inventory.coverage_issuer = 'passed_pawn_result_event.branch_complete_legal_reply_inventory';
-      return true;
-    },
-    (inventory: JsonObject) => {
-      inventory.coverage_evidence_id = 'different.passed-pawn-result.event';
-      return true;
-    },
-  ]) {
-    const malformed = structuredClone(channel);
-    const proof = object(malformed.passed_pawn_result_proof);
-    invalidate(object(proof.closed_legal_reply_inventory));
-    const rejected = decodeMoveReviewSnapshot(
-      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', malformed),
-      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
-    );
-    assert.equal(rejected, undefined);
-  }
-
-  const assertPassedPawnResultRejected = (malformed: JsonObject, fixture = 'passed-pawn-result fixture') => {
-    const rejected = decodeMoveReviewSnapshot(
-      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', malformed),
-      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
-    );
-    assert.equal(rejected, undefined, fixture);
+  const withoutRejudgedDependencyFamily = structuredClone(channel) as JsonObject;
+  const dependencyPremises = object(
+    (object(withoutRejudgedDependencyFamily.passed_pawn_progress_realized_after_only_legal_reply_proof)
+      .proof_paths as JsonObject[])[0],
+  ).premises as JsonObject[];
+  const dependencyProof = object(object(dependencyPremises[1]).dependency_proof);
+  dependencyProof.proof_kind = 'line_access';
+  dependencyProof.squares = [];
+  dependencyProof.pieces = [];
+  object((dependencyProof.position_state_issuers as JsonObject[])[0]).state = {
+    kind: 'slider_reach',
+    side: 'white',
+    square: 'a1',
+    piece: 'rook',
+    file_step: 1,
+    rank_step: 1,
+    segment: [],
   };
-  const malformedProof = (mutate: (proof: JsonObject) => void): JsonObject => {
-    const malformed = structuredClone(channel) as JsonObject;
-    mutate(object(malformed.passed_pawn_result_proof));
-    return malformed;
+  assert.equal(
+    decode(withoutRejudgedDependencyFamily)?.kind,
+    'completed',
+    'the browser transports sealed dependency and ray fields without rebuilding their chess theorem',
+  );
+
+  const malformed = (mutate: (proof: JsonObject) => void): JsonObject => {
+    const copy = structuredClone(channel) as JsonObject;
+    mutate(object(copy.passed_pawn_progress_realized_after_only_legal_reply_proof));
+    return copy;
   };
-  for (const [fixtureIndex, malformed] of [
-    malformedProof(proof => {
-      object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[2]).role =
-        'invented_result';
+  const rejected = [
+    malformed(proof => {
+      const duplicate = structuredClone((proof.branches as JsonObject[])[0]!) as JsonObject;
+      duplicate.branch_id = hash('2');
+      (proof.branches as JsonObject[]).push(duplicate);
     }),
-    malformedProof(proof => {
-      object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]).lower_kind =
-        'guessed_dependency';
+    malformed(proof => {
+      object(proof.closed_legal_reply_inventory).actual_branch_id = hash('2');
     }),
-    malformedProof(proof => {
-      delete object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1])
-        .dependency_proof;
+    malformed(proof => {
+      object((proof.branches as JsonObject[])[0]).reply_move = 'h8h7';
     }),
-    malformedProof(proof => {
-      const premises = object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[];
-      object(premises[2]).dependency_proof = structuredClone(object(premises[1]).dependency_proof);
-    }),
-    malformedProof(proof => {
-      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
-      object(premise.dependency_proof).proof_kind = 'line_access';
-    }),
-    malformedProof(proof => {
-      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
-      const pieces = object(premise.dependency_proof).pieces as JsonObject[];
-      object(pieces[2]).side = 'black';
-    }),
-    malformedProof(proof => {
-      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
-      for (const piece of object(premise.dependency_proof).pieces as JsonObject[])
-        object(piece).side = 'black';
-    }),
-    malformedProof(proof => {
-      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
-      const rootFrom = (object(premise.dependency_proof).squares as JsonObject[]).find(
-        witness => object(witness).role === 'root_from',
+    malformed(proof => {
+      const actualSteps = object((proof.branches as JsonObject[])[0]).steps as JsonObject[];
+      object(actualSteps[2]).fen_before = root;
+      object(actualSteps[2]).step_key = stepKey(
+        object(actualSteps[2]).ply as number,
+        object(actualSteps[2]).move_uci as Uci,
+        root,
+        object(actualSteps[2]).fen_after as FEN,
       );
-      object(rootFrom).square = 'b6';
     }),
-    malformedProof(proof => {
-      const delayedWhiteFen = '6k1/P7/8/1P6/8/8/4K3/8 b - - 2 2' as FEN;
-      const delayedBlackFen = '7k/P7/8/1P6/8/8/4K3/8 w - - 3 3' as FEN;
-      const delayedResultFen = 'Q6k/8/8/1P6/8/8/4K3/8 b - - 0 3' as FEN;
-      const whiteDelayKey = stepKey(3, 'e1e2' as Uci, fens[1]!, delayedWhiteFen);
-      const blackDelayKey = stepKey(4, 'g8h8' as Uci, delayedWhiteFen, delayedBlackFen);
-      const delayedResultKey = stepKey(5, 'a7a8q' as Uci, delayedBlackFen, delayedResultFen);
-      const replyBranch = object((proof.branches as JsonObject[])[1]);
-      const originalSteps = replyBranch.steps as JsonObject[];
-      replyBranch.steps = [
-        originalSteps[0],
-        originalSteps[1],
-        {
-          step_index: 2,
-          step_key: whiteDelayKey,
-          ply: 3,
-          move_uci: 'e1e2',
-          fen_before: fens[1],
-          fen_after: delayedWhiteFen,
-          line: replyLine,
-          provenance: 'certified_analysis_move',
-          incoming_link: {
-            kind: 'adjacent_legal_replay',
-            from_step_key: replyStepKey,
-            to_step_key: whiteDelayKey,
-            occurrence_link_key: 'adjacent-white-delay',
-          },
-        },
-        {
-          step_index: 3,
-          step_key: blackDelayKey,
-          ply: 4,
-          move_uci: 'g8h8',
-          fen_before: delayedWhiteFen,
-          fen_after: delayedBlackFen,
-          line: replyLine,
-          provenance: 'certified_analysis_move',
-          incoming_link: {
-            kind: 'adjacent_legal_replay',
-            from_step_key: whiteDelayKey,
-            to_step_key: blackDelayKey,
-            occurrence_link_key: 'adjacent-black-delay',
-          },
-        },
-        {
-          step_index: 4,
-          step_key: delayedResultKey,
-          ply: 5,
-          move_uci: 'a7a8q',
-          fen_before: delayedBlackFen,
-          fen_after: delayedResultFen,
-          line: replyLine,
-          provenance: 'certified_analysis_move',
-          incoming_link: {
-            kind: 'adjacent_legal_replay',
-            from_step_key: blackDelayKey,
-            to_step_key: delayedResultKey,
-            occurrence_link_key: 'adjacent-delayed-result',
-          },
-        },
-      ];
-      object(proof.closed_legal_reply_inventory).certified_horizon_ply_offset = 4;
-      for (const rawPath of proof.proof_paths as JsonObject[]) {
-        const delayedPath = object(rawPath);
-        delayedPath.realization_ply = 5;
-        delayedPath.realization_match_kind = 'equivalent_function';
-        const premises = delayedPath.premises as JsonObject[];
-        const observedDependency = object(premises[3]);
-        observedDependency.to_step_index = 4;
-        observedDependency.source_premise_ids = [
-          relationOccurrenceId,
-          'l1.capture-recapture',
-          'passed-pawn-result.event',
-        ];
-        observedDependency.dependency_proof = {
-          dependency_kind: 'response_continuation_precondition',
-          proof_kind: 'capture_follow_up',
-          squares: [
-            { role: 'reply_from', square: 'g8' },
-            { role: 'reply_to', square: 'h8' },
-            { role: 'follow_up_from', square: 'a7' },
-            { role: 'follow_up_to', square: 'a8' },
-          ],
-          pieces: [
-            { role: 'trigger_piece', side: 'white', piece: 'pawn' },
-            { role: 'responder_piece', side: 'black', piece: 'king' },
-            { role: 'follow_up_piece', side: 'white', piece: 'pawn' },
-          ],
-          relation_issuers: [
-            {
-              contract: 'capture_recapture_inventory',
-              relation_kind: 'capture_recapture_inventory',
-              result_key: `capture_recapture_inventory:${hash('7')}`,
-              occurrence_id: relationOccurrenceId,
-              step_key: replyStepKey,
-              source_premise_ids: ['l1.capture-recapture'],
-            },
-          ],
-        };
-        object(premises[4]).from_step_index = 4;
-        object(premises[4]).to_step_index = 4;
-        object(premises[5]).from_step_index = 4;
-        object(premises[5]).to_step_index = 4;
-      }
+    malformed(proof => {
+      object((proof.proof_paths as JsonObject[])[0]).actual_branch_id = hash('2');
     }),
-    malformedProof(proof => {
-      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[3]);
-      premise.branch_id = expectedBranchId;
-      premise.branch_role = 'expected_result_route';
+    malformed(proof => {
+      const premises = object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[];
+      object(premises[1]).branch_id = hash('2');
     }),
-    malformedProof(proof => {
-      object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[3]).to_step_index = 1;
+    malformed(proof => {
+      const premises = object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[];
+      const issuers = object(object(premises[1]).dependency_proof).position_state_issuers as JsonObject[];
+      object(issuers[0]).step_key = 'detached-occurrence';
     }),
-    malformedProof(proof => {
-      object(
-        (object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[5],
-      ).related_branch_ids = [];
-    }),
-    malformedProof(proof => {
-      object(
-        (object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[0],
-      ).source_premise_ids = ['foreign'];
-    }),
-    malformedProof(proof => {
-      const expectedBranch = object((proof.branches as JsonObject[])[0]);
-      const resultStep = object((expectedBranch.steps as JsonObject[])[1]);
-      object(resultStep.incoming_link).to_step_key = 'forged-endpoint';
-    }),
-    malformedProof(proof => {
-      const expectedBranch = object((proof.branches as JsonObject[])[0]);
-      const resultStep = object((expectedBranch.steps as JsonObject[])[1]);
-      resultStep.step_key = 'forged-step';
-      object(resultStep.incoming_link).to_step_key = 'forged-step';
-    }),
-    malformedProof(proof => {
-      const expectedBranch = object((proof.branches as JsonObject[])[0]);
-      const resultStep = object((expectedBranch.steps as JsonObject[])[1]);
-      resultStep.line = { ...object(resultStep.line), line_id: 'foreign.expected.line' };
-    }),
-    malformedProof(proof => {
-      object((proof.branches as JsonObject[])[1]).root_provenance = 'counterfactual_analyzed_root';
-    }),
-    malformedProof(proof => {
-      const reply = object((proof.branches as JsonObject[])[1]);
-      const resultStep = object((reply.steps as JsonObject[])[2]);
-      resultStep.line = { ...object(resultStep.line), line_id: 'foreign.reply.line' };
-    }),
-    malformedProof(proof => {
+    malformed(proof => {
       const paths = proof.proof_paths as JsonObject[];
       object(paths[1]).path_occurrence_id = object(paths[0]).path_occurrence_id;
     }),
-    malformedProof(proof => {
-      object(object((proof.proof_paths as JsonObject[])[0]).realization_actor).side = 'black';
+    malformed(proof => {
+      object((proof.proof_paths as JsonObject[])[0]).unexpected_projection = true;
     }),
-    malformedProof(proof => {
-      const branches = proof.branches as JsonObject[];
-      const duplicateExpected = structuredClone(branches[0]) as JsonObject;
-      duplicateExpected.branch_id = hash('9');
-      branches.push(duplicateExpected);
-    }),
-    malformedProof(proof => {
-      const branches = proof.branches as JsonObject[];
-      const secondReply = structuredClone(branches[1]) as JsonObject;
-      secondReply.branch_id = hash('8');
-      secondReply.reply_move = 'h8h7';
-      secondReply.source_probe_id = 'probe.h8h7';
-      const secondSteps = secondReply.steps as JsonObject[];
-      const secondReplyFen = '8/P6k/8/1P6/8/8/8/4K3 w - - 1 2' as FEN;
-      const secondResultFen = 'Q7/7k/8/1P6/8/8/8/4K3 b - - 0 2' as FEN;
-      object(secondSteps[1]).move_uci = 'h8h7';
-      object(secondSteps[1]).fen_after = secondReplyFen;
-      object(secondSteps[2]).fen_before = secondReplyFen;
-      object(secondSteps[2]).fen_after = secondResultFen;
-      object(object(secondSteps[1]).line).root_move = 'h8h7';
-      object(object(secondSteps[2]).line).root_move = 'h8h7';
-      const secondReplyStepKey = stepKey(2, 'h8h7' as Uci, fens[0]!, secondReplyFen);
-      const secondResultStepKey = stepKey(3, 'a7a8q' as Uci, secondReplyFen, secondResultFen);
-      object(secondSteps[1]).step_key = secondReplyStepKey;
-      object(secondSteps[2]).step_key = secondResultStepKey;
-      object(object(secondSteps[1]).incoming_link).to_step_key = secondReplyStepKey;
-      object(object(secondSteps[2]).incoming_link).from_step_key = secondReplyStepKey;
-      object(object(secondSteps[2]).incoming_link).to_step_key = secondResultStepKey;
-      branches.push(secondReply);
-      const inventory = object(proof.closed_legal_reply_inventory);
-      (inventory.legal_reply_moves as string[]).push('h8h7');
-      (inventory.branch_by_reply as JsonObject[]).push({ reply_move: 'h8h7', branch_id: hash('8') });
-    }),
-  ].entries())
-    assertPassedPawnResultRejected(malformed, `malformed passed-pawn-result proof ${fixtureIndex}`);
-  assertPassedPawnResultRejected(
-    { ...structuredClone(channel), played_change: 'missed' },
-    'legacy played_change',
+  ];
+  rejected.forEach((candidate, index) =>
+    assert.equal(decode(candidate), undefined, 'malformed singleton actual-route proof ' + index),
   );
 });
-
 test('rejects retired public commentary projections', () => {
   for (const [field, retired] of [
     ['structural_idea_units', []],
@@ -1778,66 +1529,30 @@ test('rejects retired public commentary projections', () => {
     commentary[field] = retired;
     assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined, field);
   }
-  const raw = rawResponse();
-  const selected = object(raw.result).selected_move_reviews as JsonObject[];
-  const commentary = selected[1]!.commentary as JsonObject;
-  const explanation = (commentary.causal_explanations as JsonObject[])[0]!;
-  const facet = (explanation.facets as JsonObject[])[0]!;
-  facet.only_move_qualifiers = [];
-  assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined, 'only_move_qualifiers');
-
-  for (const retiredKind of ['pawn', 'passed_pawn_subject']) {
-    const retiredObject = rawResponse();
-    const retiredSelected = object(retiredObject.result).selected_move_reviews as JsonObject[];
-    const retiredCommentary = retiredSelected[1]!.commentary as JsonObject;
-    const retiredExplanation = (retiredCommentary.causal_explanations as JsonObject[])[0]!;
-    const retiredFacet = (retiredExplanation.facets as JsonObject[])[0]!;
-    const retiredChannel = (retiredFacet.channels as JsonObject[])[0]!;
-    object((retiredChannel.targets as JsonObject[])[0]).kind = retiredKind;
-    assert.equal(decodeMoveReviewSnapshot(retiredObject, decodeContext()), undefined, retiredKind);
+  for (const retiredKind of ['material_swing', 'draw_resource']) {
+    const raw = rawResponse();
+    const selected = object(raw.result).selected_move_reviews as JsonObject[];
+    const commentary = selected[1]!.commentary as JsonObject;
+    commentary.causal_explanations = [
+      {
+        cause_evidence_id: 'retired.generic-cause',
+        kind: retiredKind,
+        channels: [{}],
+      },
+    ];
+    assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined, retiredKind);
   }
+  const wrapped = rawResponse();
+  const selected = object(wrapped.result).selected_move_reviews as JsonObject[];
+  const commentary = selected[1]!.commentary as JsonObject;
+  commentary.causal_explanations = [{ kind: 'single_cause', facets: [] }];
+  assert.equal(decodeMoveReviewSnapshot(wrapped, decodeContext()), undefined, 'retired singleton wrapper');
 });
 
 test('rejects an explicitly empty causal explanation list', () => {
   const raw = rawResponse();
   const selected = object(raw.result).selected_move_reviews as JsonObject[];
   selected[1]!.commentary = rawCommentary({ causal_explanations: [] });
-  assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined);
-});
-
-test('accepts a standard causal channel whose schema-optional proof segment is absent', () => {
-  const raw = rawResponse();
-  const selected = object(raw.result).selected_move_reviews as JsonObject[];
-  const commentary = selected[1]!.commentary as JsonObject;
-  const explanation = (commentary.causal_explanations as JsonObject[])[0]!;
-  const facet = (explanation.facets as JsonObject[])[0]!;
-  const channel = (facet.channels as JsonObject[])[0]!;
-  delete channel.proof_segment;
-  const decoded = decodeMoveReviewSnapshot(raw, decodeContext());
-  assert.equal(decoded?.kind, 'completed');
-  if (decoded?.kind !== 'completed') return;
-  const played = selectedMoveReviewCandidate(decoded.evidence);
-  assert.equal(played?.review.kind, 'move-verdict');
-  if (!played || played.review.kind !== 'move-verdict') return;
-  const cause = played.review.reasons.find(reason => reason.message.kind === 'causal');
-  assert.equal(cause?.message.kind, 'causal');
-  if (cause?.message.kind !== 'causal') return;
-  assert.equal(cause.message.proofSegment, undefined);
-  assert.deepEqual(
-    cause.proof.moves.map(step => step.uci),
-    ['e7e5', 'g1f3'],
-  );
-});
-
-test('rejects a proof segment whose root-relative move does not match its proof line', () => {
-  const raw = rawResponse();
-  const selected = object(raw.result).selected_move_reviews as JsonObject[];
-  const commentary = selected[1]!.commentary as JsonObject;
-  const explanation = (commentary.causal_explanations as JsonObject[])[0]!;
-  const facet = (explanation.facets as JsonObject[])[0]!;
-  const channel = (facet.channels as JsonObject[])[0]!;
-  const proof = channel.proof_segment as JsonObject;
-  (proof.steps as JsonObject[])[1]!.move_uci = 'b1c3';
   assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined);
 });
 
@@ -1850,7 +1565,6 @@ test('preserves forced single moves and explicit position actions', () => {
       selected_commentaries_completed: 0,
       physical_works_issued: 1,
       physical_reports_accepted: 1,
-      causal_waves_completed: 0,
     },
     result: {
       kind: 'forced_single_move',
@@ -1876,7 +1590,6 @@ test('preserves forced single moves and explicit position actions', () => {
       selected_commentaries_completed: 0,
       physical_works_issued: 0,
       physical_reports_accepted: 0,
-      causal_waves_completed: 0,
     },
     result: { kind: 'automatic_terminal', terminal: { kind: 'stalemate' } },
   });

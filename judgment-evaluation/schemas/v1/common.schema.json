@@ -907,34 +907,6 @@
       ],
       "additionalProperties": false
     },
-    "candidateSetFact": {
-      "type": "object",
-      "required": ["fact_id", "fact_type", "ranked_line_ids", "best_line_id", "evidence_ids"],
-      "properties": {
-        "fact_id": { "$ref": "#/$defs/factIdDefinition" },
-        "fact_type": { "const": "candidate-set" },
-        "ranked_line_ids": {
-          "$comment": "Candidate rank is semantic and is deliberately not canonicalizable.",
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/lineIdReference" },
-          "uniqueItems": true
-        },
-        "best_line_id": { "$ref": "#/$defs/lineIdReference" },
-        "second_line_id": { "$ref": "#/$defs/lineIdReference" },
-        "evidence_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/evidenceIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "evidence",
-            "sort_by": "canonical-id"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
     "exactFact": {
       "type": "object",
       "required": ["fact_id", "fact_type", "proof_id", "line_id", "claim_kind", "result", "evidence_ids"],
@@ -967,7 +939,6 @@
         { "$ref": "#/$defs/boardFact" },
         { "$ref": "#/$defs/legalReplayFact" },
         { "$ref": "#/$defs/comparisonFact" },
-        { "$ref": "#/$defs/candidateSetFact" },
         { "$ref": "#/$defs/exactFact" }
       ]
     },
@@ -1155,7 +1126,7 @@
         "claim_id": { "$ref": "#/$defs/claimIdDefinition" },
         "family": {
           "type": "string",
-          "enum": ["tactical", "pawn-structure", "passed-pawn-result", "defensive", "conversion", "material", "evaluation"]
+          "enum": ["tactical", "pawn-structure", "passed-pawn-progress", "evaluation"]
         },
         "subject": { "$ref": "#/$defs/claimSubject" },
         "scope": {
@@ -1398,7 +1369,7 @@
         },
         "family": {
           "type": "string",
-          "enum": ["tactical", "pawn-structure", "passed-pawn-result", "defensive", "conversion", "material", "evaluation"]
+          "enum": ["tactical", "pawn-structure", "passed-pawn-progress", "evaluation"]
         },
         "subject": { "$ref": "#/$defs/claimSubject" },
         "scope": {

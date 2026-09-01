@@ -23,7 +23,6 @@ enum EvidenceProducer:
   case LegalLineProducer
   case EngineEvalProducer
   case RelationProducer
-  case TacticalMechanismProducer
   case MoveTransitionProducer
   case StructuralDeltaProducer
   case CausalProofProducer
@@ -41,7 +40,6 @@ enum EvidenceScope:
   case BestLine
   case PlayedLine
   case CandidateLine
-  case BranchReplyLine
   case Counterfactual
 
 enum EvidenceConfidence:

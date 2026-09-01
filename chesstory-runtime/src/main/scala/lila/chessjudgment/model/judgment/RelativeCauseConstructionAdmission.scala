@@ -1,9 +1,7 @@
 package lila.chessjudgment.model.judgment
 
-/** C-stage admission of a fully constructed Cause before semantic
-  * canonicalization. Every initial Cause must own at least one direct channel
-  * admitted for its exact comparison. Canonical merging may later remove all
-  * public signatures when otherwise equivalent carriers disagree.
+/** C-stage admission of a fully constructed Cause. Every initial Cause owns
+  * every declared proof source through one exact typed channel occurrence.
   */
 object RelativeCauseConstructionAdmission:
 
@@ -11,48 +9,31 @@ object RelativeCauseConstructionAdmission:
       cause: RelativeCauseFact,
       graph: TypedEvidenceGraph
   ): Boolean =
-    val admittedChannels = admittedDirectChannels(cause, graph)
-    val comparisonReady = graph.candidateComparisonRecord(cause.comparisonEvidence).exists {
-      case EvidenceRecord(_, CandidateComparisonEvidence(comparison), _) =>
-        comparison.hasDistinctRootMoves
-      case _ => false
-    }
-    val bindingReady = graph.relativeCauseBinding(cause).exists(binding =>
-      binding.sourceSide == cause.sourceSide &&
-        RelativeCauseKind.sourceAttributionCompatible(
-          cause.kind,
-          cause.sourceSide,
-          cause.attribution.kind
-        ) &&
-        cause.attribution.rootMoveMatched &&
-        cause.attribution.directProofEligible &&
-        admittedChannels.nonEmpty &&
-        ownedDepthReady(cause, graph, admittedChannels)
-    )
-    comparisonReady && bindingReady
+    initiallyReadyWithChannels(cause, graph, admittedDirectChannels(cause, graph))
 
-  private def ownedDepthReady(
+  private[chessjudgment] def initiallyReadyWithChannels(
       cause: RelativeCauseFact,
       graph: TypedEvidenceGraph,
       admittedChannels: List[DirectCauseChannel]
   ): Boolean =
-    if cause.passedPawnResultCauseKind then
-      cause.hasOwnedPassedPawnResultProof(graph) &&
-        admittedChannels.forall(
-          graph.relativeCauseChannelHasOwnedPassedPawnResultProof(cause, _)
-        )
-    else cause.hasOwnedTypedDepth(graph)
+    val comparisonReady = graph.candidateComparisonRecord(cause.comparisonEvidence).exists {
+      case EvidenceRecord(_, CandidateComparisonEvidence(comparison), _) =>
+        ActionablePlayedVsBestCausalProofDemand.accepts(comparison)
+      case _ => false
+    }
+    val exactSourceOwnership =
+      admittedChannels.nonEmpty &&
+        admittedChannels.map(_.source.id).sorted == cause.proofSources.map(_.id) &&
+        admittedChannels.map(_.exactOccurrenceFingerprint).distinct.size == admittedChannels.size
+    val bindingReady = graph.relativeCauseBinding(cause).exists(binding =>
+      binding.sourceSide == cause.sourceSide &&
+        binding.evidenceLines == List(binding.eventLine) &&
+        admittedChannels.forall(_.eventLine == binding.eventLine)
+    )
+    comparisonReady && exactSourceOwnership && bindingReady
 
   def admittedDirectChannels(
       cause: RelativeCauseFact,
       graph: TypedEvidenceGraph
   ): List[DirectCauseChannel] =
-    graph.relativeCauseBinding(cause).toList.flatMap { _ =>
-      cause.directEffectAdmission match
-        case DirectEffectAdmission.Restricted(endpointObservations) if endpointObservations.nonEmpty =>
-          EvidenceObjectBinding
-            .rawDirectSentenceChannelsForProjection(cause, graph)
-            .filter(channel => endpointObservations.contains(channel.exactOccurrenceFingerprint))
-        case DirectEffectAdmission.Unresolved | DirectEffectAdmission.Restricted(_) =>
-          Nil
-    }
+    DirectCauseChannel.certifiedForCause(cause, graph)

@@ -4,9 +4,7 @@ import chess.White
 import chess.variant.Standard
 import lila.chessjudgment.analysis.position.PositionAnalyzer
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.position.PositionOccurrenceState
-import lila.chessjudgment.model.line.EngineLine
 
 class TypedEvidenceGraphBatchTest extends munit.FunSuite:
 
@@ -102,54 +100,10 @@ class TypedEvidenceGraphBatchTest extends munit.FunSuite:
         firstNode.asInstanceOf[AnyRef]
     )
 
-  test("proof authority is closed over payload producer and exact tactical sources"):
-    val line = LineNodeRef("authority-line", "e1e2", 1, LineNodeRole.BestReference)
-    val evaluation = EvidenceRecord(
-      EvidenceRef(
-        "authority-eval",
-        EvidenceProducer.EngineEvalProducer,
-        EvidenceLayer.Eval,
-        position,
-        Some(line),
-        line.role.scope,
-        EvidenceConfidence.EngineBacked
-      ),
-      CandidateLineEvaluationEvidence(
-        line,
-        CandidateLineEvaluation.EngineSearch(EngineLine(List(line.rootMove), 0, Some(1), 20))
-      )
-    )
-    def mechanism(id: String, source: EvidenceRef): EvidenceRecord =
-      EvidenceRecord(
-        EvidenceRef(
-          id,
-          EvidenceProducer.TacticalMechanismProducer,
-          EvidenceLayer.TacticalMechanism,
-          position,
-          Some(line),
-          line.role.scope,
-          EvidenceConfidence.EngineBacked
-        ),
-        TacticalMechanismEvidence(
-          TacticalMechanismKind.KingForcing,
-          Some(line.rootMove),
-          Some(line),
-          List(TacticalMechanismSignal(
-            TacticalMechanismSignalKind.MateBranch,
-            "1",
-            EvidenceLayer.Eval,
-            Some(source)
-          ))
-        ),
-        List(evaluation.ref)
-      )
-    val exact = mechanism("authority-exact", evaluation.ref)
-    val forged = mechanism("authority-forged", evaluation.ref.copy(id = "missing-eval"))
+  test("proof authority rejects a payload under the wrong producer"):
     val wrongProducer = occurrenceRecord("wrong-producer").copy(
       ref = occurrenceRecord("wrong-producer").ref.copy(producer = EvidenceProducer.MoveTransitionProducer)
     )
-    val graph = TypedEvidenceGraph.empty.addAll(List(evaluation, exact, forged, wrongProducer))
+    val graph = TypedEvidenceGraph.empty.add(wrongProducer)
 
-    assert(graph.proofEligible(exact))
-    assert(!graph.proofEligible(forged))
     assert(!graph.proofEligible(wrongProducer))

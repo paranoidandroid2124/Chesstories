@@ -8,7 +8,6 @@ import java.util.concurrent.Executors
 import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.concurrent.duration.*
 
-import lila.chessjudgment.model.{ ProbeResolution, ProbeResult }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, CanonicalPositionHistory }
 import lila.chessjudgment.analysis.assembly.{ MoveReviewJudgmentOrchestrator, RawMoveReviewInput }
@@ -47,40 +46,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
         ReportedEngineLineSuffix(moves, ReportedWhiteEngineScore.Centipawns(score), work.requiredDepth)
       }
     )
-
-  private def awaitCausalWork(
-      initial: CommentaryJobState,
-      targetPrefix: List[String],
-      continuationFor: IssuedEngineWork => String,
-      nowEpochMs: Long
-  ): IssuedEngineWork =
-    def target(state: CommentaryJobState): Option[IssuedEngineWork] = state match
-      case awaiting: AwaitingEngineWork
-          if awaiting.issuedWork.enginePositionMovesUci.endsWith(targetPrefix) =>
-        Some(awaiting.issuedWork)
-      case _ => None
-
-    var state = initial
-    var reports = 0
-    while target(state).isEmpty do
-      state match
-        case awaiting: AwaitingEngineWork =>
-          assertEquals(awaiting.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
-          state = CommentaryJobReducer
-            .submitIssuedWorkReport(
-              awaiting,
-              completedReport(
-                awaiting.issuedWork,
-                List(List(continuationFor(awaiting.issuedWork)) -> 0)
-              ),
-              nowEpochMs + reports
-            )
-            .toOption
-            .get
-          reports += 1
-          assert(reports <= 8, clues(state))
-        case other => fail(s"existing root/focus evidence hid the causal probe: $other")
-    target(state).get
 
   private def rootLines: List[(List[String], Int)] = List(
     List("e2e4", "e7e5", "g1f3") -> 30,
@@ -158,12 +123,11 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .submitIssuedWorkReport(root, completedReport(root.issuedWork, rootLines), nowEpochMs = 1L)
       .toOption
       .get
-    afterRoot match
-      case awaiting: AwaitingEngineWork =>
-        assertEquals(awaiting.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
-      case completed: CompletedCommentaryJob =>
-        assertEquals(completed.progress.selectedCommentariesCompleted, 1)
-      case other => fail(s"covered focus must not schedule a focus comparison: $other")
+    val completed = afterRoot match
+      case value: CompletedCommentaryJob => value
+      case other => fail(s"covered focus must complete from admitted root evidence: $other")
+    assertEquals(completed.progress.selectedCommentariesCompleted, 1)
+    assertEquals(completed.progress.physicalWorksIssued, 1)
     assertEquals(afterRoot.progress.physicalReportsAccepted, 1)
 
   test("v6 adds one restricted focus comparison only when played move is outside the root bundle"):
@@ -210,10 +174,8 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .get
     assertEquals(afterFocus.progress.physicalReportsAccepted, 2)
     afterFocus match
-      case awaiting: AwaitingEngineWork =>
-        assertEquals(awaiting.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
       case _: CompletedCommentaryJob => ()
-      case other => fail(s"focused review did not enter commentary assembly: $other")
+      case other => fail(s"focused review did not complete from admitted root/focus evidence: $other")
 
   test("focused best cannot replace the root-owned reference evaluation"):
     val played = "a2a3"
@@ -253,110 +215,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .getOrElse(fail("a conflicting focused reference evaluation must fail closed"))
 
     assertEquals(stopped.stopCondition, CommentaryJobStopCondition.MoveReviewPreparationFailed)
-
-  test("one matching root PV still issues a browser-owned causal search"):
-    val rootFen = "7k/8/8/PP6/8/8/8/4K3 w - - 0 1"
-    val playedMove = "a5a6"
-    val positionHistory = CanonicalPositionHistory.from(rootFen, Nil, rootFen).toOption.get
-    val root = CommentaryJobReducer
-      .startJob(
-        rootFen,
-        Nil,
-        rootFen,
-        playedMove,
-        positionHistory.extend(List(playedMove)).toOption.get.currentFen,
-        policy(),
-        nowEpochMs = 0L
-      )
-      .toOption
-      .collect { case value: AwaitingEngineWork => value }
-      .get
-    val afterRoot = CommentaryJobReducer
-      .submitIssuedWorkReport(
-        root,
-        completedReport(
-          root.issuedWork,
-          List(
-            List("b5b6", "h8g8", "b6b7") -> 10,
-            List("a5a6", "h8g8", "a6a7") -> 0,
-            List("e1e2", "h8g8", "e2e3") -> -10
-          )
-        ),
-        nowEpochMs = 1L
-      )
-      .toOption
-      .get
-    val causal = awaitCausalWork(
-      afterRoot,
-      List(playedMove, "h8g8"),
-      _ => "a6a7",
-      nowEpochMs = 2L
-    )
-
-    assertEquals(causal.purpose, EngineWorkPurpose.CausalProbe)
-    assertEquals(causal.rootRestriction, EngineRootRestriction.Unrestricted)
-    assertEquals(causal.multiPv, 1)
-
-  test("competing root and focus PVs still issue a browser-owned causal search"):
-    val rootFen = "7k/8/8/PP6/8/8/8/4K3 w - - 0 1"
-    val playedMove = "b5b6"
-    val positionHistory = CanonicalPositionHistory.from(rootFen, Nil, rootFen).toOption.get
-    val root = CommentaryJobReducer
-      .startJob(
-        rootFen,
-        Nil,
-        rootFen,
-        playedMove,
-        positionHistory.extend(List(playedMove)).toOption.get.currentFen,
-        policy(),
-        nowEpochMs = 0L
-      )
-      .toOption
-      .collect { case value: AwaitingEngineWork => value }
-      .get
-    val focus = CommentaryJobReducer
-      .submitIssuedWorkReport(
-        root,
-        completedReport(
-          root.issuedWork,
-          List(
-            List("a5a6", "h8g8", "a6a7") -> 10,
-            List("e1e2", "h8g8", "e2e3") -> 0,
-            List("e1d1", "h8g8", "d1d2") -> -10
-          )
-        ),
-        nowEpochMs = 1L
-      )
-      .toOption
-      .collect { case value: AwaitingEngineWork => value }
-      .get
-    assertEquals(focus.issuedWork.purpose, EngineWorkPurpose.FocusComparison)
-    val afterFocus = CommentaryJobReducer
-      .submitIssuedWorkReport(
-        focus,
-        completedReport(
-          focus.issuedWork,
-          List(
-            List("a5a6", "h8g8", "b5b6") -> 10,
-            List("b5b6", "h8g8", "b6b7") -> -20
-          )
-        ),
-        nowEpochMs = 2L
-      )
-      .toOption
-      .get
-    val causal = awaitCausalWork(
-      afterFocus,
-      List("a5a6", "h8g8"),
-      work =>
-        if work.enginePositionMovesUci.headOption.contains("a5a6") then "a6a7"
-        else "b6b7",
-      nowEpochMs = 3L
-    )
-
-    assertEquals(causal.purpose, EngineWorkPurpose.CausalProbe)
-    assertEquals(causal.rootRestriction, EngineRootRestriction.Unrestricted)
-    assertEquals(causal.multiPv, 1)
 
   test("execution identity and minimal v6 engine report bind exactly one outstanding work"):
     val root = CommentaryJobReducer
@@ -458,56 +316,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
           )
         )
       )
-    )
-
-  test("causal prefix and cached physical suffix rebind to one logical occurrence without replay"):
-    val logicalOrigin = history(List("e2e4"))
-    val logicalPrefix = List("e7e5")
-    val searchHistory = logicalOrigin.extend(logicalPrefix).toOption.get
-    val work = IssuedEngineWork.create(
-      engineProfile,
-      "work:cached",
-      EngineWorkPurpose.CausalProbe,
-      searchHistory.initialFen,
-      searchHistory.movePrefixUci,
-      searchHistory.currentFen,
-      EngineRootRestriction.Unrestricted,
-      logicalOrigin.currentFen,
-      logicalPrefix,
-      EngineSearchLimits(16, 5_000_000, 5_000, 1),
-      6_000
-    )
-    val reported = List(
-      ReportedEngineLineSuffix(
-        List("g1f3", "b8c6"),
-        ReportedWhiteEngineScore.Centipawns(20),
-        16
-      )
-    )
-    val physical = EngineLineAdmission
-      .admitReportedLineSuffixes(work, reported)
-      .getOrElse(fail("expected one physical admission"))
-    val first = EngineLineAdmission
-      .bindAdmittedLineSuffixes(work, physical)
-      .flatMap(_.headOption)
-      .getOrElse(fail("expected the first logical binding"))
-    val rebound = EngineLineAdmission
-      .bindAdmittedLineSuffixes(work, physical)
-      .flatMap(_.headOption)
-      .getOrElse(fail("expected the cached logical binding"))
-    val firstSteps = first.continuationAfter(logicalOrigin).getOrElse(fail("expected retained causal steps"))
-    val reboundSteps = rebound
-      .continuationAfter(logicalOrigin)
-      .getOrElse(fail("expected cached retained causal steps"))
-    val siblingOccurrence = history(List("d2d4"))
-
-    assertEquals(firstSteps.map(_.uci), logicalPrefix ++ reported.head.moves)
-    assertEquals(reboundSteps.map(_.uci), firstSteps.map(_.uci))
-    assertEquals(first.continuationAfter(siblingOccurrence), None)
-    assert(
-      firstSteps.zip(reboundSteps).forall { case (left, right) =>
-        left.move.asInstanceOf[AnyRef] eq right.move.asInstanceOf[AnyRef]
-      }
     )
 
   test("HTTP v6 route keeps Stockfish work in the browser and stops an executor failure"):
@@ -632,7 +440,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
       assertEquals((response \ "result" \ "presentation").toOption, None)
     finally server.stop(0)
 
-  test("v6 commentary serializes an occurrence-bound L2 resource differential"):
+  test("v6 commentary serializes unique-check-reply defender displacement before capture"):
     val rootFen = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1"
     val referenceMoves = List("c4f7", "f8f7", "d1d8")
     val playedMoves = List("d1d8", "f8d8")
@@ -656,22 +464,15 @@ class RuntimeProtocolTest extends munit.FunSuite:
       Set.empty[String]
     )
     val moveOrderFacet = (commentary \ "causal_explanations").as[List[JsObject]]
-      .flatMap(idea => (idea \ "facets").as[List[JsObject]])
       .find(facet => (facet \ "kind").as[String] == "wrong_move_order")
       .getOrElse(fail("expected the selected L2 cause in public commentary"))
     val channel = (moveOrderFacet \ "channels").as[List[JsObject]] match
       case exact :: Nil => exact
       case other        => fail(s"expected one exact L2 channel, found ${other.size}")
 
-    assertEquals((moveOrderFacet \ "proof_confidence").as[String], "legal_replay_verified")
-    assertEquals((moveOrderFacet \ "effect_mode").as[String], "alternative_resource")
+    assertEquals(moveOrderFacet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
     assertEquals((moveOrderFacet \ "exposure").as[String], "primary")
-    assertEquals((moveOrderFacet \ "source_side").as[String], "reference")
-    assertEquals((moveOrderFacet \ "comparison_kind").as[String], "played_vs_best")
-    assert(!moveOrderFacet.keys.contains("only_move_qualifiers"))
-    assert(!moveOrderFacet.keys.contains("event_move"))
-    assertEquals((channel \ "direct_change").as[String], "occurred")
-    assertEquals((channel \ "played_change").as[String], "missed")
+    assertEquals(channel.keys, Set("channel_id", "unique_check_reply_defender_displacement_before_capture_proof"))
     val forbiddenDuplicateFields = Set(
       "actor",
       "targets",
@@ -683,9 +484,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "proof_segment"
     )
     assertEquals(channel.keys.intersect(forbiddenDuplicateFields), Set.empty[String])
-    val proof = (channel \ "resource_differential_proof").as[JsObject]
-    assertEquals((proof \ "family").as[String], "immediate_forced_reply_resource_differential")
-    assertEquals((proof \ "trigger_mechanism").as[String], "forced_displacement")
+    val proof = (channel \ "unique_check_reply_defender_displacement_before_capture_proof").as[JsObject]
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "dependency_fingerprint").as[String].matches("[0-9a-f]{64}"))
@@ -736,6 +535,11 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((premises.head \ "branch_id").as[String], (referenceBranch \ "branch_id").as[String])
     assertEquals((premises(1) \ "step_index").as[Int], 2)
     assertEquals((premises(2) \ "branch_id").as[String], (playedBranch \ "branch_id").as[String])
+    premises.foreach { premise =>
+      val sources = (premise \ "source_premise_ids").as[List[String]]
+      assert(sources.contains((premise \ "issuer_evidence_id").as[String]))
+      assert(sources.contains((premise \ "issuer_occurrence_id").as[String]))
+    }
     val absenceUses = (proofPath \ "closed_absence_uses").as[List[JsObject]]
     assertEquals(absenceUses.size, 1)
     val absenceUse = absenceUses.head
@@ -772,14 +576,14 @@ class RuntimeProtocolTest extends munit.FunSuite:
           )
         )
       )
-      .getOrElse(fail("expected an evidence-backed defense-obligation packet"))
+      .getOrElse(fail("expected an evidence-backed sole-recapturer-removal packet"))
 
     val moveOrderProofRecords = packet.evidenceGraph.records.filter(_.ref.layer == EvidenceLayer.CausalProof)
     assertEquals(moveOrderProofRecords.size, 1)
     val defenseCauseRecords = packet.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
           if cause.kind == RelativeCauseKind.WrongMoveOrder &&
-            cause.supportEvidence.exists(source => moveOrderProofRecords.exists(_.ref == source)) => record
+            cause.proofSources.exists(source => moveOrderProofRecords.exists(_.ref == source)) => record
     }
     assertEquals(
       defenseCauseRecords.size,
@@ -788,7 +592,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
         moveOrderProofRecords.map(record => record.ref -> packet.evidenceGraph.proofEligible(record)),
         packet.evidenceGraph.records.collect {
           case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
-            (ref, cause.kind, cause.supportEvidence)
+            (ref, cause.kind, cause.proofSources)
         }
       )
     )
@@ -798,19 +602,18 @@ class RuntimeProtocolTest extends munit.FunSuite:
       clues(defenseCauseRecords.map(_.ref.id), packet.playerFacingClaimDecisions, packet.causeDispositionLedger)
     )
 
-    val proof = RuntimeProtocol.moveCommentaryJson(packet)
+    val channel = RuntimeProtocol.moveCommentaryJson(packet)
       .value("causal_explanations")
       .as[List[JsObject]]
-      .flatMap(idea => (idea \ "facets").as[List[JsObject]])
       .find(facet => (facet \ "kind").as[String] == "wrong_move_order")
       .toList
       .flatMap(facet => (facet \ "channels").as[List[JsObject]])
-      .flatMap(channel => (channel \ "defense_obligation_change_proof").asOpt[JsObject]) match
+      .filter(channel => (channel \ "sole_recapturer_removal_before_target_capture_proof").asOpt[JsObject].nonEmpty) match
         case exact :: Nil => exact
-        case other        => fail(s"expected one public removal proof, found ${other.size}")
+        case other        => fail(s"expected one public removal channel, found ${other.size}")
+    assertEquals(channel.keys, Set("channel_id", "sole_recapturer_removal_before_target_capture_proof"))
+    val proof = (channel \ "sole_recapturer_removal_before_target_capture_proof").as[JsObject]
 
-    assertEquals((proof \ "contract").as[String], "defense_obligation_change")
-    assertEquals((proof \ "mechanism").as[String], "sole_recapturer_removal")
     assertEquals((proof \ "later_exploit_move").as[String], "d1d5")
     assertEquals((proof \ "played_sole_recapture_move").as[String], "f6d5")
     val premises = (proof \ "proof_paths" \ 0 \ "premises").as[List[JsObject]]
@@ -823,6 +626,11 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
     )
     assertEquals(premises.map(premise => (premise \ "step_index").as[Int]), List(0, 2, 0))
+    premises.foreach { premise =>
+      val sources = (premise \ "source_premise_ids").as[List[String]]
+      assert(sources.contains((premise \ "issuer_evidence_id").as[String]))
+      assert(sources.contains((premise \ "issuer_occurrence_id").as[String]))
+    }
     assertEquals((proof \ "participants" \ "remover" \ "to").as[String], "f6")
     assertEquals((proof \ "participants" \ "removal_recapture" \ "move_uci").as[String], "e7f6")
     assertEquals((proof \ "participants" \ "removed_defender" \ "piece").as[String], "knight")
@@ -835,61 +643,132 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "legal-capture:black:d5"
     )
 
-  test("v6 commentary serializes the closed passed-pawn result without a generic proof segment"):
-    val raw = RawMoveReviewInput(
-      fen = "7k/8/8/PP6/8/8/8/4K3 w - - 0 1",
-      playedMoveUci = "a5a6",
-      variations = List(
-        EngineLine(List("b5b6", "h8g8", "b6b7"), scoreCp = 10, depth = 20),
-        EngineLine(List("a5a6", "h8g8", "a6a7"), scoreCp = 0, depth = 20)
-      )
-    )
-    val initial = MoveReviewJudgmentOrchestrator
-      .execute(raw)
-      .getOrElse(fail("expected an initial bounded passed-pawn-result review"))
-    val replyRequests = initial.probeRequests.filter(request =>
-      lila.chessjudgment.model.judgment.EvidenceRef.sameMove(request.candidateMove, raw.playedMoveUci)
-    )
-    assert(replyRequests.nonEmpty, "the passed-pawn result needs its complete legal-reply demand")
-    val referenceReplyRequests = initial.probeRequests.filter(request =>
-      EvidenceRef.sameMove(request.candidateMove, "b5b6")
-    )
-    assert(referenceReplyRequests.nonEmpty, "the sibling endpoint must close the same passed-pawn-result family")
-    val passedPawnResultReplyRequests = (replyRequests ++ referenceReplyRequests).distinctBy(_.id)
-    val probeResults = passedPawnResultReplyRequests.map { request =>
-      val reply = request.moves match
-        case exact :: Nil => exact
-        case other        => fail(s"expected one exact reply move, got $other")
-      val realizingMove =
-        if EvidenceRef.sameMove(request.candidateMove, raw.playedMoveUci) then "a6a7"
-        else "e1e2"
-      ProbeResult(
-        request.id,
-        ProbeResolution.EngineSearch(
-          List(
-            CandidateLineEvaluation.EngineSearch(
-              EngineLine(List(reply, realizingMove), scoreCp = 0, depth = request.depth)
-            )
-          ),
-          request.depth
+  test("v6 commentary keeps direct line-access proof in its exact typed channel"):
+    val rootFen = "7k/q7/8/8/8/8/N7/R6K w - - 0 1"
+    val referenceSourceMoves = List("a2b4", "h8g8", "a1a7")
+    val playedMoves = List("h1h2", "h8g8")
+    val packet = MoveReviewJudgmentOrchestrator
+      .execute(
+        RawMoveReviewInput(
+          fen = rootFen,
+          playedMoveUci = playedMoves.head,
+          variations = List(
+            EngineLine(referenceSourceMoves, scoreCp = 600, depth = 24),
+            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+          )
         )
       )
+      .getOrElse(fail("expected an exact direct line-access packet"))
+
+    val facet = (RuntimeProtocol.moveCommentaryJson(packet) \ "causal_explanations")
+      .as[List[JsObject]]
+      .find(facet => (facet \ "kind").as[String] == "missed_tactical_resource")
+      .getOrElse(fail("expected the selected direct line-access cause"))
+    val channel = (facet \ "channels").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one direct line-access channel, found ${other.size}")
+    assertEquals(facet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
+    assertEquals((facet \ "exposure").as[String], "primary")
+    assertEquals(channel.keys, Set("channel_id", "vacated_gate_enables_unrecapturable_slider_capture_proof"))
+    assertEquals(
+      channel.keys.intersect(
+        Set("actor", "targets", "mechanisms", "consequences", "witnesses", "proof_line_moves", "horizon", "proof_segment")
+      ),
+      Set.empty[String],
+      "the exact L2 proof must never fall through the generic channel"
+    )
+
+    val proof = (channel \ "vacated_gate_enables_unrecapturable_slider_capture_proof").as[JsObject]
+    assertEquals((proof \ "exploit_move").as[String], "a1a7")
+    val reference = (proof \ "counterfactual_reference_branch").as[JsObject]
+    val played = (proof \ "played_root_branch").as[JsObject]
+    assertEquals(
+      (reference \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      referenceSourceMoves
+    )
+    assertEquals(
+      (played \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      playedMoves
+    )
+    assertEquals((played \ "branch_role").as[String], "observed_played_sibling")
+
+    val path = (proof \ "proof_paths").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one retained proof path, found ${other.size}")
+    val premises = (path \ "premises").as[List[JsObject]]
+    assertEquals(
+      premises.map(premise => (premise \ "role").as[String]),
+      List("reference_root_slider_reach", "reference_exploit_capture")
+    )
+    assertEquals(premises.map(premise => (premise \ "step_index").as[Int]), List(0, 2))
+    premises.foreach { premise =>
+      val sources = (premise \ "source_premise_ids").as[List[String]]
+      assert(sources.contains((premise \ "issuer_evidence_id").as[String]))
+      assert(sources.contains((premise \ "issuer_occurrence_id").as[String]))
     }
+    val absences = (path \ "closed_absence_uses").as[List[JsObject]]
+    assertEquals(
+      absences.map(use => (use \ "role").as[String]),
+      List(
+        "reference_immediate_recapture_absent",
+        "played_exploit_move_absent",
+        "played_replacement_capture_absent"
+      )
+    )
+    assertEquals(
+      absences.map(use => (use \ "branch_id").as[String]),
+      List(
+        (reference \ "branch_id").as[String],
+        (played \ "branch_id").as[String],
+        (played \ "branch_id").as[String]
+      )
+    )
+    assert(absences.forall(use => (use \ "issuer_occurrence_id").as[String].matches("[0-9a-f]{64}")))
+
+    val states = (path \ "closed_state_uses").as[List[JsObject]]
+    assertEquals(
+      states.map(use => (use \ "role").as[String]),
+      List(
+        "reference_intervening_slider_reach",
+        "played_slider_occupied",
+        "played_target_occupied",
+        "played_gate_blocker_occupied",
+        "played_blocked_slider_reach"
+      )
+    )
+    assertEquals((states.head \ "branch_id").as[String], (reference \ "branch_id").as[String])
+    assert(states.tail.forall(use => (use \ "branch_id").as[String] == (played \ "branch_id").as[String]))
+    assert(states.forall(use => (use \ "issuer_occurrence_id").as[String].matches("[0-9a-f]{64}")))
+    assertEquals((proof \ "participants" \ "enabler" \ "from").as[String], "a2")
+    assertEquals((proof \ "participants" \ "slider" \ "square").as[String], "a1")
+    assertEquals((proof \ "participants" \ "gate_blocker" \ "square").as[String], "a2")
+    assertEquals((proof \ "participants" \ "exploit" \ "to").as[String], "a7")
+    assertEquals((proof \ "participants" \ "captured_target" \ "square").as[String], "a7")
+
+  test("v6 commentary serializes the closed passed-pawn result without a generic proof segment"):
+    val raw = RawMoveReviewInput(
+      fen = "7k/5K2/6P1/8/8/8/8/8 w - - 0 1",
+      playedMoveUci = "g6g7",
+      variations = List(
+        EngineLine(List("f7e7", "h8g8", "e7e8"), scoreCp = 600, depth = 20),
+        EngineLine(List("g6g7", "h8h7", "g7g8q"), scoreCp = -600, depth = 20)
+      )
+    )
     val resolved = MoveReviewJudgmentOrchestrator
-      .execute(raw.copy(probeResults = probeResults))
-      .getOrElse(fail("expected the closed passed-pawn-result review to assemble"))
-    val passedPawnResultProofRecords = resolved.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, _: PassedPawnResultProofEvidence, _) => record
+      .execute(raw)
+      .getOrElse(fail("expected the admitted main PV to close passed-pawn progress after the only legal reply"))
+    val passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords = resolved.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
     }
-    assert(passedPawnResultProofRecords.nonEmpty, "the closed passed-pawn result must reach the typed L2 producer")
+    assert(passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords.nonEmpty, "the closed passed-pawn result must reach the typed L2 producer")
     val passedPawnResultCauseRecords = resolved.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.PassedPawnResult => record
+          if cause.kind == RelativeCauseKind.PassedPawnProgress => record
     }
     assert(
       passedPawnResultCauseRecords.nonEmpty,
       clues(
-        passedPawnResultProofRecords.map(_.ref.id),
+        passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords.map(_.ref.id),
         resolved.evidenceGraph.records.collect {
           case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _) =>
             (ref.id, fact.kind, fact.comparison.verdict, fact.referenceLine.rootMove, fact.candidateLine.rootMove)
@@ -906,56 +785,52 @@ class RuntimeProtocolTest extends munit.FunSuite:
       commentary.keys.intersect(Set("structural_idea_units", "responsibility_links")),
       Set.empty[String]
     )
-    val passedPawnResultFacet = (commentary \ "causal_explanations").as[List[JsObject]]
-      .flatMap(idea => (idea \ "facets").as[List[JsObject]])
-      .find(facet => (facet \ "kind").as[String] == "passed_pawn_result")
+    val passedPawnProgressFacet = (commentary \ "causal_explanations").as[List[JsObject]]
+      .find(facet => (facet \ "kind").as[String] == "passed_pawn_progress")
       .getOrElse(fail("expected the selected typed passed-pawn result in public commentary"))
-    val channel = (passedPawnResultFacet \ "channels").as[List[JsObject]] match
+    val channel = (passedPawnProgressFacet \ "channels").as[List[JsObject]] match
       case exact :: Nil => exact
-      case other        => fail(s"expected one exact passed-pawn-result channel, found ${other.size}")
+      case other =>
+        fail(s"expected one passed-pawn-progress-realized-after-only-legal-reply channel, found ${other.size}")
 
-    assertEquals((passedPawnResultFacet \ "proof_confidence").as[String], "legal_replay_verified")
-    assertEquals((passedPawnResultFacet \ "comparison_kind").as[String], "played_vs_best")
-    assert(!passedPawnResultFacet.keys.contains("only_move_qualifiers"))
-    assert(!passedPawnResultFacet.keys.contains("event_move"))
-    assertEquals((channel \ "direct_change").as[String], "occurred")
-    assert(!channel.keys.contains("played_change"))
+    assertEquals(passedPawnProgressFacet.keys, Set("cause_evidence_id", "kind", "exposure", "channels"))
+    assertEquals((passedPawnProgressFacet \ "exposure").as[String], "complementary")
+    assertEquals(channel.keys, Set("channel_id", "passed_pawn_progress_realized_after_only_legal_reply_proof"))
     assertEquals(
       channel.keys.intersect(
         Set("actor", "targets", "mechanisms", "consequences", "witnesses", "proof_line_moves", "horizon", "proof_segment")
       ),
       Set.empty[String]
     )
-    val proof = (channel \ "passed_pawn_result_proof").as[JsObject]
-    assertEquals((proof \ "contract").as[String], "passed_pawn_result_under_closed_replies")
+    val proof = (channel \ "passed_pawn_progress_realized_after_only_legal_reply_proof").as[JsObject]
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "dependency_fingerprint").as[String].matches("[0-9a-f]{64}"))
-    assertEquals((proof \ "consequence_kind").as[String], "passed_pawn_progress")
-    assertEquals((proof \ "root_move").as[String], "a5a6")
-    assertEquals((proof \ "realizing_move").as[String], "a6a7")
+    assertEquals((proof \ "root_move").as[String], "g6g7")
+    assertEquals((proof \ "realizing_move").as[String], "g7g8q")
     assert((proof \ "root_ply").as[Int] <= (proof \ "realizing_ply").as[Int])
     assert((proof \ "result_target_subjects").as[List[String]].nonEmpty)
-    assertEquals((proof \ "root_actor" \ "from").as[String], "a5")
-    assertEquals((proof \ "realizing_actor" \ "to").as[String], "a7")
+    assertEquals((proof \ "root_actor" \ "from").as[String], "g6")
+    assertEquals((proof \ "realizing_actor" \ "to").as[String], "g8")
     val inventory = (proof \ "closed_legal_reply_inventory").as[JsObject]
     assertEquals(
-      (inventory \ "issuer").as[String],
-      "structural_delta.canonical_legal_reply_inventory"
+      inventory.keys,
+      Set(
+        "issuer_evidence_id",
+        "root_after",
+        "legal_reply_move",
+        "actual_branch_id"
+      )
     )
-    assertEquals(
-      (inventory \ "coverage_issuer").as[String],
-      "passed_pawn_result_event.branch_complete_reply_coverage"
-    )
-    assert((inventory \ "coverage_evidence_id").as[String].nonEmpty)
-    val legalReplies = (inventory \ "legal_reply_moves").as[List[String]]
-    assertEquals(legalReplies, replyRequests.flatMap(_.moves).distinct.sorted)
+    assert((inventory \ "issuer_evidence_id").as[String].nonEmpty)
+    assertEquals((inventory \ "legal_reply_move").as[String], "h8h7")
     val branches = (proof \ "branches").as[List[JsObject]]
-    val expectedBranches = branches.filter(branch => (branch \ "role").as[String] == "expected_result_route")
-    val replyBranches = branches.filter(branch => (branch \ "role").as[String] == "legal_reply")
-    assertEquals(expectedBranches.size, 1)
-    assertEquals(replyBranches.map(branch => (branch \ "reply_move").as[String]).sorted, legalReplies)
-    assert(replyBranches.forall(branch => (branch \ "source_probe_id").as[String].nonEmpty))
+    assertEquals(branches.size, 1)
+    val actualBranch = branches.head
+    assertEquals((actualBranch \ "role").as[String], "actual_result_route")
+    assertEquals((actualBranch \ "reply_move").as[String], "h8h7")
+    assert((actualBranch \ "source_occurrence_id").as[String].nonEmpty)
+    assertEquals((inventory \ "actual_branch_id").as[String], (actualBranch \ "branch_id").as[String])
     assert(branches.flatMap(branch => (branch \ "steps").as[List[JsObject]]).forall(step =>
       (step \ "step_key").as[String].nonEmpty &&
         (step \ "line" \ "line_id").as[String].nonEmpty &&
@@ -963,28 +838,54 @@ class RuntimeProtocolTest extends munit.FunSuite:
     ))
     val proofPaths = (proof \ "proof_paths").as[List[JsObject]]
     assertEquals(proofPaths.map(path => (path \ "path_occurrence_id").as[String]).distinct.size, proofPaths.size)
-    assertEquals(proofPaths.map(path => (path \ "reply_branch_id").as[String]).toSet, replyBranches.map(branch =>
-      (branch \ "branch_id").as[String]
-    ).toSet)
+    assertEquals(
+      proofPaths.map(path => (path \ "actual_branch_id").as[String]).toSet,
+      Set((actualBranch \ "branch_id").as[String])
+    )
     assert(proofPaths.forall(path => (path \ "premises").as[List[JsObject]].nonEmpty))
+    val dependencyPremises = proofPaths.flatMap(path =>
+      (path \ "premises").as[List[JsObject]].filter(_.keys.contains("dependency_proof"))
+    )
+    val positionStateUses = dependencyPremises.flatMap(premise =>
+      (premise \ "dependency_proof" \ "position_state_issuers").as[List[JsObject]].map(premise -> _)
+    )
+    assert(positionStateUses.nonEmpty, "the public causal route must retain its closed intervening states")
+    assert(positionStateUses.forall { case (premise, issuer) =>
+      val state = (issuer \ "state").as[JsObject]
+      val evidenceOwner = (issuer \ "issuer_evidence_id").as[String]
+      val sourceIds = (premise \ "source_premise_ids").as[List[String]]
+      val lineRole = (issuer \ "line" \ "line_role").as[String]
+      val expectedScope = lineRole match
+        case "played"        => "played_line"
+        case "best_reference" => "best_line"
+        case "alternative"    => "candidate_line"
+      Set("occupied_by", "slider_reach", "pawn_topology")((state \ "kind").as[String]) &&
+        !issuer.keys.contains("query") && sourceIds.contains(evidenceOwner) &&
+        !sourceIds.contains((issuer \ "semantic_proof_id").as[String]) &&
+        sourceIds.contains((issuer \ "issuer_occurrence_id").as[String]) &&
+        (issuer \ "scope").as[String] == expectedScope
+    })
     assert(proofPaths.forall(path => (path \ "closure_use_ids").as[List[String]].nonEmpty))
     assert(proofPaths.forall(path =>
-      Set("exact_move", "equivalent_function")((path \ "realization_match_kind").as[String]) &&
-        (path \ "realization_actor" \ "legal_move_relation").as[String].matches("[0-9a-f]{64}") &&
+      (path \ "realization_actor" \ "legal_move_relation").as[String].matches("[0-9a-f]{64}") &&
         (path \ "realization_move").as[String].matches("[a-h][1-8][a-h][1-8][qrbn]?") &&
         (path \ "realization_ply").as[Int] >= 0
     ))
     assert(proofPaths.forall { path =>
-      val branchId = (path \ "reply_branch_id").as[String]
+      val branchId = (path \ "actual_branch_id").as[String]
       val move = (path \ "realization_move").as[String]
       val ply = (path \ "realization_ply").as[Int]
-      replyBranches
-        .find(branch => (branch \ "branch_id").as[String] == branchId)
+      Option(actualBranch)
+        .filter(branch => (branch \ "branch_id").as[String] == branchId)
         .exists(branch => (branch \ "steps").as[List[JsObject]].exists(step =>
           (step \ "move_uci").as[String] == move && (step \ "ply").as[Int] == ply
         ))
     })
-    assert((proof \ "lower_premise_ids").as[List[String]].nonEmpty)
+    val lowerPremiseIds = (proof \ "lower_premise_ids").as[List[String]]
+    assert(lowerPremiseIds.nonEmpty)
+    assert(positionStateUses.forall { case (_, issuer) =>
+      lowerPremiseIds.contains((issuer \ "issuer_evidence_id").as[String])
+    })
 
   test("hundreds of concurrent v6 creations preserve exact capacity and independent ledgers"):
     val registry = CommentaryJobRegistry(maximumRetainedJobs = 128, terminalJobRetentionMillis = 120000L)

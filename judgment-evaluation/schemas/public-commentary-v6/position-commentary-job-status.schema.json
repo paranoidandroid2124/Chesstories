@@ -31,17 +31,15 @@
         "root_candidate_lines_admitted",
         "selected_commentaries_completed",
         "physical_works_issued",
-        "physical_reports_accepted",
-        "causal_waves_completed"
+        "physical_reports_accepted"
       ],
       "properties": {
-        "phase": {"enum": ["root_search", "focus_comparison", "causal_probe", "completed", "stopped"]},
+        "phase": {"enum": ["root_search", "focus_comparison", "completed", "stopped"]},
         "legal_move_count": {"type": "integer", "minimum": 0},
         "root_candidate_lines_admitted": {"type": "integer", "minimum": 0, "maximum": 3},
         "selected_commentaries_completed": {"type": "integer", "minimum": 0, "maximum": 1},
         "physical_works_issued": {"type": "integer", "minimum": 0},
-        "physical_reports_accepted": {"type": "integer", "minimum": 0},
-        "causal_waves_completed": {"type": "integer", "minimum": 0}
+        "physical_reports_accepted": {"type": "integer", "minimum": 0}
       }
     },
     "awaitingEngineWork": {
@@ -72,8 +70,7 @@
         "issued_engine_work": {
           "oneOf": [
             {"$ref": "#/$defs/rootSearchWork"},
-            {"$ref": "#/$defs/focusComparisonWork"},
-            {"$ref": "#/$defs/causalProbeWork"}
+            {"$ref": "#/$defs/focusComparisonWork"}
           ]
         }
       }
@@ -106,7 +103,6 @@
         "stop_condition": {
           "enum": [
             "deadline_exceeded",
-            "budget_exhausted",
             "cancelled",
             "engine_execution_failed",
             "invalid_engine_work_report",
@@ -135,7 +131,7 @@
       ],
       "properties": {
         "work_id": {"type": "string", "pattern": "^work:[0-9]+$"},
-        "purpose": {"enum": ["root_search", "focus_comparison", "causal_probe"]},
+        "purpose": {"enum": ["root_search", "focus_comparison"]},
         "engine_profile": {"$ref": "#/$defs/engineProfile"},
         "execution_key_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "variant": {"const": "standard"},
@@ -178,20 +174,6 @@
             "purpose": {"const": "focus_comparison"},
             "root_restriction": {"$ref": "#/$defs/restrictedRoots"},
             "search_limits": {"$ref": "#/$defs/focusSearchLimits"},
-            "max_search_elapsed_ms": {"const": 3500}
-          }
-        }
-      ]
-    },
-    "causalProbeWork": {
-      "allOf": [
-        {"$ref": "#/$defs/issuedEngineWork"},
-        {
-          "type": "object",
-          "properties": {
-            "purpose": {"const": "causal_probe"},
-            "root_restriction": {"$ref": "#/$defs/unrestrictedRoots"},
-            "search_limits": {"$ref": "#/$defs/causalSearchLimits"},
             "max_search_elapsed_ms": {"const": 3500}
           }
         }
@@ -245,15 +227,6 @@
         "nodes": {"const": 2000000},
         "movetime_ms": {"const": 2500},
         "multi_pv": {"const": 2}
-      }
-    },
-    "causalSearchLimits": {
-      "type": "object",
-      "properties": {
-        "depth": {"const": 16},
-        "nodes": {"const": 2000000},
-        "movetime_ms": {"const": 2500},
-        "multi_pv": {"type": "integer", "minimum": 1, "maximum": 3}
       }
     }
   }

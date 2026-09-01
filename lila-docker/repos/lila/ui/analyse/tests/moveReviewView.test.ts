@@ -107,7 +107,7 @@ const completedJob: CompletedJob = {
                 changePercentagePoints: -3.5,
               },
               kind: 'move-verdict',
-              reasonRefs: { primary: primaryReason.id, support: [supportingReason.id], routes: [] },
+              reasonRefs: { primary: [primaryReason.id], support: [supportingReason.id], routes: [] },
             },
             reasons: [supportingReason, primaryReason],
           },
@@ -253,7 +253,7 @@ test('renders v6 candidate labels and reference-to-reviewed metrics without infe
   assert.equal(findNodes(panel, 'span.move-review__display-tag').length, 0);
 });
 
-test('renders BestChoice from the transmitted candidate set and runner-up verdict', () => {
+test('renders BestChoice from the transmitted runner-up comparison', () => {
   const played = completedJob.snapshot.evidence.candidates[1]!;
   assert.equal(played.review.kind, 'move-verdict');
   if (played.review.kind !== 'move-verdict') return;
@@ -277,7 +277,6 @@ test('renders BestChoice from the transmitted candidate set and runner-up verdic
                 bestChoice: {
                   runnerUpVerdictCode: 'inaccuracy',
                   runnerUpUci: 'e2f2' as Uci,
-                  candidateSet: 'narrow_choice',
                 },
               },
             },
@@ -288,7 +287,7 @@ test('renders BestChoice from the transmitted candidate set and runner-up verdic
   };
   const panel = renderMoveReview(props({ job }));
   const summary = findNode(panel, 'section.move-review__summary');
-  assert.equal(summary.data?.attrs?.['aria-label'], 'Best of a narrow choice: Ke3');
+  assert.equal(summary.data?.attrs?.['aria-label'], 'Inaccuracy: Ke3');
   assert.match(renderedText(summary), /Best Ke3 · Runner-up e2f2: Inaccuracy/);
   assert.equal(findNodes(panel, 'span.move-review__verdict-badge').length, 0);
   assert.doesNotMatch(renderedText(summary), /Improves on the reference/);
@@ -345,15 +344,10 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
     ...primaryReason,
     id: 'resource.typed',
     message: {
-      kind: 'resource-differential',
+      kind: 'unique-check-reply-defender-displacement-before-capture',
       channelId: 'typed.resource',
-      causalSignature: 'typed.resource.signature',
       causeEvidenceId: 'cause.resource',
       causeKind: 'wrong_move_order',
-      effectMode: 'alternative_resource',
-      directChange: 'occurred',
-      playedChange: 'missed',
-      family: 'immediate_forced_reply_resource_differential',
       sourceEvidenceId: 'resource.source',
       semanticId: 'a'.repeat(64),
       occurrenceId: 'b'.repeat(64),
@@ -426,23 +420,16 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
         ply: 2,
         scope: 'best_line',
       },
-      triggerMechanism: 'forced_displacement',
     },
   };
   const defense: MoveReviewReason = {
     ...primaryReason,
     id: 'defense-obligation.typed',
     message: {
-      kind: 'defense-obligation-change',
+      kind: 'sole-recapturer-removal-before-target-capture',
       channelId: 'typed.defense-obligation',
-      causalSignature: 'typed.defense-obligation.signature',
       causeEvidenceId: 'cause.defense-obligation',
       causeKind: 'wrong_move_order',
-      effectMode: 'alternative_resource',
-      directChange: 'occurred',
-      playedChange: 'missed',
-      contract: 'defense_obligation_change',
-      mechanism: 'sole_recapturer_removal',
       sourceEvidenceId: 'defense-obligation.source',
       semanticId: 'd'.repeat(64),
       occurrenceId: 'e'.repeat(64),
@@ -543,14 +530,10 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
     ...primaryReason,
     id: 'passed-pawn-result.typed',
     message: {
-      kind: 'passed-pawn-result',
+      kind: 'passed-pawn-progress-realized-after-only-legal-reply',
       channelId: 'typed.passed-pawn-result',
-      causalSignature: 'typed.passed-pawn-result.signature',
       causeEvidenceId: 'cause.passed-pawn-result',
-      causeKind: 'passed_pawn_result',
-      effectMode: 'played_value',
-      directChange: 'occurred',
-      contract: 'passed_pawn_result_under_closed_replies',
+      causeKind: 'passed_pawn_progress',
       sourceEvidenceId: 'passed-pawn-result.source',
       eventEvidenceId: 'passed-pawn-result.event',
       comparisonEvidenceId: 'comparison',
@@ -558,7 +541,6 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       occurrenceId: 'b'.repeat(64),
       dependencyFingerprint: 'c'.repeat(64),
       pathOccurrenceId: '6'.repeat(64),
-      consequenceKind: 'passed_pawn_progress',
       resultTargetSubjects: [
         `20:passed-pawn-promoted5:white2:a72:a8:relations:[removed:pawn_passage:${'f'.repeat(64)}]:derived:[]`,
       ],
@@ -595,40 +577,16 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       },
       pathRealizationMove: 'a7a8q' as Uci,
       pathRealizationPly: 3,
-      pathRealizationMatchKind: 'exact_move',
-      replyBranch: {
+      actualBranch: {
         id: '7'.repeat(64),
-        role: 'legal_reply',
+        role: 'actual_result_route',
         provenance: 'observed_game_root',
         lineId: 'line.played',
         lineRole: 'played',
         lineRank: 1,
         rootMove: 'a6a7' as Uci,
       },
-      expectedBranches: [
-        {
-          id: '9'.repeat(64),
-          role: 'expected_result_route',
-          provenance: 'observed_game_root',
-          lineId: 'line.played',
-          lineRole: 'played',
-          lineRank: 1,
-          rootMove: 'a6a7' as Uci,
-        },
-      ],
-      replyOccurrenceSteps: [
-        {
-          index: 0,
-          stepKey: `1:a6a7:${beforeFen}:${firstFen}`,
-          ply: 1,
-          move: 'a6a7' as Uci,
-          fenBefore: beforeFen,
-          fenAfter: firstFen,
-          line: { id: 'line.played', role: 'played', rank: 1, rootMove: 'a6a7' as Uci },
-          provenance: 'observed_game_move',
-        },
-      ],
-      expectedOccurrenceSteps: [
+      actualOccurrenceSteps: [
         {
           index: 0,
           stepKey: `1:a6a7:${beforeFen}:${firstFen}`,
@@ -642,29 +600,23 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       ],
       premises: [
         {
-          role: 'observed_result',
-          contract: 'observed_passed_pawn_result',
-          resultId: 'observed-result-result',
+          role: 'result',
+          contract: 'passed_pawn_progress',
+          resultId: 'actual-result',
           sourcePremiseIds: ['passed-pawn-result.event'],
           branchId: '7'.repeat(64),
-          branchRole: 'legal_reply',
-          relatedBranchIds: [],
+          branchRole: 'actual_result_route',
           fromStepIndex: 2,
           toStepIndex: 2,
         },
       ],
       closureUseIds: ['8'.repeat(64)],
       lowerPremiseIds: ['passed-pawn-result.event', 'structural.delta.reply.inventory'],
-      occurrenceLinkKeys: ['occurrence-link:1'],
       replyClosure: {
-        issuer: 'structural_delta.canonical_legal_reply_inventory',
         issuerEvidenceId: 'structural.delta.reply.inventory',
-        coverageIssuer: 'passed_pawn_result_event.branch_complete_reply_coverage',
-        coverageEvidenceId: 'passed-pawn-result.event',
         rootAfter: { fen: firstFen, ply: 1, scope: 'played_transition' },
-        legalReplyMoves: ['h8g8' as Uci],
-        branchByReply: [{ move: 'h8g8' as Uci, branchId: '7'.repeat(64) }],
-        certifiedHorizonPlyOffset: 2,
+        legalReplyMove: 'h8g8' as Uci,
+        actualBranchId: '7'.repeat(64),
       },
     },
   };
@@ -686,17 +638,22 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
   const passedPawnResultText = moveReviewReasonText(passedPawnResult, candidate, 'en-US');
   assert.match(
     passedPawnResultText,
-    /pawn moves a6–a7.*pawn from a7.*a7a8q.*20:passed-pawn-promoted5:white2:a72:a8/,
+    /pawn moves a6–a7.*only legal reply h8g8 and a7a8q.*20:passed-pawn-promoted5:white2:a72:a8/,
   );
-  assert.ok(passedPawnResultText.includes('structural_delta.canonical_legal_reply_inventory'));
   assert.ok(passedPawnResultText.includes('structural.delta.reply.inventory'));
-  assert.ok(passedPawnResultText.includes('passed_pawn_result_event.branch_complete_reply_coverage'));
   assert.ok(passedPawnResultText.includes('passed-pawn-result.event'));
   assert.ok(passedPawnResultText.includes(firstFen));
   assert.match(
     passedPawnResultText,
-    /issues replies h8g8.*complete branch coverage.*horizon 2 ply.*path premises observed.*causal links occurren/,
+    /certifies that reply.*owns the actual result occurrence.*path premises actual.*independent path/,
   );
+  const passedPawnResultKorean = moveReviewReasonText(passedPawnResult, candidate, 'ko-KR');
+  assert.match(
+    passedPawnResultKorean,
+    /유일 합법 응수 h8g8.*structural\.delta\.reply\.inventory 인벤토리가.*그 응수를 인증/,
+  );
+  assert.match(passedPawnResultKorean, /통과폰 진행 결과.*passed-pawn-result\.event가 실제 결과 occurrence를 소유/);
+  assert.doesNotMatch(passedPawnResultKorean, /passed-pawn-result\.event.*가지 완결/);
 
   const candidates = completedJob.snapshot.evidence.candidates.map(item =>
     item.review.kind === 'move-verdict'
@@ -706,7 +663,7 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
             ...item.review,
             core: {
               ...item.review.core,
-              reasonRefs: { primary: resource.id, support: [defense.id, passedPawnResult.id], routes: [] },
+              reasonRefs: { primary: [resource.id], support: [defense.id, passedPawnResult.id], routes: [] },
             },
             reasons: [resource, defense, passedPawnResult],
           },
@@ -734,7 +691,7 @@ test('closes a verdict-only review with an explicit cause-withheld message', () 
           ...candidate,
           review: {
             ...candidate.review,
-            core: { ...candidate.review.core, reasonRefs: { support: [], routes: [] } },
+            core: { ...candidate.review.core, reasonRefs: { primary: [], support: [], routes: [] } },
             reasons: [],
           },
         }
@@ -779,7 +736,7 @@ test('renders multiple preserved paths as neutral proof routes', () => {
             ...candidate.review,
             core: {
               ...candidate.review.core,
-              reasonRefs: { support: [], routes: [primaryReason.id, supportingReason.id] },
+              reasonRefs: { primary: [], support: [], routes: [primaryReason.id, supportingReason.id] },
             },
           },
         }

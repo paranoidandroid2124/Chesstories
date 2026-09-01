@@ -7,18 +7,21 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum BoundedCausalContractKind:
-  case ImmediateForcedReplyResourceDifferential
-  case DefenseObligationChange
-  case PassedPawnResultUnderClosedReplies
+  case UniqueCheckReplyDefenderDisplacementBeforeCapture
+  case SoleRecapturerRemovalBeforeTargetCapture
+  case VacatedGateEnablesUnrecapturableSliderCapture
+  case PassedPawnProgressRealizedAfterOnlyLegalReply
 
   def semanticNamespace: String =
     this match
-      case ImmediateForcedReplyResourceDifferential =>
-        "causal-proposition:immediate-forced-reply-resource-differential:v2"
-      case DefenseObligationChange =>
-        "causal-proposition:defense-obligation-change:v1"
-      case PassedPawnResultUnderClosedReplies =>
-        "causal-proposition:passed-pawn-result-under-closed-replies:v1"
+      case UniqueCheckReplyDefenderDisplacementBeforeCapture =>
+        "causal-proposition:unique-check-reply-defender-displacement-before-capture:v2"
+      case SoleRecapturerRemovalBeforeTargetCapture =>
+        "causal-proposition:sole-recapturer-removal-before-target-capture:v1"
+      case VacatedGateEnablesUnrecapturableSliderCapture =>
+        "causal-proposition:vacated-gate-enables-unrecapturable-slider-capture:v1"
+      case PassedPawnProgressRealizedAfterOnlyLegalReply =>
+        "causal-proposition:passed-pawn-progress-realized-after-only-legal-reply:v1"
 
 private[chessjudgment] final case class SemanticPositionIdentity private (value: String)
 
@@ -70,95 +73,13 @@ private[chessjudgment] enum CausalStepProvenance:
   case ObservedGameMove
   case CertifiedAnalysisMove
 
-private[chessjudgment] enum CausalOccurrenceLinkKind:
-  case AdjacentLegalReplay
-  case CertifiedCausalDependency
-
-/** Package-internal family extension capability for one certified
-  * non-adjacent occurrence jump. Private family tokens validate the lower
-  * dependency; this projection itself does not certify chess truth.
-  */
-private[chessjudgment] trait CausalCertifiedDependencyAuthority:
-  def before: LineReplayStep
-  def after: LineReplayStep
-  def lowerProofKey: String
-
-/** Exact authority for the jump from one retained occurrence to the next.
-  * Adjacent replay is proved by board continuity. A non-adjacent jump is
-  * admitted only through an already certified causal dependency; the bounded
-  * layer never guesses over omitted plies.
-  */
-private[chessjudgment] final case class CausalOccurrenceLink private (
-    kind: CausalOccurrenceLinkKind,
-    fromStepKey: String,
-    toStepKey: String,
-    lowerProofKey: String
-):
-  require(fromStepKey.nonEmpty && toStepKey.nonEmpty, "a causal occurrence link needs exact endpoints")
-  require(lowerProofKey.nonEmpty, "a causal occurrence link needs its lower authority")
-
-  def stableKey: String =
-    List(
-      kind.toString.toLowerCase,
-      fromStepKey,
-      toStepKey,
-      lowerProofKey
-    ).mkString("|")
-
-  def links(before: LineReplayStep, after: LineReplayStep): Boolean =
-    fromStepKey == BoundedCausalIdentity.stepKey(before) &&
-      toStepKey == BoundedCausalIdentity.stepKey(after) &&
-      (kind match
-        case CausalOccurrenceLinkKind.AdjacentLegalReplay =>
-          after.ply == before.ply + 1 &&
-            PrincipalVariationEvidence.sameBoardState(before.fenAfter, after.fenBefore)
-        case CausalOccurrenceLinkKind.CertifiedCausalDependency =>
-          after.ply > before.ply)
-
-private[chessjudgment] object CausalOccurrenceLink:
-  def adjacent(before: LineReplayStep, after: LineReplayStep): CausalOccurrenceLink =
-    require(
-      after.ply == before.ply + 1 &&
-        PrincipalVariationEvidence.sameBoardState(before.fenAfter, after.fenBefore),
-      "an adjacent causal occurrence link needs one continuous legal replay"
-    )
-    CausalOccurrenceLink(
-      CausalOccurrenceLinkKind.AdjacentLegalReplay,
-      BoundedCausalIdentity.stepKey(before),
-      BoundedCausalIdentity.stepKey(after),
-      BoundedCausalIdentity.digest(
-        List(
-          "adjacent-legal-replay:v1",
-          BoundedCausalIdentity.stepKey(before),
-          BoundedCausalIdentity.stepKey(after)
-        )
-      )
-    )
-
-  private[judgment] def fromCertifiedDependency(
-      authority: CausalCertifiedDependencyAuthority
-  ): CausalOccurrenceLink =
-    require(authority.after.ply > authority.before.ply, "a certified dependency must move to a later occurrence")
-    require(authority.lowerProofKey.nonEmpty, "a certified dependency needs its exact lower authority")
-    CausalOccurrenceLink(
-      CausalOccurrenceLinkKind.CertifiedCausalDependency,
-      BoundedCausalIdentity.stepKey(authority.before),
-      BoundedCausalIdentity.stepKey(authority.after),
-      authority.lowerProofKey
-    )
-
 private[chessjudgment] final case class CausalStepOccurrence private[judgment] (
     index: Int,
     step: LineReplayStep,
     line: LineNodeRef,
-    provenance: CausalStepProvenance,
-    linkFromPrevious: Option[CausalOccurrenceLink]
+    provenance: CausalStepProvenance
 ):
   require(index >= 0, "a causal step needs a non-negative branch index")
-  require(
-    (index == 0) == linkFromPrevious.isEmpty,
-    "only the root causal occurrence may omit its incoming link"
-  )
 
 /** Exact ordered path identity. A played branch records only its root move as
   * observed; every continuation move remains certified analysis.
@@ -180,9 +101,11 @@ private[chessjudgment] final case class CausalBranchOccurrence private (
   )
   require(
     steps.zip(steps.drop(1)).forall { case (before, after) =>
-      after.linkFromPrevious.exists(_.links(before.step, after.step))
+      after.step.ply == before.step.ply + 1 &&
+        PrincipalVariationEvidence.normalizeFen(before.step.fenAfter) ==
+          PrincipalVariationEvidence.normalizeFen(after.step.fenBefore)
     },
-    "every retained causal occurrence needs an exact adjacent replay or certified dependency"
+    "every retained causal occurrence must be one continuous adjacent replay"
   )
   require(
     (rootProvenance, steps.map(_.provenance)) match
@@ -218,8 +141,7 @@ private[chessjudgment] object CausalBranchOccurrence:
           index,
           step,
           line,
-          CausalStepProvenance.CertifiedAnalysisMove,
-          incomingAdjacentLink(steps, index)
+          CausalStepProvenance.CertifiedAnalysisMove
         )
       }
     )
@@ -241,8 +163,7 @@ private[chessjudgment] object CausalBranchOccurrence:
           step,
           line,
           if index == 0 then CausalStepProvenance.ObservedGameMove
-          else CausalStepProvenance.CertifiedAnalysisMove,
-          incomingAdjacentLink(steps, index)
+          else CausalStepProvenance.CertifiedAnalysisMove
         )
       }
     )
@@ -256,7 +177,7 @@ private[chessjudgment] object CausalBranchOccurrence:
     val rootPositionIdentity = SemanticPositionIdentity.fromFen(steps.headOption.map(_.step.fenBefore).getOrElse(""))
     val branchId = BoundedCausalIdentity.digest(
       List(
-        "causal-branch-occurrence:v1",
+        "causal-branch-occurrence:v2",
         role.stableKey,
         rootProvenance.toString.toLowerCase,
         BoundedCausalIdentity.lineKey(line),
@@ -265,8 +186,7 @@ private[chessjudgment] object CausalBranchOccurrence:
             List(
               step.provenance.toString.toLowerCase,
               BoundedCausalIdentity.lineKey(step.line),
-              BoundedCausalIdentity.stepKey(step.step),
-              step.linkFromPrevious.map(_.stableKey).getOrElse("root")
+              BoundedCausalIdentity.stepKey(step.step)
             ).mkString(":")
           )
           .mkString("[", ",", "]")
@@ -286,12 +206,6 @@ private[chessjudgment] object CausalBranchOccurrence:
     )
     steps
 
-  private def incomingAdjacentLink(
-      steps: List[LineReplayStep],
-      index: Int
-  ): Option[CausalOccurrenceLink] =
-    Option.when(index > 0)(CausalOccurrenceLink.adjacent(steps(index - 1), steps(index)))
-
   private[judgment] def rootProvenanceFor(line: LineNodeRef): CausalRootProvenance =
     line.role match
       case LineNodeRole.Played => CausalRootProvenance.ObservedGameRoot
@@ -308,11 +222,18 @@ private[chessjudgment] final case class CausalVerticalRelationPremiseUse private
     role: CausalPremiseRole,
     contract: VerticalRelationContractKind,
     result: DerivedRelationResultKey,
+    issuerEvidenceId: String,
+    issuerOccurrenceId: String,
     sourcePremiseIds: List[String],
     branchId: String,
     branchRole: CausalBranchRole,
     stepIndex: Int
 ):
+  require(issuerEvidenceId.nonEmpty, "a causal relation premise needs its exact LegalLine issuer")
+  require(
+    issuerOccurrenceId.matches("[0-9a-f]{64}"),
+    "a causal relation premise needs its exact replay occurrence"
+  )
   require(sourcePremiseIds.nonEmpty, "a causal relation premise needs its exact lower sources")
   require(
     sourcePremiseIds == sourcePremiseIds.sorted && sourcePremiseIds.distinct.size == sourcePremiseIds.size,
@@ -325,6 +246,8 @@ private[chessjudgment] final case class CausalVerticalRelationPremiseUse private
       role.stableKey,
       contract.toString.toLowerCase,
       result.stableKey,
+      issuerEvidenceId,
+      issuerOccurrenceId,
       sourcePremiseIds.mkString("[", ",", "]"),
       branchId,
       branchRole.toString.toLowerCase,
@@ -334,19 +257,25 @@ private[chessjudgment] final case class CausalVerticalRelationPremiseUse private
 private[chessjudgment] object CausalVerticalRelationPremiseUse:
   def from(
       role: CausalPremiseRole,
-      occurrence: ReplayVerticalRelationOccurrence,
+      authority: RecordBoundVerticalRelationOccurrence,
       branch: CausalBranchOccurrence,
       stepIndex: Int
   ): CausalVerticalRelationPremiseUse =
+    val stepOccurrence = branch.stepAt(stepIndex)
     require(
-      branch.stepAt(stepIndex).exists(_.step == occurrence.step),
-      "a relation premise must bind its exact certified replay occurrence"
+      stepOccurrence.exists(step =>
+        step.step == authority.step && step.line == authority.issuerLine &&
+          authority.scope == step.line.role.scope
+      ),
+      "a relation premise must bind its exact graph-owned replay occurrence"
     )
-    val sourcePremiseIds = occurrence.certifiedSourcePremiseIds
+    val sourcePremiseIds = authority.causalSourcePremiseIds
     CausalVerticalRelationPremiseUse(
       role,
-      occurrence.contract,
-      DerivedRelationResultKey.from(occurrence.relation),
+      authority.contract,
+      authority.result,
+      authority.issuerEvidenceId,
+      authority.occurrenceId,
       sourcePremiseIds,
       branch.branchId,
       branch.role,
@@ -368,16 +297,17 @@ private[chessjudgment] trait CausalSupplementalClosureBinding:
   */
 private[chessjudgment] final case class CausalClosedAbsenceBinding private (
     role: CausalAbsenceRole,
-    semanticProofId: String,
-    issuerEvidenceId: String,
-    issuerOccurrenceId: String,
-    queryKey: String,
-    position: PositionNodeRef,
-    scope: EvidenceScope,
+    authority: ClosedRelationAbsenceAuthority,
     branchId: String,
     branchRole: CausalBranchRole,
     afterStepIndex: Int
 ):
+  def semanticProofId: String = authority.semanticProofId
+  def issuerEvidenceId: String = authority.issuerEvidenceId
+  def issuerOccurrenceId: String = authority.occurrence.occurrenceId
+  def queryKey: String = authority.queryKey
+  def position: PositionNodeRef = authority.proof.position
+  def scope: EvidenceScope = authority.scope
   require(semanticProofId.matches("[0-9a-f]{64}"), "a closed absence needs its semantic id")
   require(issuerEvidenceId.nonEmpty, "a closed absence needs its exact LegalLine issuer")
   require(issuerOccurrenceId.matches("[0-9a-f]{64}"), "a closed absence needs its exact replay occurrence")
@@ -401,60 +331,200 @@ private[chessjudgment] final case class CausalClosedAbsenceBinding private (
 private[chessjudgment] object CausalClosedAbsenceBinding:
   def afterStep(
       role: CausalAbsenceRole,
-      proof: PositionRelationExtractor.ClosedRelationAbsenceProof,
+      authority: ClosedRelationAbsenceAuthority,
       branch: CausalBranchOccurrence,
-      stepIndex: Int,
-      issuerRecord: EvidenceRecord,
-      issuerOccurrence: ReplayPositionOccurrence
+      stepIndex: Int
   ): CausalClosedAbsenceBinding =
-    val step = branch.stepAt(stepIndex).map(_.step)
+    val retainedOccurrence = branch.stepAt(stepIndex)
       .getOrElse(throw IllegalArgumentException("a closed absence must bind a retained branch step"))
+    val step = retainedOccurrence.step
     require(
-      step.ply == proof.position.ply &&
-        PrincipalVariationEvidence.sameBoardState(step.fenAfter, proof.position.fen),
+      authority.step == step && step.ply == authority.proof.position.ply &&
+        PrincipalVariationEvidence.sameBoardState(step.fenAfter, authority.proof.position.fen),
       "a closed absence position must be the exact after occurrence of its branch step"
     )
     require(
-      proof.scope == branch.line.role.scope,
-      "a closed absence must retain its exact branch inventory scope"
-    )
-    val issuerCertified = issuerRecord match
-      case EvidenceRecord(ref, line: LineFactEvidence, _) =>
-        ref.producer == EvidenceProducer.LegalLineProducer &&
-          ref.layer == EvidenceLayer.Line &&
-          ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-          ref.line.contains(branch.line) && ref.scope == branch.line.role.scope &&
-          line.line == branch.line && line.certifiedReplay.exists(replay =>
-            replay.positionAfter(step).exists(exactOccurrence =>
-              exactOccurrence.occurrenceId == issuerOccurrence.occurrenceId &&
-                exactOccurrence.sameOwner(issuerOccurrence) &&
-                exactOccurrence.certifies(proof, branch.line.role.scope)
-            )
-          )
-      case _ => false
-    require(
-      issuerCertified && issuerOccurrence.step == step &&
-        issuerOccurrence.certifies(proof, branch.line.role.scope),
-      "a closed absence must name its exact graph-owned LegalLine position occurrence"
-    )
-    val semanticBoard = PrincipalVariationEvidence
-      .semanticBoardStateFen(proof.position.fen)
-      .getOrElse(throw IllegalArgumentException("a closed absence needs a semantic board state"))
-    val semanticProofId = BoundedCausalIdentity.digest(
-      List("closed-relation-absence:v1", semanticBoard, proof.query.stableKey)
+      authority.issuerLine == retainedOccurrence.line &&
+        authority.scope == branch.line.role.scope,
+      "a closed absence must retain its exact graph-owned branch inventory authority"
     )
     CausalClosedAbsenceBinding(
       role,
-      semanticProofId,
-      issuerRecord.ref.id,
-      issuerOccurrence.occurrenceId,
-      proof.query.stableKey,
-      proof.position,
-      proof.scope,
+      authority,
       branch.branchId,
       branch.role,
       stepIndex
     )
+
+/** Certified payload of one LegalLine record. Final graph membership remains
+  * the EvidenceGraph's authority and is intentionally not claimed here.
+  * Positive-state and L1 occurrence authorities share this validation instead
+  * of rebuilding line ownership independently.
+  */
+private[chessjudgment] final case class CertifiedLineReplayRecord private (
+    issuerRecord: EvidenceRecord,
+    replay: CanonicalLineReplay
+):
+  val ref: EvidenceRef = issuerRecord.ref
+  val line: LineNodeRef = ref.line.get
+  val scope: EvidenceScope = ref.scope
+
+private[chessjudgment] object CertifiedLineReplayRecord:
+  def from(issuerRecord: EvidenceRecord): Option[CertifiedLineReplayRecord] =
+    issuerRecord match
+      case EvidenceRecord(ref, line: LineFactEvidence, _)
+          if ref.producer == EvidenceProducer.LegalLineProducer &&
+            ref.layer == EvidenceLayer.Line &&
+            ref.confidence == EvidenceConfidence.LegalReplayVerified &&
+            ref.line.contains(line.line) && ref.scope == line.line.role.scope =>
+        line.certifiedReplay.map(CertifiedLineReplayRecord(issuerRecord, _))
+      case _ => None
+
+/** Sole record-bound authority for one exact absence issued by a closed
+  * LegalLine position inventory. L2 families consume this opaque authority;
+  * none may reconstruct record, occurrence, or absence ownership themselves.
+  */
+private[chessjudgment] final case class ClosedRelationAbsenceAuthority private (
+    lineRecord: CertifiedLineReplayRecord,
+    occurrence: ReplayPositionOccurrence,
+    proof: PositionRelationExtractor.ClosedRelationAbsenceProof
+):
+  val step: LineReplayStep = occurrence.step
+  val issuerRecord: EvidenceRecord = lineRecord.issuerRecord
+  val issuerEvidenceId: String = lineRecord.ref.id
+  val issuerLine: LineNodeRef = lineRecord.line
+  val scope: EvidenceScope = lineRecord.scope
+  val semanticProofId: String = ClosedRelationAbsenceProofIdentity.semanticId(proof)
+  val query: PositionRelationExtractor.ClosedRelationAbsenceQuery = proof.query
+  def queryKey: String = query.stableKey
+  def remainsCertified: Boolean =
+    ClosedRelationAbsenceAuthority.certified(issuerRecord, occurrence, proof).contains(this)
+
+private[chessjudgment] object ClosedRelationAbsenceAuthority:
+  def forQuery(
+      issuerRecord: EvidenceRecord,
+      occurrence: ReplayPositionOccurrence,
+      query: PositionRelationExtractor.ClosedRelationAbsenceQuery
+  ): Option[ClosedRelationAbsenceAuthority] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      exactOccurrence <- lineRecord.replay.positionAfter(occurrence.step)
+      if exactOccurrence.occurrenceId == occurrence.occurrenceId && exactOccurrence.sameOwner(occurrence)
+      proof <- exactOccurrence.closedAbsence(query, lineRecord.scope)
+      if occurrence.certifies(proof, lineRecord.scope)
+    yield ClosedRelationAbsenceAuthority(lineRecord, exactOccurrence, proof)
+
+  def certified(
+      issuerRecord: EvidenceRecord,
+      occurrence: ReplayPositionOccurrence,
+      proof: PositionRelationExtractor.ClosedRelationAbsenceProof
+  ): Option[ClosedRelationAbsenceAuthority] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      exactOccurrence <- lineRecord.replay.positionAfter(occurrence.step)
+      if proof.scope == lineRecord.scope
+      if exactOccurrence.occurrenceId == occurrence.occurrenceId && exactOccurrence.sameOwner(occurrence)
+      rebound <- exactOccurrence.closedAbsence(proof.query, lineRecord.scope)
+      if rebound.query == proof.query && rebound.position == proof.position && rebound.scope == proof.scope
+      if exactOccurrence.certifies(proof, lineRecord.scope) && occurrence.certifies(proof, lineRecord.scope)
+      if exactOccurrence.certifies(rebound, lineRecord.scope) && occurrence.certifies(rebound, lineRecord.scope)
+    yield ClosedRelationAbsenceAuthority(lineRecord, exactOccurrence, proof)
+
+/** One exact L1 occurrence bound to the full certified LegalLine record that
+  * produced it. EvidenceGraph later proves that record is the canonical graph
+  * owner; copied ids alone are never accepted.
+  */
+private[chessjudgment] final case class RecordBoundVerticalRelationOccurrence private (
+    lineRecord: CertifiedLineReplayRecord,
+    occurrence: ReplayVerticalRelationOccurrence
+):
+  val issuerRecord: EvidenceRecord = lineRecord.issuerRecord
+  val issuerEvidenceId: String = lineRecord.ref.id
+  val issuerLine: LineNodeRef = lineRecord.line
+  val scope: EvidenceScope = lineRecord.scope
+  val step: LineReplayStep = occurrence.step
+  val contract: VerticalRelationContractKind = occurrence.contract
+  val result: DerivedRelationResultKey = DerivedRelationResultKey.from(occurrence.relation)
+  val occurrenceId: String = occurrence.occurrenceId
+  val certifiedSourcePremiseIds: List[String] = occurrence.certifiedSourcePremiseIds
+  val binding: ReplayVerticalRelationOccurrenceBinding = ReplayVerticalRelationOccurrenceBinding.from(occurrence)
+  def causalSourcePremiseIds: List[String] =
+    val ids = issuerEvidenceId :: occurrenceId :: certifiedSourcePremiseIds
+    require(
+      ids.distinct.size == ids.size,
+      "an L2 relation premise cannot collapse distinct issuer, occurrence, or lower-premise owners"
+    )
+    ids.sorted
+  def stableKey: String =
+    List(
+      BoundedCausalIdentity.evidenceRecordKey(issuerRecord),
+      BoundedCausalIdentity.lineKey(issuerLine),
+      scope.toString.toLowerCase,
+      binding.stableKey
+    ).mkString("|")
+
+private[chessjudgment] object RecordBoundVerticalRelationOccurrence:
+  def certified(
+      issuerRecord: EvidenceRecord,
+      occurrence: ReplayVerticalRelationOccurrence
+  ): Option[RecordBoundVerticalRelationOccurrence] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      rebound <- lineRecord.replay.verticalRelationOccurrences(occurrence.step, List(occurrence.contract))
+        .find(_ == occurrence)
+    yield RecordBoundVerticalRelationOccurrence(lineRecord, rebound)
+
+/** Sole record-bound authority that one certified LegalLine replay occurrence
+  * issued one exact positive-state proof. EvidenceGraph separately certifies
+  * canonical graph ownership of the retained record.
+  */
+private[chessjudgment] final case class ClosedPositionStateAuthority private (
+    lineRecord: CertifiedLineReplayRecord,
+    occurrence: ReplayPositionOccurrence,
+    proof: PositionRelationExtractor.ClosedPositionStateProof
+):
+  val step: LineReplayStep = occurrence.step
+  val issuerRecord: EvidenceRecord = lineRecord.issuerRecord
+  val issuerEvidenceId: String = lineRecord.ref.id
+  val issuerLine: LineNodeRef = lineRecord.line
+  val scope: EvidenceScope = lineRecord.scope
+  val semanticProofId: String = ClosedPositionStateProofIdentity.semanticId(proof)
+  val query: PositionRelationExtractor.ClosedPositionStateQuery = proof.query
+  def queryKey: String = query.stableKey
+
+private[chessjudgment] object ClosedPositionStateAuthority:
+  def occurrenceAfter(
+      issuerRecord: EvidenceRecord,
+      step: LineReplayStep
+  ): Option[ReplayPositionOccurrence] =
+    CertifiedLineReplayRecord.from(issuerRecord).flatMap(_.replay.positionAfter(step))
+
+  def atStep(
+      issuerRecord: EvidenceRecord,
+      step: LineReplayStep
+  )(
+      select: (ReplayPositionOccurrence, EvidenceScope) =>
+        Option[PositionRelationExtractor.ClosedPositionStateProof]
+    ): Option[ClosedPositionStateAuthority] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      occurrence <- lineRecord.replay.positionAfter(step)
+      proof <- select(occurrence, lineRecord.scope)
+      authority <- certified(issuerRecord, occurrence, proof)
+    yield authority
+
+  def certified(
+      issuerRecord: EvidenceRecord,
+      occurrence: ReplayPositionOccurrence,
+      proof: PositionRelationExtractor.ClosedPositionStateProof
+  ): Option[ClosedPositionStateAuthority] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      exactOccurrence <- lineRecord.replay.positionAfter(occurrence.step)
+      if proof.scope == lineRecord.scope
+      if exactOccurrence.occurrenceId == occurrence.occurrenceId && exactOccurrence.sameOwner(occurrence)
+      if exactOccurrence.certifies(proof, lineRecord.scope) && occurrence.certifies(proof, lineRecord.scope)
+    yield ClosedPositionStateAuthority(lineRecord, occurrence, proof)
 
 /** Semantic positive-state id plus one exact branch use. The proof remains
   * owned by the replay position inventory that certified the full typed
@@ -462,16 +532,18 @@ private[chessjudgment] object CausalClosedAbsenceBinding:
   */
 private[chessjudgment] final case class CausalClosedStateBinding private (
     role: CausalStateRole,
-    semanticProofId: String,
-    issuerEvidenceId: String,
-    issuerOccurrenceId: String,
-    queryKey: String,
-    position: PositionNodeRef,
-    scope: EvidenceScope,
+    authority: ClosedPositionStateAuthority,
     branchId: String,
     branchRole: CausalBranchRole,
     afterStepIndex: Int
 ):
+  def semanticProofId: String = authority.semanticProofId
+  def issuerEvidenceId: String = authority.issuerEvidenceId
+  def issuerOccurrenceId: String = authority.occurrence.occurrenceId
+  def query: PositionRelationExtractor.ClosedPositionStateQuery = authority.query
+  def queryKey: String = authority.queryKey
+  def position: PositionNodeRef = authority.proof.position
+  def scope: EvidenceScope = authority.scope
   require(semanticProofId.matches("[0-9a-f]{64}"), "a closed state needs its semantic id")
   require(issuerEvidenceId.nonEmpty, "a closed state needs its exact LegalLine issuer")
   require(issuerOccurrenceId.matches("[0-9a-f]{64}"), "a closed state needs its exact replay occurrence")
@@ -492,59 +564,58 @@ private[chessjudgment] final case class CausalClosedStateBinding private (
       s"after:$afterStepIndex"
     ).mkString("|")
 
-private[chessjudgment] object CausalClosedStateBinding:
-  def afterStep(
-      role: CausalStateRole,
-      proof: PositionRelationExtractor.ClosedPositionStateProof,
-      branch: CausalBranchOccurrence,
-      stepIndex: Int,
-      issuerRecord: EvidenceRecord,
-      issuerOccurrence: ReplayPositionOccurrence
-  ): CausalClosedStateBinding =
-    val step = branch.stepAt(stepIndex).map(_.step)
-      .getOrElse(throw IllegalArgumentException("a closed state must bind a retained branch step"))
-    require(
-      step.ply == proof.position.ply &&
-        PrincipalVariationEvidence.sameBoardState(step.fenAfter, proof.position.fen),
-      "a closed state position must be the exact after occurrence of its branch step"
-    )
-    require(
-      proof.scope == branch.line.role.scope,
-      "a closed state must retain its exact branch inventory scope"
-    )
-    val issuerCertified = issuerRecord match
-      case EvidenceRecord(ref, line: LineFactEvidence, _) =>
-        ref.producer == EvidenceProducer.LegalLineProducer &&
-          ref.layer == EvidenceLayer.Line &&
-          ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-          ref.line.contains(branch.line) && ref.scope == branch.line.role.scope &&
-          line.line == branch.line && line.certifiedReplay.exists(replay =>
-            replay.positionAfter(step).exists(exactOccurrence =>
-              exactOccurrence.occurrenceId == issuerOccurrence.occurrenceId &&
-                exactOccurrence.sameOwner(issuerOccurrence) &&
-                exactOccurrence.certifies(proof, branch.line.role.scope)
-            )
-          )
-      case _ => false
-    require(
-      issuerCertified && issuerOccurrence.step == step &&
-        issuerOccurrence.certifies(proof, branch.line.role.scope),
-      "a closed state must name its exact graph-owned LegalLine position occurrence"
-    )
+/** Single semantic identity authority for an exact positive state certified
+  * by one closed position inventory. Causal families and other exact L2
+  * consumers may bind different occurrence paths to this shared meaning.
+  */
+private[chessjudgment] object ClosedPositionStateProofIdentity:
+  def semanticId(
+      proof: PositionRelationExtractor.ClosedPositionStateProof
+  ): String =
     val semanticBoard = PrincipalVariationEvidence
       .semanticBoardStateFen(proof.position.fen)
       .getOrElse(throw IllegalArgumentException("a closed state needs a semantic board state"))
-    val semanticProofId = BoundedCausalIdentity.digest(
+    BoundedCausalIdentity.digest(
       List("closed-position-state:v1", semanticBoard, proof.query.stableKey)
+    )
+
+/** Single semantic identity authority for an exact absence certified by one
+  * closed relation inventory. Families validate the rebound lower proof and
+  * compare this issued identity instead of reproducing its digest recipe.
+  */
+private[chessjudgment] object ClosedRelationAbsenceProofIdentity:
+  def semanticId(
+      proof: PositionRelationExtractor.ClosedRelationAbsenceProof
+  ): String =
+    val semanticBoard = PrincipalVariationEvidence
+      .semanticBoardStateFen(proof.position.fen)
+      .getOrElse(throw IllegalArgumentException("a closed absence needs a semantic board state"))
+    BoundedCausalIdentity.digest(
+      List("closed-relation-absence:v1", semanticBoard, proof.query.stableKey)
+    )
+
+private[chessjudgment] object CausalClosedStateBinding:
+  def afterStep(
+      role: CausalStateRole,
+      authority: ClosedPositionStateAuthority,
+      branch: CausalBranchOccurrence,
+      stepIndex: Int
+  ): CausalClosedStateBinding =
+    val retainedOccurrence = branch.stepAt(stepIndex)
+      .getOrElse(throw IllegalArgumentException("a closed state must bind a retained branch step"))
+    val step = retainedOccurrence.step
+    require(
+      authority.step == step && step.ply == authority.proof.position.ply &&
+        PrincipalVariationEvidence.sameBoardState(step.fenAfter, authority.proof.position.fen),
+      "a closed state position must be the exact after occurrence of its branch step"
+    )
+    require(
+      authority.issuerLine == retainedOccurrence.line && authority.scope == retainedOccurrence.line.role.scope,
+      "a closed state must retain its exact branch inventory scope"
     )
     CausalClosedStateBinding(
       role,
-      semanticProofId,
-      issuerRecord.ref.id,
-      issuerOccurrence.occurrenceId,
-      proof.query.stableKey,
-      proof.position,
-      proof.scope,
+      authority,
       branch.branchId,
       branch.role,
       stepIndex
@@ -751,6 +822,8 @@ final case class BoundedCausalPublicPremiseUse private[chessjudgment] (
     role: String,
     contract: String,
     resultId: String,
+    issuerEvidenceId: String,
+    issuerOccurrenceId: String,
     sourcePremiseIds: List[String],
     branchId: String,
     branchRole: String,
@@ -771,10 +844,25 @@ final case class BoundedCausalPublicClosedAbsenceUse private[chessjudgment] (
     scope: EvidenceScope
 )
 
+final case class BoundedCausalPublicClosedStateUse private[chessjudgment] (
+    useId: String,
+    role: String,
+    semanticProofId: String,
+    issuerEvidenceId: String,
+    issuerOccurrenceId: String,
+    query: String,
+    branchId: String,
+    branchRole: String,
+    afterStepIndex: Int,
+    position: PositionNodeRef,
+    scope: EvidenceScope
+)
+
 final case class BoundedCausalPublicProofPath private[chessjudgment] (
     pathOccurrenceId: String,
     premises: List[BoundedCausalPublicPremiseUse],
-    closedAbsenceUses: List[BoundedCausalPublicClosedAbsenceUse]
+    closedAbsenceUses: List[BoundedCausalPublicClosedAbsenceUse],
+    closedStateUses: List[BoundedCausalPublicClosedStateUse]
 )
 
 private[chessjudgment] object BoundedCausalPublicProjection:
@@ -799,10 +887,9 @@ private[chessjudgment] object BoundedCausalPublicProjection:
   def paths(paths: List[CausalProofPathOccurrence]): List[BoundedCausalPublicProofPath] =
     require(
       paths.forall(path =>
-        path.closedStateUses.isEmpty && path.manifest.supplementalPremiseUses.isEmpty &&
-          path.supplementalClosureUses.isEmpty
+        path.manifest.supplementalPremiseUses.isEmpty && path.supplementalClosureUses.isEmpty
       ),
-      "the common public causal projection cannot omit closed-state or family-specific proof uses"
+      "the common public causal projection cannot omit family-specific supplemental proof uses"
     )
     paths.map(path =>
       BoundedCausalPublicProofPath(
@@ -812,6 +899,8 @@ private[chessjudgment] object BoundedCausalPublicProjection:
             premise.role.stableKey,
             premise.contract.toString,
             premise.result.stableKey,
+            premise.issuerEvidenceId,
+            premise.issuerOccurrenceId,
             premise.sourcePremiseIds,
             premise.branchId,
             premise.branchRole.stableKey,
@@ -821,6 +910,22 @@ private[chessjudgment] object BoundedCausalPublicProjection:
         path.closedAbsenceUses.map { use =>
           val binding = use.binding
           BoundedCausalPublicClosedAbsenceUse(
+            use.useId,
+            binding.role.stableKey,
+            binding.semanticProofId,
+            binding.issuerEvidenceId,
+            binding.issuerOccurrenceId,
+            binding.queryKey,
+            binding.branchId,
+            binding.branchRole.stableKey,
+            binding.afterStepIndex,
+            binding.position,
+            binding.scope
+          )
+        },
+        path.closedStateUses.map { use =>
+          val binding = use.binding
+          BoundedCausalPublicClosedStateUse(
             use.useId,
             binding.role.stableKey,
             binding.semanticProofId,

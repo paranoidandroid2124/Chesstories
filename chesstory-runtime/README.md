@@ -4,7 +4,7 @@ Private standalone runtime for Chesstory's causal graph judgment.
 
 Player use is the position-commentary job path: the server issues exact
 browser engine work and the browser returns only the issued work report.
-Direct FEN/UCI/PV/probe inputs are development-only. The runtime must not
+Direct FEN/UCI/PV inputs are development-only. The runtime must not
 depend on the lila application, controllers, database, or internal graph
 transport types.
 
@@ -28,8 +28,9 @@ Player use is the position-commentary job path only:
 - `POST /v1/position-commentary-jobs/{jobId}/engine-work-reports`
 - `DELETE /v1/position-commentary-jobs/{jobId}`
 
-The server creates one root-candidate search, an optional played-vs-best
-comparison, and only the causal searches requested by the v6 semantic graph.
+The server creates one root-candidate search and an optional played-vs-best
+comparison. L2 consumes those admitted PV/MultiPV lines and never issues a
+separate causal search.
 It owns work identity, legal replay, evidence admission, and the completed
 commentary response. The browser only executes issued engine work and returns
 its line suffixes. Active and stopped job responses use the atomic

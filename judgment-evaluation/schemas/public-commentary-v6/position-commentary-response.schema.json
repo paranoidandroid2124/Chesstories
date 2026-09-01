@@ -31,7 +31,6 @@
   "$defs": {
     "requestId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
     "jobId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{32}$"},
-    "nonEmptyString": {"type": "string", "minLength": 1},
     "fen": {"type": "string", "minLength": 1, "maxLength": 128},
     "uciMove": {"type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"},
     "focus": {
@@ -53,8 +52,7 @@
         "root_candidate_lines_admitted",
         "selected_commentaries_completed",
         "physical_works_issued",
-        "physical_reports_accepted",
-        "causal_waves_completed"
+        "physical_reports_accepted"
       ],
       "properties": {
         "phase": {"const": "completed"},
@@ -62,8 +60,7 @@
         "root_candidate_lines_admitted": {"type": "integer", "minimum": 1, "maximum": 3},
         "selected_commentaries_completed": {"type": "integer", "minimum": 0, "maximum": 1},
         "physical_works_issued": {"type": "integer", "minimum": 1},
-        "physical_reports_accepted": {"type": "integer", "minimum": 1},
-        "causal_waves_completed": {"type": "integer", "minimum": 0}
+        "physical_reports_accepted": {"type": "integer", "minimum": 1}
       }
     },
     "positionResult": {

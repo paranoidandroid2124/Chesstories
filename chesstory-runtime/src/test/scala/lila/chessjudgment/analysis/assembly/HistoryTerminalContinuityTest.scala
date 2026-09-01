@@ -2,13 +2,6 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.Pawn
 import chess.variant.Standard
-import lila.chessjudgment.model.{
-  BranchReplyProbeBinding,
-  ProbeRequest,
-  ProbeResolution,
-  ProbeResult,
-  ProbeVariant
-}
 import lila.chessjudgment.model.line.{
   AutomaticTerminal,
   CandidateLineEvaluation,
@@ -43,106 +36,6 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
         )
       )
     )
-
-  test("branch reply horizon closes on a history-owned automatic terminal"):
-    val fen = "k7/6b1/8/8/8/8/3R4/7K w - - 0 1"
-    val playedMove = "d2d4"
-    val replyMove = "g7d4"
-    val prepared = MoveReviewInputAdmission
-      .admit(
-        RawMoveReviewInput(
-          fen = fen,
-          playedMoveUci = playedMove,
-          variations = List(
-            EngineLine(List("d2d3", "g7f8", "h1g1"), 20, None, 16),
-            EngineLine(List(playedMove, "g7f8", "h1g1"), 0, None, 16)
-          )
-        )
-      )
-      .getOrElse(fail("expected the branch root to normalize"))
-    val played = prepared.playedLine.getOrElse(fail("expected the played root line"))
-    val engineLine = played.evaluation.engineLine.getOrElse(fail("expected a nonterminal root engine line"))
-    val branchFen = played.replay.replaySteps.headOption
-      .map(_.fenAfter)
-      .getOrElse(fail("expected the branch position"))
-    val horizon = 3
-    val variationHash = BranchReplyProbeBinding.variationHash(
-      rootFen = fen,
-      role = played.role,
-      rootMove = playedMove,
-      whitePovEvalCp = engineLine.scoreCp,
-      mate = engineLine.mate,
-      depth = engineLine.depth,
-      moves = engineLine.moves,
-      replyMove = replyMove,
-      certifiedHorizonPlyOffset = horizon
-    )
-    val request = ProbeRequest(
-      id = "insufficient-material-reply",
-      fen = branchFen,
-      depth = 16,
-      candidateMove = playedMove,
-      depthFloor = 12,
-      variationHash = variationHash,
-      variant = ProbeVariant.BranchReply(replyMove, horizon)
-    )
-    val result = ProbeResult(
-      id = request.id,
-      resolution = ProbeResolution.ExactAutomaticTerminal(
-        CandidateLineEvaluation.ExactAutomaticTerminal(
-          List(replyMove),
-          AutomaticTerminal.InsufficientMaterial
-        )
-      )
-    )
-    val admission = MoveReviewInputAdmission
-      .admitIssuedProbeResult(prepared, request, result, prepared.lines.map(_.rank).max + 1)
-      .getOrElse(fail("expected the exact automatic terminal probe to be admitted"))
-
-    assertEquals(admission.branch.certifiedHorizonPlyOffset, horizon)
-    assertEquals(
-      admission.branch.lines.map(_.evaluation),
-      List(
-        CandidateLineEvaluation.ExactAutomaticTerminal(
-          List(replyMove),
-          AutomaticTerminal.InsufficientMaterial
-        )
-      )
-    )
-
-  test("trusted prepared probe pairs fail loudly before the shared executor on impossible metadata"):
-    val prepared = MoveReviewInputAdmission
-      .admit(
-        RawMoveReviewInput(
-          fen = Standard.initialFen.value,
-          playedMoveUci = "d2d4",
-          variations = List(
-            EngineLine(List("e2e4", "e7e5", "g1f3"), 20, None, 16),
-            EngineLine(List("d2d4", "d7d5", "g1f3"), 0, None, 16)
-          )
-        )
-      )
-      .getOrElse(fail("expected a normalized prepared review"))
-    val request = ProbeRequest(
-      id = "trusted-request",
-      fen = Standard.initialFen.value,
-      depth = 16,
-      candidateMove = "d2d4",
-      depthFloor = 12,
-      variationHash = "trusted-variation",
-      variant = ProbeVariant.BranchReply("d7d5", 1)
-    )
-    val mismatched = ProbeResult(
-      id = "different-result",
-      resolution = ProbeResolution.EngineSearch(
-        List(CandidateLineEvaluation.EngineSearch(EngineLine(List("e2e4"), 0, None, 16))),
-        16
-      )
-    )
-
-    intercept[IllegalArgumentException] {
-      MoveReviewJudgmentOrchestrator.executePreparedReview(prepared, List(request -> mismatched))
-    }
 
   test("canonical history retains custom-root replay metadata, including captures and castling"):
     val customInitial = "4k3/8/8/8/3p4/4P3/5P2/4K3 b - - 0 40"

@@ -124,7 +124,7 @@ final case class JudgmentProvenanceAllocator(prefix: String):
   private def occurrenceFen(fen: String): String =
     PrincipalVariationEvidence.normalizeFen(fen)
 
-  private def exactKey(parts: Iterable[String]): String =
+  private[assembly] def exactKey(parts: Iterable[String]): String =
     val raw = parts.iterator.map(value => s"${value.length}:$value").mkString("|")
     Base64.getUrlEncoder.withoutPadding.encodeToString(raw.getBytes(StandardCharsets.UTF_8))
 

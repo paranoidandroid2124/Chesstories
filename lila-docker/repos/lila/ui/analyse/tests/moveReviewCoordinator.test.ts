@@ -244,13 +244,8 @@ test('coordinators compute independently when Web Locks are unavailable', async 
   assert.deepEqual([firstRuns, secondRuns], [1, 1]);
 });
 
-test('runtime source executes root, focus, and causal searches only through the browser executor', async t => {
-  const bodies = [
-    rawSnapshot('awaiting_core'),
-    rawSnapshot('awaiting_evidence'),
-    rawSnapshot('awaiting_causal'),
-    rawResponse(),
-  ];
+test('runtime source executes root and focus searches only through the browser executor', async t => {
+  const bodies = [rawSnapshot('awaiting_core'), rawSnapshot('awaiting_evidence'), rawResponse()];
   const requests: Array<{ url: string; method: string; body?: string }> = [];
   const restoreFetch = replaceGlobal('fetch', async (input: string | URL | Request, init?: RequestInit) => {
     requests.push({
@@ -270,9 +265,7 @@ test('runtime source executes root, focus, and causal searches only through the 
     const rootMoves =
       work.rootRestriction.kind === 'restricted'
         ? work.rootRestriction.movesUci
-        : work.purpose === 'root_search'
-          ? (['c7c5', 'e7e5', 'g8f6'] as Uci[])
-          : (['g1f3'] as Uci[]);
+        : (['c7c5', 'e7e5', 'g8f6'] as Uci[]);
     return {
       kind: 'completed',
       completedDepth: 16,
@@ -295,9 +288,9 @@ test('runtime source executes root, focus, and causal searches only through the 
     new AbortController().signal,
   );
 
-  assert.deepEqual(executedPurposes, ['root_search', 'focus_comparison', 'causal_probe']);
-  assert.deepEqual(emitted, ['awaiting-core', 'awaiting-evidence', 'awaiting-evidence', 'completed']);
-  assert.equal(requests.filter(request => request.url.endsWith('/engine-work-reports')).length, 3);
+  assert.deepEqual(executedPurposes, ['root_search', 'focus_comparison']);
+  assert.deepEqual(emitted, ['awaiting-core', 'awaiting-evidence', 'completed']);
+  assert.equal(requests.filter(request => request.url.endsWith('/engine-work-reports')).length, 2);
   for (const request of requests.slice(1)) {
     const report = JSON.parse(request.body!) as Record<string, unknown>;
     assert.deepEqual(Object.keys(report), [

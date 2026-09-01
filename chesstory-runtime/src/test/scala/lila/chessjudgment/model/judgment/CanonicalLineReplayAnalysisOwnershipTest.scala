@@ -135,6 +135,24 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
       .fromHistory(history.segmentReplaySteps)
       .getOrElse(fail("expected a canonical pawn-break replay"))
     val breakStep :: replyStep :: followUpStep :: Nil = replay.replaySteps: @unchecked
+    val line = LineNodeRef(
+      "pawn-break-follow-up-owner",
+      breakStep.moveUci,
+      1,
+      LineNodeRole.BestReference
+    )
+    val lineRecord = EvidenceRecord(
+      EvidenceRef(
+        "pawn-break-follow-up-owner-evidence",
+        EvidenceProducer.LegalLineProducer,
+        EvidenceLayer.Line,
+        PositionNodeRef(fen, 0, replay.legalSteps.headOption.map(_.move.piece.color)),
+        Some(line),
+        line.role.scope,
+        EvidenceConfidence.LegalReplayVerified
+      ),
+      LineFactEvidence.fromCertifiedReplay(line, replay)
+    )
     val releaseOccurrences = replay.verticalRelationOccurrences(
       replyStep,
       List(VerticalRelationContractKind.PawnTopologyTransition)
@@ -149,7 +167,14 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
       case exact :: Nil => exact
       case found        => fail(s"expected one L1 release occurrence, found ${found.size}")
     val trajectory = PawnBreakFollowUpTrajectory
-      .find(breakStep, replyStep, followUpStep, List(replyStep), replay)
+      .find(
+        breakStep,
+        replyStep,
+        followUpStep,
+        List(replyStep),
+        replay,
+        _ => Some(lineRecord)
+      )
       .getOrElse(fail("expected the L1-certified pawn-break follow-up"))
 
     assertEquals(trajectory.releasedPassedPawn, EvidenceSquare("c5"))
@@ -157,17 +182,17 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
       trajectory.pawnTopologyTransitionKey,
       DerivedRelationResultKey.from(releaseOccurrence.relation)
     )
-    assertEquals(trajectory.relationOccurrenceBinding.step, replyStep)
+    assertEquals(trajectory.relationOccurrenceAuthority.step, replyStep)
     assertEquals(
-      trajectory.relationOccurrenceBinding.contract,
+      trajectory.relationOccurrenceAuthority.contract,
       VerticalRelationContractKind.PawnTopologyTransition
     )
     assertEquals(
-      trajectory.relationOccurrenceBinding.occurrenceId,
+      trajectory.relationOccurrenceAuthority.occurrenceId,
       releaseOccurrence.occurrenceId
     )
     assertEquals(
-      trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds,
+      trajectory.relationOccurrenceAuthority.certifiedSourcePremiseIds,
       releaseOccurrence.certifiedSourcePremiseIds
     )
     assertEquals(

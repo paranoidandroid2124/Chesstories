@@ -6,7 +6,6 @@ import lila.chessjudgment.analysis.assembly.{
   MoveReviewJudgmentOrchestrator,
   RawMoveReviewInput
 }
-import lila.chessjudgment.model.{ ProbeHorizon, ProbeRequest, ProbeResolution, ProbeResult, ProbeVariant }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction, DrawClaimRule }
 import lila.chessjudgment.model.line.EngineLine
@@ -32,73 +31,20 @@ object RuntimeProtocol:
   private object WireVariation:
     given Reads[WireVariation] = Json.reads[WireVariation]
 
-  private final case class WireAutomaticTerminal(
-      kind: String,
-      winner: Option[String]
-  ):
-    def toCore: Option[AutomaticTerminal] =
-      (kind, winner) match
-        case ("checkmate", Some("white")) => Some(AutomaticTerminal.Checkmate(chess.Color.White))
-        case ("checkmate", Some("black")) => Some(AutomaticTerminal.Checkmate(chess.Color.Black))
-        case ("stalemate", None) => Some(AutomaticTerminal.Stalemate)
-        case ("insufficient_material", None) => Some(AutomaticTerminal.InsufficientMaterial)
-        case ("fivefold_repetition", None) => Some(AutomaticTerminal.FivefoldRepetition)
-        case ("seventy_five_move_rule", None) => Some(AutomaticTerminal.SeventyFiveMoveRule)
-        case _ => None
-
-  private object WireAutomaticTerminal:
-    given Reads[WireAutomaticTerminal] = Json.reads[WireAutomaticTerminal]
-
-  private final case class WireProbeResult(
-      id: String,
-      replyLines: Option[List[WireVariation]],
-      depth: Option[Int],
-      moves: Option[List[String]],
-      terminal: Option[WireAutomaticTerminal]
-  ):
-    def toCore: Option[ProbeResult] =
-      (replyLines, depth, moves, terminal) match
-        case (Some(lines), Some(realizedDepth), None, None) if lines.nonEmpty && realizedDepth > 0 =>
-          Some(ProbeResult(
-            id = id,
-            resolution = ProbeResolution.EngineSearch(
-              lines.map(line => CandidateLineEvaluation.EngineSearch(line.toCore)),
-              realizedDepth
-            )
-          ))
-        case (None, None, Some(lineMoves), Some(terminalValue)) if lineMoves.nonEmpty =>
-          terminalValue.toCore.map(value =>
-            ProbeResult(
-              id = id,
-              resolution = ProbeResolution.ExactAutomaticTerminal(
-                CandidateLineEvaluation.ExactAutomaticTerminal(lineMoves, value)
-              )
-            )
-          )
-        case _ => None
-
-  private object WireProbeResult:
-    given Reads[WireProbeResult] = Json.reads[WireProbeResult]
-
   private final case class WireInput(
       fen: String,
       playedMoveUci: String,
       variations: List[WireVariation],
       ply: Option[Int],
-      movePrefixUci: Option[List[String]],
-      probeResults: Option[List[WireProbeResult]]
+      movePrefixUci: Option[List[String]]
   ):
-    def toCore: Option[RawMoveReviewInput] =
-      val coreProbes = probeResults.getOrElse(Nil).map(_.toCore)
-      Option.when(coreProbes.forall(_.nonEmpty))(
-        RawMoveReviewInput(
+    def toCore: RawMoveReviewInput =
+      RawMoveReviewInput(
         fen = fen,
         playedMoveUci = playedMoveUci,
         variations = variations.map(_.toCore),
         ply = ply,
-        movePrefixUci = movePrefixUci.getOrElse(Nil),
-        probeResults = coreProbes.flatten
-        )
+        movePrefixUci = movePrefixUci.getOrElse(Nil)
       )
 
   private object WireInput:
@@ -124,9 +70,7 @@ object RuntimeProtocol:
               (obj \ "input").validate[WireInput] match
                 case JsError(_) => failure(requestId, 400, "invalid_move_review_input")
                 case JsSuccess(input, _) =>
-                  input.toCore.fold(failure(requestId, 400, "invalid_probe_result"))(
-                    evaluate(requestId, _)
-                  )
+                  evaluate(requestId, input.toCore)
       case _ => failure(None, 400, "invalid_request")
 
   private def evaluate(
@@ -142,44 +86,19 @@ object RuntimeProtocol:
         failure(requestId, 422, "move_review_not_buildable")
       )(packet => encodeMoveMeaningResult(requestId, packet))
 
-  def publicProbeRequestJson(request: ProbeRequest): JsObject =
-    val variant = request.variant match
-      case ProbeVariant.BranchReply(_, requiredHorizonPlyOffset) =>
-        Json.obj("horizon" -> ProbeHorizon.renderPlyOffset(requiredHorizonPlyOffset))
-    Json.obj(
-      "id" -> request.id,
-      "fen" -> request.fen,
-      "moves" -> request.moves,
-      "depth" -> request.depth,
-      "purpose" -> request.kind.key,
-      "multiPv" -> 1,
-      "candidateMove" -> request.candidateMove,
-      "variationHash" -> request.variationHash
-    ) ++ variant
-
   private[runtime] def encodeMoveMeaningResult(
       requestId: Option[String],
-      packet: EvidenceBackedJudgmentPacket
+    packet: EvidenceBackedJudgmentPacket
   ): Result =
     val requestField = requestId.map(value => Json.obj("request_id" -> value)).getOrElse(Json.obj())
-    if packet.probeRequests.nonEmpty then
-      Result(
-        202,
-        Json.obj(
-          "schema_version" -> ResponseSchema,
-          "status" -> "engine_work_required",
-          "probe_requests" -> packet.probeRequests.map(publicProbeRequestJson)
-        ) ++ requestField
-      )
-    else
-      Result(
-        200,
-        Json.obj(
-          "schema_version" -> ResponseSchema,
-          "status" -> "ready",
-          "move_commentary" -> moveCommentaryJson(packet)
-        ) ++ requestField
-      )
+    Result(
+      200,
+      Json.obj(
+        "schema_version" -> ResponseSchema,
+        "status" -> "ready",
+        "move_commentary" -> moveCommentaryJson(packet)
+      ) ++ requestField
+    )
 
   private[runtime] def moveCommentaryJson(packet: EvidenceBackedJudgmentPacket): JsObject =
     MoveMeaningProjection.moveCommentaryJson(packet)
@@ -299,13 +218,6 @@ object RuntimeProtocol:
             )
           )
         case PlayerFacingPrimary.BestChoice(_) =>
-          val candidateSet = fact.candidateSet.getOrElse(
-            throw IllegalStateException("R-selected best choice has no complete candidate-set descriptor")
-          )
-          val candidateSetType = candidateSet.candidateSetType match
-            case CandidateSetType.OnlyMove     => "only_move"
-            case CandidateSetType.NarrowChoice => "narrow_choice"
-            case CandidateSetType.StyleChoice  => "style_choice"
           Json.obj(
             "primary" -> Json.obj(
               "kind" -> "best_choice",
@@ -315,22 +227,10 @@ object RuntimeProtocol:
               "mover" -> (if comparison.mover.white then "white" else "black"),
               "delta" -> comparisonDeltaJson(comparison),
               "best_endpoint" -> endpointJson(reference.evaluation, comparison.mover),
-              "runner_up_endpoint" -> endpointJson(candidate.evaluation, comparison.mover),
-              "candidate_set" -> Json.obj(
-                "type" -> candidateSetType
-              )
+              "runner_up_endpoint" -> endpointJson(candidate.evaluation, comparison.mover)
             )
           )
-      val causalExplanations = packet.causeExposureResolution.narrativeIdeas.map { idea =>
-        val unitKind = idea.unit.kind match
-          case PlayerFacingIdeaUnitKind.SingleCause             => "single_cause"
-          case PlayerFacingIdeaUnitKind.ExactPvbResponsibility => "exact_pvb_responsibility"
-        val facets = idea.facets.map(facetJson(_, packet))
-        Json.obj(
-          "kind" -> unitKind,
-          "facets" -> facets
-        )
-      }
+      val causalExplanations = packet.causeExposureResolution.certifiedCauses.map(certifiedCauseJson)
       base ++ Option
         .when(causalExplanations.nonEmpty)(Json.obj("causal_explanations" -> causalExplanations))
         .getOrElse(Json.obj())
@@ -381,250 +281,53 @@ object RuntimeProtocol:
           )
 
 
-    private def facetJson(
-        facet: PlayerFacingNarrativeIdeaFacet,
-        packet: EvidenceBackedJudgmentPacket
-    ): JsObject =
-      val selection = facet.selection
-      val record = packet.evidenceGraph.record(selection.causeEvidence).getOrElse(
-        throw IllegalStateException(
-          s"R-selected Cause is not registered: ${selection.causeEvidence.id}"
-        )
-      )
-      val cause = record.payload match
-        case RelativeCauseFactEvidence(value) => value
-        case _ =>
-          throw IllegalStateException(
-            s"R-selected Cause has the wrong payload: ${selection.causeEvidence.id}"
-          )
-      val comparison = packet.evidenceGraph.comparisonFor(cause).getOrElse(
-        throw IllegalStateException(
-          s"R-selected Cause has no registered comparison: ${selection.causeEvidence.id}"
-        )
-      )
-      val binding = packet.evidenceGraph.requiredRelativeCauseBinding(cause)
-      val facetRole = facet.role match
-        case PlayerFacingIdeaFacetRole.Lead       => "lead"
-        case PlayerFacingIdeaFacetRole.Supporting => "supporting"
-      val causeKind = cause.kind match
+    private def certifiedCauseJson(certified: PlayerFacingCertifiedCause): JsObject =
+      val selection = certified.selection
+      val causeKind = certified.cause.kind match
         case RelativeCauseKind.MissedTacticalResource     => "missed_tactical_resource"
-        case RelativeCauseKind.TacticalRefutationOfPlayed => "tactical_refutation_of_played"
-        case RelativeCauseKind.CandidateTacticalLiability => "candidate_tactical_liability"
-        case RelativeCauseKind.RecaptureRecoveryWindow   => "recapture_recovery_window"
         case RelativeCauseKind.WrongMoveOrder             => "wrong_move_order"
-        case RelativeCauseKind.PassedPawnResult            => "passed_pawn_result"
-        case RelativeCauseKind.DrawResource               => "draw_resource"
-        case RelativeCauseKind.KingForcing                => "king_forcing"
-        case RelativeCauseKind.MaterialSwing              => "material_swing"
-      val effectMode = selection.effectMode match
-        case PlayerFacingCauseEffectMode.PlayedLiability     => "played_liability"
-        case PlayerFacingCauseEffectMode.AlternativeResource => "alternative_resource"
-        case PlayerFacingCauseEffectMode.PlayedValue         => "played_value"
+        case RelativeCauseKind.PassedPawnProgress         => "passed_pawn_progress"
       val exposure = selection.exposure match
         case PlayerFacingCauseExposureTier.Primary       => "primary"
         case PlayerFacingCauseExposureTier.Complementary => "complementary"
-      val sourceSide = cause.sourceSide match
-        case RelativeCauseSourceSide.Reference => "reference"
-        case RelativeCauseSourceSide.Candidate => "candidate"
-        case RelativeCauseSourceSide.Shared    => "shared"
-        case RelativeCauseSourceSide.Mixed     => "mixed"
-      val comparisonKind = comparison.kind match
-        case CandidateComparisonKind.PlayedVsBest          => "played_vs_best"
-        case CandidateComparisonKind.BestVsSecond          => "best_vs_second"
-        case CandidateComparisonKind.PlayedVsAlternative   => "played_vs_alternative"
-        case CandidateComparisonKind.ReferenceVsAlternative => "reference_vs_alternative"
-      val moveOrderFacet = cause.kind == RelativeCauseKind.WrongMoveOrder
-      val passedPawnResultFacet = cause.kind == RelativeCauseKind.PassedPawnResult
-      if moveOrderFacet then
-        require(
-          selection.causeEvidence.confidence == EvidenceConfidence.LegalReplayVerified &&
-            selection.effectMode == PlayerFacingCauseEffectMode.AlternativeResource &&
-            selection.exposure == PlayerFacingCauseExposureTier.Primary &&
-            cause.sourceSide == RelativeCauseSourceSide.Reference &&
-            comparison.kind == CandidateComparisonKind.PlayedVsBest &&
-            facet.directChannels.nonEmpty && facet.directChannels.forall(channel =>
-              channel.rootOwnedProof.exists {
-                case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _) => true
-                case RootOwnedEffectProof.DefenseObligationChange(_, _)         => true
-                case _                                                          => false
-              }
-            ),
-          s"WrongMoveOrder public facet is not backed exclusively by its exact L2 proof: ${selection.causeEvidence.id}"
-        )
-      else if passedPawnResultFacet then
-        require(
-          selection.causeEvidence.confidence == EvidenceConfidence.LegalReplayVerified &&
-            comparison.kind == CandidateComparisonKind.PlayedVsBest &&
-            Set(RelativeCauseSourceSide.Reference, RelativeCauseSourceSide.Candidate)(cause.sourceSide) &&
-            (cause.sourceSide match
-              case RelativeCauseSourceSide.Reference =>
-                selection.effectMode == PlayerFacingCauseEffectMode.AlternativeResource
-              case RelativeCauseSourceSide.Candidate =>
-                selection.effectMode == PlayerFacingCauseEffectMode.PlayedValue
-              case _ => false
-            ) &&
-            facet.directChannels.nonEmpty && facet.directChannels.forall(channel =>
-              channel.rootOwnedProof.exists {
-                case RootOwnedEffectProof.PassedPawnResult(_, result) => result.hasCompleteProofPaths
-                case _                                          => false
-              }
-            ),
-          s"PassedPawnResult public facet is not backed exclusively by its exact L2 proof: ${selection.causeEvidence.id}"
-        )
-      else
-        require(
-          facet.directChannels.forall(channel =>
-            !channel.rootOwnedProof.exists {
-              case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _) => true
-              case RootOwnedEffectProof.DefenseObligationChange(_, _)         => true
-              case RootOwnedEffectProof.PassedPawnResult(_, _)                      => true
-              case _                                                          => false
-            }
-          ),
-          s"typed L2 proof is exposed under a foreign Cause kind: ${selection.causeEvidence.id}"
-        )
-      val facetObject = Json.obj(
-        "facet_role" -> facetRole,
+      Json.obj(
         "cause_evidence_id" -> selection.causeEvidence.id,
         "kind" -> causeKind,
-        "proof_confidence" -> (selection.causeEvidence.confidence match
-          case EvidenceConfidence.LegalReplayVerified => "legal_replay_verified"
-          case EvidenceConfidence.EngineBacked        => "engine_backed"
-          case EvidenceConfidence.BoardDerived        => "board_derived"
-          case EvidenceConfidence.Mixed               => "mixed"
-        ),
-        "effect_mode" -> effectMode,
         "exposure" -> exposure,
-        "source_side" -> sourceSide,
-        "comparison_kind" -> comparisonKind,
-        "channels" -> selection.channels.zip(facet.directChannels).map { case (selected, channel) =>
-          channelJson(selected, channel, binding, packet)
+        "channels" -> selection.channels.zip(certified.directChannels).map { case (selected, channel) =>
+          channelJson(selected, channel)
         }
       )
-      if moveOrderFacet || passedPawnResultFacet then facetObject
-      else
-        facetObject ++ Json.obj(
-          "event_move" -> EvidenceRef.normalizeMove(binding.eventLine.rootMove)
-        )
-
-    private def exactChannelProofLineMoves(
-        channel: DirectCauseChannel,
-        binding: RelativeCauseBinding,
-        packet: EvidenceBackedJudgmentPacket
-    ): List[String] =
-      val registeredEventLine = eventLineMoves(binding, packet)
-      channel.proofSegment match
-        case None =>
-          registeredEventLine
-        case Some(segment) =>
-          val requiredMoves = segment.steps.map(step =>
-            step.plyOffset -> EvidenceRef.normalizeMove(step.moveUci)
-          ).toMap
-          val terminalOffset = requiredMoves.keys.max
-          require(
-            registeredEventLine.size > terminalOffset &&
-              requiredMoves.forall((offset, move) =>
-                EvidenceRef.sameMove(registeredEventLine(offset), move)
-              ),
-            s"R-selected direct channel proof does not belong to its registered event line: ${channel.binding.source.id}"
-          )
-          registeredEventLine.take(terminalOffset + 1)
-
-    private def eventLineMoves(
-        binding: RelativeCauseBinding,
-        packet: EvidenceBackedJudgmentPacket
-    ): List[String] =
-      packet.candidateLines
-        .find(_.ref == binding.eventLine)
-        .map(_.evaluation.moves.map(EvidenceRef.normalizeMove))
-        .getOrElse(
-          throw IllegalStateException(
-            s"R-selected Cause event line is not in the packet: ${binding.eventLine.id}"
-          )
-        )
 
     private def channelJson(
         selected: PlayerFacingCauseChannelSelection,
-        channel: DirectCauseChannel,
-        causeBinding: RelativeCauseBinding,
-        packet: EvidenceBackedJudgmentPacket
+        channel: DirectCauseChannel
     ): JsObject =
-      val binding = channel.binding
       channel.rootOwnedProof match
-        case Some(proof @ RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _)) =>
-          require(
-            selected.directChange == DirectCausalChange.Occurred &&
-              selected.playedChange == PlayerFacingCausalChange.Missed,
-            s"L2 resource differential public change semantics diverged: ${selected.channelId}"
-          )
+        case proof: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture =>
           Json.obj(
             "channel_id" -> selected.channelId,
-            "causal_signature" -> selected.causalSignature,
-            "direct_change" -> "occurred",
-            "played_change" -> "missed",
-            "resource_differential_proof" -> forcedReplyResourceProofJson(proof).getOrElse(
-              throw IllegalStateException(
-                s"L2 resource differential proof lost its typed serializer: ${selected.channelId}"
-              )
-            )
+            "unique_check_reply_defender_displacement_before_capture_proof" ->
+              uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson(proof)
           )
-        case Some(proof @ RootOwnedEffectProof.DefenseObligationChange(_, _)) =>
-          require(
-            selected.directChange == DirectCausalChange.Occurred &&
-              selected.playedChange == PlayerFacingCausalChange.Missed,
-            s"L2 defense-obligation public change semantics diverged: ${selected.channelId}"
-          )
+        case proof: RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture =>
           Json.obj(
             "channel_id" -> selected.channelId,
-            "causal_signature" -> selected.causalSignature,
-            "direct_change" -> "occurred",
-            "played_change" -> "missed",
-            "defense_obligation_change_proof" -> defenseObligationChangeProofJson(proof).getOrElse(
-              throw IllegalStateException(
-                s"L2 defense-obligation proof lost its typed serializer: ${selected.channelId}"
-              )
-            )
+            "sole_recapturer_removal_before_target_capture_proof" ->
+              soleRecapturerRemovalBeforeTargetCaptureProofJson(proof)
           )
-        case Some(proof @ RootOwnedEffectProof.PassedPawnResult(_, result)) =>
-          require(
-            selected.directChange == DirectCausalChange.Occurred &&
-              result.hasCompleteProofPaths,
-            s"L2 passed-pawn result public change semantics diverged: ${selected.channelId}"
-          )
+        case proof: RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture =>
           Json.obj(
             "channel_id" -> selected.channelId,
-            "causal_signature" -> selected.causalSignature,
-            "direct_change" -> "occurred",
-            "passed_pawn_result_proof" -> passedPawnResultProofJson(proof).getOrElse(
-              throw IllegalStateException(
-                s"L2 passed-pawn result lost its typed serializer: ${selected.channelId}"
-              )
-            )
+            "vacated_gate_enables_unrecapturable_slider_capture_proof" ->
+              vacatedGateEnablesUnrecapturableSliderCaptureProofJson(proof)
           )
-        case _ =>
-          require(
-            channel.proofSegment.forall(segment =>
-              segment.terminalRelation != DirectCauseProofTerminalRelation.RealizesPassedPawnResult &&
-                segment.steps.forall(_.passedPawnResultEventOccurrence.isEmpty)
-            ),
-            s"a generic public channel cannot serialize a passed-pawn-result proof: ${selected.channelId}"
-          )
+        case proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
           Json.obj(
             "channel_id" -> selected.channelId,
-            "causal_signature" -> selected.causalSignature,
-            "direct_change" -> directChangeCode(selected.directChange),
-            "played_change" -> playedChangeCode(selected.playedChange),
-            "actor" -> rootActorJson(channel.rootActor),
-            "targets" -> objectArrayJson(binding.target),
-            "mechanisms" -> objectArrayJson(binding.mechanism),
-            "consequences" -> objectArrayJson(binding.consequence),
-            "witnesses" -> objectArrayJson(binding.witness),
-            "proof_line_moves" -> exactChannelProofLineMoves(channel, causeBinding, packet)
-          ) ++ binding.horizon
-            .map(horizon => Json.obj("horizon" -> horizon))
-            .getOrElse(Json.obj()) ++ channel.proofSegment
-            .map(segment => Json.obj("proof_segment" -> proofSegmentJson(segment)))
-            .getOrElse(Json.obj())
+            "passed_pawn_progress_realized_after_only_legal_reply_proof" ->
+              passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(proof)
+          )
 
     private def causalBranchJson(branch: BoundedCausalPublicBranch): JsObject =
       val line = branch.line
@@ -635,7 +338,6 @@ object RuntimeProtocol:
           case LineNodeRole.BestReference => "best_reference"
           case LineNodeRole.Played        => "played"
           case LineNodeRole.Alternative   => "alternative"
-          case LineNodeRole.BranchReply   => "branch_reply"
         ),
         "branch_role" -> causalRoleCode(branch.role),
         "root_provenance" -> causalEnumCode(branch.rootProvenance),
@@ -656,232 +358,243 @@ object RuntimeProtocol:
     private def causalProofPathJson(path: BoundedCausalPublicProofPath): JsObject =
       Json.obj(
         "path_occurrence_id" -> path.pathOccurrenceId,
-        "premises" -> path.premises.map(premise =>
-          Json.obj(
-            "role" -> causalRoleCode(premise.role),
-            "contract" -> causalEnumCode(premise.contract),
-            "result_id" -> premise.resultId,
-            "source_premise_ids" -> premise.sourcePremiseIds,
-            "branch_id" -> premise.branchId,
-            "branch_role" -> causalRoleCode(premise.branchRole),
-            "step_index" -> premise.stepIndex
-          )
-        ),
-        "closed_absence_uses" -> path.closedAbsenceUses.map(use =>
-          Json.obj(
-            "use_id" -> use.useId,
-            "role" -> causalRoleCode(use.role),
-            "semantic_proof_id" -> use.semanticProofId,
-            "issuer" -> "position_relation_extractor.closed_relation_inventory",
-            "issuer_evidence_id" -> use.issuerEvidenceId,
-            "issuer_occurrence_id" -> use.issuerOccurrenceId,
-            "query" -> use.query,
-            "branch_id" -> use.branchId,
-            "branch_role" -> causalRoleCode(use.branchRole),
-            "after_step_index" -> use.afterStepIndex,
-            "position" -> Json.obj(
-              "fen" -> use.position.fen,
-              "ply" -> use.position.ply,
-              "scope" -> evidenceScopeCode(use.scope)
-            )
-          )
+        "premises" -> path.premises.map(causalPremiseJson),
+        "closed_absence_uses" -> path.closedAbsenceUses.map(causalAbsenceUseJson)
+      )
+
+    private def directLineAccessProofPathJson(path: BoundedCausalPublicProofPath): JsObject =
+      Json.obj(
+        "path_occurrence_id" -> path.pathOccurrenceId,
+        "premises" -> path.premises.map(causalPremiseJson),
+        "closed_absence_uses" -> path.closedAbsenceUses.map(causalAbsenceUseJson),
+        "closed_state_uses" -> path.closedStateUses.map(causalStateUseJson)
+      )
+
+    private def causalPremiseJson(premise: BoundedCausalPublicPremiseUse): JsObject =
+      Json.obj(
+        "role" -> causalRoleCode(premise.role),
+        "contract" -> causalEnumCode(premise.contract),
+        "result_id" -> premise.resultId,
+        "issuer_evidence_id" -> premise.issuerEvidenceId,
+        "issuer_occurrence_id" -> premise.issuerOccurrenceId,
+        "source_premise_ids" -> premise.sourcePremiseIds,
+        "branch_id" -> premise.branchId,
+        "branch_role" -> causalRoleCode(premise.branchRole),
+        "step_index" -> premise.stepIndex
+      )
+
+    private def causalAbsenceUseJson(use: BoundedCausalPublicClosedAbsenceUse): JsObject =
+      Json.obj(
+        "use_id" -> use.useId,
+        "role" -> causalRoleCode(use.role),
+        "semantic_proof_id" -> use.semanticProofId,
+        "issuer" -> "position_relation_extractor.closed_relation_inventory",
+        "issuer_evidence_id" -> use.issuerEvidenceId,
+        "issuer_occurrence_id" -> use.issuerOccurrenceId,
+        "query" -> use.query,
+        "branch_id" -> use.branchId,
+        "branch_role" -> causalRoleCode(use.branchRole),
+        "after_step_index" -> use.afterStepIndex,
+        "position" -> Json.obj(
+          "fen" -> use.position.fen,
+          "ply" -> use.position.ply,
+          "scope" -> evidenceScopeCode(use.scope)
         )
       )
 
-    private def forcedReplyResourceProofJson(proof: RootOwnedEffectProof): Option[JsObject] =
-      proof match
-        case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
-          require(result.referenceLine.role == LineNodeRole.BestReference)
-          require(result.playedLine.role == LineNodeRole.Played)
-          val branchPayloads =
-            List(result.publicReferenceBranch, result.publicPlayedBranch).map(causalBranchJson)
-          val proofPathPayloads = result.publicProofPaths.map(causalProofPathJson)
-          Some(
-            Json.obj(
-              "family" -> "immediate_forced_reply_resource_differential",
-              "trigger_mechanism" -> result.triggerMechanism,
-              "source_evidence_id" -> source.id,
-              "semantic_id" -> result.semanticId,
-              "occurrence_id" -> result.occurrenceId,
-              "dependency_fingerprint" -> result.dependencyId,
-              "counterfactual_reference_branch" -> branchPayloads.head,
-              "played_root_branch" -> branchPayloads(1),
-              "proof_paths" -> proofPathPayloads,
-              "participants" -> Json.obj(
-                "trigger" -> movementWitnessJson(result.triggerMovement),
-                "forced_reply" -> legalResourceWitnessJson(result.forcedReplyResource),
-                "realizer" -> movementWitnessJson(result.realizerMovement),
-                "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
-                "played_defense" -> legalResourceWitnessJson(result.playedDefenseResource),
-                "disabled_defender" -> coloredPieceWitnessJson(result.disabledDefender)
-              ),
-              "realizing_move" -> EvidenceRef.normalizeMove(result.realizingMove),
-              "played_root_branch_legal_defense_move" -> EvidenceRef.normalizeMove(result.playedDefenseMove)
-            )
-          )
-        case _ => None
+    private def causalStateUseJson(use: BoundedCausalPublicClosedStateUse): JsObject =
+      Json.obj(
+        "use_id" -> use.useId,
+        "role" -> causalRoleCode(use.role),
+        "semantic_proof_id" -> use.semanticProofId,
+        "issuer" -> "position_relation_extractor.closed_position_state_inventory",
+        "issuer_evidence_id" -> use.issuerEvidenceId,
+        "issuer_occurrence_id" -> use.issuerOccurrenceId,
+        "query" -> use.query,
+        "branch_id" -> use.branchId,
+        "branch_role" -> causalRoleCode(use.branchRole),
+        "after_step_index" -> use.afterStepIndex,
+        "position" -> Json.obj(
+          "fen" -> use.position.fen,
+          "ply" -> use.position.ply,
+          "scope" -> evidenceScopeCode(use.scope)
+        )
+      )
 
-    private def defenseObligationChangeProofJson(proof: RootOwnedEffectProof): Option[JsObject] =
-      proof match
-        case RootOwnedEffectProof.DefenseObligationChange(source, result) =>
-          require(result.referenceLine.role == LineNodeRole.BestReference)
-          require(result.playedLine.role == LineNodeRole.Played)
-          val branchPayloads =
-            List(result.publicReferenceBranch, result.publicPlayedBranch).map(causalBranchJson)
-          val proofPathPayloads = result.publicProofPaths.map(causalProofPathJson)
-          Some(
-            Json.obj(
-              "contract" -> "defense_obligation_change",
-              "mechanism" -> result.mechanism,
-              "source_evidence_id" -> source.id,
-              "semantic_id" -> result.semanticId,
-              "occurrence_id" -> result.occurrenceId,
-              "dependency_fingerprint" -> result.dependencyId,
-              "counterfactual_reference_branch" -> branchPayloads.head,
-              "played_root_branch" -> branchPayloads(1),
-              "proof_paths" -> proofPathPayloads,
-              "participants" -> Json.obj(
-                "remover" -> movementWitnessJson(result.remover),
-                "removed_defender" -> coloredPieceWitnessJson(result.removedDefender),
-                "removal_recapture" -> legalResourceWitnessJson(result.removalRecapture),
-                "later_exploit" -> movementWitnessJson(result.laterExploit),
-                "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
-                "played_sole_recapture" -> legalResourceWitnessJson(result.playedSoleRecapture)
-              ),
-              "later_exploit_move" -> EvidenceRef.normalizeMove(result.laterExploitMove),
-              "played_sole_recapture_move" -> EvidenceRef.normalizeMove(result.playedSoleRecaptureMove)
-            )
-          )
-        case _ => None
+    private def uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson(
+        proof: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyId,
+        "counterfactual_reference_branch" -> causalBranchJson(result.publicReferenceBranch),
+        "played_root_branch" -> causalBranchJson(result.publicPlayedBranch),
+        "proof_paths" -> result.publicProofPaths.map(causalProofPathJson),
+        "participants" -> Json.obj(
+          "trigger" -> movementWitnessJson(result.triggerMovement),
+          "forced_reply" -> legalResourceWitnessJson(result.uniqueCheckReplyDefenderDisplacementBeforeCapture),
+          "realizer" -> movementWitnessJson(result.realizerMovement),
+          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
+          "played_defense" -> legalResourceWitnessJson(result.playedDefenseResource),
+          "disabled_defender" -> coloredPieceWitnessJson(result.disabledDefender)
+        ),
+        "realizing_move" -> EvidenceRef.normalizeMove(result.realizingMove),
+        "played_root_branch_legal_defense_move" -> EvidenceRef.normalizeMove(result.playedDefenseMove)
+      )
 
-    private def passedPawnResultProofJson(proof: RootOwnedEffectProof): Option[JsObject] =
-      proof match
-        case RootOwnedEffectProof.PassedPawnResult(source, result) =>
-          val inventory = result.publicClosedReplyInventory
-          val branches = result.publicBranches.map { branch =>
+    private def soleRecapturerRemovalBeforeTargetCaptureProofJson(
+        proof: RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyId,
+        "counterfactual_reference_branch" -> causalBranchJson(result.publicReferenceBranch),
+        "played_root_branch" -> causalBranchJson(result.publicPlayedBranch),
+        "proof_paths" -> result.publicProofPaths.map(causalProofPathJson),
+        "participants" -> Json.obj(
+          "remover" -> movementWitnessJson(result.remover),
+          "removed_defender" -> coloredPieceWitnessJson(result.removedDefender),
+          "removal_recapture" -> legalResourceWitnessJson(result.removalRecapture),
+          "later_exploit" -> movementWitnessJson(result.laterExploit),
+          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
+          "played_sole_recapture" -> legalResourceWitnessJson(result.playedSoleRecapture)
+        ),
+        "later_exploit_move" -> EvidenceRef.normalizeMove(result.laterExploitMove),
+        "played_sole_recapture_move" -> EvidenceRef.normalizeMove(result.playedSoleRecaptureMove)
+      )
+
+    private def vacatedGateEnablesUnrecapturableSliderCaptureProofJson(
+        proof: RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyId,
+        "counterfactual_reference_branch" -> causalBranchJson(result.publicReferenceBranch),
+        "played_root_branch" -> causalBranchJson(result.publicPlayedBranch),
+        "proof_paths" -> result.publicProofPaths.map(directLineAccessProofPathJson),
+        "participants" -> Json.obj(
+          "enabler" -> movementWitnessJson(result.enabler),
+          "slider" -> coloredPieceWitnessJson(result.slider),
+          "gate_blocker" -> coloredPieceWitnessJson(result.gateBlocker),
+          "exploit" -> movementWitnessJson(result.exploit),
+          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget)
+        ),
+        "exploit_move" -> EvidenceRef.normalizeMove(result.exploitMove)
+      )
+
+    private def passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(
+        proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      val inventory = result.publicClosedReplyInventory
+      val branches = result.publicBranches.map { branch =>
+        Json.obj(
+          "branch_id" -> branch.branchId,
+          "role" -> branch.role,
+          "line" -> passedPawnResultLineJson(
+            branch.lineId,
+            branch.lineRole,
+            branch.lineRank,
+            branch.lineRootMove
+          ),
+          "root_provenance" -> branch.rootProvenance,
+          "reply_move" -> EvidenceRef.normalizeMove(branch.replyMove),
+          "source_occurrence_id" -> branch.sourceOccurrenceId,
+          "steps" -> branch.steps.map { step =>
             Json.obj(
-              "branch_id" -> branch.branchId,
-              "role" -> branch.role,
+              "step_index" -> step.index,
+              "step_key" -> step.stepKey,
+              "ply" -> step.ply,
+              "move_uci" -> EvidenceRef.normalizeMove(step.moveUci),
+              "fen_before" -> step.fenBefore,
+              "fen_after" -> step.fenAfter,
               "line" -> passedPawnResultLineJson(
-                branch.lineId,
-                branch.lineRole,
-                branch.lineRank,
-                branch.lineRootMove
+                step.lineId,
+                step.lineRole,
+                step.lineRank,
+                step.lineRootMove
               ),
-              "root_provenance" -> branch.rootProvenance,
-              "steps" -> branch.steps.map { step =>
-                Json.obj(
-                  "step_index" -> step.index,
-                  "step_key" -> step.stepKey,
-                  "ply" -> step.ply,
-                  "move_uci" -> EvidenceRef.normalizeMove(step.moveUci),
-                  "fen_before" -> step.fenBefore,
-                  "fen_after" -> step.fenAfter,
-                  "line" -> passedPawnResultLineJson(
-                    step.lineId,
-                    step.lineRole,
-                    step.lineRank,
-                    step.lineRootMove
-                  ),
-                  "provenance" -> step.provenance
-                ) ++ step.incomingLink
-                  .map(link =>
-                    Json.obj(
-                      "incoming_link" -> Json.obj(
-                        "kind" -> link.kind,
-                        "from_step_key" -> link.fromStepKey,
-                        "to_step_key" -> link.toStepKey,
-                          "occurrence_link_key" -> link.occurrenceLinkKey
-                      )
-                    )
-                  )
-                  .getOrElse(Json.obj())
-              }
-            ) ++ branch.replyMove
-              .map(move => Json.obj("reply_move" -> EvidenceRef.normalizeMove(move)))
-              .getOrElse(Json.obj()) ++ branch.sourceProbeId
-              .map(probe => Json.obj("source_probe_id" -> probe))
+              "provenance" -> step.provenance
+            )
+          }
+        )
+      }
+      val proofPaths = result.publicProofPaths.map { path =>
+        Json.obj(
+          "path_occurrence_id" -> path.pathOccurrenceId,
+          "actual_branch_id" -> path.actualBranchId,
+          "realization_actor" -> passedPawnResultActorJson(path.realizationActor),
+          "realization_move" -> EvidenceRef.normalizeMove(path.realizationMove),
+          "realization_ply" -> path.realizationPly,
+          "premises" -> path.premises.map(premise =>
+            Json.obj(
+              "role" -> premise.role,
+              "lower_kind" -> premise.lowerKind,
+              "lower_semantic_key" -> premise.lowerSemanticKey,
+              "source_premise_ids" -> premise.sourcePremiseIds,
+              "branch_id" -> premise.branchId,
+              "branch_role" -> premise.branchRole,
+              "from_step_index" -> premise.fromStepIndex,
+              "to_step_index" -> premise.toStepIndex
+            ) ++ premise.dependencyProof
+              .map(proof => Json.obj("dependency_proof" -> passedPawnResultDependencyProofJson(proof)))
               .getOrElse(Json.obj())
-          }
-          val proofPaths = result.publicProofPaths.map { path =>
-            Json.obj(
-              "path_occurrence_id" -> path.pathOccurrenceId,
-              "reply_branch_id" -> path.replyBranchId,
-              "realization_actor" -> passedPawnResultActorJson(path.realizationActor),
-              "realization_move" -> EvidenceRef.normalizeMove(path.realizationMove),
-              "realization_ply" -> path.realizationPly,
-              "realization_match_kind" -> causalEnumCode(path.realizationMatchKind.toString),
-              "premises" -> path.premises.map(premise =>
-                Json.obj(
-                  "role" -> premise.role,
-                  "lower_kind" -> premise.lowerKind,
-                  "lower_semantic_key" -> premise.lowerSemanticKey,
-                  "source_premise_ids" -> premise.sourcePremiseIds,
-                  "branch_id" -> premise.branchId,
-                  "branch_role" -> premise.branchRole,
-                  "related_branch_ids" -> premise.relatedBranchIds,
-                  "from_step_index" -> premise.fromStepIndex,
-                  "to_step_index" -> premise.toStepIndex
-                ) ++ premise.dependencyProof
-                  .map(proof => Json.obj("dependency_proof" -> passedPawnResultDependencyProofJson(proof)))
-                  .getOrElse(Json.obj())
-              ),
-              "closure_use_ids" -> path.closureUseIds
-            )
-          }
-          Some(
-            Json.obj(
-              "contract" -> result.contract,
-              "source_evidence_id" -> source.id,
-              "event_evidence_id" -> result.eventSource.id,
-              "comparison_evidence_id" -> result.comparisonDemand.id,
-              "semantic_id" -> result.semanticId,
-              "occurrence_id" -> result.occurrenceId,
-              "dependency_fingerprint" -> result.dependencyFingerprint,
-              "consequence_kind" -> causalEnumCode(result.consequenceKind.toString),
-              "result_target_subjects" -> result.resultTargetSubjects,
-              "root_actor" -> passedPawnResultActorJson(result.rootActor),
-              "realizing_actor" -> passedPawnResultActorJson(result.resultActor),
-              "root_line" -> passedPawnResultLineJson(result.rootLine),
-              "root_move" -> EvidenceRef.normalizeMove(result.rootMove),
-              "root_ply" -> result.rootPly,
-              "realizing_move" -> EvidenceRef.normalizeMove(result.realizingMove),
-              "realizing_ply" -> result.realizingPly,
-              "result_ply_offset" -> result.resultPlyOffset,
-              "closed_legal_reply_inventory" -> Json.obj(
-                "issuer" -> "structural_delta.canonical_legal_reply_inventory",
-                "issuer_evidence_id" -> inventory.issuerEvidenceId,
-                "coverage_issuer" -> "passed_pawn_result_event.branch_complete_reply_coverage",
-                "coverage_evidence_id" -> inventory.coverageEvidenceId,
-                "root_after" -> Json.obj(
-                  "fen" -> inventory.rootAfterFen,
-                  "ply" -> inventory.rootAfterPly,
-                  "scope" -> inventory.scope
-                ),
-                "legal_reply_moves" -> inventory.legalReplyMoves.map(EvidenceRef.normalizeMove),
-                "branch_by_reply" -> inventory.branchByReply.map { case (replyMove, branchId) =>
-                  Json.obj(
-                    "reply_move" -> EvidenceRef.normalizeMove(replyMove),
-                    "branch_id" -> branchId
-                  )
-                },
-                "certified_horizon_ply_offset" -> inventory.certifiedHorizonPlyOffset
-              ),
-              "branches" -> branches,
-              "proof_paths" -> proofPaths,
-              "lower_premise_ids" -> result.lowerPremiseIds
-            )
-          )
-        case _ => None
+          ),
+          "closure_use_ids" -> path.closureUseIds
+        )
+      }
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "event_evidence_id" -> result.eventSource.id,
+        "comparison_evidence_id" -> result.comparisonDemand.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyFingerprint,
+        "result_target_subjects" -> result.resultTargetSubjects,
+        "root_actor" -> passedPawnResultActorJson(result.rootActor),
+        "realizing_actor" -> passedPawnResultActorJson(result.resultActor),
+        "root_line" -> passedPawnResultLineJson(result.rootLine),
+        "root_move" -> EvidenceRef.normalizeMove(result.rootMove),
+        "root_ply" -> result.rootPly,
+        "realizing_move" -> EvidenceRef.normalizeMove(result.realizingMove),
+        "realizing_ply" -> result.realizingPly,
+        "result_ply_offset" -> result.resultPlyOffset,
+        "closed_legal_reply_inventory" -> Json.obj(
+          "issuer_evidence_id" -> inventory.issuerEvidenceId,
+          "root_after" -> Json.obj(
+            "fen" -> inventory.rootAfterFen,
+            "ply" -> inventory.rootAfterPly,
+            "scope" -> inventory.scope
+          ),
+          "legal_reply_move" -> EvidenceRef.normalizeMove(inventory.legalReplyMove),
+          "actual_branch_id" -> inventory.actualBranchId
+        ),
+        "branches" -> branches,
+        "proof_paths" -> proofPaths,
+        "lower_premise_ids" -> result.lowerPremiseIds
+      )
 
     private def passedPawnResultLineJson(line: LineNodeRef): JsObject =
       passedPawnResultLineJson(
         line.id,
-        line.role match
+        (line.role match
           case LineNodeRole.Played        => "played"
           case LineNodeRole.BestReference => "best_reference"
           case LineNodeRole.Alternative   => "alternative"
-          case LineNodeRole.BranchReply   => "branch_reply",
+        ),
         line.rank,
         line.rootMove
       )
@@ -909,7 +622,7 @@ object RuntimeProtocol:
         "legal_move_relation" -> actor.legalMoveSemanticId
       )
 
-    private def passedPawnResultDependencyProofJson(proof: PassedPawnResultPublicDependencyProof): JsObject =
+    private def passedPawnResultDependencyProofJson(proof: PassedPawnProgressPublicDependencyProof): JsObject =
       Json.obj(
         "dependency_kind" -> proof.dependencyKind,
         "proof_kind" -> proof.proofKind,
@@ -929,14 +642,66 @@ object RuntimeProtocol:
         "relation_issuers" -> proof.relationIssuers.map(issuer =>
           Json.obj(
             "contract" -> issuer.contract,
-            "relation_kind" -> issuer.relationKind,
             "result_key" -> issuer.resultKey,
             "occurrence_id" -> issuer.occurrenceId,
             "step_key" -> issuer.stepKey,
-            "source_premise_ids" -> issuer.sourcePremiseIds
+            "source_premise_ids" -> issuer.sourcePremiseIds,
+            "issuer_evidence_id" -> issuer.issuerEvidenceId,
+            "line" -> passedPawnResultLineJson(issuer.line),
+            "scope" -> evidenceScopeCode(issuer.scope)
+          )
+        ),
+        "position_state_issuers" -> proof.positionStateIssuers.map(issuer =>
+          Json.obj(
+            "state" -> passedPawnPositionStateJson(issuer.state),
+            "semantic_proof_id" -> issuer.semanticProofId,
+            "issuer_evidence_id" -> issuer.issuerEvidenceId,
+            "issuer_occurrence_id" -> issuer.issuerOccurrenceId,
+            "step_key" -> issuer.stepKey,
+            "ply" -> issuer.ply,
+            "move_uci" -> issuer.moveUci,
+            "fen_before" -> issuer.fenBefore,
+            "fen_after" -> issuer.fenAfter,
+            "line" -> passedPawnResultLineJson(issuer.line),
+            "scope" -> evidenceScopeCode(issuer.scope)
           )
         )
       )
+
+    private def passedPawnPositionStateJson(
+        state: PassedPawnProgressPublicPositionStateWitness
+    ): JsObject =
+      state match
+        case exact: PassedPawnProgressPublicPositionStateWitness.OccupiedBy =>
+          Json.obj(
+            "kind" -> exact.kind,
+            "side" -> exact.side,
+            "square" -> exact.square,
+            "piece" -> exact.piece
+          )
+        case exact: PassedPawnProgressPublicPositionStateWitness.SliderReach =>
+          Json.obj(
+            "kind" -> exact.kind,
+            "side" -> exact.side,
+            "square" -> exact.square,
+            "piece" -> exact.piece,
+            "file_step" -> exact.fileStep,
+            "rank_step" -> exact.rankStep,
+            "segment" -> exact.segment.map(item =>
+              Json.obj(
+                "square" -> item.square,
+                "target" -> item.target,
+                "occupant_piece" -> item.occupantPiece
+              )
+            )
+          )
+        case exact: PassedPawnProgressPublicPositionStateWitness.PawnTopology =>
+          Json.obj(
+            "kind" -> exact.kind,
+            "side" -> exact.side,
+            "square" -> exact.square,
+            "passed" -> exact.passed
+          )
 
     private def causalRoleCode(value: String): String =
       value.replace('-', '_')
@@ -982,77 +747,7 @@ object RuntimeProtocol:
         case EvidenceScope.BestLine               => "best_line"
         case EvidenceScope.PlayedLine             => "played_line"
         case EvidenceScope.CandidateLine          => "candidate_line"
-        case EvidenceScope.BranchReplyLine        => "branch_reply_line"
         case EvidenceScope.Counterfactual         => "counterfactual"
-
-    private def rootActorJson(actor: RootCausalActor): JsObject =
-      Json.obj(
-        "move_uci" -> EvidenceRef.normalizeMove(actor.moveUci),
-        "side" -> colorCode(actor.color),
-        "piece" -> actor.role.name.toLowerCase,
-        "from" -> actor.from.key.toLowerCase,
-        "to" -> actor.to.key.toLowerCase
-      )
-
-    private def objectArrayJson(objects: List[ConcreteChessObject]): List[JsObject] =
-      objects
-        .distinctBy(_.signaturePart)
-        .sortBy(_.signaturePart)
-        .map(obj => Json.obj("kind" -> objectKindCode(obj.kind), "key" -> obj.key))
-
-    private def proofSegmentJson(segment: DirectCauseProofSegment): JsObject =
-      Json.obj(
-        "terminal_relation" -> proofTerminalRelationCode(segment.terminalRelation),
-        "steps" -> segment.steps.map(step =>
-          Json.obj(
-            "ply_offset" -> step.plyOffset,
-            "move_uci" -> EvidenceRef.normalizeMove(step.moveUci),
-            "role" -> proofStepRoleCode(step.role)
-          )
-        )
-      )
-
-    private def directChangeCode(change: DirectCausalChange): String =
-      change match
-        case DirectCausalChange.Occurred   => "occurred"
-        case DirectCausalChange.Maintained => "maintained"
-        case DirectCausalChange.Lost       => "lost"
-
-    private def playedChangeCode(change: PlayerFacingCausalChange): String =
-      change match
-        case PlayerFacingCausalChange.Occurred   => "occurred"
-        case PlayerFacingCausalChange.Maintained => "maintained"
-        case PlayerFacingCausalChange.Lost       => "lost"
-        case PlayerFacingCausalChange.Missed     => "missed"
-
-    private def objectKindCode(kind: EvidenceObjectKind): String =
-      kind match
-        case EvidenceObjectKind.Move        => "move"
-        case EvidenceObjectKind.Piece       => "piece"
-        case EvidenceObjectKind.Side        => "side"
-        case EvidenceObjectKind.Square      => "square"
-        case EvidenceObjectKind.File        => "file"
-        case EvidenceObjectKind.Relation    => "relation"
-        case EvidenceObjectKind.Line        => "line"
-        case EvidenceObjectKind.Mechanism   => "mechanism"
-        case EvidenceObjectKind.Consequence => "consequence"
-
-    private def proofTerminalRelationCode(relation: DirectCauseProofTerminalRelation): String =
-      relation match
-        case DirectCauseProofTerminalRelation.ProducesLineConsequence =>
-          "produces_line_consequence"
-        case DirectCauseProofTerminalRelation.IsRootLineEvent =>
-          "is_root_line_event"
-        case DirectCauseProofTerminalRelation.InstantiatesRelation =>
-          "instantiates_relation"
-        case DirectCauseProofTerminalRelation.RealizesPassedPawnResult =>
-          throw IllegalStateException("a passed-pawn result requires the typed passed_pawn_result_proof serializer")
-
-    private def proofStepRoleCode(role: DirectCauseProofStepRole): String =
-      role match
-        case DirectCauseProofStepRole.RootAction    => "root_action"
-        case DirectCauseProofStepRole.CausalLink    => "causal_link"
-        case DirectCauseProofStepRole.TerminalEvent => "terminal_event"
 
     private def comparisonDeltaJson(comparison: EvalComparison): JsObject =
       val base = Json.obj(
@@ -1106,39 +801,20 @@ object RuntimeProtocol:
     private val MaxFenLength = 128
     private val MaxVariations = 16
     private val MaxMovePrefix = 600
-    private val MaxReplyLines = 8
     private val MaxPly = 1000
-    private val MaxText = 256
     private val RequestId = "[A-Za-z0-9._:-]{1,128}".r
 
     def validRequestId(value: String): Boolean = RequestId.matches(value)
 
     def accepts(raw: RawMoveReviewInput): Boolean =
-      val lines = raw.variations ++ raw.probeResults.flatMap(_.resolution match
-        case ProbeResolution.EngineSearch(evaluations, _) => evaluations.flatMap(_.engineLine)
-        case ProbeResolution.ExactAutomaticTerminal(_)   => Nil
-      )
       raw.fen.nonEmpty && raw.fen.length <= MaxFenLength &&
         validUci(raw.playedMoveUci) &&
         raw.variations.nonEmpty && raw.variations.size <= MaxVariations &&
         raw.movePrefixUci.size <= MaxMovePrefix && raw.movePrefixUci.forall(validUci) &&
-        raw.probeResults.map(_.id).distinct.size == raw.probeResults.size &&
-        raw.probeResults.forall(validProbe) &&
         raw.ply.forall(ply => ply >= 0 && ply <= MaxPly) &&
-        lines.forall(validLine)
+        raw.variations.forall(validLine)
 
     private def validLine(line: EngineLine): Boolean =
       EngineLineAdmission.acceptsRuntimeInputLine(line)
-
-    private def validProbe(probe: ProbeResult): Boolean =
-      probe.id.nonEmpty && probe.id.length <= MaxText &&
-        (probe.resolution match
-          case ProbeResolution.EngineSearch(evaluations, depth) =>
-            evaluations.nonEmpty && evaluations.size <= MaxReplyLines &&
-              evaluations.forall(_.engineLine.nonEmpty) &&
-              EngineLineAdmission.acceptsRequiredDepth(depth)
-          case ProbeResolution.ExactAutomaticTerminal(evaluation) =>
-            EngineLineAdmission.acceptsRuntimeInputMoves(evaluation.moves)
-        )
 
     private def validUci(value: String): Boolean = EngineLineAdmission.acceptsRuntimeInputUci(value)

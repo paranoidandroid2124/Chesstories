@@ -3,13 +3,8 @@ package lila.chessjudgment.analysis.assembly
 import lila.chessjudgment.analysis.policy.ClaimAdmissionStatus
 import lila.chessjudgment.model.judgment.*
 
-/** The sole derivation of one terminal disposition for every C-stage
-  * RelativeCause record.
-  *
-  * This policy consumes, without re-deciding, the admission decisions made by
-  * `ClaimTruthPolicy` and the `PlayerFacingCauseExposureResolution`. It exposes
-  * a missing Jp host or Ja/R decision instead of allowing a ready Cause to
-  * disappear between stage-specific collections.
+/** Closes every constructed Cause by requiring one selected, certified public
+  * claim owner. Missing proposal/admission/exposure is never a silent state.
   */
 object CauseDispositionPolicy:
 
@@ -20,157 +15,56 @@ object CauseDispositionPolicy:
     val causeRecords = graph.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, RelativeCauseFactEvidence(_), _) => record
     }.sortBy(_.ref.id)
-    val proposalDecisions = graph.decisions
-    val proposalIds = proposalDecisions.map(_.claim.id)
-    val rankedClaims = graph.certified.map(_.claim)
-    val rankedClaimIds = rankedClaims.map(_.id).toSet
-    val readyHostsByCauseId = exposure.readyByClaim.toList
-      .flatMap { case (claimId, causes) =>
-        causes.map { case (_, causeRef) => causeRef.id -> claimId }
-      }
-      .groupMap(_._1)(_._2)
-      .view
-      .mapValues(_.distinct.sorted)
-      .toMap
-    val dominanceByCauseId =
-      exposure.dominanceDecisions.map(decision => decision.causeEvidenceId -> decision).toMap
-    val crossByCauseId =
-      exposure.crossDecisions.map(decision => decision.causeEvidenceId -> decision).toMap
+    val causeIds = causeRecords.map(_.ref.id)
+    require(causeIds.distinct.size == causeIds.size, "Cause records require unique evidence owners")
 
-    require(
-      proposalIds.size == proposalIds.distinct.size,
-      "Cause disposition requires unique Jp claim ids"
-    )
-    require(rankedClaimIds.size == rankedClaims.size, "Cause disposition requires unique ranked claim ids")
-    require(
-      dominanceByCauseId.size == exposure.dominanceDecisions.size,
-      "Cause disposition requires one dominance decision per ready Cause"
-    )
-    require(
-      crossByCauseId.size == exposure.crossDecisions.size,
-      "Cause disposition requires one cross-comparison decision per retained Cause"
-    )
+    val proposalIds = graph.decisions.map(_.claim.id)
+    require(proposalIds.distinct.size == proposalIds.size, "Cause disposition requires unique Jp claim ids")
+    val certifiedClaimIds = graph.certified.map(_.claim.id).toSet
+    require(certifiedClaimIds.size == graph.certified.size, "Cause disposition requires unique certified claim ids")
 
-    def directlyHosts(claim: JudgmentClaim, causeRef: EvidenceRef): Boolean =
-      claim.evidence.contains(causeRef)
-
-    def rDisposition(
-        causeRef: EvidenceRef,
-        proposedClaimIds: List[String],
-        certifiedClaimIds: List[String],
-        rankEligibleClaimIds: List[String]
-    ): CauseDisposition =
-      val dominance = dominanceByCauseId.getOrElse(
-        causeRef.id,
-        throw IllegalArgumentException(
-          s"rank-eligible Cause '${causeRef.id}' has no dominance decision"
-        )
-      )
-      val authority = CauseExposureDispositionAuthority
-        .from(dominance, crossByCauseId.get(causeRef.id))
-        .getOrElse(
-          throw IllegalArgumentException(
-            s"retained Cause '${causeRef.id}' has no cross-comparison exposure decision"
-          )
-        )
-      val owner =
-        Option.when(authority.status == CauseDispositionStatus.Selected)(
-          exposure.ownerClaimIdByCauseId.getOrElse(
-            causeRef.id,
-            throw IllegalArgumentException(
-              s"selected Cause '${causeRef.id}' has no canonical claim owner"
-            )
-          )
-        )
-      CauseDisposition(
-        causeEvidence = causeRef,
-        status = authority.status,
-        reason = authority.reason,
-        proposedClaimIds = proposedClaimIds,
-        certifiedClaimIds = certifiedClaimIds,
-        rankEligibleClaimIds = rankEligibleClaimIds,
-        selectedOwnerClaimId = owner,
-        relatedCauseEvidenceIds = authority.relatedCauseEvidenceIds
-      )
+    val selectedIds = exposure.selectedCauseEvidenceIds
+    val certifiedByCauseId = exposure.certifiedCauses.map(certified =>
+      certified.selection.causeEvidence.id -> certified
+    ).toMap
+    require(
+      selectedIds == causeIds.toSet && exposure.ownerClaimIdByCauseId.keySet == causeIds.toSet &&
+        certifiedByCauseId.keySet == causeIds.toSet && certifiedByCauseId.size == exposure.certifiedCauses.size,
+      "every constructed Cause must have one exact selected exposure owner"
+    )
 
     val dispositions = causeRecords.map {
       case EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), _) =>
-        val hostDecisions = proposalDecisions.filter(decision => directlyHosts(decision.claim, causeRef))
-        val proposedClaimIds = hostDecisions.map(_.claim.id).distinct.sorted
-        val certifiedClaimIds = hostDecisions.collect {
+        val certified = certifiedByCauseId(causeRef.id)
+        require(
+          certified.selection.causeEvidence == causeRef && certified.cause == cause,
+          s"constructed Cause '${causeRef.id}' does not match its certified fact and channel bundle"
+        )
+        val hostDecisions = graph.decisions.filter(_.claim.evidence.contains(causeRef))
+        require(hostDecisions.nonEmpty, s"constructed Cause '${causeRef.id}' has no proposed claim host")
+        val certifiedHosts = hostDecisions.collect {
           case decision if decision.status == ClaimAdmissionStatus.Certified => decision.claim.id
-        }.distinct.sorted
-        val deferredClaimIds = hostDecisions.collect {
-          case decision if decision.status == ClaimAdmissionStatus.Deferred => decision.claim.id
-        }.distinct.sorted
-        val rejectedClaimIds = hostDecisions.collect {
-          case decision if decision.status == ClaimAdmissionStatus.Rejected => decision.claim.id
-        }.distinct.sorted
-        val rankEligibleClaimIds = readyHostsByCauseId.getOrElse(causeRef.id, Nil)
-        val objectReady =
-          PlayerFacingCauseReadinessPolicy.ready(cause, causeRef, graph.evidenceGraph)
-
-        if !objectReady then
-          CauseDisposition(
-            causeRef,
-            CauseDispositionStatus.ObjectUnready,
-            CauseDispositionReason.ObjectReadinessFailed,
-            proposedClaimIds,
-            certifiedClaimIds,
-            Nil,
-            None,
-            Nil
-          )
-        else if proposedClaimIds.isEmpty then
-          CauseDisposition(
-            causeRef,
-            CauseDispositionStatus.Unproposed,
-            CauseDispositionReason.NoClaimProposal,
-            Nil,
-            Nil,
-            Nil,
-            None,
-            Nil
-          )
-        else if certifiedClaimIds.isEmpty && deferredClaimIds.nonEmpty then
-          CauseDisposition(
-            causeRef,
-            CauseDispositionStatus.AdmissionDeferred,
-            CauseDispositionReason.ClaimAdmissionDeferred,
-            proposedClaimIds,
-            Nil,
-            Nil,
-            None,
-            Nil
-          )
-        else if certifiedClaimIds.isEmpty && rejectedClaimIds.nonEmpty then
-          CauseDisposition(
-            causeRef,
-            CauseDispositionStatus.Rejected,
-            CauseDispositionReason.ClaimAdmissionRejected,
-            proposedClaimIds,
-            Nil,
-            Nil,
-            None,
-            Nil
-          )
-        else if rankEligibleClaimIds.isEmpty then
-          throw IllegalStateException(
-            s"certified Cause '${causeRef.id}' has no rank-eligible claim owner"
-          )
-        else
-          rDisposition(
-            causeRef,
-            proposedClaimIds,
-            certifiedClaimIds,
-            rankEligibleClaimIds
-          )
+        }
+        require(
+          certifiedHosts.nonEmpty,
+          s"constructed Cause '${causeRef.id}' has no certified claim host"
+        )
+        val owner = exposure.ownerClaimIdByCauseId.getOrElse(
+          causeRef.id,
+          throw IllegalStateException(s"selected Cause '${causeRef.id}' has no claim owner")
+        )
+        require(
+          certifiedHosts.contains(owner) && certifiedClaimIds(owner),
+          s"selected Cause '${causeRef.id}' owner '$owner' is not a certified host"
+        )
+        CauseDisposition(causeRef, owner)
       case _ =>
         throw IllegalStateException("Cause disposition received a non-Cause record")
     }
+
     val ledger = CauseDispositionLedger(dispositions)
     require(
-      ledger.closedFor(graph.evidenceGraph, exposure, rankedClaimIds),
+      ledger.closedFor(graph.evidenceGraph, exposure, certifiedClaimIds),
       "Cause disposition must exactly cover C and agree with canonical R exposure"
     )
     ledger

@@ -10,9 +10,83 @@ private[assembly] final case class CausalStepObservation(
     transition: StructuralTransitionBinding,
     consequences: List[TransitionConsequence],
     movement: CanonicalRootLegalMove,
-    lineOccurrenceOwner: EvidenceRef,
+    lineOccurrenceRecord: EvidenceRecord,
     structuralOccurrence: ReplayStructuralOccurrence
-)
+):
+  def lineOccurrenceOwner: EvidenceRef = lineOccurrenceRecord.ref
+
+/** One changed-dependency seed owns one exact structural consequence and the
+  * one direct transition proof issued for it. Occurrence/path ownership is
+  * added by the result-event demand; the episode builder only consumes this
+  * certified lower-layer unit and never rediscovers result candidates.
+  */
+private[assembly] final case class PassedPawnResultTransitionSeed private (
+    observation: CausalStepObservation,
+    consequence: TransitionConsequence,
+    resultProof: PassedPawnResultTransitionProof
+):
+  require(
+    observation.consequences.count(_ == consequence) == 1,
+    "a passed-pawn result seed needs one exact structural consequence"
+  )
+  require(
+    resultProof.consequence == consequence &&
+      resultProof.sourceLineOccurrenceOwner == observation.lineOccurrenceOwner &&
+      resultProof.sourceOccurrenceId == observation.structuralOccurrence.occurrenceId &&
+      resultProof.sourcePremiseKeys == observation.structuralOccurrence.sourcePremiseKeys &&
+      resultProof.sourceTransition == observation.transition &&
+      resultProof.supportingDependency.isEmpty,
+    "a passed-pawn result seed needs one exact direct transition proof"
+  )
+
+  def step: LineReplayStep = observation.step
+  def resultKind: PassedPawnResultKind = resultProof.resultKind
+
+  def belongsTo(trace: CausalLineTrace): Boolean =
+    trace.observation(step).contains(observation) && trace.replay.contains(step)
+
+  def proves(event: PassedPawnResultEventNode): Boolean =
+    event.identity.kind == resultKind &&
+      event.step == step &&
+      event.lineOccurrenceRecord == observation.lineOccurrenceRecord &&
+      event.structuralOccurrence == observation.structuralOccurrence &&
+      event.structuralTransition == observation.transition &&
+      event.canonicalMovement.contains(observation.movement) &&
+      event.structuralConsequences.contains(consequence) &&
+      resultProof.binds(event, consequence, Nil)
+
+  def stableKey: String =
+    BoundedCausalIdentity.digest(
+      List(
+        "passed-pawn-result-transition-seed:v1",
+        BoundedCausalIdentity.evidenceRecordKey(observation.lineOccurrenceRecord),
+        BoundedCausalIdentity.stepKey(step),
+        consequence.stableKey,
+        resultProof.stableKey
+      )
+    )
+
+private[assembly] object PassedPawnResultTransitionSeed:
+  def direct(
+      observation: CausalStepObservation,
+      consequence: TransitionConsequence
+  ): List[PassedPawnResultTransitionSeed] =
+    require(
+      observation.consequences.count(_ == consequence) == 1,
+      "one changed occurrence cannot duplicate an exact passed-pawn consequence"
+    )
+    val proofs = PassedPawnResultTransitionProof.directCandidates(
+      observation.lineOccurrenceOwner,
+      observation.structuralOccurrence,
+      observation.transition,
+      consequence,
+      observation.movement
+    )
+    require(
+      proofs.map(_.stableKey).distinct.size == proofs.size,
+      "one exact passed-pawn transition proof may have only one seed producer"
+    )
+    proofs.map(PassedPawnResultTransitionSeed(observation, consequence, _))
 
 private[assembly] final case class CausalStepRelation(
     from: LineReplayStep,
@@ -43,6 +117,8 @@ private[assembly] final case class CausalLineTrace(
     ]
 
   def observation(step: LineReplayStep): Option[CausalStepObservation] = observations.get(step)
+  def lineOwnerRecord(step: LineReplayStep): Option[EvidenceRecord] =
+    observations.get(step).map(_.lineOccurrenceRecord)
   def relation(from: LineReplayStep, to: LineReplayStep): Option[CausalStepRelation] =
     relationCache.getOrElseUpdate(from -> to, relationOnDemand(from, to))
   def legalStep(step: LineReplayStep): Option[lila.chessjudgment.model.line.LegalReplayStep] =
@@ -69,8 +145,15 @@ private[assembly] final case class CausalLineTrace(
       val responseContinuations = between.flatMap { response =>
         val continuations: List[CausalResponseContinuationTrajectory] = canonicalReplay.toList.flatMap { admitted =>
           List(
-            PawnBreakFollowUpTrajectory.find(from, response, to, between, admitted),
-            CaptureResponseFollowUpTrajectory.find(from, response, to, between, admitted)
+            PawnBreakFollowUpTrajectory.find(
+              from,
+              response,
+              to,
+              between,
+              admitted,
+              lineOwnerRecord
+            ),
+            CaptureResponseFollowUpTrajectory.find(from, response, to, between, admitted, lineOwnerRecord)
           ).flatten
         }
         Option.when(continuations.nonEmpty)(response -> continuations)
@@ -80,7 +163,14 @@ private[assembly] final case class CausalLineTrace(
         to = to,
         between = between,
         objectStates = canonicalReplay.toList
-          .flatMap(LineObjectTrajectory.findAll(from, between :+ to, _))
+          .flatMap(replay =>
+            LineObjectTrajectory.findAll(
+              from,
+              between :+ to,
+              replay,
+              lineOwnerRecord
+            )
+          )
           .filter(_.futureStep == to),
         lineAccess = canonicalReplay.flatMap(admitted =>
           LineAccessTrajectory.findRootClearanceBeforeUse(
@@ -88,7 +178,7 @@ private[assembly] final case class CausalLineTrace(
             to,
             between,
             admitted,
-            step => observations.get(step).map(_.lineOccurrenceOwner.scope)
+            lineOwnerRecord
           )
         ),
         responseContinuations = responseContinuations
@@ -128,14 +218,14 @@ private[assembly] object CausalLineTrace:
 private[assembly] object PassedPawnResultEpisodeBuilder:
 
   def fromLine(
-      rootLine: LineNodeRef,
       rootTransition: StructuralTransitionBinding,
-      rootLineOwner: EvidenceRef,
+      rootLineRecord: EvidenceRecord,
       rootStructuralOccurrence: ReplayStructuralOccurrence,
       rootIdentity: lila.chessjudgment.model.PassedPawnResultEventIdentity,
       rootConsequences: List[TransitionConsequence],
       line: LineFactEvidence,
-      trace: CausalLineTrace
+      trace: CausalLineTrace,
+      resultSeeds: List[PassedPawnResultTransitionSeed]
   ): PassedPawnResultEpisode =
     val rootStep = line.lineReplaySteps.headOption
       .filter(step => EvidenceRef.sameMove(step.moveUci, rootTransition.moveUci))
@@ -152,28 +242,25 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
       step = rootStep,
       perspective = rootTransition.perspective,
       structuralConsequences = rootConsequences,
-      lineOccurrenceOwner = rootLineOwner,
+      lineOccurrenceRecord = rootLineRecord,
       structuralOccurrence = rootStructuralOccurrence,
       structuralTransition = rootTransition,
       canonicalStep = trace.legalStep(rootStep),
       canonicalMovement = trace.transition(rootStep).map(_.relationDelta.rootMove)
     )
     fromContinuation(
-      rootLine = rootLine,
-      role = rootTransition.role,
       root = root,
       continuation = line.lineReplaySteps.dropWhile(_ != rootStep).drop(1),
-      trace = Some(trace)
+      trace = Some(trace),
+      resultSeeds = resultSeeds
     )
 
   def fromContinuation(
-      rootLine: LineNodeRef,
-      role: TransitionEdgeRole,
       root: PassedPawnResultEventNode,
       continuation: List[LineReplayStep],
-      observedResultMove: Option[String] = None,
       trace: Option[CausalLineTrace] = None,
-      admittedReplay: Option[CanonicalLineReplay] = None
+      admittedReplay: Option[CanonicalLineReplay] = None,
+      resultSeeds: List[PassedPawnResultTransitionSeed] = Nil
   ): PassedPawnResultEpisode =
     val resultKind = root.identity.kind
     val lineOnlyContinuation =
@@ -196,7 +283,7 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
             root.structuralTransition,
             root.structuralConsequences,
             movement,
-            root.lineOccurrenceOwner,
+            root.lineOccurrenceRecord,
             root.structuralOccurrence
           )
         ).toList,
@@ -209,16 +296,34 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
         activeTrace.transition(root.step).map(_.relationDelta.rootMove)
       )
     )
-    val observedCandidates = certifiedRoot :: rebasedContinuation.flatMap(step =>
-      eventNode(resultKind, step, Some(activeTrace))
+    require(
+      resultSeeds.map(_.stableKey).distinct.size == resultSeeds.size,
+      "one exact passed-pawn result seed may be consumed only once per occurrence"
     )
-    val demandedResults = observedCandidates.filter(event =>
-      event != certifiedRoot && (
-        observedResultMove.exists(EvidenceRef.sameMove(_, event.moveUci)) ||
-          hasRootPassedPawnResult(resultKind, rootLine, role, event)
+    require(
+      resultSeeds.forall(seed =>
+        seed.resultKind == resultKind && replay.contains(seed.step) && seed.belongsTo(activeTrace)
+      ),
+      "passed-pawn result seeds must belong to the exact replay, owner, and result kind"
+    )
+    val resultSeedsByStep = resultSeeds.groupMap(_.step)(identity)
+    resultSeedsByStep.values.foreach(seeds =>
+      require(
+        seeds.map(_.consequence).distinct.size == seeds.size,
+        "one result occurrence cannot consume duplicate passed-pawn consequences"
       )
-    ).toSet
-    val demandedPrefix = observedCandidates.lastIndexWhere(demandedResults) match
+    )
+    val observedCandidates = certifiedRoot :: rebasedContinuation.flatMap(step =>
+      eventNode(resultKind, step, Some(activeTrace)).map(event =>
+        event.copy(
+          structuralConsequences = resultSeedsByStep
+            .getOrElse(step, Nil)
+            .map(_.consequence)
+        )
+      )
+    )
+    val demandedResultSteps = resultSeedsByStep.keySet - certifiedRoot.step
+    val demandedPrefix = observedCandidates.lastIndexWhere(event => demandedResultSteps(event.step)) match
       case -1        => List(certifiedRoot)
       case lastIndex => observedCandidates.take(lastIndex + 1)
     val responsesByTrigger =
@@ -231,7 +336,13 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
           from,
           responsesFor(from, replay, activeTrace)
         )
-        dependencies(resultKind, rootLine, role, from, to, activeTrace, responses, observedResultMove)
+        dependencies(
+          from,
+          to,
+          activeTrace,
+          responses,
+          resultSeedsByStep
+        )
           .filter(_.causalConnectionProven)
       }
       require(
@@ -249,7 +360,11 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
       dependencies = possibleDependencies,
       responses = observedResponses.filter(_.proven)
     )
-    val exactResultRoutes = resultRoutes(resultKind, rootLine, role, possibleEpisode)
+    val exactResultRoutes = resultRoutes(
+      resultKind,
+      possibleEpisode,
+      resultSeeds
+    )
     val routedDependencies = exactResultRoutes.iterator.flatMap(_.causalPath).toSet
     val observedDependencies = possibleDependencies.filter(routedDependencies)
     val routeEvents = (
@@ -257,11 +372,16 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
         route.causalPath.flatMap(dependency => List(dependency.from, dependency.to)) :+ route.sourceEvent
       )
     ).toSet
-    val provenConsequencesByEvent = exactResultRoutes
+    val routedConsequencesByEvent = exactResultRoutes
       .groupMap(_.sourceEvent)(_.consequence)
       .view
-      .mapValues(_.distinct)
+      .mapValues(_.toSet)
       .toMap
+    val provenConsequencesByEvent = observedCandidates.map(event =>
+      event -> event.structuralConsequences.filter(
+        routedConsequencesByEvent.getOrElse(event, Set.empty)
+      )
+    ).toMap
     val selectedByObservation = observedCandidates
       .filter(routeEvents)
       .map { event =>
@@ -269,9 +389,7 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
         val selected = selectResults(
           resultKind,
           event,
-          if event == certifiedRoot then
-            (certifiedRoot.structuralConsequences ++ provenConsequences).distinct
-          else provenConsequences
+          if event == certifiedRoot then certifiedRoot.structuralConsequences else provenConsequences
         )
         event -> (if event == certifiedRoot then selected.copy(identity = certifiedRoot.identity) else selected)
       }
@@ -331,7 +449,7 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
         step = step,
         perspective = observed.transition.perspective,
         structuralConsequences = observed.consequences,
-        lineOccurrenceOwner = observed.lineOccurrenceOwner,
+        lineOccurrenceRecord = observed.lineOccurrenceRecord,
         structuralOccurrence = observed.structuralOccurrence,
         structuralTransition = observed.transition,
         canonicalStep = Some(transition.legal),
@@ -340,19 +458,16 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
     }
 
   private def dependencies(
-      resultKind: PassedPawnResultKind,
-      rootLine: LineNodeRef,
-      role: TransitionEdgeRole,
       from: PassedPawnResultEventNode,
       to: PassedPawnResultEventNode,
       trace: CausalLineTrace,
       responses: List[PassedPawnResultReply],
-      observedResultMove: Option[String]
+      resultSeedsByStep: Map[LineReplayStep, List[PassedPawnResultTransitionSeed]]
   ): List[PassedPawnResultDependency] =
     val relation = trace.relation(from.step, to.step)
     val plyOffset = to.step.ply - from.step.ply
-    val exactObservedResult = observedResultMove.exists(EvidenceRef.sameMove(_, to.moveUci))
-    val hasPassedPawnResult = exactObservedResult || hasRootPassedPawnResult(resultKind, rootLine, role, to)
+    val hasPassedPawnResult =
+      resultSeedsByStep.getOrElse(to.step, Nil).exists(_.proves(to))
     val structuralDependencies = relation.toList.flatMap(relation =>
       relation.objectStates.map(objectStateDependency(from, to, _)) ++
         relation.lineAccess.map(lineAccessDependency(from, to, _)).toList
@@ -365,9 +480,7 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
       )
       .flatMap(response => relation.toList.flatMap(_.continuationsFor(response.step)))
       .filter {
-        case pawn: PawnBreakFollowUpTrajectory =>
-          hasPassedPawnResult ||
-            to.structuralConsequences.exists(_.kind == TransitionConsequenceKind.PassedPawnProgress)
+        case _: PawnBreakFollowUpTrajectory => hasPassedPawnResult
         case _: CaptureResponseFollowUpTrajectory => true
       }
       .map(trajectory =>
@@ -409,25 +522,6 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
       plyOffset
     )
 
-  private def hasRootPassedPawnResult(
-      resultKind: PassedPawnResultKind,
-      rootLine: LineNodeRef,
-      role: TransitionEdgeRole,
-      event: PassedPawnResultEventNode
-  ): Boolean =
-    event.canonicalMovement.exists(movement =>
-      event.structuralConsequences.exists(consequence =>
-        PassedPawnResultEventProof.candidateConsequenceForKind(
-          resultKind,
-          consequence,
-          event.lineOccurrenceOwner,
-          event.structuralOccurrence,
-          event.structuralTransition,
-          movement
-        ).nonEmpty
-      )
-    )
-
   private def responsesFor(
       trigger: PassedPawnResultEventNode,
       replay: List[LineReplayStep],
@@ -463,31 +557,31 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
       event: PassedPawnResultEventNode,
       provenConsequences: List[TransitionConsequence]
   ): PassedPawnResultEventNode =
-    val consequences = provenConsequences.distinct
+    require(
+      provenConsequences.distinct.size == provenConsequences.size,
+      "one exact result event cannot select a consequence more than once"
+    )
     event.copy(
       identity = event.identity.copy(kind = resultKind),
-      structuralConsequences = consequences
+      structuralConsequences = provenConsequences
     )
 
   private def resultRoutes(
       resultKind: PassedPawnResultKind,
-      rootLine: LineNodeRef,
-      role: TransitionEdgeRole,
-      episode: PassedPawnResultEpisode
+      episode: PassedPawnResultEpisode,
+      resultSeeds: List[PassedPawnResultTransitionSeed]
   ): List[PassedPawnResultRoute] =
     episode.continuationsEnabledByRoot.flatMap { sourceEvent =>
       val transition = sourceEvent.structuralTransition
       PassedPawnResultEpisode.resultConsequences(sourceEvent).flatMap { consequence =>
         val causalPaths = episode.enablingDependencyPathsTo(sourceEvent)
-        val sourceProofs = PassedPawnResultTransitionProof
-          .certify(
-            sourceEvent.identity,
-            sourceEvent.lineOccurrenceOwner,
-            sourceEvent.structuralOccurrence,
-            transition,
-            consequence
-          )
-          .toList
+        val sourceProofs = resultSeeds
+          .filter(seed => seed.consequence == consequence && seed.proves(sourceEvent))
+          .map(_.resultProof)
+        require(
+          sourceProofs.nonEmpty,
+          "a passed-pawn result route cannot promote an unseeded consequence"
+        )
         val dependencyProofs = episode
           .enablingDependenciesTo(sourceEvent)
           .flatMap(dependency =>

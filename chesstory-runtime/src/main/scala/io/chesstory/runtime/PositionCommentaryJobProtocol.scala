@@ -271,8 +271,7 @@ object PositionCommentaryJobProtocol:
       "root_candidate_lines_admitted" -> progress.rootCandidateLinesAdmitted,
       "selected_commentaries_completed" -> progress.selectedCommentariesCompleted,
       "physical_works_issued" -> progress.physicalWorksIssued,
-      "physical_reports_accepted" -> progress.physicalReportsAccepted,
-      "causal_waves_completed" -> progress.causalWavesCompleted
+      "physical_reports_accepted" -> progress.physicalReportsAccepted
     )
 
   private[runtime] def focusJson(playedMoveUci: String, resultingFen: String): JsObject =

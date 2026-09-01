@@ -1,42 +1,25 @@
 package lila.chessjudgment.model.judgment
 
-import lila.chessjudgment.model.{
-  BranchReplyProbeBinding,
-  ProbeContractValidator,
-  ProbeKind,
-  ProbeRequest,
-  ProbeVariant
-}
-import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction, PrincipalVariationEvidence }
+import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction }
 
 enum ClaimFamily:
   case Tactical
   case PawnStructure
-  case PassedPawnResult
-  case Defensive
-  case Conversion
-  case Material
+  case PassedPawnProgress
   case Evaluation
 
   private[chessjudgment] def isLongTerm: Boolean =
     this match
       case PawnStructure => true
-      case Tactical | PassedPawnResult | Defensive | Conversion | Material | Evaluation => false
+      case Tactical | PassedPawnProgress | Evaluation => false
 
 object ClaimFamily:
   def fromCause(kind: RelativeCauseKind): ClaimFamily =
     kind match
-      case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
-          RelativeCauseKind.CandidateTacticalLiability |
-          RelativeCauseKind.RecaptureRecoveryWindow |
-          RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.KingForcing =>
+      case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.WrongMoveOrder =>
         ClaimFamily.Tactical
-      case RelativeCauseKind.DrawResource =>
-        ClaimFamily.Defensive
-      case RelativeCauseKind.MaterialSwing =>
-        ClaimFamily.Material
-      case RelativeCauseKind.PassedPawnResult =>
-        ClaimFamily.PassedPawnResult
+      case RelativeCauseKind.PassedPawnProgress =>
+        ClaimFamily.PassedPawnProgress
 
 enum SubjectBindingClass:
   case PrimaryPlayedCause
@@ -96,25 +79,16 @@ object JudgmentSubjectBinding:
       graph: TypedEvidenceGraph,
       playedMoves: Set[String]
   ): SubjectBindingClass =
-    graph.comparisonFor(cause).map { fact =>
+    graph.comparisonFor(cause).filter(ActionablePlayedVsBestCausalProofDemand.accepts).map { fact =>
       val binding = graph.requiredRelativeCauseBinding(cause)
       val candidateIsPlayed = playedMoves.contains(EvidenceRef.normalizeMove(fact.candidateLine.rootMove))
       val referenceIsPlayed = playedMoves.contains(EvidenceRef.normalizeMove(fact.referenceLine.rootMove))
-      binding.role match
-        case RelativeCauseRole.PrimaryPlayedCause
-            if candidateIsPlayed &&
-              binding.bindingTier == RelativeCauseBindingTier.Primary &&
-              fact.comparison.verdict.isActionableLoss =>
-          SubjectBindingClass.PrimaryPlayedCause
-        case RelativeCauseRole.PrimaryPlayedCause if candidateIsPlayed =>
-          SubjectBindingClass.ContextPlayed
-        case RelativeCauseRole.PlayedAlternativeContext if candidateIsPlayed =>
-          SubjectBindingClass.ContextPlayed
-        case RelativeCauseRole.CandidateSetConstraint | RelativeCauseRole.AlternativeDiagnostic
-            if referenceIsPlayed || candidateIsPlayed =>
-          SubjectBindingClass.ContextPlayed
-        case _ =>
-          SubjectBindingClass.Other
+      if
+        candidateIsPlayed && !referenceIsPlayed &&
+          RelativeCauseConstructionAdmission.initiallyReady(cause, graph) &&
+          binding.evidenceLines == List(binding.eventLine)
+      then SubjectBindingClass.PrimaryPlayedCause
+      else SubjectBindingClass.Other
     }.getOrElse(SubjectBindingClass.Other)
 
   def hasDirectPlayedEvidence(
@@ -139,10 +113,6 @@ object JudgmentSubjectBinding:
         EvidenceRef.sameMove(moveUci, move)
       case payload: StructuralDeltaEvidence =>
         EvidenceRef.sameMove(payload.moveUci, move)
-      case payload: TacticalMechanismEvidence =>
-        payload.moveUci.exists(EvidenceRef.sameMove(_, move)) ||
-          payload.line.exists(line => EvidenceRef.sameMove(line.rootMove, move)) ||
-          record.ref.scope == EvidenceScope.PlayedTransition
       case payload: RelationFactEvidence =>
         payload.mentionsLineMove(move) || record.ref.scope == EvidenceScope.PlayedTransition
       case _ =>
@@ -210,18 +180,7 @@ object PlayerFacingClaimPolicy:
           else if hasContextEvidence then PlayerFacingClaimTier.Context
           else if hasDirectPlayedEvidence then PlayerFacingClaimTier.Secondary
           else PlayerFacingClaimTier.Diagnostic
-        if promotedTier(baseTier) && requiresConcreteObject(claim.family) &&
-          !EvidenceObjectBinding.specificTargetMechanismReady(
-            EvidenceObjectBinding.fromClaim(claim, graph)
-          )
-        then PlayerFacingClaimTier.Diagnostic
-        else baseTier
-
-  def requiresConcreteObject(family: ClaimFamily): Boolean =
-    family != ClaimFamily.Evaluation
-
-  private def promotedTier(tier: PlayerFacingClaimTier): Boolean =
-    tier == PlayerFacingClaimTier.Primary || tier == PlayerFacingClaimTier.Secondary
+        baseTier
 
   private def evaluationVerdictCarrierRecord(
       record: EvidenceRecord,
@@ -257,7 +216,6 @@ object ClaimEvidenceSemantics:
   private val causeBoundLayers: Set[EvidenceLayer] =
     Set(
       EvidenceLayer.Relation,
-      EvidenceLayer.TacticalMechanism,
       EvidenceLayer.RelativeCause,
       EvidenceLayer.RelativeAssessment,
       EvidenceLayer.CandidateComparison
@@ -283,26 +241,11 @@ object ClaimEvidenceSemantics:
     import EvidenceSemanticAnchorKind.*
     record.payload match
       case CandidateComparisonEvidence(fact) =>
-        List(
-          Option.when(
-            fact.kind == CandidateComparisonKind.BestVsSecond || fact.candidateSet.nonEmpty
-          )(
+        Option
+          .when(fact.kind == CandidateComparisonKind.BestVsSecond)(
             EvidenceSemanticAnchor.of(CandidateComparison, "best-vs-second")
-          ),
-          Option.when(fact.candidateSet.exists(_.onlyMove))(
-            EvidenceSemanticAnchor.of(CandidateComparison, "only-move")
-          ),
-          Option
-            .when(
-              fact.kind == CandidateComparisonKind.BestVsSecond || fact.candidateSet.nonEmpty
-            )(
-              EvidenceSemanticAnchor.of(
-                CandidateComparison,
-                "best-second-wp",
-                winPercentGapAnchor(fact.comparison.winPercentLossForMover)
-              )
-            )
-        ).flatten
+          )
+          .toList
       case payload: LineFactEvidence =>
         payload.semanticGroupingAnchors
       case payload: RelationFactEvidence =>
@@ -313,12 +256,6 @@ object ClaimEvidenceSemantics:
         ).distinctBy(_.stableKey)
       case _ =>
         Nil
-
-  private def winPercentGapAnchor(gap: Double): String =
-    if gap >= 20.0 then "20+"
-    else if gap >= 10.0 then "10+"
-    else if gap >= 5.0 then "5+"
-    else "small"
 
 /** Closed, typed explanatory content candidate owned by one JudgmentClaim. The graph
   * remains the canonical source for every carrier and its payload; this value
@@ -369,7 +306,6 @@ enum PlayerFacingPrimary:
 final class EvidenceBackedJudgmentPacket private (
     private[chessjudgment] val assembly: JudgmentAssemblyContext,
     val primary: PlayerFacingPrimary,
-    val probeRequests: List[ProbeRequest],
     val playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
     val causeExposureResolution: PlayerFacingCauseExposureResolution,
     val causeDispositionLedger: CauseDispositionLedger
@@ -382,7 +318,6 @@ object EvidenceBackedJudgmentPacket:
   private[chessjudgment] def fromAssembly(
       assembly: JudgmentAssemblyContext,
       primary: PlayerFacingPrimary,
-      probeRequests: List[ProbeRequest],
       playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
       causeExposureResolution: PlayerFacingCauseExposureResolution,
       causeDispositionLedger: CauseDispositionLedger
@@ -390,7 +325,6 @@ object EvidenceBackedJudgmentPacket:
     Option.when(
       structurallyClosed(assembly) &&
         primaryClosed(assembly, primary) &&
-        probesClosed(assembly, probeRequests) &&
         playerFacingClaimsClosed(
           assembly,
           playerFacingClaimDecisions,
@@ -401,7 +335,6 @@ object EvidenceBackedJudgmentPacket:
       new EvidenceBackedJudgmentPacket(
         assembly,
         primary,
-        probeRequests,
         playerFacingClaimDecisions,
         causeExposureResolution,
         causeDispositionLedger
@@ -432,8 +365,7 @@ object EvidenceBackedJudgmentPacket:
                   fact.referenceLine == assessment.reference.ref &&
                   fact.candidateLine.role == LineNodeRole.Alternative &&
                   fact.candidateLine.rank == 2 &&
-                  fact.hasDistinctRootMoves &&
-                  fact.candidateSet.nonEmpty
+                  fact.hasDistinctRootMoves
           case _ => false
         }
       case _ => false
@@ -460,46 +392,6 @@ object EvidenceBackedJudgmentPacket:
         exposure,
         claimIds
       )
-
-  private def probesClosed(
-      assembly: JudgmentAssemblyContext,
-      requests: List[ProbeRequest]
-  ): Boolean =
-    val ids = requests.map(_.id.trim)
-    ids.forall(_.nonEmpty) &&
-      ids.distinct.size == ids.size &&
-      requests.forall { request =>
-        ProbeContractValidator.validateRequest(request).isValid &&
-          assembly.root.exists { root =>
-            request.variant match
-              case ProbeVariant.BranchReply(replyMove, requiredHorizonPlyOffset) =>
-                assembly.lines.exists { line =>
-                  EvidenceRef.sameMove(line.ref.rootMove, request.candidateMove) &&
-                    line.evaluation.engineLine.exists { engineLine =>
-                      assembly.lineReplay(line.ref).flatMap(_.replaySteps.headOption).exists { rootStep =>
-                        val expectedHash = BranchReplyProbeBinding.variationHash(
-                          rootFen = root.fen,
-                          role = line.ref.role,
-                          rootMove = line.ref.rootMove,
-                          whitePovEvalCp = engineLine.scoreCp,
-                          mate = engineLine.mate,
-                          depth = engineLine.depth,
-                          moves = engineLine.moves,
-                          replyMove = replyMove,
-                          certifiedHorizonPlyOffset = requiredHorizonPlyOffset
-                        )
-                        PrincipalVariationEvidence.sameBoardState(rootStep.fenBefore, root.fen) &&
-                          PrincipalVariationEvidence.sameBoardState(rootStep.fenAfter, request.fen) &&
-                          assembly.evidenceGraph
-                            .certifiedRootResponseMovesFor(line.ref)
-                            .exists(_.exists(EvidenceRef.sameMove(_, replyMove))) &&
-                          request.variationHash == expectedHash &&
-                          request.id == ProbeRequest.transportId(ProbeKind.BranchReply, expectedHash)
-                      }
-                    }
-                }
-          }
-      }
 
   private def structurallyClosed(assembly: JudgmentAssemblyContext): Boolean =
     val rootPresent = assembly.root.nonEmpty
@@ -647,90 +539,23 @@ object EvidenceBackedJudgmentPacket:
         .size == comparisonRecords.size
     val comparisonLinesByRef =
       assembly.lines.map(line => line.ref -> line).toMap
-    val candidateSetOwners =
-      comparisonRecords.filter(_._2.candidateSet.nonEmpty)
     def canonicalLineParents(line: CandidateLineNode): List[EvidenceRef] =
-      (
-        line.evidence ::
-          graphRecords.collect {
-            case EvidenceRecord(evalRef, CandidateLineEvaluationEvidence(payloadLine, _), _)
-                if payloadLine == line.ref =>
-              evalRef
-          }
-      ).distinctBy(_.id)
-    val expectedCandidateSet =
-      for
-        complete <- assembly.input.completeCandidateSet
-        reference <- assembly.line(LineNodeRole.BestReference)
-        if EvidenceRef.sameMove(reference.ref.rootMove, complete.bestMoveUci)
-        second <- assembly.lines.find(line => EvidenceRef.sameMove(line.ref.rootMove, complete.secondMoveUci))
-        played <- assembly.line(LineNodeRole.Played)
-      yield
-        val ownerCandidate =
-          if EvidenceRef.sameMove(second.ref.rootMove, played.ref.rootMove) then played
-          else second
-        (reference, ownerCandidate, complete.descriptor)
-    val candidateSetClosed =
-      expectedCandidateSet match
-        case None =>
-          candidateSetOwners.isEmpty
-        case Some((reference, ownerCandidate, descriptor)) =>
-          candidateSetOwners match
-            case List((ownerRecord, ownerFact)) =>
-              val candidateSetParents =
-                List(reference, ownerCandidate)
-                  .flatMap(canonicalLineParents)
-                  .distinctBy(_.id)
-              val primaryRecord =
-                comparisonRecords.collectFirst {
-                  case (record, fact)
-                      if fact.kind == CandidateComparisonKind.PlayedVsBest &&
-                        fact.referenceLine == reference.ref =>
-                    record
-                }
-              ownerFact.referenceLine == reference.ref &&
-              ownerFact.candidateLine == ownerCandidate.ref &&
-              ownerFact.candidateSet.contains(descriptor) &&
-              candidateSetParents.forall(ownerRecord.parents.contains) &&
-              primaryRecord.forall(record =>
-                record.ref == ownerRecord.ref || record.parents.contains(ownerRecord.ref)
-              )
-            case _ =>
-              false
+      line.evidence ::
+        graphRecords.collect {
+          case EvidenceRecord(evalRef, CandidateLineEvaluationEvidence(payloadLine, _), _)
+              if payloadLine == line.ref =>
+            evalRef
+        }
     val comparisonParentsCanonical =
       comparisonRecords.forall { case (record, fact) =>
         val comparedLineParents =
           List(fact.referenceLine, fact.candidateLine)
             .flatMap(comparisonLinesByRef.get)
             .flatMap(canonicalLineParents)
-        val descriptorParents =
-          Option
-            .when(fact.candidateSet.nonEmpty)(
-              expectedCandidateSet.toList
-                .flatMap { case (reference, ownerCandidate, _) =>
-                  List(reference, ownerCandidate)
-                }
-                .flatMap(canonicalLineParents)
-            )
-            .toList
-            .flatten
-        val descriptorOwnerParent =
-          Option
-            .when(
-              fact.kind == CandidateComparisonKind.PlayedVsBest &&
-                fact.candidateSet.isEmpty
-            )(
-              candidateSetOwners.collectFirst {
-                case (ownerRecord, _) => ownerRecord.ref
-              }
-            )
-            .flatten
-            .toList
-        val expectedParents =
-          (comparedLineParents ++ descriptorParents ++ descriptorOwnerParent)
-            .distinctBy(_.id)
-        record.parents.size == expectedParents.size &&
-          record.parents.toSet == expectedParents.toSet
+        val parentIds = comparedLineParents.map(_.id)
+        parentIds.distinct.size == parentIds.size &&
+          record.parents.size == comparedLineParents.size &&
+          record.parents.toSet == comparedLineParents.toSet
       }
     def comparisonFactBound(ref: EvidenceRef): Boolean =
       assembly.evidenceGraph.candidateComparisonRecord(ref).exists {
@@ -746,17 +571,15 @@ object EvidenceBackedJudgmentPacket:
     val causesClosed =
       graphRecords.forall {
         case EvidenceRecord(_, RelativeCauseFactEvidence(cause), parents) =>
-          assembly.evidenceGraph.comparisonFor(cause).exists(_ =>
+          assembly.evidenceGraph.comparisonFor(cause).exists(comparison =>
             val binding = assembly.evidenceGraph.requiredRelativeCauseBinding(cause)
-            comparisonFactBound(cause.comparisonEvidence) &&
+            ActionablePlayedVsBestCausalProofDemand.accepts(comparison) &&
+              RelativeCauseConstructionAdmission.initiallyReady(cause, assembly.evidenceGraph) &&
+              binding.evidenceLines == List(binding.eventLine) &&
+              comparisonFactBound(cause.comparisonEvidence) &&
               parents.contains(cause.comparisonEvidence) &&
               lineRefs.contains(binding.eventLine) &&
-              (cause.comparisonEvidence :: cause.supportEvidence ++
-                cause.proof.toList.flatMap(proof =>
-                  proof.directProof.sourceRefs ++
-                    proof.contrastProof.sourceRefs ++
-                    proof.contextSupport.sourceRefs
-                )).forall(registered)
+              (cause.comparisonEvidence :: cause.proofSources).forall(registered)
           )
         case _ =>
           true
@@ -768,16 +591,14 @@ object EvidenceBackedJudgmentPacket:
         val refs =
           assessment.evidence :: (comparisonRefs ++ assessment.relativeCauseEvidence)
         val expectedParents =
-          (
-            List(
-              assessment.played.evidence,
-              assessment.reference.evidence,
-              assessment.candidate.evidence
-            ) ++
-              assessment.referenceTransition.toList.map(_.evidence) ++
-              comparisonRefs ++
-              assessment.relativeCauseEvidence
-          ).distinctBy(_.id)
+          List(
+            assessment.played.evidence,
+            assessment.reference.evidence,
+            assessment.candidate.evidence
+          ) ++
+            assessment.referenceTransition.toList.map(_.evidence) ++
+            comparisonRefs ++
+            assessment.relativeCauseEvidence
         val objectsBound =
           assembly.lines.contains(assessment.reference) &&
             assembly.lines.contains(assessment.candidate) &&
@@ -800,8 +621,7 @@ object EvidenceBackedJudgmentPacket:
                         fact.referenceLine == assessment.reference.ref &&
                         fact.candidateLine.role == LineNodeRole.Alternative &&
                         fact.candidateLine.rank == 2 &&
-                        fact.hasDistinctRootMoves &&
-                        fact.candidateSet.nonEmpty
+                        fact.hasDistinctRootMoves
                     case CandidateComparisonKind.PlayedVsAlternative |
                         CandidateComparisonKind.ReferenceVsAlternative =>
                       false)
@@ -833,10 +653,11 @@ object EvidenceBackedJudgmentPacket:
         recordRef.scope == EvidenceScope.Counterfactual &&
         objectsBound &&
         refs.forall(registered) &&
+        expectedParents.map(_.id).distinct.size == expectedParents.size &&
         parents == expectedParents &&
-          primaryComparisonBound &&
-          relatedComparisonsBound &&
-          relativeCausesBound
+        primaryComparisonBound &&
+        relatedComparisonsBound &&
+        relativeCausesBound
       }
     val visiting = scala.collection.mutable.Set.empty[String]
     val visited = scala.collection.mutable.Set.empty[String]
@@ -871,6 +692,5 @@ object EvidenceBackedJudgmentPacket:
       causesClosed &&
       assessmentsClosed &&
       comparisonPairsUnique &&
-      candidateSetClosed &&
       comparisonParentsCanonical &&
       parentDagAcyclic

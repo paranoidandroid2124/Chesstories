@@ -1,6 +1,6 @@
 import { isMoveReviewEngineProfile, type MoveReviewEngineProfile } from 'lib/ceval/types';
 import { makeFen, parseFen } from 'chessops/fen';
-import { parseSquare, parseUci } from 'chessops/util';
+import { parseUci } from 'chessops/util';
 import { setupPosition } from 'chessops/variant';
 
 const moveReviewJobRequestSchema = 'chesstory.position-commentary.job-request.v6' as const;
@@ -21,9 +21,6 @@ export type MoveReviewVerdictCode =
   | 'blunder';
 export type MoveReviewCandidateRole = 'best' | 'played' | 'alternative';
 export type MoveReviewReasonRole = 'primary' | 'support' | 'proof-route';
-export type MoveReviewCandidateSetType = 'only_move' | 'narrow_choice' | 'style_choice';
-type MoveReviewDirectCausalChange = 'occurred' | 'maintained' | 'lost';
-type MoveReviewPlayerFacingCausalChange = MoveReviewDirectCausalChange | 'missed';
 type MoveReviewBrush = 'green' | 'blue' | 'yellow' | 'red';
 
 export interface MoveReviewSubject {
@@ -42,7 +39,7 @@ interface MoveReviewWinChance {
 }
 
 interface MoveReviewReasonRefs {
-  primary?: string;
+  primary: string[];
   support: string[];
   routes: string[];
 }
@@ -67,7 +64,6 @@ export type MoveReviewCore = MoveReviewCoreFields &
         bestChoice: {
           runnerUpVerdictCode: Exclude<MoveReviewVerdictCode, 'improves_on_reference'>;
           runnerUpUci: Uci;
-          candidateSet: MoveReviewCandidateSetType;
         };
       }
   );
@@ -111,13 +107,17 @@ export interface MoveReviewReason {
 
 interface MoveReviewTypedBranch {
   id: string;
-  role: 'counterfactual_reference' | 'observed_played_root' | 'expected_result_route' | 'legal_reply';
+  role:
+    | 'counterfactual_reference'
+    | 'observed_played_root'
+    | 'observed_played_sibling'
+    | 'actual_result_route';
   provenance: 'counterfactual_analyzed_root' | 'observed_game_root';
   lineId: string;
-  lineRole: 'played' | 'best_reference' | 'alternative' | 'branch_reply';
+  lineRole: 'played' | 'best_reference' | 'alternative';
   lineRank: number;
   rootMove: Uci;
-  sourceProbeId?: string;
+  sourceOccurrenceId?: string;
   steps?: MoveReviewWireStep[];
 }
 
@@ -149,6 +149,21 @@ type MoveReviewPassedPawnRelationKind =
   | 'pawn_topology_transition'
   | 'capture_recapture_inventory';
 
+type MoveReviewPassedPawnLineScope = 'best_line' | 'played_line' | 'candidate_line';
+
+type MoveReviewPassedPawnPositionState =
+  | { kind: 'occupied_by'; side: 'white' | 'black'; square: Key; piece: MoveReviewPieceRole }
+  | {
+      kind: 'slider_reach';
+      side: 'white' | 'black';
+      square: Key;
+      piece: 'bishop' | 'rook' | 'queen';
+      fileStep: number;
+      rankStep: number;
+      segment: { square: Key; target: 'empty' | 'friendly' | 'enemy'; occupantPiece?: MoveReviewPieceRole }[];
+    }
+  | { kind: 'pawn_topology'; side: 'white' | 'black'; square: Key; passed: boolean };
+
 interface MoveReviewPassedPawnDependencyProof {
   dependencyKind: MoveReviewPassedPawnDependencyKind;
   proofKind: MoveReviewPassedPawnDependencyProofKind;
@@ -156,11 +171,26 @@ interface MoveReviewPassedPawnDependencyProof {
   pieces: { role: string; side: 'white' | 'black'; piece: MoveReviewPieceRole }[];
   relationIssuers: {
     contract: MoveReviewPassedPawnRelationKind;
-    relationKind: MoveReviewPassedPawnRelationKind;
     resultKey: string;
     occurrenceId: string;
     stepKey: string;
     sourcePremiseIds: string[];
+    issuerEvidenceId: string;
+    line: MoveReviewTypedLine;
+    scope: MoveReviewPassedPawnLineScope;
+  }[];
+  positionStateIssuers: {
+    state: MoveReviewPassedPawnPositionState;
+    semanticProofId: string;
+    issuerEvidenceId: string;
+    issuerOccurrenceId: string;
+    stepKey: string;
+    ply: number;
+    move: Uci;
+    fenBefore: FEN;
+    fenAfter: FEN;
+    line: MoveReviewTypedLine;
+    scope: MoveReviewPassedPawnLineScope;
   }[];
 }
 
@@ -169,6 +199,8 @@ interface MoveReviewTypedPremise {
   contract: string;
   resultId: string;
   sourcePremiseIds: string[];
+  issuerEvidenceId?: string;
+  issuerOccurrenceId?: string;
   branchId: string;
   branchRole: string;
   stepIndex?: number;
@@ -180,7 +212,7 @@ interface MoveReviewTypedPremise {
 
 interface MoveReviewTypedLine {
   id: string;
-  role: 'played' | 'best_reference' | 'alternative' | 'branch_reply';
+  role: 'played' | 'best_reference' | 'alternative';
   rank: number;
   rootMove: Uci;
 }
@@ -188,37 +220,10 @@ interface MoveReviewTypedLine {
 export type MoveReviewReasonMessage =
   | { kind: 'line'; moves: Uci[] }
   | {
-      kind: 'causal';
-      causeEvidenceId: string;
-      causeKind: string;
-      effectMode: 'played_liability' | 'alternative_resource' | 'played_value';
-      directChange: MoveReviewDirectCausalChange;
-      playedChange: MoveReviewPlayerFacingCausalChange;
-      actor: { moveUci: Uci; side: 'white' | 'black'; piece: string; from: Key; to: Key };
-      targets: string[];
-      mechanisms: string[];
-      consequences: string[];
-      witnesses: string[];
-      horizon?: string;
-      proofSegment?: {
-        terminalRelation: 'produces_line_consequence' | 'is_root_line_event' | 'instantiates_relation';
-        steps: Array<{
-          plyOffset: number;
-          moveUci: Uci;
-          role: 'root_action' | 'causal_link' | 'terminal_event';
-        }>;
-      };
-    }
-  | {
-      kind: 'resource-differential';
+      kind: 'unique-check-reply-defender-displacement-before-capture';
       channelId: string;
-      causalSignature: string;
       causeEvidenceId: string;
-      causeKind: string;
-      effectMode: 'played_liability' | 'alternative_resource' | 'played_value';
-      directChange: 'occurred';
-      playedChange: 'missed';
-      family: 'immediate_forced_reply_resource_differential';
+      causeKind: 'wrong_move_order';
       sourceEvidenceId: string;
       semanticId: string;
       occurrenceId: string;
@@ -247,19 +252,12 @@ export type MoveReviewReasonMessage =
         ply: number;
         scope: 'best_line';
       };
-      triggerMechanism: 'forced_displacement';
     }
   | {
-      kind: 'defense-obligation-change';
+      kind: 'sole-recapturer-removal-before-target-capture';
       channelId: string;
-      causalSignature: string;
       causeEvidenceId: string;
-      causeKind: string;
-      effectMode: 'played_liability' | 'alternative_resource' | 'played_value';
-      directChange: 'occurred';
-      playedChange: 'missed';
-      contract: 'defense_obligation_change';
-      mechanism: 'sole_recapturer_removal';
+      causeKind: 'wrong_move_order';
       sourceEvidenceId: string;
       semanticId: string;
       occurrenceId: string;
@@ -292,14 +290,32 @@ export type MoveReviewReasonMessage =
       };
     }
   | {
-      kind: 'passed-pawn-result';
+      kind: 'vacated-gate-enables-unrecapturable-slider-capture';
       channelId: string;
-      causalSignature: string;
       causeEvidenceId: string;
-      causeKind: string;
-      effectMode: 'played_liability' | 'alternative_resource' | 'played_value';
-      directChange: 'occurred';
-      contract: 'passed_pawn_result_under_closed_replies';
+      causeKind: 'missed_tactical_resource';
+      sourceEvidenceId: string;
+      semanticId: string;
+      occurrenceId: string;
+      dependencyFingerprint: string;
+      pathOccurrenceId: string;
+      branch: MoveReviewTypedBranch;
+      counterpart: MoveReviewTypedBranch;
+      enabler: MoveReviewTypedActor;
+      slider: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      gateBlocker: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      exploit: MoveReviewTypedActor;
+      capturedTarget: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      exploitMove: Uci;
+      premises: MoveReviewTypedPremise[];
+      absences: MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse[];
+      states: MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse[];
+    }
+  | {
+      kind: 'passed-pawn-progress-realized-after-only-legal-reply';
+      channelId: string;
+      causeEvidenceId: string;
+      causeKind: 'passed_pawn_progress';
       sourceEvidenceId: string;
       eventEvidenceId: string;
       comparisonEvidenceId: string;
@@ -307,11 +323,10 @@ export type MoveReviewReasonMessage =
       occurrenceId: string;
       dependencyFingerprint: string;
       pathOccurrenceId: string;
-      consequenceKind: 'passed_pawn_progress';
       resultTargetSubjects: string[];
       rootActor: MoveReviewTypedActor;
       realizingActor: MoveReviewTypedActor;
-      rootLine: MoveReviewTypedLine;
+      rootLine: MoveReviewTypedLine & { role: 'played' };
       rootMove: Uci;
       rootPly: number;
       replyMove: Uci;
@@ -321,24 +336,16 @@ export type MoveReviewReasonMessage =
       pathRealizationActor: MoveReviewTypedActor;
       pathRealizationMove: Uci;
       pathRealizationPly: number;
-      pathRealizationMatchKind: 'exact_move' | 'equivalent_function';
-      replyBranch: MoveReviewTypedBranch;
-      expectedBranches: MoveReviewTypedBranch[];
-      replyOccurrenceSteps: MoveReviewPassedPawnResultWireStep[];
-      expectedOccurrenceSteps: MoveReviewPassedPawnResultWireStep[];
+      actualBranch: MoveReviewTypedBranch;
+      actualOccurrenceSteps: MoveReviewPassedPawnProgressWireStep[];
       premises: MoveReviewTypedPremise[];
       closureUseIds: string[];
       lowerPremiseIds: string[];
-      occurrenceLinkKeys: string[];
       replyClosure: {
-        issuer: 'structural_delta.canonical_legal_reply_inventory';
         issuerEvidenceId: string;
-        coverageIssuer: 'passed_pawn_result_event.branch_complete_reply_coverage';
-        coverageEvidenceId: string;
         rootAfter: { fen: FEN; ply: number; scope: string };
-        legalReplyMoves: Uci[];
-        branchByReply: Array<{ move: Uci; branchId: string }>;
-        certifiedHorizonPlyOffset: number;
+        legalReplyMove: Uci;
+        actualBranchId: string;
       };
     };
 
@@ -374,7 +381,7 @@ export type MoveReviewPositionAction =
 export interface IssuedMoveReviewEngineWork {
   engineProfile: MoveReviewEngineProfile;
   workId: string;
-  purpose: 'root_search' | 'focus_comparison' | 'causal_probe';
+  purpose: 'root_search' | 'focus_comparison';
   executionKeySha256: string;
   variant: 'standard';
   enginePositionInitialFen: FEN;
@@ -493,7 +500,6 @@ export interface MoveReviewCopy {
   supportingReason: string;
   proofRouteReason: string;
   runnerUp: string;
-  candidateSetLabels: Record<MoveReviewCandidateSetType, string>;
   proofStep: string;
   addToStudy: string;
   addedToStudy: string;
@@ -579,11 +585,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     supportingReason: '보조 근거',
     proofRouteReason: '검증 경로',
     runnerUp: '차선 수',
-    candidateSetLabels: {
-      only_move: '유일 수',
-      narrow_choice: '좁은 선택지의 최선 수',
-      style_choice: '스타일 선택의 선호 수',
-    },
     proofStep: '단계',
     addToStudy: 'Study에 수순 추가',
     addedToStudy: 'Study에 수순을 추가했습니다.',
@@ -645,11 +646,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     supportingReason: 'Supporting evidence',
     proofRouteReason: 'Proof route',
     runnerUp: 'Runner-up',
-    candidateSetLabels: {
-      only_move: 'Only move',
-      narrow_choice: 'Best of a narrow choice',
-      style_choice: 'Preferred style choice',
-    },
     proofStep: 'Step',
     addToStudy: 'Add line to Study',
     addedToStudy: 'Line added to Study.',
@@ -698,25 +694,11 @@ export function moveReviewReasonText(
     const moves = [candidate.label, ...message.moves.slice(1)].join(' ');
     return locale === 'ko-KR' ? `검증 수순: ${moves}.` : `Verified line: ${moves}.`;
   }
-  if (message.kind === 'causal') {
-    const targets = message.targets.join(', ');
-    const mechanisms = message.mechanisms.join(', ');
-    const consequences = message.consequences.join(', ');
-    return locale === 'ko-KR'
-      ? `[${message.causeKind}] ${message.actor.moveUci}: ${message.playedChange}; 대상 ${targets}; 기제 ${mechanisms}; 귀결 ${consequences}.`
-      : `[${message.causeKind}] ${message.actor.moveUci}: ${message.playedChange}; targets ${targets}; mechanisms ${mechanisms}; consequences ${consequences}.`;
-  }
-  if (message.kind === 'resource-differential') {
+  if (message.kind === 'unique-check-reply-defender-displacement-before-capture') {
     const premiseLabels: Record<MoveReviewTypedPremise['role'], [string, string]> = {
       created_check_response: ['강제 체크 응수', 'forced check reply'],
       reference_capture_recapture: ['기준 재포획', 'reference recapture'],
       played_capture_recapture: ['실전 재포획', 'played recapture'],
-      expected_dependency: ['예상 의존', 'expected dependency'],
-      expected_result: ['예상 결과', 'expected result'],
-      observed_dependency: ['관측 의존', 'observed dependency'],
-      observed_result: ['관측 결과', 'observed result'],
-      functional_match: ['기능 일치', 'functional match'],
-      comparison_demand: ['비교 요구', 'comparison demand'],
     };
     const premises = message.premises
       .map(premise => {
@@ -760,7 +742,7 @@ export function moveReviewReasonText(
       ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 ${absenceIssuer}가 ${message.absence.fen} (ply ${message.absence.ply})에서 인증한 부재 ${message.absence.query}와 하위 증거 ${premises}를 대조합니다${disabled}${mechanism}.`
       : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} contrasts absence ${message.absence.query}, certified by the ${absenceIssuer} at ${message.absence.fen} (ply ${message.absence.ply}), with lower proofs ${premises}${disabled}${mechanism}.`;
   }
-  if (message.kind === 'defense-obligation-change') {
+  if (message.kind === 'sole-recapturer-removal-before-target-capture') {
     const premiseLabels: Record<string, [string, string]> = {
       reference_defender_removal: ['기준 수비자 제거', 'reference defender removal'],
       reference_later_exploit_inventory: ['기준 후속 포획', 'reference later exploit'],
@@ -788,19 +770,35 @@ export function moveReviewReasonText(
       ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 ${message.absence.issuerEvidenceId}가 ${message.absence.fen} (ply ${message.absence.ply})에서 발급한 ${message.absence.query} 부재와 하위 증거 ${premises}를 보존합니다.`
       : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains absence ${message.absence.query}, issued by ${message.absence.issuerEvidenceId} at ${message.absence.fen} (ply ${message.absence.ply}), and lower proofs ${premises}.`;
   }
+  if (message.kind === 'vacated-gate-enables-unrecapturable-slider-capture') {
+    const reference =
+      locale === 'ko-KR'
+        ? `반사실 기준 가지에서 ${message.enabler.from}의 ${message.enabler.pieceBefore}가 게이트를 비운 뒤 ${message.exploitMove}로 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
+        : `in the counterfactual reference branch, the ${message.enabler.pieceBefore} vacates ${message.enabler.from}, and ${message.exploitMove} then captures the ${message.capturedTarget.piece} on ${message.capturedTarget.square}`;
+    const played =
+      locale === 'ko-KR'
+        ? `실전 형제 가지에서는 ${message.gateBlocker.square}의 ${message.gateBlocker.piece}이 남아 같은 ${message.exploitMove} 자원이 없습니다`
+        : `in the observed played sibling, the ${message.gateBlocker.piece} remains on ${message.gateBlocker.square}, so the same ${message.exploitMove} resource is absent`;
+    const occurrenceComparison =
+      message.branch.role === 'counterfactual_reference'
+        ? `${reference}; ${played}`
+        : `${played}; ${reference}`;
+    return locale === 'ko-KR'
+      ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 관계 전제 ${message.premises.length}개, 폐쇄 부재 ${message.absences.length}개, 폐쇄 상태 ${message.states.length}개를 정확한 발생 위치에 보존합니다.`
+      : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains ${message.premises.length} relation premises, ${message.absences.length} closed absences, and ${message.states.length} closed states at their exact occurrences.`;
+  }
   const targets = message.resultTargetSubjects.join(', ');
   const premises = message.premises.map(premise => premise.resultId.slice(0, 8)).join(', ');
-  const links = message.occurrenceLinkKeys.map(id => id.slice(0, 8)).join(', ');
   return locale === 'ko-KR'
-    ? `[${message.causeKind}] ${message.rootActor.from}의 ${message.rootActor.pieceBefore}가 ${message.rootActor.to}로 간 뒤 ${message.replyMove} 응수에서도 ${message.pathRealizationActor.from}의 ${message.pathRealizationActor.pieceBefore}가 ${message.pathRealizationMove}로 ${targets}의 ${message.consequenceKind} 결과를 실현합니다 (ply ${message.pathRealizationPly}, ${message.pathRealizationMatchKind}; ${message.replyClosure.issuer} / ${message.replyClosure.issuerEvidenceId} 정본이 ${message.replyClosure.rootAfter.fen}에서 응수 ${message.replyClosure.legalReplyMoves.join(', ')}를 발급하고 ${message.replyClosure.coverageIssuer} / ${message.replyClosure.coverageEvidenceId}가 가지 완결을 인증함, horizon ${message.replyClosure.certifiedHorizonPlyOffset} ply, 경로 전제 ${premises}, 인과 링크 ${links}, 독립 경로 ${message.pathOccurrenceId.slice(0, 8)}).`
-    : `[${message.causeKind}] After the ${message.rootActor.pieceBefore} moves ${message.rootActor.from}–${message.rootActor.to}, the ${message.pathRealizationActor.pieceBefore} from ${message.pathRealizationActor.from} plays ${message.pathRealizationMove} to realize ${message.consequenceKind} for ${targets} against ${message.replyMove} (ply ${message.pathRealizationPly}, ${message.pathRealizationMatchKind}; ${message.replyClosure.issuer} / ${message.replyClosure.issuerEvidenceId} issues replies ${message.replyClosure.legalReplyMoves.join(', ')} at ${message.replyClosure.rootAfter.fen}; ${message.replyClosure.coverageIssuer} / ${message.replyClosure.coverageEvidenceId} certifies complete branch coverage; horizon ${message.replyClosure.certifiedHorizonPlyOffset} ply; path premises ${premises}; causal links ${links}; independent path ${message.pathOccurrenceId.slice(0, 8)}).`;
+    ? `[${message.causeKind}] ${message.rootActor.from}의 ${message.rootActor.pieceBefore}가 ${message.rootActor.to}로 간 뒤, 유일 합법 응수 ${message.replyMove}와 ${message.pathRealizationMove}를 거쳐 ${targets}의 통과폰 진행 결과가 발생합니다 (ply ${message.pathRealizationPly}; ${message.replyClosure.issuerEvidenceId} 인벤토리가 ${message.replyClosure.rootAfter.fen}에서 그 응수를 인증하고, ${message.eventEvidenceId}가 실제 결과 occurrence를 소유함, 경로 전제 ${premises}, 독립 경로 ${message.pathOccurrenceId.slice(0, 8)}).`
+    : `[${message.causeKind}] After the ${message.rootActor.pieceBefore} moves ${message.rootActor.from}–${message.rootActor.to}, the only legal reply ${message.replyMove} and ${message.pathRealizationMove} lead to the passed-pawn progress result for ${targets} (ply ${message.pathRealizationPly}; inventory ${message.replyClosure.issuerEvidenceId} certifies that reply at ${message.replyClosure.rootAfter.fen}; ${message.eventEvidenceId} owns the actual result occurrence; path premises ${premises}; independent path ${message.pathOccurrenceId.slice(0, 8)}).`;
 }
 
 export function moveReviewReasonRole(
   core: MoveReviewCore,
   reasonId: string,
 ): MoveReviewReasonRole | undefined {
-  if (core.reasonRefs.primary === reasonId) return 'primary';
+  if (core.reasonRefs.primary.includes(reasonId)) return 'primary';
   if (core.reasonRefs.support.includes(reasonId)) return 'support';
   if (core.reasonRefs.routes.includes(reasonId)) return 'proof-route';
   return;
@@ -1029,7 +1027,7 @@ function projectJobStatus(
         'progress',
         'stop_condition',
       ]) ||
-      typeof raw.stop_condition !== 'string' ||
+      !isMoveReviewStopCondition(raw.stop_condition) ||
       !validProgress(raw.progress, 'stopped')
     )
       return;
@@ -1098,6 +1096,7 @@ function wireFocusMatches(value: unknown, subject: MoveReviewSubject): boolean {
 }
 
 function validProgress(value: unknown, phase: string): boolean {
+  const minimumLegalMoves = phase === 'stopped' ? 0 : 1;
   if (
     !isObject(value) ||
     !hasExactKeys(value, [
@@ -1107,20 +1106,30 @@ function validProgress(value: unknown, phase: string): boolean {
       'selected_commentaries_completed',
       'physical_works_issued',
       'physical_reports_accepted',
-      'causal_waves_completed',
     ]) ||
     value.phase !== phase ||
-    integerInRange(value.legal_move_count, 1, 218) === undefined ||
+    integerInRange(value.legal_move_count, minimumLegalMoves, 218) === undefined ||
     integerInRange(value.root_candidate_lines_admitted, 0, 3) === undefined ||
     integerInRange(value.selected_commentaries_completed, 0, 1) === undefined ||
     integerInRange(value.physical_works_issued, 0, 32) === undefined ||
-    integerInRange(value.physical_reports_accepted, 0, 32) === undefined ||
-    integerInRange(value.causal_waves_completed, 0, 3) === undefined
+    integerInRange(value.physical_reports_accepted, 0, 32) === undefined
   )
     return false;
   const issued = value.physical_works_issued as number;
   const accepted = value.physical_reports_accepted as number;
   return phase === 'completed' || phase === 'stopped' ? accepted <= issued : issued === accepted + 1;
+}
+
+function isMoveReviewStopCondition(value: unknown): boolean {
+  return (
+    value === 'deadline_exceeded' ||
+    value === 'cancelled' ||
+    value === 'engine_execution_failed' ||
+    value === 'invalid_engine_work_report' ||
+    value === 'review_construction_failed' ||
+    value === 'move_review_preparation_failed' ||
+    value === 'repetition_history_unavailable'
+  );
 }
 
 function projectIssuedEngineWork(
@@ -1145,9 +1154,7 @@ function projectIssuedEngineWork(
     ]) ||
     typeof value.work_id !== 'string' ||
     !workIdPattern.test(value.work_id) ||
-    (value.purpose !== 'root_search' &&
-      value.purpose !== 'focus_comparison' &&
-      value.purpose !== 'causal_probe') ||
+    (value.purpose !== 'root_search' && value.purpose !== 'focus_comparison') ||
     value.engine_profile !== profile ||
     typeof value.execution_key_sha256 !== 'string' ||
     !sha256Pattern.test(value.execution_key_sha256) ||
@@ -1196,12 +1203,6 @@ function projectIssuedEngineWork(
       limits.nodes === 2_000_000 &&
       limits.movetimeMs === 2_500 &&
       limits.multiPv === 2 &&
-      value.max_search_elapsed_ms === 3_500) ||
-    (value.purpose === 'causal_probe' &&
-      value.engine_position_moves_uci.length > subject.movePrefixUci.length &&
-      unrestricted &&
-      limits.nodes === 2_000_000 &&
-      limits.movetimeMs === 2_500 &&
       value.max_search_elapsed_ms === 3_500);
   if (!shapeValid) return;
   return {
@@ -1464,7 +1465,6 @@ function projectCommentary(
         'delta',
         'best_endpoint',
         'runner_up_endpoint',
-        'candidate_set',
       ])
     )
       return;
@@ -1472,7 +1472,6 @@ function projectCommentary(
     reviewedEndpoint = projectEndpoint(primary.best_endpoint);
     referenceEndpoint = projectEndpoint(primary.runner_up_endpoint);
     const runnerUpVerdictCode = moveReviewVerdictCode(primary.runner_up_verdict_code);
-    const candidateSet = projectCandidateSet(primary.candidate_set);
     const delta = projectDelta(primary.delta);
     const runnerUpUci = referenceEndpoint?.moves[0];
     verdictCode = runnerUpVerdictCode;
@@ -1485,11 +1484,10 @@ function projectCommentary(
       runnerUpUci === move ||
       !runnerUpVerdictCode ||
       runnerUpVerdictCode === 'improves_on_reference' ||
-      !candidateSet ||
       delta === undefined
     )
       return;
-    bestChoice = { runnerUpVerdictCode, runnerUpUci, candidateSet };
+    bestChoice = { runnerUpVerdictCode, runnerUpUci };
     if (reviewedEndpoint.winPercent !== undefined && referenceEndpoint.winPercent !== undefined)
       winChance = {
         referencePercent: referenceEndpoint.winPercent,
@@ -1503,6 +1501,7 @@ function projectCommentary(
     value.causal_explanations,
     verdictRef,
     move,
+    bestUci,
     subject.before.fen,
   );
   if (!causalTransport) return;
@@ -1518,18 +1517,17 @@ function projectCommentary(
     : undefined;
   const reasons = [...projectedReasons.map(reason => reason.reason), ...(lineReason ? [lineReason] : [])];
   if (reasons.length < 1 || !unique(reasons.map(reason => reason.id))) return;
-  const causalPrimaryIds = projectedReasons
+  const primaryReasons = projectedReasons
     .filter(reason => reason.role === 'primary')
     .map(reason => reason.reason.id);
   const routes = projectedReasons
     .filter(reason => reason.role === 'proof-route')
     .map(reason => reason.reason.id);
-  if (causalPrimaryIds.length > 1) routes.push(...causalPrimaryIds);
-  const primaryReason = causalPrimaryIds.length === 1 ? causalPrimaryIds[0] : lineReason?.id;
+  if (primaryReasons.length < 1 && lineReason) primaryReasons.push(lineReason.id);
   const support = projectedReasons
     .filter(reason => reason.role === 'support')
     .map(reason => reason.reason.id);
-  if (lineReason && lineReason.id !== primaryReason) support.push(lineReason.id);
+  if (lineReason && !primaryReasons.includes(lineReason.id)) support.push(lineReason.id);
   const coreFields: MoveReviewCoreFields = {
     verdictRef,
     verdictCode,
@@ -1539,7 +1537,7 @@ function projectCommentary(
     ...(winChance ? { winChance } : {}),
     ...(referenceEndpoint.terminal ? { referenceTerminal: referenceEndpoint.terminal } : {}),
     ...(reviewedEndpoint.terminal ? { reviewedTerminal: reviewedEndpoint.terminal } : {}),
-    reasonRefs: { ...(primaryReason ? { primary: primaryReason } : {}), support, routes },
+    reasonRefs: { primary: primaryReasons, support, routes },
   };
   const core: MoveReviewCore = bestChoice
     ? { ...coreFields, kind: 'best-choice', bestChoice }
@@ -1556,18 +1554,17 @@ interface ProjectedCausalReason {
   reason: MoveReviewReason;
 }
 
-type MoveReviewCauseEffectMode = 'played_liability' | 'alternative_resource' | 'played_value';
+type MoveReviewPublicCauseKind = 'wrong_move_order' | 'missed_tactical_resource' | 'passed_pawn_progress';
+type MoveReviewPublicCauseExposure = 'primary' | 'complementary';
 
 interface ProjectedCausalTransport {
   reasons: ProjectedCausalReason[];
 }
 
 interface CausalFacetMetadata {
-  role: 'lead' | 'supporting';
   causeEvidenceId: string;
-  causeKind: string;
-  effectMode: MoveReviewCauseEffectMode;
-  exposure: 'primary' | 'complementary';
+  causeKind: MoveReviewPublicCauseKind;
+  exposure: MoveReviewPublicCauseExposure;
   channels: unknown[];
 }
 
@@ -1575,151 +1572,71 @@ function projectCausalTransport(
   value: unknown,
   comparisonEvidenceId: string,
   candidateMove: Uci,
+  bestMove: Uci,
   startFen: FEN,
 ): ProjectedCausalTransport | undefined {
   if (value === undefined) return { reasons: [] };
   if (!Array.isArray(value) || value.length < 1) return;
   const reasons: ProjectedCausalReason[] = [];
   const causeEvidenceIds = new Set<string>();
-  for (const explanation of value) {
-    if (
-      !isObject(explanation) ||
-      !hasExactKeys(explanation, ['kind', 'facets']) ||
-      !Array.isArray(explanation.facets)
-    )
-      return;
-    const facets = explanation.facets.map(projectCausalFacetMetadata);
-    if (!facets.every((facet): facet is CausalFacetMetadata => !!facet)) return;
-    if (explanation.kind === 'single_cause') {
-      if (facets.length !== 1 || facets[0]!.role !== 'lead') return;
-    } else if (explanation.kind === 'exact_pvb_responsibility') {
+  const channelIds = new Set<string>();
+  for (const valueFacet of value) {
+    const facet = projectCausalFacetMetadata(valueFacet);
+    if (!facet) return;
+    if (causeEvidenceIds.has(facet.causeEvidenceId)) return;
+    causeEvidenceIds.add(facet.causeEvidenceId);
+    const facetReasons: MoveReviewReason[] = [];
+    for (const channel of facet.channels) {
       if (
-        facets.length < 2 ||
-        facets[0]!.role !== 'lead' ||
-        facets[0]!.effectMode !== 'played_liability' ||
-        facets[0]!.exposure !== 'primary' ||
-        facets
-          .slice(1)
-          .some(
-            facet =>
-              facet.role !== 'supporting' ||
-              facet.effectMode !== 'alternative_resource' ||
-              facet.exposure !== 'complementary',
-          )
+        !isObject(channel) ||
+        !semanticId(channel.channel_id) ||
+        channelIds.has(channel.channel_id as string)
       )
         return;
-    } else return;
-    for (const facet of facets) {
-      if (causeEvidenceIds.has(facet.causeEvidenceId)) return;
-      causeEvidenceIds.add(facet.causeEvidenceId);
-      const facetReasons: MoveReviewReason[] = [];
-      for (const channel of facet.channels) {
-        const projected = projectCausalChannel(
-          channel,
-          facet.causeEvidenceId,
-          facet.causeKind,
-          facet.effectMode,
-          comparisonEvidenceId,
-          candidateMove,
-          startFen,
-        );
-        if (!projected) return;
-        facetReasons.push(...projected);
-      }
-      const role: MoveReviewReasonRole =
-        facetReasons.length > 1 ? 'proof-route' : facet.role === 'lead' ? 'primary' : 'support';
-      reasons.push(...facetReasons.map(reason => ({ role, reason })));
+      channelIds.add(channel.channel_id as string);
+      const projected = projectCausalChannel(
+        channel,
+        facet.causeEvidenceId,
+        facet.causeKind,
+        comparisonEvidenceId,
+        candidateMove,
+        bestMove,
+        startFen,
+      );
+      if (!projected) return;
+      facetReasons.push(...projected);
     }
+    reasons.push(
+      ...facetReasons.map((reason, index) => ({
+        role:
+          facet.exposure === 'primary'
+            ? index === 0
+              ? ('primary' as const)
+              : ('proof-route' as const)
+            : ('support' as const),
+        reason,
+      })),
+    );
   }
   return { reasons };
 }
 
 function projectCausalFacetMetadata(value: unknown): CausalFacetMetadata | undefined {
   if (!isObject(value)) return;
-  const role = value.facet_role;
   const causeEvidenceId = nonEmptyWireString(value.cause_evidence_id);
-  const effectMode = value.effect_mode;
-  const exposure = value.exposure;
+  if (!causeEvidenceId || !Array.isArray(value.channels) || value.channels.length < 1) return;
   if (
-    (role !== 'lead' && role !== 'supporting') ||
-    !causeEvidenceId ||
-    (effectMode !== 'played_liability' &&
-      effectMode !== 'alternative_resource' &&
-      effectMode !== 'played_value') ||
-    (exposure !== 'primary' && exposure !== 'complementary') ||
-    !Array.isArray(value.channels) ||
-    value.channels.length < 1
+    !hasExactKeys(value, ['cause_evidence_id', 'kind', 'exposure', 'channels']) ||
+    (value.kind !== 'wrong_move_order' &&
+      value.kind !== 'passed_pawn_progress' &&
+      value.kind !== 'missed_tactical_resource') ||
+    (value.exposure !== 'primary' && value.exposure !== 'complementary')
   )
     return;
-  if (value.kind === 'wrong_move_order') {
-    if (
-      !hasExactKeys(value, [
-        'facet_role',
-        'cause_evidence_id',
-        'kind',
-        'proof_confidence',
-        'effect_mode',
-        'exposure',
-        'source_side',
-        'comparison_kind',
-        'channels',
-      ]) ||
-      value.proof_confidence !== 'legal_replay_verified' ||
-      effectMode !== 'alternative_resource' ||
-      exposure !== 'primary' ||
-      value.source_side !== 'reference' ||
-      value.comparison_kind !== 'played_vs_best'
-    )
-      return;
-  } else if (value.kind === 'passed_pawn_result') {
-    if (
-      !hasExactKeys(value, [
-        'facet_role',
-        'cause_evidence_id',
-        'kind',
-        'proof_confidence',
-        'effect_mode',
-        'exposure',
-        'source_side',
-        'comparison_kind',
-        'channels',
-      ]) ||
-      value.proof_confidence !== 'legal_replay_verified' ||
-      (value.source_side !== 'reference' && value.source_side !== 'candidate') ||
-      value.comparison_kind !== 'played_vs_best' ||
-      (value.source_side === 'candidate'
-        ? effectMode !== 'played_value'
-        : effectMode !== 'alternative_resource')
-    )
-      return;
-  } else {
-    if (
-      !hasExactKeys(value, [
-        'facet_role',
-        'cause_evidence_id',
-        'kind',
-        'proof_confidence',
-        'effect_mode',
-        'exposure',
-        'source_side',
-        'event_move',
-        'comparison_kind',
-        'channels',
-      ]) ||
-      !standardCauseKind(value.kind) ||
-      !standardProofConfidence(value.proof_confidence) ||
-      !standardSourceSide(value.source_side) ||
-      !uci(value.event_move) ||
-      !standardComparisonKind(value.comparison_kind)
-    )
-      return;
-  }
   return {
-    role,
     causeEvidenceId,
     causeKind: value.kind,
-    effectMode,
-    exposure,
+    exposure: value.exposure,
     channels: value.channels,
   };
 }
@@ -1727,190 +1644,63 @@ function projectCausalFacetMetadata(value: unknown): CausalFacetMetadata | undef
 function projectCausalChannel(
   value: unknown,
   causeEvidenceId: string,
-  causeKind: string,
-  effectMode: MoveReviewCauseEffectMode,
+  causeKind: MoveReviewPublicCauseKind,
   comparisonEvidenceId: string,
   candidateMove: Uci,
+  bestMove: Uci,
   startFen: FEN,
 ): MoveReviewReason[] | undefined {
-  if (!isObject(value) || !semanticId(value.channel_id) || !semanticId(value.causal_signature)) return;
-  if (Object.prototype.hasOwnProperty.call(value, 'resource_differential_proof')) {
+  if (!isObject(value) || !semanticId(value.channel_id)) return;
+  if (
+    Object.prototype.hasOwnProperty.call(
+      value,
+      'unique_check_reply_defender_displacement_before_capture_proof',
+    )
+  ) {
     if (causeKind !== 'wrong_move_order') return;
-    return projectResourceDifferential(
+    return projectUniqueCheckReplyDefenderDisplacementBeforeCapture(
       value,
       causeEvidenceId,
-      causeKind,
-      effectMode,
       candidateMove,
+      bestMove,
       startFen,
     );
   }
-  if (Object.prototype.hasOwnProperty.call(value, 'defense_obligation_change_proof')) {
+  if (Object.prototype.hasOwnProperty.call(value, 'sole_recapturer_removal_before_target_capture_proof')) {
     if (causeKind !== 'wrong_move_order') return;
-    return projectDefenseObligationChange(
+    return projectSoleRecapturerRemovalBeforeTargetCapture(
       value,
       causeEvidenceId,
-      causeKind,
-      effectMode,
       candidateMove,
+      bestMove,
       startFen,
     );
   }
-  if (Object.prototype.hasOwnProperty.call(value, 'passed_pawn_result_proof'))
-    return projectPassedPawnResult(
+  if (
+    Object.prototype.hasOwnProperty.call(value, 'vacated_gate_enables_unrecapturable_slider_capture_proof')
+  ) {
+    if (causeKind !== 'missed_tactical_resource') return;
+    return projectVacatedGateEnablesUnrecapturableSliderCapture(
       value,
       causeEvidenceId,
-      causeKind,
-      effectMode,
+      candidateMove,
+      bestMove,
+      startFen,
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value, 'passed_pawn_progress_realized_after_only_legal_reply_proof')
+  ) {
+    if (causeKind !== 'passed_pawn_progress') return;
+    return projectPassedPawnProgressRealizedAfterOnlyLegalReply(
+      value,
+      causeEvidenceId,
       comparisonEvidenceId,
       candidateMove,
       startFen,
     );
-  if (
-    !hasOnlyKeys(
-      value,
-      [
-        'channel_id',
-        'causal_signature',
-        'direct_change',
-        'played_change',
-        'actor',
-        'targets',
-        'mechanisms',
-        'consequences',
-        'witnesses',
-        'proof_line_moves',
-        'horizon',
-        'proof_segment',
-      ],
-      [
-        'channel_id',
-        'causal_signature',
-        'direct_change',
-        'played_change',
-        'actor',
-        'targets',
-        'mechanisms',
-        'consequences',
-        'witnesses',
-        'proof_line_moves',
-      ],
-    )
-  )
-    return;
-  if (
-    !directCausalChange(value.direct_change) ||
-    !playerFacingCausalChange(value.played_change) ||
-    !isObject(value.actor) ||
-    !hasExactKeys(value.actor, ['move_uci', 'side', 'piece', 'from', 'to']) ||
-    !uci(value.actor.move_uci) ||
-    (value.actor.side !== 'white' && value.actor.side !== 'black') ||
-    !nonEmptyWireString(value.actor.piece) ||
-    !key(value.actor.from) ||
-    !key(value.actor.to) ||
-    !Array.isArray(value.targets) ||
-    !Array.isArray(value.mechanisms) ||
-    !Array.isArray(value.consequences) ||
-    !Array.isArray(value.witnesses) ||
-    !validUciMoves(value.proof_line_moves, 1, 80) ||
-    (value.horizon !== undefined &&
-      (typeof value.horizon !== 'string' || !/^ply:(0|[1-9][0-9]*)$/.test(value.horizon)))
-  )
-    return;
-  const proofLine = value.proof_line_moves;
-  let proofSegment: Extract<MoveReviewReasonMessage, { kind: 'causal' }>['proofSegment'];
-  let proofMoves = proofLine;
-  if (value.proof_segment !== undefined) {
-    if (
-      !isObject(value.proof_segment) ||
-      !hasExactKeys(value.proof_segment, ['terminal_relation', 'steps']) ||
-      !terminalRelation(value.proof_segment.terminal_relation) ||
-      !Array.isArray(value.proof_segment.steps) ||
-      value.proof_segment.steps.length < 1 ||
-      value.proof_segment.steps.length > 80
-    )
-      return;
-    const steps = value.proof_segment.steps.map(step => {
-      if (
-        !isObject(step) ||
-        !hasExactKeys(step, ['ply_offset', 'move_uci', 'role']) ||
-        !uci(step.move_uci) ||
-        !proofStepRole(step.role)
-      )
-        return;
-      const offset = integerInRange(step.ply_offset, 0, proofLine.length - 1);
-      return offset !== undefined && proofLine[offset] === step.move_uci
-        ? { plyOffset: offset, moveUci: step.move_uci as Uci, role: step.role }
-        : undefined;
-    });
-    if (!steps.every((step): step is NonNullable<typeof step> => !!step)) return;
-    const offsets = steps.map(step => step.plyOffset);
-    if (
-      offsets[0] !== 0 ||
-      !unique(offsets) ||
-      !arrayEquals(
-        offsets,
-        [...offsets].sort((a, b) => a - b),
-      )
-    )
-      return;
-    proofMoves = proofLine.slice(0, offsets[offsets.length - 1]! + 1);
-    proofSegment = { terminalRelation: value.proof_segment.terminal_relation, steps };
   }
-  const actorMove = value.actor.move_uci as Uci;
-  if (proofMoves[0] !== actorMove) return;
-  const targets = projectChessObjects(value.targets);
-  const mechanisms = projectChessObjects(value.mechanisms);
-  const consequences = projectChessObjects(value.consequences);
-  const witnesses = projectChessObjects(value.witnesses);
-  if (!targets || !mechanisms || !consequences || !witnesses) return;
-  const annotations: MoveReviewAnnotation[] = [
-    {
-      atPly: 1,
-      shape: { kind: 'arrow', orig: value.actor.from as Key, dest: value.actor.to as Key, brush: 'green' },
-    },
-    ...value.targets.flatMap(target =>
-      isObject(target) && target.kind === 'square' && key(target.key)
-        ? [
-            {
-              atPly: proofMoves.length,
-              shape: { kind: 'square' as const, key: target.key as Key, brush: 'yellow' as const },
-            },
-          ]
-        : [],
-    ),
-  ];
-  const id = value.channel_id as string;
-  const proof = buildProof(`cause:${id}`, startFen, proofMoves, annotations);
-  if (!proof) return;
-  return [
-    {
-      id,
-      messageSlots: { candidateUci: candidateMove },
-      message: {
-        kind: 'causal',
-        causeEvidenceId,
-        causeKind,
-        effectMode,
-        directChange: value.direct_change,
-        playedChange: value.played_change,
-        actor: {
-          moveUci: actorMove,
-          side: value.actor.side,
-          piece: value.actor.piece as string,
-          from: value.actor.from as Key,
-          to: value.actor.to as Key,
-        },
-        targets,
-        mechanisms,
-        consequences,
-        witnesses,
-        ...(value.horizon !== undefined ? { horizon: value.horizon } : {}),
-        ...(proofSegment ? { proofSegment } : {}),
-      },
-      proof,
-    },
-  ];
+  return;
 }
 
 interface MoveReviewWireStep {
@@ -1922,92 +1712,98 @@ interface MoveReviewWireStep {
   provenance: 'observed_game_move' | 'certified_analysis_move';
   stepKey?: string;
   line?: MoveReviewTypedLine;
-  incomingLink?: {
-    kind: 'adjacent_legal_replay' | 'certified_causal_dependency';
-    fromStepKey: string;
-    toStepKey: string;
-    occurrenceLinkKey: string;
-  };
 }
 
-interface MoveReviewPassedPawnResultWireStep extends MoveReviewWireStep {
+interface MoveReviewPassedPawnProgressWireStep extends MoveReviewWireStep {
   stepKey: string;
   line: MoveReviewTypedLine;
 }
 
-interface MoveReviewPassedPawnResultWireBranch extends MoveReviewWireBranch {
-  steps: MoveReviewPassedPawnResultWireStep[];
+interface MoveReviewPassedPawnProgressWireBranch extends MoveReviewWireBranch {
+  steps: MoveReviewPassedPawnProgressWireStep[];
 }
 
 interface MoveReviewWireBranch extends MoveReviewTypedBranch {
   steps: MoveReviewWireStep[];
   replyMove?: Uci;
-  sourceProbeId?: string;
+  sourceOccurrenceId?: string;
 }
 
-type MoveReviewResourcePath = {
+type MoveReviewUniqueCheckReplyDefenderDisplacementBeforeCapturePath = {
   id: string;
   premises: MoveReviewTypedPremise[];
-  absence: Extract<MoveReviewReasonMessage, { kind: 'resource-differential' }>['absence'];
+  absence: Extract<
+    MoveReviewReasonMessage,
+    { kind: 'unique-check-reply-defender-displacement-before-capture' }
+  >['absence'];
 };
 
-type MoveReviewDefenseObligationPath = {
+type MoveReviewSoleRecapturerRemovalBeforeTargetCapturePath = {
   id: string;
   premises: MoveReviewTypedPremise[];
-  absence: Extract<MoveReviewReasonMessage, { kind: 'defense-obligation-change' }>['absence'];
+  absence: Extract<
+    MoveReviewReasonMessage,
+    { kind: 'sole-recapturer-removal-before-target-capture' }
+  >['absence'];
 };
 
-type MoveReviewPassedPawnResultPath = {
+interface MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse {
+  useId: string;
+  role: string;
+  semanticProofId: string;
+  issuer:
+    | 'position_relation_extractor.closed_relation_inventory'
+    | 'position_relation_extractor.closed_position_state_inventory';
+  issuerEvidenceId: string;
+  issuerOccurrenceId: string;
+  query: string;
+  branchId: string;
+  branchRole: 'counterfactual_reference' | 'observed_played_sibling';
+  afterStepIndex: number;
+  fen: FEN;
+  ply: number;
+  scope: 'best_line' | 'played_line';
+}
+
+type MoveReviewVacatedGateEnablesUnrecapturableSliderCapturePath = {
   id: string;
-  branch: MoveReviewPassedPawnResultWireBranch & { replyMove: Uci };
+  premises: MoveReviewTypedPremise[];
+  absences: MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse[];
+  states: MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse[];
+};
+
+type MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath = {
+  id: string;
+  branch: MoveReviewPassedPawnProgressWireBranch & { replyMove: Uci };
   realizationActor: MoveReviewTypedActor;
   realizationMove: Uci;
   realizationPly: number;
-  realizationMatchKind: 'exact_move' | 'equivalent_function';
   premises: MoveReviewTypedPremise[];
   closureUseIds: string[];
 };
 
 function typedChannelProof(
   channel: Record<string, unknown>,
-  key: 'resource_differential_proof' | 'defense_obligation_change_proof' | 'passed_pawn_result_proof',
+  key:
+    | 'unique_check_reply_defender_displacement_before_capture_proof'
+    | 'sole_recapturer_removal_before_target_capture_proof'
+    | 'vacated_gate_enables_unrecapturable_slider_capture_proof'
+    | 'passed_pawn_progress_realized_after_only_legal_reply_proof',
 ): Record<string, unknown> | undefined {
-  return hasExactKeys(channel, ['channel_id', 'causal_signature', 'direct_change', 'played_change', key]) &&
-    channel.direct_change === 'occurred' &&
-    isObject(channel[key])
-    ? channel[key]
-    : undefined;
+  return hasExactKeys(channel, ['channel_id', key]) && isObject(channel[key]) ? channel[key] : undefined;
 }
 
-function typedPassedPawnResultChannelProof(
-  channel: Record<string, unknown>,
-): Record<string, unknown> | undefined {
-  return hasExactKeys(channel, [
-    'channel_id',
-    'causal_signature',
-    'direct_change',
-    'passed_pawn_result_proof',
-  ]) &&
-    channel.direct_change === 'occurred' &&
-    isObject(channel.passed_pawn_result_proof)
-    ? channel.passed_pawn_result_proof
-    : undefined;
-}
-
-function projectResourceDifferential(
+function projectUniqueCheckReplyDefenderDisplacementBeforeCapture(
   channel: Record<string, unknown>,
   causeEvidenceId: string,
-  causeKind: string,
-  effectMode: MoveReviewCauseEffectMode,
   candidateMove: Uci,
+  bestMove: Uci,
   startFen: FEN,
 ): MoveReviewReason[] | undefined {
-  const wire = typedChannelProof(channel, 'resource_differential_proof');
-  if (!wire || channel.played_change !== 'missed') return;
+  const wire = typedChannelProof(channel, 'unique_check_reply_defender_displacement_before_capture_proof');
+  if (!wire) return;
   if (
     !hasExactKeys(wire, [
-      'family',
-      'trigger_mechanism',
       'source_evidence_id',
       'semantic_id',
       'occurrence_id',
@@ -2019,8 +1815,6 @@ function projectResourceDifferential(
       'realizing_move',
       'played_root_branch_legal_defense_move',
     ]) ||
-    wire.family !== 'immediate_forced_reply_resource_differential' ||
-    wire.trigger_mechanism !== 'forced_displacement' ||
     !nonEmptyWireString(wire.source_evidence_id) ||
     !typedHash(wire.semantic_id) ||
     !typedHash(wire.occurrence_id) ||
@@ -2038,76 +1832,43 @@ function projectResourceDifferential(
   const played = projectTypedBranch(wire.played_root_branch, 'observed_played_root', startFen);
   const realizingMove = uci(wire.realizing_move);
   const defenseMove = uci(wire.played_root_branch_legal_defense_move);
-  const participants = projectResourceParticipants(wire.participants);
+  const participants = projectUniqueCheckReplyDefenderDisplacementBeforeCaptureParticipants(
+    wire.participants,
+  );
   if (
     !reference ||
     !played ||
     reference.id === played.id ||
-    reference.rootMove === played.rootMove ||
-    reference.steps[0]?.ply !== played.steps[0]?.ply ||
-    reference.steps[0]!.ply < 1 ||
+    reference.rootMove !== bestMove ||
     played.rootMove !== candidateMove ||
     !realizingMove ||
     !defenseMove ||
-    !participants ||
-    reference.steps[2]?.move !== realizingMove ||
-    played.steps[0]?.move !== realizingMove ||
-    played.rootMove !== realizingMove ||
-    typedActorMove(participants.realizer) !== realizingMove ||
-    typedActorMove(participants.trigger) !== reference.steps[0]!.move ||
-    played.steps[1]?.move !== defenseMove ||
-    participants.forcedReply.moveUci !== reference.steps[1]?.move ||
-    typedActorMove(participants.forcedReply) !== participants.forcedReply.moveUci ||
-    participants.playedDefender.moveUci !== defenseMove ||
-    typedActorMove(participants.playedDefender) !== participants.playedDefender.moveUci ||
-    participants.trigger.side !== participants.realizer.side ||
-    participants.trigger.side !== fenSideToMove(startFen) ||
-    participants.forcedReply.side !== participants.playedDefender.side ||
-    participants.forcedReply.side !== participants.disabledDefender.side ||
-    participants.forcedReply.side !== participants.capturedTarget.side ||
-    participants.trigger.side === participants.forcedReply.side ||
-    participants.capturedTarget.square !== participants.realizer.to ||
-    participants.playedDefender.to !== participants.realizer.to ||
-    participants.disabledDefender.side !== participants.playedDefender.side ||
-    participants.disabledDefender.piece !== participants.playedDefender.pieceBefore ||
-    participants.disabledDefender.square !== participants.playedDefender.from
+    !participants
   )
     return;
-  const mechanismConsistent =
-    participants.disabledDefender.piece === participants.forcedReply.pieceBefore &&
-    participants.disabledDefender.square === participants.forcedReply.from;
-  if (!mechanismConsistent) return;
-  const exactPaths = wire.proof_paths.map(path => projectResourcePath(path, reference.id, played.id));
+  const exactPaths = wire.proof_paths.map(path =>
+    projectUniqueCheckReplyDefenderDisplacementBeforeCapturePath(path, reference, played),
+  );
   if (
-    !exactPaths.every((path): path is MoveReviewResourcePath => !!path) ||
+    !exactPaths.every(
+      (path): path is MoveReviewUniqueCheckReplyDefenderDisplacementBeforeCapturePath => !!path,
+    ) ||
     !canonicalStrings(exactPaths.map(path => path.id)) ||
-    !unique(exactPaths.map(path => path.absence.useId)) ||
-    exactPaths.some(
-      path =>
-        path.absence.query !==
-          `legal-capture:${participants.capturedTarget.side}:${participants.realizer.to}` ||
-        path.absence.fen !== reference.steps[2]!.fenAfter ||
-        path.absence.ply !== reference.steps[2]!.ply,
-    )
+    !unique(exactPaths.map(path => path.absence.useId))
   )
     return;
-  return exactPaths.flatMap((path, pathIndex) =>
+  return exactPaths.flatMap(path =>
     [reference, played].map(branch => {
-      const proof = proofFromWireSteps(`cause:${path.id}:${pathIndex}:${branch.id}`, startFen, branch.steps)!;
+      const proof = proofFromWireSteps(`cause:${path.id}:${branch.id}`, startFen, branch.steps)!;
       const counterpart = branch === reference ? played : reference;
       return {
         id: proof.id,
         messageSlots: { candidateUci: candidateMove },
         message: {
-          kind: 'resource-differential' as const,
+          kind: 'unique-check-reply-defender-displacement-before-capture' as const,
           channelId: channel.channel_id as string,
-          causalSignature: channel.causal_signature as string,
           causeEvidenceId,
-          causeKind,
-          effectMode,
-          directChange: 'occurred',
-          playedChange: 'missed',
-          family: 'immediate_forced_reply_resource_differential',
+          causeKind: 'wrong_move_order' as const,
           sourceEvidenceId: wire.source_evidence_id as string,
           semanticId: wire.semantic_id as string,
           occurrenceId: wire.occurrence_id as string,
@@ -2124,7 +1885,6 @@ function projectResourceDifferential(
           disabledDefender: participants.disabledDefender,
           premises: path.premises,
           absence: path.absence,
-          triggerMechanism: 'forced_displacement',
         },
         proof,
       };
@@ -2132,21 +1892,17 @@ function projectResourceDifferential(
   );
 }
 
-function projectDefenseObligationChange(
+function projectSoleRecapturerRemovalBeforeTargetCapture(
   channel: Record<string, unknown>,
   causeEvidenceId: string,
-  causeKind: string,
-  effectMode: MoveReviewCauseEffectMode,
   candidateMove: Uci,
+  bestMove: Uci,
   startFen: FEN,
 ): MoveReviewReason[] | undefined {
-  const wire = typedChannelProof(channel, 'defense_obligation_change_proof');
+  const wire = typedChannelProof(channel, 'sole_recapturer_removal_before_target_capture_proof');
   if (
     !wire ||
-    channel.played_change !== 'missed' ||
     !hasExactKeys(wire, [
-      'contract',
-      'mechanism',
       'source_evidence_id',
       'semantic_id',
       'occurrence_id',
@@ -2158,8 +1914,6 @@ function projectDefenseObligationChange(
       'later_exploit_move',
       'played_sole_recapture_move',
     ]) ||
-    wire.contract !== 'defense_obligation_change' ||
-    wire.mechanism !== 'sole_recapturer_removal' ||
     !nonEmptyWireString(wire.source_evidence_id) ||
     !typedHash(wire.semantic_id) ||
     !typedHash(wire.occurrence_id) ||
@@ -2176,78 +1930,39 @@ function projectDefenseObligationChange(
   const played = projectTypedBranch(wire.played_root_branch, 'observed_played_root', startFen);
   const laterExploitMove = uci(wire.later_exploit_move);
   const playedSoleRecaptureMove = uci(wire.played_sole_recapture_move);
-  const participants = projectDefenseObligationParticipants(wire.participants);
+  const participants = projectSoleRecapturerRemovalBeforeTargetCaptureParticipants(wire.participants);
   if (
     !reference ||
     !played ||
     reference.id === played.id ||
-    reference.rootMove === played.rootMove ||
-    reference.steps[0]?.ply !== played.steps[0]?.ply ||
-    reference.steps[0]!.ply < 1 ||
+    reference.rootMove !== bestMove ||
     played.rootMove !== candidateMove ||
     !laterExploitMove ||
     !playedSoleRecaptureMove ||
-    !participants ||
-    reference.steps[2]?.move !== laterExploitMove ||
-    played.steps[0]?.move !== laterExploitMove ||
-    played.rootMove !== laterExploitMove ||
-    reference.steps[1]?.move !== participants.removalRecapture.moveUci ||
-    played.steps[1]?.move !== playedSoleRecaptureMove ||
-    participants.playedSoleRecapture.moveUci !== playedSoleRecaptureMove ||
-    typedActorMove(participants.remover) !== reference.steps[0]!.move ||
-    typedActorMove(participants.removalRecapture) !== participants.removalRecapture.moveUci ||
-    typedActorMove(participants.laterExploit) !== laterExploitMove ||
-    typedActorMove(participants.playedSoleRecapture) !== playedSoleRecaptureMove ||
-    participants.remover.side !== participants.laterExploit.side ||
-    participants.remover.side !== fenSideToMove(startFen) ||
-    participants.remover.side === participants.removedDefender.side ||
-    participants.removedDefender.side !== participants.removalRecapture.side ||
-    participants.removedDefender.side !== participants.capturedTarget.side ||
-    participants.removedDefender.side !== participants.playedSoleRecapture.side ||
-    participants.remover.to !== participants.removedDefender.square ||
-    participants.removalRecapture.to !== participants.remover.to ||
-    participants.laterExploit.to !== participants.capturedTarget.square ||
-    participants.playedSoleRecapture.from !== participants.removedDefender.square ||
-    participants.playedSoleRecapture.pieceBefore !== participants.removedDefender.piece ||
-    participants.playedSoleRecapture.to !== participants.laterExploit.to
+    !participants
   )
     return;
-  const paths = wire.proof_paths.map(path => projectDefenseObligationPath(path, reference, played));
+  const paths = wire.proof_paths.map(path =>
+    projectSoleRecapturerRemovalBeforeTargetCapturePath(path, reference, played),
+  );
   if (
-    !paths.every((path): path is MoveReviewDefenseObligationPath => !!path) ||
+    !paths.every((path): path is MoveReviewSoleRecapturerRemovalBeforeTargetCapturePath => !!path) ||
     !canonicalStrings(paths.map(path => path.id)) ||
-    !unique(paths.map(path => path.absence.useId)) ||
-    paths.some(
-      path =>
-        path.absence.query !==
-          `legal-capture:${participants.removedDefender.side}:${participants.laterExploit.to}` ||
-        path.absence.fen !== reference.steps[2]!.fenAfter ||
-        path.absence.ply !== reference.steps[2]!.ply,
-    )
+    !unique(paths.map(path => path.absence.useId))
   )
     return;
-  return paths.flatMap((path, pathIndex) =>
-    [reference, played].map((branch, branchIndex) => {
-      const proof = proofFromWireSteps(
-        `cause:${path.id}:${pathIndex}:${branchIndex}:${branch.id}`,
-        startFen,
-        branch.steps,
-      )!;
+  return paths.flatMap(path =>
+    [reference, played].map(branch => {
+      const proof = proofFromWireSteps(`cause:${path.id}:${branch.id}`, startFen, branch.steps)!;
       const counterpart = branch === reference ? played : reference;
       return {
         id: proof.id,
         messageSlots: { candidateUci: candidateMove },
         message: {
-          kind: 'defense-obligation-change' as const,
+          kind: 'sole-recapturer-removal-before-target-capture' as const,
           channelId: channel.channel_id as string,
-          causalSignature: channel.causal_signature as string,
           causeEvidenceId,
-          causeKind,
-          effectMode,
-          directChange: 'occurred' as const,
-          playedChange: 'missed' as const,
-          contract: 'defense_obligation_change' as const,
-          mechanism: 'sole_recapturer_removal' as const,
+          causeKind: 'wrong_move_order' as const,
           sourceEvidenceId: wire.source_evidence_id as string,
           semanticId: wire.semantic_id as string,
           occurrenceId: wire.occurrence_id as string,
@@ -2267,11 +1982,11 @@ function projectDefenseObligationChange(
   );
 }
 
-function projectDefenseObligationPath(
+function projectSoleRecapturerRemovalBeforeTargetCapturePath(
   value: unknown,
   reference: MoveReviewWireBranch,
   played: MoveReviewWireBranch,
-): MoveReviewDefenseObligationPath | undefined {
+): MoveReviewSoleRecapturerRemovalBeforeTargetCapturePath | undefined {
   if (
     !isObject(value) ||
     !hasExactKeys(value, ['path_occurrence_id', 'premises', 'closed_absence_uses']) ||
@@ -2282,25 +1997,10 @@ function projectDefenseObligationPath(
     value.closed_absence_uses.length !== 1
   )
     return;
-  const expected = [
-    ['reference_defender_removal', reference.id, 'counterfactual_reference', 0],
-    ['reference_later_exploit_inventory', reference.id, 'counterfactual_reference', 2],
-    ['played_immediate_exploit_inventory', played.id, 'observed_played_root', 0],
-  ] as const;
-  const premises = value.premises.map((premise, index) => projectTypedPremise(premise, expected[index]![1]));
+  const premises = value.premises.map(premise => projectTypedPremise(premise, [reference, played]));
   if (
     !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
-    !unique(premises.map(premise => premise.resultId)) ||
-    premises.some((premise, index) => {
-      const [role, , branchRole, stepIndex] = expected[index]!;
-      return (
-        premise.role !== role ||
-        premise.contract !== 'capture_recapture_inventory' ||
-        !premise.resultId.startsWith('capture_recapture_inventory:') ||
-        premise.branchRole !== branchRole ||
-        premise.stepIndex !== stepIndex
-      );
-    })
+    !unique(premises.map(premise => premise.resultId))
   )
     return;
   const absence = value.closed_absence_uses[0];
@@ -2340,7 +2040,9 @@ function projectDefenseObligationPath(
     !hasExactKeys(position, ['fen', 'ply', 'scope']) ||
     !fen ||
     ply === undefined ||
-    position.scope !== 'best_line'
+    position.scope !== 'best_line' ||
+    fen !== reference.steps[2]?.fenAfter ||
+    ply !== reference.steps[2]?.ply
   )
     return;
   return {
@@ -2363,7 +2065,7 @@ function projectDefenseObligationPath(
   };
 }
 
-function projectDefenseObligationParticipants(value: unknown):
+function projectSoleRecapturerRemovalBeforeTargetCaptureParticipants(value: unknown):
   | {
       remover: MoveReviewTypedActor;
       removedDefender: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
@@ -2408,6 +2110,278 @@ function projectDefenseObligationParticipants(value: unknown):
     : undefined;
 }
 
+function projectVacatedGateEnablesUnrecapturableSliderCapture(
+  channel: Record<string, unknown>,
+  causeEvidenceId: string,
+  candidateMove: Uci,
+  bestMove: Uci,
+  startFen: FEN,
+): MoveReviewReason[] | undefined {
+  const wire = typedChannelProof(channel, 'vacated_gate_enables_unrecapturable_slider_capture_proof');
+  if (
+    !wire ||
+    !hasExactKeys(wire, [
+      'source_evidence_id',
+      'semantic_id',
+      'occurrence_id',
+      'dependency_fingerprint',
+      'counterfactual_reference_branch',
+      'played_root_branch',
+      'proof_paths',
+      'participants',
+      'exploit_move',
+    ]) ||
+    !nonEmptyWireString(wire.source_evidence_id) ||
+    !typedHash(wire.semantic_id) ||
+    !typedHash(wire.occurrence_id) ||
+    !typedHash(wire.dependency_fingerprint) ||
+    !Array.isArray(wire.proof_paths) ||
+    wire.proof_paths.length < 1
+  ) {
+    return;
+  }
+  const reference = projectTypedBranch(
+    wire.counterfactual_reference_branch,
+    'counterfactual_reference',
+    startFen,
+    true,
+  );
+  const played = projectTypedBranch(wire.played_root_branch, 'observed_played_sibling', startFen, true);
+  const participants = projectVacatedGateEnablesUnrecapturableSliderCaptureParticipants(wire.participants);
+  const exploitMove = uci(wire.exploit_move);
+  if (
+    !reference ||
+    !played ||
+    !participants ||
+    !exploitMove ||
+    reference.id === played.id ||
+    reference.rootMove !== bestMove ||
+    played.rootMove !== candidateMove
+  ) {
+    return;
+  }
+  const paths = wire.proof_paths.map(path =>
+    projectVacatedGateEnablesUnrecapturableSliderCapturePath(path, reference, played),
+  );
+  if (
+    !paths.every((path): path is MoveReviewVacatedGateEnablesUnrecapturableSliderCapturePath => !!path) ||
+    !canonicalStrings(paths.map(path => path.id)) ||
+    !unique(paths.flatMap(path => [...path.absences, ...path.states]).map(use => use.useId))
+  ) {
+    return;
+  }
+  return paths.flatMap(path =>
+    [reference, played].map(branch => {
+      const proof = proofFromWireSteps(`cause:${path.id}:${branch.id}`, startFen, branch.steps)!;
+      return {
+        id: proof.id,
+        messageSlots: { candidateUci: candidateMove },
+        message: {
+          kind: 'vacated-gate-enables-unrecapturable-slider-capture' as const,
+          channelId: channel.channel_id as string,
+          causeEvidenceId,
+          causeKind: 'missed_tactical_resource' as const,
+          sourceEvidenceId: wire.source_evidence_id as string,
+          semanticId: wire.semantic_id as string,
+          occurrenceId: wire.occurrence_id as string,
+          dependencyFingerprint: wire.dependency_fingerprint as string,
+          pathOccurrenceId: path.id,
+          branch: wireBranchIdentity(branch),
+          counterpart: wireBranchIdentity(branch === reference ? played : reference),
+          ...participants,
+          exploitMove,
+          premises: path.premises,
+          absences: path.absences,
+          states: path.states,
+        },
+        proof,
+      };
+    }),
+  );
+}
+
+function projectVacatedGateEnablesUnrecapturableSliderCaptureParticipants(value: unknown):
+  | {
+      enabler: MoveReviewTypedActor;
+      slider: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      gateBlocker: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      exploit: MoveReviewTypedActor;
+      capturedTarget: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+    }
+  | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['enabler', 'slider', 'gate_blocker', 'exploit', 'captured_target'])
+  )
+    return;
+  const enabler = projectTypedActor(value.enabler);
+  const slider = projectColoredPiece(value.slider);
+  const gateBlocker = projectColoredPiece(value.gate_blocker);
+  const exploit = projectTypedActor(value.exploit);
+  const capturedTarget = projectColoredPiece(value.captured_target);
+  return enabler && slider && gateBlocker && exploit && capturedTarget
+    ? { enabler, slider, gateBlocker, exploit, capturedTarget }
+    : undefined;
+}
+
+function projectVacatedGateEnablesUnrecapturableSliderCapturePath(
+  value: unknown,
+  reference: MoveReviewWireBranch,
+  played: MoveReviewWireBranch,
+): MoveReviewVacatedGateEnablesUnrecapturableSliderCapturePath | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['path_occurrence_id', 'premises', 'closed_absence_uses', 'closed_state_uses']) ||
+    !typedHash(value.path_occurrence_id) ||
+    !Array.isArray(value.premises) ||
+    value.premises.length !== 2 ||
+    !Array.isArray(value.closed_absence_uses) ||
+    value.closed_absence_uses.length !== 3 ||
+    !Array.isArray(value.closed_state_uses)
+  )
+    return;
+  const premises = value.premises.map(premise =>
+    projectVacatedGateEnablesUnrecapturableSliderCapturePremise(premise, [reference, played]),
+  );
+  if (
+    !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
+    !unique(premises.map(premise => premise.resultId))
+  )
+    return;
+  const absences = value.closed_absence_uses.map(use =>
+    projectVacatedGateEnablesUnrecapturableSliderCaptureClosureUse(use, reference, played, 'absence'),
+  );
+  const states = value.closed_state_uses.map(use =>
+    projectVacatedGateEnablesUnrecapturableSliderCaptureClosureUse(use, reference, played, 'state'),
+  );
+  if (
+    !absences.every(
+      (use): use is MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse => !!use,
+    ) ||
+    !states.every((use): use is MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse => !!use) ||
+    !unique([...absences, ...states].map(use => use.useId))
+  )
+    return;
+  return { id: value.path_occurrence_id as string, premises, absences, states };
+}
+
+function projectVacatedGateEnablesUnrecapturableSliderCapturePremise(
+  value: unknown,
+  branches: readonly MoveReviewWireBranch[],
+): MoveReviewTypedPremise | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, [
+      'role',
+      'contract',
+      'result_id',
+      'issuer_evidence_id',
+      'issuer_occurrence_id',
+      'source_premise_ids',
+      'branch_id',
+      'branch_role',
+      'step_index',
+    ]) ||
+    (value.role !== 'reference_root_slider_reach' && value.role !== 'reference_exploit_capture') ||
+    (value.contract !== 'slider_reach_delta' && value.contract !== 'capture_recapture_inventory') ||
+    typeof value.result_id !== 'string' ||
+    !value.result_id.startsWith(`${value.contract}:`) ||
+    !typedHash(value.result_id.slice(value.contract.length + 1)) ||
+    !nonEmptyWireString(value.issuer_evidence_id) ||
+    !typedHash(value.issuer_occurrence_id) ||
+    !canonicalWireStrings(value.source_premise_ids, 3) ||
+    !(value.source_premise_ids as string[]).includes(value.issuer_evidence_id as string) ||
+    !(value.source_premise_ids as string[]).includes(value.issuer_occurrence_id as string)
+  )
+    return;
+  const branch = branches.find(candidate => candidate.id === value.branch_id);
+  const stepIndex = nonNegativeInteger(value.step_index);
+  return !branch || branch.role !== value.branch_role || stepIndex === undefined || !branch.steps[stepIndex]
+    ? undefined
+    : {
+        role: value.role,
+        contract: value.contract,
+        resultId: value.result_id,
+        issuerEvidenceId: value.issuer_evidence_id as string,
+        issuerOccurrenceId: value.issuer_occurrence_id as string,
+        sourcePremiseIds: [...value.source_premise_ids],
+        branchId: branch.id,
+        branchRole: branch.role,
+        stepIndex,
+      };
+}
+
+function projectVacatedGateEnablesUnrecapturableSliderCaptureClosureUse(
+  value: unknown,
+  reference: MoveReviewWireBranch,
+  played: MoveReviewWireBranch,
+  kind: 'absence' | 'state',
+): MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, [
+      'use_id',
+      'role',
+      'semantic_proof_id',
+      'issuer',
+      'issuer_evidence_id',
+      'issuer_occurrence_id',
+      'query',
+      'branch_id',
+      'branch_role',
+      'after_step_index',
+      'position',
+    ]) ||
+    !typedHash(value.use_id) ||
+    !nonEmptyWireString(value.role) ||
+    !typedHash(value.semantic_proof_id) ||
+    value.issuer !==
+      (kind === 'absence'
+        ? 'position_relation_extractor.closed_relation_inventory'
+        : 'position_relation_extractor.closed_position_state_inventory') ||
+    !nonEmptyWireString(value.issuer_evidence_id) ||
+    !typedHash(value.issuer_occurrence_id) ||
+    !nonEmptyWireString(value.query)
+  )
+    return;
+  const branch =
+    value.branch_id === reference.id ? reference : value.branch_id === played.id ? played : undefined;
+  const stepIndex = nonNegativeInteger(value.after_step_index);
+  const position = isObject(value.position) ? value.position : undefined;
+  const fen = position ? fenText(position.fen) : undefined;
+  const ply = position ? nonNegativeInteger(position.ply) : undefined;
+  const scope = branch === reference ? 'best_line' : 'played_line';
+  if (
+    !branch ||
+    stepIndex === undefined ||
+    !branch.steps[stepIndex] ||
+    value.branch_role !== branch.role ||
+    !position ||
+    !hasExactKeys(position, ['fen', 'ply', 'scope']) ||
+    !fen ||
+    ply === undefined ||
+    position.scope !== scope ||
+    fen !== branch.steps[stepIndex]!.fenAfter ||
+    ply !== branch.steps[stepIndex]!.ply
+  )
+    return;
+  return {
+    useId: value.use_id as string,
+    role: value.role as string,
+    semanticProofId: value.semantic_proof_id as string,
+    issuer: value.issuer as MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse['issuer'],
+    issuerEvidenceId: value.issuer_evidence_id as string,
+    issuerOccurrenceId: value.issuer_occurrence_id as string,
+    query: value.query as string,
+    branchId: branch.id,
+    branchRole: branch.role as 'counterfactual_reference' | 'observed_played_sibling',
+    afterStepIndex: stepIndex,
+    fen,
+    ply,
+    scope,
+  };
+}
+
 function projectColoredPiece(
   value: unknown,
 ): { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key } | undefined {
@@ -2422,51 +2396,25 @@ function projectColoredPiece(
   return { side: value.side, piece: value.piece as MoveReviewPieceRole, square: value.square as Key };
 }
 
-function projectResourcePath(
+function projectUniqueCheckReplyDefenderDisplacementBeforeCapturePath(
   value: unknown,
-  referenceBranchId: string,
-  playedBranchId: string,
-): MoveReviewResourcePath | undefined {
-  const expected = [
-    [
-      'created_check_response',
-      'created_check_response_inventory',
-      referenceBranchId,
-      'counterfactual_reference',
-      0,
-    ],
-    [
-      'reference_capture_recapture',
-      'capture_recapture_inventory',
-      referenceBranchId,
-      'counterfactual_reference',
-      2,
-    ],
-    ['played_capture_recapture', 'capture_recapture_inventory', playedBranchId, 'observed_played_root', 0],
-  ] as const;
+  reference: MoveReviewWireBranch,
+  played: MoveReviewWireBranch,
+): MoveReviewUniqueCheckReplyDefenderDisplacementBeforeCapturePath | undefined {
   if (
     !isObject(value) ||
     !hasExactKeys(value, ['path_occurrence_id', 'premises', 'closed_absence_uses']) ||
     !typedHash(value.path_occurrence_id) ||
     !Array.isArray(value.premises) ||
-    value.premises.length !== expected.length ||
+    value.premises.length !== 3 ||
     !Array.isArray(value.closed_absence_uses) ||
     value.closed_absence_uses.length !== 1
   )
     return;
-  const premises = value.premises.map((premise, index) => projectTypedPremise(premise, expected[index]![2]));
+  const premises = value.premises.map(premise => projectTypedPremise(premise, [reference, played]));
   if (
     !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
-    premises.some((premise, index) => {
-      const [role, contract, , branchRole, stepIndex] = expected[index]!;
-      return (
-        premise.role !== role ||
-        premise.contract !== contract ||
-        !premise.resultId.startsWith(`${contract}:`) ||
-        premise.branchRole !== branchRole ||
-        premise.stepIndex !== stepIndex
-      );
-    })
+    !unique(premises.map(premise => premise.resultId))
   )
     return;
   const absence = value.closed_absence_uses[0];
@@ -2491,7 +2439,7 @@ function projectResourcePath(
     !typedHash(absence.semantic_proof_id) ||
     !nonEmptyWireString(absence.issuer_evidence_id) ||
     !typedHash(absence.issuer_occurrence_id) ||
-    absence.branch_id !== referenceBranchId ||
+    absence.branch_id !== reference.id ||
     absence.branch_role !== 'counterfactual_reference' ||
     absence.after_step_index !== 2 ||
     typeof absence.query !== 'string' ||
@@ -2506,7 +2454,9 @@ function projectResourcePath(
     !hasExactKeys(position, ['fen', 'ply', 'scope']) ||
     !fen ||
     ply === undefined ||
-    position.scope !== 'best_line'
+    position.scope !== 'best_line' ||
+    fen !== reference.steps[2]?.fenAfter ||
+    ply !== reference.steps[2]?.ply
   )
     return;
   return {
@@ -2528,7 +2478,7 @@ function projectResourcePath(
   };
 }
 
-function projectResourceParticipants(value: unknown):
+function projectUniqueCheckReplyDefenderDisplacementBeforeCaptureParticipants(value: unknown):
   | {
       trigger: MoveReviewTypedActor;
       forcedReply: MoveReviewTypedActor & { moveUci: Uci };
@@ -2629,63 +2579,71 @@ function projectTypedActor(
   };
 }
 
-function projectTypedPremise(value: unknown, branchId: string): MoveReviewTypedPremise | undefined {
+function projectTypedPremise(
+  value: unknown,
+  branches: readonly MoveReviewWireBranch[],
+): MoveReviewTypedPremise | undefined {
   if (
     !isObject(value) ||
     !hasExactKeys(value, [
       'role',
       'contract',
       'result_id',
+      'issuer_evidence_id',
+      'issuer_occurrence_id',
       'source_premise_ids',
       'branch_id',
       'branch_role',
       'step_index',
     ]) ||
     !nonEmptyWireString(value.role) ||
-    !nonEmptyWireString(value.contract) ||
-    !/^(created_check_response_inventory|capture_recapture_inventory):[0-9a-f]{64}$/.test(
-      nonEmptyWireString(value.result_id) ?? '',
-    ) ||
-    value.branch_id !== branchId ||
+    (value.contract !== 'created_check_response_inventory' &&
+      value.contract !== 'capture_recapture_inventory') ||
+    typeof value.result_id !== 'string' ||
+    !value.result_id.startsWith(`${value.contract}:`) ||
+    !typedHash(value.result_id.slice(value.contract.length + 1)) ||
+    !nonEmptyWireString(value.issuer_evidence_id) ||
+    !typedHash(value.issuer_occurrence_id) ||
     !nonEmptyWireString(value.branch_role) ||
-    !canonicalWireStrings(value.source_premise_ids, 1)
+    !canonicalWireStrings(value.source_premise_ids, 3) ||
+    !(value.source_premise_ids as string[]).includes(value.issuer_evidence_id as string) ||
+    !(value.source_premise_ids as string[]).includes(value.issuer_occurrence_id as string)
   )
     return;
+  const branch = branches.find(candidate => candidate.id === value.branch_id);
   const stepIndex = nonNegativeInteger(value.step_index);
-  return stepIndex === undefined
+  return !branch || branch.role !== value.branch_role || stepIndex === undefined || !branch.steps[stepIndex]
     ? undefined
     : {
         role: value.role as string,
         contract: value.contract as string,
         resultId: value.result_id as string,
+        issuerEvidenceId: value.issuer_evidence_id as string,
+        issuerOccurrenceId: value.issuer_occurrence_id as string,
         sourcePremiseIds: [...value.source_premise_ids],
-        branchId,
+        branchId: branch.id,
         branchRole: value.branch_role as string,
         stepIndex,
       };
 }
 
-function projectPassedPawnResult(
+function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
   channel: Record<string, unknown>,
   causeEvidenceId: string,
-  causeKind: string,
-  effectMode: MoveReviewCauseEffectMode,
   comparisonEvidenceId: string,
   candidateMove: Uci,
   startFen: FEN,
 ): MoveReviewReason[] | undefined {
-  const wire = typedPassedPawnResultChannelProof(channel);
+  const wire = typedChannelProof(channel, 'passed_pawn_progress_realized_after_only_legal_reply_proof');
   if (!wire) return;
   if (
     !hasExactKeys(wire, [
-      'contract',
       'source_evidence_id',
       'event_evidence_id',
       'comparison_evidence_id',
       'semantic_id',
       'occurrence_id',
       'dependency_fingerprint',
-      'consequence_kind',
       'result_target_subjects',
       'root_actor',
       'realizing_actor',
@@ -2700,18 +2658,16 @@ function projectPassedPawnResult(
       'proof_paths',
       'lower_premise_ids',
     ]) ||
-    wire.contract !== 'passed_pawn_result_under_closed_replies' ||
     !nonEmptyWireString(wire.source_evidence_id) ||
     !nonEmptyWireString(wire.event_evidence_id) ||
     wire.comparison_evidence_id !== comparisonEvidenceId ||
-    wire.consequence_kind !== 'passed_pawn_progress' ||
     !typedHash(wire.semantic_id) ||
     !typedHash(wire.occurrence_id) ||
     !typedHash(wire.dependency_fingerprint) ||
     !canonicalWireStrings(wire.result_target_subjects, 1, passedPawnResultSubject) ||
     !canonicalWireStrings(wire.lower_premise_ids, 1) ||
     !Array.isArray(wire.branches) ||
-    wire.branches.length < 2 ||
+    wire.branches.length !== 1 ||
     !Array.isArray(wire.proof_paths) ||
     wire.proof_paths.length < 1
   )
@@ -2720,11 +2676,13 @@ function projectPassedPawnResult(
   const realizingMove = uci(wire.realizing_move);
   const rootActor = projectTypedActor(wire.root_actor, false, true);
   const realizingActor = projectTypedActor(wire.realizing_actor, false, true);
-  const rootLine = projectPassedPawnResultLine(wire.root_line);
+  const rootLine = projectPassedPawnProgressLine(wire.root_line);
   const rootPly = nonNegativeInteger(wire.root_ply);
   const realizingPly = nonNegativeInteger(wire.realizing_ply);
   const resultPlyOffset = nonNegativeInteger(wire.result_ply_offset);
-  const inventory = projectPassedPawnResultInventory(wire.closed_legal_reply_inventory);
+  const inventory = projectPassedPawnProgressRealizedAfterOnlyLegalReplyInventory(
+    wire.closed_legal_reply_inventory,
+  );
   if (
     !rootMove ||
     rootMove !== candidateMove ||
@@ -2732,6 +2690,7 @@ function projectPassedPawnResult(
     !rootActor ||
     !realizingActor ||
     !rootLine ||
+    rootLine.role !== 'played' ||
     rootLine.rootMove !== rootMove ||
     inventory?.rootAfter.scope !== passedPawnResultTransitionScope(rootLine.role) ||
     rootPly === undefined ||
@@ -2740,20 +2699,15 @@ function projectPassedPawnResult(
     resultPlyOffset === undefined ||
     resultPlyOffset < 1 ||
     !inventory ||
-    inventory.coverageEvidenceId !== wire.event_evidence_id ||
-    !(wire.lower_premise_ids as string[]).includes(inventory.coverageEvidenceId) ||
+    !(wire.lower_premise_ids as string[]).includes(wire.event_evidence_id as string) ||
     !(wire.lower_premise_ids as string[]).includes(inventory.issuerEvidenceId) ||
-    !(wire.lower_premise_ids as string[]).includes(comparisonEvidenceId) ||
-    typedActorMove(rootActor) !== rootMove ||
-    typedActorMove(realizingActor) !== realizingMove ||
-    rootActor.side !== fenSideToMove(startFen) ||
-    realizingActor.side !== rootActor.side
+    !(wire.lower_premise_ids as string[]).includes(comparisonEvidenceId)
   )
     return;
   const branches = wire.branches.map(branch => projectTypedBranch(branch, undefined, startFen));
   if (
     !branches.every(
-      (branch): branch is MoveReviewPassedPawnResultWireBranch =>
+      (branch): branch is MoveReviewPassedPawnProgressWireBranch =>
         !!branch && branch.steps.every(isPassedPawnResultWireStep),
     ) ||
     !canonicalStrings(branches.map(branch => branch.id)) ||
@@ -2768,75 +2722,46 @@ function projectPassedPawnResult(
     )
   )
     return;
-  const expected = branches.filter(branch => branch.role === 'expected_result_route');
-  const replies = branches.filter(
-    (
-      branch,
-    ): branch is MoveReviewPassedPawnResultWireBranch & {
-      role: 'legal_reply';
-      replyMove: Uci;
-      sourceProbeId: string;
-    } => branch.role === 'legal_reply' && !!branch.replyMove && !!branch.sourceProbeId,
-  );
-  const expectedBranch = expected[0];
+  const actualBranch = branches[0];
+  const actualLast = actualBranch?.steps[actualBranch.steps.length - 1];
   if (
-    expected.length !== 1 ||
-    !expectedBranch ||
-    expectedBranch.steps[0]?.ply !== rootPly ||
-    expectedBranch.steps[expectedBranch.steps.length - 1]?.move !== realizingMove ||
-    expectedBranch.steps[expectedBranch.steps.length - 1]?.ply !== realizingPly ||
+    !actualBranch ||
+    actualBranch.role !== 'actual_result_route' ||
+    !actualBranch.replyMove ||
+    !actualBranch.sourceOccurrenceId ||
+    actualBranch.steps.length < 2 ||
+    actualBranch.steps[0]?.ply !== rootPly ||
+    actualLast?.move !== realizingMove ||
+    actualLast.ply !== realizingPly ||
     realizingPly - rootPly !== resultPlyOffset ||
-    replies.length !== inventory.bindings.length ||
-    inventory.bindings.some(
-      binding => !replies.some(reply => reply.replyMove === binding.move && reply.id === binding.branchId),
-    ) ||
-    branches.some(
-      branch =>
-        branch.steps[0]?.fenAfter !== inventory.rootAfter.fen ||
-        branch.steps[0]!.ply !== inventory.rootAfter.ply,
-    ) ||
-    replies.some(
-      reply =>
-        reply.steps.length < 2 ||
-        reply.steps[reply.steps.length - 1]!.ply - reply.steps[0]!.ply > inventory.horizon,
-    )
+    actualBranch.id !== inventory.actualBranchId ||
+    actualBranch.replyMove !== inventory.legalReplyMove ||
+    actualBranch.steps[1]?.move !== inventory.legalReplyMove ||
+    actualBranch.steps[0]?.fenAfter !== inventory.rootAfter.fen ||
+    actualBranch.steps[0]?.ply !== inventory.rootAfter.ply
   )
     return;
   const branchById = new Map(branches.map(branch => [branch.id, branch]));
   const paths = wire.proof_paths.map(path =>
-    projectPassedPawnResultPath(
-      path,
-      branchById,
-      expectedBranch,
-      wire.event_evidence_id as string,
-      comparisonEvidenceId,
-    ),
+    projectPassedPawnProgressRealizedAfterOnlyLegalReplyPath(path, branchById),
   );
   if (
-    !paths.every((path): path is MoveReviewPassedPawnResultPath => !!path) ||
+    !paths.every((path): path is MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath => !!path) ||
     !canonicalStrings(paths.map(path => path.id)) ||
     !unique(paths.flatMap(path => path.closureUseIds)) ||
-    paths.some(path => {
-      const offset = path.realizationPly - path.branch.steps[0]!.ply;
-      return offset < 1 || offset > inventory.horizon;
-    }) ||
-    replies.some(reply => !paths.some(path => path.branch.id === reply.id))
+    paths.some(path => path.branch.id !== actualBranch.id)
   )
     return;
-  return paths.map((path, pathIndex) => {
-    const proof = proofFromWireSteps(`cause:${path.id}:${pathIndex}`, startFen, path.branch.steps)!;
+  return paths.map(path => {
+    const proof = proofFromWireSteps(`cause:${path.id}:${path.branch.id}`, startFen, path.branch.steps)!;
     return {
       id: proof.id,
       messageSlots: { candidateUci: candidateMove },
       message: {
-        kind: 'passed-pawn-result' as const,
+        kind: 'passed-pawn-progress-realized-after-only-legal-reply' as const,
         channelId: channel.channel_id as string,
-        causalSignature: channel.causal_signature as string,
         causeEvidenceId,
-        causeKind,
-        effectMode,
-        directChange: 'occurred',
-        contract: 'passed_pawn_result_under_closed_replies',
+        causeKind: 'passed_pawn_progress' as const,
         sourceEvidenceId: wire.source_evidence_id as string,
         eventEvidenceId: wire.event_evidence_id as string,
         comparisonEvidenceId: wire.comparison_evidence_id as string,
@@ -2844,11 +2769,10 @@ function projectPassedPawnResult(
         occurrenceId: wire.occurrence_id as string,
         dependencyFingerprint: wire.dependency_fingerprint as string,
         pathOccurrenceId: path.id,
-        consequenceKind: 'passed_pawn_progress',
         resultTargetSubjects: [...(wire.result_target_subjects as string[])],
         rootActor,
         realizingActor,
-        rootLine,
+        rootLine: { ...rootLine, role: 'played' as const },
         rootMove,
         rootPly,
         replyMove: path.branch.replyMove,
@@ -2858,26 +2782,16 @@ function projectPassedPawnResult(
         pathRealizationActor: path.realizationActor,
         pathRealizationMove: path.realizationMove,
         pathRealizationPly: path.realizationPly,
-        pathRealizationMatchKind: path.realizationMatchKind,
-        replyBranch: wireBranchIdentity(path.branch),
-        expectedBranches: expected.map(wireBranchIdentity),
-        replyOccurrenceSteps: path.branch.steps,
-        expectedOccurrenceSteps: expectedBranch.steps,
+        actualBranch: wireBranchIdentity(path.branch),
+        actualOccurrenceSteps: path.branch.steps,
         premises: path.premises,
         closureUseIds: path.closureUseIds,
         lowerPremiseIds: [...(wire.lower_premise_ids as string[])],
-        occurrenceLinkKeys: path.branch.steps.flatMap(step =>
-          step.incomingLink ? [step.incomingLink.occurrenceLinkKey] : [],
-        ),
         replyClosure: {
-          issuer: inventory.issuer,
           issuerEvidenceId: inventory.issuerEvidenceId,
-          coverageIssuer: inventory.coverageIssuer,
-          coverageEvidenceId: inventory.coverageEvidenceId,
           rootAfter: inventory.rootAfter,
-          legalReplyMoves: inventory.legalReplyMoves,
-          branchByReply: inventory.bindings,
-          certifiedHorizonPlyOffset: inventory.horizon,
+          legalReplyMove: inventory.legalReplyMove,
+          actualBranchId: inventory.actualBranchId,
         },
       },
       proof,
@@ -2885,74 +2799,46 @@ function projectPassedPawnResult(
   });
 }
 
-function projectPassedPawnResultInventory(value: unknown):
+function projectPassedPawnProgressRealizedAfterOnlyLegalReplyInventory(value: unknown):
   | {
-      issuer: 'structural_delta.canonical_legal_reply_inventory';
       issuerEvidenceId: string;
-      coverageIssuer: 'passed_pawn_result_event.branch_complete_reply_coverage';
-      coverageEvidenceId: string;
       rootAfter: { fen: FEN; ply: number; scope: string };
-      legalReplyMoves: Uci[];
-      bindings: Array<{ move: Uci; branchId: string }>;
-      horizon: number;
+      legalReplyMove: Uci;
+      actualBranchId: string;
     }
   | undefined {
   if (
     !isObject(value) ||
-    !hasExactKeys(value, [
-      'issuer',
-      'issuer_evidence_id',
-      'coverage_issuer',
-      'coverage_evidence_id',
-      'root_after',
-      'legal_reply_moves',
-      'branch_by_reply',
-      'certified_horizon_ply_offset',
-    ]) ||
-    value.issuer !== 'structural_delta.canonical_legal_reply_inventory' ||
+    !hasExactKeys(value, ['issuer_evidence_id', 'root_after', 'legal_reply_move', 'actual_branch_id']) ||
     !nonEmptyWireString(value.issuer_evidence_id) ||
-    value.coverage_issuer !== 'passed_pawn_result_event.branch_complete_reply_coverage' ||
-    !nonEmptyWireString(value.coverage_evidence_id) ||
     !isObject(value.root_after) ||
-    !hasExactKeys(value.root_after, ['fen', 'ply', 'scope']) ||
-    !validUciMoves(value.legal_reply_moves, 1) ||
-    !canonicalStrings(value.legal_reply_moves) ||
-    !Array.isArray(value.branch_by_reply) ||
-    value.branch_by_reply.length !== value.legal_reply_moves.length
+    !hasExactKeys(value.root_after, ['fen', 'ply', 'scope'])
   )
     return;
   const rootAfterFen = fenText(value.root_after.fen);
   const rootAfterPly = nonNegativeInteger(value.root_after.ply);
   const rootAfterScope = nonEmptyWireString(value.root_after.scope);
-  const horizon = integerInRange(value.certified_horizon_ply_offset, 1, Number.MAX_SAFE_INTEGER);
-  if (!rootAfterFen || rootAfterPly === undefined || !rootAfterScope || horizon === undefined) return;
-  const bindings = value.branch_by_reply.map(binding => {
-    if (!isObject(binding) || !hasExactKeys(binding, ['reply_move', 'branch_id'])) return;
-    const move = uci(binding.reply_move);
-    const branchId = typedHash(binding.branch_id);
-    return move && branchId ? { move, branchId } : undefined;
-  });
-  return bindings.every((binding): binding is { move: Uci; branchId: string } => !!binding) &&
-    unique(bindings.map(binding => binding.move)) &&
-    unique(bindings.map(binding => binding.branchId)) &&
-    value.legal_reply_moves.every((move, index) => bindings[index]?.move === move)
-    ? {
-        issuer: value.issuer,
+  const legalReplyMove = uci(value.legal_reply_move);
+  const actualBranchId = typedHash(value.actual_branch_id);
+  return !rootAfterFen || rootAfterPly === undefined || rootAfterPly < 1 || !rootAfterScope || !legalReplyMove || !actualBranchId
+    ? undefined
+    : {
         issuerEvidenceId: value.issuer_evidence_id as string,
-        coverageIssuer: value.coverage_issuer,
-        coverageEvidenceId: value.coverage_evidence_id as string,
         rootAfter: { fen: rootAfterFen, ply: rootAfterPly, scope: rootAfterScope },
-        legalReplyMoves: [...value.legal_reply_moves],
-        bindings,
-        horizon,
-      }
-    : undefined;
+        legalReplyMove,
+        actualBranchId,
+      };
 }
 
 function projectTypedBranch(
   value: unknown,
-  boundedCausalRole: 'counterfactual_reference' | 'observed_played_root' | undefined,
+  boundedCausalRole:
+    | 'counterfactual_reference'
+    | 'observed_played_root'
+    | 'observed_played_sibling'
+    | undefined,
   startFen: FEN,
+  variableBoundedLength = false,
 ): MoveReviewWireBranch | undefined {
   const boundedCausal = boundedCausalRole !== undefined;
   if (
@@ -2970,8 +2856,8 @@ function projectTypedBranch(
         ])
       : hasOnlyKeys(
           value,
-          ['branch_id', 'role', 'reply_move', 'source_probe_id', 'line', 'root_provenance', 'steps'],
-          ['branch_id', 'role', 'line', 'root_provenance', 'steps'],
+          ['branch_id', 'role', 'reply_move', 'source_occurrence_id', 'line', 'root_provenance', 'steps'],
+          ['branch_id', 'role', 'reply_move', 'source_occurrence_id', 'line', 'root_provenance', 'steps'],
         )) ||
     !typedHash(value.branch_id) ||
     (value.root_provenance !== 'counterfactual_analyzed_root' &&
@@ -2979,7 +2865,7 @@ function projectTypedBranch(
     !Array.isArray(value.steps)
   )
     return;
-  const line = projectPassedPawnResultLine(
+  const line = projectPassedPawnProgressLine(
     boundedCausal
       ? {
           line_id: value.line_id,
@@ -3000,15 +2886,21 @@ function projectTypedBranch(
     return;
   if (boundedCausal) {
     const reference = boundedCausalRole === 'counterfactual_reference';
+    const observedSibling = boundedCausalRole === 'observed_played_sibling';
+    const lengthIsExact = variableBoundedLength
+      ? steps.length >= (reference ? 3 : 2)
+      : steps.length === (reference ? 3 : 2);
     if (
       value.branch_role !== boundedCausalRole ||
       line.role !== (reference ? 'best_reference' : 'played') ||
       value.root_provenance !== (reference ? 'counterfactual_analyzed_root' : 'observed_game_root') ||
-      steps.length !== (reference ? 3 : 2) ||
+      !lengthIsExact ||
+      (!reference && observedSibling !== variableBoundedLength) ||
       !wireStepsAreContinuous(steps, startFen) ||
       (reference
         ? steps.some(step => step.provenance !== 'certified_analysis_move')
-        : steps[0]?.provenance !== 'observed_game_move' || steps[1]?.provenance !== 'certified_analysis_move')
+        : steps[0]?.provenance !== 'observed_game_move' ||
+          steps.slice(1).some(step => step.provenance !== 'certified_analysis_move'))
     )
       return;
     return {
@@ -3022,53 +2914,30 @@ function projectTypedBranch(
       steps,
     };
   }
-  if (value.role !== 'expected_result_route' && value.role !== 'legal_reply') return;
-  const occurrenceSteps = steps as MoveReviewPassedPawnResultWireStep[];
+  if (value.role !== 'actual_result_route') return;
+  const occurrenceSteps = steps as MoveReviewPassedPawnProgressWireStep[];
   const observedRoot = line.role === 'played';
   if (
     !unique(occurrenceSteps.map(step => step.stepKey)) ||
     value.root_provenance !== (observedRoot ? 'observed_game_root' : 'counterfactual_analyzed_root') ||
     occurrenceSteps[0]?.provenance !== (observedRoot ? 'observed_game_move' : 'certified_analysis_move') ||
     occurrenceSteps.slice(1).some(step => step.provenance !== 'certified_analysis_move') ||
-    !samePassedPawnResultLine(occurrenceSteps[0]?.line, line) ||
-    occurrenceSteps.slice(1).some(step => !samePassedPawnResultLine(step.line, occurrenceSteps[1]!.line)) ||
+    occurrenceSteps.some(step => !samePassedPawnResultLine(step.line, line)) ||
     occurrenceSteps
       .slice(1)
       .some(
         (step, index) =>
-          step.incomingLink?.fromStepKey !== occurrenceSteps[index]!.stepKey ||
-          step.incomingLink?.toStepKey !== step.stepKey,
+          step.ply !== occurrenceSteps[index]!.ply + 1 || step.fenBefore !== occurrenceSteps[index]!.fenAfter,
       )
   )
     return;
-  if (value.role === 'expected_result_route') {
-    if (
-      Object.prototype.hasOwnProperty.call(value, 'reply_move') ||
-      Object.prototype.hasOwnProperty.call(value, 'source_probe_id') ||
-      occurrenceSteps.slice(1).some(step => !samePassedPawnResultLine(step.line, line)) ||
-      occurrenceSteps.slice(1).some(step => step.incomingLink?.kind !== 'certified_causal_dependency')
-    )
-      return;
-    return {
-      id: value.branch_id as string,
-      role: value.role,
-      provenance: value.root_provenance,
-      lineId: line.id,
-      lineRole: line.role,
-      lineRank: line.rank,
-      rootMove: line.rootMove,
-      steps: occurrenceSteps,
-    };
-  }
   const replyMove = uci(value.reply_move);
-  const sourceProbeId = nonEmptyWireString(value.source_probe_id);
+  const sourceOccurrenceId = typedHash(value.source_occurrence_id);
   if (
     !replyMove ||
-    !sourceProbeId ||
+    !sourceOccurrenceId ||
     occurrenceSteps[1]?.move !== replyMove ||
-    !wireStepsAreContinuous(occurrenceSteps, startFen) ||
-    occurrenceSteps.slice(1).some(step => step.incomingLink?.kind !== 'adjacent_legal_replay') ||
-    occurrenceSteps.slice(1).some(step => step.line.rootMove !== replyMove)
+    !wireStepsAreContinuous(occurrenceSteps, startFen)
   )
     return;
   return {
@@ -3081,89 +2950,63 @@ function projectTypedBranch(
     rootMove: line.rootMove,
     steps: occurrenceSteps,
     replyMove,
-    sourceProbeId,
+    sourceOccurrenceId,
   };
 }
 
-function projectPassedPawnResultPath(
+function projectPassedPawnProgressRealizedAfterOnlyLegalReplyPath(
   value: unknown,
-  branches: Map<string, MoveReviewPassedPawnResultWireBranch>,
-  expectedBranch: MoveReviewPassedPawnResultWireBranch,
-  eventEvidenceId: string,
-  comparisonEvidenceId: string,
-): MoveReviewPassedPawnResultPath | undefined {
+  branches: Map<string, MoveReviewPassedPawnProgressWireBranch>,
+): MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath | undefined {
   if (
     !isObject(value) ||
     !hasExactKeys(value, [
       'path_occurrence_id',
-      'reply_branch_id',
+      'actual_branch_id',
       'realization_actor',
       'realization_move',
       'realization_ply',
-      'realization_match_kind',
       'premises',
       'closure_use_ids',
     ]) ||
     !typedHash(value.path_occurrence_id) ||
-    !typedHash(value.reply_branch_id) ||
+    !typedHash(value.actual_branch_id) ||
     !Array.isArray(value.premises) ||
-    value.premises.length < 1 ||
-    !validWireStrings(value.closure_use_ids, 1, typedHash) ||
-    value.closure_use_ids.length !== 1
+    !validWireStrings(value.closure_use_ids, 1, typedHash)
   )
     return;
-  const branch = branches.get(value.reply_branch_id as string);
+  const branch = branches.get(value.actual_branch_id as string);
   const realizationActor = projectTypedActor(value.realization_actor, false, true);
   const realizationMove = uci(value.realization_move);
   const realizationPly = nonNegativeInteger(value.realization_ply);
-  const realizationMatchKind =
-    value.realization_match_kind === 'exact_move' || value.realization_match_kind === 'equivalent_function'
-      ? value.realization_match_kind
-      : undefined;
-  const premises = value.premises.map(premise => projectPassedPawnResultPremise(premise, branches));
+  const premises = value.premises.map(premise => projectPassedPawnProgressPremise(premise, branches));
   const realizationStepIndices =
     branch?.steps.flatMap((step, index) =>
       step.move === realizationMove && step.ply === realizationPly ? [index] : [],
     ) ?? [];
-  const realizationStep =
-    realizationStepIndices.length === 1 ? branch?.steps[realizationStepIndices[0]!] : undefined;
   if (
     !branch?.replyMove ||
-    branch.role !== 'legal_reply' ||
+    branch.role !== 'actual_result_route' ||
     !realizationActor ||
     !realizationMove ||
     realizationPly === undefined ||
-    !realizationMatchKind ||
-    typedActorMove(realizationActor) !== realizationMove ||
     realizationStepIndices.length !== 1 ||
-    realizationActor.side !== fenSideToMove(realizationStep!.fenBefore) ||
     !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
-    !validPassedPawnResultPremiseManifest(
-      premises,
-      branch,
-      expectedBranch,
-      realizationStepIndices[0]!,
-      realizationMove,
-      realizationPly,
-      realizationMatchKind,
-      eventEvidenceId,
-      comparisonEvidenceId,
-    )
+    !passedPawnPremisesBelongToActualBranch(premises, branch)
   )
     return;
   return {
     id: value.path_occurrence_id as string,
-    branch: branch as MoveReviewPassedPawnResultWireBranch & { replyMove: Uci },
+    branch: branch as MoveReviewPassedPawnProgressWireBranch & { replyMove: Uci },
     realizationActor,
     realizationMove,
     realizationPly,
-    realizationMatchKind,
     premises,
     closureUseIds: [...value.closure_use_ids],
   };
 }
 
-function projectPassedPawnResultPremise(
+function projectPassedPawnProgressPremise(
   value: unknown,
   branches: Map<string, MoveReviewWireBranch>,
 ): MoveReviewTypedPremise | undefined {
@@ -3178,7 +3021,6 @@ function projectPassedPawnResultPremise(
         'source_premise_ids',
         'branch_id',
         'branch_role',
-        'related_branch_ids',
         'from_step_index',
         'to_step_index',
         'dependency_proof',
@@ -3190,31 +3032,26 @@ function projectPassedPawnResultPremise(
         'source_premise_ids',
         'branch_id',
         'branch_role',
-        'related_branch_ids',
         'from_step_index',
         'to_step_index',
       ],
     ) ||
-    !nonEmptyWireString(value.role) ||
-    !nonEmptyWireString(value.lower_kind) ||
+    (value.role !== 'comparison_demand' && value.role !== 'dependency' && value.role !== 'result') ||
+    (value.lower_kind !== 'played_vs_best_demand' &&
+      value.lower_kind !== 'passed_pawn_progress_dependency' &&
+      value.lower_kind !== 'passed_pawn_progress') ||
     !nonEmptyWireString(value.lower_semantic_key) ||
     !typedHash(value.branch_id) ||
     branches.get(value.branch_id as string)?.role !== value.branch_role ||
-    !canonicalWireStrings(value.source_premise_ids, 1) ||
-    !canonicalWireStrings(value.related_branch_ids, 0, typedHash) ||
-    (value.related_branch_ids as string[]).some(
-      branchId => branchId === value.branch_id || !branches.has(branchId),
-    )
+    value.branch_role !== 'actual_result_route' ||
+    !canonicalWireStrings(value.source_premise_ids, 1)
   )
     return;
-  const dependencyPremise =
-    value.lower_kind === 'passed_pawn_result_dependency' ||
-    value.lower_kind === 'observed_passed_pawn_result_dependency';
   const hasDependencyProof = Object.prototype.hasOwnProperty.call(value, 'dependency_proof');
   const dependencyProof = hasDependencyProof
-    ? projectPassedPawnResultDependencyProof(value.dependency_proof)
+    ? projectPassedPawnProgressDependencyProof(value.dependency_proof)
     : undefined;
-  if (dependencyPremise !== hasDependencyProof || (hasDependencyProof && !dependencyProof)) return;
+  if (hasDependencyProof && !dependencyProof) return;
   const from = nonNegativeInteger(value.from_step_index);
   const to = nonNegativeInteger(value.to_step_index);
   const branch = branches.get(value.branch_id as string);
@@ -3227,22 +3064,29 @@ function projectPassedPawnResultPremise(
         sourcePremiseIds: [...value.source_premise_ids],
         branchId: value.branch_id as string,
         branchRole: value.branch_role as string,
-        relatedBranchIds: [...value.related_branch_ids],
         fromStepIndex: from,
         toStepIndex: to,
         ...(dependencyProof ? { dependencyProof } : {}),
       };
 }
 
-function projectPassedPawnResultDependencyProof(
+function projectPassedPawnProgressDependencyProof(
   value: unknown,
 ): MoveReviewPassedPawnDependencyProof | undefined {
   if (
     !isObject(value) ||
-    !hasExactKeys(value, ['dependency_kind', 'proof_kind', 'squares', 'pieces', 'relation_issuers']) ||
+    !hasExactKeys(value, [
+      'dependency_kind',
+      'proof_kind',
+      'squares',
+      'pieces',
+      'relation_issuers',
+      'position_state_issuers',
+    ]) ||
     !Array.isArray(value.squares) ||
     !Array.isArray(value.pieces) ||
-    !Array.isArray(value.relation_issuers)
+    !Array.isArray(value.relation_issuers) ||
+    !Array.isArray(value.position_state_issuers)
   )
     return;
 
@@ -3278,34 +3122,96 @@ function projectPassedPawnResultDependencyProof(
       !isObject(issuer) ||
       !hasExactKeys(issuer, [
         'contract',
-        'relation_kind',
         'result_key',
         'occurrence_id',
         'step_key',
         'source_premise_ids',
+        'issuer_evidence_id',
+        'line',
+        'scope',
       ])
     )
       return;
     const contract = passedPawnRelationKind(issuer.contract);
-    const relationKind = passedPawnRelationKind(issuer.relation_kind);
+    const line = projectPassedPawnProgressLine(issuer.line);
     if (
       !contract ||
-      relationKind !== contract ||
       typeof issuer.result_key !== 'string' ||
       !issuer.result_key.startsWith(`${contract}:`) ||
       !typedHash(issuer.result_key.slice(contract.length + 1)) ||
       !typedHash(issuer.occurrence_id) ||
       !nonEmptyWireString(issuer.step_key) ||
-      !canonicalWireStrings(issuer.source_premise_ids, 1)
+      !canonicalWireStrings(issuer.source_premise_ids, 1) ||
+      !nonEmptyWireString(issuer.issuer_evidence_id) ||
+      !line ||
+      !passedPawnPositionStateScope(issuer.scope) ||
+      issuer.scope !== passedPawnLineScope(line.role)
     )
       return;
     return {
       contract,
-      relationKind,
       resultKey: issuer.result_key,
       occurrenceId: issuer.occurrence_id as string,
       stepKey: issuer.step_key as string,
       sourcePremiseIds: [...issuer.source_premise_ids],
+      issuerEvidenceId: issuer.issuer_evidence_id as string,
+      line,
+      scope: issuer.scope,
+    };
+  });
+  const positionStateIssuers = value.position_state_issuers.map(issuer => {
+    if (!isObject(issuer)) return;
+    const state = projectPassedPawnPositionState(issuer.state);
+    const ply = nonNegativeInteger(issuer.ply);
+    const move = uci(issuer.move_uci);
+    const fenBefore = fenText(issuer.fen_before);
+    const fenAfter = fenText(issuer.fen_after);
+    if (
+      !hasExactKeys(issuer, [
+        'state',
+        'semantic_proof_id',
+        'issuer_evidence_id',
+        'issuer_occurrence_id',
+        'step_key',
+        'ply',
+        'move_uci',
+        'fen_before',
+        'fen_after',
+        'line',
+        'scope',
+      ]) ||
+      !state ||
+      !typedHash(issuer.semantic_proof_id) ||
+      !nonEmptyWireString(issuer.issuer_evidence_id) ||
+      !typedHash(issuer.issuer_occurrence_id) ||
+      !nonEmptyWireString(issuer.step_key) ||
+      ply === undefined ||
+      ply === 0 ||
+      !move ||
+      !fenBefore ||
+      !fenAfter ||
+      !passedPawnPositionStateScope(issuer.scope)
+    )
+      return;
+    const line = projectPassedPawnProgressLine(issuer.line);
+    if (
+      !line ||
+      issuer.scope !== passedPawnLineScope(line.role) ||
+      issuer.step_key !== causalStepKey(ply, move, fenBefore, fenAfter)
+    )
+      return;
+    return {
+      state,
+      semanticProofId: issuer.semantic_proof_id as string,
+      issuerEvidenceId: issuer.issuer_evidence_id as string,
+      issuerOccurrenceId: issuer.issuer_occurrence_id as string,
+      stepKey: issuer.step_key as string,
+      ply,
+      move,
+      fenBefore,
+      fenAfter,
+      line,
+      scope: issuer.scope as MoveReviewPassedPawnLineScope,
     };
   });
   if (
@@ -3314,91 +3220,83 @@ function projectPassedPawnResultDependencyProof(
     !squares.every((square): square is NonNullable<typeof square> => !!square) ||
     !pieces.every((piece): piece is NonNullable<typeof piece> => !!piece) ||
     !relationIssuers.every((issuer): issuer is NonNullable<typeof issuer> => !!issuer) ||
+    !positionStateIssuers.every((issuer): issuer is NonNullable<typeof issuer> => !!issuer) ||
     !unique(squares.map(square => `${square.role}:${square.square}`)) ||
-    !unique(pieces.map(piece => piece.role)) ||
-    !validPassedPawnDependencyProofShape(dependencyKind, proofKind, squares, pieces, relationIssuers)
+    !unique(pieces.map(piece => `${piece.role}:${piece.side}:${piece.piece}`))
   )
     return;
-  return { dependencyKind, proofKind, squares, pieces, relationIssuers };
+  return { dependencyKind, proofKind, squares, pieces, relationIssuers, positionStateIssuers };
 }
 
-function validPassedPawnDependencyProofShape(
-  dependencyKind: MoveReviewPassedPawnDependencyKind,
-  proofKind: MoveReviewPassedPawnDependencyProofKind,
-  squares: { role: string; square: Key }[],
-  pieces: { role: string; side: 'white' | 'black'; piece: MoveReviewPieceRole }[],
-  issuers: MoveReviewPassedPawnDependencyProof['relationIssuers'],
-): boolean {
-  const squareRoles = squares.map(square => square.role);
-  const pieceRoles = pieces.map(piece => piece.role);
-  const exactRoles = (actual: string[], expected: string[]): boolean =>
-    actual.length === expected.length && unique(actual) && expected.every(role => actual.includes(role));
-  const exactIssuer = (kind: MoveReviewPassedPawnRelationKind): boolean =>
-    issuers.length === 1 && issuers[0]!.contract === kind;
-  const piece = (role: string) => pieces.find(witness => witness.role === role);
+function projectPassedPawnPositionState(value: unknown): MoveReviewPassedPawnPositionState | undefined {
+  if (!isObject(value) || (value.side !== 'white' && value.side !== 'black') || !key(value.square)) return;
+  const role = pieceRole(value.piece);
+  if (value.kind === 'occupied_by')
+    return hasExactKeys(value, ['kind', 'side', 'square', 'piece']) && role
+      ? { kind: 'occupied_by', side: value.side, square: value.square as Key, piece: role }
+      : undefined;
+  if (value.kind === 'pawn_topology')
+    return hasExactKeys(value, ['kind', 'side', 'square', 'passed']) && typeof value.passed === 'boolean'
+      ? { kind: 'pawn_topology', side: value.side, square: value.square as Key, passed: value.passed }
+      : undefined;
+  if (
+    value.kind !== 'slider_reach' ||
+    !hasExactKeys(value, ['kind', 'side', 'square', 'piece', 'file_step', 'rank_step', 'segment']) ||
+    (role !== 'bishop' && role !== 'rook' && role !== 'queen') ||
+    !Number.isInteger(value.file_step) ||
+    !Number.isInteger(value.rank_step) ||
+    Math.abs(value.file_step as number) > 1 ||
+    Math.abs(value.rank_step as number) > 1 ||
+    (value.file_step === 0 && value.rank_step === 0) ||
+    !Array.isArray(value.segment)
+  )
+    return;
+  const segment = value.segment.map(item => {
+    if (
+      !isObject(item) ||
+      !hasExactKeys(item, ['square', 'target', 'occupant_piece']) ||
+      !key(item.square) ||
+      (item.target !== 'empty' && item.target !== 'friendly' && item.target !== 'enemy')
+    )
+      return;
+    const occupantPiece = pieceRole(item.occupant_piece);
+    if (
+      (item.target === 'empty') !== (item.occupant_piece === null) ||
+      (item.target !== 'empty' && !occupantPiece)
+    )
+      return;
+    return {
+      square: item.square as Key,
+      target: item.target as 'empty' | 'friendly' | 'enemy',
+      ...(occupantPiece ? { occupantPiece } : {}),
+    };
+  });
+  if (!segment.every((item): item is NonNullable<typeof item> => !!item)) return;
+  return {
+    kind: 'slider_reach',
+    side: value.side,
+    square: value.square as Key,
+    piece: role,
+    fileStep: value.file_step as number,
+    rankStep: value.rank_step as number,
+    segment,
+  };
+}
 
-  switch (proofKind) {
-    case 'object_state':
-      return (
-        dependencyKind === 'object_state_precondition' &&
-        exactRoles(squareRoles, ['root_from', 'root_to', 'future_from', 'future_to']) &&
-        exactRoles(pieceRoles, ['root_before', 'tracked', 'future_after']) &&
-        pieces.every(witness => witness.side === pieces[0]!.side) &&
-        issuers.length === 0
-      );
-    case 'line_access':
-      return (
-        dependencyKind === 'line_access_precondition' &&
-        squareRoles.filter(role => role === 'vacated_gate').length >= 1 &&
-        squareRoles.filter(role => role === 'enabled_from').length === 1 &&
-        squareRoles.filter(role => role === 'enabled_to').length === 1 &&
-        squareRoles.every(
-          role => role === 'vacated_gate' || role === 'enabled_from' || role === 'enabled_to',
-        ) &&
-        exactRoles(pieceRoles, ['enabled_piece']) &&
-        exactIssuer('slider_reach_delta')
-      );
-    case 'pawn_break_follow_up': {
-      const trigger = piece('trigger_pawn');
-      const responder = piece('responder_pawn');
-      const followUp = piece('follow_up_pawn');
-      return (
-        dependencyKind === 'response_continuation_precondition' &&
-        exactRoles(squareRoles, [
-          'reply_from',
-          'reply_to',
-          'follow_up_from',
-          'follow_up_to',
-          'released_passed_pawn',
-        ]) &&
-        exactRoles(pieceRoles, ['trigger_pawn', 'responder_pawn', 'follow_up_pawn']) &&
-        !!trigger &&
-        !!responder &&
-        !!followUp &&
-        trigger.piece === 'pawn' &&
-        responder.piece === 'pawn' &&
-        followUp.piece === 'pawn' &&
-        trigger.side === followUp.side &&
-        trigger.side !== responder.side &&
-        exactIssuer('pawn_topology_transition')
-      );
-    }
-    case 'capture_follow_up': {
-      const trigger = piece('trigger_piece');
-      const responder = piece('responder_piece');
-      const followUp = piece('follow_up_piece');
-      return (
-        dependencyKind === 'response_continuation_precondition' &&
-        exactRoles(squareRoles, ['reply_from', 'reply_to', 'follow_up_from', 'follow_up_to']) &&
-        exactRoles(pieceRoles, ['trigger_piece', 'responder_piece', 'follow_up_piece']) &&
-        !!trigger &&
-        !!responder &&
-        !!followUp &&
-        trigger.side === followUp.side &&
-        trigger.side !== responder.side &&
-        exactIssuer('capture_recapture_inventory')
-      );
-    }
+function passedPawnPositionStateScope(value: unknown): value is MoveReviewPassedPawnLineScope {
+  return value === 'best_line' || value === 'played_line' || value === 'candidate_line';
+}
+
+function passedPawnLineScope(role: MoveReviewTypedLine['role'] | undefined): string | undefined {
+  switch (role) {
+    case 'played':
+      return 'played_line';
+    case 'best_reference':
+      return 'best_line';
+    case 'alternative':
+      return 'candidate_line';
+    default:
+      return undefined;
   }
 }
 
@@ -3427,288 +3325,19 @@ function passedPawnRelationKind(value: unknown): MoveReviewPassedPawnRelationKin
     : undefined;
 }
 
-function validPassedPawnResultPremiseManifest(
+function passedPawnPremisesBelongToActualBranch(
   premises: MoveReviewTypedPremise[],
-  replyBranch: MoveReviewPassedPawnResultWireBranch & { replyMove?: Uci },
-  expectedBranch: MoveReviewPassedPawnResultWireBranch,
-  realizationStepIndex: number,
-  realizationMove: Uci,
-  realizationPly: number,
-  realizationMatchKind: 'exact_move' | 'equivalent_function',
-  eventEvidenceId: string,
-  comparisonEvidenceId: string,
+  actualBranch: MoveReviewPassedPawnProgressWireBranch,
 ): boolean {
-  const replyMove = replyBranch.replyMove;
-  const expectedLastIndex = expectedBranch.steps.length - 1;
-  const expectedLast = expectedBranch.steps[expectedLastIndex];
-  const replyRoot = replyBranch.steps[0];
-  const expectedRoot = expectedBranch.steps[0];
-  if (!replyMove || !expectedLast || !replyRoot || !expectedRoot) return false;
-
-  const exactMove =
-    realizationMove === expectedLast.move &&
-    realizationPly - replyRoot.ply === expectedLast.ply - expectedRoot.ply;
-  if ((realizationMatchKind === 'exact_move') !== exactMove) return false;
-
-  const exact = (
-    premise: MoveReviewTypedPremise | undefined,
-    role: string,
-    contract: string,
-    branch: MoveReviewWireBranch,
-    from: number,
-    to: number,
-    relatedBranchIds: string[],
-    requiredOwner: string,
-  ): boolean =>
-    !!premise &&
-    premise.role === role &&
-    premise.contract === contract &&
-    premise.branchId === branch.id &&
-    premise.branchRole === branch.role &&
-    premise.fromStepIndex === from &&
-    premise.toStepIndex === to &&
-    JSON.stringify(premise.relatedBranchIds) === JSON.stringify(relatedBranchIds) &&
-    premise.sourcePremiseIds.includes(requiredOwner);
-
-  const sole = (role: string): MoveReviewTypedPremise | undefined => {
-    const matches = premises.filter(premise => premise.role === role);
-    return matches.length === 1 ? matches[0] : undefined;
-  };
-  const comparison = sole('comparison_demand');
-  const expectedResult = sole('expected_result');
-  const observedResult = sole('observed_result');
-  const functionalMatch = sole('functional_match');
-  if (
-    !exact(
-      comparison,
-      'comparison_demand',
-      'played_vs_best_demand',
-      expectedBranch,
-      0,
-      0,
-      [],
-      comparisonEvidenceId,
-    ) ||
-    !exact(
-      expectedResult,
-      'expected_result',
-      'passed_pawn_result',
-      expectedBranch,
-      expectedLastIndex,
-      expectedLastIndex,
-      [],
-      eventEvidenceId,
-    ) ||
-    !exact(
-      observedResult,
-      'observed_result',
-      'observed_passed_pawn_result',
-      replyBranch,
-      realizationStepIndex,
-      realizationStepIndex,
-      [],
-      eventEvidenceId,
-    ) ||
-    !exact(
-      functionalMatch,
-      'functional_match',
-      'passed_pawn_result_functional_match',
-      replyBranch,
-      realizationStepIndex,
-      realizationStepIndex,
-      [expectedBranch.id],
-      eventEvidenceId,
-    ) ||
-    !!comparison?.dependencyProof ||
-    !!expectedResult?.dependencyProof ||
-    !!observedResult?.dependencyProof ||
-    !!functionalMatch?.dependencyProof
-  )
-    return false;
-
-  const ownsDependencyProof = (premise: MoveReviewTypedPremise): boolean =>
-    !!premise.dependencyProof &&
-    premise.dependencyProof.relationIssuers.every(issuer =>
-      [issuer.occurrenceId, ...issuer.sourcePremiseIds].every(source =>
-        premise.sourcePremiseIds.includes(source),
-      ),
-    );
-  const bindsDependencyOccurrence = (
-    premise: MoveReviewTypedPremise,
-    branch: MoveReviewPassedPawnResultWireBranch,
-  ): boolean => {
-    const proof = premise.dependencyProof;
-    const fromIndex = premise.fromStepIndex;
-    const toIndex = premise.toStepIndex;
-    if (!proof || fromIndex === undefined || toIndex === undefined) return false;
-    const issuer = proof.relationIssuers[0];
-    const from = passedPawnDependencyActor(branch.steps[fromIndex]);
-    const to = passedPawnDependencyActor(branch.steps[toIndex]);
-    if (!from || !to || from.side !== to.side) return false;
-    const square = (role: string): Key | undefined =>
-      proof.squares.find(witness => witness.role === role)?.square;
-    const piece = (role: string) => proof.pieces.find(witness => witness.role === role);
-    const actorPiece = (role: string, actor: PassedPawnDependencyActor, after = false): boolean => {
-      const witness = piece(role);
-      const actual = after ? actor.after : actor.before;
-      return !!witness && witness.side === actual.side && witness.piece === actual.piece;
-    };
-
-    switch (proof.proofKind) {
-      case 'object_state':
-        return (
-          square('root_from') === from.from &&
-          square('root_to') === from.to &&
-          square('future_from') === to.from &&
-          square('future_to') === to.to &&
-          from.to === to.from &&
-          actorPiece('root_before', from) &&
-          actorPiece('tracked', from, true) &&
-          actorPiece('tracked', to) &&
-          actorPiece('future_after', to, true)
-        );
-      case 'line_access':
-        return (
-          issuer?.stepKey === branch.steps[fromIndex]?.stepKey &&
-          square('enabled_from') === to.from &&
-          square('enabled_to') === to.to &&
-          actorPiece('enabled_piece', to) &&
-          proof.squares
-            .filter(witness => witness.role === 'vacated_gate')
-            .every(witness => squareVacatedByStep(branch.steps[fromIndex]!, witness.square))
-        );
-      case 'pawn_break_follow_up':
-      case 'capture_follow_up': {
-        const reply = passedPawnDependencyActor(branch.steps[fromIndex + 1]);
-        const triggerRole = proof.proofKind === 'pawn_break_follow_up' ? 'trigger_pawn' : 'trigger_piece';
-        const responderRole =
-          proof.proofKind === 'pawn_break_follow_up' ? 'responder_pawn' : 'responder_piece';
-        const followUpRole =
-          proof.proofKind === 'pawn_break_follow_up' ? 'follow_up_pawn' : 'follow_up_piece';
-        return (
-          !!reply &&
-          issuer?.stepKey === branch.steps[fromIndex + 1]?.stepKey &&
-          toIndex > fromIndex + 1 &&
-          (proof.proofKind !== 'capture_follow_up' || toIndex === fromIndex + 2) &&
-          square('reply_from') === reply.from &&
-          square('reply_to') === reply.to &&
-          reply.side !== from.side &&
-          square('follow_up_from') === to.from &&
-          square('follow_up_to') === to.to &&
-          (proof.proofKind !== 'pawn_break_follow_up' || square('released_passed_pawn') === to.from) &&
-          actorPiece(triggerRole, from) &&
-          actorPiece(responderRole, reply) &&
-          actorPiece(followUpRole, to)
-        );
-      }
-    }
-  };
-  const expectedDependencies = premises.filter(premise => premise.role === 'expected_dependency');
-  const observedDependencies = premises.filter(premise => premise.role === 'observed_dependency');
-  if (
-    expectedDependencies.length !== expectedLastIndex ||
-    expectedDependencies.length < 1 ||
-    observedDependencies.length < 1 ||
-    expectedDependencies.some(
-      (premise, index) =>
-        !exact(
-          premise,
-          'expected_dependency',
-          'passed_pawn_result_dependency',
-          expectedBranch,
-          index,
-          index + 1,
-          [],
-          eventEvidenceId,
-        ) ||
-        !ownsDependencyProof(premise) ||
-        !bindsDependencyOccurrence(premise, expectedBranch) ||
-        premise.resultId !== expectedBranch.steps[index + 1]!.incomingLink?.occurrenceLinkKey,
-    ) ||
-    observedDependencies.some(
-      (premise, position) =>
-        premise.contract !== 'observed_passed_pawn_result_dependency' ||
-        premise.branchId !== replyBranch.id ||
-        premise.branchRole !== replyBranch.role ||
-        premise.relatedBranchIds?.length !== 0 ||
-        !ownsDependencyProof(premise) ||
-        !bindsDependencyOccurrence(premise, replyBranch) ||
-        !premise.sourcePremiseIds.includes(eventEvidenceId) ||
-        premise.fromStepIndex === undefined ||
-        premise.toStepIndex === undefined ||
-        premise.fromStepIndex >= premise.toStepIndex ||
-        (position === 0
-          ? premise.fromStepIndex !== 0
-          : premise.fromStepIndex !== observedDependencies[position - 1]!.toStepIndex),
-    ) ||
-    observedDependencies[observedDependencies.length - 1]!.toStepIndex !== realizationStepIndex
-  )
-    return false;
-
-  const exactOrder = [
-    comparison!,
-    ...expectedDependencies,
-    expectedResult!,
-    ...observedDependencies,
-    observedResult!,
-    functionalMatch!,
-  ];
-  return (
-    premises.length === exactOrder.length && premises.every((premise, index) => premise === exactOrder[index])
+  return premises.every(
+    premise =>
+      premise.branchId === actualBranch.id &&
+      premise.branchRole === actualBranch.role &&
+      premise.fromStepIndex !== undefined &&
+      premise.toStepIndex !== undefined &&
+      !!actualBranch.steps[premise.fromStepIndex] &&
+      !!actualBranch.steps[premise.toStepIndex],
   );
-}
-
-interface PassedPawnDependencyActor {
-  from: Key;
-  to: Key;
-  side: 'white' | 'black';
-  before: { side: 'white' | 'black'; piece: MoveReviewPieceRole };
-  after: { side: 'white' | 'black'; piece: MoveReviewPieceRole };
-}
-
-function passedPawnDependencyActor(
-  step: MoveReviewWireStep | undefined,
-): PassedPawnDependencyActor | undefined {
-  if (!step) return;
-  const from = step.move.slice(0, 2) as Key;
-  const to = step.move.slice(2, 4) as Key;
-  const side = fenSideToMove(step.fenBefore);
-  const before = fenPieceAt(step.fenBefore, from);
-  const after = fenPieceAt(step.fenAfter, to);
-  return side && before?.side === side && after?.side === side
-    ? { from, to, side, before, after }
-    : undefined;
-}
-
-function squareVacatedByStep(step: MoveReviewWireStep, square: Key): boolean {
-  return !!fenPieceAt(step.fenBefore, square) && !fenPieceAt(step.fenAfter, square);
-}
-
-function fenPieceAt(
-  fen: FEN,
-  square: Key,
-): { side: 'white' | 'black'; piece: MoveReviewPieceRole } | undefined {
-  try {
-    const parsed = parseSquare(square);
-    const piece = parsed === undefined ? undefined : parseFen(fen).unwrap().board.get(parsed);
-    return piece ? { side: piece.color, piece: piece.role } : undefined;
-  } catch (_) {
-    return;
-  }
-}
-
-function typedActorMove(actor: MoveReviewTypedActor): Uci | undefined {
-  if (actor.pieceBefore !== 'pawn')
-    return actor.pieceAfter === actor.pieceBefore ? uci(`${actor.from}${actor.to}`) : undefined;
-  if (actor.pieceAfter === 'pawn') return uci(`${actor.from}${actor.to}`);
-  const promotion: Partial<Record<MoveReviewPieceRole, string>> = {
-    queen: 'q',
-    rook: 'r',
-    bishop: 'b',
-    knight: 'n',
-  };
-  const suffix = promotion[actor.pieceAfter];
-  return suffix ? uci(`${actor.from}${actor.to}${suffix}`) : undefined;
 }
 
 function passedPawnResultTransitionScope(role: MoveReviewTypedLine['role']): string {
@@ -3719,12 +3348,10 @@ function passedPawnResultTransitionScope(role: MoveReviewTypedLine['role']): str
       return 'reference_transition';
     case 'alternative':
       return 'alternative_transition';
-    case 'branch_reply':
-      return 'branch_reply_line';
   }
 }
 
-function isPassedPawnResultWireStep(step: MoveReviewWireStep): step is MoveReviewPassedPawnResultWireStep {
+function isPassedPawnResultWireStep(step: MoveReviewWireStep): step is MoveReviewPassedPawnProgressWireStep {
   return !!step.stepKey && !!step.line;
 }
 
@@ -3752,11 +3379,7 @@ function projectWireStep(value: unknown, withOccurrenceProof: boolean): MoveRevi
   if (
     !isObject(value) ||
     !(withOccurrenceProof
-      ? hasOnlyKeys(
-          value,
-          [...required, 'step_key', 'line', 'incoming_link'],
-          [...required, 'step_key', 'line'],
-        )
+      ? hasExactKeys(value, [...required, 'step_key', 'line'])
       : hasExactKeys(value, ['step_index', 'provenance', 'ply', 'move_uci', 'fen_before', 'fen_after'])) ||
     (value.provenance !== 'observed_game_move' && value.provenance !== 'certified_analysis_move')
   )
@@ -3767,7 +3390,7 @@ function projectWireStep(value: unknown, withOccurrenceProof: boolean): MoveRevi
   const move = uci(value.move_uci);
   const fenBefore = fenText(value.fen_before);
   const fenAfter = fenText(value.fen_after);
-  const line = withOccurrenceProof ? projectPassedPawnResultLine(value.line) : undefined;
+  const line = withOccurrenceProof ? projectPassedPawnProgressLine(value.line) : undefined;
   if (
     index === undefined ||
     ply === undefined ||
@@ -3777,19 +3400,6 @@ function projectWireStep(value: unknown, withOccurrenceProof: boolean): MoveRevi
     (withOccurrenceProof && (!stepKey || !line || stepKey !== causalStepKey(ply, move, fenBefore, fenAfter)))
   )
     return;
-  if (withOccurrenceProof) {
-    const hasLink = Object.prototype.hasOwnProperty.call(value, 'incoming_link');
-    if ((index === 0 && hasLink) || (index > 0 && !validCausalOccurrenceLink(value.incoming_link))) return;
-  }
-  const incomingLink =
-    withOccurrenceProof && index > 0 && isObject(value.incoming_link)
-      ? {
-          kind: value.incoming_link.kind as 'adjacent_legal_replay' | 'certified_causal_dependency',
-          fromStepKey: value.incoming_link.from_step_key as string,
-          toStepKey: value.incoming_link.to_step_key as string,
-          occurrenceLinkKey: value.incoming_link.occurrence_link_key as string,
-        }
-      : undefined;
   return {
     index,
     ply,
@@ -3799,19 +3409,17 @@ function projectWireStep(value: unknown, withOccurrenceProof: boolean): MoveRevi
     provenance: value.provenance,
     ...(stepKey ? { stepKey } : {}),
     ...(line ? { line } : {}),
-    ...(incomingLink ? { incomingLink } : {}),
   };
 }
 
-function projectPassedPawnResultLine(value: unknown): MoveReviewTypedLine | undefined {
+function projectPassedPawnProgressLine(value: unknown): MoveReviewTypedLine | undefined {
   if (
     !isObject(value) ||
     !hasExactKeys(value, ['line_id', 'line_role', 'line_rank', 'root_move']) ||
     !nonEmptyWireString(value.line_id) ||
     (value.line_role === 'played' ||
       value.line_role === 'best_reference' ||
-      value.line_role === 'alternative' ||
-      value.line_role === 'branch_reply') === false ||
+      value.line_role === 'alternative') === false ||
     integerInRange(value.line_rank, 1, Number.MAX_SAFE_INTEGER) === undefined ||
     !uci(value.root_move)
   )
@@ -3824,23 +3432,12 @@ function projectPassedPawnResultLine(value: unknown): MoveReviewTypedLine | unde
   };
 }
 
-function validCausalOccurrenceLink(value: unknown): boolean {
-  return (
-    isObject(value) &&
-    hasExactKeys(value, ['kind', 'from_step_key', 'to_step_key', 'occurrence_link_key']) &&
-    (value.kind === 'adjacent_legal_replay' || value.kind === 'certified_causal_dependency') &&
-    !!nonEmptyWireString(value.from_step_key) &&
-    !!nonEmptyWireString(value.to_step_key) &&
-    !!nonEmptyWireString(value.occurrence_link_key)
-  );
-}
-
 function proofFromWireSteps(
   id: string,
   startFen: FEN,
   steps: MoveReviewWireStep[],
 ): MoveReviewProof | undefined {
-  if (!semanticId(id) || !wireStepsAreContinuous(steps, startFen) || steps.length > 80) return;
+  if (!semanticId(id) || !wireStepsAreContinuous(steps, startFen)) return;
   return {
     id,
     startFen,
@@ -3877,7 +3474,7 @@ function wireBranchIdentity(branch: MoveReviewWireBranch): MoveReviewTypedBranch
     lineRole: branch.lineRole,
     lineRank: branch.lineRank,
     rootMove: branch.rootMove,
-    ...(branch.sourceProbeId ? { sourceProbeId: branch.sourceProbeId } : {}),
+    ...(branch.sourceOccurrenceId ? { sourceOccurrenceId: branch.sourceOccurrenceId } : {}),
     steps: [...branch.steps],
   };
 }
@@ -3894,18 +3491,6 @@ function validWireStrings(
   return (
     Array.isArray(value) && value.length >= minimum && value.every(item => !!validator(item)) && unique(value)
   );
-}
-
-function projectChessObjects(value: unknown[]): string[] | undefined {
-  const projected = value.map(item =>
-    isObject(item) &&
-    hasExactKeys(item, ['kind', 'key']) &&
-    chessObjectKind(item.kind) &&
-    nonEmptyWireString(item.key)
-      ? `${item.kind}:${item.key}`
-      : undefined,
-  );
-  return projected.every((item): item is string => !!item) ? projected : undefined;
 }
 
 function buildProof(
@@ -3950,12 +3535,6 @@ function projectEndpoint(value: unknown): ProjectedEndpoint | undefined {
 function projectDelta(value: unknown): number | undefined {
   if (!isObject(value) || (value.kind !== 'engine_evaluation' && value.kind !== 'outcome_only')) return;
   return finiteNumber(value.candidate_win_percent_delta_for_mover, -100, 100);
-}
-
-function projectCandidateSet(value: unknown): MoveReviewCandidateSetType | undefined {
-  return isObject(value) && hasExactKeys(value, ['type']) && candidateSetType(value.type)
-    ? value.type
-    : undefined;
 }
 
 function projectAutomaticTerminal(value: unknown): MoveReviewAutomaticTerminal | undefined {
@@ -4065,80 +3644,6 @@ function semanticId(value: unknown): string | undefined {
   return typeof value === 'string' && value.length >= 1 ? value : undefined;
 }
 
-function directCausalChange(value: unknown): value is MoveReviewDirectCausalChange {
-  return value === 'occurred' || value === 'maintained' || value === 'lost';
-}
-
-function playerFacingCausalChange(value: unknown): value is MoveReviewPlayerFacingCausalChange {
-  return directCausalChange(value) || value === 'missed';
-}
-
-function terminalRelation(
-  value: unknown,
-): value is 'produces_line_consequence' | 'is_root_line_event' | 'instantiates_relation' {
-  return (
-    value === 'produces_line_consequence' ||
-    value === 'is_root_line_event' ||
-    value === 'instantiates_relation'
-  );
-}
-
-function proofStepRole(value: unknown): value is 'root_action' | 'causal_link' | 'terminal_event' {
-  return value === 'root_action' || value === 'causal_link' || value === 'terminal_event';
-}
-
-function chessObjectKind(value: unknown): value is string {
-  return (
-    value === 'move' ||
-    value === 'piece' ||
-    value === 'side' ||
-    value === 'square' ||
-    value === 'file' ||
-    value === 'relation' ||
-    value === 'line' ||
-    value === 'mechanism' ||
-    value === 'consequence'
-  );
-}
-
-function candidateSetType(value: unknown): value is MoveReviewCandidateSetType {
-  return value === 'only_move' || value === 'narrow_choice' || value === 'style_choice';
-}
-
-function standardCauseKind(value: unknown): value is string {
-  return (
-    value === 'missed_tactical_resource' ||
-    value === 'tactical_refutation_of_played' ||
-    value === 'candidate_tactical_liability' ||
-    value === 'recapture_recovery_window' ||
-    value === 'draw_resource' ||
-    value === 'king_forcing' ||
-    value === 'material_swing'
-  );
-}
-
-function standardProofConfidence(value: unknown): boolean {
-  return (
-    value === 'legal_replay_verified' ||
-    value === 'engine_backed' ||
-    value === 'board_derived' ||
-    value === 'mixed'
-  );
-}
-
-function standardSourceSide(value: unknown): boolean {
-  return value === 'reference' || value === 'candidate' || value === 'shared' || value === 'mixed';
-}
-
-function standardComparisonKind(value: unknown): boolean {
-  return (
-    value === 'played_vs_best' ||
-    value === 'best_vs_second' ||
-    value === 'played_vs_alternative' ||
-    value === 'reference_vs_alternative'
-  );
-}
-
 function nonEmptyWireString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length >= 1 ? value : undefined;
 }
@@ -4161,11 +3666,6 @@ function key(value: unknown): Key | undefined {
   return typeof value === 'string' && squarePattern.test(value) ? (value as Key) : undefined;
 }
 
-function fenSideToMove(fen: FEN): 'white' | 'black' | undefined {
-  const activeColor = fen.trim().split(/\s+/)[1];
-  return activeColor === 'w' ? 'white' : activeColor === 'b' ? 'black' : undefined;
-}
-
 function pieceRole(value: unknown): MoveReviewPieceRole | undefined {
   return value === 'pawn' ||
     value === 'knight' ||
@@ -4178,7 +3678,7 @@ function pieceRole(value: unknown): MoveReviewPieceRole | undefined {
 }
 
 function passedPawnResultSubject(value: unknown): string | undefined {
-  return typeof value === 'string' && passedPawnResultSubjectPattern.test(value) ? value : undefined;
+  return nonEmptyWireString(value);
 }
 
 function validUciMoves(value: unknown, minimum: number, maximum = Number.MAX_SAFE_INTEGER): value is Uci[] {
@@ -4222,7 +3722,5 @@ const requestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/;
 const jobIdPattern = /^[A-Za-z0-9_-]{32}$/;
 const workIdPattern = /^work:[0-9]+$/;
 const sha256Pattern = /^[a-f0-9]{64}$/;
-const passedPawnResultSubjectPattern =
-  /^(19:passed-pawn-created5:(white|black)2:[a-h][1-8]|20:passed-pawn-advanced5:(white|black)2:[a-h][1-8]2:[a-h][1-8]1:[1-8]|21:passed-status-created5:(white|black)2:[a-h][1-8]2:[a-h][1-8]1:[1-8]|20:passed-pawn-promoted5:(white|black)2:[a-h][1-8]2:[a-h][1-8]):relations:\[(established|removed):pawn_passage:[0-9a-f]{64}(,(established|removed):pawn_passage:[0-9a-f]{64})*\]:derived:\[\]$/;
 const squarePattern = /^[a-h][1-8]$/;
 const uciPattern = /^[a-h][1-8][a-h][1-8][qrbn]?$/;

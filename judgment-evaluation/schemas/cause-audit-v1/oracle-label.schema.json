@@ -70,14 +70,8 @@
     "causeKind": {
       "enum": [
         "MissedTacticalResource",
-        "TacticalRefutationOfPlayed",
-        "CandidateTacticalLiability",
-        "RecaptureRecoveryWindow",
         "WrongMoveOrder",
-        "PassedPawnResult",
-        "DrawResource",
-        "KingForcing",
-        "MaterialSwing"
+        "PassedPawnProgress"
       ]
     }
   }

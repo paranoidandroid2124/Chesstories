@@ -1,7 +1,6 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Pawn
-import chess.format.Fen
 import lila.chessjudgment.analysis.evaluation.EvalFactNormalizer
 import lila.chessjudgment.analysis.line.LineFactNormalizer
 import lila.chessjudgment.analysis.material.MaterialValue
@@ -367,34 +366,6 @@ object TransitionEdgeAssembler:
     TransitionEdgeAssembly(edge, List(TransitionFactNormalizer.fromMoveTransition(edge, replay)), replay)
 
 object NodeLineTransitionAssembler:
-  private final case class LineRootTransitionAssembly(
-      line: LineNodeRef,
-      destination: PositionNodeAssembly,
-      transition: TransitionEdgeAssembly
-  )
-
-  private final case class AdmittedBranchPredecessor(
-      replay: CanonicalLineReplay,
-      history: CanonicalPositionHistory
-  )
-
-  private final case class BranchReplyRootOccurrence(
-      moveUci: String,
-      fenBefore: String,
-      fenAfter: String,
-      ply: Int
-  ):
-    def stableKey: String =
-      List(ply.toString, moveUci, fenBefore, fenAfter).mkString("|")
-
-  private object BranchReplyRootOccurrence:
-    def from(input: AdmittedMoveReviewInput, branch: AdmittedReviewBranchReply): BranchReplyRootOccurrence =
-      BranchReplyRootOccurrence(
-        moveUci = EvidenceRef.normalizeMove(branch.probedMoveUci),
-        fenBefore = PrincipalVariationEvidence.normalizeFen(input.beforeFen),
-        fenAfter = PrincipalVariationEvidence.normalizeFen(branch.branchFen),
-        ply = branch.branchPly
-      )
 
   def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
     MoveReviewInputAdmission.admit(raw).flatMap(assemble)
@@ -492,89 +463,7 @@ object NodeLineTransitionAssembler:
               }
             case _ => None
         }
-      val admittedBranchReplies =
-        input.branchReplies.flatMap { branch =>
-          admittedBranchPredecessor(input, branch)
-            .map(predecessor => branch -> predecessor)
-        }
-      val branchReplyOccurrences = admittedBranchReplies
-        .map { case (branch, _) => BranchReplyRootOccurrence.from(input, branch) }
-        .distinct
-        .sortBy(_.stableKey)
-      val conflictingBranchReplyMoves = branchReplyOccurrences
-        .groupBy(_.moveUci)
-        .collect { case (move, occurrences) if occurrences.size > 1 => move }
-        .toList
-        .sorted
-      require(
-        conflictingBranchReplyMoves.isEmpty,
-        s"one branch-reply root move cannot own multiple transition occurrences: ${conflictingBranchReplyMoves.mkString(",")}"
-      )
-      val branchReplyTransitionReplays = branchReplyOccurrences.flatMap { occurrence =>
-        val legalMoves = beforeAnalysis.actualLegalMoves.filter(move =>
-          EvidenceRef.sameMove(move.toUci.uci, occurrence.moveUci) &&
-            PrincipalVariationEvidence.sameBoardState(
-              Fen.write(move.after).value,
-              occurrence.fenAfter
-            )
-        )
-        legalMoves match
-          case move :: Nil =>
-            val step = LineReplayStep(
-              ply = occurrence.ply,
-              moveUci = occurrence.moveUci,
-              fenBefore = occurrence.fenBefore,
-              fenAfter = occurrence.fenAfter
-            )
-            CanonicalLineReplay
-              .fromAnalyzedLegalMove(step, beforeAnalysis, move)
-              .map(occurrence -> _)
-          case _ => None
-      }.toMap
-      require(
-        branchReplyTransitionReplays.size == branchReplyOccurrences.size,
-        "every branch-reply transition occurrence must have exactly one root-owned legal replay"
-      )
-      val branchReplyPositionAssemblies = branchReplyOccurrences.map { occurrence =>
-        val replay = branchReplyTransitionReplays(occurrence)
-        val step = replay.replaySteps.head
-        val analysis = replay.analysisAfter(step).getOrElse(
-          throw IllegalArgumentException("a branch-reply transition replay must own its destination analysis")
-        )
-        occurrence -> PositionNodeAssembler.fromAnalysis(
-          role = PositionNodeRole.AfterBranchReply,
-          fen = occurrence.fenAfter,
-          ply = occurrence.ply,
-          analysis = analysis,
-          allocator = allocator,
-          scope = EvidenceScope.BranchReplyLine
-        )
-      }
-      val branchReplyPositionsByOccurrence = branchReplyPositionAssemblies.toMap
-      val afterBranchReplies = admittedBranchReplies.map { case (branch, predecessor) =>
-        val occurrence = BranchReplyRootOccurrence.from(input, branch)
-        (branch, predecessor) -> branchReplyPositionsByOccurrence(occurrence)
-      }
-      val branchReplyLineAssemblies =
-        afterBranchReplies.flatMap { case ((branch, predecessor), position) =>
-          val owner = BranchReplyLineOccurrenceOwner(
-            probedMoveUci = EvidenceRef.normalizeMove(branch.probedMoveUci),
-            branchPosition = position.node.ref
-          )
-          branch.lines.flatMap(line =>
-            CandidateLineAssembler
-              .fromLine(
-                line,
-                position.node.ref,
-                position.analysis,
-                predecessor.history,
-                allocator
-              )
-              .map(owner -> _)
-          )
-        }
-      val branchReplyLines = branchReplyLineAssemblies.map(_._2)
-      val lines = rootLines ++ branchReplyLines
+      val lines = rootLines
       val playedTransition = admittedTransition(
         playedLine.replay,
         input.beforeFen,
@@ -616,64 +505,10 @@ object NodeLineTransitionAssembler:
             }
           }
         }
-      val branchReplyTransitions =
-        branchReplyPositionAssemblies.map { case (occurrence, position) =>
-          TransitionEdgeAssembler.fromMove(
-            role = TransitionEdgeRole.BranchReply,
-            from = before.node,
-            moveUci = occurrence.moveUci,
-            to = position.node,
-            replay = branchReplyTransitionReplays(occurrence),
-            allocator = allocator
-          )
-        }
-      val branchReplyContinuationRoots = branchReplyLineAssemblies.map { case (owner, lineAssembly) =>
-        val start = branchReplyPositionAssemblies.collect {
-          case (_, position) if position.node.ref == owner.branchPosition => position
-        } match
-          case position :: Nil => position
-          case _ =>
-            throw IllegalArgumentException(
-              s"branch-reply line '${lineAssembly.node.ref.id}' has no unique registered start occurrence"
-            )
-        val rootStep = lineAssembly.replay.replaySteps.headOption.getOrElse(
-          throw IllegalArgumentException(s"branch-reply line '${lineAssembly.node.ref.id}' has no root step")
-        )
-        val rootReplay = lineAssembly.replay.subset(List(rootStep)).getOrElse(
-          throw IllegalArgumentException(
-            s"branch-reply line '${lineAssembly.node.ref.id}' root step is not an admitted replay subset"
-          )
-        )
-        val afterRootAnalysis = lineAssembly.replay.analysisAfter(rootStep).getOrElse(
-          throw IllegalArgumentException(
-            s"branch-reply line '${lineAssembly.node.ref.id}' root step has no destination analysis"
-          )
-        )
-        val destination = PositionNodeAssembler.fromAnalysis(
-          role = PositionNodeRole.AfterBranchReplyContinuation,
-          fen = rootStep.fenAfter,
-          ply = rootStep.ply,
-          analysis = afterRootAnalysis,
-          allocator = allocator,
-          scope = EvidenceScope.BranchReplyLine,
-          lineRootOwner = Some(lineAssembly.node.ref)
-        )
-        val transition = TransitionEdgeAssembler.fromMove(
-          role = TransitionEdgeRole.BranchReplyContinuation,
-          from = start.node,
-          moveUci = rootStep.moveUci,
-          to = destination.node,
-          replay = rootReplay,
-          allocator = allocator
-        )
-        LineRootTransitionAssembly(lineAssembly.node.ref, destination, transition)
-      }
       val context =
         (List(before, afterPlayed) ++
           afterReference.toList.map(_._2._1) ++
-          afterAlternatives.map(_._2) ++
-          branchReplyPositionAssemblies.map(_._2) ++
-          branchReplyContinuationRoots.map(_.destination))
+          afterAlternatives.map(_._2))
           .foldLeft(JudgmentAssemblyContext.empty(input)) { (ctx, assembly) =>
             ctx.withPosition(assembly.node, assembly.analysis).withEvidence(assembly.evidence)
           }
@@ -681,16 +516,10 @@ object NodeLineTransitionAssembler:
         lines.foldLeft(context) { (ctx, assembly) =>
           ctx.withLine(assembly.node, assembly.replay).withEvidence(assembly.evidence)
         }
-      val withBranchReplyLineOwners =
-        branchReplyLineAssemblies.foldLeft(withLines) { case (ctx, (owner, assembly)) =>
-          ctx.withBranchReplyLineOwner(assembly.node.ref, owner)
-        }
       val withTransitions =
         (playedTransition.toList ++
           referenceTransition.toList ++
-          alternativeTransitions ++
-          branchReplyTransitions ++
-          branchReplyContinuationRoots.map(_.transition)).foldLeft(withBranchReplyLineOwners) { (ctx, assembly) =>
+          alternativeTransitions).foldLeft(withLines) { (ctx, assembly) =>
           ctx.withTransition(assembly.edge, assembly.replay).withEvidence(assembly.evidence)
         }
       val rootLineBindings =
@@ -702,8 +531,7 @@ object NodeLineTransitionAssembler:
           ) ++
           alternativeTransitions.map(transition =>
             uniqueLineForTransition(rootLines, transition.edge) -> transition.edge
-          ) ++
-          branchReplyContinuationRoots.map(root => root.line -> root.transition.edge)
+          )
       rootLineBindings.foldLeft(withTransitions) { case (ctx, (line, edge)) =>
         ctx.withLineRootOccurrence(line, edge)
       }
@@ -722,62 +550,6 @@ object NodeLineTransitionAssembler:
         throw IllegalArgumentException(
           s"transition '${edge.evidence.id}' has no unique candidate-line root owner"
         )
-
-  private def admittedBranchPredecessor(
-      input: AdmittedMoveReviewInput,
-      branch: AdmittedReviewBranchReply
-  ): Option[AdmittedBranchPredecessor] =
-    val candidates = branch.lines.flatMap(_.predecessorReplay).flatMap { replay =>
-      for
-        first <- replay.replaySteps.headOption
-        last <- replay.replaySteps.lastOption
-        if replay.replaySteps.size == 1 && replay.legalSteps.size == 1
-        if branch.branchPly == input.beforePly + 1
-        if EvidenceRef.sameMove(first.moveUci, branch.probedMoveUci)
-        if PrincipalVariationEvidence.sameBoardState(first.fenBefore, input.beforeFen)
-        if last.ply == branch.branchPly
-        if PrincipalVariationEvidence.sameBoardState(last.fenAfter, branch.branchFen)
-        history <- input.positionHistory.extendAdmitted(replay.legalSteps).toOption
-        if history.currentPly == branch.branchPly
-        if PrincipalVariationEvidence.sameBoardState(history.currentFen, branch.branchFen)
-        transition <- admittedTransition(replay, input.beforeFen, branch.probedMoveUci, branch.branchFen)
-        transitionStep <- transition.replaySteps.headOption
-        if transitionStep.ply == input.beforePly + 1
-      yield AdmittedBranchPredecessor(replay, history)
-    }
-    uniqueSemanticPredecessor(candidates.map(_.replay))
-      .flatMap(selected => candidates.find(candidate => candidate.replay eq selected))
-
-  private[assembly] def uniqueSemanticPredecessor(
-      candidates: List[CanonicalLineReplay]
-  ): Option[CanonicalLineReplay] =
-    val keyed = candidates.flatMap(replay => replaySemanticKey(replay).map(_ -> replay))
-    keyed.groupMap(_._1)(_._2).values.toList match
-      case equivalent :: Nil => equivalent.sortBy(candidateOrderKey).headOption
-      case _                 => None
-
-  private def replaySemanticKey(
-      replay: CanonicalLineReplay
-  ): Option[List[(Int, String, String, String)]] =
-    val steps = replay.replaySteps.flatMap { step =>
-      for
-        before <- PrincipalVariationEvidence.semanticBoardStateFen(step.fenBefore)
-        after <- PrincipalVariationEvidence.semanticBoardStateFen(step.fenAfter)
-      yield (step.ply, EvidenceRef.normalizeMove(step.moveUci), before, after)
-    }
-    Option.when(steps.size == replay.replaySteps.size)(steps)
-
-  private def candidateOrderKey(replay: CanonicalLineReplay): String =
-    replay.replaySteps
-      .map(step =>
-        List(
-          step.ply.toString,
-          EvidenceRef.normalizeMove(step.moveUci),
-          PrincipalVariationEvidence.normalizeFen(step.fenBefore),
-          PrincipalVariationEvidence.normalizeFen(step.fenAfter)
-        ).mkString("\u0001")
-      )
-      .mkString("\u0000")
 
   private def admittedTransition(
       replay: CanonicalLineReplay,

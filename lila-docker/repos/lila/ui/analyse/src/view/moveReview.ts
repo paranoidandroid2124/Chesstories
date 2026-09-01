@@ -230,13 +230,11 @@ function renderReviewBody(
   const review = played.review;
   const core = review.kind === 'move-verdict' ? review.core : undefined;
   const primary =
-    review.kind === 'move-verdict' && review.core.reasonRefs.primary
-      ? review.reasons.find(reason => reason.id === review.core.reasonRefs.primary)
+    review.kind === 'move-verdict' && review.core.reasonRefs.primary[0]
+      ? review.reasons.find(reason => reason.id === review.core.reasonRefs.primary[0])
       : undefined;
   const verdictLabel = core
-    ? core.kind === 'best-choice'
-      ? props.copy.candidateSetLabels[core.bestChoice.candidateSet]
-      : moveReviewVerdictCodeLabel(core.verdictCode, props.copy)
+    ? moveReviewVerdictCodeLabel(core.verdictCode, props.copy)
     : review.kind === 'single-candidate-insight'
       ? props.copy.lineInsight
       : review.kind === 'forced-single-move'
@@ -387,7 +385,7 @@ function renderCandidateReview(candidate: MoveReviewCandidate, props: MoveReview
   if (review.kind === 'single-candidate-insight') return renderInsight(candidate, review.proof, props);
   const reasonById = new Map(review.reasons.map(reason => [reason.id, reason]));
   const orderedRefs = [
-    ...(review.core.reasonRefs.primary ? [review.core.reasonRefs.primary] : []),
+    ...review.core.reasonRefs.primary,
     ...review.core.reasonRefs.routes,
     ...review.core.reasonRefs.support,
   ];

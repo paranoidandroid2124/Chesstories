@@ -1,0 +1,238 @@
+{
+  "schema_version": "1.0.0",
+  "authority": "ci_only_reference_provenance_not_board_truth",
+  "runtime_consumed": false,
+  "cache_dependency": false,
+  "contracts": [
+    {
+      "contract_kind": "UniqueCheckReplyDefenderDisplacementBeforeCapture",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler.scala",
+        "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence"
+      },
+      "public_consumer": {
+        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+        "serializer_symbol": "uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson",
+        "field": "unique_check_reply_defender_displacement_before_capture_proof",
+        "schema_channel_definition": "uniqueCheckReplyDefenderDisplacementBeforeCaptureCausalChannel",
+        "schema_proof_definition": "uniqueCheckReplyDefenderDisplacementBeforeCaptureProof"
+      },
+      "browser_consumer": {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+        "projection_symbol": "projectUniqueCheckReplyDefenderDisplacementBeforeCapture",
+        "discriminant": "unique-check-reply-defender-displacement-before-capture"
+      },
+      "cause": {
+        "scala_symbol": "WrongMoveOrder",
+        "wire_kind": "wrong_move_order",
+        "schema_facet_definition": "wrongMoveOrderCausalFacet"
+      },
+      "coverage_status": "exact_ordered_skeleton",
+      "references": [
+        {
+          "coverage": "exact_ordered_skeleton",
+          "external_url": "https://www.chess.com/terms/deflection-chess"
+        },
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
+            "pdf_page": 178
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "forced_win",
+        "general_deflection",
+        "tempo"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/UniqueCheckReplyDefenderDisplacementBeforeCaptureTest.scala",
+        "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureTest"
+      }
+    },
+    {
+      "contract_kind": "SoleRecapturerRemovalBeforeTargetCapture",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/SoleRecapturerRemovalBeforeTargetCaptureAssembler.scala",
+        "symbol": "SoleRecapturerRemovalBeforeTargetCaptureAssembler"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "SoleRecapturerRemovalBeforeTargetCaptureEvidence"
+      },
+      "public_consumer": {
+        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+        "serializer_symbol": "soleRecapturerRemovalBeforeTargetCaptureProofJson",
+        "field": "sole_recapturer_removal_before_target_capture_proof",
+        "schema_channel_definition": "soleRecapturerRemovalBeforeTargetCaptureCausalChannel",
+        "schema_proof_definition": "soleRecapturerRemovalBeforeTargetCaptureProof"
+      },
+      "browser_consumer": {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+        "projection_symbol": "projectSoleRecapturerRemovalBeforeTargetCapture",
+        "discriminant": "sole-recapturer-removal-before-target-capture"
+      },
+      "cause": {
+        "scala_symbol": "WrongMoveOrder",
+        "wire_kind": "wrong_move_order",
+        "schema_facet_definition": "wrongMoveOrderCausalFacet"
+      },
+      "coverage_status": "exact_ordered_skeleton",
+      "references": [
+        {
+          "coverage": "exact_ordered_skeleton",
+          "external_url": "https://www.chess.com/terms/removing-the-defender-chess"
+        },
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
+            "pdf_page": 154
+          }
+        },
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
+            "pdf_page": 271
+          }
+        },
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 131
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "general_defense_collapse",
+        "overload"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/SoleRecapturerRemovalBeforeTargetCaptureTest.scala",
+        "symbol": "SoleRecapturerRemovalBeforeTargetCaptureTest"
+      }
+    },
+    {
+      "contract_kind": "VacatedGateEnablesUnrecapturableSliderCapture",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/VacatedGateEnablesUnrecapturableSliderCaptureAssembler.scala",
+        "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureAssembler"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureEvidence"
+      },
+      "public_consumer": {
+        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+        "serializer_symbol": "vacatedGateEnablesUnrecapturableSliderCaptureProofJson",
+        "field": "vacated_gate_enables_unrecapturable_slider_capture_proof",
+        "schema_channel_definition": "vacatedGateEnablesUnrecapturableSliderCaptureCausalChannel",
+        "schema_proof_definition": "vacatedGateEnablesUnrecapturableSliderCaptureProof"
+      },
+      "browser_consumer": {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+        "projection_symbol": "projectVacatedGateEnablesUnrecapturableSliderCapture",
+        "discriminant": "vacated-gate-enables-unrecapturable-slider-capture"
+      },
+      "cause": {
+        "scala_symbol": "MissedTacticalResource",
+        "wire_kind": "missed_tactical_resource",
+        "schema_facet_definition": "missedTacticalResourceCausalFacet"
+      },
+      "coverage_status": "motif_only",
+      "references": [
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
+            "pdf_page": 146
+          }
+        },
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
+            "pdf_page": 156
+          }
+        },
+        {
+          "coverage": "motif_only",
+          "locator": {
+            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
+            "pdf_page": 271
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "general_preparation",
+        "maneuver",
+        "plan"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/VacatedGateEnablesUnrecapturableSliderCaptureTest.scala",
+        "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureTest"
+      }
+    },
+    {
+      "contract_kind": "PassedPawnProgressRealizedAfterOnlyLegalReply",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.scala",
+        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence"
+      },
+      "public_consumer": {
+        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+        "serializer_symbol": "passedPawnProgressRealizedAfterOnlyLegalReplyProofJson",
+        "field": "passed_pawn_progress_realized_after_only_legal_reply_proof",
+        "schema_channel_definition": "passedPawnProgressChannel",
+        "schema_proof_definition": "passedPawnProgressRealizedAfterOnlyLegalReplyProof"
+      },
+      "browser_consumer": {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+        "projection_symbol": "projectPassedPawnProgressRealizedAfterOnlyLegalReply",
+        "discriminant": "passed-pawn-progress-realized-after-only-legal-reply"
+      },
+      "cause": {
+        "scala_symbol": "PassedPawnProgress",
+        "wire_kind": "passed_pawn_progress",
+        "schema_facet_definition": "passedPawnProgressFacet"
+      },
+      "coverage_status": "exact_route_component",
+      "references": [
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 507
+          }
+        },
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 508
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "forced_win",
+        "inevitable_promotion",
+        "plan"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest.scala",
+        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest"
+      }
+    }
+  ]
+}

@@ -147,9 +147,3 @@ enum CandidateLineEvaluation:
       JudgmentThresholds.engineBackedByDepth(line.depth, line.mate)
     case ExactAutomaticTerminal(_, _) =>
       true
-
-final case class RankedCandidateLineEvaluation(
-    rank: Int,
-    rootMoveUci: String,
-    evaluation: CandidateLineEvaluation
-)

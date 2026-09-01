@@ -1,32 +1,10 @@
 package lila.chessjudgment.analysis.assembly
 
-import lila.chessjudgment.model.line.{
-  AutomaticTerminal,
-  CandidateLineEvaluation,
-  PrincipalVariationEvidence
-}
 import lila.chessjudgment.model.{ PassedPawnResultActorOccurrence, PassedPawnResultEventIdentity, PassedPawnResultEventOccurrence }
 import lila.chessjudgment.model.PassedPawnResultKind
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.judgment.{
-  AdmittedReviewLine,
-  AdmittedMoveReviewInput
-}
 
 object PassedPawnResultEventAssembler:
-
-  final private case class ObservedBranchEpisode(
-      line: LineNodeRef,
-      continuation: List[LineReplayStep],
-      episode: PassedPawnResultEpisode,
-      trace: CausalLineTrace
-  )
-
-  final private case class ObservedBranchLine(
-      line: LineNodeRef,
-      continuation: List[LineReplayStep],
-      trace: CausalLineTrace
-  )
 
   final private case class PassedPawnResultEventDraft(
       suffix: String,
@@ -37,37 +15,105 @@ object PassedPawnResultEventAssembler:
       parents: List[EvidenceRef]
   )
 
-  def fromAssembly(
-      input: AdmittedMoveReviewInput,
+  private[assembly] final case class PassedPawnChangedOccurrence(
+      line: LineNodeRef,
+      seed: PassedPawnResultTransitionSeed,
+      replayOccurrenceKey: String
+  ):
+    require(
+      seed.observation.lineOccurrenceRecord.ref.line.contains(line),
+      "a passed-pawn changed occurrence needs its exact line owner"
+    )
+    require(replayOccurrenceKey.nonEmpty, "a passed-pawn changed occurrence needs its replay owner")
+
+    def lineOwner: EvidenceRecord = seed.observation.lineOccurrenceRecord
+    def step: LineReplayStep = seed.step
+    def resultKind: PassedPawnResultKind = seed.resultKind
+
+    def stableKey: String =
+      List(
+        BoundedCausalIdentity.lineKey(line),
+        BoundedCausalIdentity.evidenceRecordKey(lineOwner),
+        seed.stableKey,
+        replayOccurrenceKey
+      ).mkString("|")
+
+  private[assembly] final case class PassedPawnRootDemand(
+      rootLine: LineNodeRef,
+      rootTransition: MoveTransitionEdge,
+      rootLineOwner: EvidenceRecord,
+      rootLinePayload: LineFactEvidence,
+      mainReplay: CanonicalLineReplay,
+      structuralOwner: EvidenceRecord,
+      structural: StructuralDeltaEvidence,
+      changedOccurrences: List[PassedPawnChangedOccurrence]
+  ):
+    require(rootLineOwner.ref.line.contains(rootLine) && rootLinePayload.line == rootLine)
+    require(structuralOwner.ref.line.contains(rootLine) && structural.line.contains(rootLine))
+    require(rootTransition.matches(structuralOwner))
+    require(changedOccurrences.nonEmpty, "a passed-pawn root demand needs an exact changed occurrence")
+    require(
+      changedOccurrences.map(_.stableKey).distinct.size == changedOccurrences.size,
+      "a passed-pawn root demand cannot duplicate a changed occurrence"
+    )
+
+    def stableKey: String =
+      List(
+        BoundedCausalIdentity.lineKey(rootLine),
+        BoundedCausalIdentity.evidenceRecordKey(rootLineOwner),
+        BoundedCausalIdentity.evidenceRecordKey(structuralOwner),
+        rootTransition.evidence.id,
+        mainReplay.replaySteps.map(BoundedCausalIdentity.stepKey).mkString("[", ",", "]"),
+        changedOccurrences.map(_.stableKey).sorted.mkString("[", ",", "]")
+      ).mkString("|")
+
+  /** Exact structural changed-dependency dispatch for the passed-pawn family.
+    * A root is retained when its admitted main replay owns a
+    * PassedPawnProgress consequence together with its direct transition
+    * proof. No event, episode, or other L1 family is materialized by this
+    * predispatch.
+    */
+  private[assembly] final case class PassedPawnResultDemand(
+      input: ExactPlayedVsBestCausalInput,
+      roots: List[PassedPawnRootDemand]
+  ):
+    require(roots.nonEmpty, "a passed-pawn result demand needs a changed root occurrence")
+    val rootLines: Set[LineNodeRef] = roots.map(_.rootLine).toSet
+    require(
+      roots.map(_.rootLine) == List(input.comparison.candidateLine),
+      "the current passed-pawn consumer may retain only the exact played endpoint"
+    )
+    require(rootLines.size == roots.size, "a passed-pawn result demand cannot duplicate a root")
+
+    val stableKey: String =
+      BoundedCausalIdentity.digest(
+        List(
+          "passed-pawn-result-demand:v3",
+          BoundedCausalIdentity.evidenceRecordKey(input.demandSource),
+          CandidateComparisonSemanticKey.from(input.comparison).stableKey
+        ) ++ roots.map(_.stableKey)
+      )
+
+  private[assembly] def fromDemand(
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      demandingComparison: EvidenceRecord
+      demand: PassedPawnResultDemand
   ): List[EvidenceRecord] =
-    val demandedLines = demandedRootLines(context, demandingComparison)
-    val demandIdentity = exactPlayedVsBestDemand(context, demandingComparison)
-      .map { case (record, fact) =>
-        BoundedCausalIdentity.digest(List(
-          "passed-pawn-result-event-demand:v1",
-          BoundedCausalIdentity.evidenceRecordKey(record),
-          CandidateComparisonSemanticKey.from(fact).stableKey
-        ))
-      }
-      .getOrElse("")
-    val graph = context.evidenceGraph
-    context.lines
-      .filter(line => demandedLines(line.ref))
-      .flatMap { candidateLine =>
-        val rootLine = candidateLine.ref
+    val exactDemand = demand.input
+    val demandingComparison = exactDemand.demandSource
+    val demandIdentity = demand.stableKey
+    demand.roots.flatMap { rootDemand =>
+        val rootLine = rootDemand.rootLine
+        val transition = rootDemand.rootTransition
+        val lineRecord = rootDemand.rootLineOwner
+        val linePayload = rootDemand.rootLinePayload
+        val structuralRecord = rootDemand.structuralOwner
+        val structural = rootDemand.structural
         val drafts = for
-          transition <- uniqueRootTransition(context, rootLine).toList
-          lineRecordAndPayload <- graph.uniqueProofEligibleLineFactRecordFor(rootLine).toList
-          structuralRecordAndPayload <- uniqueStructuralRecord(graph, rootLine).toList
-          (lineRecord, linePayload) = lineRecordAndPayload
-          (structuralRecord, structural) = structuralRecordAndPayload
           lineTrace <- PassedPawnResultEventProof.causalTrace(
             lineRecord,
             linePayload,
-            linePayload.certifiedReplay
+            Some(rootDemand.mainReplay)
           ).toList
           rootReplayStep <- linePayload.lineReplaySteps.headOption.toList
           rootStructuralOccurrence <- structural.replayStructuralOccurrence.toList
@@ -77,60 +123,58 @@ object PassedPawnResultEventAssembler:
           )
           rootCanonicalTransition <- lineTrace.transition(rootReplayStep).toList
           rootMovement = rootCanonicalTransition.relationDelta.rootMove
-          observedBranchLines = observedBranchLinesFor(
-            input,
-            context,
-            rootLine,
-            lineRecord,
-            linePayload,
-            structural
+          mainChangedOccurrences = changedOccurrencesOwnedBy(
+            rootDemand.changedOccurrences,
+            line = rootLine,
+            lineOwner = lineRecord,
+            replay = rootDemand.mainReplay,
+            admittedSteps = rootDemand.mainReplay.replaySteps.toSet,
+            trace = lineTrace
           )
-          observedBranchKinds = observedBranchLines.flatMap(branch =>
-            PassedPawnResultEventProof.eventCandidateKinds(branch.trace)
+          rootKindCandidates = PassedPawnResultEventProof.eventCandidateKinds(
+            lineTrace,
+            mainChangedOccurrences.map(_.seed)
           )
-          rootKindCandidates = (
-            PassedPawnResultEventProof.eventCandidateKinds(lineTrace) ++ observedBranchKinds
-          ).distinct
           rootKind <- rootKindCandidates
           directFunctionDurable = linePayload.rootActorSurvivesLine.contains(true)
-          structuralBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(structuralRecord.ref))
-          supportedConsequences = structural.consequences
-            .filter(_.establishesState)
-              .flatMap(
-                PassedPawnResultEventProof.candidateConsequenceForKind(
-                  rootKind,
-                  _,
+          rootResultSeeds = mainChangedOccurrences
+            .filter(occurrence =>
+              occurrence.step == rootReplayStep &&
+                occurrence.resultKind == rootKind
+            )
+            .map(_.seed)
+          _ = require(
+            rootResultSeeds.forall(seed =>
+              seed.observation.structuralOccurrence == rootStructuralOccurrence &&
+                structural.consequences.count(_ == seed.consequence) == 1
+            ),
+            "a root result seed must retain the exact structural-delta occurrence and consequence"
+          )
+          rootResultProofs = rootResultSeeds
+            .filter(seed =>
+              val durabilityProven = directFunctionDurable || !TransitionConsequenceKind
+                .requiresRootActorSurvival(seed.consequence.kind)
+              durabilityProven
+            )
+            .map(seed =>
+              PassedPawnResultTransitionProof
+                .certify(
+                  seed.resultKind,
                   lineRecord.ref,
                   rootStructuralOccurrence,
                   structural.transition,
+                  seed.consequence,
                   rootMovement
                 )
-              )
-              .filter(consequence =>
-                val durabilityProven = directFunctionDurable || !TransitionConsequenceKind
-                  .requiresRootActorSurvival(consequence.kind)
-                durabilityProven &&
-                PassedPawnResultEventProof.consequenceProvenForRootMove(
-                  rootLine,
-                  rootLine.rootMove,
-                  consequence,
-                  PassedPawnResultEventProof.structuralConsequenceEstablishesResult(
-                    rootKind,
-                    lineRecord.ref,
-                    rootStructuralOccurrence,
-                    structural,
-                    consequence
-                  ),
-                  structuralBindings
+                .getOrElse(
+                  throw new IllegalArgumentException(
+                    "a root result seed must bind the graph-owned structural transition"
+                  )
                 )
-              )
-          rootResultProofs = PassedPawnResultEventProof.resultProofs(
-            rootKind,
-            lineRecord.ref,
-            rootStructuralOccurrence,
-            structural.transition,
-            supportedConsequences,
-            rootMovement
+            )
+          _ = require(
+            rootResultProofs.map(_.stableKey).distinct.size == rootResultProofs.size,
+            "one exact root result transition proof may be consumed only once"
           )
           establishedConsequences = rootResultProofs.map(_.consequence)
           rootIdentity = PassedPawnResultEventIdentityBuilder.from(
@@ -139,61 +183,35 @@ object PassedPawnResultEventAssembler:
             kind = rootKind
           )
           mainLineEpisode = PassedPawnResultEpisodeBuilder.fromLine(
-            rootLine = rootLine,
             rootTransition = structural.transition,
-            rootLineOwner = lineRecord.ref,
+            rootLineRecord = lineRecord,
             rootStructuralOccurrence = rootStructuralOccurrence,
             rootIdentity = rootIdentity,
             rootConsequences = establishedConsequences,
             line = linePayload,
-            trace = lineTrace
+            trace = lineTrace,
+            resultSeeds = mainChangedOccurrences
+              .filter(_.resultKind == rootKind)
+              .map(_.seed)
           )
-          observedBranchEpisodes = observedBranchEpisodesFor(
-            rootLine = rootLine,
-            transition = structural.transition,
-            root = mainLineEpisode.root,
-            branches = observedBranchLines
-          )
-          observedBranchEpisode <-
-            Option.empty[ObservedBranchEpisode] :: observedBranchEpisodes.map(Some(_))
-          initialEpisode = observedBranchEpisode.map(_.episode).getOrElse(mainLineEpisode)
-          episode = initialEpisode
-          if episode.rootEnablesContinuation && episode.resultRoutes.nonEmpty
-        yield
-          val provisionalPayload = PassedPawnResultEventEvidence(
+          episode = mainLineEpisode
+          if episode.causalEpisodeProven && episode.resultRoutes.nonEmpty
+          payload = PassedPawnResultEventEvidence(
             rootTransition = structural.transition,
             causalEpisode = episode,
             directResultProofs = rootResultProofs,
-            branchWitnesses = Nil,
-            continuationSourceLine = observedBranchEpisode.map(_.line),
             canonicalRootTransitionProof = structural.canonicalTransitionProof
           )
-          val branchWitnesses = Option
-            .when(
-              episode.rootEnablesContinuation && provisionalPayload.observedResultRoutes.nonEmpty
-            )(provisionalPayload)
-            .toList
-            .flatMap(event =>
-              branchWitnessesFor(
-                input,
-                context,
-                rootLine,
-                lineRecord,
-                linePayload,
-                structural.transition,
-                event
-              )
-            )
-          val payload = provisionalPayload.copy(branchWitnesses = branchWitnesses)
-          val branchOwnerBindings = branchWitnesses.flatMap(witness =>
-            graph.uniqueProofEligibleLineFactRecordFor(witness.line).map(record => witness.line -> record._1.ref.id)
-          )
-          val occurrenceKey = allocator.key(
-            episodeOccurrenceKey(
-              payload,
-              observedBranchEpisode.map(_.line),
-              branchOwnerBindings
-            )
+        yield
+          val occurrenceKey = allocator.key(episodeOccurrenceKey(payload))
+          val parents = List(
+            structuralRecord.ref,
+            transition.evidence,
+            demandingComparison.ref
+          ) ++ payload.lineOccurrenceOwners
+          require(
+            parents.map(_.id).distinct.size == parents.size,
+            "a passed-pawn result event cannot hide duplicate parent owners"
           )
           PassedPawnResultEventDraft(
             suffix =
@@ -202,20 +220,7 @@ object PassedPawnResultEventAssembler:
             line = rootLine,
             scope = transition.role.scope,
             payload = payload,
-            parents = (
-              List(
-                structuralRecord.ref,
-                lineRecord.ref,
-                transition.evidence,
-                demandingComparison.ref
-              ) ++
-                observedBranchEpisode.toList.flatMap(observed =>
-                  graph.uniqueProofEligibleLineFactRecordFor(observed.line).map(_._1.ref)
-                ) ++
-                branchWitnesses.flatMap(witness =>
-                  graph.uniqueProofEligibleLineFactRecordFor(witness.line).map(_._1.ref)
-                )
-            ).distinctBy(_.id)
+            parents = parents
           )
         uniqueDraftsById(
           drafts
@@ -240,40 +245,114 @@ object PassedPawnResultEventAssembler:
         )
       }
 
-  private[assembly] def demandedRootLines(
+  private[assembly] def changedDependencyDemand(
       context: JudgmentAssemblyContext,
-      demandingComparison: EvidenceRecord
-  ): Set[LineNodeRef] =
-    exactPlayedVsBestDemand(context, demandingComparison)
-      .map { case (_, fact) => Set(fact.referenceLine, fact.candidateLine) }
-      .getOrElse(Set.empty)
+      exact: ExactPlayedVsBestCausalInput
+  ): Option[PassedPawnResultDemand] =
+    playedRootDemand(context, exact).map(root => PassedPawnResultDemand(exact, List(root)))
 
-  private def exactPlayedVsBestDemand(
+  private def playedRootDemand(
       context: JudgmentAssemblyContext,
-      demandingComparison: EvidenceRecord
-  ): Option[(EvidenceRecord, CandidateComparisonFact)] =
-    demandingComparison match
-      case record @ EvidenceRecord(ref, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.PlayedVsBest &&
-            fact.referenceLine.role == LineNodeRole.BestReference &&
-            fact.candidateLine.role == LineNodeRole.Played &&
-            fact.hasDistinctRootMoves &&
-            ref.producer == EvidenceProducer.RelativeMoveProducer &&
-            ref.layer == EvidenceLayer.CandidateComparison &&
-            ref.line.contains(fact.candidateLine) &&
-            ref.scope == EvidenceScope.Counterfactual &&
-            context.root.contains(ref.position) &&
-            context.lines.exists(_.ref == fact.referenceLine) &&
-            context.lines.exists(_.ref == fact.candidateLine) &&
-            context.evidenceGraph.record(ref).contains(record) &&
-            context.evidenceGraph.proofEligible(record) =>
-        Some(record -> fact)
-      case _ => None
+      exact: ExactPlayedVsBestCausalInput
+  ): Option[PassedPawnRootDemand] =
+    val rootLine = exact.comparison.candidateLine
+    for
+      rootTransition <- uniqueRootTransition(context, rootLine)
+      linePayload <- exact.playedSource.payload match
+        case payload: LineFactEvidence if payload.line == rootLine => Some(payload)
+        case _                                                    => None
+      structuralOwnerAndPayload <- uniqueStructuralRecord(context.evidenceGraph, rootLine)
+      (structuralOwner, structural) = structuralOwnerAndPayload
+      if rootTransition.matches(structuralOwner)
+      legalReply <- structural.certifiedRootResponseMoves
+        .map(_.map(EvidenceRef.normalizeMove))
+        .collect { case reply :: Nil => reply }
+      playedReply <- exact.playedReplay.replaySteps.lift(1)
+      if EvidenceRef.sameMove(playedReply.moveUci, legalReply)
+      changes = changedOccurrencesFor(
+        rootLine,
+        exact.playedSource,
+        linePayload,
+        exact.playedReplay,
+        exact.playedReplay.replaySteps.toSet
+      ).sortBy(_.stableKey)
+      if changes.nonEmpty
+    yield PassedPawnRootDemand(
+      rootLine,
+      rootTransition,
+      exact.playedSource,
+      linePayload,
+      exact.playedReplay,
+      structuralOwner,
+      structural,
+      changes
+    )
+
+  private def changedOccurrencesFor(
+      line: LineNodeRef,
+      lineOwner: EvidenceRecord,
+      linePayload: LineFactEvidence,
+      replay: CanonicalLineReplay,
+      admittedSteps: Set[LineReplayStep]
+  ): List[PassedPawnChangedOccurrence] =
+    val replayOccurrenceKey = passedPawnReplayOccurrenceKey(replay)
+    replay
+      .structuralConsequenceOccurrences(TransitionConsequenceKind.PassedPawnProgress)
+      .flatMap {
+        case (step, consequences) if admittedSteps(step) =>
+          require(
+            consequences.distinct.size == consequences.size,
+            "one replay occurrence cannot duplicate an exact passed-pawn consequence"
+          )
+          PassedPawnResultEventProof
+            .exactStructuralObservation(lineOwner, linePayload, step, replay)
+            .toList
+            .flatMap(observation =>
+              consequences.flatMap(consequence =>
+                PassedPawnResultTransitionSeed
+                  .direct(observation, consequence)
+                  .map(seed =>
+                    PassedPawnChangedOccurrence(
+                      line,
+                      seed,
+                      replayOccurrenceKey
+                    )
+                  )
+              )
+            )
+        case _ => Nil
+      }
+
+  private def passedPawnReplayOccurrenceKey(replay: CanonicalLineReplay): String =
+    BoundedCausalIdentity.digest(
+      "passed-pawn-replay-occurrence:v1" ::
+        replay.replaySteps.map(BoundedCausalIdentity.stepKey)
+    )
+
+  private def changedOccurrencesOwnedBy(
+      occurrences: List[PassedPawnChangedOccurrence],
+      line: LineNodeRef,
+      lineOwner: EvidenceRecord,
+      replay: CanonicalLineReplay,
+      admittedSteps: Set[LineReplayStep],
+      trace: CausalLineTrace
+  ): List[PassedPawnChangedOccurrence] =
+    val replayOccurrenceKey = passedPawnReplayOccurrenceKey(replay)
+    val owned = occurrences.filter(occurrence =>
+      occurrence.line == line &&
+        occurrence.lineOwner == lineOwner &&
+        occurrence.replayOccurrenceKey == replayOccurrenceKey
+    )
+    require(
+      owned.forall(occurrence =>
+        admittedSteps(occurrence.step) && occurrence.seed.belongsTo(trace)
+      ),
+      "a passed-pawn changed occurrence must retain its exact replay path and line owner"
+    )
+    owned
 
   private[assembly] def episodeOccurrenceKey(
-      payload: PassedPawnResultEventEvidence,
-      continuationSource: Option[LineNodeRef],
-      branchOwnerBindings: List[(LineNodeRef, String)]
+      payload: PassedPawnResultEventEvidence
   ): String =
     def exact(values: Iterable[String]): String =
       values.iterator.map(value => s"${value.length}:$value").mkString
@@ -307,33 +386,10 @@ object PassedPawnResultEventAssembler:
         exact(responses),
         exact(episode.resultRoutes.map(_.stableKey).sorted)
       ))
-    val witnesses = payload.branchWitnesses.map { witness =>
-      val exactOwners = branchOwnerBindings.collect {
-        case (line, ownerId) if line == witness.line => ownerId
-      }.distinct
-      require(exactOwners.size == 1, "each passed-pawn result branch witness needs one exact line owner in its occurrence id")
-      exact(List(
-        witness.sourceProbeId,
-        BoundedCausalIdentity.lineKey(witness.line),
-        exactOwners.head,
-        witness.certifiedHorizonPlyOffset.toString,
-        witness.observedThroughPlyOffset.toString,
-        witness.terminalOutcome.map(_.toString.toLowerCase).getOrElse("none"),
-        witness.terminalPlyOffset.map(_.toString).getOrElse("none"),
-        witness.terminalStep.map(BoundedCausalIdentity.stepKey).getOrElse("none"),
-        witness.canonicalReplay
-          .map(replay => exact(replay.replaySteps.map(BoundedCausalIdentity.stepKey)))
-          .getOrElse("none"),
-        witness.observedEpisode.map(episodeKey).getOrElse("none")
-      ))
-    }.sorted
     exact(List(
-      "passed-pawn-result-event-occurrence:v2",
-      continuationSource.map(_.id).getOrElse("main-line"),
-      payload.totalLegalReplyCount.toString,
+      "passed-pawn-result-event-occurrence:v4",
       exact(payload.directResultProofs.map(_.stableKey).sorted),
-      episodeKey(payload.causalEpisode),
-      exact(witnesses)
+      episodeKey(payload.causalEpisode)
     ))
 
   private def uniqueDraftsById(records: List[EvidenceRecord]): List[EvidenceRecord] =
@@ -343,208 +399,6 @@ object PassedPawnResultEventAssembler:
       s"passed-pawn-result evidence ids need unique owners: ${duplicateIds.toList.sorted.mkString(",")}"
     )
     records
-
-
-  private[assembly] def exactBranchReplyLineFor(
-      context: JudgmentAssemblyContext,
-      branch: AdmittedReviewBranchReply,
-      admittedLine: AdmittedReviewLine
-  ): Option[CandidateLineNode] =
-    context.lines.filter(line =>
-      line.ref.role == LineNodeRole.BranchReply &&
-        line.ref.rank == admittedLine.rank &&
-        admittedLine.rootMove.exists(EvidenceRef.sameMove(_, line.ref.rootMove)) &&
-        PrincipalVariationEvidence.sameBoardState(line.evidence.position.fen, branch.branchFen)
-    ) match
-      case line :: Nil => Some(line)
-      case _           => None
-
-
-  private def branchWitnessesFor(
-      input: AdmittedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      rootLine: LineNodeRef,
-      rootLineRecord: EvidenceRecord,
-      rootLinePayload: LineFactEvidence,
-      transition: StructuralTransitionBinding,
-      expectedEvent: PassedPawnResultEventEvidence
-  ): List[PassedPawnReplyBranchWitness] =
-    expectedEvent.episode.toList.flatMap(expectedEpisode =>
-      val requiredHorizonPlyOffset = expectedEvent.requiredHorizonPlyOffset
-      replyBranchLines(input, transition, requiredHorizonPlyOffset)
-        .flatMap { case (branch, admittedLine) =>
-          exactBranchReplyLineFor(context, branch, admittedLine)
-            .flatMap(line => context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(line.ref).map { case (record, payload) =>
-              (line, record, payload)
-            })
-            .flatMap { case (line, lineRecord, payload) =>
-              context.continuationReplay(transition, line.ref).map { combinedReplay =>
-                val combinedSteps = combinedReplay.replaySteps
-                val trace = PassedPawnResultEventProof.causalTrace(
-                  combinedReplay,
-                  List(rootLineRecord -> rootLinePayload, lineRecord -> payload),
-                  Map(
-                    rootLineRecord.ref.id -> combinedSteps.headOption.toSet,
-                    lineRecord.ref.id -> combinedSteps.drop(1).toSet
-                  )
-                )
-                PassedPawnResultEventProof.branchWitness(
-                  sourceProbeId = branch.sourceProbeId,
-                  line = line.ref,
-                  linePayload = payload,
-                  rootLine = rootLine,
-                  rootTransition = transition,
-                  expectedEpisode = expectedEpisode,
-                  requiredHorizonPlyOffset = requiredHorizonPlyOffset,
-                  evaluation = admittedLine.evaluation,
-                  trace = trace
-                )
-              }
-            }
-        }
-    )
-
-  private[assembly] def replyBranchLines(
-      input: AdmittedMoveReviewInput,
-      transition: StructuralTransitionBinding,
-      requiredHorizonPlyOffset: Int
-  ): List[(AdmittedReviewBranchReply, AdmittedReviewLine)] =
-    val covering = input.branchReplies
-      .filter { branch =>
-        EvidenceRef.sameMove(branch.probedMoveUci, transition.moveUci) &&
-        PrincipalVariationEvidence.sameBoardState(branch.branchFen, transition.to.fen) &&
-        branch.certifiedHorizonPlyOffset >= requiredHorizonPlyOffset
-      }
-      .flatMap(branch => branch.lines.map(branch -> _))
-    val minimumCoveringHorizonByReply = covering
-      .flatMap { case (branch, line) =>
-        line.rootMove.map(move => EvidenceRef.normalizeMove(move) -> branch.certifiedHorizonPlyOffset)
-      }
-      .groupMap(_._1)(_._2)
-      .view
-      .mapValues(_.min)
-      .toMap
-    covering
-      .filter { case (branch, line) =>
-        line.rootMove.exists(move =>
-          minimumCoveringHorizonByReply(EvidenceRef.normalizeMove(move)) == branch.certifiedHorizonPlyOffset
-        )
-      }
-      .sortBy { case (branch, line) =>
-        (
-          branch.sourceProbeId,
-          branch.certifiedHorizonPlyOffset,
-          line.rank,
-          line.rootMove.getOrElse(""),
-          PrincipalVariationEvidence.normalizeFen(branch.branchFen)
-        )
-      }
-
-  private def observedBranchLinesFor(
-      input: AdmittedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      rootLine: LineNodeRef,
-      rootLineRecord: EvidenceRecord,
-      rootLinePayload: LineFactEvidence,
-      structural: StructuralDeltaEvidence
-  ): List[ObservedBranchLine] =
-    val transition = structural.transition
-    val rootStep = LineReplayStep(
-      ply = transition.to.ply,
-      moveUci = transition.moveUci,
-      fenBefore = transition.from.fen,
-      fenAfter = transition.to.fen
-    )
-    passedPawnResultObservationBranches(input, transition)
-      .flatMap(branch =>
-        branch.lines.flatMap { admittedLine =>
-          exactBranchReplyLineFor(context, branch, admittedLine)
-            .flatMap(line => context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(line.ref).map { case (record, payload) =>
-              (line, record, payload)
-            })
-            .flatMap { case (line, lineRecord, payload) =>
-              for
-                combinedReplay <- context.continuationReplay(transition, line.ref)
-                combinedSteps = combinedReplay.replaySteps
-                if combinedSteps.headOption.contains(rootStep)
-                continuation = combinedSteps.drop(1)
-                if continuation.map(_.moveUci) == payload.lineReplaySteps.map(_.moveUci)
-                trace = PassedPawnResultEventProof.causalTrace(
-                  combinedReplay,
-                  List(rootLineRecord -> rootLinePayload, lineRecord -> payload),
-                  Map(
-                    rootLineRecord.ref.id -> Set(rootStep),
-                    lineRecord.ref.id -> continuation.toSet
-                  )
-                )
-                if trace.observation(rootStep).exists(_.lineOccurrenceOwner == rootLineRecord.ref)
-              yield ObservedBranchLine(line.ref, continuation, trace)
-            }
-        }
-      )
-      .distinct
-
-  private def observedBranchEpisodesFor(
-      rootLine: LineNodeRef,
-      transition: StructuralTransitionBinding,
-      root: PassedPawnResultEventNode,
-      branches: List[ObservedBranchLine]
-  ): List[ObservedBranchEpisode] =
-    branches
-      .map { branch =>
-        val episode = PassedPawnResultEpisodeBuilder.fromContinuation(
-          rootLine = rootLine,
-          role = transition.role,
-          root = root,
-          continuation = branch.continuation,
-          trace = Some(branch.trace)
-        )
-        ObservedBranchEpisode(branch.line, branch.continuation, episode, branch.trace)
-      }
-      .filter(observed =>
-        observed.episode.rootEnablesContinuation &&
-          observed.episode.resultRoutes.nonEmpty
-      )
-      .sortBy(observed =>
-        (
-          branchDependencySpecificity(observed.episode),
-          observed.episode.requiredPlyOffset,
-          observed.line.rank,
-          observed.line.id
-        )
-      )
-
-  private def passedPawnResultObservationBranches(
-      input: AdmittedMoveReviewInput,
-      transition: StructuralTransitionBinding
-  ): List[AdmittedReviewBranchReply] =
-    val branches = input.branchReplies.filter(branch =>
-        EvidenceRef.sameMove(branch.probedMoveUci, transition.moveUci) &&
-        PrincipalVariationEvidence.sameBoardState(branch.branchFen, transition.to.fen)
-    )
-    require(
-      branches.distinct.size == branches.size,
-      "one exact passed-pawn-result observation branch may be produced only once"
-    )
-    branches
-
-  private def branchDependencySpecificity(episode: PassedPawnResultEpisode): Int =
-    episode.dependencies
-      .filter(dependency => dependency.from == episode.root && dependency.enablesContinuation)
-      .map {
-        case PassedPawnResultDependency(
-              _,
-              _,
-              PassedPawnResultDependencyKind.LineAccessPrecondition,
-              PassedPawnResultDependencyProof.LineAccess(trajectory),
-              _
-            ) if trajectory.enabledTo == trajectory.vacatedSquare =>
-          0
-        case dependency if dependency.kind == PassedPawnResultDependencyKind.LineAccessPrecondition => 1
-        case _ => 2
-      }
-      .minOption
-      .getOrElse(Int.MaxValue)
 
   private def uniqueRootTransition(
       context: JudgmentAssemblyContext,
@@ -575,31 +429,6 @@ object PassedPawnResultEventAssembler:
       case _             => None
 
 private[assembly] object PassedPawnResultEventProof:
-  def structuralConsequenceEstablishesResult(
-      resultKind: PassedPawnResultKind,
-      lineOwner: EvidenceRef,
-      structuralOccurrence: ReplayStructuralOccurrence,
-      structural: StructuralDeltaEvidence,
-      consequence: TransitionConsequence
-  ): Boolean =
-    structural.consequences.exists(observed =>
-      observed.kind == consequence.kind &&
-        consequence.subjectFacts.toSet.subsetOf(observed.subjectFacts.toSet)
-    ) &&
-    consequence.establishesState &&
-    structural.certifiedRootMovement
-      .flatMap(
-        resultConsequenceForKind(
-          resultKind,
-          consequence,
-          lineOwner,
-          structuralOccurrence,
-          structural.transition,
-          _
-        )
-      )
-      .nonEmpty
-
   def causalTrace(
       lineOwner: EvidenceRecord,
       line: LineFactEvidence,
@@ -694,7 +523,7 @@ private[assembly] object PassedPawnResultEventProof:
       transition,
       occurrence.consequences.filter(_.establishesState),
       movement,
-      lineOwner.ref,
+      lineOwner,
       occurrence
     )
 
@@ -703,45 +532,37 @@ private[assembly] object PassedPawnResultEventProof:
       case LineNodeRole.Played        => Some(TransitionEdgeRole.Played)
       case LineNodeRole.BestReference => Some(TransitionEdgeRole.Reference)
       case LineNodeRole.Alternative   => Some(TransitionEdgeRole.Alternative)
-      case LineNodeRole.BranchReply   => Some(TransitionEdgeRole.BranchReplyContinuation)
 
-  def eventCandidateKinds(trace: CausalLineTrace): List[PassedPawnResultKind] =
-    candidateHypothesisKinds(trace)
-
-  private def candidateHypothesisKinds(trace: CausalLineTrace): List[PassedPawnResultKind] =
+  def eventCandidateKinds(
+      trace: CausalLineTrace,
+      resultSeeds: List[PassedPawnResultTransitionSeed]
+  ): List[PassedPawnResultKind] =
+    require(
+      resultSeeds.map(_.stableKey).distinct.size == resultSeeds.size,
+      "one exact passed-pawn result seed may activate dispatch only once"
+    )
+    require(
+      resultSeeds.forall(_.belongsTo(trace)),
+      "passed-pawn candidate dispatch needs exact trace-owned result seeds"
+    )
     val replay = trace.replay
     val rootStep = replay.headOption
     val observed = replay.flatMap(trace.observation)
-    val candidateKinds = observed.map(event => event.step -> candidatePassedPawnResultKindsAt(event))
-    val demandedFutureSteps = candidateKinds.collect {
-      case (step, kinds) if !rootStep.contains(step) && kinds.nonEmpty => step
-    }.toSet
+    val demandedFutureSteps = resultSeeds
+      .map(_.step)
+      .filterNot(rootStep.contains)
+      .toSet
     val reachable =
       rootStep
         .filter(_ => demandedFutureSteps.nonEmpty)
         .map(step => reachableSteps(step, observed.map(_.step), demandedFutureSteps, trace))
         .getOrElse(Set.empty)
-    candidateKinds
-      .filter { case (step, _) => rootStep.contains(step) || reachable(step) }
-      .flatMap(_._2)
-      .distinct
-
-  /** Candidate prior only. Public passed-pawn-result authority is granted later by the
-    * causal dependency and branch contracts; matching a result vocabulary
-    * here is never proof of intent or durability.
-    */
-  private[assembly] def candidatePassedPawnResultKindsAt(observation: CausalStepObservation): List[PassedPawnResultKind] =
-    observation.consequences
-      .flatMap(consequence =>
-        PassedPawnResultTransitionProof.directCandidates(
-          observation.lineOccurrenceOwner,
-          observation.structuralOccurrence,
-          observation.transition,
-          consequence,
-          observation.movement
-        ).map(_.resultKind)
-      )
-      .distinct
+    resultSeeds
+      .filter(seed => rootStep.contains(seed.step) || reachable(seed.step))
+      .map(_.resultKind)
+      .toSet
+      .toList
+      .sortBy(_.id)
 
   private def reachableSteps(
       root: LineReplayStep,
@@ -771,165 +592,7 @@ private[assembly] object PassedPawnResultEventProof:
   def decisiveResultProof(
       event: PassedPawnResultEventEvidence
   ): Boolean =
-    event.observedResultRoutes.nonEmpty
-
-  def resultProofs(
-      resultKind: PassedPawnResultKind,
-      lineOccurrenceOwner: EvidenceRef,
-      structuralOccurrence: ReplayStructuralOccurrence,
-      transition: StructuralTransitionBinding,
-      consequences: List[TransitionConsequence],
-      movement: CanonicalRootLegalMove
-  ): List[PassedPawnResultTransitionProof] =
-    val proofs = consequences.flatMap(consequence =>
-      PassedPawnResultTransitionProof.certify(
-        resultKind,
-        lineOccurrenceOwner,
-        structuralOccurrence,
-        transition,
-        consequence,
-        movement
-      )
-    )
-    require(
-      proofs.distinct.size == proofs.size,
-      "one exact passed-pawn-result transition proof may be produced only once"
-    )
-    proofs
-
-  def resultConsequenceForKind(
-      resultKind: PassedPawnResultKind,
-      consequence: TransitionConsequence,
-      lineOccurrenceOwner: EvidenceRef,
-      structuralOccurrence: ReplayStructuralOccurrence,
-      transition: StructuralTransitionBinding,
-      movement: CanonicalRootLegalMove
-  ): Option[TransitionConsequence] =
-    Option.when(
-      PassedPawnResultTransitionProof.proves(
-        resultKind,
-        lineOccurrenceOwner,
-        structuralOccurrence,
-        transition,
-        consequence,
-        movement
-      )
-    )(consequence)
-
-  def candidateConsequenceForKind(
-      resultKind: PassedPawnResultKind,
-      consequence: TransitionConsequence,
-      lineOccurrenceOwner: EvidenceRef,
-      structuralOccurrence: ReplayStructuralOccurrence,
-      transition: StructuralTransitionBinding,
-      movement: CanonicalRootLegalMove
-  ): Option[TransitionConsequence] =
-    resultConsequenceForKind(
-      resultKind,
-      consequence,
-      lineOccurrenceOwner,
-      structuralOccurrence,
-      transition,
-      movement
-    )
-
-  def consequenceProvenForRootMove(
-      rootLine: LineNodeRef,
-      rootMove: String,
-      consequence: TransitionConsequence,
-      structuralConsequenceEstablishesResult: Boolean,
-      structuralBindings: List[EvidenceObjectBinding]
-  ): Boolean =
-    structuralConsequenceEstablishesResult &&
-      consequenceBoundToRootMove(rootLine, rootMove, consequence, structuralBindings)
-
-  def consequenceBoundToRootMove(
-      rootLine: LineNodeRef,
-      rootMove: String,
-      consequence: TransitionConsequence,
-      structuralBindings: List[EvidenceObjectBinding]
-  ): Boolean =
-    val normalizedKind = consequence.kind.toString.trim.toLowerCase
-    def matchesRootMove(binding: EvidenceObjectBinding): Boolean =
-      binding.line.contains(rootLine) &&
-        (binding.actor ++ binding.witness).exists(obj =>
-          obj.kind == EvidenceObjectKind.Move && EvidenceRef.sameMove(obj.key, rootMove)
-        )
-    val consequenceBindings = structuralBindings.filter(binding =>
-      matchesRootMove(binding) &&
-        binding.mechanism.exists(obj =>
-          obj.kind == EvidenceObjectKind.Mechanism && obj.key.trim.toLowerCase == normalizedKind
-        )
-    )
-    val concreteTargetRequired =
-      Set(
-        TransitionConsequenceKind.OpenFileEstablished,
-        TransitionConsequenceKind.SemiOpenFileEstablished,
-        TransitionConsequenceKind.PawnTensionCreated,
-        TransitionConsequenceKind.PassedPawnProgress
-      )(consequence.kind)
-    consequenceBindings.nonEmpty &&
-    (!concreteTargetRequired ||
-      consequence.subjectFacts.nonEmpty && consequenceBindings.exists(
-        _.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject)
-      ))
-
-  def branchWitness(
-      sourceProbeId: String,
-      line: LineNodeRef,
-      linePayload: LineFactEvidence,
-      rootLine: LineNodeRef,
-      rootTransition: StructuralTransitionBinding,
-      expectedEpisode: PassedPawnResultEpisode,
-      requiredHorizonPlyOffset: Int,
-      evaluation: CandidateLineEvaluation,
-      trace: CausalLineTrace
-  ): PassedPawnReplyBranchWitness =
-    val proofThroughPlyOffset = linePayload.lineReplayCount
-      .min(requiredHorizonPlyOffset)
-    val continuation = linePayload.lineReplaySteps.take(proofThroughPlyOffset)
-    val canonicalPrefix = linePayload.certifiedReplay.flatMap(_.subset(continuation))
-    val observedCandidate = PassedPawnResultEpisodeBuilder.fromContinuation(
-      rootLine = rootLine,
-      role = rootTransition.role,
-      root = expectedEpisode.root,
-      continuation = continuation,
-      trace = Some(trace)
-    )
-    val observed = Option.when(observedCandidate.rootEnablesContinuation)(observedCandidate)
-    val exactTerminalOutcome = evaluation match
-      case CandidateLineEvaluation.ExactAutomaticTerminal(_, AutomaticTerminal.Checkmate(winner)) =>
-        Some(
-          if winner == expectedEpisode.root.perspective then PassedPawnResultTerminalOutcome.Victory
-          else PassedPawnResultTerminalOutcome.Defeat
-        )
-      case CandidateLineEvaluation.ExactAutomaticTerminal(
-            _,
-            AutomaticTerminal.Stalemate |
-            AutomaticTerminal.InsufficientMaterial |
-            AutomaticTerminal.FivefoldRepetition |
-            AutomaticTerminal.SeventyFiveMoveRule
-          ) =>
-        Some(PassedPawnResultTerminalOutcome.Draw)
-      case CandidateLineEvaluation.EngineSearch(_) => None
-    val terminalOutcome =
-      Option
-        .when(proofThroughPlyOffset == linePayload.lineReplayCount)(continuation.lastOption)
-        .flatten
-        .flatMap(step => canonicalPrefix.flatMap(_.legalStep(step)))
-        .flatMap(_ => exactTerminalOutcome)
-    val terminalStep = Option.when(terminalOutcome.nonEmpty)(continuation.lastOption).flatten
-    PassedPawnReplyBranchWitness(
-      sourceProbeId = sourceProbeId,
-      line = line,
-      observedEpisode = observed,
-      certifiedHorizonPlyOffset = requiredHorizonPlyOffset,
-      observedThroughPlyOffset = proofThroughPlyOffset,
-      terminalOutcome = terminalOutcome,
-      terminalPlyOffset = Option.when(terminalOutcome.nonEmpty)(continuation.size),
-      terminalStep = terminalStep,
-      canonicalReplay = canonicalPrefix
-    )
+    event.onlyLegalReplyRealized
 
 private[assembly] object PassedPawnResultEventIdentityBuilder:
   def from(

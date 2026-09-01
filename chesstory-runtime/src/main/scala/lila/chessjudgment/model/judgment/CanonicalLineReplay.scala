@@ -169,6 +169,39 @@ private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
           s"one replay position produced ${other.size} slider reaches for one side/piece/direction"
         )
 
+  /** Binds one already-owned occupant fact to this exact replay occurrence.
+    * The query is answered by the position inventory; callers never infer
+    * persistence from an unchanged-square shortcut.
+    */
+  private[chessjudgment] def existingOccupantState(
+      piece: RelationColoredPieceWitness,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedPositionStateProof] =
+    closedState(
+      PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece),
+      scope
+    )
+
+  /** Selects the exact pawn-topology witness already owned by this position
+    * and binds it to the replay occurrence. Requiring the complete witness is
+    * deliberately stricter than treating a missing transition as persistence.
+    */
+  private[chessjudgment] def existingPawnTopologyState(
+      side: Color,
+      square: EvidenceSquare,
+      passed: Boolean,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedPositionStateProof] =
+    inventory.pawnTopologyView
+      .stateWitness(side, square)
+      .filter(_.passed == passed)
+      .flatMap(exact =>
+        closedState(
+          PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(exact),
+          scope
+        )
+      )
+
   private[chessjudgment] def certifies(
       proof: PositionRelationExtractor.ClosedRelationAbsenceProof,
       scope: EvidenceScope
@@ -375,6 +408,11 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
   ): List[RelationFactEvidence] =
     calculation.certifiedVertical.resultsFor(contract)
 
+  private[chessjudgment] def activatesVerticalRelation(
+      contract: VerticalRelationContractKind
+  ): Boolean =
+    calculation.certifiedVertical.activates(contract)
+
   private[chessjudgment] def closedRelationInventory: ClosedRelationTransitionInventory =
     closedRelationOutput
 
@@ -479,6 +517,8 @@ private[chessjudgment] final class CanonicalLineReplay private (
     replaySteps.zip(legalSteps).toMap
   private val indexByReplayStep: Map[LineReplayStep, Int] =
     replaySteps.zipWithIndex.toMap
+  private val positionOccurrenceCache =
+    scala.collection.mutable.Map.empty[LineReplayStep, ReplayPositionOccurrence]
   require(
     indexByReplayStep.size == replaySteps.size,
     "a canonical replay cannot contain the same time-axis occurrence twice"
@@ -524,7 +564,17 @@ private[chessjudgment] final class CanonicalLineReplay private (
   private[chessjudgment] def positionAfter(
       step: LineReplayStep
   ): Option[ReplayPositionOccurrence] =
-    analysisAfter(step).map(new ReplayPositionOccurrence(step, _))
+    indexByReplayStep.get(step).flatMap { index =>
+      positionOccurrenceCache.synchronized {
+        positionOccurrenceCache.get(step).orElse(
+          occurrenceAnalyses.lift(index + 1).map { analysis =>
+            val occurrence = new ReplayPositionOccurrence(step, analysis)
+            positionOccurrenceCache.update(step, occurrence)
+            occurrence
+          }
+        )
+      }
+    }
 
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
@@ -533,6 +583,20 @@ private[chessjudgment] final class CanonicalLineReplay private (
       step: LineReplayStep
   ): Option[ReplayStructuralOccurrence] =
     transition(step).map(_.structuralOccurrence)
+
+  /** Changed-dependency ownership for callers that must retain the exact
+    * time-axis occurrence instead of reducing dispatch to a boolean and
+    * rediscovering the same transition later.
+    */
+  private[chessjudgment] def structuralConsequenceOccurrences(
+      kind: TransitionConsequenceKind
+  ): List[(LineReplayStep, List[TransitionConsequence])] =
+    replaySteps.flatMap(step =>
+      transition(step).toList.flatMap { occurrence =>
+        val consequences = occurrence.structuralConsequences.filter(_.kind == kind)
+        Option.when(consequences.nonEmpty)(step -> consequences)
+      }
+    )
 
   private[chessjudgment] def verticalRelationOccurrences(
       step: LineReplayStep,
@@ -549,6 +613,16 @@ private[chessjudgment] final class CanonicalLineReplay private (
         )
       )
     }
+
+  /** Read-only L1 demand key for one exact transition occurrence. The
+    * underlying vertical contract remains lazy until a selected consumer asks
+    * for its closed result.
+    */
+  private[chessjudgment] def activatesVerticalRelation(
+      step: LineReplayStep,
+      contract: VerticalRelationContractKind
+  ): Boolean =
+    transition(step).exists(_.activatesVerticalRelation(contract))
 
   /** Exact L1 membership owned by the capture transition occurrence. Missing
     * or duplicate inventories/resources fail closed instead of creating a

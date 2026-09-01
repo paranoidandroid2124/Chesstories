@@ -20,12 +20,9 @@ from .hashing import (
     sha256_json,
 )
 from .model import ContractError, IntegrityError
-from .probe_completion import (
-    MAX_RUNTIME_PROBE_RESULTS,
+from .runtime_jsonl_session import (
     _RuntimeExchange,
     _RuntimeJsonlSession,
-    _search_probe,
-    _validate_probe_request,
 )
 from .schemas import SchemaRegistry
 from .stockfish import acquire_stockfish_evidence
@@ -44,44 +41,21 @@ SPLIT_SALT = "cause-audit-v1-stratum-seal"
 
 def _checked_runtime_response(
     exchange: _RuntimeExchange,
-) -> tuple[str, list[dict[str, Any]] | None, str | None]:
+) -> str:
     """Classify one already schema-validated RuntimeProtocol response."""
 
     status = exchange.body.get("status")
-    if status == "engine_work_required":
-        if exchange.http_status != 202:
-            raise ContractError(
-                "runtime engine_work_required response must use HTTP 202"
-            )
-        raw_probes = exchange.body.get("probe_requests")
-        if (
-            not isinstance(raw_probes, list)
-            or not raw_probes
-            or not all(isinstance(item, Mapping) for item in raw_probes)
-        ):
-            raise ContractError(
-                "runtime engine_work_required response probe_requests must be non-empty objects"
-            )
-        probes = [_validate_probe_request(item) for item in raw_probes]
-        probe_ids = [str(item["id"]) for item in probes]
-        if len(probe_ids) != len(set(probe_ids)):
-            raise ContractError("runtime public response emitted duplicate probe IDs")
-        return status, probes, None
     if status == "ready":
         if exchange.http_status != 200:
             raise ContractError("runtime ready response must use HTTP 200")
-        if "probe_requests" in exchange.body:
-            raise ContractError("runtime ready response must not carry probe_requests")
-        return status, None, "ready"
+        return status
     if status == "error":
         if not 400 <= exchange.http_status <= 499:
             raise ContractError("runtime error response must use a 4xx HTTP status")
-        if "probe_requests" in exchange.body:
-            raise ContractError("runtime error response must not carry probe_requests")
         error = exchange.body.get("error")
         if not isinstance(error, str) or not error:
             raise ContractError("runtime error response error must be non-empty text")
-        return status, None, f"runtime_error:{error}"
+        return status
     raise ContractError(f"runtime public response has unknown status: {status!r}")
 
 
@@ -1139,11 +1113,9 @@ def run_cause_audit(
     stockfish_path: Path,
     sbt_path: Path,
     adapter_root: Path,
-    timeout_seconds: float,
     provider_timeout_seconds: float,
-    max_probe_rounds: int,
 ) -> dict[str, Any]:
-    """Capture public RuntimeProtocol responses while closing runtime probes."""
+    """Capture one terminal public RuntimeProtocol response per frozen case."""
 
     registry, canonicalizer = _schema_tools(root)
     manifest, cases = _verify_manifest(
@@ -1186,8 +1158,6 @@ def run_cause_audit(
     adapter_directory = adapter_root.resolve(strict=True)
     if not adapter_directory.is_dir():
         raise ContractError("cause audit adapter root is not a directory")
-    if isinstance(max_probe_rounds, bool) or not 1 <= max_probe_rounds <= 12:
-        raise ContractError("max probe rounds must be from 1 through 12")
 
     case_records: list[dict[str, Any]] = []
     with _RuntimeJsonlSession(
@@ -1199,85 +1169,27 @@ def run_cause_audit(
             case_id = str(case["case_id"])
             _, pack = rows[case_id]
             request = _runtime_request(case, pack)
-            if not isinstance(request.get("input"), dict):
-                raise ContractError(f"runtime request {case_id} input is not mutable")
-            rounds: list[dict[str, Any]] = []
-            issued_probes: dict[str, dict[str, Any]] = {}
-            stop_reason = "max_probe_rounds_reached"
-            for round_index in range(1, max_probe_rounds + 2):
-                exchange = session.invoke(request)
-                status, probes, terminal_stop_reason = _checked_runtime_response(exchange)
-                round_record = {
-                    "round": round_index,
-                    "request_jsonl_base64": exchange.request_jsonl_base64,
-                    "request_jsonl_sha256": exchange.request_jsonl_sha256,
-                    "request_jsonl_length": exchange.request_jsonl_length,
-                    "response_jsonl_base64": exchange.response_jsonl_base64,
-                    "response_jsonl_sha256": exchange.response_jsonl_sha256,
-                    "response_jsonl_length": exchange.response_jsonl_length,
-                    "http_status": exchange.http_status,
-                    "status": status,
-                }
-                rounds.append(round_record)
-                if terminal_stop_reason is not None:
-                    if status == "error":
-                        round_record["runtime_error"] = exchange.body["error"]
-                    stop_reason = terminal_stop_reason
-                    break
-                if status != "engine_work_required" or probes is None:
-                    raise ContractError("runtime public response status transition is inconsistent")
-                round_record["probe_requests"] = probes
-                round_record["probe_results"] = []
-                current_results = request["input"].get("probeResults", [])
-                if not isinstance(current_results, list):
-                    raise ContractError("runtime request probeResults is not an array")
-                current_ids = {
-                    str(item.get("id"))
-                    for item in current_results
-                    if isinstance(item, Mapping)
-                }
-                for probe in probes:
-                    probe_id = str(probe["id"])
-                    previous = issued_probes.get(probe_id)
-                    if previous is not None and previous != probe:
-                        raise ContractError(
-                            f"probe ID {probe_id} changed its request binding"
-                        )
-                    issued_probes[probe_id] = copy.deepcopy(probe)
-                new_probes = [
-                    probe for probe in probes if str(probe["id"]) not in current_ids
-                ]
-                if len(current_results) + len(new_probes) > MAX_RUNTIME_PROBE_RESULTS:
-                    raise ContractError(
-                        f"runtime probe result limit would be exceeded for {case_id}"
-                    )
-                if not new_probes:
-                    stop_reason = "runtime_reissued_fulfilled_probes"
-                    break
-                if round_index > max_probe_rounds:
-                    stop_reason = "max_probe_rounds_reached"
-                    break
-                for probe in new_probes:
-                    result, acquisition = _search_probe(
-                        executable=executable,
-                        executable_sha256=executable_sha256,
-                        timeout_seconds=timeout_seconds,
-                        request=probe,
-                    )
-                    record = {
-                        "request": copy.deepcopy(probe),
-                        "result": result,
-                        "acquisition": acquisition,
-                    }
-                    round_record["probe_results"].append(record)
-                    current_results.append(result)
-                    current_ids.add(str(probe["id"]))
-                request["input"]["probeResults"] = current_results
+            exchange = session.invoke(request)
+            status = _checked_runtime_response(exchange)
+            response_record = {
+                "request_jsonl_base64": exchange.request_jsonl_base64,
+                "request_jsonl_sha256": exchange.request_jsonl_sha256,
+                "request_jsonl_length": exchange.request_jsonl_length,
+                "response_jsonl_base64": exchange.response_jsonl_base64,
+                "response_jsonl_sha256": exchange.response_jsonl_sha256,
+                "response_jsonl_length": exchange.response_jsonl_length,
+                "http_status": exchange.http_status,
+                "status": status,
+            }
+            stop_reason = "ready"
+            if status == "error":
+                response_record["runtime_error"] = exchange.body["error"]
+                stop_reason = f"runtime_error:{exchange.body['error']}"
             case_records.append(
                 {
                     "case_id": case_id,
                     "stop_reason": stop_reason,
-                    "rounds": rounds,
+                    "response": response_record,
                 }
             )
 
@@ -1347,9 +1259,7 @@ def execute_cause_audit_action(
             stockfish_path=arguments.stockfish,
             sbt_path=arguments.sbt,
             adapter_root=arguments.adapter_root or (root / "runtime-adapter"),
-            timeout_seconds=float(arguments.timeout_seconds),
             provider_timeout_seconds=float(arguments.provider_timeout_seconds),
-            max_probe_rounds=int(arguments.max_probe_rounds),
         )
     raise ContractError(f"unsupported cause-audit action: {action}")
 

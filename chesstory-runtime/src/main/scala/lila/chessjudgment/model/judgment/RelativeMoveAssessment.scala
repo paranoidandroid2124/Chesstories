@@ -2,7 +2,7 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath, VerdictThresholdPolicy }
-import lila.chessjudgment.model.line.{ CandidateLineEvaluation, RankedCandidateLineEvaluation }
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 
 enum MoveChoiceVerdict:
   case ImprovesOnReference
@@ -17,52 +17,29 @@ enum MoveChoiceVerdict:
       case Inaccuracy | Mistake | Blunder => true
       case _                              => false
 
-enum CandidateSetType:
-  case OnlyMove
-  case NarrowChoice
-  case StyleChoice
-
-final case class CandidateSetDescriptor private[judgment] (
-    candidateSetType: CandidateSetType
-):
-  def onlyMove: Boolean = candidateSetType == CandidateSetType.OnlyMove
-
-final case class CompleteCandidateSet private[chessjudgment] (
+final case class AdmittedRootRankingPair private[chessjudgment] (
     bestMoveUci: String,
-    secondMoveUci: String,
-    descriptor: CandidateSetDescriptor
+    secondMoveUci: String
 )
 
-object CandidateSetDescriptor:
-  def fromCompleteRanking(
-      mover: Color,
-      ranked: List[RankedCandidateLineEvaluation]
-  ): Option[CompleteCandidateSet] =
-    val ordered = ranked.sortBy(_.rank)
-    for
-      best <- ordered.headOption
-      second <- ordered.tail.headOption
-    yield
-      val topCandidates = ordered.take(3)
-      val reliable =
-        topCandidates.forall(_.evaluation.comparisonReady)
-      val bestWinPercent = best.evaluation.winPercentForMover(mover)
-      val gap = (bestWinPercent - second.evaluation.winPercentForMover(mover)).max(0.0)
-      val spread =
-        topCandidates
-          .map(candidate => (bestWinPercent - candidate.evaluation.winPercentForMover(mover)).max(0.0))
-          .max
-      val candidateSetType =
-        if reliable && gap >= JudgmentThresholds.ONLY_MOVE_GAP_WP then
-          CandidateSetType.OnlyMove
-        else if reliable && spread <= JudgmentThresholds.STYLE_CHOICE_SPREAD_WP then
-          CandidateSetType.StyleChoice
-        else CandidateSetType.NarrowChoice
-      CompleteCandidateSet(
-        bestMoveUci = EvidenceRef.normalizeMove(best.rootMoveUci),
-        secondMoveUci = EvidenceRef.normalizeMove(second.rootMoveUci),
-        descriptor = CandidateSetDescriptor(candidateSetType)
-      )
+object AdmittedRootRankingPair:
+  def fromAdmittedRanking(
+      rootMovesByRank: List[String]
+  ): Option[AdmittedRootRankingPair] =
+    rootMovesByRank match
+      case best :: second :: _ =>
+        val bestMove = EvidenceRef.normalizeMove(best)
+        val secondMove = EvidenceRef.normalizeMove(second)
+        Option.when(
+          bestMove.nonEmpty && secondMove.nonEmpty && !EvidenceRef.sameMove(bestMove, secondMove)
+        )(
+          AdmittedRootRankingPair(
+            bestMoveUci = bestMove,
+            secondMoveUci = secondMove
+          )
+        )
+      case _ =>
+        None
 
 enum CandidateComparisonKind:
   case PlayedVsBest
@@ -70,43 +47,13 @@ enum CandidateComparisonKind:
   case PlayedVsAlternative
   case ReferenceVsAlternative
 
-enum RelativeCauseRole:
-  case PrimaryPlayedCause
-  case PlayedAlternativeContext
-  case CandidateSetConstraint
-  case AlternativeDiagnostic
-
-  def defaultEventLine(referenceLine: LineNodeRef, candidateLine: LineNodeRef): LineNodeRef =
-    this match
-      case RelativeCauseRole.PrimaryPlayedCause | RelativeCauseRole.PlayedAlternativeContext =>
-        candidateLine
-      case RelativeCauseRole.CandidateSetConstraint =>
-        referenceLine
-      case RelativeCauseRole.AlternativeDiagnostic =>
-        candidateLine
-
-object RelativeCauseRole:
-  def fromComparisonKind(kind: CandidateComparisonKind): RelativeCauseRole =
-    kind match
-      case CandidateComparisonKind.PlayedVsBest =>
-        RelativeCauseRole.PrimaryPlayedCause
-      case CandidateComparisonKind.PlayedVsAlternative =>
-        RelativeCauseRole.PlayedAlternativeContext
-      case CandidateComparisonKind.BestVsSecond =>
-        RelativeCauseRole.CandidateSetConstraint
-      case CandidateComparisonKind.ReferenceVsAlternative =>
-        RelativeCauseRole.AlternativeDiagnostic
-
 enum RelativeCauseSourceSide:
   case Reference
   case Candidate
-  case Shared
-  case Mixed
 
 object RelativeCauseSourceSide:
   def eventLine(
       sourceSide: RelativeCauseSourceSide,
-      role: RelativeCauseRole,
       referenceLine: LineNodeRef,
       candidateLine: LineNodeRef
   ): LineNodeRef =
@@ -115,105 +62,6 @@ object RelativeCauseSourceSide:
         referenceLine
       case RelativeCauseSourceSide.Candidate =>
         candidateLine
-      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed =>
-        role.defaultEventLine(referenceLine, candidateLine)
-
-  def fromSupportEvidence(
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef,
-      supportEvidence: List[EvidenceRef]
-  ): Option[RelativeCauseSourceSide] =
-    if supportEvidence.isEmpty then
-      Some(RelativeCauseSourceSide.Shared)
-    else
-      combine(
-        supportEvidence.flatMap(ref => evidenceRefSourceSide(ref, referenceLine, candidateLine))
-      )
-
-  private def evidenceRefSourceSide(
-      ref: EvidenceRef,
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef
-  ): Option[RelativeCauseSourceSide] =
-    ref.line match
-      case Some(line) if line == referenceLine =>
-        Some(RelativeCauseSourceSide.Reference)
-      case Some(line) if line == candidateLine =>
-        Some(RelativeCauseSourceSide.Candidate)
-      case _ =>
-        ref.scope match
-          case EvidenceScope.BestLine | EvidenceScope.ReferenceTransition | EvidenceScope.AfterReferencePosition =>
-            lineRoleSourceSide(LineNodeRole.BestReference, referenceLine, candidateLine)
-          case EvidenceScope.PlayedLine | EvidenceScope.PlayedTransition | EvidenceScope.AfterPlayedPosition =>
-            lineRoleSourceSide(LineNodeRole.Played, referenceLine, candidateLine)
-          case EvidenceScope.CandidateLine | EvidenceScope.AlternativeTransition =>
-            lineRoleSourceSide(LineNodeRole.Alternative, referenceLine, candidateLine)
-          case EvidenceScope.BeforePosition | EvidenceScope.CurrentPosition =>
-            Some(RelativeCauseSourceSide.Shared)
-          case EvidenceScope.BranchReplyLine | EvidenceScope.Counterfactual =>
-            None
-
-  private def lineRoleSourceSide(
-      role: LineNodeRole,
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef
-  ): Option[RelativeCauseSourceSide] =
-    if referenceLine.role == role then Some(RelativeCauseSourceSide.Reference)
-    else if candidateLine.role == role then Some(RelativeCauseSourceSide.Candidate)
-    else None
-
-  private def combine(sides: List[RelativeCauseSourceSide]): Option[RelativeCauseSourceSide] =
-    if sides.isEmpty then None
-    else
-      val concreteSides = sides.filter(side =>
-        side == RelativeCauseSourceSide.Reference || side == RelativeCauseSourceSide.Candidate
-      ).distinct
-      val hasShared = sides.contains(RelativeCauseSourceSide.Shared)
-      if concreteSides.size > 1 || sides.contains(RelativeCauseSourceSide.Mixed) || (concreteSides.nonEmpty && hasShared) then
-        Some(RelativeCauseSourceSide.Mixed)
-      else concreteSides.headOption.orElse(Option.when(hasShared)(RelativeCauseSourceSide.Shared))
-
-enum RelativeCauseBindingTier:
-  case Primary
-  case Supporting
-  case Context
-
-enum CauseAttributionKind:
-  case ReferenceCreatesResource
-  case CandidateAllowsLiability
-  case CandidateCreatesValue
-  case SharedContext
-  case ContextOnly
-  case Unattributed
-
-case class CauseAttribution(
-    kind: CauseAttributionKind,
-    rootMoveMatched: Boolean = false,
-    directProofEligible: Boolean = false,
-    reason: Option[String] = None
-):
-  def unattributed: Boolean =
-    kind == CauseAttributionKind.Unattributed
-
-object CauseAttribution:
-  val unattributed: CauseAttribution =
-    CauseAttribution(CauseAttributionKind.Unattributed, reason = Some("no-cause-attribution"))
-
-object RelativeCauseBindingTier:
-  def from(
-      role: RelativeCauseRole,
-      sourceSide: RelativeCauseSourceSide
-  ): RelativeCauseBindingTier =
-    role match
-      case RelativeCauseRole.PrimaryPlayedCause
-          if sourceSide == RelativeCauseSourceSide.Shared =>
-        RelativeCauseBindingTier.Supporting
-      case RelativeCauseRole.PrimaryPlayedCause =>
-        RelativeCauseBindingTier.Primary
-      case RelativeCauseRole.CandidateSetConstraint =>
-        RelativeCauseBindingTier.Supporting
-      case RelativeCauseRole.PlayedAlternativeContext | RelativeCauseRole.AlternativeDiagnostic =>
-        RelativeCauseBindingTier.Context
 
 enum VerdictConfidence:
   case EngineBacked
@@ -275,8 +123,7 @@ object EvalComparison:
   def fromLines(
       mover: Color,
       reference: CandidateLineNode,
-      candidate: CandidateLineNode,
-      candidateSetType: Option[CandidateSetType] = None
+      candidate: CandidateLineNode
   ): Option[EvalComparison] =
     VerdictConfidence.fromEvaluations(reference.evaluation, candidate.evaluation).map { _ =>
       val (candidateWinPercentDeltaForMover, detail) =
@@ -303,8 +150,7 @@ object EvalComparison:
         verdict = VerdictThresholdPolicy.verdictFromWinPercent(
           candidateWinPercentDeltaForMover,
           winPercentLossForMover,
-          detail,
-          candidateSetType
+          detail
         ),
         detail = detail
       )
@@ -315,33 +161,27 @@ case class CandidateComparisonFact(
     referenceLine: LineNodeRef,
     candidateLine: LineNodeRef,
     comparison: EvalComparison,
-    verdictConfidence: VerdictConfidence,
-    candidateSet: Option[CandidateSetDescriptor] = None
+    verdictConfidence: VerdictConfidence
 ):
   def hasDistinctRootMoves: Boolean =
     !EvidenceRef.sameMove(referenceLine.rootMove, candidateLine.rootMove)
-
-  def candidateSetType: Option[CandidateSetType] =
-    candidateSet.map(_.candidateSetType)
 
 object CandidateComparisonFact:
   def fromLines(
       kind: CandidateComparisonKind,
       mover: Color,
       reference: CandidateLineNode,
-      candidate: CandidateLineNode,
-      candidateSet: Option[CandidateSetDescriptor] = None
+      candidate: CandidateLineNode
   ): Option[CandidateComparisonFact] =
     for
       verdictConfidence <- VerdictConfidence.fromEvaluations(reference.evaluation, candidate.evaluation)
-      comparison <- EvalComparison.fromLines(mover, reference, candidate, candidateSet.map(_.candidateSetType))
+      comparison <- EvalComparison.fromLines(mover, reference, candidate)
     yield CandidateComparisonFact(
       kind = kind,
       referenceLine = reference.ref,
       candidateLine = candidate.ref,
       comparison = comparison,
-      verdictConfidence = verdictConfidence,
-      candidateSet = candidateSet
+      verdictConfidence = verdictConfidence
     )
 
 /** Evidence-id-independent identity of one evaluated comparison relation.
@@ -354,8 +194,7 @@ final case class CandidateComparisonSemanticKey(
     candidateLine: SemanticLineKey,
     candidateWinPercentDeltaForMover: Double,
     verdict: MoveChoiceVerdict,
-    verdictConfidence: VerdictConfidence,
-    candidateSetType: Option[CandidateSetType]
+    verdictConfidence: VerdictConfidence
 ):
   def stableKey: String =
     List(
@@ -365,8 +204,7 @@ final case class CandidateComparisonSemanticKey(
       candidateLine.stableKey,
       java.lang.Double.toHexString(candidateWinPercentDeltaForMover),
       verdict.toString,
-      verdictConfidence.toString,
-      candidateSetType.map(_.toString).getOrElse("")
+      verdictConfidence.toString
     ).mkString("|")
 
 object CandidateComparisonSemanticKey:
@@ -378,187 +216,70 @@ object CandidateComparisonSemanticKey:
       candidateLine = SemanticLineKey.from(comparison.candidateLine),
       candidateWinPercentDeltaForMover = comparison.comparison.candidateWinPercentDeltaForMover,
       verdict = comparison.comparison.verdict,
-      verdictConfidence = comparison.verdictConfidence,
-      candidateSetType = comparison.candidateSet.map(_.candidateSetType)
+      verdictConfidence = comparison.verdictConfidence
     )
 
 enum RelativeCauseKind:
   case MissedTacticalResource
-  case TacticalRefutationOfPlayed
-  case CandidateTacticalLiability
-  case RecaptureRecoveryWindow
   case WrongMoveOrder
-  case PassedPawnResult
-  case DrawResource
-  case KingForcing
-  case MaterialSwing
-
-/** C owns an explicit, fail-closed selector for the direct effects it may
-  * expose. Raw proof projection deliberately ignores this value so assembly
-  * can resolve endpoint deltas before any Cause record is registered.
-  */
-enum DirectEffectAdmission:
-  case Unresolved
-  case Restricted(
-      endpointObservations: Map[
-        RootOwnedEffectChannelOccurrenceFingerprint,
-        Option[ComparisonEndpointEffectObservation]
-      ]
-  )
-
-  private[chessjudgment] def observationFor(
-      occurrence: RootOwnedEffectChannelOccurrenceFingerprint
-  ): Option[ComparisonEndpointEffectObservation] =
-    this match
-      case Unresolved                       => None
-      case Restricted(endpointObservations) => endpointObservations.get(occurrence).flatten
+  case PassedPawnProgress
 
 case class RelativeCauseFact(
     kind: RelativeCauseKind,
     comparisonEvidence: EvidenceRef,
-    supportEvidence: List[EvidenceRef],
     sourceSide: RelativeCauseSourceSide,
-    attribution: CauseAttribution = CauseAttribution.unattributed,
-    proof: Option[RelativeCauseProof] = None,
-    directEffectAdmission: DirectEffectAdmission = DirectEffectAdmission.Unresolved
+    proofSources: List[EvidenceRef]
 ):
-  def hasOwnedTypedDepth(graph: TypedEvidenceGraph): Boolean =
-    graph.relativeCauseHasOwnedTypedDepth(this)
-  def passedPawnResultCauseKind: Boolean =
-    RelativeCauseKind.requiresExactPassedPawnResult(kind)
-  def hasOwnedPassedPawnResultProof(graph: TypedEvidenceGraph): Boolean =
-    graph.relativeCauseHasOwnedPassedPawnResultProof(this)
-  def hasOwnedTacticalProof(graph: TypedEvidenceGraph): Boolean =
-    graph.relativeCauseHasOwnedTacticalProof(this)
-  private[chessjudgment] def admittedEndpointObservation(
-      channel: DirectCauseChannel
-  ): Option[ComparisonEndpointEffectObservation] =
-    val expectedStake = attribution.kind match
-      case CauseAttributionKind.ReferenceCreatesResource | CauseAttributionKind.CandidateCreatesValue =>
-        Some(RootOwnedEffectStake.ActorValue)
-      case CauseAttributionKind.CandidateAllowsLiability =>
-        Some(RootOwnedEffectStake.ActorLiability)
-      case CauseAttributionKind.SharedContext | CauseAttributionKind.ContextOnly |
-          CauseAttributionKind.Unattributed => None
-    directEffectAdmission
-      .observationFor(channel.exactOccurrenceFingerprint)
-      .filter(observation => expectedStake.contains(observation.scope.stake))
+  require(proofSources.nonEmpty, "a relative Cause requires exact typed proof sources")
+  require(
+    proofSources.map(_.id).distinct.size == proofSources.size,
+    "a relative Cause must not repeat or collide proof-source owners"
+  )
+  require(
+    proofSources == proofSources.sortBy(_.id),
+    "relative Cause proof sources must use canonical evidence-id order"
+  )
 
-object RelativeCauseKind:
-  def requiresExactPassedPawnResult(kind: RelativeCauseKind): Boolean =
-    kind == RelativeCauseKind.PassedPawnResult
-
-  def sourceAttributionCompatible(
-      kind: RelativeCauseKind,
-      sourceSide: RelativeCauseSourceSide,
-      attributionKind: CauseAttributionKind
-  ): Boolean =
-    val polarityCompatible =
-      attributionKind match
-        case CauseAttributionKind.ReferenceCreatesResource =>
-          sourceSide == RelativeCauseSourceSide.Reference
-        case CauseAttributionKind.CandidateCreatesValue | CauseAttributionKind.CandidateAllowsLiability =>
-          sourceSide == RelativeCauseSourceSide.Candidate
-        case CauseAttributionKind.SharedContext =>
-          sourceSide == RelativeCauseSourceSide.Shared || sourceSide == RelativeCauseSourceSide.Mixed
-        case CauseAttributionKind.ContextOnly | CauseAttributionKind.Unattributed =>
-          false
-    polarityCompatible
-
-  /** Public passed-pawn-result causality is authorized only by the closed L2 proof record.
-    * The raw passed-pawn result event remains a premise/probe and cannot prove a Cause.
-    */
-  def passedPawnResultProofCanProveCause(
-      kind: RelativeCauseKind,
-      result: PassedPawnResultProofEvidence
-  ): Boolean =
-    kind == RelativeCauseKind.PassedPawnResult &&
-      result.consequenceKind == TransitionConsequenceKind.PassedPawnProgress &&
-      result.assessment.robustness == PassedPawnResultReplyCoverage.AllLegalRepliesRealize &&
-      result.hasCompleteProofPaths
-
-  def acceptsLineConsequence(
-      kind: RelativeCauseKind,
-      consequenceKind: LineConsequenceKind
-  ): Boolean =
-    kind match
-      case RelativeCauseKind.RecaptureRecoveryWindow =>
-        consequenceKind == LineConsequenceKind.RecaptureSequence ||
-          consequenceKind == LineConsequenceKind.RecoveryWindow
-      case RelativeCauseKind.WrongMoveOrder =>
-        false
-      case RelativeCauseKind.KingForcing =>
-        consequenceKind == LineConsequenceKind.Mate
-      case RelativeCauseKind.DrawResource =>
-        consequenceKind == LineConsequenceKind.DrawResource
-      case RelativeCauseKind.MaterialSwing =>
-        consequenceKind == LineConsequenceKind.MaterialGain ||
-          consequenceKind == LineConsequenceKind.MaterialLoss
-      case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
-          RelativeCauseKind.CandidateTacticalLiability =>
-        LineConsequenceKind.tacticalDriver(consequenceKind)
-      case _ =>
-        false
-
-  def acceptsDirectLineConsequence(
-      kind: RelativeCauseKind,
-      payload: LineFactEvidence,
-      rootMove: String,
-      consequence: LineConsequence
-  ): Boolean =
-    acceptsLineConsequence(kind, consequence.kind) &&
-      (
-        consequence.kind match
-          case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow =>
-            payload.rootIsRecapture(rootMove)
-          case _ =>
-            true
-      )
-
-/** Evidence-id-independent causal frame. Two Causes may be compared for
-  * semantic channel subsumption only when every field in this frame agrees.
+/** Evidence-id-independent causal frame used only with the complete typed
+  * proof-occurrence list when checking producer ownership.
   */
 final case class RelativeCauseSemanticFrameKey(
     kind: RelativeCauseKind,
     comparison: CandidateComparisonSemanticKey,
     eventLine: SemanticLineKey,
-    role: RelativeCauseRole,
-    sourceSide: RelativeCauseSourceSide,
-    attributionKind: CauseAttributionKind
+    sourceSide: RelativeCauseSourceSide
 ):
   def stableKey: String =
     List(
       kind.toString,
       comparison.stableKey,
       eventLine.stableKey,
-      role.toString,
-      sourceSide.toString,
-      attributionKind.toString
+      sourceSide.toString
     ).mkString("|")
 
 final case class RelativeCauseSemanticKey(
     frame: RelativeCauseSemanticFrameKey,
-    directCausalSignatures: List[String],
-    unreadyCauseEvidenceId: Option[String]
+    exactProofOccurrences: List[RootOwnedEffectChannelOccurrenceFingerprint]
 ):
+  require(exactProofOccurrences.nonEmpty, "a relative Cause semantic key requires an admitted proof occurrence")
+  require(
+    exactProofOccurrences.map(_.stableSortKey) == exactProofOccurrences.map(_.stableSortKey).sorted &&
+      exactProofOccurrences.distinct.size == exactProofOccurrences.size,
+    "relative Cause proof occurrences must be unique and canonically ordered"
+  )
+
   def kind: RelativeCauseKind = frame.kind
   def comparisonKind: CandidateComparisonKind = frame.comparison.kind
   def mover: Color = frame.comparison.mover
   def referenceLine: SemanticLineKey = frame.comparison.referenceLine
   def candidateLine: SemanticLineKey = frame.comparison.candidateLine
   def eventLine: SemanticLineKey = frame.eventLine
-  def role: RelativeCauseRole = frame.role
   def sourceSide: RelativeCauseSourceSide = frame.sourceSide
-  def attributionKind: CauseAttributionKind = frame.attributionKind
-
-  def sentenceReady: Boolean =
-    directCausalSignatures.nonEmpty && unreadyCauseEvidenceId.isEmpty
 
   def stableKey: String =
     List(
       frame.stableKey,
-      directCausalSignatures.mkString(","),
-      unreadyCauseEvidenceId.getOrElse("")
+      exactProofOccurrences.map(_.stableSortKey).mkString(",")
     ).mkString("|")
 
 object RelativeCauseSemanticKey:
@@ -573,33 +294,32 @@ object RelativeCauseSemanticKey:
       )
     )
     val binding = graph.requiredRelativeCauseBinding(cause)
-    val directChannels = RelativeCauseConstructionAdmission
-      .admittedDirectChannels(cause, graph)
-      .map(_.causalSignature)
-      .distinct
-      .sorted
+    val admittedChannels = RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
+    require(
+      RelativeCauseConstructionAdmission.initiallyReadyWithChannels(cause, graph, admittedChannels),
+      s"relative cause '$causeEvidenceId' has no complete admitted typed proof construction"
+    )
+    val exactProofOccurrences = admittedChannels.map(_.exactOccurrenceFingerprint)
+    require(
+      exactProofOccurrences.distinct.size == exactProofOccurrences.size,
+      s"relative cause '$causeEvidenceId' repeats one exact proof occurrence"
+    )
+    val orderedProofOccurrences = exactProofOccurrences.sortBy(_.stableSortKey)
     val frame = RelativeCauseSemanticFrameKey(
       kind = cause.kind,
       comparison = CandidateComparisonSemanticKey.from(comparison),
       eventLine = SemanticLineKey.from(binding.eventLine),
-      role = binding.role,
-      sourceSide = cause.sourceSide,
-      attributionKind = cause.attribution.kind
+      sourceSide = cause.sourceSide
     )
     RelativeCauseSemanticKey(
       frame = frame,
-      directCausalSignatures = directChannels,
-      unreadyCauseEvidenceId = Option.unless(
-        RelativeCauseConstructionAdmission.initiallyReady(cause, graph)
-      )(causeEvidenceId)
+      exactProofOccurrences = orderedProofOccurrences
     )
 
 case class RelativeCauseBinding(
-    role: RelativeCauseRole,
     sourceSide: RelativeCauseSourceSide,
     eventLine: LineNodeRef,
-    evidenceLines: List[LineNodeRef],
-    bindingTier: RelativeCauseBindingTier
+    evidenceLines: List[LineNodeRef]
 )
 
 object RelativeCauseFact:
@@ -608,104 +328,28 @@ object RelativeCauseFact:
       comparison: CandidateComparisonFact
   ): RelativeCauseBinding =
     binding(
-      kind = cause.kind,
       comparisonKind = comparison.kind,
       referenceLine = comparison.referenceLine,
       candidateLine = comparison.candidateLine,
-      supportEvidence = cause.supportEvidence,
-      explicitSourceSide = Some(cause.sourceSide)
+      sourceSide = cause.sourceSide
     )
 
   def binding(
-      kind: RelativeCauseKind,
       comparisonKind: CandidateComparisonKind,
       referenceLine: LineNodeRef,
       candidateLine: LineNodeRef,
-      supportEvidence: List[EvidenceRef],
-      explicitSourceSide: Option[RelativeCauseSourceSide]
+      sourceSide: RelativeCauseSourceSide
   ): RelativeCauseBinding =
-    val role = RelativeCauseRole.fromComparisonKind(comparisonKind)
-    val sourceSide =
-      explicitSourceSide
-        .orElse(semanticSourceSide(kind, referenceLine, candidateLine, supportEvidence))
-        .orElse(RelativeCauseSourceSide.fromSupportEvidence(referenceLine, candidateLine, supportEvidence))
-        .getOrElse(RelativeCauseSourceSide.Shared)
-    val eventLine = RelativeCauseSourceSide.eventLine(sourceSide, role, referenceLine, candidateLine)
+    require(
+      comparisonKind == CandidateComparisonKind.PlayedVsBest,
+      "a relative Cause may bind only an exact PlayedVsBest comparison"
+    )
+    val eventLine = RelativeCauseSourceSide.eventLine(sourceSide, referenceLine, candidateLine)
     RelativeCauseBinding(
-      role = role,
       sourceSide = sourceSide,
       eventLine = eventLine,
-      evidenceLines = evidenceLinesFor(referenceLine, candidateLine, supportEvidence, sourceSide),
-      bindingTier = RelativeCauseBindingTier.from(role, sourceSide)
+      evidenceLines = List(eventLine)
     )
-
-  private def semanticSourceSide(
-      kind: RelativeCauseKind,
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef,
-      supportEvidence: List[EvidenceRef]
-  ): Option[RelativeCauseSourceSide] =
-    kind match
-      case _ =>
-        None
-
-  private def supportReferencesLine(supportEvidence: List[EvidenceRef], line: LineNodeRef): Boolean =
-    supportEvidence.exists(_.line.contains(line))
-
-  private def evidenceLinesFor(
-      referenceLine: LineNodeRef,
-      candidateLine: LineNodeRef,
-      supportEvidence: List[EvidenceRef],
-      sourceSide: RelativeCauseSourceSide
-  ): List[LineNodeRef] =
-    val supportLines =
-      supportEvidence.flatMap(_.line).filter(line => line == referenceLine || line == candidateLine)
-    val sideLines =
-      sourceSide match
-        case RelativeCauseSourceSide.Reference =>
-          List(referenceLine)
-        case RelativeCauseSourceSide.Candidate =>
-          List(candidateLine)
-        case RelativeCauseSourceSide.Mixed | RelativeCauseSourceSide.Shared =>
-          List(referenceLine, candidateLine)
-    (supportLines ++ sideLines).distinct
-
-enum RelativeCauseProofRole:
-  case DirectProof
-  case ContrastProof
-  case ContextSupport
-
-enum RelativeCauseProofStrength:
-  case Primary
-  case Supporting
-  case WeakHint
-
-case class RelativeCauseProofSection(
-    role: RelativeCauseProofRole,
-    strength: RelativeCauseProofStrength,
-    sourceRefs: List[EvidenceRef] = Nil
-):
-  require(
-    sourceRefs.map(_.id).distinct.size == sourceRefs.size,
-    "a relative Cause proof section must not repeat or collide source owners"
-  )
-
-case class RelativeCauseProof(
-    directProof: RelativeCauseProofSection = RelativeCauseProofSection(
-      role = RelativeCauseProofRole.DirectProof,
-      strength = RelativeCauseProofStrength.Primary
-    ),
-    contrastProof: RelativeCauseProofSection = RelativeCauseProofSection(
-      role = RelativeCauseProofRole.ContrastProof,
-      strength = RelativeCauseProofStrength.Supporting
-    ),
-    contextSupport: RelativeCauseProofSection = RelativeCauseProofSection(
-      role = RelativeCauseProofRole.ContextSupport,
-      strength = RelativeCauseProofStrength.WeakHint
-    )
-):
-  def sections: List[RelativeCauseProofSection] =
-    List(directProof, contrastProof, contextSupport)
 
 case class RelativeMoveAssessment(
     played: MoveTransitionEdge,

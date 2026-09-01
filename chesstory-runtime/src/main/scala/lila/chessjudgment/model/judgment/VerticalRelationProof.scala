@@ -1371,6 +1371,14 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
     )
   }
 
+  /** Exact changed-dependency key selected by the sole L1 dispatcher. This
+    * does not execute the selected contract or materialize its result.
+    */
+  private[chessjudgment] def activates(
+      contract: VerticalRelationContractKind
+  ): Boolean =
+    engine.activates(contract)
+
   private[judgment] lazy val byContract: VectorMap[
     VerticalRelationContractKind,
     List[RelationFactEvidence]
@@ -1427,6 +1435,8 @@ private final class ClosedVerticalRelationEngine(
   ]
 
   def activeContracts: List[VerticalRelationContractKind] = input.activeContracts
+
+  def activates(contract: VerticalRelationContractKind): Boolean = input.activates(contract)
 
   def resultsFor(contract: VerticalRelationContractKind): List[RelationFactEvidence] = synchronized {
     rawByContract.getOrElseUpdate(

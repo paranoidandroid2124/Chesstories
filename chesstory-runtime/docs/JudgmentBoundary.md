@@ -11,7 +11,7 @@
 
 | 단계 | 책임 |
 | --- | --- |
-| Q | canonical history와 focus를 검증하고 필요한 root/focus/causal engine work만 발급한다. |
+| Q | canonical history와 focus를 검증하고 기존 PV/MultiPV에 필요한 engine work만 발급한다. |
 | F | 합법 재생된 position, line, transition 및 폐쇄 인벤토리를 만든다. |
 | C | 등록된 사실에서 원인 후보와 정확한 증명 경로를 조립한다. |
 | Jp | 그래프에 결속된 claim 후보를 만든다. |
@@ -77,6 +77,48 @@ L2는 공격맵, 합법수, ray, 핀, pawn topology를 다시 계산하지 않�
 명시적 결손이며, 증명할 수 없어 비워 둔 결과는 올바른 fail-closed
 상태다.
 
+### 인간 이론서 검증 게이트
+
+체스 아이디어의 의미 요건은 인간 이론서에서 가져오되, 책의 표현이
+런타임 사실 권위가 되지는 않는다. 새 L2 증명군은 구현 전에 정확한
+책·PDF page/example, 그 예가 연결하는 선행 수·후속 소비·상대 자원과
+대안, 필요한 하위 premise를 함께 기록해야 한다. 이름만 닮았거나
+평가치가 좋아졌다는 이유로 계약을 만들 수 없다.
+
+source identity는
+[`source-index.json`](../../judgment-evaluation/references/source-index.json)이
+소유한다. 그 document locator의 page는 모두 1-based다. 표의 외부 용어집은
+URL로 따로 식별하며, 수순과 현재 계약의 의미 상한을 함께 보존한다.
+활성 증명군과 생산자·공개 필드·형식 테스트·anchor의 대응은
+[`l2-proof-provenance.json`](../../judgment-evaluation/references/l2-proof-provenance.json)이
+CI에서 전수 대조한다. 이 manifest는 레퍼런스 provenance 게이트일 뿐이며
+런타임 보드 사실, dispatch 또는 캐시 dependency에는 참여하지 않는다.
+
+| 현재 증명군 | 레퍼런스 검증 수준 | anchor | 코드가 추가로 요구하는 형식적 충분조건 |
+| --- | --- | --- | --- |
+| `UniqueCheckReplyDefenderDisplacementBeforeCapture` | **exact ordered skeleton** | Chess.com, [*Deflection*](https://www.chess.com/terms/deflection-chess): `Bxf7+`의 유일 합법 응수 `Kxf7` 뒤 queen 방어가 사라지는 예. `ref-bc7b3f1ff52f4c7a9940dad53cd6b975`, p.178의 `13.Qa4+! ... 14.Qxb4`는 forcing/zwischenzug **motif-only** 보조 anchor다. | 동일한 유일 응수자가 played sibling의 정확한 재포획자이고, reference 후속 포획에는 합법 재포획이 없을 때만 승인한다. |
+| `SoleRecapturerRemovalBeforeTargetCapture` | **exact ordered skeleton + 책의 motif-only breadth** | Chess.com, [*Removing the Defender*](https://www.chess.com/terms/removing-the-defender-chess)는 rook이 유일 수비자를 잡고 상대가 그 rook을 재포획한 뒤 원래 target의 보호가 사라져 실제로 material을 얻는 구조를 명시한다. `ref-4f1abd0745b24746b58928d162f837f6`, pp.154–156; `ref-7a451d5c87b9422a901f0486386aeb44`, pp.269–272; `ref-dc427a9593ab48248d19627b245fafaa`, p.131은 defender displacement/removal의 **motif-only** 전략적 폭이다. | 일반 과부하가 아니라, sibling의 유일 재포획자를 먼저 제거하고 상대 재포획 뒤 같은 exploit이 실제로 소비되며 대체 재포획자가 없을 때만 승인한다. |
+| `VacatedGateEnablesUnrecapturableSliderCapture` | **motif-only; full contract exact example은 아직 없음** | `ref-4f1abd0745b24746b58928d162f837f6`, pp.145–147의 `47.Rxc5 bxc5 48.Qh4`와 pp.153–156의 열린 g-file/diagonal; `ref-7a451d5c87b9422a901f0486386aeb44`, pp.270–272의 e-file/e7 진입은 line opening/invasion 의미를 검증하지만 현재 계약 전체의 실행 예는 아니다. | 일반 파일 개방이나 계획이 아니라, 정확한 gate 이탈·같은 slider의 reach 유지·뒤의 실제 포획·played sibling의 닫힌 부재를 모두 증명하는 보수적 formal strengthening이다. 이를 책이 그대로 검증한 계약이라고 부르지 않는다. |
+| `PassedPawnProgressRealizedAfterOnlyLegalReply` | **exact route component; singleton reply closure는 runtime strengthening** | `ref-dc427a9593ab48248d19627b245fafaa`, pp.507–508의 `37.Nxa6 ... 39.a6 ... 41.a8=Q`는 실제 통과폰 진행·승격 occurrence를 검증한다. 책이 root의 합법 응수 인벤토리를 발급한 것은 아니다. | root의 합법 응수가 정확히 하나임을 canonical inventory가 인증하고, observed played root와 그 main continuation으로 이루어진 한 actual route에서 뒤의 통과폰 진행 결과 occurrence가 발급될 때만 승인한다. 승리·의도·장기 계획이나 다른 sibling 실패는 말하지 않는다. |
+
+`exact example`은 인간 자료가 계약의 핵심 수순 구조까지 보여 준다는 뜻이고,
+`motif-only`는 이름과 인과 방향의 의미 상한만 제공한다는 뜻이다. 후자의
+formal strengthening은 코드에서 정확할 수 있지만, 그 자체를 책으로 검증된
+새 체스 명칭으로 승격하지 않는다. exact source example이 없는 상태도 이 표에
+그대로 남겨야 하며, 문서 문구로 검증 완료를 가장하지 않는다.
+
+향후 outpost·기동의 기준은 `ref-4f1abd0745b24746b58928d162f837f6`
+pp.149–169와 `ref-7a451d5c87b9422a901f0486386aeb44` pp.257–269다.
+예방의 핵심 반례는 `ref-b7e552e8d8914cdc31ce1002fbb8252e` p.33의
+`10.a4` 뒤에도 남는 `...Nb6`이며, 구체적 활성 자원은 pp.37–38에 나온다.
+반격의 기준은 `ref-dc427a9593ab48248d19627b245fafaa` p.507의
+`32...Rf4!`처럼 상대 계획과 별개의 자원 및 시간 순서를 함께 보이는
+경우다. 이 premise들이 닫히기 전에는 해당 L2 이름을 만들지 않는다.
+
+따라서 레퍼런스는 motif 목록을 복사하는 재료가 아니라 구현이 말해도
+되는 최대 의미의 상한이다. 코드가 이 연결을 닫지 못하면 그 아이디어는
+아직 미구현이다.
+
 ## 4. 봉인된 공통 L2 뼈대
 
 `BoundedCausalProof`는 다음 소유권을 분리한다.
@@ -84,6 +126,8 @@ L2는 공격맵, 합법수, ray, 핀, pawn topology를 다시 계산하지 않�
 - semantic proposition은 같은 의미 명제를 공유한다.
 - occurrence는 actual/counterfactual branch와 ordered root/step
   provenance, 정확한 before/after position을 보존한다.
+- step index·ply·before/after position의 직접 연속성이 occurrence 연결을
+  인증한다. 이를 재진술하는 별도 `incomingLink`나 자체 발급 link hash는 없다.
 - 독립 증명은 별도 path occurrence로 남고 각 path가 자기 L0/L1
   premise use와 closed-absence use를 소유한다.
 - premise는 하위 result ID, source evidence ID, branch와 step을 잃지
@@ -106,18 +150,27 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
 없으면 새로 파생하고 복수 소유자는 fail-closed한다. 하위 dependency가
 바뀌면 새 fingerprint로 demand가 실행된다.
 
+관계 기반 세 증명군의 predispatch는 canonical L1 producer의 활성
+contract key만 읽고 결과를 미리 materialize하지 않는다. 통과폰 증명군은
+root `StructuralDelta`의 canonical 응수 인벤토리가 singleton이고 그 수가
+main replay의 첫 응수와 같은지를 먼저 검사한다. 이 cheap gate를 통과한
+경우에만 main replay의 `PassedPawnProgress` changed occurrence와 causal
+episode를 materialize한다. 구조 결과가 없는 합법 전이도 동일한
+`StructuralDeltaProducer`가 빈 폐쇄 인벤토리로 인증한다. 상위 층은 이
+값을 "미계산"과 구별할 수 있지만 새로운 보드 계산은 하지 않는다.
+
 ## 5. 현재 봉인된 L2 증명군
 
-현재 공통 뼈대를 끝까지 사용하는 증명군은 세 개다.
+현재 공통 뼈대를 끝까지 사용하는 증명군은 네 개다.
 
-### 강제 응수에 따른 수비 자원 차이
+### `UniqueCheckReplyDefenderDisplacementBeforeCapture`: 후속 포획 전에 강제된 수비자 이동
 
-- 유일 생산자는 `ForcedReplyResourceDifferentialAssembler`다.
+- 유일 생산자는 `UniqueCheckReplyDefenderDisplacementBeforeCaptureAssembler`다.
 - actionable `PlayedVsBest` 비교가 `WrongMoveOrder` 증명을 요구할
   때만 reference/played pair를 계산한다.
 - reference의 첫 수가 체크를 만들고 L1 inventory가 유일한 즉시
   응수를 닫으며, 다음 같은 편의 실현수가 정확한 대상을 잡아야 한다.
-- `forced_displacement`는 실전에서 재포획한 바로 그 수비 기물이
+- 실전에서 재포획한 바로 그 수비 기물이
   reference의 유일 응수로 이동한 경우만 승인한다.
 - reference branch에는 해당 수비 기물의 `LegalCaptureOf`가 없고,
   played branch에는 같은 수비 기물의 합법 재포획이 실제 line으로
@@ -126,15 +179,15 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
   position occurrence가 함께 발급자를 소유한다. L1 relation은 체크와
   포획 명제의 premise이지 임의 위치 부재의 별도 진실 원천이 아니다.
 - 결과는 `WrongMoveOrder`의 direct proof로 claim 승인·선택을 거쳐
-  public v6의 typed `resource_differential_proof`까지 소비된다.
+  public v6의 typed `unique_check_reply_defender_displacement_before_capture_proof`까지 소비된다.
 
 따라서 현재 말할 수 있는 명제는 “기준 수의 유일한 체크 응수가 실전의
 재포획자를 정확히 이동시켜 뒤의 실현수를 가능하게 하지만, 실전 순서는
 그 자원을 남겨 같은 실현수에 재포획을 허용했다”는 좁은 경우다.
 
-### 유일 재포획자 제거에 따른 수비 의무 변화
+### `SoleRecapturerRemovalBeforeTargetCapture`: 대상 포획 전에 이루어진 유일 재포획자 제거
 
-- 유일 생산자는 `DefenseObligationChangeAssembler`다.
+- 유일 생산자는 `SoleRecapturerRemovalBeforeTargetCaptureAssembler`다.
 - actionable `PlayedVsBest`의 exact demand가 있을 때만 같은 reference/played
   sibling pair를 계산한다.
 - reference 첫 수는 실전 즉시 exploit의 유일 재포획자를 정확히 잡고,
@@ -150,39 +203,86 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
   재포획 수, exact demand를 dependency fingerprint와 한 proof path에
   보존한다.
 - 결과는 `WrongMoveOrder`의 독립 direct proof channel로 선택되어 public
-  v6의 typed `defense_obligation_change_proof`까지 소비된다.
+  v6의 typed `sole_recapturer_removal_before_target_capture_proof`까지 소비된다.
 
 따라서 이 증명군은 일반 과부하나 일반 수비 붕괴를 말하지 않는다.
 “기준 순서가 실전의 유일 재포획자를 먼저 제거했기 때문에 뒤의 동일
 exploit에는 대체 재포획이 없지만, 실전 즉시 exploit에는 그 수비자가
 남아 있다”는 명제만 승인한다.
 
-### 폐쇄 응수 아래 통과폰 결과
+### `VacatedGateEnablesUnrecapturableSliderCapture`: 비워진 gate와 같은 slider의 후속 포획
 
-- 유일 생산자는 `PassedPawnResultProofAssembler`다.
-- exact `PlayedVsBest` demand가 만든 passed-pawn-result event 중 통과폰 진행의 실제
+- 유일 생산자는 `VacatedGateEnablesUnrecapturableSliderCaptureAssembler`다.
+- actionable `PlayedVsBest`가 있고 reference root의 L1
+  `SliderReachDelta` 및 뒤의 L1 `CaptureRecaptureInventory`가 활성인
+  occurrence index만 demand한다.
+- reference root mover가 slider 앞의 정확한 gate를 비우고, 같은 slider가
+  intervening occurrence마다 그 reach를 유지한 뒤 정확한 상대 기물을
+  실제로 포획해야 한다. 포획 직후 상대의 합법 재포획은 없어야 한다.
+- played sibling은 exploit 전까지 같은 continuation을 보존하면서 slider,
+  target, gate blocker의 정확한 점유와 blocked reach를 유지해야 한다.
+  그 위치에는 reference exploit move와 같은 target에 대한 대체 합법
+  capture가 모두 없어야 한다.
+- 두 L1 premise, 모든 중간 positive state, 세 폐쇄 부재, 두 branch와
+  실제 later capture를 occurrence와 dependency fingerprint에 보존한다.
+- 결과는 `MissedTacticalResource`의 독립 direct proof로 승인·선택되어
+  public v6의 typed `vacated_gate_enables_unrecapturable_slider_capture_proof`까지 소비된다.
+
+따라서 이는 일반적인 “파일을 열었다”나 장기 계획을 뜻하지 않는다.
+“reference root가 비운 정확한 gate를 같은 slider의 뒤 포획이 실제로
+소비하며, played sibling에서는 blocker가 남아 그 합법 자원이 닫혀
+있다”는 capture-only 준비만 말한다.
+
+### `PassedPawnProgressRealizedAfterOnlyLegalReply`: 유일 합법 응수 뒤의 통과폰 진행
+
+- 유일 생산자는 `PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler`다.
+- exact `PlayedVsBest` demand가 만든 하위 passed-pawn-result event 중 통과폰 진행의 실제
   후속 결과가 있는 endpoint만 계산한다.
-- root 뒤의 전체 합법 응수는 structural-delta의 canonical reply
-  inventory가 발급하고 passed-pawn-result event가 every-and-only branch coverage를
-  인증한다. 각 응수 branch에서는 같은 기능의 통과폰 결과가 실제 legal
-  occurrence로 실현돼야 한다.
-- expected route와 각 reply route는 exact dependency·goal·functional
-  match premise를 별도 proof path로 보존한다. 여러 실현 경로는 하나로
-  줄이지 않는다.
-- 원시 passed-pawn-result event는 내부 premise와 probe 소유자일 뿐이다. 공개
-  `PassedPawnResult` 원인과 typed `passed_pawn_result_proof`는 위 L2 결과만
-  소비한다.
+- root 뒤의 합법 응수가 정확히 하나라는 사실은 structural-delta의
+  canonical reply inventory가 발급한다. 현재 생산자는 그 수가 기존 main
+  PV의 첫 응수와 동일한 경우에만 changed occurrence와 episode를 만들며,
+  필요한 replay 범위가 모두 인증된 경우만 witness를 만든다. 다중 응수나
+  별도 probe 경로는 없다.
+- 공개 occurrence는 observed played root, 그 유일 응수, 뒤의 실제 결과를
+  잇는 단 하나의 `actual_result_route`다. 비교 demand·각 graph-owned
+  dependency route·terminal result가 한 proof path를 이루며, 동일 actual
+  occurrence에 독립적인 하위 dependency 경로가 여러 개면 어느 것도
+  dedup하지 않고 공통 proof set에 모두 보존한다.
+- 원시 passed-pawn-result event는 내부 premise일 뿐이다. 공개 원인과 typed
+  L2 proof는 닫힌 유일-응수 occurrence만 소비한다.
+- 현재 상위 소비자는 actionable `PlayedVsBest`에서 실전 수가 실제로 만든
+  결과를 `candidate`/`played_value`의 complementary facet으로만 선택한다.
+  평가 손실의 원인이나 reference에서 놓친 자원으로 바꾸어 말하지 않는다.
 
-따라서 이 증명군은 “현재 수가 만든 정확한 통과폰 관계를 뒤의 같은
-편 수가 실제로 소비했고, 모든 합법 즉시 응수에서 그 결과 occurrence까지
-발급된 정확한 canonical 수순 범위 안에 성립했다”까지만 말한다. 이 proof는
-source root의 결과만 인증하며 played sibling의 부재나 `missed`를 주장하지
-않는다. 장기적 승리, 최선의 계획, 의도나 일반적 준비도 주장하지 않는다.
+따라서 이 증명군은 “observed root와 유일한 합법 즉시 응수, 뒤의 실제
+실현 수가 하나의 canonical actual route에 있고, 그 경로의 정확한 하위
+dependency가 terminal 통과폰 진행 결과에 도달했다”까지만 말한다. 이
+proof는 actual route의 결과만 인증하며 sibling의 부재나 `missed`를
+주장하지 않는다. 장기적 승리, 최선의 계획, 의도나 일반적 준비도 주장하지
+않는다.
 
 현재는 일반 과부하, 일반 간섭, 모든 합법 repair까지 닫힌 수비 붕괴,
-교환·이동에 의한 일반 수비 의무 이전, 지연된 준비, 예방, 반격,
-기동을 증명하지 않는다. 대체 수비자와 repair 전체, intervening
+교환·이동에 의한 일반 수비 의무 이전, non-capture 또는 여러 단계의
+일반 준비, 예방, 반격, 기동·outpost를 증명하지 않는다. 대체 수비자와
+repair 전체, sibling counterfactual, square 안정성, intervening
 dependency와 실제 후속 소비가 닫히기 전에는 이 이름들을 만들지 않는다.
+
+향후 의미 커버리지는 현재 타입 이름을 늘리는 작업이 아니다. 다음 순서로
+하부 권한과 반사실이 닫힐 때만 새 증명군을 연다.
+
+| P2 증명군 | 레퍼런스가 요구하는 연결 | 아직 필요한 폐쇄 입력 |
+| --- | --- | --- |
+| 일반 수비 의무 변화 | 제거·교환·간섭·과부하 뒤 실제 exploit | 모든 합법 repair/대체 수비와 동시 의무 불가능성 |
+| 비포획 준비와 pawn break | 선행 수가 만든 관계를 뒤의 같은 편 수가 실제 소비 | intervening state, sibling 부재, 동일 주체·대상 identity |
+| 예방 | 수가 없을 때의 구체적 상대 자원과 수 뒤 동일 자원의 소멸 | actual/sibling counterfactual 및 폐쇄 합법 자원 inventory |
+| 반격 | 상대의 실현 가능한 위협과 별개의 forcing resource의 시간 순서 | 위협 실현 수·대상, 양측 응수 폐쇄와 선후 관계 |
+| 기동·outpost | 같은 기물의 경로, 도착 가능성, 지지 기반과 도착 뒤 역할 소비 | 상대 pawn challenge·교환·추방 자원 부재와 전체 occurrence 경로 |
+| 공간·약점·색 복합 | 제약이 실제 기물 경로/침투/공격에서 소비됨 | 정적 라벨이 아닌 제한 자원과 대체 경로의 폐쇄 증명 |
+
+특히 outpost는 L0의 정적 `outpost=true`가 아니다. 같은 기물이 실제로
+도달하거나 점유한 occurrence, 지원·통제, 상대 pawn challenge 및 합법
+교환/추방 자원의 부재, 뒤의 실제 역할 소비와 sibling 반사실까지 묶일 때
+L2가 말할 수 있다.
 
 ## 6. 공개와 평가의 분리
 
@@ -190,6 +290,22 @@ player response는 선택된 verdict와 원인이 소유한 증명만 투영한�
 typed L2 proof는 branch occurrence, proof paths, exact premises,
 closed absence, 관련 기물과 realizing/defense move를 보존한다. 공개
 계층은 actor/mechanism 문구나 confidence로 빈 필드를 채우지 않는다.
+자연어 생성은 이 구조를 소비할 수 있는 후속 표현 기능일 뿐 프로젝트의
+증명 목표가 아니다.
+
+공개 trust boundary는 생산자보다 넓지 않다.
+
+- `cause_evidence_id`와 `channel_id`는 한 commentary 전체에서 occurrence
+  소유자가 유일하다. 같은 ID 아래 다른 proof path를 숨길 수 없다.
+- `exposure`는 R이 인증한 `primary | complementary`를 그대로 운반한다.
+  브라우저는 proof path 또는 branch occurrence 수로 이 등급을 다시 정하지 않는다.
+- candidate/reference source와 comparison kind가 지시하는 실제 primary
+  root가 event/actor/proof occurrence를 소유한다. 현재 네 typed L2
+  증명군은 actionable `PlayedVsBest` 수요에서만 공개된다.
+- Runtime·Python·브라우저는 공격맵이나 합법 자원을 다시 계산하거나
+  typed proof의 체스 의미를 재승인하지 않는다. 서버가 낸 wire vocabulary,
+  ID·branch·path·use 교차참조, root 운송 소유권과 occurrence/FEN/수순
+  연속성만 fail-closed로 검증한다.
 
 개발용 stage intervention, corpus 봉인, 통계와 release 절차는
 [`../../judgment-evaluation/README.md`](../../judgment-evaluation/README.md)의

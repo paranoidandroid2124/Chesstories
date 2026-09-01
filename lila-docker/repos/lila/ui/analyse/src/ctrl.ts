@@ -801,9 +801,9 @@ export default class AnalyseCtrl implements CevalHandler {
       if (
         review.kind === 'move-verdict' &&
         !this.moveReviewView.expandedReasonId &&
-        review.core.reasonRefs.primary
+        review.core.reasonRefs.primary[0]
       )
-        this.moveReviewView.expandedReasonId = review.core.reasonRefs.primary;
+        this.moveReviewView.expandedReasonId = review.core.reasonRefs.primary[0];
       if (review.kind !== 'move-verdict' || review.core.verdictSymbol === 'none')
         this.moveReviewAnnotations.delete(subject!.after.path);
       else

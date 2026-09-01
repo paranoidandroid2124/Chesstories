@@ -5,8 +5,7 @@ export const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 
 export const beforeFen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1' as FEN;
 export const afterFen = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2' as FEN;
 export const bestFen = 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2' as FEN;
-export const continuationFen =
-  'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2' as FEN;
+export const continuationFen = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2' as FEN;
 export const requestId = 'move-review-test';
 export const jobId = 'a'.repeat(32);
 export const judgmentRevision = 'chesstory.position-commentary.response.v6';
@@ -26,8 +25,8 @@ export function decodeContext(engineProfile: MoveReviewEngineProfile = moveRevie
 }
 
 export function rawProgress(
-  phase: 'root_search' | 'focus_comparison' | 'causal_probe' | 'completed' | 'stopped',
-  works = phase === 'root_search' ? 1 : phase === 'focus_comparison' ? 2 : 3,
+  phase: 'root_search' | 'focus_comparison' | 'completed' | 'stopped',
+  works = phase === 'root_search' ? 1 : 2,
   reports = phase === 'completed' || phase === 'stopped' ? works : works - 1,
 ): Record<string, unknown> {
   return {
@@ -37,33 +36,29 @@ export function rawProgress(
     selected_commentaries_completed: phase === 'completed' ? 1 : 0,
     physical_works_issued: works,
     physical_reports_accepted: reports,
-    causal_waves_completed: phase === 'completed' ? 1 : 0,
   };
 }
 
 export function rawIssuedWork(
-  purpose: 'root_search' | 'focus_comparison' | 'causal_probe' = 'root_search',
+  purpose: 'root_search' | 'focus_comparison' = 'root_search',
   engineProfile: MoveReviewEngineProfile = moveReviewEngineProfile,
 ): Record<string, unknown> {
   const focus = purpose === 'focus_comparison';
-  const causal = purpose === 'causal_probe';
   return {
-    work_id: purpose === 'root_search' ? 'work:0' : focus ? 'work:1' : 'work:2',
+    work_id: purpose === 'root_search' ? 'work:0' : 'work:1',
     purpose,
     engine_profile: engineProfile,
-    execution_key_sha256: purpose === 'root_search' ? 'a'.repeat(64) : focus ? 'b'.repeat(64) : 'c'.repeat(64),
+    execution_key_sha256: purpose === 'root_search' ? 'a'.repeat(64) : 'b'.repeat(64),
     variant: 'standard',
     engine_position_initial_fen: initialFen,
-    engine_position_moves_uci: causal ? ['e2e4', 'e7e5'] : ['e2e4'],
-    search_fen: causal ? afterFen : beforeFen,
-    root_restriction: focus
-      ? { kind: 'restricted', moves_uci: ['c7c5', 'e7e5'] }
-      : { kind: 'unrestricted' },
+    engine_position_moves_uci: ['e2e4'],
+    search_fen: beforeFen,
+    root_restriction: focus ? { kind: 'restricted', moves_uci: ['c7c5', 'e7e5'] } : { kind: 'unrestricted' },
     search_limits: {
       depth: 16,
       nodes: purpose === 'root_search' ? 5_000_000 : 2_000_000,
       movetime_ms: purpose === 'root_search' ? 5_000 : 2_500,
-      multi_pv: purpose === 'root_search' ? 3 : focus ? 2 : 1,
+      multi_pv: purpose === 'root_search' ? 3 : 2,
     },
     max_search_elapsed_ms: purpose === 'root_search' ? 6_000 : 3_500,
   };
@@ -91,45 +86,6 @@ export function rawCommentary(overrides: Record<string, unknown> = {}): Record<s
         depth: 16,
       },
     },
-    causal_explanations: [
-      {
-        kind: 'single_cause',
-        facets: [
-          {
-            facet_role: 'lead',
-            cause_evidence_id: 'cause.center',
-            kind: 'candidate_tactical_liability',
-            proof_confidence: 'engine_backed',
-            effect_mode: 'played_liability',
-            exposure: 'primary',
-            source_side: 'candidate',
-            event_move: 'e7e5',
-            comparison_kind: 'played_vs_best',
-            channels: [
-              {
-                channel_id: 'cause-channel:exact-center-pressure',
-                causal_signature: 'cause.center:pressure',
-                direct_change: 'occurred',
-                played_change: 'lost',
-                actor: { move_uci: 'e7e5', side: 'black', piece: 'pawn:e7', from: 'e7', to: 'e5' },
-                targets: [{ kind: 'square', key: 'e5' }],
-                mechanisms: [{ kind: 'relation', key: 'center-control' }],
-                consequences: [{ kind: 'consequence', key: 'tempo-target' }],
-                witnesses: [{ kind: 'line', key: 'played' }],
-                proof_line_moves: ['e7e5', 'g1f3'],
-                proof_segment: {
-                  terminal_relation: 'produces_line_consequence',
-                  steps: [
-                    { ply_offset: 0, move_uci: 'e7e5', role: 'root_action' },
-                    { ply_offset: 1, move_uci: 'g1f3', role: 'terminal_event' },
-                  ],
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
     ...overrides,
   };
 }
@@ -144,7 +100,7 @@ export function rawResponse(overrides: Record<string, unknown> = {}): Record<str
     variant: 'standard',
     current_fen: beforeFen,
     focus: { kind: 'played_move', played_move_uci: 'e7e5', resulting_fen: afterFen },
-    progress: rawProgress('completed', 3, 3),
+    progress: rawProgress('completed', 2, 2),
     result: {
       kind: 'selected_move_choices',
       selected_move_reviews: [
@@ -174,11 +130,12 @@ export function rawResponse(overrides: Record<string, unknown> = {}): Record<str
 }
 
 export function rawSnapshot(
-  state: 'awaiting_core' | 'awaiting_evidence' | 'awaiting_causal' | 'completed' | 'stopped',
+  state: 'awaiting_core' | 'awaiting_evidence' | 'completed' | 'stopped',
   options: { engineProfile?: MoveReviewEngineProfile } = {},
 ): Record<string, unknown> {
-  if (state === 'completed') return { ...rawResponse(), engine_profile: options.engineProfile ?? moveReviewEngineProfile };
-  const purpose = state === 'awaiting_core' ? 'root_search' : state === 'awaiting_evidence' ? 'focus_comparison' : 'causal_probe';
+  if (state === 'completed')
+    return { ...rawResponse(), engine_profile: options.engineProfile ?? moveReviewEngineProfile };
+  const purpose = state === 'awaiting_core' ? 'root_search' : 'focus_comparison';
   const base = {
     schema_version: 'chesstory.position-commentary.job-status.v6',
     request_id: requestId,
@@ -198,7 +155,7 @@ export function rawSnapshot(
   return {
     ...base,
     state: 'awaiting_engine_work',
-    progress: rawProgress(purpose, purpose === 'root_search' ? 1 : purpose === 'focus_comparison' ? 2 : 3),
+    progress: rawProgress(purpose, purpose === 'root_search' ? 1 : 2),
     issued_engine_work: rawIssuedWork(purpose, options.engineProfile),
   };
 }

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/f.output.schema.json",
   "title": "F output v1",
-  "$comment": "Board facts, legal replay, same-perspective engine comparisons, candidate-set classification, and exact proofs.",
+  "$comment": "Board facts, legal replay, same-perspective engine comparisons, and exact proofs.",
   "allOf": [
     { "$ref": "common.schema.json#/$defs/stageDocument" },
     {

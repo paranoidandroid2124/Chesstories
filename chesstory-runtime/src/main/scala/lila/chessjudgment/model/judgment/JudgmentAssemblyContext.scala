@@ -14,28 +14,6 @@ final case class AdmittedReviewLine(
   def rootMove: Option[String] =
     evaluation.moves.headOption.map(_.trim.toLowerCase)
 
-final case class AdmittedReviewBranchReply(
-    sourceProbeId: String,
-    probedMoveUci: String,
-    branchFen: String,
-    branchPly: Int,
-    certifiedHorizonPlyOffset: Int,
-    lines: List[AdmittedReviewLine],
-):
-  require(certifiedHorizonPlyOffset > 0, "a branch-reply probe needs an exact positive horizon")
-  require(
-    lines.groupBy(_.rootMove).values.forall(group => group.map(line => line.evaluation -> line.replay).distinct.size == 1),
-    "one branch-reply root move cannot carry conflicting evaluations"
-  )
-  def firstRankedLinePerRootMove: List[AdmittedReviewLine] =
-    lines.sortBy(_.rank).distinctBy(_.rootMove)
-
-final case class BranchReplyLineOccurrenceOwner(
-    probedMoveUci: String,
-    branchPosition: PositionNodeRef
-):
-  require(EvidenceRef.normalizeMove(probedMoveUci).nonEmpty, "a branch-reply line occurrence requires its probed move")
-
 final case class LineRootOccurrence(
     start: PositionNodeRef,
     destination: PositionNodeRef,
@@ -51,9 +29,8 @@ final case class AdmittedMoveReviewInput(
     afterPlayedFen: String,
     afterReferenceFen: Option[String],
     lines: List[AdmittedReviewLine],
-    completeCandidateSet: Option[CompleteCandidateSet],
-    positionHistory: CanonicalPositionHistory,
-    branchReplies: List[AdmittedReviewBranchReply] = Nil
+    admittedRootRankingPair: Option[AdmittedRootRankingPair],
+    positionHistory: CanonicalPositionHistory
 ):
   require(
     lines.groupBy(_.rootMove).values.forall(group => group.map(line => line.evaluation -> line.replay).distinct.size == 1),
@@ -69,9 +46,6 @@ final case class AdmittedMoveReviewInput(
       case line :: Nil => Some(line)
       case _           => None
 
-  def firstRankedLinePerRootMove: List[AdmittedReviewLine] =
-    lines.sortBy(_.rank).distinctBy(_.rootMove)
-
 final case class JudgmentAssemblyContext(
     input: AdmittedMoveReviewInput,
     positions: List[PositionNode],
@@ -80,7 +54,6 @@ final case class JudgmentAssemblyContext(
     transitions: List[MoveTransitionEdge],
     lineReplays: Map[LineNodeRef, CanonicalLineReplay] = Map.empty,
     transitionReplays: Map[String, CanonicalLineReplay] = Map.empty,
-    branchReplyLineOwners: Map[LineNodeRef, BranchReplyLineOccurrenceOwner] = Map.empty,
     lineRootOccurrences: Map[LineNodeRef, LineRootOccurrence] = Map.empty,
     evidenceGraph: TypedEvidenceGraph,
     claims: List[JudgmentClaim]
@@ -99,11 +72,6 @@ final case class JudgmentAssemblyContext(
 
   private[chessjudgment] def transitionReplay(edge: MoveTransitionEdge): Option[CanonicalLineReplay] =
     transitionReplays.get(edge.evidence.id)
-
-  private[chessjudgment] def branchReplyLineOwner(
-      line: LineNodeRef
-  ): Option[BranchReplyLineOccurrenceOwner] =
-    branchReplyLineOwners.get(line)
 
   private[chessjudgment] def lineRootOccurrence(
       line: LineNodeRef
@@ -275,25 +243,6 @@ final case class JudgmentAssemblyContext(
               transitionReplays = transitionReplays.updated(edge.evidence.id, admittedReplay)
             )
 
-  private[chessjudgment] def withBranchReplyLineOwner(
-      line: LineNodeRef,
-      owner: BranchReplyLineOccurrenceOwner
-  ): JudgmentAssemblyContext =
-    val exactLine = lines.exists(_.ref == line)
-    val exactStart = lineReplays.get(line).exists(_.replaySteps.headOption.exists(step =>
-      step.ply == owner.branchPosition.ply + 1 &&
-        PrincipalVariationEvidence.sameBoardState(step.fenBefore, owner.branchPosition.fen)
-    ))
-    require(
-      line.role == LineNodeRole.BranchReply && exactLine && exactStart,
-      s"branch-reply line '${line.id}' must be bound to its exact branch occurrence"
-    )
-    branchReplyLineOwners.get(line) match
-      case None => copy(branchReplyLineOwners = branchReplyLineOwners.updated(line, owner))
-      case Some(existing) if existing == owner => this
-      case Some(_) =>
-        throw IllegalArgumentException(s"branch-reply line '${line.id}' has more than one occurrence owner")
-
   private[chessjudgment] def withLineRootOccurrence(
       line: LineNodeRef,
       edge: MoveTransitionEdge
@@ -382,7 +331,6 @@ object JudgmentAssemblyContext:
       transitions = Nil,
       lineReplays = Map.empty,
       transitionReplays = Map.empty,
-      branchReplyLineOwners = Map.empty,
       lineRootOccurrences = Map.empty,
       evidenceGraph = evidenceGraph,
       claims = Nil

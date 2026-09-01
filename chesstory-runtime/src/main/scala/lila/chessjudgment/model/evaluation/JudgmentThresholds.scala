@@ -10,9 +10,6 @@ object JudgmentThresholds:
   val PLAYABLE_LOSS_WP = 2.5
   val DECISIVE_CP_DEGRADATION = 500
 
-  val ONLY_MOVE_GAP_WP = 10.0
-  val STYLE_CHOICE_SPREAD_WP = 3.0
-
   /** WinPercent difference thresholds */
   val BLUNDER_WP = 20.0
   val INACCURACY_WP = 5.0

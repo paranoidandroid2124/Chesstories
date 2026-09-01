@@ -201,7 +201,6 @@ object LineFactNormalizer:
               LineConsequence(
                 LineConsequenceKind.Mate,
                 prefix,
-                directCauseProjectionEligible = true,
                 eventOccurrence = Some(LineMoveOccurrence(normalized, index)),
                 rootMove = rootMove,
                 rootSide = rootSide,
@@ -213,7 +212,6 @@ object LineFactNormalizer:
               LineConsequence(
                 LineConsequenceKind.DrawResource,
                 prefix,
-                directCauseProjectionEligible = true,
                 eventOccurrence = Some(LineMoveOccurrence(normalized, index)),
                 rootMove = rootMove,
                 rootSide = rootSide
@@ -239,7 +237,6 @@ object LineFactNormalizer:
           LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
           LineMoveOccurrence(EvidenceRef.normalizeMove(replyStep.moveUci), 1)
         ),
-        directCauseProjectionEligible = false,
         eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(replyStep.moveUci), 1)),
         rootMove = Some(normalizedRoot),
         rootSide = rootSide,
@@ -253,16 +250,9 @@ object LineFactNormalizer:
             LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
           )
         val materialEvents = materialOutcomeEvents(summary)
-        val lastingMaterialOutcome = lastingMaterialOutcomeFor(materialEvents, summary)
-        val materialOutcomeEvent = lastingMaterialOutcome.map(_.event)
+        val materialOutcomeEvent = lastingMaterialOutcomeFor(materialEvents, summary)
         val materialGainEvent = materialOutcomeEvent.filter(_.side == summary.sideToMove)
         val materialLossEvent = materialOutcomeEvent.filter(_.side != summary.sideToMove)
-        val materialGainOutcome = lastingMaterialOutcome
-          .filter(_.event.side == summary.sideToMove)
-          .flatMap(_.toRootOwnedOutcome)
-        val materialLossOutcome = lastingMaterialOutcome
-          .filter(_.event.side != summary.sideToMove)
-          .flatMap(_.toRootOwnedOutcome)
         val materialGainEventOccurrence = materialGainEvent.map(event =>
           LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
         )
@@ -282,28 +272,24 @@ object LineFactNormalizer:
         val materialGainProofOccurrences = proofOccurrencesFrom(materialGainEvent)
         val materialLossProofOccurrences = proofOccurrencesFrom(materialLossEvent)
         val materialResultConsequences = List(
-          Option.when(summary.hasDirectCauseProjectionEligibleMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
+          materialGainEvent.map(_ =>
             LineConsequence(
               LineConsequenceKind.MaterialGain,
               materialGainProofOccurrences,
-              directCauseProjectionEligible = summary.hasDirectCauseProjectionEligibleMaterialGain,
               eventOccurrence = materialGainEventOccurrence,
               rootMove = materialGainRootMove,
               rootSide = Some(summary.sideToMove),
-              beneficiary = Some(summary.sideToMove),
-              materialOutcome = materialGainOutcome
+              beneficiary = Some(summary.sideToMove)
             )
           ),
-          Option.when(summary.hasDirectCauseProjectionEligibleMaterialLoss || summary.hasUnrecoveredPawnLossForMover)(
+          materialLossEvent.map(_ =>
             LineConsequence(
               LineConsequenceKind.MaterialLoss,
               materialLossProofOccurrences,
-              directCauseProjectionEligible = summary.hasDirectCauseProjectionEligibleMaterialLoss,
               eventOccurrence = materialLossEventOccurrence,
               rootMove = materialLossRootMove,
               rootSide = Some(summary.sideToMove),
-              beneficiary = Some(!summary.sideToMove),
-              materialOutcome = materialLossOutcome
+              beneficiary = Some(!summary.sideToMove)
             )
           )
         ).flatten
@@ -312,7 +298,6 @@ object LineFactNormalizer:
               LineConsequence(
                 LineConsequenceKind.RecaptureSequence,
                 proofOccurrencesThrough(capture.plyOffset),
-                directCauseProjectionEligible = true,
                 eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(capture.moveUci), capture.plyOffset)),
                 rootMove = rootMove,
                 rootSide = Some(summary.sideToMove),
@@ -323,7 +308,6 @@ object LineFactNormalizer:
             LineConsequence(
               LineConsequenceKind.RecoveryWindow,
               proofOccurrencesThrough(capture.plyOffset),
-              directCauseProjectionEligible = true,
               eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(capture.moveUci), capture.plyOffset)),
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
@@ -335,7 +319,6 @@ object LineFactNormalizer:
             LineConsequence(
               LineConsequenceKind.Promotion,
               proofOccurrencesThrough(event.plyOffset),
-              directCauseProjectionEligible = true,
               eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)),
               rootMove = rootMove.filter(_ => event.plyOffset == 0),
               rootSide = Some(summary.sideToMove),
@@ -357,21 +340,6 @@ object LineFactNormalizer:
       recapture: Boolean,
       capture: Option[LineMaterialCapture]
   )
-
-  private final case class LastingMaterialOutcome(
-      event: MaterialOutcomeEvent,
-      durableNetCp: Int
-  ):
-    def toRootOwnedOutcome: Option[RootOwnedMaterialOutcome] =
-      for
-        capture <- event.capture
-        if capture.side == event.side
-        salience <- RootOwnedMaterialEventSalience.from(capture)
-      yield RootOwnedMaterialOutcome(
-        event = salience,
-        beneficiary = event.side,
-        durableNetCp = durableNetCp
-      )
 
   private def materialOutcomeEvents(
       summary: LineMaterialSummary
@@ -400,7 +368,7 @@ object LineFactNormalizer:
   private def lastingMaterialOutcomeFor(
       events: List[MaterialOutcomeEvent],
       summary: LineMaterialSummary
-  ): Option[LastingMaterialOutcome] =
+  ): Option[MaterialOutcomeEvent] =
     summary.closedNetCpForMover.flatMap { closedNet =>
       val finalSign = Integer.signum(closedNet)
       val observedNet = events.lastOption.map(_.balanceAfterForMover).getOrElse(0)
@@ -418,7 +386,7 @@ object LineFactNormalizer:
               .map(next => finalSign * next.balanceAfterForMover)
               .minOption
               .filter(_ > 0)
-              .map(durableNetCp => LastingMaterialOutcome(event, durableNetCp))
+              .map(_ => event)
         }.flatten
       }.flatten
     }

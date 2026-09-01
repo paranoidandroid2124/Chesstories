@@ -197,7 +197,7 @@ object ClaimArbitrator:
           exposureTier =
             PlayerFacingClaimDecision.tierFor(claim, exposure, evidenceGraph, playedMoves),
           playerFacingCauseSelections =
-            exposure.selectionsForClaim(claim.id).sortBy(_.selectionOrder)
+            exposure.selectionsForClaim(claim.id)
         )
       }
       .sortBy(decision =>
@@ -234,8 +234,7 @@ object ClaimArbitrator:
                 fact.referenceLine == assessment.reference.ref &&
                 fact.candidateLine.role == LineNodeRole.Alternative &&
                 fact.candidateLine.rank == 2 &&
-                fact.hasDistinctRootMoves &&
-                fact.candidateSet.nonEmpty =>
+                fact.hasDistinctRootMoves =>
             Some(PlayerFacingPrimary.BestChoice(ref))
           case _ => None
         }

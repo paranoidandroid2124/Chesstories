@@ -1,147 +1,20 @@
 package lila.chessjudgment.model.judgment
 
-/** The terminal Jp -> Ja -> R disposition of one C-stage RelativeCause
-  * record.  The cases describe where the Cause stopped; they do not make a
-  * second truth, deduplication, fallback, or exposure decision.
+/** Terminal owner of one fully constructed C-stage Cause. There is no
+  * non-selected terminal state: construction succeeded, so failure to expose
+  * the Cause is an invariant violation rather than a disposition.
   */
-enum CauseDispositionStatus:
-  case Selected
-  case Dominated
-  case Redundant
-  case Diagnostic
-  case Inferior
-  case AdmissionDeferred
-  case Rejected
-  case Unproposed
-  case ObjectUnready
-
-/** The existing stage result that authorizes a terminal disposition. */
-enum CauseDispositionReason:
-  case PlayerFacingSelection
-  case DominatedFallback
-  case CrossComparisonRedundancy
-  case DiagnosticComparison
-  case InferiorAlternative
-  case ClaimAdmissionDeferred
-  case ClaimAdmissionRejected
-  case NoClaimProposal
-  case ObjectReadinessFailed
-
 final case class CauseDisposition(
     causeEvidence: EvidenceRef,
-    status: CauseDispositionStatus,
-    reason: CauseDispositionReason,
-    proposedClaimIds: List[String],
-    certifiedClaimIds: List[String],
-    rankEligibleClaimIds: List[String],
-    selectedOwnerClaimId: Option[String],
-    relatedCauseEvidenceIds: List[String]
+    selectedOwnerClaimId: String
 ):
   require(
     causeEvidence.layer == EvidenceLayer.RelativeCause,
     "a Cause disposition must identify a RelativeCause record"
   )
-  require(canonicalIds(proposedClaimIds), "proposed Cause hosts must be canonical")
-  require(canonicalIds(certifiedClaimIds), "certified Cause hosts must be canonical")
-  require(canonicalIds(rankEligibleClaimIds), "rank-eligible Cause hosts must be canonical")
-  require(canonicalIds(relatedCauseEvidenceIds), "related Cause ids must be canonical")
-  require(
-    certifiedClaimIds.forall(proposedClaimIds.contains),
-    "every certified Cause host must originate in Jp"
-  )
-  require(statusReasonCompatible, "Cause disposition status and authority must agree")
-  require(
-    selectedOwnerClaimId.nonEmpty == (status == CauseDispositionStatus.Selected),
-    "exactly a selected Cause must carry its selected claim owner"
-  )
-  require(
-    selectedOwnerClaimId.forall(rankEligibleClaimIds.contains),
-    "a selected Cause owner must be one of its rank-eligible claim hosts"
-  )
+  require(selectedOwnerClaimId.trim.nonEmpty, "a Cause disposition requires its selected claim owner")
 
-  private def canonicalIds(ids: List[String]): Boolean =
-    ids.forall(_.trim.nonEmpty) && ids == ids.distinct.sorted
-
-  private def statusReasonCompatible: Boolean =
-    (status, reason) match
-      case (CauseDispositionStatus.Selected, CauseDispositionReason.PlayerFacingSelection) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty
-      case (CauseDispositionStatus.Dominated, CauseDispositionReason.DominatedFallback) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.nonEmpty
-      case (CauseDispositionStatus.Redundant, CauseDispositionReason.CrossComparisonRedundancy) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.nonEmpty
-      case (CauseDispositionStatus.Diagnostic, CauseDispositionReason.DiagnosticComparison) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty
-      case (CauseDispositionStatus.Inferior, CauseDispositionReason.InferiorAlternative) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty
-      case (CauseDispositionStatus.AdmissionDeferred, CauseDispositionReason.ClaimAdmissionDeferred) =>
-        proposedClaimIds.nonEmpty && certifiedClaimIds.isEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty
-      case (CauseDispositionStatus.Rejected, CauseDispositionReason.ClaimAdmissionRejected) =>
-        proposedClaimIds.nonEmpty && certifiedClaimIds.isEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty
-      case (CauseDispositionStatus.Unproposed, CauseDispositionReason.NoClaimProposal) =>
-        proposedClaimIds.isEmpty && certifiedClaimIds.isEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty
-      case (CauseDispositionStatus.ObjectUnready, CauseDispositionReason.ObjectReadinessFailed) =>
-        rankEligibleClaimIds.isEmpty && relatedCauseEvidenceIds.isEmpty
-      case _ => false
-
-private[chessjudgment] final case class CauseExposureDispositionAuthority(
-    status: CauseDispositionStatus,
-    reason: CauseDispositionReason,
-    relatedCauseEvidenceIds: List[String]
-)
-
-/** Exact translation of already canonical R decisions into ledger state.
-  * Both the assembler and packet closure check reuse this translation; neither
-  * owns a second interpretation of dominance or cross-comparison status.
-  */
-private[chessjudgment] object CauseExposureDispositionAuthority:
-
-  def from(
-      dominance: RelativeCauseDominanceDecision,
-      cross: Option[CrossComparisonExposureDecision]
-  ): Option[CauseExposureDispositionAuthority] =
-    if dominance.status == RelativeCauseDominanceStatus.DominatedFallback then
-      Some(
-        CauseExposureDispositionAuthority(
-          CauseDispositionStatus.Dominated,
-          CauseDispositionReason.DominatedFallback,
-          dominance.dominatingCauseEvidenceIds.distinct.sorted
-        )
-      )
-    else
-      cross.map { decision =>
-        decision.status match
-          case CrossComparisonExposureStatus.SelectedPrimary |
-              CrossComparisonExposureStatus.SelectedComplementary =>
-            CauseExposureDispositionAuthority(
-              CauseDispositionStatus.Selected,
-              CauseDispositionReason.PlayerFacingSelection,
-              Nil
-            )
-          case CrossComparisonExposureStatus.RedundantAcrossComparison =>
-            CauseExposureDispositionAuthority(
-              CauseDispositionStatus.Redundant,
-              CauseDispositionReason.CrossComparisonRedundancy,
-              List(decision.representativeCauseEvidenceId).distinct.sorted
-            )
-          case CrossComparisonExposureStatus.DiagnosticComparison =>
-            CauseExposureDispositionAuthority(
-              CauseDispositionStatus.Diagnostic,
-              CauseDispositionReason.DiagnosticComparison,
-              Nil
-            )
-          case CrossComparisonExposureStatus.InferiorAlternative =>
-            CauseExposureDispositionAuthority(
-              CauseDispositionStatus.Inferior,
-              CauseDispositionReason.InferiorAlternative,
-              Nil
-            )
-      }
-
-/** Complete terminal ledger for the C-stage RelativeCause identity set. */
+/** Complete terminal owner ledger for the C-stage RelativeCause identity set. */
 final case class CauseDispositionLedger(
     dispositions: List[CauseDisposition]
 ):
@@ -154,82 +27,51 @@ final case class CauseDispositionLedger(
     dispositions.map(disposition => disposition.causeEvidence.id -> disposition).toMap
 
   def selectedCauseEvidenceIds: Set[String] =
-    dispositions.collect {
-      case disposition if disposition.status == CauseDispositionStatus.Selected =>
-        disposition.causeEvidence.id
-    }.toSet
+    byCauseEvidenceId.keySet
 
-  /** Packet-side closure check.  Jp/Ja history is carried by the ledger and
-    * cannot be reconstructed from the ranked assembly, but the packet can and
-    * must verify full C identity coverage plus every R-derived disposition,
-    * final owner, and selected Cause exactly.
-    */
   private[chessjudgment] def closedFor(
       graph: TypedEvidenceGraph,
       exposure: PlayerFacingCauseExposureResolution,
-      rankedClaimIds: Set[String]
+      certifiedClaimIds: Set[String]
   ): Boolean =
     val causeRecords = graph.records.collect {
       case record @ EvidenceRecord(_, RelativeCauseFactEvidence(_), _) => record
     }
     val causeRecordsById = causeRecords.map(record => record.ref.id -> record).toMap
     val causeIds = causeRecordsById.keySet
-    val dispositionIds = byCauseEvidenceId.keySet
-    val readyHostsByCauseId = exposure.readyByClaim.toList
-      .flatMap { case (claimId, causes) =>
-        causes.map { case (_, causeRef) => causeRef.id -> claimId }
-      }
+    val certifiedByCauseId = exposure.certifiedCauses.map(certified =>
+      certified.selection.causeEvidence.id -> certified
+    ).toMap
+    val readyHostPairs = exposure.readyByClaim.toList.flatMap { case (claimId, causes) =>
+      causes.map { case (_, causeRef) => causeRef.id -> claimId }
+    }
+    val readyHostsByCauseId = readyHostPairs
       .groupMap(_._1)(_._2)
       .view
-      .mapValues(_.distinct.sorted)
+      .mapValues(_.sorted)
       .toMap
-    val dominanceByCauseId =
-      exposure.dominanceDecisions.map(decision => decision.causeEvidenceId -> decision).toMap
-    val crossByCauseId =
-      exposure.crossDecisions.map(decision => decision.causeEvidenceId -> decision).toMap
+    val readyHostPairsUnique = readyHostPairs.distinct.size == readyHostPairs.size
     val selectedIds = exposure.selectedCauseEvidenceIds
 
-    def expectedRDisposition(
-        disposition: CauseDisposition
-    ): Option[CauseExposureDispositionAuthority] =
-      dominanceByCauseId.get(disposition.causeEvidence.id).flatMap { dominance =>
-        CauseExposureDispositionAuthority.from(dominance, crossByCauseId.get(disposition.causeEvidence.id))
-      }
-
-    val rCauseIds = readyHostsByCauseId.keySet
-    val rDispositionsClosed = dispositions.forall { disposition =>
-      val causeId = disposition.causeEvidence.id
-      val expectedReadyHosts = readyHostsByCauseId.getOrElse(causeId, Nil)
-      val expectedOwner = exposure.ownerClaimIdByCauseId.get(causeId)
-      expectedRDisposition(disposition) match
-        case Some(authority) =>
-          disposition.rankEligibleClaimIds == expectedReadyHosts &&
-            disposition.status == authority.status &&
-            disposition.reason == authority.reason &&
-            disposition.relatedCauseEvidenceIds == authority.relatedCauseEvidenceIds &&
-            disposition.selectedOwnerClaimId == expectedOwner
-        case None =>
-          expectedReadyHosts.isEmpty &&
-            disposition.rankEligibleClaimIds.isEmpty &&
-            disposition.selectedOwnerClaimId.isEmpty &&
-            !Set(
-              CauseDispositionStatus.Selected,
-              CauseDispositionStatus.Dominated,
-              CauseDispositionStatus.Diagnostic,
-              CauseDispositionStatus.Inferior
-            )(disposition.status) &&
-            !(disposition.status == CauseDispositionStatus.Redundant &&
-              disposition.reason == CauseDispositionReason.CrossComparisonRedundancy)
-    }
-
     causeIds.size == causeRecords.size &&
-      dispositionIds == causeIds &&
-      dispositions.forall(disposition =>
-        causeRecordsById.get(disposition.causeEvidence.id).exists(_.ref == disposition.causeEvidence)
-      ) &&
-      readyHostsByCauseId.values.flatten.forall(rankedClaimIds) &&
-      rCauseIds == dominanceByCauseId.keySet &&
-      crossByCauseId.keySet == exposure.retainedCauseEvidenceIds &&
-      exposure.ownerClaimIdByCauseId.keySet == selectedIds &&
-      selectedCauseEvidenceIds == selectedIds &&
-      rDispositionsClosed
+      byCauseEvidenceId.keySet == causeIds &&
+      selectedIds == causeIds &&
+      certifiedByCauseId.keySet == causeIds &&
+      certifiedByCauseId.size == exposure.certifiedCauses.size &&
+      readyHostsByCauseId.keySet == causeIds &&
+      exposure.ownerClaimIdByCauseId.keySet == causeIds &&
+      readyHostPairsUnique &&
+      dispositions.forall { disposition =>
+        val causeId = disposition.causeEvidence.id
+        val owner = disposition.selectedOwnerClaimId
+        causeRecordsById.get(causeId).exists {
+          case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
+            ref == disposition.causeEvidence && certifiedByCauseId.get(causeId).exists(certified =>
+              certified.selection.causeEvidence == ref && certified.cause == cause
+            )
+          case _ => false
+        } &&
+          exposure.ownerClaimIdByCauseId.get(causeId).contains(owner) &&
+          readyHostsByCauseId.getOrElse(causeId, Nil).contains(owner) &&
+          certifiedClaimIds(owner)
+      }

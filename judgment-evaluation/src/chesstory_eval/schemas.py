@@ -80,29 +80,26 @@ _SCHEMA_SINGLE_KEYWORDS = (
 )
 
 
-def _movement_witness_uci(actor: Mapping[str, Any]) -> str | None:
-    origin = actor.get("from")
-    destination = actor.get("to")
-    piece_before = actor.get("piece_before")
-    piece_after = actor.get("piece_after")
-    if not all(
-        isinstance(value, str)
-        for value in (origin, destination, piece_before, piece_after)
-    ):
-        return None
-    move = origin + destination
-    if piece_before != "pawn":
-        return move if piece_after == piece_before else None
-    if piece_after == "pawn":
-        return move
-    suffix = {
-        "queen": "q",
-        "rook": "r",
-        "bishop": "b",
-        "knight": "n",
-    }.get(piece_after)
-    return move + suffix if suffix else None
+_PUBLIC_V6_PROOF_TRANSPORT_SCHEMA_IDS = frozenset(
+    {
+        "https://chesstories.dev/judgment-evaluation/schemas/public-v6/move-meaning-response.schema.json",
+        "https://chesstories.dev/judgment-evaluation/schemas/public-commentary-v6/position-commentary-response.schema.json",
+    }
+)
 
+
+def _normalized_fen(value: Any) -> str | None:
+    return " ".join(value.split()) if isinstance(value, str) and value.strip() else None
+
+
+def _causal_step_key(step: Mapping[str, Any]) -> str | None:
+    ply = step.get("ply")
+    move = step.get("move_uci")
+    before = _normalized_fen(step.get("fen_before"))
+    after = _normalized_fen(step.get("fen_after"))
+    if not isinstance(ply, int) or not isinstance(move, str) or before is None or after is None:
+        return None
+    return f"{ply}:{move.lower()}:{before}:{after}"
 
 @dataclass(frozen=True)
 class IdentityOccurrence:
@@ -292,52 +289,66 @@ class SchemaRegistry:
         schema = self.load(path)
         errors: list[str] = []
         self._validate(document, schema, self._resolved_schema_path(path), "$", errors)
-        if not errors:
-            self._validate_public_proof_semantics(document, "$", errors)
+        if (
+            not errors
+            and schema.get("$id") in _PUBLIC_V6_PROOF_TRANSPORT_SCHEMA_IDS
+        ):
+            self._validate_public_proof_transport(document, "$", errors)
         if errors:
             preview = "\n".join(f"- {error}" for error in errors[:30])
             suffix = f"\n- ... {len(errors) - 30} more" if len(errors) > 30 else ""
             raise ContractError(f"{label} schema validation failed:\n{preview}{suffix}")
 
-    def _validate_public_proof_semantics(
+    def _validate_public_proof_transport(
         self,
         value: Any,
         location: str,
         errors: list[str],
     ) -> None:
-        """Close public proof identifiers without claiming private ancestry."""
+        """Validate only public proof identity, ownership, and occurrence wiring."""
 
         if isinstance(value, Mapping):
-            passed_pawn_result = value.get("passed_pawn_result_proof")
-            if isinstance(passed_pawn_result, Mapping):
-                self._validate_passed_pawn_result_proof_identifiers(
-                    passed_pawn_result,
-                    f"{location}.passed_pawn_result_proof",
+            if isinstance(value.get("primary"), Mapping) and isinstance(
+                value.get("causal_explanations"), list
+            ):
+                self._validate_move_commentary_proof_transport(value, location, errors)
+            passed_pawn_progress = value.get("passed_pawn_progress_realized_after_only_legal_reply_proof")
+            if isinstance(passed_pawn_progress, Mapping):
+                self._validate_passed_pawn_progress_realized_after_only_legal_reply_proof_identifiers(
+                    passed_pawn_progress,
+                    f"{location}.passed_pawn_progress_realized_after_only_legal_reply_proof",
                     errors,
                 )
-            resource = value.get("resource_differential_proof")
+            resource = value.get("unique_check_reply_defender_displacement_before_capture_proof")
             if isinstance(resource, Mapping):
                 self._validate_resource_proof_identifiers(
                     resource,
-                    f"{location}.resource_differential_proof",
+                    f"{location}.unique_check_reply_defender_displacement_before_capture_proof",
                     errors,
                 )
-            defense = value.get("defense_obligation_change_proof")
+            defense = value.get("sole_recapturer_removal_before_target_capture_proof")
             if isinstance(defense, Mapping):
-                self._validate_defense_obligation_change_proof_identifiers(
+                self._validate_sole_recapturer_removal_before_target_capture_proof_identifiers(
                     defense,
-                    f"{location}.defense_obligation_change_proof",
+                    f"{location}.sole_recapturer_removal_before_target_capture_proof",
+                    errors,
+                )
+            direct = value.get("vacated_gate_enables_unrecapturable_slider_capture_proof")
+            if isinstance(direct, Mapping):
+                self._validate_vacated_gate_enables_unrecapturable_slider_capture_proof_identifiers(
+                    direct,
+                    f"{location}.vacated_gate_enables_unrecapturable_slider_capture_proof",
                     errors,
                 )
             for key, child in value.items():
-                self._validate_public_proof_semantics(
+                self._validate_public_proof_transport(
                     child,
                     f"{location}.{key}",
                     errors,
                 )
         elif isinstance(value, list):
             for index, child in enumerate(value):
-                self._validate_public_proof_semantics(
+                self._validate_public_proof_transport(
                     child,
                     f"{location}[{index}]",
                     errors,
@@ -385,7 +396,56 @@ class SchemaRegistry:
                 f"{branch.get(role_key)!r}"
             )
 
-    def _validate_passed_pawn_result_proof_identifiers(
+    @staticmethod
+    def _validate_move_commentary_proof_transport(
+        commentary: Mapping[str, Any],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        primary = commentary.get("primary")
+        explanations = commentary.get("causal_explanations")
+        if not isinstance(primary, Mapping) or not isinstance(explanations, list):
+            return
+        comparison_id = primary.get("comparison_evidence_id")
+        seen_cause_evidence_ids: set[str] = set()
+        seen_channel_ids: set[str] = set()
+        for facet_index, facet in enumerate(explanations):
+            if not isinstance(facet, Mapping):
+                continue
+            facet_location = f"{location}.causal_explanations[{facet_index}]"
+            cause_evidence_id = facet.get("cause_evidence_id")
+            if isinstance(cause_evidence_id, str):
+                if cause_evidence_id in seen_cause_evidence_ids:
+                    errors.append(
+                        f"{facet_location}.cause_evidence_id: duplicate public Cause owner"
+                    )
+                seen_cause_evidence_ids.add(cause_evidence_id)
+            channels = facet.get("channels")
+            if not isinstance(channels, list):
+                continue
+            for channel_index, channel in enumerate(channels):
+                if not isinstance(channel, Mapping):
+                    continue
+                channel_location = f"{facet_location}.channels[{channel_index}]"
+                channel_id = channel.get("channel_id")
+                if isinstance(channel_id, str):
+                    if channel_id in seen_channel_ids:
+                        errors.append(
+                            f"{channel_location}.channel_id: duplicate public proof occurrence"
+                        )
+                    seen_channel_ids.add(channel_id)
+                passed = channel.get("passed_pawn_progress_realized_after_only_legal_reply_proof")
+                if (
+                    isinstance(comparison_id, str)
+                    and isinstance(passed, Mapping)
+                    and passed.get("comparison_evidence_id") != comparison_id
+                ):
+                    errors.append(
+                        f"{channel_location}.passed_pawn_progress_realized_after_only_legal_reply_proof."
+                        "comparison_evidence_id: does not retain the primary comparison owner"
+                    )
+
+    def _validate_passed_pawn_progress_realized_after_only_legal_reply_proof_identifiers(
         self,
         proof: Mapping[str, Any],
         location: str,
@@ -398,6 +458,11 @@ class SchemaRegistry:
             f"{location}.branches",
             errors,
         )
+        self._validate_passed_pawn_progress_branch_routes(
+            branches,
+            location,
+            errors,
+        )
         raw_paths = proof.get("proof_paths")
         paths = raw_paths if isinstance(raw_paths, list) else []
         self._unique_objects_by_id(
@@ -407,106 +472,42 @@ class SchemaRegistry:
             errors,
         )
 
-        expected_branch_ids = {
-            branch_id
-            for branch_id, branch in branches.items()
-            if branch.get("role") == "expected_result_route"
-        }
-        legal_reply_branches = {
-            branch_id: branch
-            for branch_id, branch in branches.items()
-            if branch.get("role") == "legal_reply"
-        }
-        if len(expected_branch_ids) != 1:
-            errors.append(
-                f"{location}.branches: expected exactly one expected_result_route branch"
-            )
+        actual_branches = branches
+        self._validate_passed_pawn_progress_root_contract(
+            proof,
+            actual_branches,
+            location,
+            errors,
+        )
 
         inventory = proof.get("closed_legal_reply_inventory")
         if isinstance(inventory, Mapping):
-            bindings = inventory.get("branch_by_reply")
-            if isinstance(bindings, list):
-                binding_reply_moves: list[str] = []
-                binding_branch_ids: list[str] = []
-                for index, binding in enumerate(bindings):
-                    if not isinstance(binding, Mapping):
-                        continue
-                    branch_id = binding.get("branch_id")
-                    reply_move = binding.get("reply_move")
-                    if isinstance(reply_move, str):
-                        binding_reply_moves.append(reply_move)
-                    if isinstance(branch_id, str):
-                        binding_branch_ids.append(branch_id)
-                    self._validate_branch_reference(
-                        branch_id,
-                        "legal_reply",
-                        branches,
-                        "role",
-                        f"{location}.closed_legal_reply_inventory.branch_by_reply[{index}].branch_id",
-                        errors,
-                    )
-                    branch = branches.get(branch_id) if isinstance(branch_id, str) else None
-                    if branch is not None and branch.get("reply_move") != binding.get("reply_move"):
-                        errors.append(
-                            f"{location}.closed_legal_reply_inventory.branch_by_reply[{index}]: "
-                            "reply_move does not match its branch"
-                        )
+            branch_id = inventory.get("actual_branch_id")
+            self._validate_branch_reference(
+                branch_id,
+                "actual_result_route",
+                branches,
+                "role",
+                f"{location}.closed_legal_reply_inventory.actual_branch_id",
+                errors,
+            )
+            branch = branches.get(branch_id) if isinstance(branch_id, str) else None
+            if isinstance(branch, Mapping) and inventory.get("legal_reply_move") != branch.get("reply_move"):
+                errors.append(
+                    f"{location}.closed_legal_reply_inventory.legal_reply_move: does not match the actual route"
+                )
 
-                inventory_reply_moves = inventory.get("legal_reply_moves")
-                if isinstance(inventory_reply_moves, list):
-                    if len(binding_reply_moves) != len(set(binding_reply_moves)):
-                        errors.append(
-                            f"{location}.closed_legal_reply_inventory.branch_by_reply: "
-                            "duplicate reply_move binding"
-                        )
-                    if len(binding_branch_ids) != len(set(binding_branch_ids)):
-                        errors.append(
-                            f"{location}.closed_legal_reply_inventory.branch_by_reply: "
-                            "duplicate branch_id binding"
-                        )
-                    if set(binding_reply_moves) != set(inventory_reply_moves):
-                        errors.append(
-                            f"{location}.closed_legal_reply_inventory: legal_reply_moves and "
-                            "branch_by_reply moves must match exactly"
-                        )
-
-                legal_reply_branch_ids = set(legal_reply_branches)
-                if set(binding_branch_ids) != legal_reply_branch_ids:
-                    errors.append(
-                        f"{location}.closed_legal_reply_inventory.branch_by_reply: "
-                        "branch ids must match the legal_reply branches exactly"
-                    )
-                branch_reply_moves = [
-                    branch.get("reply_move")
-                    for branch in legal_reply_branches.values()
-                    if isinstance(branch.get("reply_move"), str)
-                ]
-                if len(branch_reply_moves) != len(set(branch_reply_moves)):
-                    errors.append(
-                        f"{location}.branches: duplicate legal_reply reply_move"
-                    )
-                if isinstance(inventory_reply_moves, list) and set(
-                    branch_reply_moves
-                ) != set(inventory_reply_moves):
-                    errors.append(
-                        f"{location}.closed_legal_reply_inventory.legal_reply_moves: "
-                        "moves must match the legal_reply branches exactly"
-                    )
-
-        path_reply_branch_ids: list[str] = []
         for path_index, path in enumerate(paths):
             if not isinstance(path, Mapping):
                 continue
             path_location = f"{location}.proof_paths[{path_index}]"
-            reply_branch_id = path.get("reply_branch_id")
-            if isinstance(reply_branch_id, str):
-                path_reply_branch_ids.append(reply_branch_id)
+            actual_branch_id = path.get("actual_branch_id")
             self._validate_branch_reference(
-                reply_branch_id,
-                "legal_reply",
+                actual_branch_id,
+                "actual_result_route",
                 branches,
                 "role",
-                f"{path_location}.reply_branch_id",
+                f"{path_location}.actual_branch_id",
                 errors,
             )
             premises = path.get("premises")
@@ -524,23 +525,316 @@ class SchemaRegistry:
                     f"{premise_location}.branch_id",
                     errors,
                 )
-                related = premise.get("related_branch_ids")
-                if isinstance(related, list):
-                    for related_index, branch_id in enumerate(related):
-                        self._validate_branch_reference(
-                            branch_id,
-                            None,
-                            branches,
-                            "role",
-                            f"{premise_location}.related_branch_ids[{related_index}]",
-                            errors,
-                        )
-
-        if set(path_reply_branch_ids) != set(legal_reply_branches):
-            errors.append(
-                f"{location}.proof_paths: reply_branch_id values must cover the "
-                "legal_reply branches exactly"
+                dependency_proof = premise.get("dependency_proof")
+                if isinstance(dependency_proof, Mapping):
+                    self._validate_passed_pawn_dependency_state_route(
+                        dependency_proof,
+                        premise,
+                        branches,
+                        premise_location,
+                        errors,
+                    )
+            self._validate_passed_pawn_progress_path_transport(
+                proof,
+                path,
+                branches,
+                path_location,
+                errors,
             )
+
+    @staticmethod
+    def _validate_passed_pawn_progress_root_contract(
+        proof: Mapping[str, Any],
+        branches: Mapping[str, Mapping[str, Any]],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        actual_branch = next(iter(branches.values()), None)
+        raw_steps = actual_branch.get("steps") if isinstance(actual_branch, Mapping) else None
+        actual_steps = raw_steps if isinstance(raw_steps, list) else []
+        if not actual_steps or not all(isinstance(step, Mapping) for step in actual_steps):
+            return
+        root = actual_steps[0]
+        result = actual_steps[-1]
+        assert isinstance(root, Mapping)
+        assert isinstance(result, Mapping)
+
+        root_move = proof.get("root_move")
+        realizing_move = proof.get("realizing_move")
+        root_ply = proof.get("root_ply")
+        realizing_ply = proof.get("realizing_ply")
+        if (
+            root_move != root.get("move_uci")
+            or root_ply != root.get("ply")
+            or proof.get("root_line") != actual_branch.get("line")
+        ):
+            errors.append(f"{location}: root move, ply, and line do not identify one occurrence")
+        if (
+            realizing_move != result.get("move_uci")
+            or realizing_ply != result.get("ply")
+        ):
+            errors.append(f"{location}: realizing move and ply do not identify the actual terminal occurrence")
+        if (
+            not isinstance(root_ply, int)
+            or not isinstance(realizing_ply, int)
+            or proof.get("result_ply_offset") != realizing_ply - root_ply
+        ):
+            errors.append(f"{location}.result_ply_offset: does not span root to realizing occurrence")
+
+        inventory = proof.get("closed_legal_reply_inventory")
+        root_after = inventory.get("root_after") if isinstance(inventory, Mapping) else None
+        if (
+            not isinstance(root_after, Mapping)
+            or root_after.get("fen") != root.get("fen_after")
+            or root_after.get("ply") != root.get("ply")
+        ):
+            errors.append(
+                f"{location}.closed_legal_reply_inventory.root_after: closure does not certify the shared root result"
+            )
+        if (
+            len(actual_steps) < 2
+            or not isinstance(inventory, Mapping)
+            or inventory.get("legal_reply_move") != actual_steps[1].get("move_uci")
+        ):
+            errors.append(
+                f"{location}.closed_legal_reply_inventory.legal_reply_move: does not identify the first actual reply"
+            )
+
+    @staticmethod
+    def _validate_passed_pawn_progress_branch_routes(
+        branches: Mapping[str, Mapping[str, Any]],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        for branch_id, branch in branches.items():
+            branch_location = f"{location}.branches[{branch_id}]"
+            raw_steps = branch.get("steps")
+            steps = raw_steps if isinstance(raw_steps, list) else []
+            if not steps or not all(isinstance(step, Mapping) for step in steps):
+                continue
+            typed_steps = [step for step in steps if isinstance(step, Mapping)]
+            step_keys = [
+                step.get("step_key")
+                for step in typed_steps
+                if isinstance(step.get("step_key"), str)
+            ]
+            if len(step_keys) != len(set(step_keys)):
+                errors.append(f"{branch_location}.steps: duplicate step_key occurrence")
+
+            branch_line = branch.get("line")
+            root = typed_steps[0]
+            if root.get("line") != branch_line:
+                errors.append(f"{branch_location}.steps[0].line: root occurrence does not belong to the branch line")
+            if isinstance(branch_line, Mapping) and root.get("move_uci") != branch_line.get("root_move"):
+                errors.append(f"{branch_location}.steps[0].move_uci: root move does not match the branch line")
+
+            observed_root = isinstance(branch_line, Mapping) and branch_line.get("line_role") == "played"
+            expected_root_provenance = (
+                "observed_game_root" if observed_root else "counterfactual_analyzed_root"
+            )
+            expected_step_provenance = (
+                "observed_game_move" if observed_root else "certified_analysis_move"
+            )
+            if branch.get("root_provenance") != expected_root_provenance:
+                errors.append(f"{branch_location}.root_provenance: does not match root-line ownership")
+            if root.get("provenance") != expected_step_provenance:
+                errors.append(f"{branch_location}.steps[0].provenance: does not match root occurrence ownership")
+
+            for index, step in enumerate(typed_steps):
+                step_location = f"{branch_location}.steps[{index}]"
+                if step.get("step_index") != index:
+                    errors.append(f"{step_location}.step_index: branch occurrences are not in exact order")
+                if step.get("step_key") != _causal_step_key(step):
+                    errors.append(f"{step_location}.step_key: does not bind the exact replay occurrence")
+                if index == 0:
+                    continue
+                previous = typed_steps[index - 1]
+                previous_ply = previous.get("ply")
+                if not isinstance(previous_ply, int) or step.get("ply") != previous_ply + 1:
+                    errors.append(f"{step_location}.ply: adjacent occurrences must advance by one ply")
+                if step.get("fen_before") != previous.get("fen_after"):
+                    errors.append(f"{step_location}.fen_before: adjacent occurrence route is discontinuous")
+                if step.get("provenance") != "certified_analysis_move":
+                    errors.append(f"{step_location}.provenance: continuation is not certified analysis")
+                if step.get("line") != branch_line:
+                    errors.append(f"{step_location}.line: actual occurrences do not share their line owner")
+
+            if branch.get("role") == "actual_result_route" and len(typed_steps) > 1:
+                reply_move = branch.get("reply_move")
+                if typed_steps[1].get("move_uci") != reply_move:
+                    errors.append(f"{branch_location}.reply_move: does not identify the first reply occurrence")
+
+    @staticmethod
+    def _validate_passed_pawn_progress_path_transport(
+        proof: Mapping[str, Any],
+        path: Mapping[str, Any],
+        branches: Mapping[str, Mapping[str, Any]],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        actual_branch_id = path.get("actual_branch_id")
+        actual_branch = branches.get(actual_branch_id) if isinstance(actual_branch_id, str) else None
+        if not isinstance(actual_branch, Mapping):
+            return
+        raw_premises = path.get("premises")
+        premises = raw_premises if isinstance(raw_premises, list) else []
+        if not all(isinstance(premise, Mapping) for premise in premises):
+            return
+        steps_raw = actual_branch.get("steps")
+        steps = steps_raw if isinstance(steps_raw, list) else []
+        if not steps:
+            return
+
+        realization_move = path.get("realization_move")
+        realization_ply = path.get("realization_ply")
+        realization_indices = [
+            index
+            for index, step in enumerate(steps)
+            if isinstance(step, Mapping)
+            and step.get("move_uci") == realization_move
+            and step.get("ply") == realization_ply
+        ]
+        if len(realization_indices) != 1:
+            errors.append(f"{location}: realization_move and realization_ply must identify one actual occurrence")
+            return
+        if realization_move != proof.get("realizing_move") or realization_ply != proof.get("realizing_ply"):
+            errors.append(f"{location}: proof path does not terminate at the public realizing occurrence")
+        for premise_index, premise in enumerate(premises):
+            if not isinstance(premise, Mapping):
+                continue
+            from_index = premise.get("from_step_index")
+            to_index = premise.get("to_step_index")
+            if (
+                premise.get("branch_id") != actual_branch_id
+                or premise.get("branch_role") != actual_branch.get("role")
+                or not isinstance(from_index, int)
+                or not isinstance(to_index, int)
+                or not (0 <= from_index <= to_index < len(steps))
+            ):
+                errors.append(
+                    f"{location}.premises[{premise_index}]: premise does not bind an occurrence range on its path branch"
+                )
+
+    @staticmethod
+    def _validate_passed_pawn_dependency_state_route(
+        dependency: Mapping[str, Any],
+        premise: Mapping[str, Any],
+        branches: Mapping[str, Mapping[str, Any]],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        source_ids = premise.get("source_premise_ids")
+        sources = (
+            {value for value in source_ids if isinstance(value, str)}
+            if isinstance(source_ids, list)
+            else set()
+        )
+        raw_states = dependency.get("position_state_issuers")
+        states = raw_states if isinstance(raw_states, list) else []
+        for index, state in enumerate(states):
+            if not isinstance(state, Mapping):
+                continue
+            retained_ids = (
+                state.get("issuer_evidence_id"),
+                state.get("issuer_occurrence_id"),
+            )
+            if any(not isinstance(value, str) or value not in sources for value in retained_ids):
+                errors.append(
+                    f"{location}.dependency_proof.position_state_issuers[{index}]: "
+                    "state owner and occurrence must both be retained by source_premise_ids"
+                )
+
+        branch_id = premise.get("branch_id")
+        branch = branches.get(branch_id) if isinstance(branch_id, str) else None
+        raw_steps = branch.get("steps") if isinstance(branch, Mapping) else None
+        steps = raw_steps if isinstance(raw_steps, list) else []
+        from_index = premise.get("from_step_index")
+        to_index = premise.get("to_step_index")
+        if not isinstance(from_index, int) or not isinstance(to_index, int):
+            return
+        if not (0 <= from_index <= to_index < len(steps)):
+            return
+
+        raw_relations = dependency.get("relation_issuers")
+        relations = raw_relations if isinstance(raw_relations, list) else []
+        route_steps = steps[from_index : to_index + 1]
+        route_steps_by_key = {
+            step.get("step_key"): step
+            for step in route_steps
+            if isinstance(step, Mapping) and isinstance(step.get("step_key"), str)
+        }
+        branch_line = branch.get("line") if isinstance(branch, Mapping) else None
+        scope_by_role = {
+            "played": "played_line",
+            "best_reference": "best_line",
+            "alternative": "candidate_line",
+        }
+        for index, issuer in enumerate(relations):
+            if not isinstance(issuer, Mapping):
+                continue
+            issuer_location = f"{location}.dependency_proof.relation_issuers[{index}]"
+            retained_ids = [issuer.get("issuer_evidence_id"), issuer.get("occurrence_id")]
+            lower_ids = issuer.get("source_premise_ids")
+            if isinstance(lower_ids, list):
+                retained_ids.extend(lower_ids)
+            if any(not isinstance(value, str) or value not in sources for value in retained_ids):
+                errors.append(
+                    f"{issuer_location}: relation owner, occurrence, and lower sources "
+                    "must all be retained by source_premise_ids"
+                )
+            relation_step = route_steps_by_key.get(issuer.get("step_key"))
+            if not isinstance(relation_step, Mapping):
+                errors.append(
+                    f"{issuer_location}.step_key: relation issuer does not bind an occurrence on its branch route"
+                )
+            elif issuer.get("line") != branch_line or issuer.get("line") != relation_step.get("line"):
+                errors.append(
+                    f"{issuer_location}.line: relation issuer does not own its replay route"
+                )
+            issuer_line = issuer.get("line")
+            line_role = issuer_line.get("line_role") if isinstance(issuer_line, Mapping) else None
+            if issuer.get("scope") != scope_by_role.get(line_role):
+                errors.append(f"{issuer_location}.scope: relation issuer scope does not match its line")
+
+        for index, state in enumerate(states):
+            if not isinstance(state, Mapping):
+                continue
+            state_location = f"{location}.dependency_proof.position_state_issuers[{index}]"
+            state_step = route_steps_by_key.get(state.get("step_key"))
+            if not isinstance(state_step, Mapping) or any(
+                state.get(field) != state_step.get(field)
+                for field in (
+                    "step_key",
+                    "ply",
+                    "move_uci",
+                    "fen_before",
+                    "fen_after",
+                    "line",
+                )
+            ):
+                errors.append(
+                    f"{state_location}: state issuer does not equal its exact branch occurrence"
+                )
+            state_line = state.get("line")
+            line_role = state_line.get("line_role") if isinstance(state_line, Mapping) else None
+            if state.get("scope") != scope_by_role.get(line_role):
+                errors.append(f"{state_location}.scope: state issuer scope does not match its line")
+            if state_line != branch_line:
+                errors.append(
+                    f"{state_location}.line: state issuer does not own the dependency route"
+                )
+
+    def _validate_vacated_gate_enables_unrecapturable_slider_capture_proof_identifiers(
+        self,
+        proof: Mapping[str, Any],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        self._validate_two_branch_causal_proof_identifiers(
+            proof,
+            location,
+            errors,
+        )
 
     def _validate_resource_proof_identifiers(
         self,
@@ -548,27 +842,20 @@ class SchemaRegistry:
         location: str,
         errors: list[str],
     ) -> None:
-        paths = self._validate_two_branch_causal_proof_identifiers(
+        self._validate_two_branch_causal_proof_identifiers(
             proof,
             location,
             errors,
         )
-        self._validate_resource_proof_field_closure(proof, paths, location, errors)
 
-    def _validate_defense_obligation_change_proof_identifiers(
+    def _validate_sole_recapturer_removal_before_target_capture_proof_identifiers(
         self,
         proof: Mapping[str, Any],
         location: str,
         errors: list[str],
     ) -> None:
-        paths = self._validate_two_branch_causal_proof_identifiers(
+        self._validate_two_branch_causal_proof_identifiers(
             proof,
-            location,
-            errors,
-        )
-        self._validate_defense_obligation_change_field_closure(
-            proof,
-            paths,
             location,
             errors,
         )
@@ -578,7 +865,7 @@ class SchemaRegistry:
         proof: Mapping[str, Any],
         location: str,
         errors: list[str],
-    ) -> list[Any]:
+    ) -> None:
         branch_values = [
             proof.get("counterfactual_reference_branch"),
             proof.get("played_root_branch"),
@@ -589,6 +876,56 @@ class SchemaRegistry:
             f"{location}.branches",
             errors,
         )
+
+        shared_root: tuple[str | None, Any] | None = None
+        for branch_index, branch in enumerate(branch_values):
+            if not isinstance(branch, Mapping):
+                continue
+            raw_steps = branch.get("steps")
+            if not isinstance(raw_steps, list) or not all(
+                isinstance(step, Mapping) for step in raw_steps
+            ):
+                continue
+            steps = [step for step in raw_steps if isinstance(step, Mapping)]
+            if not steps:
+                continue
+            branch_location = f"{location}.branches[{branch_index}]"
+            root = steps[0]
+            if branch.get("root_move") != root.get("move_uci"):
+                errors.append(
+                    f"{branch_location}.root_move: does not identify the first branch occurrence"
+                )
+            root_occurrence = (
+                _normalized_fen(root.get("fen_before")),
+                root.get("ply"),
+            )
+            if shared_root is None:
+                shared_root = root_occurrence
+            elif root_occurrence != shared_root:
+                errors.append(
+                    f"{branch_location}.steps[0]: branches do not share one root occurrence"
+                )
+            for step_index, step in enumerate(steps):
+                step_location = f"{branch_location}.steps[{step_index}]"
+                if step.get("step_index") != step_index:
+                    errors.append(
+                        f"{step_location}.step_index: branch occurrences are not in exact order"
+                    )
+                if step_index == 0:
+                    continue
+                previous = steps[step_index - 1]
+                previous_ply = previous.get("ply")
+                if not isinstance(previous_ply, int) or step.get("ply") != previous_ply + 1:
+                    errors.append(
+                        f"{step_location}.ply: adjacent occurrences must advance by one ply"
+                    )
+                if _normalized_fen(step.get("fen_before")) != _normalized_fen(
+                    previous.get("fen_after")
+                ):
+                    errors.append(
+                        f"{step_location}.fen_before: adjacent occurrence route is discontinuous"
+                    )
+
         raw_paths = proof.get("proof_paths")
         paths = raw_paths if isinstance(raw_paths, list) else []
         self._unique_objects_by_id(
@@ -600,328 +937,133 @@ class SchemaRegistry:
         path_ids = [
             path.get("path_occurrence_id")
             for path in paths
-            if isinstance(path, Mapping) and isinstance(path.get("path_occurrence_id"), str)
+            if isinstance(path, Mapping)
+            and isinstance(path.get("path_occurrence_id"), str)
         ]
         if path_ids != sorted(path_ids):
             errors.append(
                 f"{location}.proof_paths: path_occurrence_id values must be canonical"
             )
-        absence_use_ids: list[str] = []
+
+        closed_use_ids: list[str] = []
         for path_index, path in enumerate(paths):
             if not isinstance(path, Mapping):
                 continue
             path_location = f"{location}.proof_paths[{path_index}]"
-            uses = []
-            premises = path.get("premises")
-            if isinstance(premises, list):
-                uses.extend(("premises", index, item) for index, item in enumerate(premises))
-            absences = path.get("closed_absence_uses")
-            if isinstance(absences, list):
-                uses.extend(
-                    ("closed_absence_uses", index, item)
-                    for index, item in enumerate(absences)
-                )
+            uses: list[tuple[str, int, Any]] = []
+            for collection in (
+                "premises",
+                "closed_absence_uses",
+                "closed_state_uses",
+            ):
+                values = path.get(collection)
+                if isinstance(values, list):
+                    uses.extend(
+                        (collection, index, item)
+                        for index, item in enumerate(values)
+                    )
+
+            result_ids: list[str] = []
             for collection, index, use in uses:
                 if not isinstance(use, Mapping):
                     continue
+                use_location = f"{path_location}.{collection}[{index}]"
                 if collection == "premises":
                     source_ids = use.get("source_premise_ids")
                     if isinstance(source_ids, list) and source_ids != sorted(source_ids):
                         errors.append(
-                            f"{path_location}.{collection}[{index}].source_premise_ids: "
-                            "values must be canonical"
+                            f"{use_location}.source_premise_ids: values must be canonical"
                         )
+                    issuer_evidence_id = use.get("issuer_evidence_id")
+                    issuer_occurrence_id = use.get("issuer_occurrence_id")
+                    if (
+                        not isinstance(source_ids, list)
+                        or not isinstance(issuer_evidence_id, str)
+                        or issuer_evidence_id not in source_ids
+                        or not isinstance(issuer_occurrence_id, str)
+                        or re.fullmatch(r"[0-9a-f]{64}", issuer_occurrence_id)
+                        is None
+                        or issuer_occurrence_id not in source_ids
+                    ):
+                        errors.append(
+                            f"{use_location}: relation owner and occurrence must both "
+                            "be retained by source_premise_ids"
+                        )
+                    result_id = use.get("result_id")
+                    if isinstance(result_id, str):
+                        result_ids.append(result_id)
                 else:
                     use_id = use.get("use_id")
                     if isinstance(use_id, str):
-                        absence_use_ids.append(use_id)
+                        closed_use_ids.append(use_id)
+
+                branch_id = use.get("branch_id")
                 self._validate_branch_reference(
-                    use.get("branch_id"),
+                    branch_id,
                     use.get("branch_role"),
                     branches,
                     "branch_role",
-                    f"{path_location}.{collection}[{index}].branch_id",
+                    f"{use_location}.branch_id",
                     errors,
                 )
-
-        if len(absence_use_ids) != len(set(absence_use_ids)):
-            errors.append(
-                f"{location}.proof_paths: closed absence use_id values must be globally unique"
-            )
-        return paths
-
-    @staticmethod
-    def _validate_resource_proof_field_closure(
-        proof: Mapping[str, Any],
-        paths: list[Any],
-        location: str,
-        errors: list[str],
-    ) -> None:
-        """Bind the public projection to itself without replaying board facts."""
-
-        reference = proof.get("counterfactual_reference_branch")
-        played = proof.get("played_root_branch")
-        participants = proof.get("participants")
-        if not all(isinstance(value, Mapping) for value in (reference, played, participants)):
-            return
-        assert isinstance(reference, Mapping)
-        assert isinstance(played, Mapping)
-        assert isinstance(participants, Mapping)
-
-        participant_names = (
-            "trigger",
-            "forced_reply",
-            "realizer",
-            "captured_target",
-            "played_defense",
-            "disabled_defender",
-        )
-        participant_values = {name: participants.get(name) for name in participant_names}
-        if not all(isinstance(value, Mapping) for value in participant_values.values()):
-            return
-        trigger = participant_values["trigger"]
-        forced_reply = participant_values["forced_reply"]
-        realizer = participant_values["realizer"]
-        target = participant_values["captured_target"]
-        played_defense = participant_values["played_defense"]
-        disabled = participant_values["disabled_defender"]
-        assert all(
-            isinstance(value, Mapping)
-            for value in (trigger, forced_reply, realizer, target, played_defense, disabled)
-        )
-
-        def steps(branch: Mapping[str, Any]) -> list[Any]:
-            value = branch.get("steps")
-            return value if isinstance(value, list) else []
-
-        def step(branch: Mapping[str, Any], index: int) -> Mapping[str, Any] | None:
-            branch_steps = steps(branch)
-            value = branch_steps[index] if index < len(branch_steps) else None
-            return value if isinstance(value, Mapping) else None
-
-        def require_equal(actual: Any, expected: Any, field: str) -> None:
-            if actual != expected:
-                errors.append(f"{location}.{field}: public proof fields do not identify the same occurrence")
-
-        reference_steps = steps(reference)
-        played_steps = steps(played)
-        if len(reference_steps) < 3 or len(played_steps) < 2:
-            return
-        reference_root = step(reference, 0)
-        reference_reply = step(reference, 1)
-        reference_realizer = step(reference, 2)
-        played_root = step(played, 0)
-        played_reply = step(played, 1)
-        if not all(
-            value is not None
-            for value in (reference_root, reference_reply, reference_realizer, played_root, played_reply)
-        ):
-            return
-        assert reference_root is not None
-        assert reference_reply is not None
-        assert reference_realizer is not None
-        assert played_root is not None
-        assert played_reply is not None
-
-        realizing_move = proof.get("realizing_move")
-        defense_move = proof.get("played_root_branch_legal_defense_move")
-        require_equal(reference.get("root_move"), reference_root.get("move_uci"), "counterfactual_reference_branch.root_move")
-        require_equal(played.get("root_move"), played_root.get("move_uci"), "played_root_branch.root_move")
-        require_equal(reference_root.get("move_uci"), _movement_witness_uci(trigger), "participants.trigger")
-        require_equal(reference_reply.get("move_uci"), forced_reply.get("move_uci"), "participants.forced_reply.move_uci")
-        require_equal(forced_reply.get("move_uci"), _movement_witness_uci(forced_reply), "participants.forced_reply")
-        require_equal(reference_realizer.get("move_uci"), realizing_move, "realizing_move")
-        require_equal(played_root.get("move_uci"), realizing_move, "played_root_branch.steps[0]")
-        require_equal(realizing_move, _movement_witness_uci(realizer), "participants.realizer")
-        require_equal(played_reply.get("move_uci"), defense_move, "played_root_branch.steps[1]")
-        require_equal(played_defense.get("move_uci"), defense_move, "participants.played_defense.move_uci")
-        require_equal(defense_move, _movement_witness_uci(played_defense), "participants.played_defense")
-        require_equal(trigger.get("side"), realizer.get("side"), "participants.trigger.side")
-        require_equal(forced_reply.get("side"), played_defense.get("side"), "participants.forced_reply.side")
-        require_equal(forced_reply.get("side"), disabled.get("side"), "participants.disabled_defender.side")
-        require_equal(forced_reply.get("side"), target.get("side"), "participants.captured_target.side")
-        if trigger.get("side") == forced_reply.get("side"):
-            errors.append(f"{location}.participants: trigger and reply must have opposing sides")
-        require_equal(target.get("square"), realizer.get("to"), "participants.captured_target.square")
-        require_equal(played_defense.get("to"), realizer.get("to"), "participants.played_defense.to")
-        require_equal(disabled.get("side"), played_defense.get("side"), "participants.disabled_defender.side")
-        require_equal(disabled.get("piece"), played_defense.get("piece_before"), "participants.disabled_defender.piece")
-        require_equal(disabled.get("square"), played_defense.get("from"), "participants.disabled_defender.square")
-
-        require_equal(disabled.get("piece"), forced_reply.get("piece_before"), "participants.forced_reply.piece_before")
-        require_equal(disabled.get("square"), forced_reply.get("from"), "participants.forced_reply.from")
-
-        expected_query = (
-            f"legal-capture:{target.get('side')}:{realizer.get('to')}"
-            if isinstance(target.get("side"), str) and isinstance(realizer.get("to"), str)
-            else None
-        )
-        for path_index, path in enumerate(paths):
-            if not isinstance(path, Mapping):
-                continue
-            absences = path.get("closed_absence_uses")
-            if not isinstance(absences, list):
-                continue
-            for absence_index, absence in enumerate(absences):
-                if not isinstance(absence, Mapping):
+                branch = branches.get(branch_id) if isinstance(branch_id, str) else None
+                if not isinstance(branch, Mapping):
                     continue
-                prefix = f"proof_paths[{path_index}].closed_absence_uses[{absence_index}]"
-                require_equal(absence.get("query"), expected_query, f"{prefix}.query")
-                require_equal(absence.get("branch_id"), reference.get("branch_id"), f"{prefix}.branch_id")
-                position = absence.get("position")
-                if isinstance(position, Mapping):
-                    require_equal(position.get("fen"), reference_realizer.get("fen_after"), f"{prefix}.position.fen")
-                    require_equal(position.get("ply"), reference_realizer.get("ply"), f"{prefix}.position.ply")
+                raw_steps = branch.get("steps")
+                steps = raw_steps if isinstance(raw_steps, list) else []
+                if collection == "premises":
+                    step_index = use.get("step_index")
+                    if (
+                        not isinstance(step_index, int)
+                        or not 0 <= step_index < len(steps)
+                    ):
+                        errors.append(
+                            f"{use_location}.step_index: does not reference a branch occurrence"
+                        )
+                    continue
 
-    @staticmethod
-    def _validate_defense_obligation_change_field_closure(
-        proof: Mapping[str, Any],
-        paths: list[Any],
-        location: str,
-        errors: list[str],
-    ) -> None:
-        """Bind the defense proof's public fields without replaying chess."""
+                after_step_index = use.get("after_step_index")
+                if (
+                    not isinstance(after_step_index, int)
+                    or not 0 <= after_step_index < len(steps)
+                    or not isinstance(steps[after_step_index], Mapping)
+                ):
+                    errors.append(
+                        f"{use_location}.after_step_index: does not reference a branch occurrence"
+                    )
+                    continue
+                step = steps[after_step_index]
+                position = use.get("position")
+                if not isinstance(position, Mapping) or (
+                    _normalized_fen(position.get("fen"))
+                    != _normalized_fen(step.get("fen_after"))
+                    or position.get("ply") != step.get("ply")
+                ):
+                    errors.append(
+                        f"{use_location}.position: does not bind the supplied branch occurrence"
+                    )
+                expected_scope = (
+                    "best_line"
+                    if branch.get("branch_role") == "counterfactual_reference"
+                    else "played_line"
+                )
+                if (
+                    isinstance(position, Mapping)
+                    and position.get("scope") != expected_scope
+                ):
+                    errors.append(
+                        f"{use_location}.position.scope: does not match branch ownership"
+                    )
 
-        reference = proof.get("counterfactual_reference_branch")
-        played = proof.get("played_root_branch")
-        participants = proof.get("participants")
-        if not all(isinstance(value, Mapping) for value in (reference, played, participants)):
-            return
-        assert isinstance(reference, Mapping)
-        assert isinstance(played, Mapping)
-        assert isinstance(participants, Mapping)
-
-        names = (
-            "remover",
-            "removed_defender",
-            "removal_recapture",
-            "later_exploit",
-            "captured_target",
-            "played_sole_recapture",
-        )
-        values = {name: participants.get(name) for name in names}
-        if not all(isinstance(value, Mapping) for value in values.values()):
-            return
-        remover = values["remover"]
-        removed = values["removed_defender"]
-        removal_recapture = values["removal_recapture"]
-        exploit = values["later_exploit"]
-        target = values["captured_target"]
-        played_recapture = values["played_sole_recapture"]
-        assert all(
-            isinstance(value, Mapping)
-            for value in (remover, removed, removal_recapture, exploit, target, played_recapture)
-        )
-
-        def steps(branch: Mapping[str, Any]) -> list[Any]:
-            value = branch.get("steps")
-            return value if isinstance(value, list) else []
-
-        def require_equal(actual: Any, expected: Any, field: str) -> None:
-            if actual != expected:
+            if len(result_ids) != len(set(result_ids)):
                 errors.append(
-                    f"{location}.{field}: public proof fields do not identify the same occurrence"
+                    f"{path_location}.premises: result_id values must be unique"
                 )
 
-        reference_steps = steps(reference)
-        played_steps = steps(played)
-        if len(reference_steps) != 3 or len(played_steps) != 2:
-            return
-        if not all(isinstance(value, Mapping) for value in reference_steps + played_steps):
-            return
-        reference_root, reference_reply, reference_exploit = reference_steps
-        played_root, played_reply = played_steps
-        assert all(
-            isinstance(value, Mapping)
-            for value in (reference_root, reference_reply, reference_exploit, played_root, played_reply)
-        )
-
-        for branch_name, branch_steps in (
-            ("counterfactual_reference_branch", reference_steps),
-            ("played_root_branch", played_steps),
-        ):
-            require_equal(
-                [step.get("step_index") for step in branch_steps],
-                list(range(len(branch_steps))),
-                f"{branch_name}.steps.step_index",
+        if len(closed_use_ids) != len(set(closed_use_ids)):
+            errors.append(
+                f"{location}.proof_paths: closed use_id values must be globally unique"
             )
-            for index, (before, after) in enumerate(zip(branch_steps, branch_steps[1:])):
-                require_equal(
-                    after.get("fen_before"),
-                    before.get("fen_after"),
-                    f"{branch_name}.steps[{index + 1}].fen_before",
-                )
-                before_ply = before.get("ply")
-                expected_ply = before_ply + 1 if isinstance(before_ply, int) else None
-                require_equal(
-                    after.get("ply"),
-                    expected_ply,
-                    f"{branch_name}.steps[{index + 1}].ply",
-                )
-
-        later_exploit_move = proof.get("later_exploit_move")
-        sole_recapture_move = proof.get("played_sole_recapture_move")
-        require_equal(reference.get("root_move"), reference_root.get("move_uci"), "counterfactual_reference_branch.root_move")
-        require_equal(played.get("root_move"), played_root.get("move_uci"), "played_root_branch.root_move")
-        require_equal(reference_root.get("fen_before"), played_root.get("fen_before"), "played_root_branch.steps[0].fen_before")
-        require_equal(reference_root.get("ply"), played_root.get("ply"), "played_root_branch.steps[0].ply")
-        require_equal(reference_root.get("move_uci"), _movement_witness_uci(remover), "participants.remover")
-        require_equal(reference_reply.get("move_uci"), removal_recapture.get("move_uci"), "participants.removal_recapture.move_uci")
-        require_equal(removal_recapture.get("move_uci"), _movement_witness_uci(removal_recapture), "participants.removal_recapture")
-        require_equal(reference_exploit.get("move_uci"), later_exploit_move, "later_exploit_move")
-        require_equal(played_root.get("move_uci"), later_exploit_move, "played_root_branch.steps[0]")
-        require_equal(later_exploit_move, _movement_witness_uci(exploit), "participants.later_exploit")
-        require_equal(played_reply.get("move_uci"), sole_recapture_move, "played_sole_recapture_move")
-        require_equal(played_recapture.get("move_uci"), sole_recapture_move, "participants.played_sole_recapture.move_uci")
-        require_equal(sole_recapture_move, _movement_witness_uci(played_recapture), "participants.played_sole_recapture")
-
-        require_equal(remover.get("side"), exploit.get("side"), "participants.later_exploit.side")
-        require_equal(removed.get("side"), removal_recapture.get("side"), "participants.removal_recapture.side")
-        require_equal(removed.get("side"), target.get("side"), "participants.captured_target.side")
-        require_equal(removed.get("side"), played_recapture.get("side"), "participants.played_sole_recapture.side")
-        if remover.get("side") == removed.get("side"):
-            errors.append(f"{location}.participants: remover and removed defender must have opposing sides")
-        require_equal(remover.get("to"), removed.get("square"), "participants.remover.to")
-        require_equal(removal_recapture.get("to"), remover.get("to"), "participants.removal_recapture.to")
-        require_equal(exploit.get("to"), target.get("square"), "participants.captured_target.square")
-        require_equal(played_recapture.get("to"), exploit.get("to"), "participants.played_sole_recapture.to")
-        require_equal(played_recapture.get("from"), removed.get("square"), "participants.played_sole_recapture.from")
-        require_equal(played_recapture.get("piece_before"), removed.get("piece"), "participants.played_sole_recapture.piece_before")
-
-        reference_id = reference.get("branch_id")
-        played_id = played.get("branch_id")
-        expected_query = (
-            f"legal-capture:{removed.get('side')}:{exploit.get('to')}"
-            if isinstance(removed.get("side"), str) and isinstance(exploit.get("to"), str)
-            else None
-        )
-        for path_index, path in enumerate(paths):
-            if not isinstance(path, Mapping):
-                continue
-            path_location = f"proof_paths[{path_index}]"
-            premises = path.get("premises")
-            if isinstance(premises, list) and len(premises) == 3 and all(
-                isinstance(premise, Mapping) for premise in premises
-            ):
-                require_equal(premises[0].get("branch_id"), reference_id, f"{path_location}.premises[0].branch_id")
-                require_equal(premises[1].get("branch_id"), reference_id, f"{path_location}.premises[1].branch_id")
-                require_equal(premises[2].get("branch_id"), played_id, f"{path_location}.premises[2].branch_id")
-                result_ids = [premise.get("result_id") for premise in premises]
-                if len(result_ids) != len(set(result_ids)):
-                    errors.append(f"{location}.{path_location}.premises: result_id values must be distinct")
-            absences = path.get("closed_absence_uses")
-            if not isinstance(absences, list):
-                continue
-            for absence_index, absence in enumerate(absences):
-                if not isinstance(absence, Mapping):
-                    continue
-                prefix = f"{path_location}.closed_absence_uses[{absence_index}]"
-                require_equal(absence.get("query"), expected_query, f"{prefix}.query")
-                require_equal(absence.get("branch_id"), reference_id, f"{prefix}.branch_id")
-                position = absence.get("position")
-                if isinstance(position, Mapping):
-                    require_equal(position.get("fen"), reference_exploit.get("fen_after"), f"{prefix}.position.fen")
-                    require_equal(position.get("ply"), reference_exploit.get("ply"), f"{prefix}.position.ply")
 
     def validate_registry(self) -> None:
         roots: list[tuple[Mapping[str, Any], Path]] = []

@@ -134,7 +134,7 @@ JDK 21과 sbt 1.11.7이 필요하다.
 ## 인간 이론서와 코퍼스
 
 [`references/source-index.json`](references/source-index.json)이 등록된
-evaluation/curation source identity, checksum, page count와 contamination
+reference source identity, checksum, page count와 contamination
 표식의 단일 권위다. 허용 locator는 `{document_id, pdf_page}`뿐이며 local path, 원문,
 스크린샷과 추출 본문은 artifact에 넣지 않는다.
 
@@ -142,6 +142,8 @@ evaluation/curation source identity, checksum, page count와 contamination
 정답 label이 아니다. 합법 수순과 보드 사실을 별도로 검증하고, 오염된
 explore source를 confirm/blind 근거로 재사용하지 않는다.
 
-[`curation/pdf-ideas-v1/README.md`](curation/pdf-ideas-v1/README.md)는 이
-경계를 지킨 인간 검토용 연구 묶음이다. production, runtime, test 또는
-held-out oracle consumer는 없다.
+레퍼런스 문장·후보 설명·복사 PGN을 저장소 안의 별도 의미 원장으로
+복제하지 않는다. 현재 공개 L2 명제의 page anchor와 형식적 충분조건은
+[`../chesstory-runtime/docs/JudgmentBoundary.md`](../chesstory-runtime/docs/JudgmentBoundary.md)에만
+기록하며, 실제 체스 사실은 언제나 런타임의 인증된 L0/L0.5/L1 producer가
+발급한다.
