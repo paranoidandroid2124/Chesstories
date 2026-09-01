@@ -45,6 +45,7 @@ import * as studyApi from './studyApi';
 import {
   moveReviewCopy,
   moveReviewEngineOutcomeAtRequiredDepth,
+  moveReviewProofById,
   moveReviewSubjectFromNodeList,
   moveReviewSubjectKey,
   moveReviewVerdictLabel,
@@ -592,7 +593,7 @@ export default class AnalyseCtrl implements CevalHandler {
       actions: {
         selectCandidate: this.selectMoveReviewCandidate,
         toggleEvidence: this.toggleMoveReviewEvidence,
-        toggleReason: this.toggleMoveReviewReason,
+        toggleProof: this.toggleMoveReviewProof,
         previewFrame: this.previewMoveReviewFrame,
         clearPreview: this.clearMoveReviewPreview,
         pinFrame: this.pinMoveReviewFrame,
@@ -707,7 +708,10 @@ export default class AnalyseCtrl implements CevalHandler {
           };
           const cancel = (): void => finish(failure('cancelled', 'The move review was cancelled.'), true);
           const fail = (): void =>
-            finish(failure('engine_failure', 'The browser engine stopped before producing an exact result.'), true);
+            finish(
+              failure('engine_failure', 'The browser engine stopped before producing an exact result.'),
+              true,
+            );
           this.moveReviewEngineFailure = fail;
           signal.addEventListener('abort', cancel, { once: true });
           const remainingLeaseMs = work.maxSearchElapsedMs - elapsed();
@@ -716,7 +720,8 @@ export default class AnalyseCtrl implements CevalHandler {
             return;
           }
           leaseTimer = window.setTimeout(
-            () => finish(failure('lease_expired', 'The browser engine exceeded its issued work lease.'), true),
+            () =>
+              finish(failure('lease_expired', 'The browser engine exceeded its issued work lease.'), true),
             remainingLeaseMs,
           );
           try {
@@ -737,10 +742,7 @@ export default class AnalyseCtrl implements CevalHandler {
               emit: evaluation => {
                 latestNodes = Math.max(latestNodes, evaluation.nodes);
                 latestEngineTimeMs = Math.max(latestEngineTimeMs, evaluation.millis);
-                if (
-                  evaluation.depth === work.searchLimits.depth - 1 &&
-                  evaluation.bestmove === undefined
-                )
+                if (evaluation.depth === work.searchLimits.depth - 1 && evaluation.bestmove === undefined)
                   previousEvaluation = {
                     ...evaluation,
                     pvs: evaluation.pvs.map(pv => ({ ...pv, moves: [...pv.moves] })),
@@ -798,12 +800,8 @@ export default class AnalyseCtrl implements CevalHandler {
       )!;
       this.moveReviewView.selectedCandidateUci ??= played.uci;
       const review = played.review;
-      if (
-        review.kind === 'move-verdict' &&
-        !this.moveReviewView.expandedReasonId &&
-        review.core.reasonRefs.primary[0]
-      )
-        this.moveReviewView.expandedReasonId = review.core.reasonRefs.primary[0];
+      if (review.kind === 'move-verdict' && !this.moveReviewView.expandedProofId && review.comparisonProof)
+        this.moveReviewView.expandedProofId = review.comparisonProof.id;
       if (review.kind !== 'move-verdict' || review.core.verdictSymbol === 'none')
         this.moveReviewAnnotations.delete(subject!.after.path);
       else
@@ -831,9 +829,9 @@ export default class AnalyseCtrl implements CevalHandler {
     this.redraw();
   };
 
-  private toggleMoveReviewReason = (reasonId: string): void => {
-    this.moveReviewView.expandedReasonId =
-      this.moveReviewView.expandedReasonId === reasonId ? undefined : reasonId;
+  private toggleMoveReviewProof = (proofId: string): void => {
+    this.moveReviewView.expandedProofId =
+      this.moveReviewView.expandedProofId === proofId ? undefined : proofId;
     this.redraw();
   };
 
@@ -865,16 +863,11 @@ export default class AnalyseCtrl implements CevalHandler {
   ): { subject: MoveReviewSubject; proof: MoveReviewProof } | undefined {
     if (this.moveReviewJob.kind !== 'completed') return;
     const { subject, evidence } = this.moveReviewJob.snapshot;
-    const proof = evidence.candidates
-      .flatMap(candidate =>
-        candidate.review.kind === 'move-verdict'
-          ? candidate.review.reasons.map(reason => reason.proof)
-          : candidate.review.kind === 'single-candidate-insight'
-            ? [candidate.review.proof]
-            : [],
-      )
-      .find(candidate => candidate.id === proofId);
-    return proof ? { subject, proof } : undefined;
+    for (const candidate of evidence.candidates) {
+      const proof = moveReviewProofById(candidate.review, proofId);
+      if (proof) return { subject, proof };
+    }
+    return;
   }
 
   private addMoveReviewProof = (proofId: string): void => {

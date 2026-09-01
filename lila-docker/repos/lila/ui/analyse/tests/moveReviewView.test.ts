@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { moveReviewEngineProfile } from 'lib/ceval/types';
 import type { VNode } from 'snabbdom';
 import {
+  decodeMoveReviewSnapshot,
   moveReviewCopy,
-  moveReviewReasonText,
+  type MoveReviewCandidateReview,
   type MoveReviewJobState,
   type MoveReviewLocale,
-  type MoveReviewProof,
-  type MoveReviewReason,
+  type MoveReviewSubject,
   type MoveReviewVerdictSymbol,
   type MoveReviewViewState,
 } from '../src/moveReview';
@@ -17,13 +19,27 @@ import {
   type MoveReviewPanelProps,
 } from '../src/view/moveReview';
 
+type JsonObject = Record<string, unknown>;
 type CompletedJob = Extract<MoveReviewJobState, { kind: 'completed' }>;
 type MoveReviewPanelActions = MoveReviewPanelProps['actions'];
+type VerdictReview = Extract<MoveReviewCandidateReview, { kind: 'move-verdict' }>;
+
+const object = (value: unknown): JsonObject => value as JsonObject;
+const objects = (value: unknown): JsonObject[] => value as JsonObject[];
+
+const occurrenceFixtureUrl = new URL(
+  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json',
+  import.meta.url,
+);
+const bestChoiceFixtureUrl = new URL(
+  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/best-choice-produced.json',
+  import.meta.url,
+);
 
 const noopActions: MoveReviewPanelActions = {
   selectCandidate: () => {},
   toggleEvidence: () => {},
-  toggleReason: () => {},
+  toggleProof: () => {},
   previewFrame: () => {},
   clearPreview: () => {},
   pinFrame: () => {},
@@ -33,117 +49,74 @@ const noopActions: MoveReviewPanelActions = {
   viewAddedLine: () => {},
 };
 
-const beforeFen = '8/8/8/8/8/8/4K3/7k w - - 0 1' as FEN;
-const firstFen = '8/8/8/8/8/4K3/8/7k b - - 1 1' as FEN;
-const secondFen = '8/8/8/8/8/4K3/6k1/8 w - - 2 2' as FEN;
-const playedUci = 'e2e3' as Uci;
+function fixture(url = occurrenceFixtureUrl): JsonObject {
+  return JSON.parse(readFileSync(url, 'utf8')) as JsonObject;
+}
 
-function makeProof(id: string): MoveReviewProof {
+function commentary(raw: JsonObject): JsonObject {
+  const reviews = objects(object(raw.result).selected_move_reviews);
+  const review = reviews.find(item => object(item).commentary);
+  assert.ok(review);
+  return object(review.commentary);
+}
+
+function subjectFor(raw: JsonObject): MoveReviewSubject {
+  const focus = object(raw.focus);
+  const before = raw.current_fen as FEN;
+  const played = focus.played_move_uci as Uci;
+  const after = focus.resulting_fen as FEN;
   return {
-    id,
-    startFen: beforeFen,
-    moves: [
-      { uci: playedUci, label: 'e2e3', fenAfter: firstFen },
-      { uci: 'h1g2' as Uci, label: 'h1g2', fenAfter: secondFen },
-    ],
-    annotations: [],
+    variant: 'standard',
+    initialFen: before,
+    movePrefixUci: [],
+    before: { path: '' as Tree.Path, fen: before },
+    played: { uci: played, san: played as San },
+    after: { path: 'aa' as Tree.Path, fen: after },
   };
 }
 
-function makeReason(id: string): MoveReviewReason {
-  return {
-    id,
-    messageSlots: { candidateUci: playedUci },
-    message: { kind: 'line', moves: [playedUci, 'h1g2' as Uci] },
-    proof: makeProof(id),
-  };
+function completedFrom(raw: JsonObject): CompletedJob {
+  const subject = subjectFor(raw);
+  const snapshot = decodeMoveReviewSnapshot(raw, {
+    requestId: raw.request_id as string,
+    subject,
+    engineProfile: moveReviewEngineProfile,
+  });
+  assert.equal(snapshot?.kind, 'completed');
+  if (snapshot?.kind !== 'completed') throw new Error('Expected completed producer fixture');
+  return { kind: 'completed', snapshot };
 }
 
-const primaryReason = makeReason('reason.primary');
-const supportingReason = makeReason('reason.support');
+const completedJob = completedFrom(fixture());
+const playedCandidate = completedJob.snapshot.evidence.candidates.find(candidate =>
+  candidate.roles.includes('played'),
+);
+assert.ok(playedCandidate);
+const playedUci = playedCandidate.uci;
 
-const completedJob: CompletedJob = {
-  kind: 'completed',
-  snapshot: {
-    kind: 'completed',
-    requestId: 'view-test',
-    jobId: 'a'.repeat(32),
-    engineProfile: 'sf18-smallnet-t2-h16-v1',
-    judgmentRevision: 'chesstory.position-commentary.response.v6',
-    annotationPolicyRevision: 'chesstory.verdict-threshold-policy.v2',
-    subject: {
-      variant: 'standard',
-      initialFen: beforeFen,
-      movePrefixUci: [],
-      before: { path: '' as Tree.Path, fen: beforeFen },
-      played: { uci: playedUci, san: 'Ke3' as San },
-      after: { path: 'aa' as Tree.Path, fen: firstFen },
-    },
-    evidence: {
-      candidates: [
-        {
-          uci: 'e2f2' as Uci,
-          label: 'e2f2',
-          roles: ['best'],
-          winPercent: 53.25,
-          review: { kind: 'single-candidate-insight', proof: makeProof('line.best') },
-        },
-        {
-          uci: playedUci,
-          label: 'Ke3',
-          roles: ['played'],
-          winPercent: 49.75,
-          review: {
-            kind: 'move-verdict',
-            core: {
-              verdictRef: 'verdict.view-test',
-              verdictCode: 'inaccuracy',
-              verdictSymbol: '?!',
-              playedUci,
-              bestUci: 'e2f2' as Uci,
-              winChance: {
-                referencePercent: 53.25,
-                playedPercent: 49.75,
-                changePercentagePoints: -3.5,
-              },
-              kind: 'move-verdict',
-              reasonRefs: { primary: [primaryReason.id], support: [supportingReason.id], routes: [] },
-            },
-            reasons: [supportingReason, primaryReason],
-          },
-        },
-      ],
-    },
-  },
-};
+function verdictReview(job: CompletedJob): VerdictReview {
+  const candidate = job.snapshot.evidence.candidates.find(item => item.roles.includes('played'));
+  assert.equal(candidate?.review.kind, 'move-verdict');
+  if (candidate?.review.kind !== 'move-verdict') throw new Error('Expected verdict review');
+  return candidate.review;
+}
+
+const producerExplanationId = verdictReview(completedJob).explanations[0]!.id;
+const producerFirstBranchProofId = `${producerExplanationId}-branch-0`;
 
 function completedWith(symbol: MoveReviewVerdictSymbol): CompletedJob {
-  const verdictCode =
+  const job = structuredClone(completedJob);
+  const review = verdictReview(job);
+  review.core.verdictSymbol = symbol;
+  review.core.verdictCode =
     symbol === 'none'
-      ? ('matches_reference' as const)
+      ? 'matches_reference'
       : symbol === '?!'
-        ? ('inaccuracy' as const)
+        ? 'inaccuracy'
         : symbol === '?'
-          ? ('mistake' as const)
-          : ('blunder' as const);
-  const candidates = completedJob.snapshot.evidence.candidates.map(candidate =>
-    candidate.review.kind === 'move-verdict'
-      ? {
-          ...candidate,
-          review: {
-            ...candidate.review,
-            core: { ...candidate.review.core, verdictCode, verdictSymbol: symbol },
-          },
-        }
-      : candidate,
-  );
-  return {
-    ...completedJob,
-    snapshot: {
-      ...completedJob.snapshot,
-      evidence: { candidates },
-    },
-  };
+          ? 'mistake'
+          : 'blunder';
+  return job;
 }
 
 function props(
@@ -188,8 +161,20 @@ function descendants(root: VNode): VNode[] {
 function renderedText(root: VNode): string {
   return descendants(root)
     .map(node => node.text)
-    .filter((text): text is string => typeof text === 'string')
+    .filter((value): value is string => typeof value === 'string')
     .join(' ');
+}
+
+function renderedTextWithout(root: VNode, selector: string): string {
+  const values: string[] = [];
+  const visit = (node: VNode) => {
+    if (node.sel === selector) return;
+    if (typeof node.text === 'string') values.push(node.text);
+    for (const child of node.children || [])
+      if (typeof child === 'object' && child && 'sel' in child) visit(child as VNode);
+  };
+  visit(root);
+  return values.join(' ');
 }
 
 function findNode(root: VNode, selector: string): VNode {
@@ -206,6 +191,7 @@ interface BoardConfig {
   fen: FEN;
   lastMove?: Key[];
   orientation: Color;
+  drawable?: { autoShapes?: Array<{ orig: Key; dest?: Key; brush: string }> };
 }
 
 function renderedBoardConfig(root: VNode): BoardConfig {
@@ -221,19 +207,17 @@ function renderedBoardConfig(root: VNode): BoardConfig {
   return captured;
 }
 
-test('renders only the four v6 verdict symbols and their honest tones', () => {
-  const verdicts: Array<[MoveReviewVerdictSymbol, string | undefined, string, string]> = [
-    ['none', undefined, 'Matches the reference', 'No annotation'],
-    ['?!', 'inaccuracy', 'Inaccuracy', 'Dubious'],
-    ['?', 'mistake', 'Mistake', 'Mistake'],
-    ['??', 'blunder', 'Blunder', 'Blunder'],
+test('renders only the four v6 verdict symbols and their tones', () => {
+  const cases: Array<[MoveReviewVerdictSymbol, string | undefined]> = [
+    ['none', undefined],
+    ['?!', 'inaccuracy'],
+    ['?', 'mistake'],
+    ['??', 'blunder'],
   ];
-  for (const [symbol, tone, summaryLabel, notationLabel] of verdicts) {
+  for (const [symbol, tone] of cases) {
     const panel = renderMoveReview(props({ job: completedWith(symbol) }));
-    const summary = findNode(panel, 'section.move-review__summary');
-    assert.equal(summary.data?.attrs?.['aria-label'], `${summaryLabel}: Ke3`);
-    assert.match(renderedText(summary), new RegExp(summaryLabel));
-    const notation = renderMoveReviewNotationBadge(symbol, notationLabel);
+    assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /b2b4/);
+    const notation = renderMoveReviewNotationBadge(symbol, symbol);
     if (!tone) assert.equal(notation, undefined);
     else {
       assert.equal(notation?.sel, `span.move-review__notation-badge.move-review__notation-badge--${tone}`);
@@ -242,811 +226,361 @@ test('renders only the four v6 verdict symbols and their honest tones', () => {
   }
 });
 
-test('renders v6 candidate labels and reference-to-reviewed metrics without inferred tags', () => {
+test('keeps played, best, verdict, and metrics in the Assessment surface', () => {
   const panel = renderMoveReview(props({ view: { evidenceExpanded: true } }));
+  const copy = moveReviewCopy('en-US');
   const candidates = findNodes(panel, 'button.move-review__candidate');
   assert.equal(candidates.length, 2);
-  assert.equal(renderedText(candidates[0]!), 'Best e2f2 53.3%');
-  assert.equal(renderedText(candidates[1]!), 'Played Ke3 49.8%');
-  assert.match(renderedText(findNode(panel, 'dl.move-review__metrics')), /53\.3% → 49\.8%/);
-  assert.match(renderedText(panel), /-3\.5%p/);
-  assert.equal(findNodes(panel, 'span.move-review__display-tag').length, 0);
+  assert.ok(candidates.some(candidate => renderedText(candidate).includes(`${copy.best} d4d5`)));
+  assert.ok(candidates.some(candidate => renderedText(candidate).includes(`${copy.played} b2b4`)));
+  assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /Blunder/);
+  assert.match(renderedText(findNode(panel, 'dl.move-review__metrics')), /90\.1% → 50\.0%/);
+  assert.match(renderedText(panel), /-40\.1%p/);
+  const headlines = findNodes(panel, 'button.move-review__proof-entry-button').map(renderedText).join(' ');
+  assert.doesNotMatch(headlines, /capture_exclusion_move_order/);
 });
 
-test('renders BestChoice from the transmitted runner-up comparison', () => {
-  const played = completedJob.snapshot.evidence.candidates[1]!;
-  assert.equal(played.review.kind, 'move-verdict');
-  if (played.review.kind !== 'move-verdict') return;
-  const job: CompletedJob = {
-    ...completedJob,
-    snapshot: {
-      ...completedJob.snapshot,
-      evidence: {
-        candidates: [
-          {
-            ...played,
-            roles: ['best', 'played'],
-            review: {
-              ...played.review,
-              core: {
-                ...played.review.core,
-                kind: 'best-choice',
-                verdictCode: 'inaccuracy',
-                verdictSymbol: 'none',
-                bestUci: playedUci,
-                bestChoice: {
-                  runnerUpVerdictCode: 'inaccuracy',
-                  runnerUpUci: 'e2f2' as Uci,
-                },
-              },
-            },
-          },
-        ],
-      },
-    },
-  };
-  const panel = renderMoveReview(props({ job }));
+test('renders the immutable BestChoice producer fixture with its runner-up', () => {
+  const panel = renderMoveReview(props({ job: completedFrom(fixture(bestChoiceFixtureUrl)) }));
   const summary = findNode(panel, 'section.move-review__summary');
-  assert.equal(summary.data?.attrs?.['aria-label'], 'Inaccuracy: Ke3');
-  assert.match(renderedText(summary), /Best Ke3 · Runner-up e2f2: Inaccuracy/);
-  assert.equal(findNodes(panel, 'span.move-review__verdict-badge').length, 0);
-  assert.doesNotMatch(renderedText(summary), /Improves on the reference/);
+  assert.match(renderedText(summary), /Best .* · Runner-up .*:/);
+  assert.equal(findNodes(summary, 'span.move-review__verdict-badge').length, 0);
 });
 
-test('renders draw claims alongside selected candidate reviews', () => {
-  const job: CompletedJob = {
-    ...completedJob,
-    snapshot: {
-      ...completedJob.snapshot,
-      evidence: {
-        ...completedJob.snapshot.evidence,
-        drawClaims: [{ rule: 'threefold_repetition', availability: 'available_now' }],
-      },
-    },
-  };
-  const copy = moveReviewCopy('en-US');
-  const text = renderedText(renderMoveReview(props({ job })));
-  assert.ok(text.includes(copy.drawClaimAvailable));
-  assert.ok(text.includes(copy.drawRuleLabels.threefold_repetition));
-});
-
-test('renders a forced single move terminal as an exact line outcome', () => {
-  const job: CompletedJob = {
-    ...completedJob,
-    snapshot: {
-      ...completedJob.snapshot,
-      evidence: {
-        candidates: [
-          {
-            uci: playedUci,
-            label: 'Ke3',
-            roles: ['best', 'played'],
-            review: {
-              kind: 'forced-single-move',
-              lineUcis: [playedUci, 'h1g2' as Uci],
-              terminal: { kind: 'checkmate', winner: 'black' },
-            },
-          },
-        ],
-      },
-    },
-  };
-  const panel = renderMoveReview(props({ job, view: { evidenceExpanded: true } }));
-  assert.match(renderedText(panel), /Forced single move/);
-  assert.match(renderedText(panel), /e2e3 h1g2/);
-  assert.match(renderedText(panel), /Terminal position: Checkmate · Black/);
-  assert.equal(findNodes(panel, 'span.move-review__verdict-badge').length, 0);
-});
-
-test('renders typed L2 coordinates and their transmitted proof moves without legacy pattern labels', () => {
-  const candidate = completedJob.snapshot.evidence.candidates[1]!;
-  const resource: MoveReviewReason = {
-    ...primaryReason,
-    id: 'resource.typed',
-    message: {
-      kind: 'unique-check-reply-defender-displacement-before-capture',
-      channelId: 'typed.resource',
-      causeEvidenceId: 'cause.resource',
-      causeKind: 'wrong_move_order',
-      sourceEvidenceId: 'resource.source',
-      semanticId: 'a'.repeat(64),
-      occurrenceId: 'b'.repeat(64),
-      dependencyFingerprint: 'c'.repeat(64),
-      pathOccurrenceId: '3'.repeat(64),
-      branch: {
-        id: '1'.repeat(64),
-        role: 'counterfactual_reference',
-        provenance: 'counterfactual_analyzed_root',
-        lineId: 'line.reference',
-        lineRole: 'best_reference',
-        lineRank: 1,
-        rootMove: 'c4f7' as Uci,
-      },
-      counterpart: {
-        id: '2'.repeat(64),
-        role: 'played_root_analysis_continuation',
-        provenance: 'observed_game_root',
-        lineId: 'line.played',
-        lineRole: 'played',
-        lineRank: 1,
-        rootMove: playedUci,
-      },
-      trigger: { side: 'white', from: 'c4', to: 'f7', pieceBefore: 'bishop', pieceAfter: 'bishop' },
-      forcedReply: {
-        side: 'black',
-        from: 'f8',
-        to: 'f7',
-        pieceBefore: 'rook',
-        pieceAfter: 'rook',
-        moveUci: 'f8f7' as Uci,
-      },
-      realizer: { side: 'white', from: 'd1', to: 'd8', pieceBefore: 'rook', pieceAfter: 'rook' },
-      realizingMove: 'd1d8' as Uci,
-      capturedTarget: { side: 'black', piece: 'queen', square: 'd8' },
-      playedDefender: {
-        side: 'black',
-        from: 'f8',
-        to: 'd8',
-        pieceBefore: 'rook',
-        pieceAfter: 'rook',
-        moveUci: 'f8d8' as Uci,
-      },
-      disabledDefender: {
-        side: 'black',
-        piece: 'rook',
-        square: 'f8',
-      },
-      premises: [
-        {
-          role: 'reference_capture_recapture',
-          contract: 'capture_recapture_inventory',
-          resultId: 'result',
-          sourcePremiseIds: ['premise'],
-          branchId: '1'.repeat(64),
-          branchRole: 'counterfactual_reference',
-          stepIndex: 2,
-        },
-      ],
-      absence: {
-        useId: '4'.repeat(64),
-        semanticProofId: '5'.repeat(64),
-        issuer: 'position_relation_extractor.closed_relation_inventory',
-        issuerEvidenceId: 'reference-line-evidence',
-        issuerOccurrenceId: '6'.repeat(64),
-        query: 'legal-capture:black:d8',
-        branchId: '1'.repeat(64),
-        afterStepIndex: 2,
-        fen: secondFen,
-        ply: 2,
-        scope: 'best_line',
-      },
-    },
-  };
-  const defense: MoveReviewReason = {
-    ...primaryReason,
-    id: 'defense-obligation.typed',
-    message: {
-      kind: 'sole-recapturer-removal-before-target-capture',
-      channelId: 'typed.defense-obligation',
-      causeEvidenceId: 'cause.defense-obligation',
-      causeKind: 'wrong_move_order',
-      sourceEvidenceId: 'defense-obligation.source',
-      semanticId: 'd'.repeat(64),
-      occurrenceId: 'e'.repeat(64),
-      dependencyFingerprint: 'f'.repeat(64),
-      pathOccurrenceId: '4'.repeat(64),
-      branch: {
-        id: '1'.repeat(64),
-        role: 'counterfactual_reference',
-        provenance: 'counterfactual_analyzed_root',
-        lineId: 'line.reference',
-        lineRole: 'best_reference',
-        lineRank: 1,
-        rootMove: 'g5f6' as Uci,
-      },
-      counterpart: {
-        id: '2'.repeat(64),
-        role: 'played_root_analysis_continuation',
-        provenance: 'observed_game_root',
-        lineId: 'line.played',
-        lineRole: 'played',
-        lineRank: 1,
-        rootMove: 'd1d5' as Uci,
-      },
-      remover: { side: 'white', from: 'g5', to: 'f6', pieceBefore: 'bishop', pieceAfter: 'bishop' },
-      removedDefender: { side: 'black', piece: 'knight', square: 'f6' },
-      removalRecapture: {
-        side: 'black',
-        from: 'e7',
-        to: 'f6',
-        pieceBefore: 'pawn',
-        pieceAfter: 'pawn',
-        moveUci: 'e7f6' as Uci,
-      },
-      laterExploit: {
-        side: 'white',
-        from: 'd1',
-        to: 'd5',
-        pieceBefore: 'queen',
-        pieceAfter: 'queen',
-      },
-      capturedTarget: { side: 'black', piece: 'rook', square: 'd5' },
-      playedSoleRecapture: {
-        side: 'black',
-        from: 'f6',
-        to: 'd5',
-        pieceBefore: 'knight',
-        pieceAfter: 'knight',
-        moveUci: 'f6d5' as Uci,
-      },
-      laterExploitMove: 'd1d5' as Uci,
-      playedSoleRecaptureMove: 'f6d5' as Uci,
-      premises: [
-        {
-          role: 'reference_defender_removal',
-          contract: 'capture_recapture_inventory',
-          resultId: `capture_recapture_inventory:${'0'.repeat(64)}`,
-          sourcePremiseIds: ['reference-removal'],
-          branchId: '1'.repeat(64),
-          branchRole: 'counterfactual_reference',
-          stepIndex: 0,
-        },
-        {
-          role: 'reference_later_exploit_inventory',
-          contract: 'capture_recapture_inventory',
-          resultId: `capture_recapture_inventory:${'1'.repeat(64)}`,
-          sourcePremiseIds: ['reference-exploit'],
-          branchId: '1'.repeat(64),
-          branchRole: 'counterfactual_reference',
-          stepIndex: 2,
-        },
-        {
-          role: 'played_immediate_exploit_inventory',
-          contract: 'capture_recapture_inventory',
-          resultId: `capture_recapture_inventory:${'2'.repeat(64)}`,
-          sourcePremiseIds: ['played-exploit'],
-          branchId: '2'.repeat(64),
-          branchRole: 'played_root_analysis_continuation',
-          stepIndex: 0,
-        },
-      ],
-      absence: {
-        useId: '4'.repeat(64),
-        role: 'reference_replacement_recapture_absent',
-        semanticProofId: '5'.repeat(64),
-        issuer: 'position_relation_extractor.closed_relation_inventory',
-        issuerEvidenceId: 'reference-line-evidence',
-        issuerOccurrenceId: '6'.repeat(64),
-        query: 'legal-capture:black:d5',
-        branchId: '1'.repeat(64),
-        afterStepIndex: 2,
-        fen: secondFen,
-        ply: 3,
-        scope: 'best_line',
-      },
-    },
-  };
-  const passedPawnResult: MoveReviewReason = {
-    ...primaryReason,
-    id: 'passed-pawn-result.typed',
-    message: {
-      kind: 'passed-pawn-progress-realized-after-only-legal-reply',
-      channelId: 'typed.passed-pawn-result',
-      causeEvidenceId: 'cause.passed-pawn-result',
-      causeKind: 'passed_pawn_progress',
-      sourceEvidenceId: 'passed-pawn-result.source',
-      eventEvidenceId: 'passed-pawn-result.event',
-      semanticId: 'a'.repeat(64),
-      occurrenceId: 'b'.repeat(64),
-      dependencyFingerprint: 'c'.repeat(64),
-      pathOccurrenceId: '6'.repeat(64),
-      resultTargetSubjects: [
-        `20:passed-pawn-promoted5:white2:a72:a8:relations:[removed:pawn_passage:${'f'.repeat(64)}]:derived:[]`,
-      ],
-      rootActor: {
-        side: 'white',
-        from: 'a6',
-        to: 'a7',
-        pieceBefore: 'pawn',
-        pieceAfter: 'pawn',
-        legalMoveRelation: 'd'.repeat(64),
-      },
-      realizingActor: {
-        side: 'white',
-        from: 'a7',
-        to: 'a8',
-        pieceBefore: 'pawn',
-        pieceAfter: 'queen',
-        legalMoveRelation: 'e'.repeat(64),
-      },
-      rootLine: { id: 'line.played', role: 'played', rank: 1, rootMove: 'a6a7' as Uci },
-      rootMove: 'a6a7' as Uci,
-      rootPly: 1,
-      replyMove: 'h8g8' as Uci,
-      realizingMove: 'a7a8q' as Uci,
-      realizingPly: 3,
-      resultPlyOffset: 2,
-      pathRealizationActor: {
-        side: 'white',
-        from: 'a7',
-        to: 'a8',
-        pieceBefore: 'pawn',
-        pieceAfter: 'queen',
-        legalMoveRelation: 'e'.repeat(64),
-      },
-      pathRealizationMove: 'a7a8q' as Uci,
-      pathRealizationPly: 3,
-      analysisContinuationBranch: {
-        id: '7'.repeat(64),
-        role: 'played_root_analysis_continuation',
-        provenance: 'observed_game_root',
-        lineId: 'line.played',
-        lineRole: 'played',
-        lineRank: 1,
-        rootMove: 'a6a7' as Uci,
-      },
-      analysisContinuationSteps: [
-        {
-          index: 0,
-          stepKey: `1:a6a7:${beforeFen}:${firstFen}`,
-          ply: 1,
-          move: 'a6a7' as Uci,
-          fenBefore: beforeFen,
-          fenAfter: firstFen,
-          line: { id: 'line.played', role: 'played', rank: 1, rootMove: 'a6a7' as Uci },
-          provenance: 'observed_game_move',
-        },
-      ],
-      premises: [
-        {
-          role: 'result',
-          contract: 'passed_pawn_progress',
-          resultId: 'analysis-result',
-          sourcePremiseIds: ['passed-pawn-result.event'],
-          branchId: '7'.repeat(64),
-          branchRole: 'played_root_analysis_continuation',
-          fromStepIndex: 2,
-          toStepIndex: 2,
-        },
-      ],
-      closureUseIds: ['8'.repeat(64)],
-      lowerPremiseIds: ['passed-pawn-result.event', 'structural.delta.reply.inventory'],
-      replyClosure: {
-        issuerEvidenceId: 'structural.delta.reply.inventory',
-        rootAfter: { fen: firstFen, ply: 1, scope: 'played_transition' },
-        legalReplyMove: 'h8g8' as Uci,
-        analysisContinuationBranchId: '7'.repeat(64),
-      },
-    },
-  };
-  const vacatedGate: MoveReviewReason = {
-    ...primaryReason,
-    id: 'vacated-gate.typed',
-    message: {
-      kind: 'vacated-gate-enables-unrecapturable-slider-capture',
-      channelId: 'typed.vacated-gate',
-      causeEvidenceId: 'cause.vacated-gate',
-      causeKind: 'missed_tactical_resource',
-      sourceEvidenceId: 'vacated-gate.source',
-      semanticId: '1'.repeat(64),
-      occurrenceId: '2'.repeat(64),
-      dependencyFingerprint: '3'.repeat(64),
-      pathOccurrenceId: '4'.repeat(64),
-      branch: {
-        id: '5'.repeat(64),
-        role: 'counterfactual_reference',
-        provenance: 'counterfactual_analyzed_root',
-        lineId: 'line.reference.vacated-gate',
-        lineRole: 'best_reference',
-        lineRank: 1,
-        rootMove: 'a2b4' as Uci,
-      },
-      counterpart: {
-        id: '6'.repeat(64),
-        role: 'played_root_analysis_continuation',
-        provenance: 'observed_game_root',
-        lineId: 'line.played.vacated-gate',
-        lineRole: 'played',
-        lineRank: 2,
-        rootMove: playedUci,
-      },
-      enabler: { side: 'white', from: 'a2', to: 'b4', pieceBefore: 'knight', pieceAfter: 'knight' },
-      slider: { side: 'white', piece: 'rook', square: 'a1' },
-      gateBlocker: { side: 'white', piece: 'knight', square: 'a2' },
-      exploit: { side: 'white', from: 'a1', to: 'a7', pieceBefore: 'rook', pieceAfter: 'rook' },
-      capturedTarget: { side: 'black', piece: 'queen', square: 'a7' },
-      exploitMove: 'a1a7' as Uci,
-      premises: [
-        {
-          role: 'reference_root_slider_reach',
-          contract: 'slider_reach_delta',
-          resultId: `slider_reach_delta:${'7'.repeat(64)}`,
-          sourcePremiseIds: ['reference-reach'],
-          branchId: '5'.repeat(64),
-          branchRole: 'counterfactual_reference',
-          stepIndex: 0,
-        },
-        {
-          role: 'reference_exploit_capture',
-          contract: 'capture_recapture_inventory',
-          resultId: `capture_recapture_inventory:${'8'.repeat(64)}`,
-          sourcePremiseIds: ['reference-capture'],
-          branchId: '5'.repeat(64),
-          branchRole: 'counterfactual_reference',
-          stepIndex: 2,
-        },
-      ],
-      absences: Array.from({ length: 3 }, (_, index) => ({
-        useId: String(index + 1).repeat(64),
-        role: `closed-absence-${index}`,
-        semanticProofId: '9'.repeat(64),
-        issuer: 'position_relation_extractor.closed_relation_inventory',
-        issuerEvidenceId: 'reference-line-evidence',
-        issuerOccurrenceId: 'a'.repeat(64),
-        query: 'legal-capture:black:a7',
-        branchId: '5'.repeat(64),
-        branchRole: 'counterfactual_reference',
-        afterStepIndex: 2,
-        fen: secondFen,
-        ply: 3,
-        scope: 'best_line',
-      })),
-      states: Array.from({ length: 5 }, (_, index) => ({
-        useId: String(index + 4).repeat(64),
-        role: `closed-state-${index}`,
-        semanticProofId: 'b'.repeat(64),
-        issuer: 'position_relation_extractor.closed_position_state_inventory',
-        issuerEvidenceId: 'played-line-evidence',
-        issuerOccurrenceId: 'c'.repeat(64),
-        query: 'occupied-by:white:knight@a2',
-        branchId: '6'.repeat(64),
-        branchRole: 'played_root_analysis_continuation',
-        afterStepIndex: 1,
-        fen: secondFen,
-        ply: 2,
-        scope: 'played_line',
-      })),
-    },
-  };
-  const resourceText = moveReviewReasonText(resource, candidate, 'en-US');
-  assert.match(resourceText, /bishop moves c4–f7.*forcing f8f7.*queen on d8.*f8d8/);
-  assert.ok(resourceText.includes('closed relation inventory (reference-line-evidence)'));
-  assert.ok(resourceText.includes(secondFen));
-  assert.match(
-    resourceText,
-    /legal-capture:black:d8.*lower proofs reference recapture:result.*disabled rook on f8.*mechanism forced defender displacement/,
-  );
-  const defenseText = moveReviewReasonText(defense, candidate, 'en-US');
-  assert.match(
-    defenseText,
-    /bishop from g5 captures the knight on f6, is recaptured by e7f6.*d1d5.*rook on d5/,
-  );
-  assert.match(defenseText, /observed played root.*certified analysis continuation.*knight from f6.*f6d5/);
-  assert.match(defenseText, /legal-capture:black:d5.*reference defender removal/);
-  const passedPawnResultText = moveReviewReasonText(passedPawnResult, candidate, 'en-US');
-  assert.match(
-    passedPawnResultText,
-    /observed played root a6–a7.*certified analysis continuation.*only legal reply h8g8 and a7a8q.*20:passed-pawn-promoted5:white2:a72:a8/,
-  );
-  assert.ok(passedPawnResultText.includes('structural.delta.reply.inventory'));
-  assert.ok(passedPawnResultText.includes('passed-pawn-result.event'));
-  assert.ok(passedPawnResultText.includes(firstFen));
-  assert.match(
-    passedPawnResultText,
-    /certifies that reply.*owns the analysis-result occurrence.*path premises analysis.*independent path/,
-  );
-  const passedPawnResultKorean = moveReviewReasonText(passedPawnResult, candidate, 'ko-KR');
-  assert.match(
-    passedPawnResultKorean,
-    /유일 합법 응수 h8g8.*structural\.delta\.reply\.inventory 인벤토리가.*그 응수를 인증/,
-  );
-  assert.match(
-    passedPawnResultKorean,
-    /인증 분석 후속 수순.*통과폰 진행 결과.*passed-pawn-result\.event가 분석 결과 occurrence를 소유/,
-  );
-  assert.doesNotMatch(passedPawnResultKorean, /passed-pawn-result\.event.*가지 완결/);
-
-  const candidates = completedJob.snapshot.evidence.candidates.map(item =>
-    item.review.kind === 'move-verdict'
-      ? {
-          ...item,
-          review: {
-            ...item.review,
-            core: {
-              ...item.review.core,
-              reasonRefs: {
-                primary: [resource.id],
-                support: [defense.id, passedPawnResult.id, vacatedGate.id],
-                routes: [],
-              },
-            },
-            reasons: [resource, defense, passedPawnResult, vacatedGate],
-          },
-        }
-      : item,
-  );
-  const typedL2Job: CompletedJob = {
-    ...completedJob,
-    snapshot: { ...completedJob.snapshot, evidence: { candidates } },
-  };
+test('renders the producer occurrence as ordered typed paths and provenance-owned branches', () => {
   const panel = renderMoveReview(
     props({
-      job: typedL2Job,
-      view: { evidenceExpanded: true, expandedReasonId: resource.id },
+      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
     }),
   );
-  assert.match(renderedText(panel), /counterfactual reference analysis/);
-  assert.match(renderedText(panel), /reference defender removal/);
-  assert.deepEqual(findNodes(panel, 'button.move-review__proof-san').map(renderedText), ['e2e3', 'h1g2']);
+  const text = renderedText(panel);
+  assert.match(text, /Proof path 1/);
+  assert.match(text, /Premises/);
+  assert.match(text, /Closed absence/);
+  assert.match(text, /Closed state/);
+  assert.match(text, /Captured target/);
+  assert.match(text, /d4/);
+  assert.match(text, /b2b4/);
+  assert.match(text, /e5d4/);
 
-  const vacatedPanel = renderMoveReview(
-    props({
-      job: typedL2Job,
-      view: { evidenceExpanded: true, expandedReasonId: vacatedGate.id },
-    }),
-  );
-  const vacatedPanelText = renderedText(vacatedPanel);
-  assert.match(vacatedPanelText, /counterfactual reference analysis.*knight vacates a2.*a1a7.*queen on a7/);
-  assert.match(
-    vacatedPanelText,
-    /observed played root.*certified analysis continuation.*knight on a2.*a1a7 resource is absent/,
-  );
-  assert.match(vacatedPanelText, /2 relation premises, 3 closed absences, and 5 closed states/);
-  assert.equal(findNodes(vacatedPanel, 'button.move-review__reason-button').length, 4);
-
-  const koreanPanel = renderMoveReview(
-    props({
-      job: typedL2Job,
-      locale: 'ko-KR',
-      view: { evidenceExpanded: true, expandedReasonId: vacatedGate.id },
-    }),
-  );
-  const koreanPanelText = renderedText(koreanPanel);
-  assert.match(
-    koreanPanelText,
-    /반사실 기준 분석.*a2의 knight가 게이트를 비운 뒤.*a1a7.*a7의 queen을 잡습니다/,
-  );
-  assert.match(
-    koreanPanelText,
-    /관측된 실전 첫 수 이후 인증 분석 후속 수순.*a2의 knight.*같은 a1a7 자원이 없습니다/,
-  );
-  assert.match(koreanPanelText, /관계 전제 2개, 폐쇄 부재 3개, 폐쇄 상태 5개/);
-  assert.equal(findNodes(koreanPanel, 'button.move-review__reason-button').length, 4);
-});
-
-test('closes a verdict-only review with an explicit cause-withheld message', () => {
-  const candidates = completedJob.snapshot.evidence.candidates.map(candidate =>
-    candidate.review.kind === 'move-verdict'
-      ? {
-          ...candidate,
-          review: {
-            ...candidate.review,
-            core: { ...candidate.review.core, reasonRefs: { primary: [], support: [], routes: [] } },
-            reasons: [],
-          },
-        }
-      : candidate,
-  );
-  const job: CompletedJob = {
-    ...completedJob,
-    snapshot: { ...completedJob.snapshot, evidence: { candidates } },
-  };
-  assert.match(
-    renderedText(renderMoveReview(props({ job }))),
-    /verdict is available, but no cause for the difference from the reference move was verified/i,
-  );
-});
-
-test('uses selected reason order and UCI proof labels without browser SAN synthesis', () => {
-  const panel = renderMoveReview(
-    props({
-      canWrite: true,
-      view: { evidenceExpanded: true, expandedReasonId: primaryReason.id },
-    }),
-  );
-  const reasons = findNodes(panel, 'button.move-review__reason-button').map(renderedText);
-  assert.equal(reasons.length, 2);
-  assert.match(reasons[0]!, /^Primary evidence Verified line: Ke3 h1g2\./);
-  assert.match(reasons[1]!, /^Supporting evidence Verified line: Ke3 h1g2\./);
-  const moves = findNodes(panel, 'button.move-review__proof-san');
-  assert.deepEqual(moves.map(renderedText), ['e2e3', 'h1g2']);
+  assert.deepEqual(findNodes(panel, 'header.move-review__branch-header').map(renderedText), [
+    'Analyzed alternative d4d5',
+    'Actual move · Analysis continuation b2b4',
+  ]);
+  assert.deepEqual(findNodes(panel, 'span.move-review__proof-stage').map(renderedText), [
+    'Analyzed alternative',
+    'Analyzed alternative',
+    'Analyzed alternative',
+    'Analyzed alternative',
+    'Analyzed alternative',
+    'Actual move',
+    'Analysis continuation',
+  ]);
   assert.deepEqual(
-    moves.map(node => node.data?.attrs?.['aria-label']),
-    ['Step 1: e2e3', 'Step 2: h1g2'],
+    findNodes(panel, 'button.move-review__proof-entry-button').map(button =>
+      renderedText(findNode(button, 'strong')),
+    ),
+    ['Verified candidate line', moveReviewCopy('en-US').familyLabels.capture_exclusion_move_order],
   );
-  assert.equal(renderedBoardConfig(panel).fen, firstFen);
+  assert.equal(findNodes(panel, 'section.move-review__participants.move-review__typed-section').length, 1);
+  assert.equal(findNodes(panel, 'section.move-review__participant').length, 4);
+  assert.equal(findNodes(panel, 'section.move-review__proof-path.move-review__typed-section').length, 1);
+  assert.equal(findNodes(panel, 'section.move-review__premise').length, 4);
+  assert.equal(findNodes(panel, 'section.move-review__closed-absence').length, 1);
+  assert.equal(findNodes(panel, 'section.move-review__closed-state').length, 1);
+  assert.equal(findNodes(panel, 'section.move-review__later-consumer.move-review__typed-section').length, 1);
+  const provenance = findNode(panel, 'details.move-review__provenance');
+  assert.equal(provenance.data?.attrs?.open, undefined);
+  const decodedExplanation = verdictReview(completedJob).explanations[0]!;
+  const visible = renderedTextWithout(panel, 'details.move-review__provenance');
+  assert.doesNotMatch(visible, /capture_exclusion_move_order|proofKind|causeEvidenceId|capturedTarget/);
+  assert.doesNotMatch(visible, new RegExp(decodedExplanation.proof.occurrenceId));
+  assert.match(renderedText(provenance), new RegExp(decodedExplanation.proof.occurrenceId));
+  assert.equal(findNodes(panel, 'div.cg-wrap.is2d').length, 2);
 });
 
-test('renders multiple preserved paths as neutral proof routes', () => {
-  const candidates = completedJob.snapshot.evidence.candidates.map(candidate =>
-    candidate.review.kind === 'move-verdict'
-      ? {
-          ...candidate,
-          review: {
-            ...candidate.review,
-            core: {
-              ...candidate.review.core,
-              reasonRefs: { primary: [], support: [], routes: [primaryReason.id, supportingReason.id] },
-            },
-          },
-        }
-      : candidate,
-  );
-  const job: CompletedJob = {
-    ...completedJob,
-    snapshot: { ...completedJob.snapshot, evidence: { candidates } },
-  };
-  const panel = renderMoveReview(props({ job, view: { evidenceExpanded: true } }));
-  const reasons = findNodes(panel, 'button.move-review__reason-button').map(renderedText);
-  assert.equal(reasons.length, 2);
-  assert.ok(reasons.every(reason => reason.startsWith('Proof route')));
-});
+test('omits a move stage when the transmitted step provenance is absent', () => {
+  const job = structuredClone(completedJob);
+  const explanation = verdictReview(job).explanations[0]!;
+  assert.equal(explanation.proofKind, 'capture_exclusion_move_order');
+  if (explanation.proofKind !== 'capture_exclusion_move_order') return;
+  delete (explanation.proof.immediateCaptureBranch.steps[0] as { provenance?: unknown }).provenance;
 
-test('preserves the best candidate insight independently from the played verdict', () => {
   const panel = renderMoveReview(
-    props({
-      view: {
-        selectedCandidateUci: 'e2f2',
-        evidenceExpanded: true,
-        expandedReasonId: 'line.best',
-      },
-    }),
+    props({ job, view: { evidenceExpanded: true, expandedProofId: explanation.id } }),
   );
-  assert.match(renderedText(findNode(panel, 'button.move-review__reason-button')), /Verified candidate line/);
-  assert.deepEqual(findNodes(panel, 'button.move-review__proof-san').map(renderedText), ['e2e3', 'h1g2']);
+  const stages = findNodes(panel, 'span.move-review__proof-stage').map(renderedText);
+  assert.equal(stages.filter(stage => stage === 'Actual move').length, 0);
+  assert.equal(stages.filter(stage => stage === 'Analyzed alternative').length, 5);
+  assert.equal(stages.filter(stage => stage === 'Analysis continuation').length, 1);
 });
 
-test('keeps candidates visible when the played review is honestly withheld', () => {
-  const candidates = completedJob.snapshot.evidence.candidates.map(candidate =>
-    candidate.roles.includes('played') ? { ...candidate, review: { kind: 'abstained' as const } } : candidate,
+test('preserves multiple independent occurrence explanations in wire order', () => {
+  const raw = fixture();
+  const occurrences = objects(commentary(raw).occurrence_explanations);
+  const second = structuredClone(occurrences[0]!);
+  second.cause_evidence_id = 'second-independent-cause';
+  const secondProof = object(second.proof);
+  secondProof.occurrence_id = 'e'.repeat(64);
+  object(objects(secondProof.proof_paths)[0]).path_occurrence_id = 'f'.repeat(64);
+  commentary(raw).occurrence_explanations = [occurrences[0]!, second];
+
+  const panel = renderMoveReview(props({ job: completedFrom(raw), view: { evidenceExpanded: true } }));
+  assert.deepEqual(
+    findNodes(panel, 'button.move-review__proof-entry-button').map(button =>
+      renderedText(findNode(button, 'strong')),
+    ),
+    [
+      'Verified candidate line',
+      moveReviewCopy('en-US').familyLabels.capture_exclusion_move_order,
+      moveReviewCopy('en-US').familyLabels.capture_exclusion_move_order,
+    ],
   );
-  const job: CompletedJob = {
-    ...completedJob,
-    snapshot: { ...completedJob.snapshot, evidence: { candidates } },
-  };
-  const panel = renderMoveReview(props({ job, view: { evidenceExpanded: true } }));
-  assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /unavailable/i);
-  assert.equal(findNodes(panel, 'button.move-review__candidate').length, 2);
-  assert.equal(findNodes(panel, 'span.move-review__verdict-badge').length, 0);
+  assert.deepEqual(
+    findNodes(panel, 'article.move-review__proof-entry').map(entry => entry.key),
+    [
+      `pv:${playedUci}`,
+      `occurrence-explanation-${object(occurrences[0]!.proof).occurrence_id}`,
+      `occurrence-explanation-${secondProof.occurrence_id}`,
+    ],
+  );
 });
 
-test('renders exact terminal and draw-claim position actions without a verdict badge', () => {
-  const common = {
-    requestId: 'view-test',
-    jobId: 'a'.repeat(32),
-    engineProfile: 'sf18-smallnet-t2-h16-v1' as const,
-    judgmentRevision: 'chesstory.position-commentary.response.v6',
-    annotationPolicyRevision: 'chesstory.verdict-threshold-policy.v2',
-    subject: completedJob.snapshot.subject,
-  };
-  const terminal = renderMoveReview(
-    props({
-      job: {
-        kind: 'position-action',
-        snapshot: {
-          ...common,
-          kind: 'position-action',
-          action: { kind: 'automatic-terminal', terminal: { kind: 'checkmate', winner: 'white' } },
-        },
-      },
-    }),
+test('keeps Assessment comparison proof and Explanation branches separate', () => {
+  const assessment = renderMoveReview(
+    props({ view: { evidenceExpanded: true, expandedProofId: `pv:${playedUci}` } }),
   );
-  assert.match(renderedText(terminal), /Terminal position Checkmate · White/);
-  assert.equal(findNodes(terminal, 'span.move-review__verdict-badge').length, 0);
+  assert.equal(findNodes(assessment, 'div.cg-wrap.is2d').length, 1);
+  assert.equal(findNodes(assessment, 'section.move-review__branch').length, 0);
 
-  const draw = renderMoveReview(
-    props({
-      job: {
-        kind: 'position-action',
-        snapshot: {
-          ...common,
-          kind: 'position-action',
-          action: {
-            kind: 'draw-claim',
-            claims: [{ rule: 'threefold_repetition', availability: 'available_now' }],
-          },
-        },
-      },
-    }),
+  const explanation = renderMoveReview(
+    props({ view: { evidenceExpanded: true, expandedProofId: producerExplanationId } }),
   );
-  assert.match(renderedText(draw), /Draw claim available Threefold repetition · Available now/);
+  assert.equal(findNodes(explanation, 'div.cg-wrap.is2d').length, 2);
+  assert.equal(findNodes(explanation, 'section.move-review__branch').length, 2);
 });
 
-test('keeps proof navigation and Study actions separate', () => {
+test('keeps proof navigation, mini-board frames, and Study actions intact', () => {
   const calls: string[] = [];
-  const actions: Partial<MoveReviewPanelActions> = {
-    previewFrame: frame => calls.push(`preview:${frame.proofId}:${frame.ply}`),
-    pinFrame: frame => calls.push(`pin:${frame.proofId}:${frame.ply}`),
-    addProof: proofId => calls.push(`add:${proofId}`),
-  };
   const panel = renderMoveReview(
     props({
       canWrite: true,
-      actions,
-      view: { evidenceExpanded: true, expandedReasonId: primaryReason.id },
+      actions: {
+        previewFrame: frame => calls.push(`preview:${frame.proofId}:${frame.ply}`),
+        pinFrame: frame => calls.push(`pin:${frame.proofId}:${frame.ply}`),
+        addProof: proofId => calls.push(`add:${proofId}`),
+      },
+      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
     }),
   );
   const moves = findNodes(panel, 'button.move-review__proof-san');
+  assert.equal(renderedText(moves[0]!), 'd4d5');
+  assert.equal(renderedText(moves[1]!), 'c7c6');
   (moves[0]!.data?.on?.mouseenter as () => void)();
   (moves[1]!.data?.on?.click as () => void)();
-  (findNode(panel, 'button.button.button-thin.move-review__add').data?.on?.click as () => void)();
-  assert.deepEqual(calls, ['preview:reason.primary:1', 'pin:reason.primary:2', 'add:reason.primary']);
+  const add = findNodes(panel, 'button.button.button-thin.move-review__add');
+  assert.equal(add.length, 2);
+  (add[0]!.data?.on?.click as () => void)();
+  assert.deepEqual(calls, [
+    `preview:${producerFirstBranchProofId}:1`,
+    `pin:${producerFirstBranchProofId}:2`,
+    `add:${producerFirstBranchProofId}`,
+  ]);
+  assert.deepEqual(renderedBoardConfig(panel).lastMove, ['d4', 'd5']);
 
   const pinned = renderMoveReview(
     props({
       view: {
         evidenceExpanded: true,
-        expandedReasonId: primaryReason.id,
-        pinnedFrame: { proofId: primaryReason.id, ply: 2 },
+        expandedProofId: producerExplanationId,
+        pinnedFrame: { proofId: producerFirstBranchProofId, ply: 2 },
       },
     }),
   );
-  assert.match(renderedText(findNode(pinned, 'figcaption')), /Step 2: h1g2/);
-  assert.equal(renderedBoardConfig(pinned).fen, secondFen);
+  assert.match(renderedText(findNode(pinned, 'figcaption')), /Step 2: c7c6/);
+  assert.deepEqual(renderedBoardConfig(pinned).lastMove, ['c7', 'c6']);
 });
 
-test('renders loading, retryable faults, and unsupported states honestly', () => {
-  const subject = completedJob.snapshot.subject;
-  const loading = renderMoveReview(props({ job: { kind: 'loading', subject } }));
-  assert.match(renderedText(loading), /Reviewing the last move/);
-
-  const abstained = renderMoveReview(props({ job: { kind: 'abstained', subject } }));
-  assert.match(renderedText(abstained), /withheld because no verified judgment/i);
-
-  let retries = 0;
-  const fault = renderMoveReview(
+test('preserves certified proof annotations on candidate mini-boards', () => {
+  const job = structuredClone(completedJob);
+  const candidate = job.snapshot.evidence.candidates.find(item => item.roles.includes('best'));
+  assert.equal(candidate?.review.kind, 'single-candidate-insight');
+  if (candidate?.review.kind !== 'single-candidate-insight') return;
+  candidate.review.proof.annotations = [
+    { atPly: 1, shape: { kind: 'arrow', orig: 'd4', dest: 'd5', brush: 'green' } },
+    { atPly: 1, shape: { kind: 'square', key: 'd5', brush: 'blue' } },
+  ];
+  const panel = renderMoveReview(
     props({
-      job: { kind: 'fault', subject, message: 'Evidence unavailable.', retryable: true },
-      actions: { retry: () => retries++ },
-    }),
-  );
-  (findNode(fault, 'button.button.button-thin.move-review__retry').data?.on?.click as () => void)();
-  assert.equal(retries, 1);
-
-  const unsupported = renderMoveReview(
-    props({
-      job: {
-        kind: 'unsupported',
-        subject,
-        reason: 'browser-unsupported',
-        message: moveReviewCopy('en-US').browserUnsupported,
+      job,
+      view: {
+        evidenceExpanded: true,
+        selectedCandidateUci: candidate.uci,
+        expandedProofId: candidate.review.proof.id,
       },
     }),
   );
-  assert.equal(findNodes(unsupported, 'button.button.button-thin.move-review__retry').length, 0);
+  assert.deepEqual(renderedBoardConfig(panel).drawable?.autoShapes, [
+    { orig: 'd4', dest: 'd5', brush: 'green' },
+    { orig: 'd5', brush: 'blue' },
+  ]);
 });
 
-test('supports roving candidate focus and clamps stale proof frames', () => {
+test('shows a verdict-only explanation absence without inventing a cause', () => {
+  const job = structuredClone(completedJob);
+  verdictReview(job).explanations = [];
+  const panel = renderMoveReview(props({ job, view: { evidenceExpanded: true } }));
+  assert.match(renderedText(panel), /no cause .* was verified/i);
+  assert.equal(findNodes(panel, 'section.move-review__branch').length, 0);
+});
+
+test('limits Korean explanation copy to finite structural labels', () => {
+  const panel = renderMoveReview(
+    props({
+      locale: 'ko-KR',
+      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
+    }),
+  );
+  const text = renderedText(panel);
+  assert.match(text, /근거 경로 1/);
+  assert.match(text, /분석 대안 d4d5/);
+  assert.match(text, /실제 수 · 분석 후속 b2b4/);
+  assert.match(text, /전제/);
+  assert.match(text, /폐쇄 부재/);
+  assert.match(text, /폐쇄 상태/);
+  assert.deepEqual(moveReviewCopy('ko-KR').familyLabels, {
+    unique_check_reply_defender_displacement_before_capture: '유일 체크 응수로 수비수 이동 후 포획',
+    sole_recapturer_removal_before_target_capture: '유일 재포획 기물 제거 후 목표 포획',
+    vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
+    square_release_route: '칸 해방 후 기물 경로',
+    capture_exclusion_move_order: '포획 응수를 배제한 수순',
+    passed_pawn_progress_realized_after_only_legal_reply: '유일 합법 응수 후 통과폰 전진',
+  });
+  assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
+    unique_check_reply_defender_displacement_before_capture:
+      'Unique-check-reply defender displacement before capture',
+    sole_recapturer_removal_before_target_capture: 'Sole-recapturer removal before target capture',
+    vacated_gate_enables_unrecapturable_slider_capture:
+      'Unrecapturable slider capture through a vacated gate',
+    square_release_route: 'Route through a released square',
+    capture_exclusion_move_order: 'Move order excluding the capture reply',
+    passed_pawn_progress_realized_after_only_legal_reply: 'Passed-pawn progress after the only legal reply',
+  });
+  assert.equal('dependency' in moveReviewCopy('ko-KR').structureLabels, false);
+  assert.equal('dependency' in moveReviewCopy('en-US').structureLabels, false);
+});
+
+test('renders transmitted draw claims alongside Assessment', () => {
+  const job = structuredClone(completedJob);
+  job.snapshot.evidence.drawClaims = [{ rule: 'threefold_repetition', availability: 'available_now' }];
+  const text = renderedText(renderMoveReview(props({ job })));
+  assert.match(text, /Draw claim available/);
+  assert.match(text, /Threefold repetition · Available now/);
+});
+
+test('supports roving candidate focus without changing chess meaning', () => {
   let selected: Uci | undefined;
   let focused = false;
   const panel = renderMoveReview(
     props({
       view: { evidenceExpanded: true },
-      actions: { selectCandidate: value => (selected = value) },
+      actions: { selectCandidate: uci => (selected = uci) },
     }),
   );
   const candidates = findNodes(panel, 'button.move-review__candidate');
+  const tabs = [{ focus: () => {} }, { focus: () => (focused = true) }];
   const event = {
-    key: 'ArrowLeft',
+    key: 'ArrowRight',
     preventDefault: () => {},
-    currentTarget: {
-      parentElement: {
-        querySelectorAll: () => [{ focus: () => (focused = true) }, { focus: () => {} }],
-      },
-    },
+    currentTarget: { parentElement: { querySelectorAll: () => tabs } },
   } as unknown as KeyboardEvent;
-  (candidates[1]!.data?.on?.keydown as (event: KeyboardEvent) => void)(event);
-  assert.equal(selected, 'e2f2');
+  (candidates[0]!.data?.on?.keydown as (value: KeyboardEvent) => void)(event);
+  assert.equal(selected, playedUci);
   assert.equal(focused, true);
+});
 
-  const stale = renderMoveReview(
+test('falls back to the first certified frame when a pinned frame is stale', () => {
+  const proofId = `pv:${playedUci}`;
+  const panel = renderMoveReview(
     props({
       view: {
         evidenceExpanded: true,
-        expandedReasonId: primaryReason.id,
-        pinnedFrame: { proofId: primaryReason.id, ply: 99 },
+        expandedProofId: proofId,
+        pinnedFrame: { proofId, ply: 99 },
       },
     }),
   );
-  assert.match(renderedText(findNode(stale, 'figcaption')), /Step 1: e2e3/);
+  assert.match(renderedText(findNode(panel, 'figcaption')), /Step 1: b2b4/);
+  assert.deepEqual(renderedBoardConfig(panel).lastMove, ['b2', 'b4']);
+});
+
+test('offers the added Study line without duplicating its add action', () => {
+  const proofId = producerFirstBranchProofId;
+  let viewed: string | undefined;
+  const panel = renderMoveReview(
+    props({
+      canWrite: true,
+      addedProofId: proofId,
+      actions: { viewAddedLine: id => (viewed = id) },
+      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
+    }),
+  );
+  assert.match(renderedText(panel), /Line added to Study/);
+  assert.equal(findNodes(panel, 'button.button.button-thin.move-review__add').length, 1);
+  const viewButton = findNode(panel, 'button.button.button-thin.move-review__view-added');
+  (viewButton.data?.on?.click as () => void)();
+  assert.equal(viewed, proofId);
+});
+
+test('keeps forced and position-action outcomes separate from explanations', () => {
+  const forced = structuredClone(completedJob);
+  const candidate = forced.snapshot.evidence.candidates.find(item => item.roles.includes('played'))!;
+  candidate.review = {
+    kind: 'forced-single-move',
+    lineUcis: [playedUci, 'e5d4' as Uci],
+    terminal: { kind: 'checkmate', winner: 'black' },
+  };
+  const forcedPanel = renderMoveReview(props({ job: forced, view: { evidenceExpanded: true } }));
+  assert.match(renderedText(forcedPanel), /Forced single move/);
+  assert.match(renderedText(forcedPanel), /Terminal position: Checkmate · Black/);
+
+  const { evidence: _evidence, ...common } = completedJob.snapshot;
+  const action: MoveReviewJobState = {
+    kind: 'position-action',
+    snapshot: {
+      ...common,
+      kind: 'position-action',
+      action: { kind: 'automatic-terminal', terminal: { kind: 'stalemate' } },
+    },
+  };
+  const actionPanel = renderMoveReview(props({ job: action }));
+  assert.match(renderedText(actionPanel), /Terminal position.*Stalemate/);
+  assert.equal(findNodes(actionPanel, 'button.move-review__proof-entry-button').length, 0);
+});
+
+test('renders loading, fault, unsupported, and abstained states honestly', () => {
+  const subject = completedJob.snapshot.subject;
+  assert.match(renderedText(renderMoveReview(props({ job: { kind: 'loading', subject } }))), /Reviewing/);
+  assert.match(
+    renderedText(
+      renderMoveReview(
+        props({ job: { kind: 'fault', subject, message: 'transport failed', retryable: true } }),
+      ),
+    ),
+    /transport failed.*Retry/,
+  );
+  assert.match(
+    renderedText(
+      renderMoveReview(
+        props({
+          job: { kind: 'unsupported', subject, reason: 'browser-unsupported', message: 'unsupported' },
+        }),
+      ),
+    ),
+    /unsupported/,
+  );
+  assert.match(
+    renderedText(renderMoveReview(props({ job: { kind: 'abstained', subject } }))),
+    /withheld because no verified judgment/i,
+  );
 });

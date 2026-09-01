@@ -379,20 +379,15 @@
   text-align: end;
 }
 
-.move-review__reasons {
-  display: grid;
-  border-block: 1px solid rgba($c-border, 0.75);
-}
-
-.move-review__reason {
+.move-review__proof-entry {
   min-width: 0;
 
-  + .move-review__reason {
+  + .move-review__proof-entry {
     border-top: 1px solid rgba($c-border, 0.72);
   }
 }
 
-.move-review__reason-button {
+.move-review__proof-entry-button {
   @extend %button-none;
 
   inline-size: 100%;
@@ -423,7 +418,7 @@
   }
 }
 
-.move-review__reason-copy {
+.move-review__proof-entry-copy {
   min-width: 0;
   display: grid;
   gap: 0.2rem;
@@ -441,18 +436,20 @@
   }
 }
 
-.move-review__reason-copy .move-review__display-tags {
+.move-review__proof-entry-summary {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.move-review__reason-copy .move-review__display-tag {
-  color: $c-primary;
-  font-size: 0.7rem;
-  font-weight: 700;
-  line-height: 1.2;
+.move-review__typed-value {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
 }
 
-.move-review__reason-chevron {
+.move-review__proof-entry-chevron {
   color: $c-font-dim;
   transform: rotate(0deg);
   transition: transform 150ms ease;
@@ -468,6 +465,154 @@
   padding-block: 0.2rem 0.75rem;
 }
 
+.move-review__typed-path,
+.move-review__branches {
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.move-review__typed-path {
+  padding-block: 0.2rem 0.75rem;
+}
+
+.move-review__typed-section,
+.move-review__branch {
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border: 1px solid rgba($c-border, 0.72);
+  background: $c-bg-zebra;
+
+  h4 {
+    margin: 0;
+    color: $c-font-clear;
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+}
+
+.move-review__branch {
+  background: transparent;
+}
+
+.move-review__participant-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem;
+}
+
+.move-review__participant,
+.move-review__premise,
+.move-review__closed-absence,
+.move-review__closed-state,
+.move-review__dependency,
+.move-review__position-state {
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+
+  h5,
+  h6 {
+    margin: 0;
+    color: $c-font-clear;
+    font-size: 0.72rem;
+  }
+}
+
+.move-review__participant,
+.move-review__premise {
+  padding: 0.45rem;
+  border: 1px solid rgba($c-border, 0.58);
+  background: rgba($c-bg-box, 0.42);
+}
+
+.move-review__provenance {
+  min-width: 0;
+  padding-block: 0.35rem;
+  border-block-start: 1px solid rgba($c-border, 0.58);
+  color: $c-font-dim;
+
+  summary {
+    color: $c-font;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &[open] {
+    display: grid;
+    gap: 0.45rem;
+  }
+}
+
+.move-review__branch-header {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.move-review__typed-fields {
+  min-width: 0;
+  display: grid;
+  gap: 0.28rem;
+  margin: 0;
+}
+
+.move-review__typed-field {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 0.38fr) minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: start;
+  padding-block: 0.18rem;
+
+  dt,
+  dd {
+    min-width: 0;
+    margin: 0;
+  }
+
+  dt {
+    color: $c-font-dim;
+    font-size: 0.68rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  &.is-target {
+    border-inline-start: 2px solid rgba($c-bad, 0.56);
+    padding-inline-start: 0.4rem;
+  }
+}
+
+.move-review__typed-list {
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-inline-start: 1.4rem;
+}
+
+.move-review__typed-value {
+  color: $c-font-dim;
+
+  &.is-square,
+  &.is-move {
+    color: $c-primary;
+    font-weight: 700;
+  }
+
+  &.is-piece {
+    color: $c-font-clear;
+    font-weight: 700;
+  }
+}
+
 .move-review__proof-copy {
   min-width: 0;
   display: grid;
@@ -475,7 +620,8 @@
   gap: 0.55rem;
 }
 
-.move-review__no-reason {
+.move-review__candidate-message,
+.move-review__empty-explanation {
   margin: 0;
   color: $c-font-dim;
   font-size: 0.8rem;
@@ -488,6 +634,21 @@
   flex-wrap: wrap;
   gap: 0.25rem;
   align-items: center;
+}
+
+.move-review__proof-move {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  gap: 0.15rem 0.3rem;
+  align-items: center;
+}
+
+.move-review__proof-stage {
+  grid-column: 1 / -1;
+  color: $c-font-dim;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 .move-review__proof-index {
@@ -651,7 +812,7 @@
     animation: none !important;
   }
 
-  .move-review__reason-chevron {
+  .move-review__proof-entry-chevron {
     transition: none;
   }
 }
