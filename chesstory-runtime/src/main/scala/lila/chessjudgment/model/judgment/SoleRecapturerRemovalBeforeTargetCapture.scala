@@ -3,15 +3,6 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
-private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCaptureBranchRole extends CausalBranchRole:
-  case CounterfactualReference
-  case PlayedRootAnalysisContinuation
-
-  def stableKey: String =
-    this match
-      case CounterfactualReference => "counterfactual-reference"
-      case PlayedRootAnalysisContinuation => "played-root-analysis-continuation"
-
 private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCapturePremiseRole extends CausalPremiseRole:
   case ReferenceDefenderRemoval
   case ReferenceLaterExploitInventory
@@ -74,10 +65,10 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
     val contractKind = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture
     val semanticParts: List[String] = List(
       remover.stableKey,
-      coloredPieceStableKey(removedDefender),
+      BoundedCausalIdentity.coloredPieceKey(removedDefender),
       removalRecapture.stableKey,
       exploit.stableKey,
-      coloredPieceStableKey(capturedTarget),
+      BoundedCausalIdentity.coloredPieceKey(capturedTarget),
       playedRecapture.stableKey
     )
 
@@ -101,9 +92,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureCausalAuth
         playedRecapture
       )
     )
-
-  def coloredPieceStableKey(piece: RelationColoredPieceWitness): String =
-    s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
 
   private def sameInitialPiece(
       piece: RelationColoredPieceWitness,
@@ -142,7 +130,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureManifest:
       referenceRemoval.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceDefenderRemoval &&
         referenceRemoval.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         referenceRemoval.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        referenceRemoval.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference &&
+        referenceRemoval.branchRole == ComparedLineBranchRole.CounterfactualReference &&
         referenceRemoval.stepIndex == 0,
       "defender removal must consume the reference root capture inventory"
     )
@@ -150,7 +138,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureManifest:
       referenceExploit.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.ReferenceLaterExploitInventory &&
         referenceExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         referenceExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        referenceExploit.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference &&
+        referenceExploit.branchRole == ComparedLineBranchRole.CounterfactualReference &&
         referenceExploit.branchId == referenceRemoval.branchId &&
         referenceExploit.stepIndex == 2,
       "the realized exploit must consume the reference third-ply capture inventory"
@@ -159,13 +147,13 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureManifest:
       playedExploit.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PlayedImmediateExploitInventory &&
         playedExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         playedExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        playedExploit.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation &&
+        playedExploit.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
         playedExploit.stepIndex == 0,
       "the failed exploit must consume the played root capture inventory"
     )
     require(
       referenceNoRecapture.role == SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.ReferenceReplacementRecaptureAbsent &&
-        referenceNoRecapture.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference &&
+        referenceNoRecapture.branchRole == ComparedLineBranchRole.CounterfactualReference &&
         referenceNoRecapture.branchId == referenceExploit.branchId &&
         referenceNoRecapture.afterStepIndex == referenceExploit.stepIndex,
       "the closed recapture absence must belong to the reference exploit occurrence"
@@ -211,10 +199,10 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   )
   require(
     proofSet.occurrence.branches.size == 2 &&
-      proofSet.occurrence.branch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference).exists(
+      proofSet.occurrence.branch(ComparedLineBranchRole.CounterfactualReference).exists(
         _.line.role == LineNodeRole.BestReference
       ) &&
-      proofSet.occurrence.branch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation).exists(
+      proofSet.occurrence.branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation).exists(
         _.line.role == LineNodeRole.Played
       ),
     "a sole-recapturer-removal-before-target-capture occurrence needs one BestReference and one played-root analysis continuation"
@@ -222,7 +210,7 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   require(referenceSteps.size == 3, "the reference occurrence needs removal, reply, and exploit")
   require(playedSteps.size == 2, "the played-root analysis continuation needs exploit and recapture")
 
-  private def exactBranch(role: SoleRecapturerRemovalBeforeTargetCaptureBranchRole): CausalBranchOccurrence =
+  private def exactBranch(role: ComparedLineBranchRole): CausalBranchOccurrence =
     proofSet.occurrence
       .branch(role)
       .getOrElse(
@@ -233,9 +221,9 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
 
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
-  def referenceBranch: CausalBranchOccurrence = exactBranch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference)
+  def referenceBranch: CausalBranchOccurrence = exactBranch(ComparedLineBranchRole.CounterfactualReference)
   def playedBranch: CausalBranchOccurrence =
-    exactBranch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation)
+    exactBranch(ComparedLineBranchRole.PlayedRootAnalysisContinuation)
   def referenceLine: LineNodeRef = referenceBranch.line
   def playedLine: LineNodeRef = playedBranch.line
   def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
@@ -264,7 +252,7 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
     List(
       BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
       BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
-      SoleRecapturerRemovalBeforeTargetCaptureCausalAuthority.coloredPieceStableKey(removedDefender),
+      BoundedCausalIdentity.coloredPieceKey(removedDefender),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
@@ -429,9 +417,9 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
   private def premisesRemainCertified: Boolean =
     occurrence.proofPaths.flatMap(_.premiseUses).forall { use =>
       val replayAndOwner = Option.when(
-        use.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference
+        use.branchRole == ComparedLineBranchRole.CounterfactualReference
       )(referenceReplay -> referenceLineRecord).orElse(
-        Option.when(use.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation)(
+        Option.when(use.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation)(
           playedReplay -> playedLineRecord
         )
       )
@@ -453,7 +441,7 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
 
   private def absenceRemainsCertified: Boolean =
     val binding = absenceUse.binding
-    binding.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference &&
+    binding.branchRole == ComparedLineBranchRole.CounterfactualReference &&
       binding.authority == absenceAuthority && absenceAuthority.issuerRecord == referenceLineRecord &&
       absenceAuthority.remainsCertified &&
       occurrence.proofSet.occurrence.branch(binding.branchRole).exists(branch =>
@@ -603,13 +591,13 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       if referenceExploitOccurrence.certifiedSourcePremiseIds.nonEmpty
       if playedExploitOccurrence.certifiedSourcePremiseIds.nonEmpty
       referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
-        SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference,
+        ComparedLineBranchRole.CounterfactualReference,
         referenceLine,
         referenceReplay,
         3
       )
       playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation,
+        ComparedLineBranchRole.PlayedRootAnalysisContinuation,
         playedLine,
         playedReplay,
         2

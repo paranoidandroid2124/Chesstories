@@ -856,6 +856,7 @@ object PositionRelationExtractor:
     */
   private[chessjudgment] enum ClosedPositionStateQuery:
     case OccupiedBy(piece: RelationColoredPieceWitness)
+    case Vacant(square: EvidenceSquare)
     case OwnKingExposure(
         side: Color,
         piece: RelationPieceWitness,
@@ -875,6 +876,8 @@ object PositionRelationExtractor:
       this match
         case OccupiedBy(piece) =>
           Square.fromKey(piece.square.key).nonEmpty
+        case Vacant(square) =>
+          Square.fromKey(square.key).nonEmpty
         case OwnKingExposure(_, piece, resource, kingSquare, controllers) =>
           Square.fromKey(piece.square.key).nonEmpty && Square.fromKey(resource.destination.key).nonEmpty &&
             Square.fromKey(kingSquare.key).nonEmpty &&
@@ -890,6 +893,8 @@ object PositionRelationExtractor:
       this match
         case OccupiedBy(piece) =>
           s"occupied-by:${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
+        case Vacant(square) =>
+          s"vacant:${square.key.toLowerCase}"
         case OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
           s"own-king-exposure:${side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}:${resource.stableKey}:${kingSquare.key.toLowerCase}:${controllers.map(controller => s"${controller.role.name.toLowerCase}@${controller.square.key.toLowerCase}").mkString(",")}"
         case PawnTopology(state) =>
@@ -1866,6 +1871,8 @@ object PositionRelationExtractor:
           query.admissible(state) && (query match
             case ClosedPositionStateQuery.OccupiedBy(piece) =>
               state.occupantAt(piece.square).contains(piece)
+            case ClosedPositionStateQuery.Vacant(square) =>
+              state.occupantAt(square).isEmpty
             case ClosedPositionStateQuery.OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
               state.sideToMove == side && movementAffordancesFrom(piece.square)
                 .find(movement =>

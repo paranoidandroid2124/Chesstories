@@ -3,15 +3,6 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
-private[chessjudgment] enum VacatedGateEnablesUnrecapturableSliderCaptureBranchRole extends CausalBranchRole:
-  case CounterfactualReference
-  case PlayedRootAnalysisContinuation
-
-  def stableKey: String =
-    this match
-      case CounterfactualReference => "counterfactual-reference"
-      case PlayedRootAnalysisContinuation => "played-root-analysis-continuation"
-
 private[chessjudgment] enum VacatedGateEnablesUnrecapturableSliderCapturePremiseRole extends CausalPremiseRole:
   case ReferenceRootSliderReach
   case ReferenceExploitCapture
@@ -71,10 +62,10 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureCausa
     val contractKind = BoundedCausalContractKind.VacatedGateEnablesUnrecapturableSliderCapture
     val semanticParts: List[String] = List(
       enabler.stableKey,
-      coloredPieceStableKey(slider),
-      coloredPieceStableKey(gateBlocker),
+      BoundedCausalIdentity.coloredPieceKey(slider),
+      BoundedCausalIdentity.coloredPieceKey(gateBlocker),
       exploit.stableKey,
-      coloredPieceStableKey(capturedTarget)
+      BoundedCausalIdentity.coloredPieceKey(capturedTarget)
     )
 
   def proposition(
@@ -88,9 +79,6 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureCausa
     CausalPropositionIdentity.from(
       PropositionDescriptor(rootFen, enabler, slider, gateBlocker, exploit, capturedTarget)
     )
-
-  def coloredPieceStableKey(piece: RelationColoredPieceWitness): String =
-    s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
 
 private[chessjudgment] sealed trait VacatedGateEnablesUnrecapturableSliderCaptureManifest
     extends BoundedCausalContractManifest:
@@ -134,8 +122,8 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureManif
       referencePersistence: List[CausalClosedStateBinding],
       playedPositionStates: List[CausalClosedStateBinding]
   ): VacatedGateEnablesUnrecapturableSliderCaptureManifest =
-    val referenceRole = VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference
-    val playedRole = VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation
+    val referenceRole = ComparedLineBranchRole.CounterfactualReference
+    val playedRole = ComparedLineBranchRole.PlayedRootAnalysisContinuation
     val exploitIndex = referenceExploit.stepIndex
     val playedPreExploitIndex = exploitIndex - 1
     require(
@@ -233,17 +221,17 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
   )
   require(
     proofSet.occurrence.branches.size == 2 &&
-      proofSet.occurrence.branch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference).exists(
+      proofSet.occurrence.branch(ComparedLineBranchRole.CounterfactualReference).exists(
         _.line.role == LineNodeRole.BestReference
       ) &&
-      proofSet.occurrence.branch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation).exists(
+      proofSet.occurrence.branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation).exists(
         _.line.role == LineNodeRole.Played
       ),
     "a vacated-gate-enables-unrecapturable-slider-capture occurrence needs one BestReference and one Played branch"
   )
   require(referenceSteps.size >= 3 && playedSteps.size == referenceSteps.size - 1)
 
-  private def exactBranch(role: VacatedGateEnablesUnrecapturableSliderCaptureBranchRole): CausalBranchOccurrence =
+  private def exactBranch(role: ComparedLineBranchRole): CausalBranchOccurrence =
     proofSet.occurrence
       .branch(role)
       .getOrElse(
@@ -255,9 +243,9 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
   def referenceBranch: CausalBranchOccurrence =
-    exactBranch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference)
+    exactBranch(ComparedLineBranchRole.CounterfactualReference)
   def playedBranch: CausalBranchOccurrence =
-    exactBranch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation)
+    exactBranch(ComparedLineBranchRole.PlayedRootAnalysisContinuation)
   def referenceLine: LineNodeRef = referenceBranch.line
   def playedLine: LineNodeRef = playedBranch.line
   def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
@@ -339,6 +327,7 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
     private val referenceReplay: CanonicalLineReplay,
     private val playedReplay: CanonicalLineReplay,
     private val trajectory: LineAccessTrajectory,
+    private val vacancyClosure: VacancySiblingClosure,
     private val referenceRootReachOccurrence: ReplayVerticalRelationOccurrence,
     private val referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
     private val absenceAuthorities: List[DirectLineAccessBoundAbsence],
@@ -434,6 +423,16 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
   private def pathRemainsCertified: Boolean =
     occurrence.proofPaths match
       case path :: Nil =>
+        val stateBindings = path.closedStateUses.map(_.binding)
+        val blockerState = stateBindings.filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied
+        )
+        val moverState = stateBindings.filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied
+        )
+        val moveAbsence = path.closedAbsenceUses.map(_.binding).filter(
+          _.role == VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole.PlayedExploitMoveAbsent
+        )
         path.manifest.isInstanceOf[VacatedGateEnablesUnrecapturableSliderCaptureManifest] &&
           path.premiseUses.size == 2 && path.closedAbsenceUses.size == 3 &&
           path.closedStateUses.size == stateAuthorities.size &&
@@ -442,6 +441,21 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
           path.closedAbsenceUses.map(_.binding.role) == absenceAuthorities.map(_.role) &&
           path.closedAbsenceUses.map(_.binding.authority) == absenceAuthorities.map(_.authority) &&
           path.closedStateUses.map(_.binding.role) == stateAuthorities.map(_.role) &&
+          blockerState.size == 1 && moverState.size == 1 && moveAbsence.size == 1 &&
+          vacancyClosure.matches(
+            semantic.enabler,
+            occurrence.enablingStep.moveUci,
+            semantic.gateBlocker,
+            semantic.exploit,
+            occurrence.exploitStep.moveUci,
+            semantic.slider,
+            occurrence.referenceBranch,
+            occurrence.playedBranch,
+            occurrence.referenceSteps.size - 1,
+            blockerState.head,
+            moverState.head,
+            moveAbsence.head
+          ) &&
           parentSources.map(_.id).distinct.size == 2 &&
           dependencyManifest.consumes(referenceLineRecord, playedLineRecord)
       case _ => false
@@ -465,6 +479,7 @@ private[chessjudgment] object CertifiedVacatedGateEnablesUnrecapturableSliderCap
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       trajectory: LineAccessTrajectory,
+      vacancyClosure: VacancySiblingClosure,
       referenceRootReachOccurrence: ReplayVerticalRelationOccurrence,
       referenceExploitOccurrence: ReplayVerticalRelationOccurrence,
       absenceAuthorities: List[DirectLineAccessBoundAbsence],
@@ -480,6 +495,7 @@ private[chessjudgment] object CertifiedVacatedGateEnablesUnrecapturableSliderCap
       referenceReplay,
       playedReplay,
       trajectory,
+      vacancyClosure,
       referenceRootReachOccurrence,
       referenceExploitOccurrence,
       absenceAuthorities,
@@ -644,13 +660,13 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           gateBlocker
         )
         referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
-          VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference,
+          ComparedLineBranchRole.CounterfactualReference,
           referenceLine,
           referenceReplay,
           exploitIndex + 1
         )
         playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-          VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation,
+          ComparedLineBranchRole.PlayedRootAnalysisContinuation,
           playedLine,
           playedReplay,
           exploitIndex
@@ -766,7 +782,7 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
     val exploitUse = CausalVerticalRelationPremiseUse.from(
       VacatedGateEnablesUnrecapturableSliderCapturePremiseRole.ReferenceExploitCapture,
       RecordBoundVerticalRelationOccurrence.certified(referenceLineRecord, inputs.exploitOccurrence).getOrElse(
-        throw IllegalArgumentException("direct line access lost its graph-owned exploit occurrence")
+        throw IllegalArgumentException("a vacated-gate proof lost its graph-owned exploit occurrence")
       ),
       inputs.referenceBranch,
       exploitIndex
@@ -804,6 +820,33 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
         inputs.playedBranch,
         exactBranchStepIndex(inputs.playedBranch, authority.occurrence.step)
       )
+    )
+    def exactPlayedState(
+        role: VacatedGateEnablesUnrecapturableSliderCaptureStateRole
+    ): CausalClosedStateBinding =
+      playedStateBindings.filter(_.role == role) match
+        case exact :: Nil => exact
+        case _ =>
+          throw IllegalArgumentException(s"a vacated-gate proof lost its exact $role played state")
+    val vacancyClosure = VacancySiblingClosure.certified(
+      inputs.rootReach.mover,
+      inputs.referenceBranch.replaySteps.head.moveUci,
+      inputs.gateBlocker,
+      inputs.exploitCapture.mover,
+      inputs.referenceBranch.replaySteps(exploitIndex).moveUci,
+      inputs.slider,
+      inputs.referenceBranch,
+      inputs.playedBranch,
+      exploitIndex,
+      exactPlayedState(
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedGateBlockerOccupied
+      ),
+      exactPlayedState(
+        VacatedGateEnablesUnrecapturableSliderCaptureStateRole.PlayedSliderOccupied
+      ),
+      playedExploitMoveAbsence
+    ).getOrElse(
+      throw IllegalArgumentException("a vacated-gate proof failed the shared vacancy-move kernel")
     )
     val manifest = VacatedGateEnablesUnrecapturableSliderCaptureManifest.exact(
       rootReachUse,
@@ -844,6 +887,7 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
       referenceReplay,
       playedReplay,
       inputs.trajectory,
+      vacancyClosure,
       inputs.rootReachOccurrence,
       inputs.exploitOccurrence,
       List(

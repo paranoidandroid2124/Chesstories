@@ -21,7 +21,7 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
     def claim(id: String, evidence: List[EvidenceRef] = Nil): JudgmentClaim =
       JudgmentClaim(
         id,
-        ClaimFamily.Tactical,
+        ClaimFamily.BoundedCausal,
         ClaimSubject.PlayedMove,
         position,
         None,

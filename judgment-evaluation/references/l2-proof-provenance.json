@@ -122,7 +122,7 @@
     {
       "contract_kind": "VacatedGateEnablesUnrecapturableSliderCapture",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/VacatedGateEnablesUnrecapturableSliderCaptureAssembler.scala",
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/VacancyProofAssembler.scala",
         "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureAssembler"
       },
       "proof_type": {
@@ -178,6 +178,100 @@
       "formal_test": {
         "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/VacatedGateEnablesUnrecapturableSliderCaptureTest.scala",
         "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureTest"
+      }
+    },
+    {
+      "contract_kind": "VacancyEnablesOccupation",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/VacancyProofAssembler.scala",
+        "symbol": "VacancyEnablesOccupationAssembler"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "VacancyEnablesOccupationEvidence"
+      },
+      "public_consumer": {
+        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+        "serializer_symbol": "vacancyEnablesOccupationProofJson",
+        "field": "vacancy_enables_occupation_proof",
+        "schema_channel_definition": "vacancyEnablesOccupationCausalChannel",
+        "schema_proof_definition": "vacancyEnablesOccupationProof"
+      },
+      "browser_consumer": {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+        "projection_symbol": "projectVacancyEnablesOccupation",
+        "discriminant": "vacancy-enables-occupation"
+      },
+      "cause": {
+        "scala_symbol": "MissedSquareRelease",
+        "wire_kind": "missed_square_release",
+        "schema_facet_definition": "missedSquareReleaseCausalFacet"
+      },
+      "coverage_status": "exact_ordered_skeleton",
+      "references": [
+        {
+          "coverage": "exact_ordered_skeleton",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 130
+          }
+        },
+        {
+          "coverage": "exact_ordered_skeleton",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 131
+          }
+        },
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 53
+          }
+        },
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
+            "pdf_page": 161
+          }
+        },
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
+            "pdf_page": 381
+          }
+        },
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-7a451d5c87b9422a901f0486386aeb44",
+            "pdf_page": 900
+          }
+        },
+        {
+          "coverage": "exact_route_component",
+          "locator": {
+            "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
+            "pdf_page": 62
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "general_preparation",
+        "good_move",
+        "maneuver",
+        "outpost",
+        "physical_token_identity",
+        "plan",
+        "sole_cause",
+        "unbounded_vacancy"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/VacancyEnablesOccupationTest.scala",
+        "symbol": "VacancyEnablesOccupationTest"
       }
     },
     {

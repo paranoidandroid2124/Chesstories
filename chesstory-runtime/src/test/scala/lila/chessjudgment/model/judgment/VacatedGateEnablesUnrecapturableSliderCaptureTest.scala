@@ -79,7 +79,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assert(path.closedStateUses.last.binding.queryKey.startsWith("slider-reach:white:rook@a1:"))
     assert(!path.closedStateUses.last.binding.queryKey.contains("a7:enemy"))
 
-    val projected = BoundedCausalPublicProjection.paths(exact.occurrence.proofPaths).head
+    val projected = BoundedCausalPublicProjection.verticalRelationPaths(exact.occurrence.proofPaths).head
     assertEquals(projected.pathOccurrenceId, path.pathOccurrenceId)
     assertEquals(projected.closedStateUses.map(_.useId), path.closedStateUses.map(_.useId))
     assertEquals(
@@ -262,13 +262,13 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       exactReferenceMoves = sourceMoves
     ) match
       case one :: Nil => one
-      case other      => fail(s"expected one bounded preparation, found ${other.size}")
+      case other      => fail(s"expected one bounded gate-release proof, found ${other.size}")
 
     assertEquals(exact.occurrence.referenceSteps.map(_.moveUci), referenceMoves)
     assertEquals(exact.occurrence.exploitStep.moveUci, "a1a7")
     assertEquals(exact.occurrence.proofPaths.head.premiseUses.last.stepIndex, 2)
 
-  test("the exact preparation reaches its own MissedTacticalResource proof consumer"):
+  test("the exact gate-release proof reaches its MissedTacticalResource consumer"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -287,7 +287,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
           if fact.kind == CandidateComparisonKind.PlayedVsBest => record
     }.getOrElse(fail("expected the exact PlayedVsBest demand"))
     val comparison = demand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val causalRecords = RelativeCauseSignalProfile.vacatedGateEnablesUnrecapturableSliderCaptureRecords(
+    val causalRecords = RelativeCauseSignalProfile.referenceDirectCausalProofRecords(
       facts.evidenceGraph,
       facts.evidenceGraph.recordsFor(comparison.referenceLine),
       comparison,
@@ -383,7 +383,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       id = id,
       producer = EvidenceProducer.LegalLineProducer,
       layer = EvidenceLayer.Line,
-      position = PositionNodeRef(fen, 0, Some(White), Some("direct-line-access-root")),
+      position = PositionNodeRef(fen, 0, Some(White), Some("vacated-gate-root")),
       line = Some(line),
       scope = line.role.scope,
       confidence = EvidenceConfidence.LegalReplayVerified

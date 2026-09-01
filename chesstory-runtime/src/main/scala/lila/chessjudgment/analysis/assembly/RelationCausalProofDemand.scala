@@ -82,7 +82,8 @@ private[assembly] final case class RelationCausalProofDemand private (
     input: ExactPlayedVsBestCausalInput,
     uniqueCheckReplyDefenderDisplacementBeforeCaptureSeed: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed],
     soleRecapturerRemovalBeforeTargetCaptureSeed: Option[SoleRecapturerRemovalBeforeTargetCaptureChangedSeed],
-    vacatedGateEnablesUnrecapturableSliderCaptureSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed]
+    vacatedGateEnablesUnrecapturableSliderCaptureSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed],
+    vacancyEnablesOccupationSeeds: List[VacancyEnablesOccupationChangedSeed]
 )
 
 private[assembly] object RelationCausalProofDemand:
@@ -223,11 +224,36 @@ private[assembly] object RelationCausalProofDemand:
       "one direct line-access changed occurrence route may be dispatched only once"
     )
 
+    val occupationSeeds = referenceSteps.headOption.toList.flatMap(rootStep =>
+      reference.legalMoveOccurrence(rootStep).toList.flatMap(rootOccurrence =>
+        referenceSteps.indices.drop(2).filter(_ <= playedSteps.size).toList.flatMap(index =>
+          referenceSteps.lift(index).toList.flatMap(step =>
+            reference.legalMoveOccurrence(step).toList.collect {
+              case occupationOccurrence
+                  if occupationOccurrence.movement.capture.isEmpty &&
+                    occupationOccurrence.movement.side == rootOccurrence.movement.side &&
+                    occupationOccurrence.movement.to == rootOccurrence.movement.from =>
+                VacancyEnablesOccupationChangedSeed(
+                  rootOccurrence,
+                  occupationOccurrence,
+                  index
+                )
+            }
+          )
+        )
+      )
+    ).sortBy(_.stableKey)
+    require(
+      occupationSeeds.map(_.stableKey).distinct.size == occupationSeeds.size,
+      "one vacancy-to-occupation changed occurrence route may be dispatched only once"
+    )
+
     RelationCausalProofDemand(
       input,
       forcedSeed,
       defenseSeed,
-      directSeeds.sortBy(_.stableKey)
+      directSeeds.sortBy(_.stableKey),
+      occupationSeeds
     )
 
   private def activates(

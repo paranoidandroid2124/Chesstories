@@ -71,6 +71,13 @@ object RelativeAssessmentAssembler:
                 demand
               )
             )
+            val vacancyOccupationProofRecords = causalDemand.toList.flatMap(demand =>
+              VacancyEnablesOccupationAssembler.fromDemand(
+                comparisonContext,
+                inputs.allocator,
+                demand
+              )
+            )
             val passedPawnResultEventRecords = passedPawnResultDemand.toList.flatMap(demand =>
               PassedPawnResultEventAssembler.fromDemand(
                 comparisonContext,
@@ -88,7 +95,8 @@ object RelativeAssessmentAssembler:
             )
             passedPawnResultContext.withEvidence(
               passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords ++ defenderDisplacementProofRecords ++
-                soleRecapturerRemovalProofRecords ++ vacatedGateCaptureProofRecords
+                soleRecapturerRemovalProofRecords ++ vacatedGateCaptureProofRecords ++
+                vacancyOccupationProofRecords
             )
           }
         }
@@ -490,6 +498,7 @@ object RelativeAssessmentAssembler:
         case _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence |
             _: SoleRecapturerRemovalBeforeTargetCaptureEvidence |
             _: VacatedGateEnablesUnrecapturableSliderCaptureEvidence |
+            _: VacancyEnablesOccupationEvidence |
             _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence => true
         case _ => false
       typedProof && context.evidenceGraph.proofEligible(record) && record.referencesLine(line)

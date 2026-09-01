@@ -239,7 +239,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
           if fact.kind == CandidateComparisonKind.PlayedVsBest => record
     }.getOrElse(fail("expected the exact PlayedVsBest demand"))
     val comparison = demand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val proofs = RelativeCauseSignalProfile.moveOrderCausalProofRecords(
+    val proofs = RelativeCauseSignalProfile.referenceDirectCausalProofRecords(
       facts.evidenceGraph,
       facts.evidenceGraph.recordsFor(comparison.referenceLine),
       comparison,

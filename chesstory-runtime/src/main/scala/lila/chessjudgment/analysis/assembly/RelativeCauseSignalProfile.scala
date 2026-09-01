@@ -52,15 +52,8 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
       graph.record(demandSource.ref).contains(demandSource) && graph.proofEligible(demandSource),
     "a relative cause profile needs its exact graph-owned comparison demand"
   )
-  val referenceMoveOrderProofs: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.moveOrderCausalProofRecords(
-      graph,
-      referenceRecords,
-      fact,
-      demandSource
-    )
-  val referenceVacatedGateEnablesUnrecapturableSliderCaptures: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.vacatedGateEnablesUnrecapturableSliderCaptureRecords(
+  val referenceDirectProofs: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.referenceDirectCausalProofRecords(
       graph,
       referenceRecords,
       fact,
@@ -115,7 +108,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     import profile.*
     if ActionablePlayedVsBestCausalProofDemand.accepts(fact) then
       onePerExactProofRecord(
-        referenceVacatedGateEnablesUnrecapturableSliderCaptures ++ referenceMoveOrderProofs
+        referenceDirectProofs
       )
     else Nil
 
@@ -156,7 +149,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       candidateRecords = candidateRecords
     )
 
-  private[chessjudgment] def moveOrderCausalProofRecords(
+  private[chessjudgment] def referenceDirectCausalProofRecords(
       graph: TypedEvidenceGraph,
       records: List[EvidenceRecord],
       fact: CandidateComparisonFact,
@@ -184,23 +177,14 @@ private[chessjudgment] object RelativeCauseSignalProfile:
               payload.consumesDependencies(reference, played) &&
               graph.proofEligible(record) =>
           record
-      }
-    }
-
-  private[chessjudgment] def vacatedGateEnablesUnrecapturableSliderCaptureRecords(
-      graph: TypedEvidenceGraph,
-      records: List[EvidenceRecord],
-      fact: CandidateComparisonFact,
-      demand: EvidenceRecord
-  ): List[EvidenceRecord] =
-    val exactDependencies = for
-      reference <- graph.uniqueProofEligibleLineFactRecordFor(fact.referenceLine).map(_._1)
-      played <- graph.uniqueProofEligibleLineFactRecordFor(fact.candidateLine).map(_._1)
-      if demand.payload == CandidateComparisonEvidence(fact) && graph.proofEligible(demand)
-    yield (reference, played)
-    exactDependencies.toList.flatMap { case (reference, played) =>
-      records.collect {
         case record @ EvidenceRecord(_, payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence, _)
+            if payload.occurrence.referenceLine == fact.referenceLine &&
+              payload.occurrence.playedLine == fact.candidateLine &&
+              payload.proofPaths.nonEmpty &&
+              payload.consumesDependencies(reference, played) &&
+              graph.proofEligible(record) =>
+          record
+        case record @ EvidenceRecord(_, payload: VacancyEnablesOccupationEvidence, _)
             if payload.occurrence.referenceLine == fact.referenceLine &&
               payload.occurrence.playedLine == fact.candidateLine &&
               payload.proofPaths.nonEmpty &&

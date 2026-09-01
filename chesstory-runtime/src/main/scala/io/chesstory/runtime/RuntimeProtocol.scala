@@ -285,6 +285,7 @@ object RuntimeProtocol:
       val selection = certified.selection
       val causeKind = certified.cause.kind match
         case RelativeCauseKind.MissedTacticalResource     => "missed_tactical_resource"
+        case RelativeCauseKind.MissedSquareRelease        => "missed_square_release"
         case RelativeCauseKind.WrongMoveOrder             => "wrong_move_order"
         case RelativeCauseKind.PassedPawnProgress         => "passed_pawn_progress"
       val exposure = selection.exposure match
@@ -321,6 +322,11 @@ object RuntimeProtocol:
             "channel_id" -> selected.channelId,
             "vacated_gate_enables_unrecapturable_slider_capture_proof" ->
               vacatedGateEnablesUnrecapturableSliderCaptureProofJson(proof)
+          )
+        case proof: RootOwnedEffectProof.VacancyEnablesOccupation =>
+          Json.obj(
+            "channel_id" -> selected.channelId,
+            "vacancy_enables_occupation_proof" -> vacancyEnablesOccupationProofJson(proof)
           )
         case proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
           Json.obj(
@@ -362,7 +368,7 @@ object RuntimeProtocol:
         "closed_absence_uses" -> path.closedAbsenceUses.map(causalAbsenceUseJson)
       )
 
-    private def directLineAccessProofPathJson(path: BoundedCausalPublicProofPath): JsObject =
+    private def causalProofPathWithStateJson(path: BoundedCausalPublicProofPath): JsObject =
       Json.obj(
         "path_occurrence_id" -> path.pathOccurrenceId,
         "premises" -> path.premises.map(causalPremiseJson),
@@ -370,18 +376,54 @@ object RuntimeProtocol:
         "closed_state_uses" -> path.closedStateUses.map(causalStateUseJson)
       )
 
-    private def causalPremiseJson(premise: BoundedCausalPublicPremiseUse): JsObject =
+    private def causalPremiseJson(premise: BoundedCausalPublicPremise): JsObject =
+      premise match
+        case exact: BoundedCausalPublicPremiseUse =>
+          Json.obj(
+            "role" -> causalRoleCode(exact.role),
+            "contract" -> causalEnumCode(exact.contract),
+            "result_id" -> exact.resultId,
+            "issuer_evidence_id" -> exact.issuerEvidenceId,
+            "issuer_occurrence_id" -> exact.issuerOccurrenceId,
+            "source_premise_ids" -> exact.sourcePremiseIds,
+            "branch_id" -> exact.branchId,
+            "branch_role" -> causalRoleCode(exact.branchRole),
+            "step_index" -> exact.stepIndex
+          )
+        case exact: BoundedCausalPublicLegalMoveUse =>
+          causalLegalMovePremiseJson(exact)
+
+    private def causalLegalMovePremiseJson(
+        premise: BoundedCausalPublicLegalMoveUse
+    ): JsObject =
       Json.obj(
         "role" -> causalRoleCode(premise.role),
-        "contract" -> causalEnumCode(premise.contract),
-        "result_id" -> premise.resultId,
+        "contract" -> "legal_move",
+        "move_uci" -> EvidenceRef.normalizeMove(premise.moveUci),
+        "movement" -> Json.obj(
+          "side" -> premise.side,
+          "from" -> premise.from,
+          "to" -> premise.to,
+          "piece_before" -> premise.beforePiece,
+          "piece_after" -> premise.afterPiece
+        ),
+        "movement_mode" -> causalEnumCode(premise.movementMode),
+        "legal_move_semantic_id" -> premise.legalMoveSemanticId,
         "issuer_evidence_id" -> premise.issuerEvidenceId,
         "issuer_occurrence_id" -> premise.issuerOccurrenceId,
         "source_premise_ids" -> premise.sourcePremiseIds,
         "branch_id" -> premise.branchId,
         "branch_role" -> causalRoleCode(premise.branchRole),
         "step_index" -> premise.stepIndex
-      )
+      ) ++ premise.capturedSquare.map(square =>
+        Json.obj(
+          "capture" -> Json.obj(
+            "square" -> square,
+            "piece" -> premise.capturedPiece.get,
+            "side" -> premise.capturedSide.get
+          )
+        )
+      ).getOrElse(Json.obj())
 
     private def causalAbsenceUseJson(use: BoundedCausalPublicClosedAbsenceUse): JsObject =
       Json.obj(
@@ -483,7 +525,7 @@ object RuntimeProtocol:
         "dependency_fingerprint" -> result.dependencyId,
         "counterfactual_reference_branch" -> causalBranchJson(result.publicReferenceBranch),
         "played_root_branch" -> causalBranchJson(result.publicPlayedBranch),
-        "proof_paths" -> result.publicProofPaths.map(directLineAccessProofPathJson),
+        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
         "participants" -> Json.obj(
           "enabler" -> movementWitnessJson(result.enabler),
           "slider" -> coloredPieceWitnessJson(result.slider),
@@ -492,6 +534,26 @@ object RuntimeProtocol:
           "captured_target" -> coloredPieceWitnessJson(result.capturedTarget)
         ),
         "exploit_move" -> EvidenceRef.normalizeMove(result.exploitMove)
+      )
+
+    private def vacancyEnablesOccupationProofJson(
+        proof: RootOwnedEffectProof.VacancyEnablesOccupation
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyId,
+        "counterfactual_reference_branch" -> causalBranchJson(result.publicReferenceBranch),
+        "played_root_branch" -> causalBranchJson(result.publicPlayedBranch),
+        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
+        "participants" -> Json.obj(
+          "releaser" -> movementWitnessJson(result.releaser),
+          "occupier" -> movementWitnessJson(result.occupation)
+        ),
+        "occupation_move" -> EvidenceRef.normalizeMove(result.occupationMove)
       )
 
     private def passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(

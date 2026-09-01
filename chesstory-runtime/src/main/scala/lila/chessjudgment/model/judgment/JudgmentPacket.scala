@@ -3,7 +3,7 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction }
 
 enum ClaimFamily:
-  case Tactical
+  case BoundedCausal
   case PawnStructure
   case PassedPawnProgress
   case Evaluation
@@ -11,13 +11,14 @@ enum ClaimFamily:
   private[chessjudgment] def isLongTerm: Boolean =
     this match
       case PawnStructure => true
-      case Tactical | PassedPawnProgress | Evaluation => false
+      case BoundedCausal | PassedPawnProgress | Evaluation => false
 
 object ClaimFamily:
   def fromCause(kind: RelativeCauseKind): ClaimFamily =
     kind match
-      case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.WrongMoveOrder =>
-        ClaimFamily.Tactical
+      case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.MissedSquareRelease |
+          RelativeCauseKind.WrongMoveOrder =>
+        ClaimFamily.BoundedCausal
       case RelativeCauseKind.PassedPawnProgress =>
         ClaimFamily.PassedPawnProgress
 

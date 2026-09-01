@@ -272,6 +272,11 @@ object PlayerFacingCauseAdmissionPolicy:
           ) if eventLine == comparison.referenceLine =>
         Some(PlayerFacingCauseExposureTier.Primary)
       case (
+            RelativeCauseKind.MissedSquareRelease,
+            RelativeCauseSourceSide.Reference
+          ) if eventLine == comparison.referenceLine =>
+        Some(PlayerFacingCauseExposureTier.Primary)
+      case (
             RelativeCauseKind.PassedPawnProgress,
             RelativeCauseSourceSide.Candidate
           ) if eventLine == comparison.candidateLine =>

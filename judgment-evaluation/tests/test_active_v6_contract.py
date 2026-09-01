@@ -5,6 +5,7 @@ import copy
 import io
 import json
 import unittest
+from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -584,6 +585,163 @@ def _vacated_gate_enables_unrecapturable_slider_capture_proof() -> dict[str, obj
     }
 
 
+def _vacancy_enables_occupation_proof() -> dict[str, object]:
+    root = "1r4k1/p1q2p1p/2BRbp1B/4p3/P1p4P/6P1/1P2PP1K/3R4 w - - 0 30"
+    reference_moves = ["c6g2", "e6f5", "d6c6"]
+    played_moves = ["d1d2", "e6f5"]
+    reference_fens = [
+        "1r4k1/p1q2p1p/3Rbp1B/4p3/P1p4P/6P1/1P2PPBK/3R4 b - - 1 30",
+        "1r4k1/p1q2p1p/3R1p1B/4pb2/P1p4P/6P1/1P2PPBK/3R4 w - - 2 31",
+        "1r4k1/p1q2p1p/2R2p1B/4pb2/P1p4P/6P1/1P2PPBK/3R4 b - - 3 31",
+    ]
+    played_fens = [
+        "1r4k1/p1q2p1p/2BRbp1B/4p3/P1p4P/6P1/1P1RPP1K/8 b - - 1 30",
+        "1r4k1/p1q2p1p/2BR1p1B/4pb2/P1p4P/6P1/1P1RPP1K/8 w - - 2 31",
+    ]
+    reference_id = "1" * 64
+    played_id = "2" * 64
+
+    def steps(moves: list[str], fens: list[str], observed: bool) -> list[dict[str, object]]:
+        return [
+            {
+                "step_index": index,
+                "provenance": (
+                    "observed_game_move"
+                    if observed and index == 0
+                    else "certified_analysis_move"
+                ),
+                "ply": 59 + index,
+                "move_uci": move,
+                "fen_before": root if index == 0 else fens[index - 1],
+                "fen_after": fens[index],
+            }
+            for index, move in enumerate(moves)
+        ]
+
+    def legal_move(
+        role: str,
+        move: str,
+        movement: dict[str, str],
+        step_index: int,
+        digit: str,
+    ) -> dict[str, object]:
+        semantic_id = digit * 64
+        occurrence_id = chr(ord(digit) + 1) * 64
+        return {
+            "role": role,
+            "contract": "legal_move",
+            "move_uci": move,
+            "movement": movement,
+            "movement_mode": "controlled_destination",
+            "legal_move_semantic_id": semantic_id,
+            "issuer_evidence_id": "line.reference",
+            "issuer_occurrence_id": occurrence_id,
+            "source_premise_ids": sorted(
+                ["line.reference", occurrence_id, f"legal-move:{semantic_id}"]
+            ),
+            "branch_id": reference_id,
+            "branch_role": "counterfactual_reference",
+            "step_index": step_index,
+        }
+
+    def closure(
+        use_id: str,
+        role: str,
+        issuer: str,
+        query: str,
+        branch_id: str,
+        branch_role: str,
+        step_index: int,
+        fen: str,
+        scope: str,
+    ) -> dict[str, object]:
+        return {
+            "use_id": use_id,
+            "role": role,
+            "semantic_proof_id": ("a" if branch_id == reference_id else "b") * 64,
+            "issuer": issuer,
+            "issuer_evidence_id": "line.reference" if branch_id == reference_id else "line.played",
+            "issuer_occurrence_id": ("c" if branch_id == reference_id else "d") * 64,
+            "query": query,
+            "branch_id": branch_id,
+            "branch_role": branch_role,
+            "after_step_index": step_index,
+            "position": {"fen": fen, "ply": 59 + step_index, "scope": scope},
+        }
+
+    releaser = {
+        "side": "white",
+        "from": "c6",
+        "to": "g2",
+        "piece_before": "bishop",
+        "piece_after": "bishop",
+    }
+    occupier = {
+        "side": "white",
+        "from": "d6",
+        "to": "c6",
+        "piece_before": "rook",
+        "piece_after": "rook",
+    }
+    return {
+        "source_evidence_id": "vacancy.source",
+        "semantic_id": "e" * 64,
+        "occurrence_id": "f" * 64,
+        "dependency_fingerprint": "0" * 64,
+        "counterfactual_reference_branch": {
+            "branch_id": reference_id,
+            "line_id": "line.reference",
+            "line_role": "best_reference",
+            "branch_role": "counterfactual_reference",
+            "root_provenance": "counterfactual_analyzed_root",
+            "line_rank": 1,
+            "root_move": reference_moves[0],
+            "steps": steps(reference_moves, reference_fens, False),
+        },
+        "played_root_branch": {
+            "branch_id": played_id,
+            "line_id": "line.played",
+            "line_role": "played",
+            "branch_role": "played_root_analysis_continuation",
+            "root_provenance": "observed_game_root",
+            "line_rank": 1,
+            "root_move": played_moves[0],
+            "steps": steps(played_moves, played_fens, True),
+        },
+        "proof_paths": [
+            {
+                "path_occurrence_id": "3" * 64,
+                "premises": [
+                    legal_move("reference_release_move", "c6g2", releaser, 0, "4"),
+                    legal_move("reference_occupation_move", "d6c6", occupier, 2, "6"),
+                ],
+                "closed_absence_uses": [
+                    closure(
+                        "8" * 64,
+                        "played_occupation_move_absent",
+                        "position_relation_extractor.closed_relation_inventory",
+                        "legal-move-from-to:white:d6:c6",
+                        played_id,
+                        "played_root_analysis_continuation",
+                        1,
+                        played_fens[1],
+                        "played_line",
+                    )
+                ],
+                "closed_state_uses": [
+                    closure("5" * 64, "reference_vacancy", "position_relation_extractor.closed_position_state_inventory", "vacant:c6", reference_id, "counterfactual_reference", 0, reference_fens[0], "best_line"),
+                    closure("7" * 64, "reference_vacancy", "position_relation_extractor.closed_position_state_inventory", "vacant:c6", reference_id, "counterfactual_reference", 1, reference_fens[1], "best_line"),
+                    closure("9" * 64, "reference_occupation", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@c6", reference_id, "counterfactual_reference", 2, reference_fens[2], "best_line"),
+                    closure("a" * 64, "played_blocker", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:bishop@c6", played_id, "played_root_analysis_continuation", 1, played_fens[1], "played_line"),
+                    closure("b" * 64, "played_occupier", "position_relation_extractor.closed_position_state_inventory", "occupied-by:white:rook@d6", played_id, "played_root_analysis_continuation", 1, played_fens[1], "played_line"),
+                ],
+            }
+        ],
+        "participants": {"releaser": releaser, "occupier": occupier},
+        "occupation_move": "d6c6",
+    }
+
+
 def _sole_recapturer_removal_before_target_capture_proof() -> dict[str, object]:
     root = "7k/4p3/5n2/3r2B1/8/8/2B5/K2Q2R1 w - - 0 1"
     reference_fens = [
@@ -792,6 +950,100 @@ def _promoting_sole_recapturer_removal_before_target_capture_proof() -> dict[str
     return proof
 
 
+def _unique_check_reply_defender_displacement_before_capture_proof() -> dict[str, object]:
+    proof = _sole_recapturer_removal_before_target_capture_proof()
+    root = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1"
+    reference_moves = ["c4f7", "f8f7", "d1d8"]
+    played_moves = ["d1d8", "f8d8"]
+    reference_fens = [
+        "3q1rkr/5Bpp/8/8/8/1Q6/8/3R2K1 b - - 0 1",
+        "3q2kr/5rpp/8/8/8/1Q6/8/3R2K1 w - - 0 2",
+        "3R2kr/5rpp/8/8/8/1Q6/8/6K1 b - - 0 2",
+    ]
+    played_fens = [
+        "3R1rkr/5ppp/8/8/2B5/1Q6/8/6K1 b - - 0 1",
+        "3r2kr/5ppp/8/8/2B5/1Q6/8/6K1 w - - 0 2",
+    ]
+
+    def steps(moves: list[str], fens: list[str], observed: bool) -> list[dict[str, object]]:
+        return [
+            {
+                "step_index": index,
+                "provenance": (
+                    "observed_game_move"
+                    if observed and index == 0
+                    else "certified_analysis_move"
+                ),
+                "ply": index + 1,
+                "move_uci": move,
+                "fen_before": root if index == 0 else fens[index - 1],
+                "fen_after": fens[index],
+            }
+            for index, move in enumerate(moves)
+        ]
+
+    reference = proof["counterfactual_reference_branch"]
+    played = proof["played_root_branch"]
+    reference["root_move"] = reference_moves[0]
+    reference["steps"] = steps(reference_moves, reference_fens, False)
+    played["root_move"] = played_moves[0]
+    played["steps"] = steps(played_moves, played_fens, True)
+    path = proof["proof_paths"][0]
+    check, reference_capture, played_capture = path["premises"]
+    check.update(
+        role="created_check_response",
+        contract="created_check_response_inventory",
+        result_id=f"created_check_response_inventory:{'0' * 64}",
+    )
+    reference_capture["role"] = "reference_capture_recapture"
+    played_capture["role"] = "played_capture_recapture"
+    absence = path["closed_absence_uses"][0]
+    absence.update(
+        role="reference_recapture_absent",
+        query="legal-capture:black:d8",
+        position={"fen": reference_fens[2], "ply": 3, "scope": "best_line"},
+    )
+    proof["participants"] = {
+        "trigger": {
+            "side": "white",
+            "from": "c4",
+            "to": "f7",
+            "piece_before": "bishop",
+            "piece_after": "bishop",
+        },
+        "forced_reply": {
+            "side": "black",
+            "from": "f8",
+            "to": "f7",
+            "piece_before": "rook",
+            "piece_after": "rook",
+            "move_uci": "f8f7",
+        },
+        "realizer": {
+            "side": "white",
+            "from": "d1",
+            "to": "d8",
+            "piece_before": "rook",
+            "piece_after": "rook",
+        },
+        "captured_target": {"side": "black", "piece": "queen", "square": "d8"},
+        "played_defense": {
+            "side": "black",
+            "from": "f8",
+            "to": "d8",
+            "piece_before": "rook",
+            "piece_after": "rook",
+            "move_uci": "f8d8",
+        },
+        "disabled_defender": {"side": "black", "piece": "rook", "square": "f8"},
+    }
+    del proof["later_exploit_move"]
+    del proof["played_sole_recapture_move"]
+    proof["realizing_move"] = "d1d8"
+    proof["played_root_branch_legal_defense_move"] = "f8d8"
+    return proof
+
+
 class RuntimePublicResponseTransportTest(unittest.TestCase):
     @staticmethod
     def _exchange(http_status: int, body: dict[str, object]) -> _RuntimeExchange:
@@ -829,6 +1081,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                 {"$ref": "#/$defs/wrongMoveOrderCausalFacet"},
                 {"$ref": "#/$defs/passedPawnProgressFacet"},
                 {"$ref": "#/$defs/missedTacticalResourceCausalFacet"},
+                {"$ref": "#/$defs/missedSquareReleaseCausalFacet"},
             ],
         )
 
@@ -874,6 +1127,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         for kind, exposure in (
             ("wrong_move_order", "complementary"),
             ("missed_tactical_resource", "complementary"),
+            ("missed_square_release", "complementary"),
             ("passed_pawn_progress", "primary"),
         ):
             commentary = {
@@ -891,6 +1145,177 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             registry._validate_move_commentary_proof_transport(commentary, "$", errors)
             with self.subTest(kind=kind, exposure=exposure):
                 self.assertTrue(any(".exposure:" in error for error in errors))
+
+    def test_vacancy_enables_occupation_binds_exact_moves_and_sibling_closure(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+        move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
+        proof_schema = registry.load(move_path)["$defs"]["vacancyEnablesOccupationProof"]
+
+        def validation_errors(candidate: dict[str, object]) -> list[str]:
+            errors: list[str] = []
+            registry._validate(candidate, proof_schema, move_path, "$", errors)
+            if not errors:
+                registry._validate_vacancy_enables_occupation_proof_identifiers(
+                    candidate, "$", errors
+                )
+            return errors
+
+        proof = _vacancy_enables_occupation_proof()
+        self.assertEqual(validation_errors(proof), [])
+
+        def collapse_legal_move_occurrences(candidate: dict[str, object]) -> None:
+            release, occupation = candidate["proof_paths"][0]["premises"]
+            previous = occupation["issuer_occurrence_id"]
+            occupation["issuer_occurrence_id"] = release["issuer_occurrence_id"]
+            occupation["source_premise_ids"] = sorted(
+                release["issuer_occurrence_id"] if item == previous else item
+                for item in occupation["source_premise_ids"]
+            )
+
+        def detach_move_coordinates(candidate: dict[str, object]) -> None:
+            path = candidate["proof_paths"][0]
+            candidate["participants"]["releaser"]["from"] = "b6"
+            candidate["participants"]["occupier"]["to"] = "b6"
+            path["premises"][0]["movement"]["from"] = "b6"
+            path["premises"][1]["movement"]["to"] = "b6"
+            path["closed_absence_uses"][0]["query"] = "legal-move-from-to:white:d6:b6"
+            path["closed_state_uses"][0]["query"] = "vacant:b6"
+            path["closed_state_uses"][1]["query"] = "vacant:b6"
+            path["closed_state_uses"][2]["query"] = "occupied-by:white:rook@b6"
+            path["closed_state_uses"][3]["query"] = "occupied-by:white:bishop@b6"
+
+        def add_false_promotion_suffix(candidate: dict[str, object]) -> None:
+            candidate["occupation_move"] = "d6c6q"
+            candidate["counterfactual_reference_branch"]["steps"][2]["move_uci"] = "d6c6q"
+            candidate["proof_paths"][0]["premises"][1]["move_uci"] = "d6c6q"
+
+        def hide_piece_change_without_suffix(candidate: dict[str, object]) -> None:
+            candidate["participants"]["occupier"]["piece_after"] = "queen"
+            path = candidate["proof_paths"][0]
+            path["premises"][1]["movement"]["piece_after"] = "queen"
+            path["closed_state_uses"][2]["query"] = "occupied-by:white:queen@c6"
+
+        mutations = (
+            lambda candidate: candidate["proof_paths"][0]["premises"][1]["source_premise_ids"].remove(
+                f"legal-move:{'6' * 64}"
+            ),
+            lambda candidate: candidate["proof_paths"][0]["closed_absence_uses"][0].update(
+                query="legal-move-from-to:white:d6:d5"
+            ),
+            lambda candidate: candidate["participants"]["occupier"].update(to="b6"),
+            lambda candidate: candidate["played_root_branch"]["steps"].append(
+                copy.deepcopy(candidate["counterfactual_reference_branch"]["steps"][2])
+            ),
+            collapse_legal_move_occurrences,
+            detach_move_coordinates,
+            add_false_promotion_suffix,
+            hide_piece_change_without_suffix,
+        )
+        for index, mutate in enumerate(mutations):
+            candidate = copy.deepcopy(proof)
+            mutate(candidate)
+            with self.subTest(mutation=index):
+                self.assertTrue(validation_errors(candidate))
+
+    def test_legacy_two_branch_families_reject_coordinated_semantic_forgery(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+        move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
+        definitions = registry.load(move_path)["$defs"]
+
+        def validation_errors(
+            candidate: dict[str, object],
+            schema_name: str,
+            validator: Callable[[dict[str, object], str, list[str]], None],
+        ) -> list[str]:
+            errors: list[str] = []
+            registry._validate(candidate, definitions[schema_name], move_path, "$", errors)
+            if not errors:
+                validator(candidate, "$", errors)
+            return errors
+
+        unique = _unique_check_reply_defender_displacement_before_capture_proof()
+        sole = _sole_recapturer_removal_before_target_capture_proof()
+        promoting_sole = _promoting_sole_recapturer_removal_before_target_capture_proof()
+        direct = _vacated_gate_enables_unrecapturable_slider_capture_proof()
+        families = (
+            (
+                unique,
+                "uniqueCheckReplyDefenderDisplacementBeforeCaptureProof",
+                registry._validate_resource_proof_identifiers,
+            ),
+            (
+                sole,
+                "soleRecapturerRemovalBeforeTargetCaptureProof",
+                registry._validate_sole_recapturer_removal_before_target_capture_proof_identifiers,
+            ),
+            (
+                promoting_sole,
+                "soleRecapturerRemovalBeforeTargetCaptureProof",
+                registry._validate_sole_recapturer_removal_before_target_capture_proof_identifiers,
+            ),
+            (
+                direct,
+                "vacatedGateEnablesUnrecapturableSliderCaptureProof",
+                registry._validate_vacated_gate_enables_unrecapturable_slider_capture_proof_identifiers,
+            ),
+        )
+        for proof, schema_name, validator in families:
+            with self.subTest(valid=schema_name, promotion=proof is promoting_sole):
+                self.assertEqual(validation_errors(proof, schema_name, validator), [])
+
+        forged_unique = copy.deepcopy(unique)
+        forged_unique["realizing_move"] = "d1d7"
+        forged_unique["played_root_branch_legal_defense_move"] = "f8d7"
+        forged_unique["participants"]["realizer"]["to"] = "d7"
+        forged_unique["participants"]["captured_target"]["square"] = "d7"
+        forged_unique["participants"]["played_defense"].update(to="d7", move_uci="f8d7")
+        forged_unique["proof_paths"][0]["closed_absence_uses"][0][
+            "query"
+        ] = "legal-capture:black:d7"
+
+        forged_sole = copy.deepcopy(sole)
+        forged_sole["later_exploit_move"] = "d1d4"
+        forged_sole["played_sole_recapture_move"] = "f6d4"
+        forged_sole["participants"]["later_exploit"]["to"] = "d4"
+        forged_sole["participants"]["captured_target"]["square"] = "d4"
+        forged_sole["participants"]["played_sole_recapture"].update(
+            to="d4", move_uci="f6d4"
+        )
+        forged_sole["proof_paths"][0]["closed_absence_uses"][0][
+            "query"
+        ] = "legal-capture:black:d4"
+
+        forged_direct = copy.deepcopy(direct)
+        forged_direct["exploit_move"] = "a1a6"
+        forged_direct["participants"]["exploit"]["to"] = "a6"
+        forged_direct["participants"]["captured_target"]["square"] = "a6"
+        forged_path = forged_direct["proof_paths"][0]
+        forged_path["closed_absence_uses"][0]["query"] = "legal-capture:black:a6"
+        forged_path["closed_absence_uses"][1][
+            "query"
+        ] = "legal-move-from-to:white:a1:a6"
+        forged_path["closed_absence_uses"][2]["query"] = "legal-capture:white:a6"
+        forged_path["closed_state_uses"][2]["query"] = "occupied-by:black:queen@a6"
+
+        for candidate, schema_name, validator in (
+            (
+                forged_unique,
+                "uniqueCheckReplyDefenderDisplacementBeforeCaptureProof",
+                registry._validate_resource_proof_identifiers,
+            ),
+            (
+                forged_sole,
+                "soleRecapturerRemovalBeforeTargetCaptureProof",
+                registry._validate_sole_recapturer_removal_before_target_capture_proof_identifiers,
+            ),
+            (
+                forged_direct,
+                "vacatedGateEnablesUnrecapturableSliderCaptureProof",
+                registry._validate_vacated_gate_enables_unrecapturable_slider_capture_proof_identifiers,
+            ),
+        ):
+            with self.subTest(forged=schema_name):
+                self.assertTrue(validation_errors(candidate, schema_name, validator))
 
     def test_sole_recapturer_removal_before_target_capture_requires_its_exact_three_premise_manifest(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
@@ -1282,18 +1707,36 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         )
         direct_facet["channels"] = [
             {
-                "channel_id": "channel-direct-line-access",
+                "channel_id": "channel-vacated-gate-slider-capture",
                 "vacated_gate_enables_unrecapturable_slider_capture_proof": _vacated_gate_enables_unrecapturable_slider_capture_proof(),
             }
         ]
         registry.validate_document(
             direct_ready,
             move_path,
-            label="public v6 exact direct-line-access preparation",
+            label="public v6 exact vacated-gate slider capture",
+        )
+        vacancy_ready = copy.deepcopy(direct_ready)
+        vacancy_primary = vacancy_ready["move_commentary"]["primary"]
+        vacancy_primary["reference_endpoint"]["moves"] = ["c6g2", "e6f5", "d6c6"]
+        vacancy_primary["played_endpoint"]["moves"] = ["d1d2", "e6f5"]
+        vacancy_facet = vacancy_ready["move_commentary"]["causal_explanations"][0]
+        vacancy_facet.update(kind="missed_square_release", exposure="primary")
+        vacancy_facet["channels"] = [
+            {
+                "channel_id": "channel-vacancy-enables-occupation",
+                "vacancy_enables_occupation_proof": _vacancy_enables_occupation_proof(),
+            }
+        ]
+        registry.validate_document(
+            vacancy_ready,
+            move_path,
+            label="public v6 exact square-release occupation",
         )
         for label, document, exposure in (
             ("wrong move order", defense_ready, "complementary"),
             ("missed tactical resource", direct_ready, "complementary"),
+            ("missed square release", vacancy_ready, "complementary"),
             ("passed pawn progress", ready, "primary"),
         ):
             invalid = copy.deepcopy(document)

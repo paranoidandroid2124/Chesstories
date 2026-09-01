@@ -10,6 +10,7 @@ private[chessjudgment] enum BoundedCausalContractKind:
   case UniqueCheckReplyDefenderDisplacementBeforeCapture
   case SoleRecapturerRemovalBeforeTargetCapture
   case VacatedGateEnablesUnrecapturableSliderCapture
+  case VacancyEnablesOccupation
   case PassedPawnProgressRealizedAfterOnlyLegalReply
 
   def semanticNamespace: String =
@@ -20,6 +21,8 @@ private[chessjudgment] enum BoundedCausalContractKind:
         "causal-proposition:sole-recapturer-removal-before-target-capture:v1"
       case VacatedGateEnablesUnrecapturableSliderCapture =>
         "causal-proposition:vacated-gate-enables-unrecapturable-slider-capture:v1"
+      case VacancyEnablesOccupation =>
+        "causal-proposition:vacancy-enables-occupation:v1"
       case PassedPawnProgressRealizedAfterOnlyLegalReply =>
         "causal-proposition:passed-pawn-progress-realized-after-only-legal-reply:v1"
 
@@ -64,6 +67,19 @@ private[chessjudgment] object CausalPropositionIdentity:
 
 private[chessjudgment] trait CausalBranchRole:
   def stableKey: String
+
+/** Shared roles for every exact BestReference-vs-Played causal occurrence.
+  * Family meaning stays in its typed manifest; branch identity is not
+  * redefined once per family.
+  */
+private[chessjudgment] enum ComparedLineBranchRole extends CausalBranchRole:
+  case CounterfactualReference
+  case PlayedRootAnalysisContinuation
+
+  def stableKey: String =
+    this match
+      case CounterfactualReference          => "counterfactual-reference"
+      case PlayedRootAnalysisContinuation   => "played-root-analysis-continuation"
 
 private[chessjudgment] enum CausalRootProvenance:
   case CounterfactualAnalyzedRoot
@@ -474,6 +490,121 @@ private[chessjudgment] object RecordBoundVerticalRelationOccurrence:
         .find(_ == occurrence)
     yield RecordBoundVerticalRelationOccurrence(lineRecord, rebound)
 
+/** One replay-owned legal movement bound to its sole certified LegalLine
+  * record. It exposes the already-issued movement occurrence to L2 without
+  * parsing the move or asking a second legality source.
+  */
+private[chessjudgment] final case class RecordBoundLegalMoveOccurrence private (
+    lineRecord: CertifiedLineReplayRecord,
+    occurrence: ReplayLegalMoveOccurrence
+):
+  val issuerRecord: EvidenceRecord = lineRecord.issuerRecord
+  val issuerEvidenceId: String = lineRecord.ref.id
+  val issuerLine: LineNodeRef = lineRecord.line
+  val scope: EvidenceScope = lineRecord.scope
+  val step: LineReplayStep = occurrence.step
+  val movement: RelationMoveTransitionWitness = occurrence.movement.witness
+  val moveUci: String = occurrence.movement.moveUci
+  val capture: Option[RelationLegalCaptureWitness] = occurrence.movement.capture
+  val movementMode: PositionRelationExtractor.ClosedLegalMovementMode = occurrence.movement.mode
+  val legalMoveSemanticId: String = occurrence.movement.fact.semanticId
+  val occurrenceId: String = occurrence.occurrenceId
+
+  def causalSourcePremiseIds: List[String] =
+    val ids = issuerEvidenceId :: occurrenceId :: occurrence.certifiedSourcePremiseIds
+    require(
+      ids.distinct.size == ids.size,
+      "an L2 legal-move premise cannot collapse issuer, occurrence, or lower fact owners"
+    )
+    ids.sorted
+
+private[chessjudgment] object RecordBoundLegalMoveOccurrence:
+  def certified(
+      issuerRecord: EvidenceRecord,
+      occurrence: ReplayLegalMoveOccurrence
+  ): Option[RecordBoundLegalMoveOccurrence] =
+    for
+      lineRecord <- CertifiedLineReplayRecord.from(issuerRecord)
+      rebound <- lineRecord.replay.legalMoveOccurrence(occurrence.step)
+      if rebound == occurrence
+    yield RecordBoundLegalMoveOccurrence(lineRecord, rebound)
+
+/** One exact use of a replay-owned legal movement in a causal proof path. */
+private[chessjudgment] final case class CausalLegalMovePremiseUse private (
+    role: CausalPremiseRole,
+    movement: RelationMoveTransitionWitness,
+    moveUci: String,
+    capture: Option[RelationLegalCaptureWitness],
+    movementMode: PositionRelationExtractor.ClosedLegalMovementMode,
+    legalMoveSemanticId: String,
+    issuerEvidenceId: String,
+    issuerOccurrenceId: String,
+    sourcePremiseIds: List[String],
+    branchId: String,
+    branchRole: CausalBranchRole,
+    stepIndex: Int
+) extends CausalSupplementalPremiseUse:
+  require(EvidenceRef.normalizeMove(moveUci).nonEmpty, "a causal legal-move use needs an exact move")
+  require(
+    legalMoveSemanticId.matches("[0-9a-f]{64}"),
+    "a causal legal-move use needs its exact lower semantic fact"
+  )
+  require(issuerEvidenceId.nonEmpty, "a causal legal-move use needs its exact LegalLine issuer")
+  require(issuerOccurrenceId.matches("[0-9a-f]{64}"), "a causal legal-move use needs its replay occurrence")
+  require(
+    sourcePremiseIds.nonEmpty && sourcePremiseIds == sourcePremiseIds.distinct.sorted,
+    "a causal legal-move use needs canonical lower premise ids"
+  )
+  require(stepIndex >= 0, "a causal legal-move use needs an exact branch step")
+
+  val branchIds: Set[String] = Set(branchId)
+
+  def stableKey: String =
+    List(
+      role.stableKey,
+      movement.stableKey,
+      EvidenceRef.normalizeMove(moveUci),
+      BoundedCausalIdentity.legalCaptureKey(capture),
+      movementMode.toString.toLowerCase,
+      legalMoveSemanticId,
+      issuerEvidenceId,
+      issuerOccurrenceId,
+      sourcePremiseIds.mkString("[", ",", "]"),
+      branchId,
+      branchRole.stableKey,
+      stepIndex.toString
+    ).mkString("|")
+
+private[chessjudgment] object CausalLegalMovePremiseUse:
+  def from(
+      role: CausalPremiseRole,
+      authority: RecordBoundLegalMoveOccurrence,
+      branch: CausalBranchOccurrence,
+      stepIndex: Int
+  ): CausalLegalMovePremiseUse =
+    val retained = branch.stepAt(stepIndex)
+    require(
+      retained.exists(step =>
+        step.step == authority.step && step.line == authority.issuerLine &&
+          authority.scope == step.line.role.scope
+      ),
+      "a legal-move premise must bind its exact graph-owned replay occurrence"
+    )
+    CausalLegalMovePremiseUse(
+      role,
+      authority.movement,
+      authority.moveUci,
+      authority.capture,
+      authority.movementMode,
+      authority.legalMoveSemanticId,
+      authority.issuerEvidenceId,
+      authority.occurrenceId,
+      authority.causalSourcePremiseIds,
+      branch.branchId,
+      branch.role,
+      stepIndex
+    )
+
 /** Sole record-bound authority that one certified LegalLine replay occurrence
   * issued one exact positive-state proof. EvidenceGraph separately certifies
   * canonical graph ownership of the retained record.
@@ -797,9 +928,9 @@ private[chessjudgment] object BoundedCausalProofSet:
     )
     BoundedCausalProofSet(proposition, occurrence, paths.sortBy(_.pathOccurrenceId))
 
-/** Read-only wire projection for common branch, vertical-relation premise,
-  * and closed-relation-absence coordinates. Family-specific supplemental
-  * premises stay in their own typed projection and may never be dropped here.
+/** Read-only wire projection for common branches, typed lower premises, and
+  * closed inventory coordinates. Unsupported supplemental premise kinds fail
+  * closed instead of disappearing from a family projection.
   */
 final case class BoundedCausalPublicStep private[chessjudgment] (
     index: Int,
@@ -818,6 +949,15 @@ final case class BoundedCausalPublicBranch private[chessjudgment] (
     steps: List[BoundedCausalPublicStep]
 )
 
+sealed trait BoundedCausalPublicPremise:
+  def role: String
+  def issuerEvidenceId: String
+  def issuerOccurrenceId: String
+  def sourcePremiseIds: List[String]
+  def branchId: String
+  def branchRole: String
+  def stepIndex: Int
+
 final case class BoundedCausalPublicPremiseUse private[chessjudgment] (
     role: String,
     contract: String,
@@ -828,7 +968,33 @@ final case class BoundedCausalPublicPremiseUse private[chessjudgment] (
     branchId: String,
     branchRole: String,
     stepIndex: Int
-)
+) extends BoundedCausalPublicPremise
+
+final case class BoundedCausalPublicLegalMoveUse private[chessjudgment] (
+    role: String,
+    moveUci: String,
+    side: String,
+    from: String,
+    to: String,
+    beforePiece: String,
+    afterPiece: String,
+    capturedSquare: Option[String],
+    capturedPiece: Option[String],
+    capturedSide: Option[String],
+    movementMode: String,
+    legalMoveSemanticId: String,
+    issuerEvidenceId: String,
+    issuerOccurrenceId: String,
+    sourcePremiseIds: List[String],
+    branchId: String,
+    branchRole: String,
+    stepIndex: Int
+) extends BoundedCausalPublicPremise:
+  require(
+    List(capturedSquare, capturedPiece, capturedSide).forall(_.isDefined) ||
+      List(capturedSquare, capturedPiece, capturedSide).forall(_.isEmpty),
+    "a public legal-move use must retain a complete optional capture identity"
+  )
 
 final case class BoundedCausalPublicClosedAbsenceUse private[chessjudgment] (
     useId: String,
@@ -860,7 +1026,7 @@ final case class BoundedCausalPublicClosedStateUse private[chessjudgment] (
 
 final case class BoundedCausalPublicProofPath private[chessjudgment] (
     pathOccurrenceId: String,
-    premises: List[BoundedCausalPublicPremiseUse],
+    premises: List[BoundedCausalPublicPremise],
     closedAbsenceUses: List[BoundedCausalPublicClosedAbsenceUse],
     closedStateUses: List[BoundedCausalPublicClosedStateUse]
 )
@@ -884,7 +1050,78 @@ private[chessjudgment] object BoundedCausalPublicProjection:
       )
     )
 
-  def paths(paths: List[CausalProofPathOccurrence]): List[BoundedCausalPublicProofPath] =
+  def legalMoveUse(use: CausalLegalMovePremiseUse): BoundedCausalPublicLegalMoveUse =
+    BoundedCausalPublicLegalMoveUse(
+      use.role.stableKey,
+      EvidenceRef.normalizeMove(use.moveUci),
+      use.movement.side.toString.toLowerCase,
+      use.movement.from.key.toLowerCase,
+      use.movement.to.key.toLowerCase,
+      use.movement.beforeRole.name.toLowerCase,
+      use.movement.afterRole.name.toLowerCase,
+      use.capture.map(_.capturedSquare.key.toLowerCase),
+      use.capture.map(_.capturedRole.name.toLowerCase),
+      use.capture.map(_.capturedSide.toString.toLowerCase),
+      use.movementMode.toString,
+      use.legalMoveSemanticId,
+      use.issuerEvidenceId,
+      use.issuerOccurrenceId,
+      use.sourcePremiseIds,
+      use.branchId,
+      use.branchRole.stableKey,
+      use.stepIndex
+    )
+
+  private def verticalRelationUse(
+      premise: CausalVerticalRelationPremiseUse
+  ): BoundedCausalPublicPremiseUse =
+    BoundedCausalPublicPremiseUse(
+      premise.role.stableKey,
+      premise.contract.toString,
+      premise.result.stableKey,
+      premise.issuerEvidenceId,
+      premise.issuerOccurrenceId,
+      premise.sourcePremiseIds,
+      premise.branchId,
+      premise.branchRole.stableKey,
+      premise.stepIndex
+    )
+
+  def closedAbsenceUse(use: CausalClosedAbsenceUse): BoundedCausalPublicClosedAbsenceUse =
+    val binding = use.binding
+    BoundedCausalPublicClosedAbsenceUse(
+      use.useId,
+      binding.role.stableKey,
+      binding.semanticProofId,
+      binding.issuerEvidenceId,
+      binding.issuerOccurrenceId,
+      binding.queryKey,
+      binding.branchId,
+      binding.branchRole.stableKey,
+      binding.afterStepIndex,
+      binding.position,
+      binding.scope
+    )
+
+  def closedStateUse(use: CausalClosedStateUse): BoundedCausalPublicClosedStateUse =
+    val binding = use.binding
+    BoundedCausalPublicClosedStateUse(
+      use.useId,
+      binding.role.stableKey,
+      binding.semanticProofId,
+      binding.issuerEvidenceId,
+      binding.issuerOccurrenceId,
+      binding.queryKey,
+      binding.branchId,
+      binding.branchRole.stableKey,
+      binding.afterStepIndex,
+      binding.position,
+      binding.scope
+    )
+
+  def verticalRelationPaths(
+      paths: List[CausalProofPathOccurrence]
+  ): List[BoundedCausalPublicProofPath] =
     require(
       paths.forall(path =>
         path.manifest.supplementalPremiseUses.isEmpty && path.supplementalClosureUses.isEmpty
@@ -894,51 +1131,33 @@ private[chessjudgment] object BoundedCausalPublicProjection:
     paths.map(path =>
       BoundedCausalPublicProofPath(
         path.pathOccurrenceId,
-        path.premiseUses.map(premise =>
-          BoundedCausalPublicPremiseUse(
-            premise.role.stableKey,
-            premise.contract.toString,
-            premise.result.stableKey,
-            premise.issuerEvidenceId,
-            premise.issuerOccurrenceId,
-            premise.sourcePremiseIds,
-            premise.branchId,
-            premise.branchRole.stableKey,
-            premise.stepIndex
-          )
-        ),
-        path.closedAbsenceUses.map { use =>
-          val binding = use.binding
-          BoundedCausalPublicClosedAbsenceUse(
-            use.useId,
-            binding.role.stableKey,
-            binding.semanticProofId,
-            binding.issuerEvidenceId,
-            binding.issuerOccurrenceId,
-            binding.queryKey,
-            binding.branchId,
-            binding.branchRole.stableKey,
-            binding.afterStepIndex,
-            binding.position,
-            binding.scope
-          )
+        path.premiseUses.map(verticalRelationUse),
+        path.closedAbsenceUses.map(closedAbsenceUse),
+        path.closedStateUses.map(closedStateUse)
+      )
+    )
+
+  def legalMovePaths(
+      paths: List[CausalProofPathOccurrence]
+  ): List[BoundedCausalPublicProofPath] =
+    require(
+      paths.forall(path =>
+        path.premiseUses.isEmpty && path.supplementalClosureUses.isEmpty &&
+          path.manifest.supplementalPremiseUses.nonEmpty &&
+          path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse])
+      ),
+      "the legal-move public projection accepts only exact legal-move premise paths"
+    )
+    paths.map(path =>
+      BoundedCausalPublicProofPath(
+        path.pathOccurrenceId,
+        path.manifest.supplementalPremiseUses.map {
+          case exact: CausalLegalMovePremiseUse => legalMoveUse(exact)
+          case _ =>
+            throw IllegalStateException("a legal-move proof path lost its typed lower premise")
         },
-        path.closedStateUses.map { use =>
-          val binding = use.binding
-          BoundedCausalPublicClosedStateUse(
-            use.useId,
-            binding.role.stableKey,
-            binding.semanticProofId,
-            binding.issuerEvidenceId,
-            binding.issuerOccurrenceId,
-            binding.queryKey,
-            binding.branchId,
-            binding.branchRole.stableKey,
-            binding.afterStepIndex,
-            binding.position,
-            binding.scope
-          )
-        }
+        path.closedAbsenceUses.map(closedAbsenceUse),
+        path.closedStateUses.map(closedStateUse)
       )
     )
 
@@ -988,6 +1207,14 @@ private[chessjudgment] object BoundedCausalIdentity:
       PrincipalVariationEvidence.normalizeFen(step.fenBefore),
       PrincipalVariationEvidence.normalizeFen(step.fenAfter)
     ).mkString(":")
+
+  def coloredPieceKey(piece: RelationColoredPieceWitness): String =
+    s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
+
+  def legalCaptureKey(capture: Option[RelationLegalCaptureWitness]): String =
+    capture.map(exact =>
+      s"${exact.capturedSide.toString.toLowerCase}:${exact.capturedRole.name.toLowerCase}@${exact.capturedSquare.key.toLowerCase}"
+    ).getOrElse("noncapture")
 
   def evidenceRecordKey(record: EvidenceRecord): String =
     val ref = record.ref

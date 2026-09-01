@@ -21,9 +21,9 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureC
       trigger.stableKey,
       forcedReply.stableKey,
       realizer.stableKey,
-      coloredPieceStableKey(capturedTarget),
+      BoundedCausalIdentity.coloredPieceKey(capturedTarget),
       playedDefense.stableKey,
-      coloredPieceStableKey(disabledDefender)
+      BoundedCausalIdentity.coloredPieceKey(disabledDefender)
     )
   def proposition(
       rootFen: String,
@@ -45,18 +45,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureC
         disabledDefender
       )
     )
-
-  def coloredPieceStableKey(piece: RelationColoredPieceWitness): String =
-    s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
-
-private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole extends CausalBranchRole:
-  case CounterfactualReference
-  case PlayedRootAnalysisContinuation
-
-  def stableKey: String =
-    this match
-      case CounterfactualReference => "counterfactual-reference"
-      case PlayedRootAnalysisContinuation => "played-root-analysis-continuation"
 
 private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole extends CausalPremiseRole:
   case CreatedCheckResponse
@@ -118,7 +106,7 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
       checkResponse.role == UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.CreatedCheckResponse &&
         checkResponse.contract == VerticalRelationContractKind.CreatedCheckResponseInventory &&
         checkResponse.result.kind == RelationFactKind.CreatedCheckResponseInventory &&
-        checkResponse.branchRole == UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference &&
+        checkResponse.branchRole == ComparedLineBranchRole.CounterfactualReference &&
         checkResponse.stepIndex == 0,
       "the first premise must be the exact counterfactual root check-response inventory"
     )
@@ -126,7 +114,7 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
       referenceRecapture.role == UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.ReferenceCaptureRecapture &&
         referenceRecapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         referenceRecapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        referenceRecapture.branchRole == UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference &&
+        referenceRecapture.branchRole == ComparedLineBranchRole.CounterfactualReference &&
         referenceRecapture.stepIndex == 2,
       "the second premise must be the counterfactual realizer recapture inventory"
     )
@@ -134,13 +122,13 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
       playedRecapture.role == UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.PlayedCaptureRecapture &&
         playedRecapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         playedRecapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        playedRecapture.branchRole == UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation &&
+        playedRecapture.branchRole == ComparedLineBranchRole.PlayedRootAnalysisContinuation &&
         playedRecapture.stepIndex == 0,
       "the third premise must be the played-root analysis-continuation recapture inventory"
     )
     require(
       referenceNoRecapture.role == UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.ReferenceRecaptureAbsent &&
-        referenceNoRecapture.branchRole == UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference &&
+        referenceNoRecapture.branchRole == ComparedLineBranchRole.CounterfactualReference &&
         checkResponse.branchId == referenceRecapture.branchId &&
         referenceNoRecapture.branchId == referenceRecapture.branchId &&
         referenceNoRecapture.afterStepIndex == referenceRecapture.stepIndex,
@@ -195,10 +183,10 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   )
   require(
     proofSet.occurrence.branches.size == 2 &&
-      proofSet.occurrence.branch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference).exists(
+      proofSet.occurrence.branch(ComparedLineBranchRole.CounterfactualReference).exists(
         _.line.role == LineNodeRole.BestReference
       ) &&
-      proofSet.occurrence.branch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation).exists(
+      proofSet.occurrence.branch(ComparedLineBranchRole.PlayedRootAnalysisContinuation).exists(
         _.line.role == LineNodeRole.Played
       ),
     "this contract needs one exact BestReference and one played-root analysis continuation"
@@ -210,7 +198,7 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   require(playedSteps.size == 2, "the played-root analysis continuation needs realizer and reply")
   require(referenceRealizerIndex == 2, "the first proof family admits only its immediate realizer")
 
-  private def exactBranch(role: UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole): CausalBranchOccurrence =
+  private def exactBranch(role: ComparedLineBranchRole): CausalBranchOccurrence =
     proofSet.occurrence
       .branch(role)
       .getOrElse(throw IllegalStateException(s"a causal occurrence lost its $role branch"))
@@ -218,9 +206,9 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
   def referenceBranch: CausalBranchOccurrence =
-    exactBranch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference)
+    exactBranch(ComparedLineBranchRole.CounterfactualReference)
   def playedBranch: CausalBranchOccurrence =
-    exactBranch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation)
+    exactBranch(ComparedLineBranchRole.PlayedRootAnalysisContinuation)
   def referenceLine: LineNodeRef = referenceBranch.line
   def playedLine: LineNodeRef = playedBranch.line
   def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
@@ -254,7 +242,7 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
     List(
       BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
       BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureCausalAuthority.coloredPieceStableKey(disabledDefender),
+      BoundedCausalIdentity.coloredPieceKey(disabledDefender),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
@@ -332,9 +320,9 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
     absenceAuthorities.forall { case (use, authority) =>
       val binding = use.binding
       val issuerRecord = binding.branchRole match
-        case UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference =>
+        case ComparedLineBranchRole.CounterfactualReference =>
           referenceLineRecord
-        case UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation =>
+        case ComparedLineBranchRole.PlayedRootAnalysisContinuation =>
           playedLineRecord
         case _ =>
           throw IllegalStateException(
@@ -506,13 +494,13 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       if referenceCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
       if playedCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
       referenceBranch = CausalBranchOccurrence.certifiedCounterfactual(
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference,
+        ComparedLineBranchRole.CounterfactualReference,
         referenceLine,
         referenceReplay,
         referenceRealizerIndex + 1
       )
       playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation,
+        ComparedLineBranchRole.PlayedRootAnalysisContinuation,
         playedLine,
         playedReplay,
         2

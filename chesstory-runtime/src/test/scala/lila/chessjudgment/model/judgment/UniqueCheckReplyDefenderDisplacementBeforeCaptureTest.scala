@@ -110,7 +110,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
 
     val line = LineNodeRef("position-owner", referenceMoves.head, 1, LineNodeRole.BestReference)
     val branch = CausalBranchOccurrence.certifiedCounterfactual(
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference,
+      ComparedLineBranchRole.CounterfactualReference,
       line,
       replay,
       referenceMoves.size
@@ -130,7 +130,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     )
     val foreignLine = line.copy(id = "foreign-position-owner")
     val foreignBranch = CausalBranchOccurrence.certifiedCounterfactual(
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference,
+      ComparedLineBranchRole.CounterfactualReference,
       foreignLine,
       replay,
       referenceMoves.size
@@ -254,7 +254,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       referenceRecords,
       candidateRecords
     )
-    assertEquals(profile.referenceMoveOrderProofs.map(_.ref.id), List(oldProof.ref.id))
+    assertEquals(profile.referenceDirectProofs.map(_.ref.id), List(oldProof.ref.id))
 
   test("missing sibling defense fails closed"):
     val referenceLine = LineNodeRef("reference-closed", referenceMoves.head, 1, LineNodeRole.BestReference)
@@ -420,7 +420,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       referenceRecords,
       candidateRecords
     )
-    assertEquals(profile.referenceMoveOrderProofs.map(_.ref.id), causalRecords.map(_.ref.id))
+    assertEquals(profile.referenceDirectProofs.map(_.ref.id), causalRecords.map(_.ref.id))
     val drafts = RelativeCauseDraftPlanner.drafts(profile)
     assertEquals(
       drafts.filter(_.kind == RelativeCauseKind.MissedTacticalResource),

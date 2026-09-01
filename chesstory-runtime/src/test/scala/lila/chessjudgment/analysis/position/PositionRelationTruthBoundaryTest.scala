@@ -161,6 +161,19 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       closedInitial.inventory.stateView.pieces(Color.White, lila.chessjudgment.model.judgment.EvidencePieceRole("pawn")).size,
       8
     )
+    val vacantE4 = closedInitial.inventory.certifyState(
+      PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("e4"))
+    ).getOrElse(fail("expected the exact closed vacancy on e4"))
+    val cachedVacantE4 = closedInitial.inventory.certifyState(
+      PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("e4"))
+    ).getOrElse(fail("expected the cached exact vacancy on e4"))
+    assert(vacantE4.asInstanceOf[AnyRef] eq cachedVacantE4.asInstanceOf[AnyRef])
+    assertEquals(
+      closedInitial.inventory.certifyState(
+        PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("e2"))
+      ),
+      None
+    )
     assert(initial.boardRelations.asInstanceOf[AnyRef] eq initial.relationInventory.relations.asInstanceOf[AnyRef])
 
     val beforeFen = "7k/8/8/8/3p4/8/4P3/K3R3 w - - 0 1"

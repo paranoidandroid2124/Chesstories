@@ -221,6 +221,7 @@ object CandidateComparisonSemanticKey:
 
 enum RelativeCauseKind:
   case MissedTacticalResource
+  case MissedSquareRelease
   case WrongMoveOrder
   case PassedPawnProgress
 

@@ -383,7 +383,7 @@ object ClaimTruthPolicy:
 
   private def requiredLayerGroups(family: ClaimFamily): List[Set[EvidenceLayer]] =
     family match
-      case ClaimFamily.Tactical =>
+      case ClaimFamily.BoundedCausal | ClaimFamily.PassedPawnProgress =>
         List(
           Set(EvidenceLayer.RelativeCause),
           Set(EvidenceLayer.CausalProof),
@@ -402,12 +402,6 @@ object ClaimTruthPolicy:
             EvidenceLayer.RelativeCause
           )
         )
-      case ClaimFamily.PassedPawnProgress =>
-        List(
-          Set(EvidenceLayer.RelativeCause),
-          Set(EvidenceLayer.CausalProof),
-          Set(EvidenceLayer.CandidateComparison)
-        )
       case ClaimFamily.Evaluation =>
         List(Set(EvidenceLayer.RelativeAssessment), Set(EvidenceLayer.CandidateComparison))
 
@@ -417,12 +411,12 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Boolean =
     claim.family match
-      case ClaimFamily.Tactical =>
-        tacticalProof(claim, records, graph)
+      case ClaimFamily.BoundedCausal =>
+        relativeCauseProof(claim, records, graph, ClaimFamily.BoundedCausal)
       case ClaimFamily.PawnStructure =>
         pawnStructureProof(claim, records, graph)
       case ClaimFamily.PassedPawnProgress =>
-        passedPawnProgressRealizedAfterOnlyLegalReplyProof(claim, records, graph)
+        relativeCauseProof(claim, records, graph, ClaimFamily.PassedPawnProgress)
       case ClaimFamily.Evaluation =>
         evaluationProof(claim, records, graph)
 
@@ -467,17 +461,6 @@ object ClaimTruthPolicy:
     ) &&
       claim.subjectMove.forall(move => EvidenceRef.sameMove(move, moveUci))
 
-  private def passedPawnProgressRealizedAfterOnlyLegalReplyProof(
-      claim: JudgmentClaim,
-      records: List[EvidenceRecord],
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
-    relativeCauses.exists(cause =>
-      ClaimFamily.fromCause(cause.kind) == ClaimFamily.PassedPawnProgress &&
-        RelativeCauseConstructionAdmission.initiallyReady(cause, graph)
-    )
-
   private def relativeCausesBoundToClaimEvidence(
       claim: JudgmentClaim,
       records: List[EvidenceRecord]
@@ -489,14 +472,15 @@ object ClaimTruthPolicy:
         cause
     }.distinct
 
-  private def tacticalProof(
+  private def relativeCauseProof(
       claim: JudgmentClaim,
       records: List[EvidenceRecord],
-      graph: TypedEvidenceGraph
+      graph: TypedEvidenceGraph,
+      expectedFamily: ClaimFamily
   ): Boolean =
     val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
     relativeCauses.exists(cause =>
-      ClaimFamily.fromCause(cause.kind) == ClaimFamily.Tactical &&
+      ClaimFamily.fromCause(cause.kind) == expectedFamily &&
         RelativeCauseConstructionAdmission.initiallyReady(cause, graph)
     )
 

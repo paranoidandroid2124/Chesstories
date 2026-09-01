@@ -143,8 +143,12 @@ class L2ProofProvenanceTest(unittest.TestCase):
             if "EvidenceProducer.CausalProofProducer" not in text:
                 continue
             symbols = re.findall(r"\bobject (\w+Assembler)\b", text)
-            self.assertEqual(len(symbols), 1, path.as_posix())
-            discovered_producers.append((path.relative_to(REPO).as_posix(), symbols[0]))
+            self.assertTrue(symbols, path.as_posix())
+            self.assertEqual(len(symbols), len(set(symbols)), path.as_posix())
+            discovered_producers.extend(
+                (path.relative_to(REPO).as_posix(), symbol)
+                for symbol in symbols
+            )
         declared_producers = [
             (contract["producer"]["file"], contract["producer"]["symbol"])
             for contract in self.contracts
@@ -154,6 +158,16 @@ class L2ProofProvenanceTest(unittest.TestCase):
     def test_references_are_registered_and_do_not_claim_more_than_the_sources(self) -> None:
         required_unsupported = {
             "VacatedGateEnablesUnrecapturableSliderCapture": {"general_preparation", "plan"},
+            "VacancyEnablesOccupation": {
+                "general_preparation",
+                "good_move",
+                "maneuver",
+                "outpost",
+                "physical_token_identity",
+                "plan",
+                "sole_cause",
+                "unbounded_vacancy",
+            },
             "PassedPawnProgressRealizedAfterOnlyLegalReply": {"forced_win", "plan"},
         }
         for contract in self.contracts:

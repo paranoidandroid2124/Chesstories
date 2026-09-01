@@ -182,6 +182,18 @@ private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
       scope
     )
 
+  /** Binds the closed inventory's exact empty-square state to this replay
+    * occurrence. L2 uses the issued state; it never inspects the board.
+    */
+  private[chessjudgment] def existingVacancyState(
+      square: EvidenceSquare,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedPositionStateProof] =
+    closedState(
+      PositionRelationExtractor.ClosedPositionStateQuery.Vacant(square),
+      scope
+    )
+
   /** Selects the exact pawn-topology witness already owned by this position
     * and binds it to the replay occurrence. Requiring the complete witness is
     * deliberately stricter than treating a missing transition as persistence.
@@ -216,6 +228,46 @@ private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
 
   private[chessjudgment] def sameOwner(other: ReplayPositionOccurrence): Boolean =
     occurrenceId == other.occurrenceId && inventory.sameOwner(other.inventory)
+
+/** Exact legal movement already issued by one canonical replay transition.
+  * This is an occurrence binding over the existing closed transition; it does
+  * not parse UCI or generate a legal move a second time.
+  */
+private[chessjudgment] final case class ReplayLegalMoveOccurrence private[judgment] (
+    step: LineReplayStep,
+    movement: CanonicalRootLegalMove
+):
+  private val exactLowerFact = movement.fact.detail match
+    case RelationWitnessDetail.LegalMove(side, from, role, to, moveUci, capture) =>
+      side == movement.side && from == movement.from && role == movement.beforeRole &&
+        to == movement.to && EvidenceRef.sameMove(moveUci, movement.moveUci) &&
+        capture == movement.capture
+    case _ => false
+  private val exactSnapshot = movement.fact.origin match
+    case RelationEvidenceOrigin.PositionSnapshot(fen) =>
+      PrincipalVariationEvidence.sameBoardState(fen, step.fenBefore)
+    case _ => false
+  require(
+    movement.fact.kind == RelationFactKind.LegalMove &&
+      !movement.fact.hasLineProof && exactLowerFact && exactSnapshot &&
+      EvidenceRef.sameMove(movement.moveUci, step.moveUci),
+    "a replay legal-move occurrence must retain its exact canonical transition"
+  )
+
+  private[chessjudgment] lazy val occurrenceId: String =
+    BoundedCausalIdentity.digest(
+      List(
+        "replay-legal-move-occurrence:v1",
+        BoundedCausalIdentity.stepKey(step),
+        movement.fact.semanticId,
+        movement.witness.stableKey,
+        BoundedCausalIdentity.legalCaptureKey(movement.capture),
+        movement.mode.toString.toLowerCase
+      )
+    )
+
+  private[chessjudgment] def certifiedSourcePremiseIds: List[String] =
+    List(s"legal-move:${movement.fact.semanticId}")
 
 /** Semantic time-axis address of one certified L1 result. The replay step
   * identifies the exact transition occurrence; graph binding later adds the
@@ -443,6 +495,9 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     )
     calculation.structuralOccurrence(declared, occurrences)
 
+  private[chessjudgment] lazy val legalMoveOccurrence: ReplayLegalMoveOccurrence =
+    ReplayLegalMoveOccurrence(declared, relationDelta.rootMove)
+
   private[judgment] def certifiesBinding(
       transition: StructuralTransitionBinding
   ): Boolean =
@@ -578,6 +633,11 @@ private[chessjudgment] final class CanonicalLineReplay private (
 
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
+
+  private[chessjudgment] def legalMoveOccurrence(
+      step: LineReplayStep
+  ): Option[ReplayLegalMoveOccurrence] =
+    transition(step).map(_.legalMoveOccurrence)
 
   private[chessjudgment] def structuralOccurrence(
       step: LineReplayStep
