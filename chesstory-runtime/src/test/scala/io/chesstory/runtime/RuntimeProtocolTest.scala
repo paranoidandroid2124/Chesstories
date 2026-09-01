@@ -3,6 +3,7 @@ package io.chesstory.runtime
 import java.net.{ InetSocketAddress, URI }
 import java.net.http.{ HttpClient, HttpRequest, HttpResponse }
 import java.nio.charset.StandardCharsets
+import java.nio.file.{ Files, Paths }
 import java.util.concurrent.Executors
 
 import scala.concurrent.{ Await, ExecutionContext, Future }
@@ -133,6 +134,72 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(completed.progress.selectedCommentariesCompleted, 1)
     assertEquals(completed.progress.physicalWorksIssued, 1)
     assertEquals(afterRoot.progress.physicalReportsAccepted, 1)
+
+  test("v6 produces BestChoice from one LegalLine owner when the played move is best"):
+    val played = "e2e4"
+    val root = CommentaryJobReducer
+      .startJob(
+        initialFen,
+        Nil,
+        initialFen,
+        played,
+        resultingFen(played),
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .getOrElse(fail("expected the root search"))
+    val afterRoot = CommentaryJobReducer
+      .submitIssuedWorkReport(root, completedReport(root.issuedWork, rootLines), nowEpochMs = 1L)
+      .toOption
+      .getOrElse(fail("the root report must be admitted"))
+    val completed = afterRoot match
+      case value: CompletedCommentaryJob => value
+      case other => fail(s"the best played move must produce a completed review, found $other")
+    val review = completed.result match
+      case CompletedPositionCommentary.FocusedMoveReview(_, value) => value
+      case other => fail(s"expected a focused move review, found $other")
+    val packet = review.judgmentPacket
+    val rootMoves = packet.candidateLines.map(line => EvidenceRef.normalizeMove(line.ref.rootMove))
+
+    assertEquals(rootMoves.distinct.size, rootMoves.size)
+    assertEquals(
+      packet.candidateLines.filter(line => EvidenceRef.sameMove(line.ref.rootMove, played)).map(_.role),
+      List(LineNodeRole.BestReference)
+    )
+    packet.primary match
+      case PlayerFacingPrimary.BestChoice(comparisonEvidence) =>
+        val comparison = packet.evidenceGraph
+          .candidateComparisonRecord(comparisonEvidence)
+          .getOrElse(fail("expected the producer-owned BestVsSecond comparison"))
+        comparison.payload match
+          case CandidateComparisonEvidence(fact) =>
+            assertEquals(fact.kind, CandidateComparisonKind.BestVsSecond)
+            assertEquals(fact.referenceLine.rootMove, played)
+            assertEquals(fact.candidateLine.rootMove, "d2d4")
+          case other => fail(s"expected candidate comparison evidence, found $other")
+      case other => fail(s"expected BestChoice, found $other")
+
+    val response = RuntimeProtocol.encodePositionCommentaryResponse(
+      CommentaryJobSnapshot("b" * 32, "request-best-choice", Long.MaxValue, completed),
+      completed
+    )
+    val fixture = Json.parse(
+      Files.readString(
+        Paths.get("..", "judgment-evaluation", "fixtures", "public-commentary-v6", "best-choice-produced.json"),
+        StandardCharsets.UTF_8
+      )
+    )
+    assertEquals(response, fixture)
+    assertEquals((response \ "schema_version").as[String], "chesstory.position-commentary.response.v6")
+    val selectedReviews = (response \ "result" \ "selected_move_reviews").as[List[JsObject]]
+    assertEquals(selectedReviews.size, 1)
+    assertEquals((selectedReviews.head \ "selection" \ "roles").as[List[String]], List("best", "played"))
+    val primary = (selectedReviews.head \ "commentary" \ "primary").as[JsObject]
+    assertEquals((primary \ "kind").as[String], "best_choice")
+    assertEquals((primary \ "best_endpoint" \ "moves").as[List[String]].headOption, Some(played))
+    assertEquals((primary \ "runner_up_endpoint" \ "moves").as[List[String]].headOption, Some("d2d4"))
 
   test("v6 adds one restricted focus comparison only when played move is outside the root bundle"):
     val played = "a2a3"

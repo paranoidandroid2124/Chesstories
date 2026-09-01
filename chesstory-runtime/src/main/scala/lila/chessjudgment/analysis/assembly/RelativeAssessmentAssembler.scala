@@ -19,7 +19,7 @@ object RelativeAssessmentAssembler:
   final private case class RelativeAssemblyInputs(
       input: AdmittedMoveReviewInput,
       played: MoveTransitionEdge,
-      referenceTransition: MoveTransitionEdge,
+      referenceTransition: Option[MoveTransitionEdge],
       reference: CandidateLineNode,
       candidate: CandidateLineNode,
       root: PositionNodeRef,
@@ -117,7 +117,7 @@ object RelativeAssessmentAssembler:
             val assessment =
               RelativeMoveAssessment(
                 played = inputs.played,
-                referenceTransition = Some(inputs.referenceTransition),
+                referenceTransition = inputs.referenceTransition,
                 reference = inputs.reference,
                 candidate = inputs.candidate,
                 evidence = relativeEvidence,
@@ -136,9 +136,11 @@ object RelativeAssessmentAssembler:
     val input = context.input
     for
       played <- context.playedTransition
-      referenceTransition <- context.referenceTransition
       reference <- context.line(LineNodeRole.BestReference)
-      candidate <- context.line(LineNodeRole.Played)
+      candidate <- context.lineForRootMove(input.playedMoveUci)
+      referenceTransition <-
+        if EvidenceRef.sameMove(reference.ref.rootMove, input.playedMoveUci) then Some(None)
+        else context.referenceTransition.map(Some(_))
       root <- context.position(PositionNodeRole.Before).map(_.ref)
       mover <- root.sideToMove.orElse(input.sideToMove)
     yield RelativeAssemblyInputs(

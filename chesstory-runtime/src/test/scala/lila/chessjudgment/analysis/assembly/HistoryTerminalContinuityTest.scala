@@ -28,7 +28,7 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       .getOrElse(fail("expected the automatic-terminal line to normalize"))
 
     assertEquals(
-      prepared.playedLine.map(_.evaluation),
+      prepared.playedRootLineOwner.map(_.evaluation),
       Some(
         CandidateLineEvaluation.ExactAutomaticTerminal(
           List("a4b3"),

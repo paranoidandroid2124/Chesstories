@@ -363,3 +363,15 @@ case class RelativeMoveAssessment(
     relativeCauseEvidence: List[EvidenceRef] = Nil
 ):
   val confidence: EvidenceConfidence = evidence.confidence
+
+  private[chessjudgment] def canonicalParents: Option[List[EvidenceRef]] =
+    val lineParents =
+      if reference == candidate then List(reference.evidence)
+      else List(reference.evidence, candidate.evidence)
+    val parents =
+      List(played.evidence) ++
+        lineParents ++
+        referenceTransition.toList.map(_.evidence) ++
+        (primaryComparisonEvidence :: relatedComparisonEvidence) ++
+        relativeCauseEvidence
+    Option.when(parents.map(_.id).distinct.size == parents.size)(parents)

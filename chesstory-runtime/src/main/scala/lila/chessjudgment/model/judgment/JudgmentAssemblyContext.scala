@@ -32,12 +32,14 @@ final case class AdmittedMoveReviewInput(
     admittedRootRankingPair: Option[AdmittedRootRankingPair],
     positionHistory: CanonicalPositionHistory
 ):
+  private val admittedRootMoves = lines.flatMap(_.rootMove)
   require(
-    lines.groupBy(_.rootMove).values.forall(group => group.map(line => line.evaluation -> line.replay).distinct.size == 1),
-    "one root move cannot carry conflicting admitted review evaluations"
+    admittedRootMoves.size == lines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,
+    "one root move must have exactly one admitted LegalLine owner"
   )
-  def playedLine: Option[AdmittedReviewLine] =
-    lines.filter(_.role == LineNodeRole.Played) match
+
+  def playedRootLineOwner: Option[AdmittedReviewLine] =
+    lines.filter(_.rootMove.exists(EvidenceRef.sameMove(_, playedMoveUci))) match
       case line :: Nil => Some(line)
       case _           => None
 
@@ -63,6 +65,9 @@ final case class JudgmentAssemblyContext(
 
   def line(role: LineNodeRole): Option[CandidateLineNode] =
     exactlyOne(lines.filter(_.role == role))
+
+  def lineForRootMove(moveUci: String): Option[CandidateLineNode] =
+    exactlyOne(lines.filter(line => EvidenceRef.sameMove(line.ref.rootMove, moveUci)))
 
   private[chessjudgment] def lineReplay(line: LineNodeRef): Option[CanonicalLineReplay] =
     lineReplays.get(line)
@@ -251,7 +256,11 @@ final case class JudgmentAssemblyContext(
     val exactEdge = transitions.find(_.evidence.id == edge.evidence.id)
     val exactStep = lineReplays.get(line).flatMap(_.replaySteps.headOption)
     require(
-      exactLine.exists(_.role == edge.role.lineRole) &&
+      exactLine.exists(candidate =>
+        edge.role.acceptsLineOwnerRole(candidate.role) &&
+          candidate.evidence.position == edge.from &&
+          EvidenceRef.sameMove(candidate.ref.rootMove, edge.moveUci)
+      ) &&
         exactEdge.contains(edge) &&
         positions.exists(_.ref == edge.from) &&
         positions.exists(_.ref == edge.to) &&

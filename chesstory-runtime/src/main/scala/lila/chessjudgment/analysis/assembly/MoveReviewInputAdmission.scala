@@ -245,13 +245,20 @@ object MoveReviewInputAdmission:
           admitted.replay
         )
       }
-      val played =
+      val playedAdmission =
         ranked
           .find { case (admitted, _) =>
             admitted.evaluation.moves.headOption.exists(move => EvidenceRef.sameMove(move, playedMove))
           }
           .filter { case (admitted, _) =>
             admitted.evaluation.moves.size >= 2 || admitted.automaticTerminal.nonEmpty
+          }
+      val played =
+        playedAdmission
+          .filterNot { case (admitted, _) =>
+            reference.flatMap(_.rootMove).exists(referenceMove =>
+              admitted.evaluation.moves.headOption.exists(EvidenceRef.sameMove(referenceMove, _))
+            )
           }
           .map { case (admitted, index) =>
             AdmittedReviewLine(
@@ -264,7 +271,7 @@ object MoveReviewInputAdmission:
       val alternatives =
         ranked
           .filterNot { case (_, index) =>
-            reference.exists(_.rank == index + 1) || played.exists(_.rank == index + 1)
+            reference.exists(_.rank == index + 1) || playedAdmission.exists(_._2 == index)
           }
           .map { case (admitted, index) =>
             AdmittedReviewLine(
@@ -278,12 +285,15 @@ object MoveReviewInputAdmission:
       Option
         .when(lines.map(line => line.role -> line.rank).distinct.size == lines.size)(lines)
         .flatMap { exactLines =>
-          played.flatMap { playedLine =>
+          playedAdmission.flatMap { case (admittedPlayed, _) =>
             reference.flatMap { _ =>
-              val graphPlayedMove = playedLine.rootMove.getOrElse(playedMove)
               for
-                graphAfterPlayed <- playedLine.replay.replaySteps.headOption.map(_.fenAfter)
-                afterReference = reference.flatMap(_.replay.replaySteps.headOption).map(_.fenAfter)
+                graphPlayedMove <- admittedPlayed.evaluation.moves.headOption.map(EvidenceRef.normalizeMove)
+                graphAfterPlayed <- admittedPlayed.replay.replaySteps.headOption.map(_.fenAfter)
+                afterReference = reference
+                  .filterNot(_.rootMove.exists(EvidenceRef.sameMove(_, graphPlayedMove)))
+                  .flatMap(_.replay.replaySteps.headOption)
+                  .map(_.fenAfter)
               yield AdmittedMoveReviewInput(
                 beforeFen = canonicalBeforeFen,
                 playedMoveUci = graphPlayedMove,

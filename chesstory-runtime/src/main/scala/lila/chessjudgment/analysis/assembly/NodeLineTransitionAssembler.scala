@@ -374,7 +374,7 @@ object NodeLineTransitionAssembler:
   def assemble(input: AdmittedMoveReviewInput): Option[JudgmentAssemblyContext] =
     val allocator = JudgmentProvenanceAllocator.forInput(input)
     for
-      playedLine <- input.playedLine
+      playedLine <- input.playedRootLineOwner
       playedReplayStep <- playedLine.replay.replaySteps.headOption
       beforeAnalysis <- playedLine.replay.analysisBefore(playedReplayStep)
       afterPlayedAnalysis <- playedLine.replay.analysisAfter(playedReplayStep)
@@ -411,6 +411,7 @@ object NodeLineTransitionAssembler:
       val afterReference =
         for
           reference <- input.referenceLine
+          if !reference.rootMove.exists(EvidenceRef.sameMove(_, input.playedMoveUci))
           fen <- input.afterReferenceFen
           referenceAssembly <- rootLines.filter(assembly =>
             assembly.node.ref.role == reference.role &&
@@ -541,7 +542,7 @@ object NodeLineTransitionAssembler:
       edge: MoveTransitionEdge
   ): LineNodeRef =
     lines.filter(assembly =>
-      assembly.node.role == edge.role.lineRole &&
+      edge.role.acceptsLineOwnerRole(assembly.node.role) &&
         assembly.node.evidence.position == edge.from &&
         EvidenceRef.sameMove(assembly.node.ref.rootMove, edge.moveUci)
     ) match

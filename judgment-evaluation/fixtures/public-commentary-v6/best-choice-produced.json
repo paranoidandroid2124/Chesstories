@@ -1,0 +1,60 @@
+{
+  "schema_version": "chesstory.position-commentary.response.v6",
+  "annotation_policy_revision": "chesstory.verdict-threshold-policy.v2",
+  "request_id": "request-best-choice",
+  "job_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "engine_profile": "sf18-smallnet-t2-h16-v1",
+  "variant": "standard",
+  "current_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+  "focus": {
+    "kind": "played_move",
+    "played_move_uci": "e2e4",
+    "resulting_fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"
+  },
+  "progress": {
+    "phase": "completed",
+    "legal_move_count": 20,
+    "root_candidate_lines_admitted": 3,
+    "selected_commentaries_completed": 1,
+    "physical_works_issued": 1,
+    "physical_reports_accepted": 1
+  },
+  "result": {
+    "kind": "selected_move_choices",
+    "selected_move_reviews": [
+      {
+        "legal_move_index": 11,
+        "move_uci": "e2e4",
+        "selection": {
+          "roles": ["best", "played"],
+          "root_rank": 1
+        },
+        "commentary": {
+          "primary": {
+            "kind": "best_choice",
+            "comparison_evidence_id": "move-review:0:e2e4:evidence:candidate-comparison:MTA1OkJlc3RWc1NlY29uZHxXaGl0ZXxCZXN0UmVmZXJlbmNlOjE6ZTJlNHxBbHRlcm5hdGl2ZToyOmQyZDR8LTB4MS5kNjRiYzkxYjQ0OThwLTF8UGxheWFibGVMb3NzfEVuZ2luZUJhY2tlZA",
+            "runner_up_verdict_code": "playable_loss",
+            "verdict_confidence": "engine_backed",
+            "mover": "white",
+            "delta": {
+              "candidate_win_percent_delta_for_mover": -0.9185469480310502,
+              "kind": "engine_evaluation"
+            },
+            "best_endpoint": {
+              "kind": "engine_search",
+              "moves": ["e2e4", "e7e5", "g1f3"],
+              "win_percent_for_mover": 52.75875538925041,
+              "depth": 16
+            },
+            "runner_up_endpoint": {
+              "kind": "engine_search",
+              "moves": ["d2d4", "d7d5", "g1f3"],
+              "win_percent_for_mover": 51.84020844121936,
+              "depth": 16
+            }
+          }
+        }
+      }
+    ]
+  }
+}

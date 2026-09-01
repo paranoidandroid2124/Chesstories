@@ -412,12 +412,29 @@ object EvidenceBackedJudgmentPacket:
       assembly.claims.map(_.id).distinct.size == assembly.claims.size
     def exactlyOneRole[A, R](items: List[A], role: R)(itemRole: A => R): Boolean =
       items.count(item => itemRole(item) == role) == 1
+    val playedTransition = assembly.transitions.filter(_.role == TransitionEdgeRole.Played) match
+      case edge :: Nil => Some(edge)
+      case _           => None
+    val referenceLine = assembly.lines.filter(_.role == LineNodeRole.BestReference) match
+      case line :: Nil => Some(line)
+      case _           => None
+    val playedUsesReferenceOwner =
+      for
+        edge <- playedTransition
+        line <- referenceLine
+      yield EvidenceRef.sameMove(edge.moveUci, line.ref.rootMove)
     val primaryRolesUnique =
       exactlyOneRole(assembly.positions, PositionNodeRole.Before)(_.role) &&
-        exactlyOneRole(assembly.lines, LineNodeRole.Played)(_.role) &&
         exactlyOneRole(assembly.lines, LineNodeRole.BestReference)(_.role) &&
         exactlyOneRole(assembly.transitions, TransitionEdgeRole.Played)(_.role) &&
-        exactlyOneRole(assembly.transitions, TransitionEdgeRole.Reference)(_.role)
+        playedUsesReferenceOwner.exists { sharedOwner =>
+          if sharedOwner then
+            !assembly.lines.exists(_.role == LineNodeRole.Played) &&
+              !assembly.transitions.exists(_.role == TransitionEdgeRole.Reference)
+          else
+            exactlyOneRole(assembly.lines, LineNodeRole.Played)(_.role) &&
+              exactlyOneRole(assembly.transitions, TransitionEdgeRole.Reference)(_.role)
+        }
     val graphClosed =
       graphRecords.forall(record =>
         positionRefs.contains(record.ref.position) &&
@@ -591,15 +608,7 @@ object EvidenceBackedJudgmentPacket:
           assessment.primaryComparisonEvidence :: assessment.relatedComparisonEvidence
         val refs =
           assessment.evidence :: (comparisonRefs ++ assessment.relativeCauseEvidence)
-        val expectedParents =
-          List(
-            assessment.played.evidence,
-            assessment.reference.evidence,
-            assessment.candidate.evidence
-          ) ++
-            assessment.referenceTransition.toList.map(_.evidence) ++
-            comparisonRefs ++
-            assessment.relativeCauseEvidence
+        val expectedParents = assessment.canonicalParents
         val objectsBound =
           assembly.lines.contains(assessment.reference) &&
             assembly.lines.contains(assessment.candidate) &&
@@ -654,8 +663,7 @@ object EvidenceBackedJudgmentPacket:
         recordRef.scope == EvidenceScope.Counterfactual &&
         objectsBound &&
         refs.forall(registered) &&
-        expectedParents.map(_.id).distinct.size == expectedParents.size &&
-        parents == expectedParents &&
+        expectedParents.contains(parents) &&
         primaryComparisonBound &&
         relatedComparisonsBound &&
         relativeCausesBound

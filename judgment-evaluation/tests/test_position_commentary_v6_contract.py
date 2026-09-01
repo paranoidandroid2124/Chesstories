@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 from pathlib import Path
 
@@ -227,6 +228,16 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
             SCHEMAS / schema_name,
             label=schema_name,
         )
+
+    def test_producer_best_choice_fixture_matches_the_public_contract(self) -> None:
+        fixture_path = ROOT / "fixtures" / "public-commentary-v6" / "best-choice-produced.json"
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+        self.validate("position-commentary-response.schema.json", fixture)
+        selected = fixture["result"]["selected_move_reviews"]
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(selected[0]["selection"]["roles"], ["best", "played"])
+        self.assertEqual(selected[0]["commentary"]["primary"]["kind"], "best_choice")
 
     @staticmethod
     def progress(phase: str, *, issued: int, accepted: int) -> dict[str, object]:

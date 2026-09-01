@@ -54,6 +54,9 @@ enum TransitionEdgeRole:
       case Reference   => LineNodeRole.BestReference
       case Alternative => LineNodeRole.Alternative
 
+  def acceptsLineOwnerRole(role: LineNodeRole): Boolean =
+    role == lineRole || (this == Played && role == LineNodeRole.BestReference)
+
   def scope: EvidenceScope =
     this match
       case Played      => EvidenceScope.PlayedTransition

@@ -3554,7 +3554,7 @@ private[judgment] object ClosedRelationOccurrenceEvidence:
             ref.line.contains(line) &&
             ref.scope == line.role.scope &&
             ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-            line.role == edge.role.lineRole &&
+            edge.role.acceptsLineOwnerRole(line.role) &&
             EvidenceRef.sameMove(line.rootMove, edge.moveUci)
         )
       ),
@@ -3562,7 +3562,7 @@ private[judgment] object ClosedRelationOccurrenceEvidence:
         .map { case (line, ref) =>
           s"closed relation line authority mismatch: producer=${ref.producer}, layer=${ref.layer}, " +
             s"position=${ref.position == edge.from}, scope=${ref.scope}/${line.role.scope}, " +
-            s"confidence=${ref.confidence}, role=${line.role}/${edge.role.lineRole}, " +
+            s"confidence=${ref.confidence}, lineRole=${line.role}, transitionRole=${edge.role}, " +
             s"move=${line.rootMove}/${edge.moveUci}"
         }
         .getOrElse("a closed relation occurrence line must be owned by its exact line evidence")
@@ -6270,7 +6270,7 @@ final class TypedEvidenceGraph private (
               ref.line.contains(line) &&
               ref.scope == line.role.scope &&
               ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-              line.role == payload.edge.role.lineRole &&
+              payload.edge.role.acceptsLineOwnerRole(line.role) &&
               lineFact.line == line &&
               lineFact.canonicalReplay.exists(_.replaySteps.headOption.exists(step =>
                 step.ply == payload.edge.to.ply &&

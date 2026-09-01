@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { moveReviewEngineProfile } from 'lib/ceval/types';
 import {
@@ -172,37 +173,21 @@ test('projects an exact primary while withholding an unproved L2 cause', () => {
 });
 
 test('preserves BestChoice and its transmitted runner-up comparison without synthesizing improves', () => {
-  const raw = rawResponse();
-  const result = object(raw.result);
-  const selected = result.selected_move_reviews as JsonObject[];
-  const combined = selected[1]!;
-  combined.legal_move_index = 0;
-  combined.selection = { roles: ['best', 'played'], root_rank: 1 };
-  combined.commentary = rawCommentary({
-    primary: {
-      kind: 'best_choice',
-      comparison_evidence_id: 'comparison.best-vs-runner-up',
-      runner_up_verdict_code: 'inaccuracy',
-      verdict_confidence: 'engine_backed',
-      mover: 'black',
-      delta: { kind: 'engine_evaluation', candidate_win_percent_delta_for_mover: 3.25 },
-      best_endpoint: {
-        kind: 'engine_search',
-        moves: ['e7e5', 'g1f3'],
-        win_percent_for_mover: 60,
-        depth: 16,
-      },
-      runner_up_endpoint: {
-        kind: 'engine_search',
-        moves: ['c7c5', 'g1f3'],
-        win_percent_for_mover: 52,
-        depth: 16,
-      },
-    },
+  const raw = JSON.parse(
+    readFileSync(
+      new URL(
+        '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/best-choice-produced.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  ) as JsonObject;
+  const producedAfter = object(raw.focus).resulting_fen as FEN;
+  const decoded = decodeMoveReviewSnapshot(raw, {
+    requestId: 'request-best-choice',
+    subject: typedSubject(initialFen, 'e2e4', producedAfter),
+    engineProfile: moveReviewEngineProfile,
   });
-  delete object(combined.commentary).causal_explanations;
-  result.selected_move_reviews = [combined];
-  const decoded = decodeMoveReviewSnapshot(raw, decodeContext());
   assert.equal(decoded?.kind, 'completed');
   if (decoded?.kind !== 'completed') return;
   const played = selectedMoveReviewCandidate(decoded.evidence);
@@ -212,12 +197,12 @@ test('preserves BestChoice and its transmitted runner-up comparison without synt
   assert.equal(core.kind, 'best-choice');
   if (core.kind !== 'best-choice') return;
   assert.equal(core.verdictSymbol, 'none');
-  assert.equal(core.verdictCode, 'inaccuracy');
+  assert.equal(core.verdictCode, 'playable_loss');
   assert.deepEqual(core.bestChoice, {
-    runnerUpVerdictCode: 'inaccuracy',
-    runnerUpUci: 'c7c5',
+    runnerUpVerdictCode: 'playable_loss',
+    runnerUpUci: 'd2d4',
   });
-  assert.equal(core.winChance?.changePercentagePoints, 3.25);
+  assert.equal(core.bestUci, 'e2e4');
 
   for (const mutate of [
     (primary: JsonObject) => (primary.runner_up_verdict_code = 'improves_on_reference'),

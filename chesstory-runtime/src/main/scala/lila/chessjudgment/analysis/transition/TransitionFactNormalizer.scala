@@ -135,16 +135,11 @@ object TransitionFactNormalizer:
 
   def fromRelativeAssessment(assessment: RelativeMoveAssessment): EvidenceRecord =
     val parents =
-      (
-        List(
-          assessment.played.evidence,
-          assessment.reference.evidence,
-          assessment.candidate.evidence
-        ) ++
-          assessment.referenceTransition.toList.map(_.evidence) ++
-          (assessment.primaryComparisonEvidence :: assessment.relatedComparisonEvidence) ++
-          assessment.relativeCauseEvidence
-      ).distinctBy(_.id)
+      assessment.canonicalParents.getOrElse(
+        throw new IllegalArgumentException(
+          "relative assessment parent evidence ids must be unique except for one shared reference/candidate line owner"
+        )
+      )
     EvidenceRecord(
       ref = assessment.evidence,
       payload = RelativeAssessmentEvidence(assessment),
