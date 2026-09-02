@@ -1501,7 +1501,7 @@
         "15.Rae1 is a quiet rook relocation before the intervening 17.f4, exchanges on g4, and 20.f5."
       ],
       "branch_response": [
-        "The game continues 15...Qd8 16.b3 Re8 17.f4 Ng4 18.Nxg4 Bxg4 19.Bxg4 hxg4 20.f5 Nf6 21.e5 dxe5."
+        "The game continues 15...Qd8 16.b3 Ne8 17.f4 Ng4 18.Nxg4 Bxg4 19.Bxg4 hxg4 20.f5 Nf6 21.e5 dxe5."
       ],
       "pedagogical_alternatives": [
         "The source gives 15...b5 and the immediate 16.f4 as improvements, but no complete same-root sibling reaches a matched 21.e5 terminal without 15.Rae1."
