@@ -105,9 +105,9 @@
               }
             ]
           },
-          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
-          "ui_status": "pending_completion",
-          "ui_owner": "separate frontend task",
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal-resource, relation, and position-state truth."
@@ -195,9 +195,9 @@
               }
             ]
           },
-          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
-          "ui_status": "pending_completion",
-          "ui_owner": "separate frontend task",
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of capture/recapture and position-state truth."
@@ -291,9 +291,9 @@
               }
             ]
           },
-          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
-          "ui_status": "pending_completion",
-          "ui_owner": "separate frontend task",
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of slider reach, capture resources, and position state."
@@ -392,9 +392,9 @@
               }
             ]
           },
-          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
-          "ui_status": "pending_completion",
-          "ui_owner": "separate frontend task",
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal moves, capture/check resources, vacancy, and piece state."
@@ -531,9 +531,9 @@
             "proof_kind": "capture_exclusion_move_order",
             "producer_test_name": "Scala producer matches the immutable occurrence-explanation public-v6 fixture"
           },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and immutable Scala-produced fixture",
-          "ui_status": "pending_completion",
-          "ui_owner": "separate frontend task",
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, immutable Scala-produced fixture, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins canonical LegalMove occurrences and closed state/absence record IDs; it does not recalculate legal moves, capture maps, rays, or piece state."
@@ -632,9 +632,9 @@
               }
             ]
           },
-          "completed_through": "public schema and producer-based RuntimeProtocol test coverage",
-          "ui_status": "pending_completion",
-          "ui_owner": "separate frontend task",
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer consumes the existing passed-pawn event, relation issuers, position-state issuers, and singleton legal-reply inventory; it does not recompute pawn structure or legal replies."

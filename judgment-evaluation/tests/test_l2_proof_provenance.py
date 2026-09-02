@@ -33,6 +33,15 @@ ASSEMBLY = (
     / "analysis"
     / "assembly"
 )
+UI_ANALYSE = REPO / "lila-docker" / "repos" / "lila" / "ui" / "analyse"
+UI_DECODER = UI_ANALYSE / "src" / "moveReview.ts"
+UI_RENDERER = UI_ANALYSE / "src" / "view" / "moveReview.ts"
+UI_DECODER_TEST = UI_ANALYSE / "tests" / "moveReview.test.ts"
+UI_RENDERER_TEST = UI_ANALYSE / "tests" / "moveReviewView.test.ts"
+UI_OWNER = (
+    "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> "
+    "lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation"
+)
 
 CONTRACT_KEYS = {
     "contract_kind",
@@ -254,6 +263,34 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertNotIn("causal_explanations", runtime_text)
         self.assertNotIn("requested_explanations", runtime_text)
 
+    def test_typed_ui_is_the_completed_public_explanation_consumer(self) -> None:
+        ui_files = [
+            UI_DECODER,
+            UI_RENDERER,
+            UI_DECODER_TEST,
+            UI_RENDERER_TEST,
+        ]
+        for path in ui_files:
+            self.assertTrue(path.is_file())
+
+        decoder, renderer, decoder_test, renderer_test = [
+            path.read_text(encoding="utf-8") for path in ui_files
+        ]
+
+        self.assertIn("export type MoveReviewOccurrenceExplanation =", decoder)
+        self.assertIn("function projectOccurrenceExplanations(", decoder)
+        for proof_kind in {contract["wire"]["proof_kind"] for contract in self.contracts}:
+            self.assertIn(f"case '{proof_kind}':", decoder)
+        self.assertIn("function renderOccurrenceExplanation(", renderer)
+        self.assertIn(
+            "test('decodes all six proof kinds as their exact discriminated variants'",
+            decoder_test,
+        )
+        self.assertIn(
+            "test('renders the producer occurrence as ordered typed paths and provenance-owned branches'",
+            renderer_test,
+        )
+
     def test_each_family_has_one_producer_proof_wire_and_formal_test(self) -> None:
         declared_producer_files = {contract["producer"]["file"] for contract in self.contracts}
         discovered_producer_files = {
@@ -452,7 +489,8 @@ class L2ProofProvenanceTest(unittest.TestCase):
             direct_fixture = consumers.get("direct_fixture")
             if direct_fixture is None:
                 expected_completion = (
-                    "public schema and producer-based RuntimeProtocol test coverage"
+                    "public schema, producer-based RuntimeProtocol test coverage, "
+                    "and typed lila analyse decode/render coverage"
                 )
             else:
                 self.assertEqual(
@@ -474,15 +512,15 @@ class L2ProofProvenanceTest(unittest.TestCase):
                     {wire["proof_kind"]},
                 )
                 expected_completion = (
-                    "public schema, producer-based RuntimeProtocol test coverage, "
-                    "and immutable Scala-produced fixture"
+                    "public schema, producer-based RuntimeProtocol test coverage, immutable "
+                    "Scala-produced fixture, and typed lila analyse decode/render coverage"
                 )
             self.assertEqual(
                 consumers["completed_through"],
                 expected_completion,
             )
-            self.assertEqual(consumers["ui_status"], "pending_completion")
-            self.assertEqual(consumers["ui_owner"], "separate frontend task")
+            self.assertEqual(consumers["ui_status"], "completed")
+            self.assertEqual(consumers["ui_owner"], UI_OWNER)
             self.assertEqual(
                 set(consumers["ui_required_fields"]),
                 {"subject", "branches", "steps", "pieces", "closures", "proof_paths"},
