@@ -1448,6 +1448,225 @@
       ],
       "mapped_contracts": [],
       "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "basman-williams-grischuk-mvl",
+      "locators": [
+        {"document_id": "ref-009749ddb7ef4fe0a033b33e9712fc74", "pdf_page": 19}
+      ],
+      "game": "A. Grischuk-M. Vachier-Lagrave, FIDE Grand Prix (Riga) 2019",
+      "position_anchor": "The actual 17.gxf3 recapture and the source's immediate 17.Bxf3 alternative after 16...Bxf3",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "After 16...Bxf3, White can answer with the g2-pawn or the bishop on e2; this is the recapture choice itself, not a preceding preparation occurrence."
+      ],
+      "current_move_change": [
+        "17.gxf3 places the g2-pawn on f3 and leaves the e2 bishop in place, while 17.Bxf3 places that bishop on f3 and leaves the g-pawn unmoved."
+      ],
+      "branch_response": [
+        "The game chooses 17.gxf3 and later reaches 21.f4; the source contrasts 17.Bxf3 Ne5 18.Be2 c4 19.Rd2 Nbd3 20.Rb1."
+      ],
+      "pedagogical_alternatives": [
+        "The 17.Bxf3 line explains the local recapture choice; it does not certify an earlier move as preparation for changing the recapture actor."
+      ],
+      "later_consumer": [
+        "The later 21.f4 occurrence uses the pawn placed on f3 by 17.gxf3, but the source's broader dark-square and structural judgment remains outside a bounded target proposition."
+      ],
+      "needed_closed_absence": [
+        "No exact prior-preparation sibling or closed resource absence supports promoting this local choice into the target preparation-to-recapture proposition."
+      ],
+      "sibling_difference": [
+        "The two recaptures change different piece placements and lead to different continuations; they are not two terminals of one prior-preparation proof."
+      ],
+      "transposition_occurrence": [
+        "No transposition is claimed; the game and analysis recapture occurrences remain distinct."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["higher_layer_responsibility"]
+    },
+    {
+      "case_id": "basman-williams-fedoseev-mikhailovsky",
+      "locators": [
+        {"document_id": "ref-009749ddb7ef4fe0a033b33e9712fc74", "pdf_page": 81}
+      ],
+      "game": "V. Fedoseev-Mikhailovsky, Chess.com (Internet) 2020",
+      "position_anchor": "The quoted actual 15.Rae1 preparation and the later 21.e5 pawn break",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "The source explicitly says 15.Rae1 aims to prepare the eventual e4-e5 advance."
+      ],
+      "current_move_change": [
+        "15.Rae1 is a quiet rook relocation before the intervening 17.f4, exchanges on g4, and 20.f5."
+      ],
+      "branch_response": [
+        "The game continues 15...Qd8 16.b3 Re8 17.f4 Ng4 18.Nxg4 Bxg4 19.Bxg4 hxg4 20.f5 Nf6 21.e5 dxe5."
+      ],
+      "pedagogical_alternatives": [
+        "The source gives 15...b5 and the immediate 16.f4 as improvements, but no complete same-root sibling reaches a matched 21.e5 terminal without 15.Rae1."
+      ],
+      "later_consumer": [
+        "21.e5 is the exact later occurrence identified as the realization of the plan introduced by 15.Rae1."
+      ],
+      "needed_closed_absence": [
+        "A bounded proof still needs an admitted same-root sibling and exact closure showing how the later e5 resource differs when the quiet root move is absent."
+      ],
+      "sibling_difference": [
+        "The actual chain is complete, but the source alternatives do not provide the same later consumer under a paired counterfactual root."
+      ],
+      "transposition_occurrence": [
+        "No transposition is claimed; 15.Rae1 and 21.e5 must remain separate ordered game occurrences."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "modernized-benko-rb1-e4",
+      "locators": [
+        {"document_id": "ref-edf868ccf0a3425488f55ef6b4b08acf", "pdf_page": 71},
+        {"document_id": "ref-edf868ccf0a3425488f55ef6b4b08acf", "pdf_page": 76}
+      ],
+      "game": "The 9.Rb1 and 9.e4 repertoire branches after 8...Bb7",
+      "position_anchor": "The 9.Rb1 branch's 11...axb5 12.axb5 pawn recapture and the 9.e4 branch's 11...axb5 12.Bxb5 bishop recapture",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "Both source branches start after 8...Bb7, with the white rook on a1, pawn on a4, and bishop able to participate in the later b5 recapture choice."
+      ],
+      "current_move_change": [
+        "9.Rb1 vacates a1 and is explicitly explained as allowing a pawn recapture after ...axb5; 9.e4 instead begins a branch that later uses Bxb5."
+      ],
+      "branch_response": [
+        "The 9.Rb1 branch contains 9...e6 10.dxe6 fxe6 11.Be2 axb5 12.axb5 Ne4, while the 9.e4 branch contains 9...e6 10.Be2 exd5 11.exd5 axb5 12.Bxb5 Qe8+."
+      ],
+      "pedagogical_alternatives": [
+        "The nearby 9.Ra3 idea is a separate one-off route and is not merged into this two-branch boundary."
+      ],
+      "later_consumer": [
+        "The branches terminate the recapture with different actors and continue with different opponent moves; they provide no common later consumer occurrence."
+      ],
+      "needed_closed_absence": [
+        "The source does not close the absence of other legal recaptures or a shared later resource at one matched terminal."
+      ],
+      "sibling_difference": [
+        "The pawn and bishop recaptures are exact occurrence components, but their different terminals cannot be treated as one same-consumer resource-change proof."
+      ],
+      "transposition_occurrence": [
+        "A transposition noted inside the 9.e4 analysis does not merge that branch with the independent 9.Rb1 occurrence."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "beating-najdorf-fedoseev-indjic",
+      "locators": [
+        {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 293},
+        {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 300}
+      ],
+      "game": "The 7...h5 repertoire analysis citing V. Fedoseev-A. Indjic, lichess.org (Internet blitz) 2020",
+      "position_anchor": "The stated 8...Nbd7-to-f6 recapture plan contrasted with the exact 14...Nb6 ...17.fxg4 Nc4 analysis subvariation before 19.Bxf6",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "After 7...h5 8.Bg5 Nbd7, the source describes the d7 knight as the intended recapturer if White trades Bxf6."
+      ],
+      "current_move_change": [
+        "In the exact analysis subvariation, the same d7 knight travels through 14...Nb6 and 17...Nc4 instead of persisting as an f6 recapturer."
+      ],
+      "branch_response": [
+        "The parenthetical analysis subvariation contains 14...Nb6 15.Kb1 Qc7 16.g4 hxg4 17.fxg4 Nc4 18.Bxc4 bxc4 19.Bxf6 cxb3; the page's main line instead has 17.Bxf6 Bxf6."
+      ],
+      "pedagogical_alternatives": [
+        "The opening plan sentence is pedagogical motivation, not a certificate that its actor survives every analyzed continuation."
+      ],
+      "later_consumer": [
+        "19.Bxf6 removes the f6 knight, but the knight introduced by 8...Nbd7 is already on c4 and does not recapture on f6."
+      ],
+      "needed_closed_absence": [
+        "Any recapture proposition must consume the exact piece-identity route and the closed capture-recapture inventory at 19.Bxf6 rather than the earlier plan wording."
+      ],
+      "sibling_difference": [
+        "The plan description and the analysis-subvariation route are not interchangeable sibling proofs; joining them would create a false positive."
+      ],
+      "transposition_occurrence": [
+        "No transposition is claimed; the d7-b6-c4 occurrence history is the identity constraint that must be preserved."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "najdorf-bg5-v1-burridge-williamson",
+      "locators": [
+        {"document_id": "ref-638dbc429db08ca52ef07553822722d8b", "pdf_page": 305}
+      ],
+      "game": "Burridge-Williamson, email 2016 repertoire analysis",
+      "position_anchor": "20.Rxd8 Raxd8 and the rejected 20...Rfxd8 sibling before their corresponding 21.Ng6+ branch occurrences",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "After 20.Rxd8, Black can choose which rook recaptures on d8 while the f7- and h7-pawns remain candidate responders to the later knight check on g6."
+      ],
+      "current_move_change": [
+        "20...Raxd8 leaves the f8 rook in place, whereas 20...Rfxd8 moves that rook away and leaves the a8 rook on a8."
+      ],
+      "branch_response": [
+        "The source gives 20...Rfxd8 21.Ng6+ fxg6 and 20...Raxd8 21.Ng6+ hxg6 as exact branches with corresponding 21.Ng6+ occurrences."
+      ],
+      "pedagogical_alternatives": [
+        "The source's winning and equality assessments describe outcomes; they are not premises for the recapture-actor proposition."
+      ],
+      "later_consumer": [
+        "The independent 21.Ng6+ occurrence in each branch exposes its f-pawn or h-pawn recapture actor after the rook recapture choice."
+      ],
+      "needed_closed_absence": [
+        "Current lower inventories do not yet certify the complete legal-reply absence that would make either pawn the closed required responder in its branch."
+      ],
+      "sibling_difference": [
+        "Only the rook recapture actor changes at the paired root; the later move token is retained while its occurrence, responding pawn, and resulting position remain branch-specific."
+      ],
+      "transposition_occurrence": [
+        "No transposition is claimed; both rook recapture roots and their 21.Ng6+ continuations retain independent occurrence identities."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["lower_fact_gap"]
+    },
+    {
+      "case_id": "najdorf-bg5-v2-qc1-qd2",
+      "locators": [
+        {"document_id": "ref-37f7d12776c8cc2f391b4b17add2d59", "pdf_page": 668},
+        {"document_id": "ref-37f7d12776c8cc2f391b4b17add2d59", "pdf_page": 669}
+      ],
+      "game": "Repertoire analysis after 18...Rac8",
+      "position_anchor": "19.Qc1 preserving the d-file rook route, contrasted with 19.Qd2 before ...Nb6",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "At the common root after 18...Rac8, the white rook is on d1 and the queen can choose c1 or d2 from h6."
+      ],
+      "current_move_change": [
+        "19.Qc1 leaves d2 clear for the d1 rook's later route, while 19.Qd2 occupies d2 and blocks that route."
+      ],
+      "branch_response": [
+        "The source gives 19.Qc1 as the main move and states that after 19.Qd2 Nb6 White lacks 20.Bf6 Nxd5 21.Rxd5."
+      ],
+      "pedagogical_alternatives": [
+        "The separate 19.c3 Bf8 20.Qd2 Qd6 line explains Black's regrouping time and is not merged with the Qc1/Qd2 route pair."
+      ],
+      "later_consumer": [
+        "20.Bf6 Nxd5 21.Rxd5 is the exact later rook-route consumer preserved by 19.Qc1 and absent from the stated 19.Qd2 continuation."
+      ],
+      "needed_closed_absence": [
+        "The current host does not supply both book branches as admitted paired replays rooted in the observed occurrence; no line is injected from the reference."
+      ],
+      "sibling_difference": [
+        "The local route proposition resembles SquareReleaseRoute, but the current contract cannot approve it without its required observed root and paired replay authority."
+      ],
+      "transposition_occurrence": [
+        "No transposition is claimed; the Qc1 and Qd2 branch occurrences remain distinct even if a later position were semantically equal."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
     }
   ]
 }

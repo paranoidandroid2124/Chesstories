@@ -622,8 +622,22 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 507,
                 508,
             ),
+            "basman-williams-grischuk-mvl":
+                ("ref-009749ddb7ef4fe0a033b33e9712fc74", 19),
+            "basman-williams-fedoseev-mikhailovsky":
+                ("ref-009749ddb7ef4fe0a033b33e9712fc74", 81),
+            "modernized-benko-rb1-e4":
+                ("ref-edf868ccf0a3425488f55ef6b4b08acf", 71, 76),
+            "beating-najdorf-fedoseev-indjic":
+                ("ref-6661fa92ce6d237a8eb6c8e9e6c49fe", 293, 300),
+            "najdorf-bg5-v1-burridge-williamson":
+                ("ref-638dbc429db08ca52ef07553822722d8b", 305),
+            "najdorf-bg5-v2-qc1-qd2":
+                ("ref-37f7d12776c8cc2f391b4b17add2d59", 668, 669),
         }
-        self.assertEqual({entry["case_id"] for entry in self.ledger}, set(expected_locator_pages))
+        case_ids = [entry["case_id"] for entry in self.ledger]
+        self.assertEqual(len(case_ids), len(set(case_ids)))
+        self.assertEqual(set(case_ids), set(expected_locator_pages))
         used_categories: set[str] = set()
         for entry in self.ledger:
             self.assertEqual(set(entry), LEDGER_KEYS)
@@ -678,6 +692,27 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertEqual(used_categories, COVERAGE_CATEGORIES)
 
         ledger_by_id = {entry["case_id"]: entry for entry in self.ledger}
+        expected_new_boundaries = {
+            "basman-williams-grischuk-mvl":
+                ("exact_occurrence_component", ["higher_layer_responsibility"]),
+            "basman-williams-fedoseev-mikhailovsky":
+                ("exact", ["l2_join_or_demand_gap"]),
+            "modernized-benko-rb1-e4":
+                ("exact_occurrence_component", ["l2_join_or_demand_gap"]),
+            "beating-najdorf-fedoseev-indjic":
+                ("motif_only", ["l2_join_or_demand_gap"]),
+            "najdorf-bg5-v1-burridge-williamson":
+                ("exact", ["lower_fact_gap"]),
+            "najdorf-bg5-v2-qc1-qd2":
+                ("exact", ["l2_join_or_demand_gap"]),
+        }
+        for case_id, (support, categories) in expected_new_boundaries.items():
+            entry = ledger_by_id[case_id]
+            self.assertEqual(entry["occurrence_evidence"], "exact")
+            self.assertEqual(entry["causal_proposition_support"], support)
+            self.assertEqual(entry["current_coverage_categories"], categories)
+            self.assertEqual(entry["mapped_contracts"], [])
+
         goryachkina = ledger_by_id["ai-revolution-square-release-goryachkina-dubov"]
         self.assertEqual(goryachkina["causal_proposition_support"], "exact_occurrence_component")
         self.assertEqual(goryachkina["current_coverage_categories"], ["lower_fact_gap"])
