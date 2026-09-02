@@ -468,30 +468,6 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertEquals(causes.head.proofSource, causalRecords.head.ref)
     assertEquals(causes.head.subject, exactDemand(facts).subject.publicOccurrence)
 
-  test("the certified player-facing Cause retains the exact L2 occurrence"):
-    val packet = MoveReviewJudgmentOrchestrator
-      .execute(
-        RawMoveReviewInput(
-          fen = rootFen,
-          playedMoveUci = immediateMoves.head,
-          variations = List(
-            EngineLine(displacementMoves, scoreCp = 600, mate = Some(1), depth = 24),
-            EngineLine(immediateMoves, scoreCp = 0, depth = 24)
-          )
-        )
-      )
-      .getOrElse(fail("expected an evidence-backed judgment packet"))
-
-    val selected = packet.occurrenceExplanations match
-      case exact :: Nil => exact
-      case other        => fail(s"expected one requested occurrence explanation, found ${other.size}")
-    assertEquals(selected.subject.moveUci, immediateMoves.head)
-    assert(selected.rootOwnedProof match
-      case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) =>
-        result.subjectOccurrence == selected.subject && result.proofPaths.nonEmpty
-      case _ => false
-    )
-
   private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     OccurrenceExplanationAssembler.enrichProofs(
       context,

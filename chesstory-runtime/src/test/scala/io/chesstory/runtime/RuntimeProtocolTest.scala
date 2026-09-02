@@ -561,7 +561,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
         )
       )
       .getOrElse(fail("expected an evidence-backed judgment packet"))
-
     val commentary = RuntimeProtocol.moveCommentaryJson(packet)
     assertEquals((commentary \ "primary" \ "presentation").toOption, None)
     assertEquals(
@@ -598,6 +597,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(occurrenceResult.keys.intersect(forbiddenDuplicateFields), Set.empty[String])
     val proof = (occurrenceResult \ "proof").as[JsObject]
     val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((subject \ "move_uci").as[String], playedMoves.head)
     assertEquals((proof \ "subject_occurrence").toOption, None)
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
