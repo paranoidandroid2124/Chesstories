@@ -66,7 +66,7 @@ LEDGER_KEYS = {
     "causal_proposition_support",
     "premise",
     "current_move_change",
-    "actual_response",
+    "branch_response",
     "pedagogical_alternatives",
     "later_consumer",
     "needed_closed_absence",
@@ -588,7 +588,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
             for field in (
                 "premise",
                 "current_move_change",
-                "actual_response",
+                "branch_response",
                 "pedagogical_alternatives",
                 "later_consumer",
                 "needed_closed_absence",
@@ -632,6 +632,23 @@ class L2ProofProvenanceTest(unittest.TestCase):
         passed_pawn = ledger_by_id["ai-revolution-passed-pawn-route"]
         self.assertEqual(passed_pawn["causal_proposition_support"], "exact_occurrence_component")
         self.assertEqual(passed_pawn["current_coverage_categories"], ["lower_fact_gap"])
+
+        ruy_game_15 = ledger_by_id["ruy-lopez-game-15"]
+        self.assertEqual(ruy_game_15["occurrence_evidence"], "exact")
+        self.assertEqual(ruy_game_15["causal_proposition_support"], "exact")
+        self.assertIn("analysis branch", ruy_game_15["game"].lower())
+        self.assertIn("not the leko-navara main line", ruy_game_15["position_anchor"].lower())
+        self.assertTrue(
+            all("analysis" in response.lower() for response in ruy_game_15["branch_response"])
+        )
+        serialized_ruy_game_15 = json.dumps(ruy_game_15).lower()
+        self.assertNotIn("complete game records", serialized_ruy_game_15)
+        self.assertNotIn("actual line", serialized_ruy_game_15)
+        self.assertEqual(ruy_game_15["mapped_contracts"], [])
+        self.assertEqual(
+            ruy_game_15["current_coverage_categories"], ["l2_join_or_demand_gap"]
+        )
+
         exact_cases = {
             entry["case_id"]
             for entry in self.ledger

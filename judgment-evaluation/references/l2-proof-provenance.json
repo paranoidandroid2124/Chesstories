@@ -686,7 +686,7 @@
       "current_move_change": [
         "17.d5 moves the d4 pawn away before White plays b4, so the later branch no longer presents the d4 capture target."
       ],
-      "actual_response": [
+      "branch_response": [
         "17.d5 c6 18.dxc6 Bxc6 19.b4"
       ],
       "pedagogical_alternatives": [
@@ -724,7 +724,7 @@
       "current_move_change": [
         "14...Nc4 places the knight on c4; 20...Bxc6 places the bishop on c6 after the knight exchange."
       ],
-      "actual_response": [
+      "branch_response": [
         "14...Nc4 15.Bc1 Rfd8 16.f4 Be8 17.Rd3 Qb6 18.b3 Na5 19.Bb2 Nc6 20.Nxc6 Bxc6"
       ],
       "pedagogical_alternatives": [
@@ -763,7 +763,7 @@
       "current_move_change": [
         "11...Bb7 makes the later ...Bxc6 recapture available while leaving the queen on b6."
       ],
-      "actual_response": [
+      "branch_response": [
         "11...Bb7 12.Qg3 Nc6 13.Nxc6 Qxc6?!"
       ],
       "pedagogical_alternatives": [
@@ -808,7 +808,7 @@
         "15.Nf4 creates immediate threats that alter the order in which Black may play ...Kh8 and ...a4.",
         "20...e5 removes White's e5 advance; 20...Ra5 instead controls d5 before ...e5."
       ],
-      "actual_response": [
+      "branch_response": [
         "13...b4 14.Ne2 a5 15.Nf4 Kh8 16.Bg5 Nc6 17.Bxe7 Nxe7 18.Qh4 Nf6 19.Rfe1 a4 20.Bc4 e5"
       ],
       "pedagogical_alternatives": [
@@ -852,7 +852,7 @@
       "current_move_change": [
         "24.Kh2 vacates g1 before 25.Rh1 and 27.Ng1 begin separated later routes."
       ],
-      "actual_response": [
+      "branch_response": [
         "The complete game preserves the ordered occurrences 24.Kh2, 25.Rh1, 27.Ng1, 35.Ng6, and 47.Rxd5."
       ],
       "pedagogical_alternatives": [
@@ -889,7 +889,7 @@
       "current_move_change": [
         "29.g6 changes the kingside structure before the rook reaches e7 at move 35."
       ],
-      "actual_response": [
+      "branch_response": [
         "The complete game retains 29.g6 and the later 35.Re7 occurrence."
       ],
       "pedagogical_alternatives": [
@@ -926,7 +926,7 @@
       "current_move_change": [
         "The exchange on b3 changes material and structure; 40...b5 begins the later pawn break."
       ],
-      "actual_response": [
+      "branch_response": [
         "The complete game carries the imbalance from 13...Qxb3 through the long continuation to 39.f3 Bd7 40.Kf2 b5."
       ],
       "pedagogical_alternatives": [
@@ -963,7 +963,7 @@
       "current_move_change": [
         "...Rc6 releases b6 for the knight route d5-b6-c4-a3-b1."
       ],
-      "actual_response": [
+      "branch_response": [
         "The same knight follows d5-b6-c4-a3-b1 and executes ...Nxb1; Rxb1 follows."
       ],
       "pedagogical_alternatives": [
@@ -1000,7 +1000,7 @@
       "current_move_change": [
         "30.Bg2 releases the square needed for 31.Rc6."
       ],
-      "actual_response": [
+      "branch_response": [
         "30.Bg2 is followed by the exact 31.Rc6 route occurrence."
       ],
       "pedagogical_alternatives": [
@@ -1037,7 +1037,7 @@
       "current_move_change": [
         "37.Nxa6 changes the route conditions before the a-pawn advances at move 39."
       ],
-      "actual_response": [
+      "branch_response": [
         "37.Nxa6 is followed by 39.a6 and the later 41.a8=Q promotion occurrence."
       ],
       "pedagogical_alternatives": [
@@ -1064,33 +1064,33 @@
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 98},
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 105}
       ],
-      "game": "Game 15, P. Leko-D. Navara",
-      "position_anchor": "Rg3 before ...f5 and the later Rg5, contrasted with immediate Rg5",
+      "game": "Game 15, P. Leko-D. Navara; 11...Qd7 analysis branch citing M. Kuusela-K. Miettinen, correspondence 2014",
+      "position_anchor": "The analyzed 11...Qd7 12.Rg1 Bh5 13.Rg3 f5 14.Rg5 sequence; it is not the Leko-Navara main line",
       "occurrence_evidence": "exact",
       "causal_proposition_support": "exact",
       "premise": [
-        "The immediate Rg5 line permits ...Qh3+; the game first keeps the rook on g3."
+        "In the book's 11...Qd7 analysis branch, after 12.Rg1 Bh5 the queen on d7 threatens ...Qh3 and White covers h3 with 13.Rg3."
       ],
       "current_move_change": [
-        "Black's intervening ...f5 creates a new condition before the later Rg5 occurrence."
+        "The source explicitly places 13...f5 between the two rook occurrences and says that only then can White play 14.Rg5 because the queen can no longer move to h3."
       ],
-      "actual_response": [
-        "The complete game records Rg3, the intervening ...f5, and only then Rg5."
+      "branch_response": [
+        "The analysis branch continues 14.Rg5; from 14...g6 the book cites the Kuusela-Miettinen correspondence game as an example continuation."
       ],
       "pedagogical_alternatives": [
-        "Immediate Rg5 is compared with the ordered Rg3, ...f5, Rg5 sequence because it allows ...Qh3+."
+        "The prose identifies the pre-...f5 ...Qh3 resource, but it does not supply a complete immediate-Rg5 sibling line that may be promoted to a certified branch."
       ],
       "later_consumer": [
-        "The later Rg5 consumes the condition changed by ...f5; Rg3 alone is not certified as its sole cause."
+        "The analyzed 14.Rg5 occurrence consumes the condition changed by 13...f5; 13.Rg3 alone is not certified as its sole cause."
       ],
       "needed_closed_absence": [
-        "A proof must bind the exact ...Qh3+ resource and its later absence to the intervening ...f5 occurrence."
+        "A proof must bind the exact pre-...f5 ...Qh3 resource, the ...f5 transition, its later closed absence, and the analyzed 14.Rg5 consumer to admitted replay occurrences."
       ],
       "sibling_difference": [
-        "The pedagogical sibling changes both order and an intervening board condition, so it cannot be reduced to the first rook move."
+        "No complete exact sibling is supplied on these pages; the missing branch must not be reconstructed from the author's 'only now' wording or from engine rank."
       ],
       "transposition_occurrence": [
-        "No transposition is needed, but the two rook occurrences must remain temporally distinct."
+        "No transposition is needed, but Rg3, ...f5, and Rg5 must remain distinct analyzed occurrences."
       ],
       "mapped_contracts": [],
       "current_coverage_categories": ["l2_join_or_demand_gap"]
@@ -1111,7 +1111,7 @@
       "current_move_change": [
         "The prerequisite-first sequence changes the pawn and piece arrangement before the same ...Be6 move is considered."
       ],
-      "actual_response": [
+      "branch_response": [
         "15...Be6 16.Nd4 initiates the positional piece sacrifice in the game."
       ],
       "pedagogical_alternatives": [
@@ -1148,7 +1148,7 @@
       "current_move_change": [
         "14.e5 dxe5 15.f5 begins the concrete sacrifice and pawn advance sequence after the transposition."
       ],
-      "actual_response": [
+      "branch_response": [
         "14.e5 dxe5 15.f5, 16.d6, 17.Nd5/18.Ne4, and the later material gain remain ordered game occurrences."
       ],
       "pedagogical_alternatives": [
@@ -1185,7 +1185,7 @@
       "current_move_change": [
         "13...Ne7 begins an ordered transfer; 15...f5 changes the position before ...Ng6 and ...Nf4."
       ],
-      "actual_response": [
+      "branch_response": [
         "13...Ne7, 15...f5, 16...Ng6, and 17...Nf4 are exact ordered occurrences in the complete game."
       ],
       "pedagogical_alternatives": [
@@ -1222,7 +1222,7 @@
       "current_move_change": [
         "The ...Re8/...Qd7 sequence prepares ...Bf3 in one branch; ...Nd7 and the 13.Ne2-related line alter the same light-square contest differently."
       ],
-      "actual_response": [
+      "branch_response": [
         "13...Re8 14.Nf4 Qd7 15.Qh4 Bf3 is one exact practice line."
       ],
       "pedagogical_alternatives": [
@@ -1262,7 +1262,7 @@
         "20.Re1 is the quiet e-file-opening occurrence; 26.Rd6 is the source-identified move that consumes the preceding play; 36.Rc3 is a distinct later rook-sacrifice occurrence serving the c-pawn.",
         "The ...g6, ...e5, and ...h5 alternatives change different defensive resources and are not collapsed into one ranked repair."
       ],
-      "actual_response": [
+      "branch_response": [
         "The complete actual line contains 20.Re1, then 26.Rd6, then 36.Rc3 in that temporal order; surrounding Black replies remain attached to their source occurrences rather than being replaced by an engine pair."
       ],
       "pedagogical_alternatives": [
@@ -1303,7 +1303,7 @@
         "32.Bc4 blockades ...c5-c4 while threatening 33.Qb3.",
         "33.Bxf6 attacks with tempo, drives the queen away from the b-file, and thereby reduces the pressure on b2; the long-term value of combining those functions remains a higher-layer judgment."
       ],
-      "actual_response": [
+      "branch_response": [
         "32.Bc4 and 33.Bxf6 are retained as ordered actual-game occurrences; their intervening opponent replies stay attached to the complete source line rather than being replaced by an invented sibling."
       ],
       "pedagogical_alternatives": [
@@ -1344,7 +1344,7 @@
         "20...b5 is the actual queen-sacrifice occurrence, made only after the 16...Bg4 diagonal-blocking prerequisite.",
         "21.Rf1 and 22.Rb1 are strengthening occurrences that delay the queen capture until 23.Bxc3; 21.Rf1 is not itself a capture."
       ],
-      "actual_response": [
+      "branch_response": [
         "The actual line retains 16...Bg4, 20...b5 21.Rf1 ...Rfd8 22.Rb1 ...a5 23.Bxc3 as separate ordered occurrences, with White strengthening before capturing the queen. A promotion terminal shown only in analysis remains an analyzed terminal and is not promoted to the actual game."
       ],
       "pedagogical_alternatives": [
