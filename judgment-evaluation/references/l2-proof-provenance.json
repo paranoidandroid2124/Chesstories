@@ -42,6 +42,32 @@
     "l2_join_or_demand_gap",
     "higher_layer_responsibility"
   ],
+  "p0_corrections": [
+    {
+      "id": "canonical-causal-identity-keys",
+      "status": "fixed",
+      "owners": [
+        "CausalBranchRole.stableKey",
+        "VerticalRelationContractKind.id",
+        "BoundedCausalContractKind.semanticNamespace"
+      ],
+      "affected_identity_inputs": [
+        "ReplayVerticalRelationOccurrence",
+        "ReplayVerticalRelationOccurrenceBinding",
+        "CausalVerticalRelationPremiseUse",
+        "CausalClosedAbsenceBinding",
+        "CausalClosedStateBinding",
+        "BoundedCausalContractManifest.stableKey implementations",
+        "BoundedCausalDependencyManifest",
+        "BoundedCausalDependencyFingerprint"
+      ],
+      "producer_fixtures": [
+        "judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json",
+        "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json"
+      ],
+      "invariant": "Every path, dependency, closed-use, and Cause identity consumes the canonical branch-role and contract keys; semantic proposition, occurrence, branch, move sequence, and lower-premise contents remain unchanged."
+    }
+  ],
   "contracts": [
     {
       "contract_kind": "UniqueCheckReplyDefenderDisplacementBeforeCapture",
@@ -286,7 +312,7 @@
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 907,
+                "line": 1201,
                 "name": "v6 commentary keeps direct line-access proof in its exact typed channel"
               }
             ]
@@ -383,11 +409,11 @@
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 1022,
+                "line": 1316,
                 "name": "v6 commentary serializes the exact one-leg square-release route proof"
               },
               {
-                "line": 1148,
+                "line": 1442,
                 "name": "v6 commentary preserves the Silicon Road multi-leg route and all five check replies"
               }
             ]
@@ -571,6 +597,148 @@
       }
     },
     {
+      "contract_kind": "RelocationEnablesRecapture",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
+        "symbol": "OccurrenceExplanationAssembler",
+        "method": "relocationEnablesRecaptureRecords"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "RelocationEnablesRecaptureEvidence"
+      },
+      "wire": {
+        "proof_kind": "relocation_enables_recapture",
+        "variant_definition": "relocationEnablesRecaptureOccurrenceExplanation",
+        "proof_field": "proof",
+        "proof_definition": "occurrenceRelocationEnablesRecaptureProof"
+      },
+      "audit_mapping": {
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala#OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords",
+        "coordinate_piece_identity_proposition": {
+          "statement": "Across two same-root admitted lines, the same identified attacker captures the same identified target; the tracked responder's exact seed-to-staging relocation and retained trajectory enable its recapture on the capture mover's landing square in the relocated-responder branch, while the retained-responder sibling keeps that responder at seed and certifies the exact seed-to-recapture-square legal move absent.",
+          "wire_fields": ["participants", "attacker_at_common_root", "attacker_at_capture", "target_at_common_root", "captured_target", "recapture_square", "tracked_responder_at_seed", "tracked_responder_at_staging", "other_recapturer", "relocation", "target_capture", "relocated_responder_recapture", "retained_other_recapture"]
+        },
+        "lower_premises": {
+          "contracts": ["capture_recapture_inventory", "legal_move", "object_continuity_step"],
+          "dynamic_id_fields": ["result_id", "legal_move_semantic_id", "transition_footprint_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
+          "issuer_source_kinds": ["capture-recapture relation result owner", "canonical LegalMove owner", "canonical transition-footprint owner", "canonical source premise IDs"]
+        },
+        "closed_inventory": {
+          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
+          "fields": ["semantic_proof_id", "query", "position"],
+          "certified_absence_or_state": ["retained_seed_recapture_absent", "complete moved-or-retained object continuity for target, attacker, and responder in both branches", "every retained step's exact OccupiedBy state", "every moved or retained step's exact transition-footprint occurrence"]
+        },
+        "branch_occurrence": {
+          "roles": ["relocated_responder", "retained_responder"],
+          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
+          "provenance_fields": ["root_provenance", "provenance"]
+        },
+        "proof_paths_transposition": {
+          "cardinality": "exactly_one_current_contract",
+          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
+          "rule": "Each role has one exact lower authority, so one occurrence has one conjunctive path; semantic_id may coincide after transposition while subject occurrence, both branch owners, ordered replay occurrences, path_occurrence_id, and Cause remain distinct"
+        },
+        "dependency_cache": {
+          "changed_dependencies": ["subject transition occurrence", "both branch owners, root transitions, and complete replays", "all capture-recapture result and source IDs", "every legal-move occurrence and source ID", "all six object continuities with selected primary or secondary transition, transition-footprint, and retained-state IDs", "closed seed-to-recapture-square absence ID", "all proof path occurrence IDs"],
+          "fingerprint_field": "dependency_fingerprint",
+          "cache_owner": "sole producer deterministic graph record; no separate public cache"
+        },
+        "consumers": {
+          "cause": "OccurrenceExplanationCause",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
+          "runtime_field": "occurrence_explanations",
+          "schema_variant": "relocationEnablesRecaptureOccurrenceExplanation",
+          "runtime_producer_tests": {
+            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
+            "cases": [
+              {
+                "line": 907,
+                "name": "v6 commentary serializes relocation-enabled recapture from its occurrence Cause"
+              }
+            ]
+          },
+          "direct_fixture": {
+            "file": "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json",
+            "proof_kind": "relocation_enables_recapture",
+            "producer_test_name": "v6 commentary serializes relocation-enabled recapture from its occurrence Cause"
+          },
+          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, immutable Scala-produced fixture, and typed lila analyse decode/render coverage",
+          "ui_status": "completed",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
+        },
+        "no_recomputation_owner": "The L2 producer joins admitted LegalLine replay, canonical LegalMove occurrences, capture-recapture result owners, and closed position-state and relation-absence records; PositionRelationExtractor remains the owner of legal moves, capture-recapture resources, and piece state."
+      },
+      "implementation_status": "current_exact_proof",
+      "reference_support": "exact_proposition_anchor",
+      "references": [
+        {
+          "support": "exact_proposition_anchor",
+          "locator": {
+            "document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e",
+            "pdf_page": 137
+          }
+        },
+        {
+          "support": "exact_proposition_anchor",
+          "locator": {
+            "document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e",
+            "pdf_page": 139
+          }
+        },
+        {
+          "support": "exact_occurrence_component",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 104
+          }
+        },
+        {
+          "support": "exact_proposition_anchor",
+          "locator": {
+            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
+            "pdf_page": 105
+          }
+        },
+        {
+          "support": "exact_occurrence_component",
+          "locator": {
+            "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
+            "pdf_page": 231
+          }
+        },
+        {
+          "support": "exact_proposition_anchor",
+          "locator": {
+            "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
+            "pdf_page": 232
+          }
+        },
+        {
+          "support": "exact_occurrence_component",
+          "locator": {
+            "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
+            "pdf_page": 233
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "best_move",
+        "forced_recapture",
+        "general_move_order",
+        "overload",
+        "preparation",
+        "preservation",
+        "sole_recapturer",
+        "unique_recapture"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/RelocationEnablesRecaptureTest.scala",
+        "symbol": "RelocationEnablesRecaptureTest"
+      }
+    },
+    {
       "contract_kind": "PassedPawnProgressRealizedAfterOnlyLegalReply",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.scala",
@@ -627,7 +795,7 @@
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 1224,
+                "line": 1518,
                 "name": "v6 commentary serializes the closed passed-pawn occurrence result from its occurrence Cause"
               }
             ]
@@ -753,31 +921,30 @@
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 145}
       ],
       "game": "Game 16, Naumann-Areshchenko",
-      "position_anchor": "11...Bb7 before ...Nc6 and the immediate 11...Nc6?! sibling",
+      "position_anchor": "The same-root 11...Bb7 relocated-responder branch and 11...Nc6?! retained-responder sibling before the matched Nxc6 capture",
       "occurrence_evidence": "exact",
       "causal_proposition_support": "exact",
       "premise": [
-        "Black wants to develop ...Nc6 and answer Nxc6 with the bishop rather than the queen.",
-        "The bishop is not on b7 in the immediate 11...Nc6?! sibling."
+        "The same white knight from d4 captures the same black knight on c6 in both exact branches.",
+        "The tracked black bishop starts on c8; the other recapturer is the black queen on b6."
       ],
       "current_move_change": [
-        "11...Bb7 makes the later ...Bxc6 recapture available while leaving the queen on b6."
+        "11...Bb7 relocates the tracked bishop from c8 to b7, from where that same bishop can later recapture on c6."
       ],
       "branch_response": [
-        "11...Bb7 12.Qg3 Nc6 13.Nxc6 Qxc6?!"
+        "The relocated-responder analysis branch is 11...Bb7 12.Qg3 Nc6 13.Nxc6 Bxc6!; the retained-responder sibling is 11...Nc6?! 12.Nxc6 Qxc6."
       ],
       "pedagogical_alternatives": [
-        "11...Nc6?! 12.Nxc6 Qxc6 13.Qg3 b4 14.Bxf6 Bxf6 15.Rxd6",
-        "After 11...Bb7, 13...Bxc6! is the prepared recapture that the game did not use.",
+        "The game used 13...Qxc6?! after 11...Bb7, while the book supplies 13...Bxc6! as the exact relocated-responder recapture alternative.",
+        "The continuation 11...Nc6?! 12.Nxc6 Qxc6 13.Qg3 b4 14.Bxf6 Bxf6 15.Rxd6 explains the practical consequence but is not part of the certified recapture-path proposition.",
         "9...Qb6 is recommended for soundness and playability while 9...Qc7 is described as more theory-heavy, not as an L2 rank certificate."
       ],
       "later_consumer": [
-        "13...Bxc6 would consume the bishop placement established by 11...Bb7.",
-        "15.Rxd6 in the premature sibling consumes the queen recapture's tempo exposure."
+        "13...Bxc6 immediately consumes the c8-b7 responder relocation after the matched Nxc6 occurrence."
       ],
       "needed_closed_absence": [
-        "The prepared branch needs exact bishop identity, legal recapture, and continuation ownership.",
-        "The premature sibling needs a closed statement of which recapturer exists and which tempo-gaining reply remains legal."
+        "The relocated-responder branch consumes the exact c8-b7 and b7-c6 LegalMove occurrences, the responder trajectory states, and the Nxc6 capture-recapture inventory.",
+        "The retained-responder sibling keeps the c8 bishop through Nxc6 and consumes the closed absence of the exact c8-c6 legal move; it does not claim that Qxc6 is the sole legal recapture."
       ],
       "sibling_difference": [
         "The same ...Nc6 idea before ...Bb7 forces a queen recapture; after ...Bb7 the bishop can recapture on c6."
@@ -785,8 +952,8 @@
       "transposition_occurrence": [
         "The notes also identify a 12...Nc6 continuation that can transpose to the later ...Bxc6 variation; move-order occurrence must not be merged with its equal board state."
       ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      "mapped_contracts": ["RelocationEnablesRecapture"],
+      "current_coverage_categories": ["current_exact_proof"]
     },
     {
       "case_id": "najdorf-game-18",
@@ -946,6 +1113,45 @@
       ],
       "mapped_contracts": [],
       "current_coverage_categories": ["lower_fact_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "ai-revolution-recapture-relocation",
+      "locators": [
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 104},
+        {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 105}
+      ],
+      "game": "FIDE Candidates 2020-21 chapter analysis citing Wojtaszek-D. Navara, Prague 2021",
+      "position_anchor": "After 13.a5 Rfe8 14.Re1, the game branch 14...Bxf4?! and parenthetical analysis sibling 14...Bxf3! before the matched c6-bishop capture on f3",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "The same black bishop from c6 captures the same white knight on f3 in both exact analysis branches.",
+        "The tracked white queen starts on c1; the other recapturer is the white bishop on g2."
+      ],
+      "current_move_change": [
+        "14...Bxf4 15.Qxf4 relocates the tracked queen from c1 to f4 before the c6 bishop captures on f3."
+      ],
+      "branch_response": [
+        "The game branch is 14...Bxf4?! 15.Qxf4 Bxf3 16.Qxf3; the parenthetical analysis sibling is 14...Bxf3! 15.Bxf3 Bxf4 16.Qxf4."
+      ],
+      "pedagogical_alternatives": [
+        "The source's solid-position and opening-outcome assessments are explanatory evaluation, not proof premises."
+      ],
+      "later_consumer": [
+        "16.Qxf3 immediately consumes the c1-f4 responder relocation after the matched ...Bxf3 occurrence."
+      ],
+      "needed_closed_absence": [
+        "The relocated-responder branch consumes the exact c1-f4 and f4-f3 LegalMove occurrences, every intervening queen state, and the ...Bxf3 capture-recapture inventory.",
+        "The retained-responder sibling keeps the c1 queen through ...Bxf3 and consumes the closed absence of the exact c1-f3 legal move; it does not certify that Bxf3 is the sole recapture."
+      ],
+      "sibling_difference": [
+        "The intervening 14...Bxf4 15.Qxf4 sequence changes the exact responder to the later ...Bxf3 capture from the g2 bishop to the c1-origin queen."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed; the c1-f4-f3 queen occurrence history remains distinct from the g2-f3 bishop occurrence."
+      ],
+      "mapped_contracts": ["RelocationEnablesRecapture"],
+      "current_coverage_categories": ["current_exact_proof"]
     },
     {
       "case_id": "ai-revolution-square-release-goryachkina-dubov",
@@ -1557,6 +1763,46 @@
       ],
       "mapped_contracts": [],
       "current_coverage_categories": ["l2_join_or_demand_gap"]
+    },
+    {
+      "case_id": "beating-najdorf-qe2-recapture-relocation",
+      "locators": [
+        {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 231},
+        {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 232},
+        {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 233}
+      ],
+      "game": "Beating the Najdorf: Rare Lines, 6.Qe2 e5 repertoire analysis",
+      "position_anchor": "After the common 7...Be7 8.Bg5 Be6 root, the retained-responder 9.Bxf6 sibling and relocated-responder 9.O-O-O Nbd7 branch before the matched Bxf6 capture",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact",
+      "premise": [
+        "The same white bishop from g5 captures the same black knight on f6 in both exact analysis branches.",
+        "The tracked black knight starts on b8; the other recapturer is the black bishop on e7."
+      ],
+      "current_move_change": [
+        "After 9.O-O-O, 9...Nbd7 relocates the tracked knight from b8 to d7 before Bxf6."
+      ],
+      "branch_response": [
+        "The relocated-responder branch is 9.O-O-O Nbd7 10.Bxf6 Nxf6; the retained-responder sibling is 9.Bxf6 Bxf6."
+      ],
+      "pedagogical_alternatives": [
+        "The source says White should capture the f6 knight before Black moves the other knight to d7; that wording supplies the exact sibling relation but does not certify bestness or uniqueness."
+      ],
+      "later_consumer": [
+        "10...Nxf6 immediately consumes the b8-d7 responder relocation after the matched Bxf6 occurrence."
+      ],
+      "needed_closed_absence": [
+        "The relocated-responder branch consumes the exact b8-d7 and d7-f6 LegalMove occurrences, every intervening knight state, and the Bxf6 capture-recapture inventory.",
+        "The retained-responder sibling keeps the b8 knight through Bxf6 and consumes the closed absence of the exact b8-f6 legal move; it does not certify that Bxf6 is the sole recapture."
+      ],
+      "sibling_difference": [
+        "Without the intervening ...Nbd7 occurrence, the e7 bishop recaptures on f6; after ...Nbd7, the same tracked b8 knight recaptures from d7."
+      ],
+      "transposition_occurrence": [
+        "No transposition is needed; the b8-d7-f6 knight history and e7-f6 bishop occurrence remain independent."
+      ],
+      "mapped_contracts": ["RelocationEnablesRecapture"],
+      "current_coverage_categories": ["current_exact_proof"]
     },
     {
       "case_id": "beating-najdorf-fedoseev-indjic",

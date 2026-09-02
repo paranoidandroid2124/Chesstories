@@ -257,7 +257,7 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     assertNotEquals(changed._1, baseline._1)
     assertEquals(changed._2, baseline._2)
 
-  test("a non-actionable comparison still produces the explicitly requested passed-pawn occurrence"):
+  test("a close-score comparison still produces the explicitly requested passed-pawn occurrence"):
     val quietInput = singletonAnalysisContinuation.copy(
       variations = List(
         EngineLine(List("f7e7", "h8g8", "e7e8"), scoreCp = 20, depth = 20),
@@ -265,11 +265,6 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
       )
     )
     val resolved = MoveReviewJudgmentOrchestrator.execute(quietInput).getOrElse(fail("expected a review packet"))
-    val comparison = resolved.evidenceGraph.records.collectFirst {
-      case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == CandidateComparisonKind.PlayedVsBest => fact
-    }.getOrElse(fail("expected a quiet PlayedVsBest comparison"))
-    assert(!comparison.comparison.verdict.isActionableLoss)
     assert(resolved.evidenceGraph.records.exists(_.payload.isInstanceOf[PassedPawnResultEventEvidence]))
     val proofRecords = resolved.evidenceGraph.records.filter(
       _.payload.isInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]

@@ -1,0 +1,915 @@
+{
+  "schema_version" : "chesstory.position-commentary.response.v6",
+  "annotation_policy_revision" : "chesstory.verdict-threshold-policy.v2",
+  "request_id" : "request-relocation-enables-recapture",
+  "job_id" : "dddddddddddddddddddddddddddddddd",
+  "engine_profile" : "sf18-smallnet-t2-h16-v1",
+  "variant" : "standard",
+  "current_fen" : "r3k3/3pq3/8/4P3/8/8/P7/K7 b q - 0 1",
+  "focus" : {
+    "kind" : "played_move",
+    "played_move_uci" : "d7d5",
+    "resulting_fen" : "r3k3/4q3/8/3pP3/8/8/P7/K7 w q d6 0 2"
+  },
+  "progress" : {
+    "phase" : "completed",
+    "legal_move_count" : 29,
+    "root_candidate_lines_admitted" : 3,
+    "selected_commentaries_completed" : 1,
+    "physical_works_issued" : 1,
+    "physical_reports_accepted" : 1
+  },
+  "result" : {
+    "kind" : "selected_move_choices",
+    "selected_move_reviews" : [ {
+      "legal_move_index" : 6,
+      "move_uci" : "a8b8",
+      "selection" : {
+        "roles" : [ "best" ],
+        "root_rank" : 1
+      },
+      "line_insight" : {
+        "endpoint" : {
+          "kind" : "engine_search",
+          "moves" : [ "a8b8" ],
+          "win_percent_for_mover" : 67.6211637485054,
+          "depth" : 16
+        }
+      }
+    }, {
+      "legal_move_index" : 9,
+      "move_uci" : "d7d5",
+      "selection" : {
+        "roles" : [ "played" ],
+        "root_rank" : 2
+      },
+      "commentary" : {
+        "primary" : {
+          "kind" : "move_verdict",
+          "comparison_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:candidate-comparison:OTU6UGxheWVkVnNCZXN0fEJsYWNrfEJlc3RSZWZlcmVuY2U6MTphOGI4fFBsYXllZDoyOmQ3ZDV8LTB4MS4xOWYwNDk2NjE0YTljcDR8TWlzdGFrZXxFbmdpbmVCYWNrZWQ",
+          "verdict_code" : "mistake",
+          "verdict_confidence" : "engine_backed",
+          "mover" : "black",
+          "delta" : {
+            "candidate_win_percent_delta_for_mover" : -17.621163748505396,
+            "kind" : "engine_evaluation"
+          },
+          "reference_endpoint" : {
+            "kind" : "engine_search",
+            "moves" : [ "a8b8" ],
+            "win_percent_for_mover" : 67.6211637485054,
+            "depth" : 16
+          },
+          "played_endpoint" : {
+            "kind" : "engine_search",
+            "moves" : [ "d7d5", "e5d6", "e7d6" ],
+            "win_percent_for_mover" : 50,
+            "depth" : 16
+          }
+        },
+        "occurrence_explanations" : [ {
+          "cause_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:occurrence-explanation:MjI4Om1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OmV2aWRlbmNlOnRyYW5zaXRpb246TVRveGZETTFPbkl6YXpNdk0zQnhNeTg0THpSUU15ODRMemd2VURjdlN6Y2dZaUJ4SUMwZ01DQXhmRFE2WkRka05Yd3hPako4TXpZNmNqTnJNeTgwY1RNdk9DOHpjRkF6THpndk9DOVFOeTlMTnlCM0lIRWdaRFlnTUNBeXw1MDpjYXVzYWwtcHJvcG9zaXRpb246cmVsb2NhdGlvbi1lbmFibGVzLXJlY2FwdHVyZTp2MXw2NDo2NDMwZDJmMDNiNzg0ZGE0ZmEwYzAzMjU5OWFiZDZmMDk1NjgwZGMwOTc0NjI4NWE2MmRmYTJiZTg2MTIxMDc4fDY0OmUwZGQ5ZDVmMjY5OTI2ZDQ4ZTFiMmZiZWU1ZGMxMGM5ZTc5N2U0YjI4NzMzYjI4ZjIwMjhlYzQwZjAzZWNkYTN8NjQ6NDE0YWYxYmQ5ZWM4ZDQ0ZTZlYmE5NjFmODRmNDNhNTA5ZWM2N2E2NzQxOTMxMTc5YTk0MTczYjQ2NTY3M2U0Znw2NjpbMTA1OGVlY2MzZDYxZmYyYjFmMTI3MzQ2YjliZWUyMGNkNjkwYTBmNGVlZGQ3YjQ4MDc0ZGViNzllNTczYTQ2ZF0",
+          "subject_occurrence" : {
+            "occurrence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNXwxOjJ8MzY6cjNrMy80cTMvOC8zcFAzLzgvOC9QNy9LNyB3IHEgZDYgMCAy",
+            "line_owner_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+            "transition_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNXwxOjJ8MzY6cjNrMy80cTMvOC8zcFAzLzgvOC9QNy9LNyB3IHEgZDYgMCAy",
+            "move_uci" : "d7d5",
+            "root_provenance" : "observed_game_root",
+            "line_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+            "start" : {
+              "fen" : "r3k3/3pq3/8/4P3/8/8/P7/K7 b q - 0 1",
+              "ply" : 1
+            },
+            "destination" : {
+              "fen" : "r3k3/4q3/8/3pP3/8/8/P7/K7 w q d6 0 2",
+              "ply" : 2
+            }
+          },
+          "proof_kind" : "relocation_enables_recapture",
+          "proof" : {
+            "source_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:causal-proof:causal-proposition:relocation-enables-recapture:v1:6430d2f03b784da4fa0c032599abd6f095680dc09746285a62dfa2be86121078:e0dd9d5f269926d48e1b2fbee5dc10c9e797e4b28733b28f2028ec40f03ecda3:414af1bd9ec8d44e6eba961f84f43a509ec67a6741931179a94173b465673e4f:1058eecc3d61ff2b1f127346b9bee20cd690a0f4eedd7b48074deb79e573a46d:subject:move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNXwxOjJ8MzY6cjNrMy80cTMvOC8zcFAzLzgvOC9QNy9LNyB3IHEgZDYgMCAy",
+            "semantic_id" : "6430d2f03b784da4fa0c032599abd6f095680dc09746285a62dfa2be86121078",
+            "occurrence_id" : "e0dd9d5f269926d48e1b2fbee5dc10c9e797e4b28733b28f2028ec40f03ecda3",
+            "dependency_fingerprint" : "414af1bd9ec8d44e6eba961f84f43a509ec67a6741931179a94173b465673e4f",
+            "relocated_responder_branch" : {
+              "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+              "line_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+              "line_owner_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+              "root_transition_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOHwxOjJ8MzU6MmtyNC8zcHEzLzgvNFAzLzgvOC9QNy9LNyB3IC0gLSAxIDI",
+              "branch_role" : "relocated_responder",
+              "root_provenance" : "counterfactual_analyzed_root",
+              "root_move" : "e8c8",
+              "steps" : [ {
+                "step_index" : 0,
+                "provenance" : "certified_analysis_move",
+                "ply" : 2,
+                "move_uci" : "e8c8",
+                "fen_before" : "r3k3/3pq3/8/4P3/8/8/P7/K7 b q - 0 1",
+                "fen_after" : "2kr4/3pq3/8/4P3/8/8/P7/K7 w - - 1 2"
+              }, {
+                "step_index" : 1,
+                "provenance" : "certified_analysis_move",
+                "ply" : 3,
+                "move_uci" : "a2a3",
+                "fen_before" : "2kr4/3pq3/8/4P3/8/8/P7/K7 w - - 1 2",
+                "fen_after" : "2kr4/3pq3/8/4P3/8/P7/8/K7 b - - 0 2"
+              }, {
+                "step_index" : 2,
+                "provenance" : "certified_analysis_move",
+                "ply" : 4,
+                "move_uci" : "d7d5",
+                "fen_before" : "2kr4/3pq3/8/4P3/8/P7/8/K7 b - - 0 2",
+                "fen_after" : "2kr4/4q3/8/3pP3/8/P7/8/K7 w - d6 0 3"
+              }, {
+                "step_index" : 3,
+                "provenance" : "certified_analysis_move",
+                "ply" : 5,
+                "move_uci" : "e5d6",
+                "fen_before" : "2kr4/4q3/8/3pP3/8/P7/8/K7 w - d6 0 3",
+                "fen_after" : "2kr4/4q3/3P4/8/8/P7/8/K7 b - - 0 3"
+              }, {
+                "step_index" : 4,
+                "provenance" : "certified_analysis_move",
+                "ply" : 6,
+                "move_uci" : "d8d6",
+                "fen_before" : "2kr4/4q3/3P4/8/8/P7/8/K7 b - - 0 3",
+                "fen_after" : "2k5/4q3/3r4/8/8/P7/8/K7 w - - 0 4"
+              } ]
+            },
+            "retained_responder_branch" : {
+              "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+              "line_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+              "line_owner_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+              "root_transition_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNXwxOjJ8MzY6cjNrMy80cTMvOC8zcFAzLzgvOC9QNy9LNyB3IHEgZDYgMCAy",
+              "branch_role" : "retained_responder",
+              "root_provenance" : "observed_game_root",
+              "root_move" : "d7d5",
+              "steps" : [ {
+                "step_index" : 0,
+                "provenance" : "observed_game_move",
+                "ply" : 2,
+                "move_uci" : "d7d5",
+                "fen_before" : "r3k3/3pq3/8/4P3/8/8/P7/K7 b q - 0 1",
+                "fen_after" : "r3k3/4q3/8/3pP3/8/8/P7/K7 w q d6 0 2"
+              }, {
+                "step_index" : 1,
+                "provenance" : "certified_analysis_move",
+                "ply" : 3,
+                "move_uci" : "e5d6",
+                "fen_before" : "r3k3/4q3/8/3pP3/8/8/P7/K7 w q d6 0 2",
+                "fen_after" : "r3k3/4q3/3P4/8/8/8/P7/K7 b q - 0 2"
+              }, {
+                "step_index" : 2,
+                "provenance" : "certified_analysis_move",
+                "ply" : 4,
+                "move_uci" : "e7d6",
+                "fen_before" : "r3k3/4q3/3P4/8/8/8/P7/K7 b q - 0 2",
+                "fen_after" : "r3k3/8/3q4/8/8/8/P7/K7 w q - 0 3"
+              } ]
+            },
+            "proof_paths" : [ {
+              "path_occurrence_id" : "1058eecc3d61ff2b1f127346b9bee20cd690a0f4eedd7b48074deb79e573a46d",
+              "premises" : [ {
+                "role" : "relocated_recapture_inventory",
+                "contract" : "capture_recapture_inventory",
+                "result_id" : "capture_recapture_inventory:21916ab0ec7b5f66cd30f56f96913f9b35f24888c022433e601bc1f6e4a5a621",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "31256f771c740d38e04ae159a7905f7c775838831d9e9ae514b05570d29f700e",
+                "source_premise_ids" : [ "31256f771c740d38e04ae159a7905f7c775838831d9e9ae514b05570d29f700e", "geometric_recapture:black:d8:rook:d6:pawn:position:after:position_fact:geometric_control:2d8078f5c02a35b8026709ecde27b91908e680a8ce1495bd2eb25685a84d696d:21a7fa30891b502692c0386ebc1cd6aa1847a9e028b79359a5c2ff63ef88d2fc", "geometric_recapture:black:e7:queen:d6:pawn:position:after:position_fact:geometric_control:e20490b381ec5a9349363945f366da427061e01ecbd43cf64fc237ebe0579f7b:087ee965560f7d2bc94ab47ecc9e77bb1fa17ed02d8fe77a227775e83cb80993", "legal_recapture:black:queen>queen:e7-d6:e7d6:white:pawn@d6:position:after:position_fact:legal_move:d9d5cb019f3392667fe0736f7eed0258258b78c5d3d8fb3cb1c3ac4fd9dafbcb:79ee5a5d1031ec4e65bb7e75a55e74e69f6ebddb7fac7df96b2cb79c4614d678", "legal_recapture:black:rook>rook:d8-d6:d8d6:white:pawn@d6:position:after:position_fact:legal_move:12e11ea80092112e72a081c759f6be30cdf929a7553e46e251c18b7305d6b498:d3aba96cdb117d5ec1835c2e66b9fb2374fa951b93812eca3d0f8c3f65107d2a", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "root_capture:root_transition:transition_fact:legal_move:d2ae2f6831f15309a35049fedd9832c8ee6d7e6eb10f3fbba417469ab31ac1eb:c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 3
+              }, {
+                "role" : "retained_recapture_inventory",
+                "contract" : "capture_recapture_inventory",
+                "result_id" : "capture_recapture_inventory:93665255012d800e2994c89d832243d9c39131b6c70772089a51141247a1052e",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "fc012daf8c901baabfd1a49d6ab4e48238cb835eae3b58fdd8f3eb8d0769a0aa",
+                "source_premise_ids" : [ "fc012daf8c901baabfd1a49d6ab4e48238cb835eae3b58fdd8f3eb8d0769a0aa", "geometric_recapture:black:e7:queen:d6:pawn:position:after:position_fact:geometric_control:e20490b381ec5a9349363945f366da427061e01ecbd43cf64fc237ebe0579f7b:087ee965560f7d2bc94ab47ecc9e77bb1fa17ed02d8fe77a227775e83cb80993", "legal_recapture:black:queen>queen:e7-d6:e7d6:white:pawn@d6:position:after:position_fact:legal_move:d9d5cb019f3392667fe0736f7eed0258258b78c5d3d8fb3cb1c3ac4fd9dafbcb:79ee5a5d1031ec4e65bb7e75a55e74e69f6ebddb7fac7df96b2cb79c4614d678", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ", "root_capture:root_transition:transition_fact:legal_move:d2ae2f6831f15309a35049fedd9832c8ee6d7e6eb10f3fbba417469ab31ac1eb:c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 1
+              }, {
+                "role" : "relocated_branch_target_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "e8c8",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d7",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d7",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "b4efb2c8d4f22b9d44a557a7502791845928ee50c7c2e1a23672316be04ed0f7",
+                "transition_footprint_id" : "eb1f3bbec9e75ff23f9b8ddf8833ea4a0613d4c3b7a7b09d90142ab93fe15a7d",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "b5f3b74036d4906302947374ff021b8f27d77cf7784e0f0c9b7dd66119a02907",
+                "source_premise_ids" : [ "b5f3b74036d4906302947374ff021b8f27d77cf7784e0f0c9b7dd66119a02907", "legal-move:b4efb2c8d4f22b9d44a557a7502791845928ee50c7c2e1a23672316be04ed0f7", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:eb1f3bbec9e75ff23f9b8ddf8833ea4a0613d4c3b7a7b09d90142ab93fe15a7d" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 0
+              }, {
+                "role" : "relocated_branch_target_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "a2a3",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d7",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d7",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4",
+                "transition_footprint_id" : "9cf2e3ffa78f5fedbaa6efd4ec623537f8e4b864c10ce16f7a7bbce4f77c008a",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "42da77044ce2e51ca8c3d0e4dfd6f4fce94b2de73ac54517bd093b1889c5890b",
+                "source_premise_ids" : [ "42da77044ce2e51ca8c3d0e4dfd6f4fce94b2de73ac54517bd093b1889c5890b", "legal-move:ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:9cf2e3ffa78f5fedbaa6efd4ec623537f8e4b864c10ce16f7a7bbce4f77c008a" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 1
+              }, {
+                "role" : "relocated_branch_target_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "primary",
+                "overall_move_uci" : "d7d5",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d7",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d5",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c",
+                "transition_footprint_id" : "3f2478312aa9733789c49e5b77450ea32b3d83113718688ada178f297246f07f",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "842c4b18eb1d0c704159f5582cf9757e00354d2b16c1a1fe18afce2129f483d3",
+                "source_premise_ids" : [ "842c4b18eb1d0c704159f5582cf9757e00354d2b16c1a1fe18afce2129f483d3", "legal-move:25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:3f2478312aa9733789c49e5b77450ea32b3d83113718688ada178f297246f07f" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 2,
+                "selected_transition" : {
+                  "side" : "black",
+                  "from" : "d7",
+                  "to" : "d5",
+                  "piece_before" : "pawn",
+                  "piece_after" : "pawn"
+                }
+              }, {
+                "role" : "retained_branch_target_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "primary",
+                "overall_move_uci" : "d7d5",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d7",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d5",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c",
+                "transition_footprint_id" : "6590919013c6bac0a20b30c31c5d9da1748ee72be5033cb27ef886aa66ac0190",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "cb015fac290809da2d9a309578f014c60991c0df3e649e9cc1c232cb363f48b6",
+                "source_premise_ids" : [ "cb015fac290809da2d9a309578f014c60991c0df3e649e9cc1c232cb363f48b6", "legal-move:25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ", "transition-footprint:6590919013c6bac0a20b30c31c5d9da1748ee72be5033cb27ef886aa66ac0190" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 0,
+                "selected_transition" : {
+                  "side" : "black",
+                  "from" : "d7",
+                  "to" : "d5",
+                  "piece_before" : "pawn",
+                  "piece_after" : "pawn"
+                }
+              }, {
+                "role" : "relocated_responder_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "secondary",
+                "overall_move_uci" : "e8c8",
+                "before" : {
+                  "side" : "black",
+                  "square" : "a8",
+                  "piece" : "rook"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "legal_move_semantic_id" : "b4efb2c8d4f22b9d44a557a7502791845928ee50c7c2e1a23672316be04ed0f7",
+                "transition_footprint_id" : "eb1f3bbec9e75ff23f9b8ddf8833ea4a0613d4c3b7a7b09d90142ab93fe15a7d",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "b5f3b74036d4906302947374ff021b8f27d77cf7784e0f0c9b7dd66119a02907",
+                "source_premise_ids" : [ "b5f3b74036d4906302947374ff021b8f27d77cf7784e0f0c9b7dd66119a02907", "legal-move:b4efb2c8d4f22b9d44a557a7502791845928ee50c7c2e1a23672316be04ed0f7", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:eb1f3bbec9e75ff23f9b8ddf8833ea4a0613d4c3b7a7b09d90142ab93fe15a7d" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 0,
+                "selected_transition" : {
+                  "side" : "black",
+                  "from" : "a8",
+                  "to" : "d8",
+                  "piece_before" : "rook",
+                  "piece_after" : "rook"
+                }
+              }, {
+                "role" : "relocated_responder_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "a2a3",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "legal_move_semantic_id" : "ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4",
+                "transition_footprint_id" : "9cf2e3ffa78f5fedbaa6efd4ec623537f8e4b864c10ce16f7a7bbce4f77c008a",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "42da77044ce2e51ca8c3d0e4dfd6f4fce94b2de73ac54517bd093b1889c5890b",
+                "source_premise_ids" : [ "42da77044ce2e51ca8c3d0e4dfd6f4fce94b2de73ac54517bd093b1889c5890b", "legal-move:ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:9cf2e3ffa78f5fedbaa6efd4ec623537f8e4b864c10ce16f7a7bbce4f77c008a" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 1
+              }, {
+                "role" : "relocated_responder_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "d7d5",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "legal_move_semantic_id" : "25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c",
+                "transition_footprint_id" : "3f2478312aa9733789c49e5b77450ea32b3d83113718688ada178f297246f07f",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "842c4b18eb1d0c704159f5582cf9757e00354d2b16c1a1fe18afce2129f483d3",
+                "source_premise_ids" : [ "842c4b18eb1d0c704159f5582cf9757e00354d2b16c1a1fe18afce2129f483d3", "legal-move:25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:3f2478312aa9733789c49e5b77450ea32b3d83113718688ada178f297246f07f" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 2
+              }, {
+                "role" : "relocated_responder_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "e5d6",
+                "before" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "d8",
+                  "piece" : "rook"
+                },
+                "legal_move_semantic_id" : "c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a",
+                "transition_footprint_id" : "d151bc43bbf8d74b6b4c63113731ec83778b35dea503d367c8851e69044b171c",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "584a21d605fa5d0bc380b77cefa1bfc10c05e56e066f73d3a965f744b51d8fd9",
+                "source_premise_ids" : [ "584a21d605fa5d0bc380b77cefa1bfc10c05e56e066f73d3a965f744b51d8fd9", "legal-move:c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:d151bc43bbf8d74b6b4c63113731ec83778b35dea503d367c8851e69044b171c" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 3
+              }, {
+                "role" : "retained_responder_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "d7d5",
+                "before" : {
+                  "side" : "black",
+                  "square" : "a8",
+                  "piece" : "rook"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "a8",
+                  "piece" : "rook"
+                },
+                "legal_move_semantic_id" : "25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c",
+                "transition_footprint_id" : "6590919013c6bac0a20b30c31c5d9da1748ee72be5033cb27ef886aa66ac0190",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "cb015fac290809da2d9a309578f014c60991c0df3e649e9cc1c232cb363f48b6",
+                "source_premise_ids" : [ "cb015fac290809da2d9a309578f014c60991c0df3e649e9cc1c232cb363f48b6", "legal-move:25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ", "transition-footprint:6590919013c6bac0a20b30c31c5d9da1748ee72be5033cb27ef886aa66ac0190" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 0
+              }, {
+                "role" : "retained_responder_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "e5d6",
+                "before" : {
+                  "side" : "black",
+                  "square" : "a8",
+                  "piece" : "rook"
+                },
+                "after" : {
+                  "side" : "black",
+                  "square" : "a8",
+                  "piece" : "rook"
+                },
+                "legal_move_semantic_id" : "c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a",
+                "transition_footprint_id" : "268841bd4b2009778db53d0f7c059ed1aae1e31a9798cfcad8655476d78252c5",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "658ad017b1cff4590e6215ad3b08742130d4c34c016f44bf36b137236686f5d7",
+                "source_premise_ids" : [ "658ad017b1cff4590e6215ad3b08742130d4c34c016f44bf36b137236686f5d7", "legal-move:c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ", "transition-footprint:268841bd4b2009778db53d0f7c059ed1aae1e31a9798cfcad8655476d78252c5" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 1
+              }, {
+                "role" : "relocated_branch_attacker_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "e8c8",
+                "before" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "b4efb2c8d4f22b9d44a557a7502791845928ee50c7c2e1a23672316be04ed0f7",
+                "transition_footprint_id" : "eb1f3bbec9e75ff23f9b8ddf8833ea4a0613d4c3b7a7b09d90142ab93fe15a7d",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "b5f3b74036d4906302947374ff021b8f27d77cf7784e0f0c9b7dd66119a02907",
+                "source_premise_ids" : [ "b5f3b74036d4906302947374ff021b8f27d77cf7784e0f0c9b7dd66119a02907", "legal-move:b4efb2c8d4f22b9d44a557a7502791845928ee50c7c2e1a23672316be04ed0f7", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:eb1f3bbec9e75ff23f9b8ddf8833ea4a0613d4c3b7a7b09d90142ab93fe15a7d" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 0
+              }, {
+                "role" : "relocated_branch_attacker_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "a2a3",
+                "before" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4",
+                "transition_footprint_id" : "9cf2e3ffa78f5fedbaa6efd4ec623537f8e4b864c10ce16f7a7bbce4f77c008a",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "42da77044ce2e51ca8c3d0e4dfd6f4fce94b2de73ac54517bd093b1889c5890b",
+                "source_premise_ids" : [ "42da77044ce2e51ca8c3d0e4dfd6f4fce94b2de73ac54517bd093b1889c5890b", "legal-move:ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:9cf2e3ffa78f5fedbaa6efd4ec623537f8e4b864c10ce16f7a7bbce4f77c008a" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 1
+              }, {
+                "role" : "relocated_branch_attacker_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "d7d5",
+                "before" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c",
+                "transition_footprint_id" : "3f2478312aa9733789c49e5b77450ea32b3d83113718688ada178f297246f07f",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "842c4b18eb1d0c704159f5582cf9757e00354d2b16c1a1fe18afce2129f483d3",
+                "source_premise_ids" : [ "842c4b18eb1d0c704159f5582cf9757e00354d2b16c1a1fe18afce2129f483d3", "legal-move:25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA", "transition-footprint:3f2478312aa9733789c49e5b77450ea32b3d83113718688ada178f297246f07f" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 2
+              }, {
+                "role" : "retained_branch_attacker_continuity",
+                "contract" : "object_continuity_step",
+                "transition_kind" : "retained",
+                "overall_move_uci" : "d7d5",
+                "before" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "after" : {
+                  "side" : "white",
+                  "square" : "e5",
+                  "piece" : "pawn"
+                },
+                "legal_move_semantic_id" : "25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c",
+                "transition_footprint_id" : "6590919013c6bac0a20b30c31c5d9da1748ee72be5033cb27ef886aa66ac0190",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "cb015fac290809da2d9a309578f014c60991c0df3e649e9cc1c232cb363f48b6",
+                "source_premise_ids" : [ "cb015fac290809da2d9a309578f014c60991c0df3e649e9cc1c232cb363f48b6", "legal-move:25735e12cb6643007282616ca97e3e4a5f6ba06fe08aeb9fce472bad5c13793c", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ", "transition-footprint:6590919013c6bac0a20b30c31c5d9da1748ee72be5033cb27ef886aa66ac0190" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 0
+              }, {
+                "role" : "relocated_target_capture",
+                "contract" : "legal_move",
+                "move_uci" : "e5d6",
+                "movement" : {
+                  "side" : "white",
+                  "from" : "e5",
+                  "to" : "d6",
+                  "piece_before" : "pawn",
+                  "piece_after" : "pawn"
+                },
+                "movement_mode" : "controlled_destination",
+                "legal_move_semantic_id" : "c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "584a21d605fa5d0bc380b77cefa1bfc10c05e56e066f73d3a965f744b51d8fd9",
+                "source_premise_ids" : [ "584a21d605fa5d0bc380b77cefa1bfc10c05e56e066f73d3a965f744b51d8fd9", "legal-move:c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 3,
+                "capture" : {
+                  "square" : "d5",
+                  "piece" : "pawn",
+                  "side" : "black"
+                }
+              }, {
+                "role" : "relocated_responder_recapture",
+                "contract" : "legal_move",
+                "move_uci" : "d8d6",
+                "movement" : {
+                  "side" : "black",
+                  "from" : "d8",
+                  "to" : "d6",
+                  "piece_before" : "rook",
+                  "piece_after" : "rook"
+                },
+                "movement_mode" : "controlled_destination",
+                "legal_move_semantic_id" : "d3aba96cdb117d5ec1835c2e66b9fb2374fa951b93812eca3d0f8c3f65107d2a",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "b36c00aa8df44b95f60cc66081e69af3a9f89eaa9faa865d5ff8cc145ac06596",
+                "source_premise_ids" : [ "b36c00aa8df44b95f60cc66081e69af3a9f89eaa9faa865d5ff8cc145ac06596", "legal-move:d3aba96cdb117d5ec1835c2e66b9fb2374fa951b93812eca3d0f8c3f65107d2a", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA" ],
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "step_index" : 4,
+                "capture" : {
+                  "square" : "d6",
+                  "piece" : "pawn",
+                  "side" : "white"
+                }
+              }, {
+                "role" : "retained_target_capture",
+                "contract" : "legal_move",
+                "move_uci" : "e5d6",
+                "movement" : {
+                  "side" : "white",
+                  "from" : "e5",
+                  "to" : "d6",
+                  "piece_before" : "pawn",
+                  "piece_after" : "pawn"
+                },
+                "movement_mode" : "controlled_destination",
+                "legal_move_semantic_id" : "c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "658ad017b1cff4590e6215ad3b08742130d4c34c016f44bf36b137236686f5d7",
+                "source_premise_ids" : [ "658ad017b1cff4590e6215ad3b08742130d4c34c016f44bf36b137236686f5d7", "legal-move:c4375f88d1c0216bd0891b9abff48376a4fed3f8ca66706df47b8a5e2de80e4a", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 1,
+                "capture" : {
+                  "square" : "d5",
+                  "piece" : "pawn",
+                  "side" : "black"
+                }
+              }, {
+                "role" : "retained_other_recapture",
+                "contract" : "legal_move",
+                "move_uci" : "e7d6",
+                "movement" : {
+                  "side" : "black",
+                  "from" : "e7",
+                  "to" : "d6",
+                  "piece_before" : "queen",
+                  "piece_after" : "queen"
+                },
+                "movement_mode" : "controlled_destination",
+                "legal_move_semantic_id" : "79ee5a5d1031ec4e65bb7e75a55e74e69f6ebddb7fac7df96b2cb79c4614d678",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "63421b25cb9a37c95823bb1e1b0da22e22ab8f3dcb32e9446b66b054c8e60cd8",
+                "source_premise_ids" : [ "63421b25cb9a37c95823bb1e1b0da22e22ab8f3dcb32e9446b66b054c8e60cd8", "legal-move:79ee5a5d1031ec4e65bb7e75a55e74e69f6ebddb7fac7df96b2cb79c4614d678", "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ" ],
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "step_index" : 2,
+                "capture" : {
+                  "square" : "d6",
+                  "piece" : "pawn",
+                  "side" : "white"
+                }
+              } ],
+              "closed_absence_uses" : [ {
+                "use_id" : "aecab69b8e6105d4a4857681d718a3afad3f57225b3d8af982884dfafa10494b",
+                "role" : "retained_seed_recapture_absent",
+                "semantic_proof_id" : "37fe66049779b6759ec7aaef6595b5a4d52dfadb5aa133fdc61a2dc59f749570",
+                "issuer" : "position_relation_extractor.closed_relation_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "3fa39fa732474eaf159a842226d4dc97136f5c917bd5e53f887565d0cb1bd284",
+                "query" : "legal-move-from-to:black:a8:d6",
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "after_step_index" : 1,
+                "position" : {
+                  "fen" : "r3k3/4q3/3P4/8/8/8/P7/K7 b q - 0 2",
+                  "ply" : 3,
+                  "scope" : "legal_line"
+                }
+              } ],
+              "closed_state_uses" : [ {
+                "use_id" : "f8872360fbd40c274a28360d8d9e70ef7e2d7068ba6c0db1f20b25d04a60965a",
+                "role" : "relocated_branch_target_continuity",
+                "semantic_proof_id" : "dd3d555790304c9aad3d559618223007eba3e02d0abe55d79eb5e1d0b9eb861f",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "ce5a62db2b825ed852fcf4b90c26bb6ab29ce28433a96138c381230c25d9b208",
+                "query" : "occupied-by:black:pawn@d7",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 0,
+                "position" : {
+                  "fen" : "2kr4/3pq3/8/4P3/8/8/P7/K7 w - - 1 2",
+                  "ply" : 2,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "2a0fb90844b80a14c920895e55ab33f55bb3971b36f63e8850320ef597703a98",
+                "role" : "relocated_branch_target_continuity",
+                "semantic_proof_id" : "41bcb529b0b5c35008dd750bfd7621995a463d587844e6df7a54af6c1de47c5a",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "708843fe3086ce8ba30c3c8b365a261f1bf7a3d82b01015920568c25be48b52c",
+                "query" : "occupied-by:black:pawn@d7",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 1,
+                "position" : {
+                  "fen" : "2kr4/3pq3/8/4P3/8/P7/8/K7 b - - 0 2",
+                  "ply" : 3,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "39dfbee58543301a522999336f0f5b332a4f630161ec5a5f22e20b1523ccd8e0",
+                "role" : "relocated_responder_continuity",
+                "semantic_proof_id" : "312adc91fd03052327e46cfbb00b522da0b9b4ea2e63a426777c7ba71b7c7604",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "708843fe3086ce8ba30c3c8b365a261f1bf7a3d82b01015920568c25be48b52c",
+                "query" : "occupied-by:black:rook@d8",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 1,
+                "position" : {
+                  "fen" : "2kr4/3pq3/8/4P3/8/P7/8/K7 b - - 0 2",
+                  "ply" : 3,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "b56487976d359469d2e46f666e994636f53ef40deba7845355e4b10b3a524ab5",
+                "role" : "relocated_responder_continuity",
+                "semantic_proof_id" : "fbeb1f4d1157d52db6696e73d20817d58d2a2c4543407da8b573e46c63d4d27e",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "08b416fd1dbf9ee95038670cbf2ab7d0620d7331e7900e2a8119dc6cd4ef5aba",
+                "query" : "occupied-by:black:rook@d8",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 2,
+                "position" : {
+                  "fen" : "2kr4/4q3/8/3pP3/8/P7/8/K7 w - d6 0 3",
+                  "ply" : 4,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "0e1ea5a13d86f0f7b57b1d3f8a58317befa048803b6e15ca228960725be3688f",
+                "role" : "relocated_responder_continuity",
+                "semantic_proof_id" : "922b42ef49c4a98883bfb6e93608f29534f932551e3873da6e1b2c51206e57f2",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "04cb86ab90f7ef7c17915c730e0e9bcd422547a9fb192b518fcec3e35264153e",
+                "query" : "occupied-by:black:rook@d8",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 3,
+                "position" : {
+                  "fen" : "2kr4/4q3/3P4/8/8/P7/8/K7 b - - 0 3",
+                  "ply" : 5,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "373fc1aeacd232fb604c0cda193df30606bdb4e99eb71babd65e9678d217fc03",
+                "role" : "retained_responder_continuity",
+                "semantic_proof_id" : "a89677a277d8b6acca3058dca3c911b87fe9150ca29259adb0140f0d9ce7e398",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "baa5aed1c662e061801023ef07813e111a51fc7e76eab0d94c3cbc13357bdcbf",
+                "query" : "occupied-by:black:rook@a8",
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "after_step_index" : 0,
+                "position" : {
+                  "fen" : "r3k3/4q3/8/3pP3/8/8/P7/K7 w q d6 0 2",
+                  "ply" : 2,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "526b695270a35ddb9d8d40ffdc7541253843a9282d161d2f65a8d025295f8604",
+                "role" : "retained_responder_continuity",
+                "semantic_proof_id" : "84c0ac61268c594079e07aaa7adca52de5bd1db692cf89db32a0133fad553531",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "3fa39fa732474eaf159a842226d4dc97136f5c917bd5e53f887565d0cb1bd284",
+                "query" : "occupied-by:black:rook@a8",
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "after_step_index" : 1,
+                "position" : {
+                  "fen" : "r3k3/4q3/3P4/8/8/8/P7/K7 b q - 0 2",
+                  "ply" : 3,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "51d20ab2bb19e2d51464d9cb1fcda41f010b715e1f0ce2be78958d3637dd4d3e",
+                "role" : "relocated_branch_attacker_continuity",
+                "semantic_proof_id" : "5a0e73e147a8255c12614d1ddf46a3dfafbb42fd0012c0bc789be560c097c61b",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "ce5a62db2b825ed852fcf4b90c26bb6ab29ce28433a96138c381230c25d9b208",
+                "query" : "occupied-by:white:pawn@e5",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 0,
+                "position" : {
+                  "fen" : "2kr4/3pq3/8/4P3/8/8/P7/K7 w - - 1 2",
+                  "ply" : 2,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "5979b99ebb8099ebe3321c53721700f0a2cb0385b51d56fbc88b7c1b00d2aa37",
+                "role" : "relocated_branch_attacker_continuity",
+                "semantic_proof_id" : "1e267d6ce9a0412704f1bb6d05791ab0166f8517a1f048e219cea65b5df41052",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "708843fe3086ce8ba30c3c8b365a261f1bf7a3d82b01015920568c25be48b52c",
+                "query" : "occupied-by:white:pawn@e5",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 1,
+                "position" : {
+                  "fen" : "2kr4/3pq3/8/4P3/8/P7/8/K7 b - - 0 2",
+                  "ply" : 3,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "ebdff0f5f98fb8519c50fde4b7b77facdc6516ae179d41811e21b77046277809",
+                "role" : "relocated_branch_attacker_continuity",
+                "semantic_proof_id" : "ef1d6d3184e9084e12a7b0f70efaf6bf599afbd4586f167f5ae06339a1d17f61",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZThjOA",
+                "issuer_occurrence_id" : "08b416fd1dbf9ee95038670cbf2ab7d0620d7331e7900e2a8119dc6cd4ef5aba",
+                "query" : "occupied-by:white:pawn@e5",
+                "branch_id" : "8a9ad8c35142f67679b47daae6498df5582bba02d3906b923a8891ba4fe708a3",
+                "branch_role" : "relocated_responder",
+                "after_step_index" : 2,
+                "position" : {
+                  "fen" : "2kr4/4q3/8/3pP3/8/P7/8/K7 w - d6 0 3",
+                  "ply" : 4,
+                  "scope" : "legal_line"
+                }
+              }, {
+                "use_id" : "bc8c9e257bd624d9b13b73a4591cd08db6f2536b2215c3ace708f542510eba1f",
+                "role" : "retained_branch_attacker_continuity",
+                "semantic_proof_id" : "33a4fe8939d8366a801b66ad85bfbd5f5f1ad197843f2fd3b405744af3d93ab7",
+                "issuer" : "position_relation_extractor.closed_position_state_inventory",
+                "issuer_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
+                "issuer_occurrence_id" : "baa5aed1c662e061801023ef07813e111a51fc7e76eab0d94c3cbc13357bdcbf",
+                "query" : "occupied-by:white:pawn@e5",
+                "branch_id" : "dca4e1413392de600d385006fad6655975c42ab272c8a7c264fa086b967d43c8",
+                "branch_role" : "retained_responder",
+                "after_step_index" : 0,
+                "position" : {
+                  "fen" : "r3k3/4q3/8/3pP3/8/8/P7/K7 w q d6 0 2",
+                  "ply" : 2,
+                  "scope" : "legal_line"
+                }
+              } ]
+            } ],
+            "participants" : {
+              "attacker_at_common_root" : {
+                "side" : "white",
+                "piece" : "pawn",
+                "square" : "e5"
+              },
+              "attacker_at_capture" : {
+                "side" : "white",
+                "piece" : "pawn",
+                "square" : "e5"
+              },
+              "target_at_common_root" : {
+                "side" : "black",
+                "piece" : "pawn",
+                "square" : "d7"
+              },
+              "captured_target" : {
+                "side" : "black",
+                "piece" : "pawn",
+                "square" : "d5"
+              },
+              "recapture_square" : "d6",
+              "tracked_responder_at_seed" : {
+                "side" : "black",
+                "piece" : "rook",
+                "square" : "a8"
+              },
+              "tracked_responder_at_staging" : {
+                "side" : "black",
+                "piece" : "rook",
+                "square" : "d8"
+              },
+              "other_recapturer" : {
+                "side" : "black",
+                "piece" : "queen",
+                "square" : "e7"
+              }
+            },
+            "relocation" : {
+              "movement" : {
+                "side" : "black",
+                "from" : "a8",
+                "to" : "d8",
+                "piece_before" : "rook",
+                "piece_after" : "rook"
+              },
+              "move_uci" : "e8c8",
+              "step_index" : 0
+            },
+            "target_capture" : {
+              "movement" : {
+                "side" : "white",
+                "from" : "e5",
+                "to" : "d6",
+                "piece_before" : "pawn",
+                "piece_after" : "pawn"
+              },
+              "move_uci" : "e5d6",
+              "relocated_step_index" : 3,
+              "retained_step_index" : 1
+            },
+            "relocated_responder_recapture" : {
+              "movement" : {
+                "side" : "black",
+                "from" : "d8",
+                "to" : "d6",
+                "piece_before" : "rook",
+                "piece_after" : "rook"
+              },
+              "move_uci" : "d8d6",
+              "step_index" : 4
+            },
+            "retained_other_recapture" : {
+              "movement" : {
+                "side" : "black",
+                "from" : "e7",
+                "to" : "d6",
+                "piece_before" : "queen",
+                "piece_after" : "queen"
+              },
+              "move_uci" : "e7d6",
+              "step_index" : 2
+            }
+          }
+        } ]
+      }
+    } ]
+  }
+}

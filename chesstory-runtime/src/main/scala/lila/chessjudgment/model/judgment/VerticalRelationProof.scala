@@ -847,7 +847,6 @@ private[chessjudgment] final case class VerticalRelationPremise private[chessjud
 final case class VerticalRelationDerivationProof private[chessjudgment] (
     private[chessjudgment] val contract: VerticalRelationContractKind,
     private val obligations: List[VerticalRelationPremise],
-    private val alternativeRoutes: List[VerticalRelationPremise],
     private[chessjudgment] val absences: List[ClosedRelationAbsencePremise],
     private[chessjudgment] val states: List[ClosedPositionStatePremise]
 ):
@@ -857,47 +856,28 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
     "a vertical relation derivation cannot repeat an exact obligation"
   )
   require(obligations == obligations.sortBy(_.stableKey), "vertical relation obligations must use canonical order")
-  require(
-    alternativeRoutes.distinct.size == alternativeRoutes.size &&
-      alternativeRoutes == alternativeRoutes.sortBy(_.stableKey) &&
-      alternativeRoutes.forall(route => obligations.exists(_.role == route.role)),
-    "vertical relation alternatives must be unique canonical routes for an existing obligation"
-  )
   require(absences.distinct.size == absences.size, "a vertical relation derivation cannot repeat an absence premise")
   require(absences == absences.sortBy(_.stableKey), "vertical absence premises must use canonical order")
   require(states.distinct.size == states.size, "a vertical relation derivation cannot repeat a state premise")
   require(states == states.sortBy(_.stableKey), "vertical state premises must use canonical order")
   require(
-    (obligations ++ alternativeRoutes).forall(premise =>
+    obligations.forall(premise =>
       RelationProofStage.rank(premise.stage) < VerticalRelationContractKind.rank(contract)
     ),
     "a vertical relation derivation may consume only a strictly lower proof stratum"
   )
   require(
-    (obligations ++ alternativeRoutes).exists(premise =>
+    obligations.exists(premise =>
       VerticalRelationPremiseSource.transitionAnchored(premise.source, premise.stage)
     ),
     "a transition-scoped vertical derivation needs one exact changed or derived transition premise"
   )
 
   private[chessjudgment] def premises: List[VerticalRelationPremise] =
-    (obligations ++ alternativeRoutes).sortBy(_.stableKey)
+    obligations
 
   private[chessjudgment] lazy val sourcePremises: List[VerticalRelationPremise] =
     premises
-      .groupBy(premise => VerticalRelationPremiseSource.id(premise.source) -> premise.semanticId)
-      .toList
-      .map { case ((_, semanticId), occurrences) =>
-        require(
-          occurrences.forall(premise =>
-              premise.kind == occurrences.head.kind && premise.assertionId == occurrences.head.assertionId &&
-              premise.stage == occurrences.head.stage && premise.source == occurrences.head.source
-          ),
-          s"one lower relation '$semanticId' cannot change identity across proof obligations"
-        )
-        occurrences.head
-      }
-      .sortBy(_.stableKey)
 
   private[chessjudgment] lazy val sourceSemanticIds: Set[String] =
     sourcePremises.map(_.semanticId).toSet
@@ -957,7 +937,7 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
                   path.kingSquare,
                   path.geometry.axis
                 )
-              )).distinct
+              ))
           val expectedAbsences =
             Option.when(geometricRecapturers.isEmpty)(
               ClosedRelationAbsencePremise(
@@ -1249,10 +1229,9 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
 
   private[judgment] def stableKey: String =
     val sourceKey = obligations.map(_.stableKey).mkString("[", ",", "]")
-    val alternativeKey = alternativeRoutes.map(_.stableKey).mkString("[", ",", "]")
     val absenceKey = absences.map(_.stableKey).mkString("[", ",", "]")
     val stateKey = states.map(_.stableKey).mkString("[", ",", "]")
-    s"contract:${VerticalRelationContractKind.id(contract)}:obligations:$sourceKey:alternatives:$alternativeKey:absences:$absenceKey:states:$stateKey"
+    s"contract:${VerticalRelationContractKind.id(contract)}:premises:$sourceKey:absences:$absenceKey:states:$stateKey"
 
 private[chessjudgment] object VerticalRelationDerivationProof:
   private[judgment] def fromRootAndSources(
@@ -1331,18 +1310,12 @@ private[chessjudgment] object VerticalRelationDerivationProof:
       states: List[ClosedPositionStatePremise]
   ): VerticalRelationDerivationProof =
     require(
-      premises.distinct.size == premises.size,
-      "a vertical derivation cannot silently deduplicate one exact proof route"
+      premises.map(_.role).distinct.size == premises.size,
+      "a vertical derivation needs one exact premise per role"
     )
-    val routesByRole = premises
-      .groupMap(_.role)(identity)
-      .toList
-      .sortBy { case (role, _) => VerticalRelationPremiseRole.id(role) }
-      .map { case (_, routes) => routes.sortBy(_.stableKey) }
     VerticalRelationDerivationProof(
       contract,
-      routesByRole.map(_.head).sortBy(_.stableKey),
-      routesByRole.flatMap(_.drop(1)).sortBy(_.stableKey),
+      premises.sortBy(_.stableKey),
       absences.sortBy(_.stableKey),
       states.sortBy(_.stableKey)
     )
@@ -2262,8 +2235,6 @@ private[chessjudgment] object VerticalRelationContracts:
               cause.source
             )
           )
-        }.distinctBy { case (role, source, relation) =>
-          (role, source, relation.semanticId)
         }
       val absences =
         Option.when(recapturers.isEmpty)(

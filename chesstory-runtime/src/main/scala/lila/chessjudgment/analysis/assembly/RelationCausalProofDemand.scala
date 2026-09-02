@@ -27,10 +27,7 @@ private[assembly] final case class UniqueCheckReplyProofDemand private (
 private[assembly] object UniqueCheckReplyProofDemand:
   def from(demand: OccurrenceExplanationDemand): List[UniqueCheckReplyProofDemand] =
     val exact = for
-      displacement <- demand.availableBranches
-      immediate <- demand.availableBranches
-      if displacement.line != immediate.line
-      if demand.subject == displacement || demand.subject == immediate
+      (displacement, immediate) <- demand.subjectSiblingOrientations
       lower <- lowerDemand(displacement.replay, immediate.replay).toList
     yield UniqueCheckReplyProofDemand(demand.subject, displacement, immediate, lower)
     canonical(exact, _.stableKey, "unique-check-reply")
@@ -91,10 +88,7 @@ private[assembly] final case class SoleRecapturerRemovalProofDemand private (
 private[assembly] object SoleRecapturerRemovalProofDemand:
   def from(demand: OccurrenceExplanationDemand): List[SoleRecapturerRemovalProofDemand] =
     val exact = for
-      removal <- demand.availableBranches
-      immediate <- demand.availableBranches
-      if removal.line != immediate.line
-      if demand.subject == removal || demand.subject == immediate
+      (removal, immediate) <- demand.subjectSiblingOrientations
       lower <- lowerDemand(removal.replay, immediate.replay).toList
     yield SoleRecapturerRemovalProofDemand(demand.subject, removal, immediate, lower)
     canonical(exact, _.stableKey, "sole-recapturer-removal")
@@ -156,10 +150,7 @@ private[assembly] final case class VacatedGateCaptureProofDemand private (
 private[assembly] object VacatedGateCaptureProofDemand:
   def from(demand: OccurrenceExplanationDemand): List[VacatedGateCaptureProofDemand] =
     val exact = for
-      vacated <- demand.availableBranches
-      retained <- demand.availableBranches
-      if vacated.line != retained.line
-      if demand.subject == vacated || demand.subject == retained
+      (vacated, retained) <- demand.subjectSiblingOrientations
       lowers = lowerDemands(vacated.replay, retained.replay)
       if lowers.nonEmpty
     yield VacatedGateCaptureProofDemand(demand.subject, vacated, retained, lowers)
@@ -213,10 +204,7 @@ private[assembly] final case class SquareReleaseRouteProofDemand private (
 private[assembly] object SquareReleaseRouteProofDemand:
   def from(demand: OccurrenceExplanationDemand): List[SquareReleaseRouteProofDemand] =
     val exact = for
-      released <- demand.availableBranches
-      retained <- demand.availableBranches
-      if released.line != retained.line
-      if demand.subject == released || demand.subject == retained
+      (released, retained) <- demand.subjectSiblingOrientations
       lowers = lowerDemands(released, retained)
       if lowers.nonEmpty
     yield SquareReleaseRouteProofDemand(demand.subject, released, retained, lowers)
@@ -255,36 +243,44 @@ private[assembly] object SquareReleaseRouteProofDemand:
 
     def loop(
         route: List[ReplayLegalMoveOccurrence],
-        indices: List[Int]
+        indices: List[Int],
+        remaining: List[LineReplayStep]
     ): List[SquareReleaseRouteDemand] =
-      RecordBoundObjectTrajectory.firstAfter(released.lineOwner, route.last.step).toList.flatMap { trajectory =>
-        val next = trajectory.futureMovement.occurrence
-        val nextIndex = steps.indexOf(next.step)
-        if nextIndex <= indices.last then Nil
-        else
-          val extendedRoute = route :+ next
-          val extendedIndices = indices :+ nextIndex
-          val terminals = replay.verticalRelationOccurrences(
-            next.step,
-            List(
-              VerticalRelationContractKind.CaptureRecaptureInventory,
-              VerticalRelationContractKind.CreatedCheckResponseInventory
-            )
-          ).flatMap(terminal =>
-            exactTerminalReply(replay, nextIndex, terminal).map(reply =>
-              SquareReleaseRouteDemand.terminal(
-                occupation.releaseOccurrence,
-                extendedRoute,
-                extendedIndices,
-                terminal,
-                reply
+      RecordBoundObjectTrajectory
+        .firstAfter(released.lineOwner, route.last.step, route.last.movement.witness, remaining)
+        .toList.flatMap { trajectory =>
+          val next = trajectory.futureMovement.occurrence
+          val nextIndex = indices.last + trajectory.plyOffset
+          if nextIndex <= indices.last then Nil
+          else
+            val extendedRoute = route :+ next
+            val extendedIndices = indices :+ nextIndex
+            val terminals = replay.verticalRelationOccurrences(
+              next.step,
+              List(
+                VerticalRelationContractKind.CaptureRecaptureInventory,
+                VerticalRelationContractKind.CreatedCheckResponseInventory
+              )
+            ).flatMap(terminal =>
+              exactTerminalReply(replay, nextIndex, terminal).map(reply =>
+                SquareReleaseRouteDemand.terminal(
+                  occupation.releaseOccurrence,
+                  extendedRoute,
+                  extendedIndices,
+                  terminal,
+                  reply
+                )
               )
             )
-          )
-          if terminals.nonEmpty then terminals else loop(extendedRoute, extendedIndices)
-      }
+            if terminals.nonEmpty then terminals
+            else loop(extendedRoute, extendedIndices, remaining.drop(trajectory.plyOffset))
+        }
 
-    loop(occupation.routeOccurrences, occupation.routeStepIndices)
+    loop(
+      occupation.routeOccurrences,
+      occupation.routeStepIndices,
+      steps.drop(occupation.routeStepIndices.last + 1)
+    )
 
   private def exactTerminalReply(
       replay: CanonicalLineReplay,

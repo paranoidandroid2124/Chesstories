@@ -168,7 +168,8 @@ private[assembly] final case class CausalLineTrace(
               from,
               between :+ to,
               replay,
-              lineOwnerRecord
+              step => lineOwnerRecord(step).flatMap(CertifiedLineReplayRecord.from),
+              None
             )
           )
           .filter(_.futureStep == to),

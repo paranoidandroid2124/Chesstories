@@ -40,6 +40,10 @@ const producerFixtureUrl = new URL(
   '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json',
   import.meta.url,
 );
+const relocationProducerFixtureUrl = new URL(
+  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json',
+  import.meta.url,
+);
 
 function typedSubject(before: FEN, played: Uci, after: FEN): MoveReviewSubject {
   return {
@@ -63,6 +67,14 @@ function producedCommentary(raw: JsonObject): JsonObject {
 
 function producedOccurrence(raw = producedResponse()): JsonObject {
   return objects(producedCommentary(raw).occurrence_explanations)[0]!;
+}
+
+function producedRelocationResponse(): JsonObject {
+  return JSON.parse(readFileSync(relocationProducerFixtureUrl, 'utf8')) as JsonObject;
+}
+
+function producedRelocationOccurrence(): JsonObject {
+  return producedOccurrence(producedRelocationResponse());
 }
 
 function producedDecodeContext(raw: JsonObject): ReturnType<typeof decodeContext> {
@@ -177,6 +189,7 @@ function proofBase(): JsonObject {
 function schemaOccurrence(proofKind: MoveReviewProofKind, multiplePaths = false): JsonObject {
   const source = producedOccurrence();
   if (proofKind === 'capture_exclusion_move_order') return structuredClone(source);
+  if (proofKind === 'relocation_enables_recapture') return structuredClone(producedRelocationOccurrence());
 
   const captureProof = object(source.proof);
   const counterfactualSource = object(captureProof.vacating_branch);
@@ -675,18 +688,190 @@ test('decodes the immutable Scala-produced occurrence fixture end to end', () =>
   assert.equal(moveReviewProofById(played.review, branchProof.id)?.id, branchProof.id);
 });
 
-test('decodes all six proof kinds as their exact discriminated variants', () => {
+test('decodes the immutable Scala-produced relocation fixture with complete object continuity', () => {
+  const raw = producedRelocationResponse();
+  const decoded = decodeProduced(raw);
+  assert.equal(decoded?.kind, 'completed');
+  if (decoded?.kind !== 'completed') return;
+  const played = selectedMoveReviewCandidate(decoded.evidence);
+  assert.equal(played?.review.kind, 'move-verdict');
+  if (played?.review.kind !== 'move-verdict') return;
+  const explanation = played.review.explanations[0]!;
+  assert.equal(explanation.proofKind, 'relocation_enables_recapture');
+  assert.equal(explanation.subjectOccurrence.moveUci, 'd7d5');
+  if (explanation.proofKind !== 'relocation_enables_recapture') return;
+
+  const branches = moveReviewOccurrenceBranches(explanation);
+  assert.deepEqual(
+    branches.map(branch => branch.steps.map(step => step.provenance)),
+    [
+      Array(5).fill('certified_analysis_move'),
+      ['observed_game_move', ...Array(2).fill('certified_analysis_move')],
+    ],
+  );
+  const path = explanation.proof.proofPaths[0];
+  const continuity = path.premises.filter(premise => 'transitionKind' in premise);
+  assert.ok(continuity.length > 9);
+  assert.ok(continuity.some(premise => premise.transitionKind === 'secondary'));
+  assert.deepEqual(
+    path.premises
+      .filter(premise => premise.contract === 'capture_recapture_inventory')
+      .map(premise => premise.role),
+    ['relocated_recapture_inventory', 'retained_recapture_inventory'],
+  );
+  assert.deepEqual(
+    path.premises.filter(premise => premise.contract === 'legal_move').map(premise => premise.role),
+    [
+      'relocated_target_capture',
+      'relocated_responder_recapture',
+      'retained_target_capture',
+      'retained_other_recapture',
+    ],
+  );
+  const liveRoles = new Map(
+    continuity.map(premise => [
+      `${premise.role}:${premise.stepIndex}`,
+      `${premise.before.square}-${premise.after.square}`,
+    ]),
+  );
+  assert.equal(liveRoles.get('relocated_responder_continuity:0'), 'a8-d8');
+  assert.equal(liveRoles.get('relocated_branch_target_continuity:0'), 'd7-d7');
+  assert.equal(liveRoles.get('relocated_branch_target_continuity:2'), 'd7-d5');
+  assert.equal(liveRoles.get('relocated_branch_attacker_continuity:1'), 'e5-e5');
+  assert.equal(liveRoles.get('retained_responder_continuity:0'), 'a8-a8');
+  assert.notDeepEqual(
+    explanation.proof.participants.trackedResponderAtSeed,
+    explanation.proof.participants.otherRecapturer,
+  );
+  assert.equal(
+    path.closedStateUses.length,
+    continuity.filter(premise => premise.transitionKind === 'retained').length,
+  );
+  assert.equal(explanation.proof.participants.capturedTarget.square, 'd5');
+  assert.equal(explanation.proof.participants.recaptureSquare, 'd6');
+  assert.notEqual(
+    explanation.proof.participants.capturedTarget.square,
+    explanation.proof.participants.recaptureSquare,
+  );
+  const branchProof = moveReviewOccurrenceBranchProof(explanation, 0)!;
+  assert.deepEqual(branchProof.annotations, [
+    { atPly: 1, shape: { kind: 'arrow', orig: 'a8', dest: 'd8', brush: 'blue' } },
+    { atPly: 4, shape: { kind: 'arrow', orig: 'e5', dest: 'd6', brush: 'red' } },
+    { atPly: 5, shape: { kind: 'arrow', orig: 'd8', dest: 'd6', brush: 'green' } },
+  ]);
+  assert.equal(moveReviewProofById(played.review, branchProof.id)?.id, branchProof.id);
+});
+
+test('fails closed when relocation continuity loses an occurrence, owner, transition, or endpoint', () => {
+  const mutations: Array<(proof: JsonObject) => void> = [
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const index = premises.findIndex(
+        premise => premise.role === 'relocated_branch_target_continuity' && premise.step_index === 2,
+      );
+      premises.splice(index, 1);
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const source = premises.find(premise => premise.contract === 'object_continuity_step')!;
+      const duplicate = structuredClone(source);
+      const priorFootprint = duplicate.transition_footprint_id;
+      duplicate.transition_footprint_id = hashId(999);
+      duplicate.source_premise_ids = (duplicate.source_premise_ids as string[])
+        .map(value =>
+          value === `transition-footprint:${priorFootprint}`
+            ? `transition-footprint:${duplicate.transition_footprint_id}`
+            : value,
+        )
+        .sort();
+      premises.push(duplicate);
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const secondary = premises.find(premise => premise.transition_kind === 'secondary')!;
+      delete secondary.selected_transition;
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const targetCapture = premises.find(premise => premise.role === 'relocated_target_capture')!;
+      targetCapture.capture = structuredClone(object(object(proof.participants).other_recapturer));
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const recapture = premises.find(premise => premise.role === 'retained_other_recapture')!;
+      object(recapture.movement).from = 'a1';
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const continuity = premises.find(premise => premise.contract === 'object_continuity_step')!;
+      continuity.source_premise_ids = (continuity.source_premise_ids as string[])
+        .map(value => (value.startsWith('legal-move:') ? `legal-move:${hashId(997)}` : value))
+        .sort();
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const endpoint = premises.find(premise => premise.role === 'relocated_target_capture')!;
+      endpoint.source_premise_ids = (endpoint.source_premise_ids as string[])
+        .map(value => (value.startsWith('legal-move:') ? `legal-move:${hashId(996)}` : value))
+        .sort();
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const inventory = premises.find(premise => premise.role === 'relocated_recapture_inventory')!;
+      inventory.step_index = Number(inventory.step_index) + 1;
+    },
+    proof => {
+      const absence = objects(object(objects(proof.proof_paths)[0]).closed_absence_uses)[0]!;
+      absence.query = 'legal-move-from-to:black:a1:a2';
+    },
+    proof => {
+      const absence = objects(object(objects(proof.proof_paths)[0]).closed_absence_uses)[0]!;
+      absence.after_step_index = Number(absence.after_step_index) + 1;
+    },
+    proof => {
+      const premises = objects(object(objects(proof.proof_paths)[0]).premises);
+      const recapture = premises.find(premise => premise.role === 'relocated_responder_recapture')!;
+      recapture.capture = structuredClone(object(object(proof.participants).other_recapturer));
+    },
+    proof => {
+      object(proof.participants).recapture_square = 'a1';
+    },
+    proof => {
+      object(proof.participants).tracked_responder_at_seed = structuredClone(
+        object(object(proof.participants).other_recapturer),
+      );
+    },
+    proof => {
+      const paths = objects(proof.proof_paths);
+      const duplicate = structuredClone(paths[0]!);
+      duplicate.path_occurrence_id = hashId(998);
+      paths.push(duplicate);
+    },
+  ];
+
+  for (const mutate of mutations) {
+    const raw = producedRelocationResponse();
+    mutate(object(producedOccurrence(raw).proof));
+    assert.equal(decodeProduced(raw), undefined);
+  }
+});
+
+test('decodes all seven proof kinds as their exact discriminated variants', () => {
   const proofKinds: MoveReviewProofKind[] = [
     'unique_check_reply_defender_displacement_before_capture',
     'sole_recapturer_removal_before_target_capture',
     'vacated_gate_enables_unrecapturable_slider_capture',
     'square_release_route',
     'capture_exclusion_move_order',
+    'relocation_enables_recapture',
     'passed_pawn_progress_realized_after_only_legal_reply',
   ];
 
   for (const proofKind of proofKinds) {
-    const raw = responseWithOccurrences([schemaOccurrence(proofKind)]);
+    const raw =
+      proofKind === 'relocation_enables_recapture'
+        ? producedRelocationResponse()
+        : responseWithOccurrences([schemaOccurrence(proofKind)]);
     const decoded = decodeProduced(raw);
     assert.equal(decoded?.kind, 'completed', proofKind);
     if (decoded?.kind !== 'completed') continue;

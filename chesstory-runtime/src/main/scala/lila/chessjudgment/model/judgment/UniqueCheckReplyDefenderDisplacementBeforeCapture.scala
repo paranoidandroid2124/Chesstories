@@ -93,7 +93,7 @@ private[chessjudgment] sealed trait UniqueCheckReplyDefenderDisplacementBeforeCa
   final override def stateBindings = delayedPersistence
   final def stableKey: String =
     List(
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       premiseUses.map(_.stableKey).mkString("[", ",", "]"),
       delayedNoRecapture.stableKey,
       delayedPersistence.map(_.stableKey).mkString("[", ",", "]")

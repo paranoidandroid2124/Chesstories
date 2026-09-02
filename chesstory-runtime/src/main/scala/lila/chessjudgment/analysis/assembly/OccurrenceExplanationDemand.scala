@@ -49,6 +49,12 @@ private[chessjudgment] final case class OccurrenceExplanationDemand private (
     "all demanded explanation branches must share the subject root occurrence"
   )
 
+  def subjectSiblingOrientations: List[(CertifiedRootOccurrence, CertifiedRootOccurrence)] =
+    availableBranches
+      .filterNot(_.lineOwner.ref.id == subject.lineOwner.ref.id)
+      .flatMap(sibling => List(subject -> sibling, sibling -> subject))
+      .sortBy { case (left, right) => (left.lineOwner.ref.id, right.lineOwner.ref.id) }
+
 private[chessjudgment] object OccurrenceExplanationDemand:
   def resolve(
       context: JudgmentAssemblyContext,
@@ -89,10 +95,7 @@ private[assembly] final case class CaptureExclusionProofDemand private (
 private[assembly] object CaptureExclusionProofDemand:
   def from(demand: OccurrenceExplanationDemand): List[CaptureExclusionProofDemand] =
     val candidates = for
-      vacating <- demand.availableBranches
-      immediate <- demand.availableBranches
-      if vacating.line != immediate.line
-      if demand.subject == vacating || demand.subject == immediate
+      (vacating, immediate) <- demand.subjectSiblingOrientations
       occurrences = exactOccurrences(vacating.replay, immediate.replay)
       if occurrences.nonEmpty
     yield CaptureExclusionProofDemand(demand.subject, vacating, immediate, occurrences)
@@ -146,3 +149,57 @@ private[assembly] object CaptureExclusionProofDemand:
       laterDeferred,
       deferredIndex
     )).sortBy(_.stableKey)
+
+private[assembly] final case class RelocationEnablesRecaptureProofDemand private (
+    subject: CertifiedRootOccurrence,
+    relocatedBranch: CertifiedRootOccurrence,
+    retainedBranch: CertifiedRootOccurrence,
+    occurrences: List[RelocationEnablesRecaptureDemand]
+):
+  require(occurrences.nonEmpty, "relocation recapture needs an exact lower occurrence demand")
+  require(
+    subject == relocatedBranch || subject == retainedBranch,
+    "a relocation-recapture proof must explain its requested subject occurrence"
+  )
+  require(
+    relocatedBranch.line != retainedBranch.line,
+    "relocation-recapture sibling branches need distinct LegalLine owners"
+  )
+
+private[assembly] object RelocationEnablesRecaptureProofDemand:
+  def from(demand: OccurrenceExplanationDemand): List[RelocationEnablesRecaptureProofDemand] =
+    val catalogEntries = demand.availableBranches.map(branch =>
+      branch.lineOwner.ref.id -> RelocationEnablesRecaptureDemand.capturesWithImmediateReply(branch.replay)
+    )
+    require(
+      catalogEntries.map(_._1).distinct.size == catalogEntries.size,
+      "each relocation-recapture catalog entry needs one exact LegalLine owner"
+    )
+    val captureCatalog = catalogEntries.toMap
+
+    val candidates = for
+      (relocated, retained) <- demand.subjectSiblingOrientations
+      occurrences = RelocationEnablesRecaptureDemand.fromCatalog(
+        captureCatalog(relocated.lineOwner.ref.id),
+        captureCatalog(retained.lineOwner.ref.id)
+      )
+      if occurrences.nonEmpty
+    yield RelocationEnablesRecaptureProofDemand(demand.subject, relocated, retained, occurrences)
+
+    val keys = candidates.map(candidate =>
+      List(
+        candidate.subject.transition.evidence.id,
+        candidate.relocatedBranch.lineOwner.ref.id,
+        candidate.relocatedBranch.transitionOwner.ref.id,
+        candidate.retainedBranch.lineOwner.ref.id,
+        candidate.retainedBranch.transitionOwner.ref.id,
+        candidate.occurrences.map(_.stableKey).mkString("[", ",", "]")
+      ).mkString("|")
+    )
+    require(
+      keys.distinct.size == keys.size,
+      "one exact relocation-recapture sibling demand may be dispatched only once"
+    )
+    candidates.sortBy(candidate =>
+      (candidate.relocatedBranch.line.id, candidate.retainedBranch.line.id)
+    )

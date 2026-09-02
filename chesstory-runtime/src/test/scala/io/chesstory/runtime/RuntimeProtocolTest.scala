@@ -904,6 +904,300 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((proof \ "participants" \ "captured_target" \ "square").as[String], "d4")
     assertEquals((proof \ "later_deferred_step_index").as[Int], 4)
 
+  test("v6 commentary serializes relocation-enabled recapture from its occurrence Cause"):
+    val rootFen = "r3k3/3pq3/8/4P3/8/8/P7/K7 b q - 0 1"
+    val relocatedMoves = List("e8c8", "a2a3", "d7d5", "e5d6", "d8d6")
+    val retainedMoves = List("d7d5", "e5d6", "e7d6")
+    val rootHistory = CanonicalPositionHistory
+      .from(rootFen, Nil, rootFen)
+      .toOption
+      .getOrElse(fail("expected the relocation fixture root history"))
+    val resulting = rootHistory
+      .extend(List(retainedMoves.head))
+      .toOption
+      .map(_.currentFen)
+      .getOrElse(fail("expected the relocation fixture played move"))
+    val started = CommentaryJobReducer
+      .startJob(
+        rootFen,
+        Nil,
+        rootFen,
+        retainedMoves.head,
+        resulting,
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .getOrElse(fail("expected the relocation fixture root search"))
+    val finished = CommentaryJobReducer
+      .submitIssuedWorkReport(
+        started,
+        completedReport(
+          started.issuedWork,
+          List(
+            relocatedMoves -> 600,
+            retainedMoves -> 0,
+            List("a8b8") -> -200
+          )
+        ),
+        nowEpochMs = 1L
+      )
+      .toOption
+      .collect { case value: CompletedCommentaryJob => value }
+      .getOrElse(fail("expected the relocation fixture review to complete"))
+    val response = RuntimeProtocol.encodePositionCommentaryResponse(
+      CommentaryJobSnapshot("d" * 32, "request-relocation-enables-recapture", Long.MaxValue, finished),
+      finished
+    )
+    val playedReview = (response \ "result" \ "selected_move_reviews")
+      .as[List[JsObject]]
+      .find(review => (review \ "move_uci").as[String] == retainedMoves.head)
+      .getOrElse(fail("expected the played review in the relocation fixture"))
+    val occurrenceResult = (playedReview \ "commentary" \ "occurrence_explanations")
+      .as[List[JsObject]] match
+        case exact :: Nil => exact
+        case other =>
+          fail(s"expected one relocation-enabled-recapture occurrence result, found ${other.size}")
+    assertEquals((occurrenceResult \ "proof_kind").as[String], "relocation_enables_recapture")
+    val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
+    assertEquals((subject \ "move_uci").as[String], retainedMoves.head)
+    assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
+
+    val proof = (occurrenceResult \ "proof").as[JsObject]
+    assertEquals(
+      proof.keys,
+      Set(
+        "source_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "relocated_responder_branch",
+        "retained_responder_branch",
+        "proof_paths",
+        "participants",
+        "relocation",
+        "target_capture",
+        "relocated_responder_recapture",
+        "retained_other_recapture"
+      )
+    )
+    val relocated = (proof \ "relocated_responder_branch").as[JsObject]
+    val retained = (proof \ "retained_responder_branch").as[JsObject]
+    assertCounterfactualBranchOwners(relocated, subject)
+    assertObservedBranchOwners(retained, subject)
+    assertEquals((relocated \ "branch_role").as[String], "relocated_responder")
+    assertEquals((retained \ "branch_role").as[String], "retained_responder")
+    assertEquals(
+      (relocated \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      relocatedMoves
+    )
+    assertEquals(
+      (retained \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
+      retainedMoves
+    )
+
+    val participants = (proof \ "participants").as[JsObject]
+    assertEquals((participants \ "attacker_at_common_root" \ "side").as[String], "white")
+    assertEquals((participants \ "attacker_at_common_root" \ "piece").as[String], "pawn")
+    assertEquals((participants \ "attacker_at_common_root" \ "square").as[String], "e5")
+    assertEquals((participants \ "attacker_at_capture" \ "square").as[String], "e5")
+    assertEquals((participants \ "target_at_common_root" \ "piece").as[String], "pawn")
+    assertEquals((participants \ "target_at_common_root" \ "square").as[String], "d7")
+    assertEquals((participants \ "captured_target" \ "piece").as[String], "pawn")
+    assertEquals((participants \ "captured_target" \ "square").as[String], "d5")
+    assertEquals((participants \ "recapture_square").as[String], "d6")
+    assertNotEquals(
+      (participants \ "captured_target" \ "square").as[String],
+      (participants \ "recapture_square").as[String]
+    )
+    assertEquals((participants \ "tracked_responder_at_seed" \ "square").as[String], "a8")
+    assertEquals((participants \ "tracked_responder_at_staging" \ "square").as[String], "d8")
+    assertEquals((participants \ "other_recapturer" \ "piece").as[String], "queen")
+    assertEquals((participants \ "other_recapturer" \ "square").as[String], "e7")
+
+    assertEquals((proof \ "relocation" \ "move_uci").as[String], "e8c8")
+    assertEquals((proof \ "relocation" \ "movement" \ "from").as[String], "a8")
+    assertEquals((proof \ "relocation" \ "movement" \ "to").as[String], "d8")
+    assertEquals((proof \ "relocation" \ "step_index").as[Int], 0)
+    assertEquals((proof \ "target_capture" \ "move_uci").as[String], "e5d6")
+    assertEquals((proof \ "target_capture" \ "relocated_step_index").as[Int], 3)
+    assertEquals((proof \ "target_capture" \ "retained_step_index").as[Int], 1)
+    assertEquals((proof \ "relocated_responder_recapture" \ "move_uci").as[String], "d8d6")
+    assertEquals((proof \ "relocated_responder_recapture" \ "step_index").as[Int], 4)
+    assertEquals((proof \ "retained_other_recapture" \ "move_uci").as[String], "e7d6")
+    assertEquals((proof \ "retained_other_recapture" \ "step_index").as[Int], 2)
+
+    val path = (proof \ "proof_paths").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other => fail(s"expected one exact lower proof path, found ${other.size}")
+    val premises = (path \ "premises").as[List[JsObject]]
+    val inventories = premises.filter(premise => (premise \ "contract").as[String] == "capture_recapture_inventory")
+    assertEquals(
+      inventories.map(premise => (premise \ "role").as[String]),
+      List("relocated_recapture_inventory", "retained_recapture_inventory")
+    )
+    val endpointMoves = premises.filter(premise => (premise \ "contract").as[String] == "legal_move")
+    assertEquals(
+      endpointMoves.map(premise => (premise \ "role").as[String]),
+      List(
+        "relocated_target_capture",
+        "relocated_responder_recapture",
+        "retained_target_capture",
+        "retained_other_recapture"
+      )
+    )
+    val targetCapture = (proof \ "target_capture").as[JsObject]
+    val capturedTarget = (participants \ "captured_target").as[JsObject]
+    val capturedAttacker = Json.obj(
+      "side" -> (targetCapture \ "movement" \ "side").as[String],
+      "piece" -> (targetCapture \ "movement" \ "piece_after").as[String],
+      "square" -> (targetCapture \ "movement" \ "to").as[String]
+    )
+    def assertEndpoint(
+        role: String,
+        branch: JsObject,
+        stepIndex: Int,
+        transition: JsObject,
+        captured: JsObject
+    ): Unit =
+      val premise = endpointMoves.find(value => (value \ "role").as[String] == role)
+        .getOrElse(fail(s"expected endpoint premise $role"))
+      assertEquals((premise \ "branch_id").as[String], (branch \ "branch_id").as[String])
+      assertEquals((premise \ "branch_role").as[String], (branch \ "branch_role").as[String])
+      assertEquals((premise \ "step_index").as[Int], stepIndex)
+      assertEquals((premise \ "move_uci").as[String], (transition \ "move_uci").as[String])
+      assertEquals((premise \ "movement").as[JsObject], (transition \ "movement").as[JsObject])
+      assertEquals((premise \ "capture").as[JsObject], captured)
+      assertEquals(
+        (premise \ "source_premise_ids").as[List[String]],
+        List(
+          (premise \ "issuer_evidence_id").as[String],
+          (premise \ "issuer_occurrence_id").as[String],
+          s"legal-move:${(premise \ "legal_move_semantic_id").as[String]}"
+        ).sorted
+      )
+    assertEndpoint(
+      "relocated_target_capture",
+      relocated,
+      (targetCapture \ "relocated_step_index").as[Int],
+      targetCapture,
+      capturedTarget
+    )
+    assertEndpoint(
+      "retained_target_capture",
+      retained,
+      (targetCapture \ "retained_step_index").as[Int],
+      targetCapture,
+      capturedTarget
+    )
+    assertEndpoint(
+      "relocated_responder_recapture",
+      relocated,
+      (proof \ "relocated_responder_recapture" \ "step_index").as[Int],
+      (proof \ "relocated_responder_recapture").as[JsObject],
+      capturedAttacker
+    )
+    assertEndpoint(
+      "retained_other_recapture",
+      retained,
+      (proof \ "retained_other_recapture" \ "step_index").as[Int],
+      (proof \ "retained_other_recapture").as[JsObject],
+      capturedAttacker
+    )
+    val continuity = premises.filter(premise => (premise \ "contract").as[String] == "object_continuity_step")
+    val continuityRoles = Set(
+      "relocated_branch_target_continuity",
+      "retained_branch_target_continuity",
+      "relocated_responder_continuity",
+      "retained_responder_continuity",
+      "relocated_branch_attacker_continuity",
+      "retained_branch_attacker_continuity"
+    )
+    assertEquals(continuity.map(premise => (premise \ "role").as[String]).toSet, continuityRoles)
+    assert(continuity.size > 9)
+    assert(continuity.groupBy(premise => (premise \ "role").as[String]).values.exists(_.size > 1))
+    val occurrenceKeys = continuity.map(premise => (
+      (premise \ "role").as[String],
+      (premise \ "branch_id").as[String],
+      (premise \ "step_index").as[Int],
+      (premise \ "issuer_occurrence_id").as[String]
+    ))
+    assertEquals(occurrenceKeys.distinct.size, occurrenceKeys.size)
+    val branchesById = List(relocated, retained).map(branch => (branch \ "branch_id").as[String] -> branch).toMap
+    continuity.foreach { premise =>
+      val sources = (premise \ "source_premise_ids").as[List[String]]
+      assertEquals(
+        sources,
+        List(
+          (premise \ "issuer_evidence_id").as[String],
+          (premise \ "issuer_occurrence_id").as[String],
+          s"legal-move:${(premise \ "legal_move_semantic_id").as[String]}",
+          s"transition-footprint:${(premise \ "transition_footprint_id").as[String]}"
+        ).sorted
+      )
+      val branch = branchesById((premise \ "branch_id").as[String])
+      val steps = (branch \ "steps").as[List[JsObject]]
+      val step = steps((premise \ "step_index").as[Int])
+      assertEquals((premise \ "overall_move_uci").as[String], (step \ "move_uci").as[String])
+      val before = (premise \ "before").as[JsObject]
+      val after = (premise \ "after").as[JsObject]
+      (premise \ "transition_kind").as[String] match
+        case "retained" =>
+          assertEquals(before, after)
+          assert(!premise.keys.contains("selected_transition"))
+        case "primary" | "secondary" =>
+          val selected = (premise \ "selected_transition").as[JsObject]
+          assertEquals((selected \ "side").as[String], (before \ "side").as[String])
+          assertEquals((selected \ "from").as[String], (before \ "square").as[String])
+          assertEquals((selected \ "piece_before").as[String], (before \ "piece").as[String])
+          assertEquals((selected \ "to").as[String], (after \ "square").as[String])
+          assertEquals((selected \ "piece_after").as[String], (after \ "piece").as[String])
+        case other => fail(s"unexpected object-continuity transition kind $other")
+    }
+    assert(continuity.exists(premise => (premise \ "transition_kind").as[String] == "secondary"))
+    premises.foreach { premise =>
+      val sources = (premise \ "source_premise_ids").as[List[String]]
+      assert(sources.contains((premise \ "issuer_evidence_id").as[String]))
+      assert(sources.contains((premise \ "issuer_occurrence_id").as[String]))
+    }
+    val absence = (path \ "closed_absence_uses").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other => fail(s"expected one exact seed-recapture absence, found ${other.size}")
+    assertEquals((absence \ "role").as[String], "retained_seed_recapture_absent")
+    assertEquals((absence \ "query").as[String], "legal-move-from-to:black:a8:d6")
+    assertEquals((absence \ "after_step_index").as[Int], 1)
+    assertEquals((absence \ "branch_id").as[String], (retained \ "branch_id").as[String])
+    val states = (path \ "closed_state_uses").as[List[JsObject]]
+    val retainedContinuity = continuity.filter(premise => (premise \ "transition_kind").as[String] == "retained")
+    assertEquals(states.size, retainedContinuity.size)
+    retainedContinuity.foreach { premise =>
+      val after = (premise \ "after").as[JsObject]
+      val matching = states.filter(state =>
+        (state \ "role").as[String] == (premise \ "role").as[String] &&
+          (state \ "branch_id").as[String] == (premise \ "branch_id").as[String] &&
+          (state \ "branch_role").as[String] == (premise \ "branch_role").as[String] &&
+          (state \ "after_step_index").as[Int] == (premise \ "step_index").as[Int] &&
+          (state \ "query").as[String] ==
+            s"occupied-by:${(after \ "side").as[String]}:${(after \ "piece").as[String]}@${(after \ "square").as[String]}"
+      )
+      assertEquals(matching.size, 1)
+    }
+
+    val fixture = Json.parse(
+      Files.readString(
+        Paths.get(
+          "..",
+          "judgment-evaluation",
+          "fixtures",
+          "public-commentary-v6",
+          "relocation-enables-recapture-produced.json"
+        ),
+        StandardCharsets.UTF_8
+      )
+    )
+    assertEquals(Json.parse(Json.stringify(response)), fixture)
+
   test("v6 commentary keeps direct line-access proof in its exact typed channel"):
     val rootFen = "7k/q7/8/8/8/8/N7/R6K w - - 0 1"
     val referenceSourceMoves = List("a2b4", "h8g8", "a1a7")

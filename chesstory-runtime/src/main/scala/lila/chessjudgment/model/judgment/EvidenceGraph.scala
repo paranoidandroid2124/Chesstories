@@ -92,6 +92,10 @@ enum RootOwnedEffectProof:
       source: EvidenceRef,
       result: CaptureExclusionMoveOrderEvidence
   )
+  case RelocationEnablesRecapture(
+      source: EvidenceRef,
+      result: RelocationEnablesRecaptureEvidence
+  )
   case PassedPawnProgressRealizedAfterOnlyLegalReply(
       source: EvidenceRef,
       result: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence
@@ -139,6 +143,15 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
           family = BoundedCausalContractKind.CaptureExclusionMoveOrder,
+          sourceEvidenceId = source.id,
+          semanticId = result.semanticId,
+          occurrenceId = result.occurrenceId,
+          dependencyFingerprint = result.dependencyId,
+          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
+        )
+      case RootOwnedEffectProof.RelocationEnablesRecapture(source, result) =>
+        RootOwnedEffectOccurrenceIdentity(
+          family = BoundedCausalContractKind.RelocationEnablesRecapture,
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -224,6 +237,8 @@ private[chessjudgment] object DirectCauseChannel:
         Some(DirectCauseChannel(RootOwnedEffectProof.SquareReleaseRoute(ref, payload)))
       case EvidenceRecord(ref, payload: CaptureExclusionMoveOrderEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.CaptureExclusionMoveOrder(ref, payload)))
+      case EvidenceRecord(ref, payload: RelocationEnablesRecaptureEvidence, _) =>
+        Some(DirectCauseChannel(RootOwnedEffectProof.RelocationEnablesRecapture(ref, payload)))
       case EvidenceRecord(ref, payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(ref, payload)))
       case _ => None
@@ -1634,6 +1649,67 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderEvidence privat
   ): Boolean =
     occurrenceProof.consumesDependencies(subject, vacating, immediate)
 
+/** Exact responder relocation that enables one exact immediate recapture
+  * path. It does not assert uniqueness, force, preparation, overload, or a
+  * general move-order judgment.
+  */
+private[chessjudgment] final case class RelocationEnablesRecaptureEvidence private[chessjudgment] (
+    semantic: RelocationEnablesRecaptureSemanticProof,
+    occurrence: RelocationEnablesRecaptureOccurrence,
+    subjectOccurrence: ExplanationSubjectOccurrence,
+    dependencyFingerprint: String,
+    private[chessjudgment] val occurrenceProof: CertifiedRelocationEnablesRecapture
+) extends EvidencePayload:
+  require(occurrence.semanticId == semantic.semanticId)
+  require(
+    dependencyFingerprint.matches("[0-9a-f]{64}"),
+    "relocation recapture needs its complete dependency fingerprint"
+  )
+  def semanticId: String = semantic.semanticId
+  def occurrenceId: String = occurrence.occurrenceId
+  def dependencyId: String = dependencyFingerprint
+  def relocatedBranch: CausalBranchOccurrence = occurrence.relocatedBranch
+  def retainedBranch: CausalBranchOccurrence = occurrence.retainedBranch
+  def publicRelocatedBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(relocatedBranch)
+  def publicRetainedBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(retainedBranch)
+  def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
+  def publicProofPaths: List[BoundedCausalPublicProofPath] =
+    BoundedCausalPublicProjection.mixedPaths(proofPaths)
+  def attackerAtCommonRoot: RelationColoredPieceWitness = semantic.attackerAtCommonRoot
+  def attackerAtCapture: RelationColoredPieceWitness = semantic.attackerAtCapture
+  def targetAtCommonRoot: RelationColoredPieceWitness = semantic.targetAtCommonRoot
+  def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
+  def recaptureSquare: EvidenceSquare = semantic.recaptureSquare
+  def trackedResponderAtSeed: RelationColoredPieceWitness = semantic.trackedResponderAtSeed
+  def trackedResponderAtStaging: RelationColoredPieceWitness = semantic.trackedResponderAtStaging
+  def otherRecapturer: RelationColoredPieceWitness = semantic.otherRecapturer
+  def relocationMove: RelationMoveTransitionWitness = semantic.relocation
+  def targetCaptureMove: RelationMoveTransitionWitness = semantic.targetCapture
+  def relocatedResponderRecapture: RelationMoveTransitionWitness = semantic.relocatedResponderRecapture
+  def retainedOtherRecapture: RelationMoveTransitionWitness = semantic.retainedOtherRecapture
+  def relocationStepIndex: Int = occurrence.relocationStepIndex
+  def relocatedCaptureStepIndex: Int = occurrence.relocatedCaptureStepIndex
+  def relocatedRecaptureStepIndex: Int = occurrence.relocatedRecaptureStepIndex
+  def retainedCaptureStepIndex: Int = occurrence.retainedCaptureStepIndex
+  def retainedRecaptureStepIndex: Int = occurrence.retainedRecaptureStepIndex
+  def relocationMoveUci: String = relocatedBranch.replaySteps(relocationStepIndex).moveUci
+  def targetCaptureMoveUci: String =
+    val relocatedMove = relocatedBranch.replaySteps(relocatedCaptureStepIndex).moveUci
+    val retainedMove = retainedBranch.replaySteps(retainedCaptureStepIndex).moveUci
+    require(EvidenceRef.sameMove(relocatedMove, retainedMove))
+    relocatedMove
+  def relocatedResponderRecaptureMoveUci: String =
+    relocatedBranch.replaySteps(relocatedRecaptureStepIndex).moveUci
+  def retainedOtherRecaptureMoveUci: String = retainedBranch.replaySteps(retainedRecaptureStepIndex).moveUci
+
+  private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
+    occurrenceProof.proves(record, this)
+
+  private[chessjudgment] def lowerRecordsAreCanonical(byId: Map[String, EvidenceRecord]): Boolean =
+    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
+
 /** Read-only public occurrence projection of one exact replay step. */
 final case class PassedPawnProgressPublicStep(
     index: Int,
@@ -2036,74 +2112,163 @@ final case class LineReplayStep(
 )
 
 final case class LineObjectTrajectory private (
-    rootStep: LineReplayStep,
-    futureStep: LineReplayStep,
-    interveningSteps: List[LineReplayStep],
-    rootBeforeRole: EvidencePieceRole,
-    pieceRole: EvidencePieceRole,
-    futureAfterRole: EvidencePieceRole,
-    color: Color,
-    rootFrom: EvidenceSquare,
-    rootTo: EvidenceSquare,
-    futureFrom: EvidenceSquare,
-    futureTo: EvidenceSquare,
     plyOffset: Int,
+    private[chessjudgment] val rootLegalOccurrence: ReplayLegalMoveOccurrence,
+    private[chessjudgment] val rootTransition: RelationMoveTransitionWitness,
+    private[chessjudgment] val futureLegalOccurrence: ReplayLegalMoveOccurrence,
+    private[chessjudgment] val futureTransition: RelationMoveTransitionWitness,
+    private[chessjudgment] val interveningLegalOccurrences: List[ReplayLegalMoveOccurrence],
     private[chessjudgment] val persistenceStates: List[ClosedPositionStateAuthority]
 ):
   require(
-    persistenceStates.map(_.step) == interveningSteps,
-    "an object trajectory must retain one exact occupant state for every intervening occurrence"
+    ReplayLegalMoveOccurrence.ownsTransition(rootLegalOccurrence, rootTransition) &&
+      ReplayLegalMoveOccurrence.ownsTransition(futureLegalOccurrence, futureTransition),
+    "an object trajectory must retain exact selected footprint transitions"
+  )
+  require(
+    rootTransition.side == futureTransition.side &&
+      rootTransition.afterRole == futureTransition.beforeRole &&
+      rootTransition.to == futureTransition.from,
+    "an object trajectory must retain one physical object between its selected transitions"
+  )
+  require(
+    interveningLegalOccurrences.map(_.step) == persistenceStates.map(_.step) &&
+      interveningLegalOccurrences.forall(occurrence =>
+        ReplayLegalMoveOccurrence.leavesUntouched(occurrence, trackedAfterRoot)
+      ) && persistenceStates.forall(state => state.query match
+        case PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece) => piece == trackedAfterRoot
+        case _ => false
+      ),
+    "an object trajectory must retain every untouched footprint and occupant occurrence"
+  )
+
+  def rootStep: LineReplayStep = rootLegalOccurrence.step
+  def futureStep: LineReplayStep = futureLegalOccurrence.step
+  def interveningSteps: List[LineReplayStep] = interveningLegalOccurrences.map(_.step)
+  def rootBeforeRole: EvidencePieceRole = rootTransition.beforeRole
+  def pieceRole: EvidencePieceRole = rootTransition.afterRole
+  def futureAfterRole: EvidencePieceRole = futureTransition.afterRole
+  def color: Color = rootTransition.side
+  def rootFrom: EvidenceSquare = rootTransition.from
+  def rootTo: EvidenceSquare = rootTransition.to
+  def futureFrom: EvidenceSquare = futureTransition.from
+  def futureTo: EvidenceSquare = futureTransition.to
+
+  private def trackedAfterRoot: RelationColoredPieceWitness =
+    RelationColoredPieceWitness(rootTransition.to, rootTransition.afterRole, rootTransition.side)
+
+private[chessjudgment] final case class RecordBoundObjectContinuityStep(
+    index: Int,
+    legalOccurrence: RecordBoundLegalMoveOccurrence,
+    before: RelationColoredPieceWitness,
+    after: RelationColoredPieceWitness,
+    selectedTransition: Option[RelationMoveTransitionWitness],
+    retainedState: Option[ClosedPositionStateAuthority]
+):
+  require(index >= 0 && legalOccurrence.step.ply > 0)
+  require(
+    selectedTransition match
+      case Some(transition) =>
+        retainedState.isEmpty &&
+          ReplayLegalMoveOccurrence.ownsTransition(legalOccurrence.occurrence, transition) &&
+          before == RelationColoredPieceWitness(transition.from, transition.beforeRole, transition.side) &&
+          after == RelationColoredPieceWitness(transition.to, transition.afterRole, transition.side)
+      case None =>
+        before == after && legalOccurrence.leavesUntouched(before) &&
+          retainedState.exists(state =>
+            state.issuerRecord == legalOccurrence.issuerRecord &&
+              state.step == legalOccurrence.step && (state.query match
+              case PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece) => piece == after
+              case _ => false)
+          ),
+    "an object-continuity step needs one selected movement or one untouched occupied state"
+  )
+  val stepIndex: Int = index
+  val transitionKind: ObjectContinuityStepKind = selectedTransition match
+    case Some(value) if value == legalOccurrence.movement => ObjectContinuityStepKind.Primary
+    case Some(_)                                          => ObjectContinuityStepKind.Secondary
+    case None                                             => ObjectContinuityStepKind.Retained
+  def stableKey: String = List(
+    stepIndex.toString,
+    legalOccurrence.issuerEvidenceId,
+    legalOccurrence.occurrenceId,
+    legalOccurrence.transitionFootprintId,
+    BoundedCausalIdentity.coloredPieceKey(before),
+    BoundedCausalIdentity.coloredPieceKey(after),
+    selectedTransition.map(_.stableKey).getOrElse("retained"),
+    retainedState.map(state => s"${state.occurrence.occurrenceId}:${state.semanticProofId}").getOrElse("moved")
+  ).mkString("|")
+  def remainsCertifiedBy(rebound: RecordBoundLegalMoveOccurrence): Boolean =
+    rebound == legalOccurrence &&
+      selectedTransition.forall(ReplayLegalMoveOccurrence.ownsTransition(legalOccurrence.occurrence, _)) &&
+      selectedTransition.isDefined == retainedState.isEmpty &&
+      retainedState.forall(state =>
+        ClosedPositionStateAuthority.certifiedBy(
+          rebound.lineRecord,
+          rebound.positionAfterOccurrence,
+          state.occurrence,
+          state.proof
+        ).contains(state)
+      ) && (selectedTransition.nonEmpty || legalOccurrence.leavesUntouched(before))
+
+private[chessjudgment] final case class LineObjectContinuity(
+    rootPiece: RelationColoredPieceWitness,
+    endpointPiece: RelationColoredPieceWitness,
+    steps: List[RecordBoundObjectContinuityStep]
+):
+  require(steps.map(_.index) == steps.indices.toList)
+  require(
+    steps.foldLeft(rootPiece) { (piece, step) =>
+      require(step.before == piece, "object continuity cannot change identity between replay steps")
+      step.after
+    } == endpointPiece,
+    "object continuity must reach its exact endpoint"
   )
 
 object LineObjectTrajectory:
+  private final case class IssuedStep(
+      index: Int,
+      legalOccurrence: RecordBoundLegalMoveOccurrence
+  )
+
   private[chessjudgment] def findAll(
       rootStep: LineReplayStep,
       continuation: List[LineReplayStep],
       replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[EvidenceRecord]
+      ownerAt: LineReplayStep => Option[CertifiedLineReplayRecord],
+      selectedRootTransition: Option[RelationMoveTransitionWitness]
   ): List[LineObjectTrajectory] =
-    val exactContinuation =
-      replay.replaySteps.indexOf(rootStep) match
-        case rootIndex if rootIndex >= 0 &&
-            replay.replaySteps.slice(rootIndex + 1, rootIndex + 1 + continuation.size) == continuation =>
-          continuation
-        case _ => Nil
-    replay.transition(rootStep).toList.flatMap { rootTransition =>
-      rootTransition.boardFootprint.pieceTransitions.flatMap { rootMovement =>
-        firstFutureMovement(rootMovement, exactContinuation, replay).flatMap { case (futureStep, futureMovement, offset) =>
-          val intervening = exactContinuation.take(offset - 1)
-          val tracked = RelationColoredPieceWitness(
-            EvidenceSquare(rootMovement.to.key),
-            EvidencePieceRole(rootMovement.afterRole.name),
-            rootMovement.side
+    val trajectories = issuedStep(replay, ownerAt, rootStep, 0).toList.flatMap { root =>
+      ReplayLegalMoveOccurrence
+        .pieceTransitions(root.legalOccurrence.occurrence)
+        .filter(transition => selectedRootTransition.forall(_ == transition))
+        .flatMap { rootTransition =>
+          val trackedAfterRoot = RelationColoredPieceWitness(
+            rootTransition.to,
+            rootTransition.afterRole,
+            rootTransition.side
           )
-          val persistence = intervening.flatMap(step =>
-            ownerAt(step).flatMap(owner =>
-              ClosedPositionStateAuthority.atStep(owner, step)((occurrence, scope) =>
-                occurrence.existingOccupantState(tracked, scope)
+          firstFutureMovement(
+            trackedAfterRoot,
+            rootStep,
+            continuation,
+            replay,
+            ownerAt
+          ).map {
+            case (future, futureTransition, intervening, persistenceStates) =>
+              LineObjectTrajectory(
+                plyOffset = future.index,
+                rootLegalOccurrence = root.legalOccurrence.occurrence,
+                rootTransition = rootTransition,
+                futureLegalOccurrence = future.legalOccurrence.occurrence,
+                futureTransition = futureTransition,
+                interveningLegalOccurrences = intervening.map(_.legalOccurrence.occurrence),
+                persistenceStates = persistenceStates
               )
-            )
-          )
-          Option.when(persistence.size == intervening.size)(
-            LineObjectTrajectory(
-              rootStep = rootStep,
-              futureStep = futureStep,
-              interveningSteps = intervening,
-              rootBeforeRole = EvidencePieceRole(rootMovement.beforeRole.name),
-              pieceRole = EvidencePieceRole(rootMovement.afterRole.name),
-              futureAfterRole = EvidencePieceRole(futureMovement.afterRole.name),
-              color = rootMovement.side,
-              rootFrom = EvidenceSquare(rootMovement.from.key),
-              rootTo = EvidenceSquare(rootMovement.to.key),
-              futureFrom = EvidenceSquare(futureMovement.from.key),
-              futureTo = EvidenceSquare(futureMovement.to.key),
-              plyOffset = offset,
-              persistenceStates = persistence
-            )
-          )
+          }
         }
-      }
-    }.sortBy(trajectory =>
+    }
+    val ordered = trajectories.sortBy(trajectory =>
       (
         trajectory.rootFrom.key,
         trajectory.rootTo.key,
@@ -2112,27 +2277,128 @@ object LineObjectTrajectory:
         trajectory.futureTo.key
       )
     )
+    require(
+      ordered.map(value =>
+        (value.rootLegalOccurrence.occurrenceId, value.rootTransition.stableKey,
+          value.futureLegalOccurrence.occurrenceId, value.futureTransition.stableKey)
+      ).distinct.size == ordered.size,
+      "one replay cannot issue duplicate object trajectories"
+    )
+    ordered
 
+  /** Follows one exact physical object backward from an endpoint through one
+    * admitted replay prefix. Each step consumes the canonical transition
+    * footprint once; untouched steps additionally consume their issued
+    * after-position `OccupiedBy` state.
+    */
+  private[chessjudgment] def continuitiesEndingAt(
+      exactPrefix: List[RecordBoundLegalMoveOccurrence],
+      endpoints: List[(Int, RelationColoredPieceWitness)]
+  ): List[Option[LineObjectContinuity]] =
+    val issuedPrefix = exactPrefix.zipWithIndex.map { case (occurrence, index) => IssuedStep(index, occurrence) }
+    endpoints.map { case (untilExclusive, endpointPiece) =>
+      scanBackward(issuedPrefix.take(untilExclusive), endpointPiece)
+    }
+
+  private def issuedStep(
+      replay: CanonicalLineReplay,
+      ownerAt: LineReplayStep => Option[CertifiedLineReplayRecord],
+      step: LineReplayStep,
+      index: Int
+  ): Option[IssuedStep] =
+    for
+      transition <- replay.transition(step)
+      lineRecord <- ownerAt(step)
+      rebound <- RecordBoundLegalMoveOccurrence.certifiedBy(lineRecord, transition.legalMoveOccurrence)
+    yield IssuedStep(index, rebound)
+
+  private def retainedState(
+      step: IssuedStep,
+      piece: RelationColoredPieceWitness
+  ): Option[ClosedPositionStateAuthority] =
+    Option.when(step.legalOccurrence.leavesUntouched(piece))(()).flatMap(_ =>
+      ClosedPositionStateAuthority.atOccurrenceBy(
+        step.legalOccurrence.lineRecord,
+        step.legalOccurrence.positionAfterOccurrence
+      )((occurrence, scope) => occurrence.existingOccupantState(piece, scope))
+    )
+
+  /** Finds the first later movement of the exact object selected at the root.
+    * Each replay step is inspected once. Retained steps consume the same
+    * no-touch/OccupiedBy binding used by endpoint-directed continuity.
+    */
   private def firstFutureMovement(
-      tracked: BoardPieceTransition,
+      trackedAfterRoot: RelationColoredPieceWitness,
+      rootStep: LineReplayStep,
       continuation: List[LineReplayStep],
-      replay: CanonicalLineReplay
-  ): Option[(LineReplayStep, BoardPieceTransition, Int)] =
-    def loop(remaining: List[LineReplayStep], offset: Int): Option[(LineReplayStep, BoardPieceTransition, Int)] =
+      replay: CanonicalLineReplay,
+      ownerAt: LineReplayStep => Option[CertifiedLineReplayRecord]
+  ): Option[(IssuedStep, RelationMoveTransitionWitness, List[IssuedStep], List[ClosedPositionStateAuthority])] =
+    @annotation.tailrec
+    def loop(
+        remaining: List[LineReplayStep],
+        previous: LineReplayStep,
+        index: Int,
+        intervening: List[IssuedStep],
+        persistence: List[ClosedPositionStateAuthority]
+    ): Option[(IssuedStep, RelationMoveTransitionWitness, List[IssuedStep], List[ClosedPositionStateAuthority])] =
       remaining match
         case Nil => None
         case step :: tail =>
-          replay.transition(step).flatMap { transition =>
-            transition.boardFootprint.pieceTransitions.filter(movement =>
-              movement.side == tracked.side && movement.beforeRole == tracked.afterRole &&
-                movement.from == tracked.to
-            ) match
-              case exact :: Nil => Some((step, exact, offset))
-              case Nil if !transition.boardFootprint.changedSquareSet(tracked.to) =>
-                loop(tail, offset + 1)
-              case _ => None
-          }
-    loop(continuation, 1)
+          Option.when(step.ply == previous.ply + 1 && step.fenBefore == previous.fenAfter)(())
+            .flatMap(_ => issuedStep(replay, ownerAt, step, index)) match
+            case None => None
+            case Some(issued) =>
+              ReplayLegalMoveOccurrence.pieceTransitions(issued.legalOccurrence.occurrence).filter(transition =>
+                RelationColoredPieceWitness(transition.from, transition.beforeRole, transition.side) == trackedAfterRoot
+              ) match
+                case exact :: Nil => Some((issued, exact, intervening.reverse, persistence.reverse))
+                case Nil =>
+                  retainedState(issued, trackedAfterRoot) match
+                    case Some(state) => loop(tail, step, index + 1, issued :: intervening, state :: persistence)
+                    case None        => None
+                case _ => None
+    loop(continuation, rootStep, 1, Nil, Nil)
+
+  private def scanBackward(
+      issued: List[IssuedStep],
+      endpointPiece: RelationColoredPieceWitness
+  ): Option[LineObjectContinuity] =
+    issued.reverse.foldLeft(Option(endpointPiece -> List.empty[RecordBoundObjectContinuityStep])) {
+      case (accumulator, step) =>
+        accumulator.flatMap { case (current, laterSteps) =>
+          val arrivals = ReplayLegalMoveOccurrence.pieceTransitions(step.legalOccurrence.occurrence).filter(transition =>
+            RelationColoredPieceWitness(transition.to, transition.afterRole, transition.side) == current
+          )
+          arrivals match
+            case transition :: Nil =>
+              val before = RelationColoredPieceWitness(
+                transition.from,
+                transition.beforeRole,
+                transition.side
+              )
+              Some(before -> (RecordBoundObjectContinuityStep(
+                step.index,
+                step.legalOccurrence,
+                before,
+                current,
+                Some(transition),
+                None
+              ) :: laterSteps))
+            case Nil =>
+              retainedState(step, current).map(state => current -> (RecordBoundObjectContinuityStep(
+                step.index,
+                step.legalOccurrence,
+                current,
+                current,
+                None,
+                Some(state)
+              ) :: laterSteps))
+            case _ => None
+        }
+    }.map { case (rootPiece, steps) =>
+      LineObjectContinuity(rootPiece, endpointPiece, steps)
+    }
 
 /** One exact positive-state premise as used by the passed-pawn causal graph.
   * Semantic state meaning is shared across transpositions; LegalLine and
@@ -5510,6 +5776,8 @@ final case class EvidenceRecord(
         List(payload.occurrence.releasedRouteLine, payload.occurrence.retainedBlockerLine)
       case payload: CaptureExclusionMoveOrderEvidence =>
         List(payload.occurrence.vacatingLine, payload.occurrence.immediateLine)
+      case payload: RelocationEnablesRecaptureEvidence =>
+        List(payload.occurrence.relocatedLine, payload.occurrence.retainedLine)
       case CandidateLineEvaluationEvidence(payloadLine, _) =>
         List(payloadLine)
       case CandidateComparisonEvidence(fact) =>
@@ -5957,6 +6225,9 @@ final class TypedEvidenceGraph private (
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: CaptureExclusionMoveOrderEvidence =>
+          exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
+            payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
+        case payload: RelocationEnablesRecaptureEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence =>

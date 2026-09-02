@@ -43,7 +43,7 @@ private[chessjudgment] final case class PassedPawnProgressPathManifest(
 
   def stableKey: String =
     List(
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       resultRoute.stableKey,
       supplementalPremiseUses.map(_.stableKey).mkString("[", ",", "]"),
       stateBindings.map(_.stableKey).mkString("[", ",", "]"),

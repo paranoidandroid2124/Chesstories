@@ -126,7 +126,7 @@ private[chessjudgment] sealed trait SoleRecapturerRemovalBeforeTargetCaptureMani
   final override def stateBindings = postRemovalPersistence
   final def stableKey: String =
     List(
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       premiseUses.map(_.stableKey).mkString("[", ",", "]"),
       postRemovalNoRecapture.stableKey,
       postRemovalPersistence.map(_.stableKey).mkString("[", ",", "]")

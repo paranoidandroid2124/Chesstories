@@ -209,7 +209,7 @@ private[chessjudgment] sealed trait SquareReleaseRouteManifest extends BoundedCa
     releaseMove :: (routeMoves ++ terminalReply.toList)
   final def stableKey: String =
     List(
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       premiseUses.map(_.stableKey).mkString("[", ",", "]"),
       supplementalPremiseUses.map(_.stableKey).mkString("[", ",", "]"),
       absenceBindings.map(_.stableKey).mkString("[", ",", "]"),
@@ -488,7 +488,7 @@ private[chessjudgment] final case class SquareReleaseRouteDependencyManifest pri
       "retained-blocker-root",
       BoundedCausalIdentity.evidenceRecordKey(retainedBlocker.lineOwner),
       BoundedCausalIdentity.evidenceRecordKey(retainedBlocker.transitionOwner),
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]"),
@@ -857,6 +857,7 @@ private[chessjudgment] object SquareReleaseRouteProof:
       retainedBlocker: CertifiedRootOccurrence
   ): Option[ExactInputs] =
     val releasedSteps = releasedRoute.replay.replaySteps
+    val releasedStepCatalog = releasedSteps.toVector
     val retainedSteps = retainedBlocker.replay.replaySteps
     for
       releaseStep <- releasedSteps.headOption
@@ -866,11 +867,16 @@ private[chessjudgment] object SquareReleaseRouteProof:
       releaseOccurrence <- releasedRoute.replay.legalMoveOccurrence(releaseStep)
       if releaseOccurrence == demand.releaseOccurrence
       release <- RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, releaseOccurrence)
-      routeOccurrences <- exactRouteOccurrences(demand, releasedRoute.replay)
+      routeOccurrences <- exactRouteOccurrences(demand, releasedRoute.replay, releasedStepCatalog)
       route <- traverseOptions(routeOccurrences.map(RecordBoundLegalMoveOccurrence.certified(releasedRoute.lineOwner, _)))
       if route.head.capture.isEmpty && route.head.movement.side == release.movement.side &&
         route.head.movement.to == release.movement.from
-      trajectories <- exactTrajectories(releasedRoute.lineOwner, route)
+      trajectories <- exactTrajectories(
+        releasedRoute.lineOwner,
+        route,
+        demand.routeStepIndices,
+        releasedStepCatalog
+      )
       terminalAuthority <- exactTerminalAuthority(demand, releasedRoute.lineOwner)
       terminal <- terminalAuthority.map(SquareReleaseRouteTerminal.from).getOrElse(
         Some(SquareReleaseRouteTerminal.Occupation)
@@ -1174,21 +1180,34 @@ private[chessjudgment] object SquareReleaseRouteProof:
 
   private def exactRouteOccurrences(
       demand: SquareReleaseRouteDemand,
-      replay: CanonicalLineReplay
+      replay: CanonicalLineReplay,
+      steps: Vector[LineReplayStep]
   ): Option[List[ReplayLegalMoveOccurrence]] =
     val rebound = demand.routeStepIndices.zip(demand.routeOccurrences).flatMap { case (stepIndex, expected) =>
-      replay.replaySteps.lift(stepIndex).flatMap(replay.legalMoveOccurrence).filter(_ == expected)
+      steps.lift(stepIndex).flatMap(replay.legalMoveOccurrence).filter(_ == expected)
     }
     Option.when(rebound.size == demand.routeOccurrences.size)(rebound)
 
   private def exactTrajectories(
       record: EvidenceRecord,
-      route: List[RecordBoundLegalMoveOccurrence]
+      route: List[RecordBoundLegalMoveOccurrence],
+      indices: List[Int],
+      steps: Vector[LineReplayStep]
   ): Option[List[RecordBoundObjectTrajectory]] =
-    val exact = route.zip(route.drop(1)).flatMap { case (before, after) =>
-      RecordBoundObjectTrajectory.firstAfter(record, before.step).filter(_.futureMovement == after)
+    Option.when(route.size == indices.size)(()).flatMap { _ =>
+      val exact = route.zip(route.drop(1)).zip(indices.zip(indices.drop(1))).flatMap {
+        case ((before, after), (beforeIndex, afterIndex)) =>
+          val continuation = steps.slice(beforeIndex + 1, afterIndex + 1).toList
+          Option
+            .when(afterIndex > beforeIndex && continuation.size == afterIndex - beforeIndex)(continuation)
+            .flatMap(segment =>
+              RecordBoundObjectTrajectory
+                .firstAfter(record, before.step, before.movement, segment)
+                .filter(trajectory => trajectory.rootMovement == before && trajectory.futureMovement == after)
+            )
+      }
+      Option.when(exact.size == route.size - 1)(exact)
     }
-    Option.when(exact.size == route.size - 1)(exact)
 
   private def exactTerminalAuthority(
       demand: SquareReleaseRouteDemand,

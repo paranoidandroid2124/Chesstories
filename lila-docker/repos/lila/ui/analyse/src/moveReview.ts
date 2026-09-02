@@ -96,6 +96,7 @@ export type MoveReviewProofKind =
   | 'vacated_gate_enables_unrecapturable_slider_capture'
   | 'square_release_route'
   | 'capture_exclusion_move_order'
+  | 'relocation_enables_recapture'
   | 'passed_pawn_progress_realized_after_only_legal_reply';
 
 export type MoveReviewRootProvenance = 'counterfactual_analyzed_root' | 'observed_game_root';
@@ -138,7 +139,9 @@ export type MoveReviewOccurrenceBranchRole =
   | 'released_square_route'
   | 'retained_blocker'
   | 'vacating_then_deferred'
-  | 'immediate_deferred_capture';
+  | 'immediate_deferred_capture'
+  | 'relocated_responder'
+  | 'retained_responder';
 
 export interface MoveReviewOccurrenceBranch<
   Role extends MoveReviewOccurrenceBranchRole = MoveReviewOccurrenceBranchRole,
@@ -215,6 +218,40 @@ export interface MoveReviewLegalMovePremiseUse<
   capture?: MoveReviewColoredPieceWitness;
 }
 
+type MoveReviewRelocationContinuityRole =
+  | 'relocated_branch_target_continuity'
+  | 'retained_branch_target_continuity'
+  | 'relocated_responder_continuity'
+  | 'retained_responder_continuity'
+  | 'relocated_branch_attacker_continuity'
+  | 'retained_branch_attacker_continuity';
+
+interface MoveReviewObjectContinuityPremiseUse<
+  Role extends string = string,
+  BranchRole extends MoveReviewOccurrenceBranchRole = MoveReviewOccurrenceBranchRole,
+> {
+  role: Role;
+  contract: 'object_continuity_step';
+  transitionKind: 'retained' | 'primary' | 'secondary';
+  overallMoveUci: Uci;
+  before: MoveReviewColoredPieceWitness;
+  after: MoveReviewColoredPieceWitness;
+  selectedTransition?: MoveReviewMovementWitness;
+  legalMoveSemanticId: string;
+  transitionFootprintId: string;
+  issuerEvidenceId: string;
+  issuerOccurrenceId: string;
+  sourcePremiseIds: string[];
+  branchId: string;
+  branchRole: BranchRole;
+  stepIndex: number;
+}
+
+type MoveReviewRelocationContinuityPremiseUse = MoveReviewObjectContinuityPremiseUse<
+  MoveReviewRelocationContinuityRole,
+  'relocated_responder' | 'retained_responder'
+>;
+
 export type MoveReviewClosureIssuer =
   | 'position_relation_extractor.closed_relation_inventory'
   | 'position_relation_extractor.closed_position_state_inventory';
@@ -238,9 +275,13 @@ export interface MoveReviewClosureUse<
 }
 
 export interface MoveReviewBoundedProofPath<
-  Premise extends MoveReviewRelationPremiseUse | MoveReviewLegalMovePremiseUse =
+  Premise extends
     | MoveReviewRelationPremiseUse
-    | MoveReviewLegalMovePremiseUse,
+    | MoveReviewLegalMovePremiseUse
+    | MoveReviewObjectContinuityPremiseUse =
+    | MoveReviewRelationPremiseUse
+    | MoveReviewLegalMovePremiseUse
+    | MoveReviewObjectContinuityPremiseUse,
   Absence extends MoveReviewClosureUse = MoveReviewClosureUse,
   State extends MoveReviewClosureUse = MoveReviewClosureUse,
 > {
@@ -428,6 +469,52 @@ export interface MoveReviewCaptureExclusionProof extends MoveReviewOccurrencePro
   laterDeferredStepIndex: number;
 }
 
+type MoveReviewRelocationRecapturePremise =
+  | MoveReviewRelationPremiseUse<
+      'relocated_recapture_inventory',
+      'capture_recapture_inventory',
+      'relocated_responder'
+    >
+  | MoveReviewRelationPremiseUse<
+      'retained_recapture_inventory',
+      'capture_recapture_inventory',
+      'retained_responder'
+    >
+  | MoveReviewLegalMovePremiseUse<
+      'relocated_target_capture' | 'relocated_responder_recapture',
+      'relocated_responder'
+    >
+  | MoveReviewLegalMovePremiseUse<
+      'retained_target_capture' | 'retained_other_recapture',
+      'retained_responder'
+    >
+  | MoveReviewRelocationContinuityPremiseUse;
+
+interface MoveReviewRelocationEnablesRecaptureProof extends MoveReviewOccurrenceProofBase {
+  relocatedResponderBranch: MoveReviewOccurrenceBranch<'relocated_responder'>;
+  retainedResponderBranch: MoveReviewOccurrenceBranch<'retained_responder'>;
+  proofPaths: [MoveReviewBoundedProofPath<MoveReviewRelocationRecapturePremise>];
+  participants: {
+    attackerAtCommonRoot: MoveReviewColoredPieceWitness;
+    attackerAtCapture: MoveReviewColoredPieceWitness;
+    targetAtCommonRoot: MoveReviewColoredPieceWitness;
+    capturedTarget: MoveReviewColoredPieceWitness;
+    recaptureSquare: Key;
+    trackedResponderAtSeed: MoveReviewColoredPieceWitness;
+    trackedResponderAtStaging: MoveReviewColoredPieceWitness;
+    otherRecapturer: MoveReviewColoredPieceWitness;
+  };
+  relocation: { movement: MoveReviewMovementWitness; moveUci: Uci; stepIndex: number };
+  targetCapture: {
+    movement: MoveReviewMovementWitness;
+    moveUci: Uci;
+    relocatedStepIndex: number;
+    retainedStepIndex: number;
+  };
+  relocatedResponderRecapture: { movement: MoveReviewMovementWitness; moveUci: Uci; stepIndex: number };
+  retainedOtherRecapture: { movement: MoveReviewMovementWitness; moveUci: Uci; stepIndex: number };
+}
+
 export interface MoveReviewPassedPawnLine {
   lineId: string;
   rootMove: Uci;
@@ -608,6 +695,7 @@ export type MoveReviewOccurrenceProof =
   | MoveReviewVacatedGateProof
   | MoveReviewSquareReleaseProof
   | MoveReviewCaptureExclusionProof
+  | MoveReviewRelocationEnablesRecaptureProof
   | MoveReviewPassedPawnProgressProof;
 
 interface MoveReviewOccurrenceExplanationBase {
@@ -632,6 +720,10 @@ export type MoveReviewOccurrenceExplanation = MoveReviewOccurrenceExplanationBas
       }
     | { proofKind: 'square_release_route'; proof: MoveReviewSquareReleaseProof }
     | { proofKind: 'capture_exclusion_move_order'; proof: MoveReviewCaptureExclusionProof }
+    | {
+        proofKind: 'relocation_enables_recapture';
+        proof: MoveReviewRelocationEnablesRecaptureProof;
+      }
     | {
         proofKind: 'passed_pawn_progress_realized_after_only_legal_reply';
         proof: MoveReviewPassedPawnProgressProof;
@@ -920,6 +1012,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
       square_release_route: '칸 해방 후 기물 경로',
       capture_exclusion_move_order: '포획 응수를 배제한 수순',
+      relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
       passed_pawn_progress_realized_after_only_legal_reply: '유일 합법 응수 후 통과폰 전진',
     },
     structureLabels: {
@@ -982,6 +1075,13 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         vacatingMove: '칸을 비운 기물',
         deferredMove: '후속 기물',
         captureReply: '포획 응수',
+        attackerAtCommonRoot: '공통 시작의 포획 기물',
+        attackerAtCapture: '포획 시점의 기물',
+        targetAtCommonRoot: '공통 시작의 포획 대상',
+        recaptureSquare: '재포획 칸',
+        trackedResponderAtSeed: '이동 전 재포획 기물',
+        trackedResponderAtStaging: '이동 후 재포획 기물',
+        otherRecapturer: '다른 재포획 기물',
         rootActor: '실제 수 기물',
         realizingActor: '후속 기물',
         displacement_check_response: '체크 응수',
@@ -999,6 +1099,21 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         immediate_deferred_move: '즉시 후속 수',
         immediate_capture_reply: '즉시 포획 응수',
         later_deferred_move: '나중 후속 수',
+        relocated_recapture_inventory: '이동 기물 재포획 관계',
+        retained_recapture_inventory: '유지선 재포획 관계',
+        relocated_target_capture: '이동선 목표 포획',
+        relocated_responder_recapture: '이동 기물 재포획',
+        retained_target_capture: '유지선 목표 포획',
+        retained_other_recapture: '유지선 다른 재포획',
+        relocated_branch_target_continuity: '이동선 목표 기물 연속성',
+        retained_branch_target_continuity: '유지선 목표 기물 연속성',
+        relocated_responder_continuity: '이동 기물 연속성',
+        retained_responder_continuity: '유지 기물 연속성',
+        relocated_branch_attacker_continuity: '이동선 포획 기물 연속성',
+        retained_branch_attacker_continuity: '유지선 포획 기물 연속성',
+        retained: '제자리 유지',
+        primary: '주 이동',
+        secondary: '동반 이동',
         dependency: '의존 근거',
         result: '결과 근거',
         delayed_capture_recapture_absent: '후속 재포획 부재',
@@ -1008,6 +1123,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         retained_gate_replacement_capture_absent: '관문 유지 시 대체 포획 부재',
         retained_blocker_first_route_leg_absent: '차단 유지 시 첫 경로 수 부재',
         capture_reply_absent: '포획 응수 부재',
+        retained_seed_recapture_absent: '유지선 출발칸 재포획 부재',
         delayed_capture_actor_present: '후속 기물 유지',
         delayed_target_present: '목표 기물 유지',
         post_removal_exploit_actor_present: '후속 기물 유지',
@@ -1030,6 +1146,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         capture_recapture_inventory: '포획·재포획',
         slider_reach_delta: '장거리 경로 변화',
         legal_move: '합법 수',
+        object_continuity_step: '기물 연속성',
         pawn_topology_transition: '폰 구조 변화',
       },
     },
@@ -1105,6 +1222,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         'Unrecapturable slider capture through a vacated gate',
       square_release_route: 'Route through a released square',
       capture_exclusion_move_order: 'Move order excluding the capture reply',
+      relocation_enables_recapture: 'Recapture enabled by relocation',
       passed_pawn_progress_realized_after_only_legal_reply: 'Passed-pawn progress after the only legal reply',
     },
     structureLabels: {
@@ -1167,6 +1285,13 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         vacatingMove: 'Vacating piece',
         deferredMove: 'Deferred piece',
         captureReply: 'Capture reply',
+        attackerAtCommonRoot: 'Capturing piece at common root',
+        attackerAtCapture: 'Capturing piece at capture',
+        targetAtCommonRoot: 'Target at common root',
+        recaptureSquare: 'Recapture square',
+        trackedResponderAtSeed: 'Recapturing piece before relocation',
+        trackedResponderAtStaging: 'Recapturing piece after relocation',
+        otherRecapturer: 'Other recapturing piece',
         rootActor: 'Actual-move piece',
         realizingActor: 'Later piece',
         displacement_check_response: 'Check reply',
@@ -1184,6 +1309,21 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         immediate_deferred_move: 'Immediate deferred move',
         immediate_capture_reply: 'Immediate capture reply',
         later_deferred_move: 'Later deferred move',
+        relocated_recapture_inventory: 'Relocated-piece recapture',
+        retained_recapture_inventory: 'Retained-line recapture',
+        relocated_target_capture: 'Relocated-line target capture',
+        relocated_responder_recapture: 'Relocated-piece recapture',
+        retained_target_capture: 'Retained-line target capture',
+        retained_other_recapture: 'Retained-line other recapture',
+        relocated_branch_target_continuity: 'Relocated-line target continuity',
+        retained_branch_target_continuity: 'Retained-line target continuity',
+        relocated_responder_continuity: 'Relocated-piece continuity',
+        retained_responder_continuity: 'Retained-piece continuity',
+        relocated_branch_attacker_continuity: 'Relocated-line attacker continuity',
+        retained_branch_attacker_continuity: 'Retained-line attacker continuity',
+        retained: 'Retained',
+        primary: 'Primary move',
+        secondary: 'Secondary move',
         dependency: 'Dependency',
         result: 'Result',
         delayed_capture_recapture_absent: 'Later recapture unavailable',
@@ -1193,6 +1333,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         retained_gate_replacement_capture_absent: 'Replacement capture unavailable with gate retained',
         retained_blocker_first_route_leg_absent: 'First route move unavailable with blocker retained',
         capture_reply_absent: 'Capture reply unavailable',
+        retained_seed_recapture_absent: 'Retained seed-square recapture unavailable',
         delayed_capture_actor_present: 'Later piece remains',
         delayed_target_present: 'Target remains',
         post_removal_exploit_actor_present: 'Later piece remains',
@@ -1215,6 +1356,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         capture_recapture_inventory: 'Capture and recapture',
         slider_reach_delta: 'Slider reach change',
         legal_move: 'Legal move',
+        object_continuity_step: 'Piece continuity',
         pawn_topology_transition: 'Pawn structure change',
       },
     },
@@ -2077,6 +2219,19 @@ function projectOccurrenceExplanation(
         : undefined;
       return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
     }
+    case 'relocation_enables_recapture': {
+      const proof = projectRelocationEnablesRecaptureProof(value.proof);
+      const explanation = proof
+        ? {
+            id: occurrenceExplanationId(proof.occurrenceId),
+            causeEvidenceId,
+            subjectOccurrence,
+            proofKind,
+            proof,
+          }
+        : undefined;
+      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+    }
     case 'passed_pawn_progress_realized_after_only_legal_reply': {
       const proof = projectPassedPawnProgressProof(value.proof);
       const explanation = proof
@@ -2103,6 +2258,7 @@ function occurrenceProofKind(value: unknown): MoveReviewProofKind | undefined {
     value === 'vacated_gate_enables_unrecapturable_slider_capture' ||
     value === 'square_release_route' ||
     value === 'capture_exclusion_move_order' ||
+    value === 'relocation_enables_recapture' ||
     value === 'passed_pawn_progress_realized_after_only_legal_reply'
     ? value
     : undefined;
@@ -2266,7 +2422,7 @@ function projectUniqueCheckReplyParticipants(
 function projectUniqueCheckReplyPath(
   value: unknown,
 ): MoveReviewBoundedProofPath<MoveReviewUniquePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 3, 1, 4);
+  const shell = projectBoundedPathShell(value, 3, 1, 4, undefined, 3);
   if (!shell) return;
   const premiseSpecs = [
     ['displacement_check_response', 'created_check_response_inventory', 'displacement_then_capture', 0],
@@ -2397,7 +2553,7 @@ function projectSoleRecapturerParticipants(
 function projectSoleRecapturerPath(
   value: unknown,
 ): MoveReviewBoundedProofPath<MoveReviewSolePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 3, 1, 4);
+  const shell = projectBoundedPathShell(value, 3, 1, 4, undefined, 3);
   if (!shell) return;
   const premiseSpecs = [
     ['defender_removal', 'removal_then_target_capture', 0],
@@ -2509,7 +2665,7 @@ function projectVacatedGateParticipants(
 function projectVacatedGatePath(
   value: unknown,
 ): MoveReviewBoundedProofPath<MoveReviewVacatedGatePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 2, 3, 10);
+  const shell = projectBoundedPathShell(value, 2, 3, 10, undefined, 2);
   if (!shell) return;
   const first = projectRelationPremise(
     shell.premises[0],
@@ -2643,7 +2799,7 @@ function projectSquareReleaseParticipants(
 function projectSquareReleasePath(
   value: unknown,
 ): MoveReviewBoundedProofPath<MoveReviewSquareReleasePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 2, 1, 7, undefined, Number.MAX_SAFE_INTEGER);
+  const shell = projectBoundedPathShell(value, 2, 1, 7);
   if (!shell) return;
   const premises = shell.premises.map(item =>
     isObject(item) && item.contract === 'legal_move'
@@ -2919,7 +3075,7 @@ function projectCaptureExclusionParticipants(
 function projectCaptureExclusionPath(
   value: unknown,
 ): MoveReviewBoundedProofPath<MoveReviewCaptureExclusionPremise> | undefined {
-  const shell = projectBoundedPathShell(value, 4, 2, 8);
+  const shell = projectBoundedPathShell(value, 4, 2, 8, undefined, 4);
   if (!shell) return;
   const specs = [
     ['vacating_move', 'vacating_then_deferred', 0, false],
@@ -2966,6 +3122,617 @@ function projectCaptureExclusionPath(
     closedAbsenceUses: absences,
     closedStateUses: states,
   };
+}
+
+function projectRelocationEnablesRecaptureProof(
+  value: unknown,
+): MoveReviewRelocationEnablesRecaptureProof | undefined {
+  const keys = [
+    'source_evidence_id',
+    'semantic_id',
+    'occurrence_id',
+    'dependency_fingerprint',
+    'relocated_responder_branch',
+    'retained_responder_branch',
+    'proof_paths',
+    'participants',
+    'relocation',
+    'target_capture',
+    'relocated_responder_recapture',
+    'retained_other_recapture',
+  ];
+  if (!isObject(value) || !hasExactKeys(value, keys)) return;
+  const base = projectOccurrenceProofBase(value);
+  const relocatedResponderBranch = projectOccurrenceBranch(
+    value.relocated_responder_branch,
+    'relocated_responder',
+    2,
+  );
+  const retainedResponderBranch = projectOccurrenceBranch(
+    value.retained_responder_branch,
+    'retained_responder',
+    2,
+  );
+  const proofPaths = projectArray(value.proof_paths, 1, 1, projectRelocationRecapturePath);
+  const participants = projectRelocationRecaptureParticipants(value.participants);
+  const relocation = projectRelocationRecaptureTransition(value.relocation);
+  const targetCapture = projectRelocationMatchedCapture(value.target_capture);
+  const relocatedResponderRecapture = projectRelocationRecaptureTransition(
+    value.relocated_responder_recapture,
+  );
+  const retainedOtherRecapture = projectRelocationRecaptureTransition(value.retained_other_recapture);
+  if (
+    !base ||
+    !relocatedResponderBranch ||
+    !retainedResponderBranch ||
+    !proofPaths ||
+    !participants ||
+    !relocation ||
+    !targetCapture ||
+    !relocatedResponderRecapture ||
+    !retainedOtherRecapture ||
+    relocatedResponderBranch.branchId === retainedResponderBranch.branchId ||
+    !boundedPathsFitBranches(proofPaths, [relocatedResponderBranch, retainedResponderBranch]) ||
+    !relocationTransportReferencesAreClosed(
+      proofPaths[0]!,
+      relocatedResponderBranch,
+      retainedResponderBranch,
+      participants,
+      relocation,
+      targetCapture,
+      relocatedResponderRecapture,
+      retainedOtherRecapture,
+    )
+  )
+    return;
+  return {
+    ...base,
+    relocatedResponderBranch,
+    retainedResponderBranch,
+    proofPaths: [proofPaths[0]!],
+    participants,
+    relocation,
+    targetCapture,
+    relocatedResponderRecapture,
+    retainedOtherRecapture,
+  };
+}
+
+function projectRelocationRecaptureParticipants(
+  value: unknown,
+): MoveReviewRelocationEnablesRecaptureProof['participants'] | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, [
+      'attacker_at_common_root',
+      'attacker_at_capture',
+      'target_at_common_root',
+      'captured_target',
+      'recapture_square',
+      'tracked_responder_at_seed',
+      'tracked_responder_at_staging',
+      'other_recapturer',
+    ])
+  )
+    return;
+  const attackerAtCommonRoot = projectColoredPieceWitness(value.attacker_at_common_root);
+  const attackerAtCapture = projectColoredPieceWitness(value.attacker_at_capture);
+  const targetAtCommonRoot = projectColoredPieceWitness(value.target_at_common_root);
+  const capturedTarget = projectColoredPieceWitness(value.captured_target);
+  const recaptureSquare = key(value.recapture_square);
+  const trackedResponderAtSeed = projectColoredPieceWitness(value.tracked_responder_at_seed);
+  const trackedResponderAtStaging = projectColoredPieceWitness(value.tracked_responder_at_staging);
+  const otherRecapturer = projectColoredPieceWitness(value.other_recapturer);
+  return attackerAtCommonRoot &&
+    attackerAtCapture &&
+    targetAtCommonRoot &&
+    capturedTarget &&
+    recaptureSquare &&
+    trackedResponderAtSeed &&
+    trackedResponderAtStaging &&
+    otherRecapturer
+    ? {
+        attackerAtCommonRoot,
+        attackerAtCapture,
+        targetAtCommonRoot,
+        capturedTarget,
+        recaptureSquare,
+        trackedResponderAtSeed,
+        trackedResponderAtStaging,
+        otherRecapturer,
+      }
+    : undefined;
+}
+
+function projectRelocationRecaptureTransition(
+  value: unknown,
+): MoveReviewRelocationEnablesRecaptureProof['relocation'] | undefined {
+  if (!isObject(value) || !hasExactKeys(value, ['movement', 'move_uci', 'step_index'])) return;
+  const movement = projectMovementWitness(value.movement);
+  const moveUci = uci(value.move_uci);
+  const stepIndex = nonNegativeInteger(value.step_index);
+  return movement && moveUci && stepIndex !== undefined ? { movement, moveUci, stepIndex } : undefined;
+}
+
+function projectRelocationMatchedCapture(
+  value: unknown,
+): MoveReviewRelocationEnablesRecaptureProof['targetCapture'] | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['movement', 'move_uci', 'relocated_step_index', 'retained_step_index'])
+  )
+    return;
+  const movement = projectMovementWitness(value.movement);
+  const moveUci = uci(value.move_uci);
+  const relocatedStepIndex = nonNegativeInteger(value.relocated_step_index);
+  const retainedStepIndex = nonNegativeInteger(value.retained_step_index);
+  return movement && moveUci && relocatedStepIndex !== undefined && retainedStepIndex !== undefined
+    ? { movement, moveUci, relocatedStepIndex, retainedStepIndex }
+    : undefined;
+}
+
+function projectRelocationRecapturePath(
+  value: unknown,
+): MoveReviewBoundedProofPath<MoveReviewRelocationRecapturePremise> | undefined {
+  const shell = projectBoundedPathShell(value, 0, 1, 0);
+  if (!shell) return;
+  const premises = shell.premises.map(projectRelocationRecapturePremise);
+  if (!premises.every((item): item is MoveReviewRelocationRecapturePremise => !!item)) return;
+  const exactRoles = [
+    'relocated_recapture_inventory',
+    'retained_recapture_inventory',
+    'relocated_target_capture',
+    'relocated_responder_recapture',
+    'retained_target_capture',
+    'retained_other_recapture',
+  ];
+  const continuity = premises.filter(
+    (item): item is MoveReviewRelocationContinuityPremiseUse => item.contract === 'object_continuity_step',
+  );
+  const continuityBindings = continuity.map(
+    item => `${item.role}|${item.branchId}|${item.stepIndex}|${item.issuerOccurrenceId}`,
+  );
+  if (
+    !exactRoles.every(role => premises.filter(item => item.role === role).length === 1) ||
+    !unique(continuityBindings)
+  )
+    return;
+  const absence = projectClosureUse(shell.closedAbsenceUses[0], {
+    role: 'retained_seed_recapture_absent',
+    issuer: 'position_relation_extractor.closed_relation_inventory',
+    branchRoles: ['retained_responder'],
+    query: legalMoveQuery,
+  });
+  const states = shell.closedStateUses.map(item =>
+    projectClosureUse(item, {
+      role: [
+        'relocated_branch_target_continuity',
+        'retained_branch_target_continuity',
+        'relocated_responder_continuity',
+        'retained_responder_continuity',
+        'relocated_branch_attacker_continuity',
+        'retained_branch_attacker_continuity',
+      ],
+      issuer: 'position_relation_extractor.closed_position_state_inventory',
+      branchRoles: ['relocated_responder', 'retained_responder'],
+      query: occupiedByQuery,
+    }),
+  );
+  const retained = continuity.filter(item => item.transitionKind === 'retained');
+  if (
+    !absence ||
+    !states.every((item): item is MoveReviewClosureUse => !!item) ||
+    !unique([absence, ...states].map(item => item.useId)) ||
+    states.length !== retained.length ||
+    !retained.every(
+      premise =>
+        states.filter(
+          state =>
+            state.role === premise.role &&
+            state.branchId === premise.branchId &&
+            state.branchRole === premise.branchRole &&
+            state.afterStepIndex === premise.stepIndex &&
+            state.query ===
+              `occupied-by:${premise.after.side}:${premise.after.piece}@${premise.after.square}`,
+        ).length === 1,
+    )
+  )
+    return;
+  return {
+    pathOccurrenceId: shell.pathOccurrenceId,
+    premises,
+    closedAbsenceUses: [absence],
+    closedStateUses: states,
+  };
+}
+
+function projectRelocationRecapturePremise(value: unknown): MoveReviewRelocationRecapturePremise | undefined {
+  if (!isObject(value)) return;
+  switch (value.role) {
+    case 'relocated_recapture_inventory':
+      return projectRelationPremise(
+        value,
+        value.role,
+        'capture_recapture_inventory',
+        'relocated_responder',
+        () => true,
+      );
+    case 'retained_recapture_inventory':
+      return projectRelationPremise(
+        value,
+        value.role,
+        'capture_recapture_inventory',
+        'retained_responder',
+        () => true,
+      );
+    case 'relocated_target_capture':
+      return projectLegalMovePremise<'relocated_target_capture', 'relocated_responder'>(
+        value,
+        role => role === 'relocated_target_capture',
+        ['relocated_responder'],
+        () => true,
+        true,
+      );
+    case 'relocated_responder_recapture':
+      return projectLegalMovePremise<'relocated_responder_recapture', 'relocated_responder'>(
+        value,
+        role => role === 'relocated_responder_recapture',
+        ['relocated_responder'],
+        () => true,
+        true,
+      );
+    case 'retained_target_capture':
+      return projectLegalMovePremise<'retained_target_capture', 'retained_responder'>(
+        value,
+        role => role === 'retained_target_capture',
+        ['retained_responder'],
+        () => true,
+        true,
+      );
+    case 'retained_other_recapture':
+      return projectLegalMovePremise<'retained_other_recapture', 'retained_responder'>(
+        value,
+        role => role === 'retained_other_recapture',
+        ['retained_responder'],
+        () => true,
+        true,
+      );
+    case 'relocated_branch_target_continuity':
+    case 'retained_branch_target_continuity':
+    case 'relocated_responder_continuity':
+    case 'retained_responder_continuity':
+    case 'relocated_branch_attacker_continuity':
+    case 'retained_branch_attacker_continuity':
+      return projectRelocationContinuityPremise(value);
+    default:
+      return;
+  }
+}
+
+function projectRelocationContinuityPremise(
+  value: Record<string, unknown>,
+): MoveReviewRelocationContinuityPremiseUse | undefined {
+  const required = [
+    'role',
+    'contract',
+    'transition_kind',
+    'overall_move_uci',
+    'before',
+    'after',
+    'legal_move_semantic_id',
+    'transition_footprint_id',
+    'issuer_evidence_id',
+    'issuer_occurrence_id',
+    'source_premise_ids',
+    'branch_id',
+    'branch_role',
+    'step_index',
+  ];
+  if (!hasOnlyKeys(value, [...required, 'selected_transition'], required)) return;
+  const role = [
+    'relocated_branch_target_continuity',
+    'retained_branch_target_continuity',
+    'relocated_responder_continuity',
+    'retained_responder_continuity',
+    'relocated_branch_attacker_continuity',
+    'retained_branch_attacker_continuity',
+  ].find(item => item === value.role) as MoveReviewRelocationContinuityRole | undefined;
+  const transitionKind = ['retained', 'primary', 'secondary'].find(item => item === value.transition_kind) as
+    | MoveReviewRelocationContinuityPremiseUse['transitionKind']
+    | undefined;
+  const overallMoveUci = uci(value.overall_move_uci);
+  const before = projectColoredPieceWitness(value.before);
+  const after = projectColoredPieceWitness(value.after);
+  const selectedTransition = Object.prototype.hasOwnProperty.call(value, 'selected_transition')
+    ? projectMovementWitness(value.selected_transition)
+    : undefined;
+  const legalMoveSemanticId = typedHash(value.legal_move_semantic_id);
+  const transitionFootprintId = typedHash(value.transition_footprint_id);
+  const issuerEvidenceId = nonEmptyWireString(value.issuer_evidence_id);
+  const issuerOccurrenceId = typedHash(value.issuer_occurrence_id);
+  const sourcePremiseIds = wireUniqueStrings(value.source_premise_ids, 4);
+  const branchId = typedHash(value.branch_id);
+  const branchRole =
+    value.branch_role === 'relocated_responder' || value.branch_role === 'retained_responder'
+      ? value.branch_role
+      : undefined;
+  const stepIndex = nonNegativeInteger(value.step_index);
+  const roleMatchesBranch =
+    !!role &&
+    !!branchRole &&
+    ((role.startsWith('relocated_') && branchRole === 'relocated_responder') ||
+      (role.startsWith('retained_') && branchRole === 'retained_responder'));
+  const transitionIsExact =
+    !!transitionKind &&
+    !!before &&
+    !!after &&
+    (transitionKind === 'retained'
+      ? !Object.prototype.hasOwnProperty.call(value, 'selected_transition') &&
+        coloredPieceEquals(before, after)
+      : !!selectedTransition &&
+        selectedTransition.side === before.side &&
+        selectedTransition.from === before.square &&
+        selectedTransition.pieceBefore === before.piece &&
+        selectedTransition.to === after.square &&
+        selectedTransition.pieceAfter === after.piece);
+  return role &&
+    value.contract === 'object_continuity_step' &&
+    transitionKind &&
+    overallMoveUci &&
+    before &&
+    after &&
+    legalMoveSemanticId &&
+    transitionFootprintId &&
+    issuerEvidenceId &&
+    issuerOccurrenceId &&
+    sourcePremiseIds &&
+    sourcePremiseIds.length === 4 &&
+    sourcePremiseIds.every(
+      (value, index) =>
+        value ===
+        [
+          issuerEvidenceId,
+          issuerOccurrenceId,
+          `legal-move:${legalMoveSemanticId}`,
+          `transition-footprint:${transitionFootprintId}`,
+        ].sort()[index],
+    ) &&
+    branchId &&
+    branchRole &&
+    stepIndex !== undefined &&
+    roleMatchesBranch &&
+    transitionIsExact
+    ? {
+        role,
+        contract: 'object_continuity_step',
+        transitionKind,
+        overallMoveUci,
+        before,
+        after,
+        ...(selectedTransition ? { selectedTransition } : {}),
+        legalMoveSemanticId,
+        transitionFootprintId,
+        issuerEvidenceId,
+        issuerOccurrenceId,
+        sourcePremiseIds,
+        branchId,
+        branchRole,
+        stepIndex,
+      }
+    : undefined;
+}
+
+function coloredPieceEquals(
+  first: MoveReviewColoredPieceWitness,
+  second: MoveReviewColoredPieceWitness,
+): boolean {
+  return first.side === second.side && first.piece === second.piece && first.square === second.square;
+}
+
+function movementWitnessEquals(first: MoveReviewMovementWitness, second: MoveReviewMovementWitness): boolean {
+  return (
+    first.side === second.side &&
+    first.pieceBefore === second.pieceBefore &&
+    first.pieceAfter === second.pieceAfter &&
+    first.from === second.from &&
+    first.to === second.to
+  );
+}
+
+function relocationTransportReferencesAreClosed(
+  path: MoveReviewBoundedProofPath<MoveReviewRelocationRecapturePremise>,
+  relocatedBranch: MoveReviewOccurrenceBranch<'relocated_responder'>,
+  retainedBranch: MoveReviewOccurrenceBranch<'retained_responder'>,
+  participants: MoveReviewRelocationEnablesRecaptureProof['participants'],
+  relocation: MoveReviewRelocationEnablesRecaptureProof['relocation'],
+  targetCapture: MoveReviewRelocationEnablesRecaptureProof['targetCapture'],
+  relocatedRecapture: MoveReviewRelocationEnablesRecaptureProof['relocatedResponderRecapture'],
+  retainedRecapture: MoveReviewRelocationEnablesRecaptureProof['retainedOtherRecapture'],
+): boolean {
+  const continuity = path.premises.filter(
+    (premise): premise is MoveReviewRelocationContinuityPremiseUse =>
+      premise.contract === 'object_continuity_step',
+  );
+  const relationReference = (
+    role: 'relocated_recapture_inventory' | 'retained_recapture_inventory',
+    branch: MoveReviewOccurrenceBranch,
+    stepIndex: number,
+  ): boolean => {
+    const matches = path.premises.filter(
+      (
+        premise,
+      ): premise is Extract<
+        MoveReviewRelocationRecapturePremise,
+        { contract: 'capture_recapture_inventory' }
+      > => premise.contract === 'capture_recapture_inventory' && premise.role === role,
+    );
+    return (
+      matches.length === 1 &&
+      matches[0]!.branchId === branch.branchId &&
+      matches[0]!.branchRole === branch.branchRole &&
+      matches[0]!.stepIndex === stepIndex
+    );
+  };
+  const continuityReference = (
+    role: MoveReviewRelocationContinuityRole,
+    branch: MoveReviewOccurrenceBranch,
+    untilExclusive: number,
+    rootPiece: MoveReviewColoredPieceWitness,
+    endpointPiece: MoveReviewColoredPieceWitness,
+  ): boolean => {
+    const uses = continuity.filter(premise => premise.role === role);
+    const endpointReferencesMatch =
+      untilExclusive === 0
+        ? coloredPieceEquals(rootPiece, endpointPiece)
+        : !!uses.length &&
+          coloredPieceEquals(uses[0]!.before, rootPiece) &&
+          coloredPieceEquals(uses[uses.length - 1]!.after, endpointPiece);
+    return (
+      uses.length === untilExclusive &&
+      uses.every(
+        (premise, index) =>
+          premise.stepIndex === index &&
+          premise.branchId === branch.branchId &&
+          premise.branchRole === branch.branchRole,
+      ) &&
+      endpointReferencesMatch
+    );
+  };
+  const relocatedResponder = continuity.filter(premise => premise.role === 'relocated_responder_continuity');
+  const relocationUses = relocatedResponder.filter(
+    premise =>
+      premise.stepIndex === relocation.stepIndex &&
+      premise.overallMoveUci === relocation.moveUci &&
+      premise.selectedTransition !== undefined &&
+      movementWitnessEquals(premise.selectedTransition, relocation.movement),
+  );
+  const legalEndpoint = (
+    role: string,
+    branch: MoveReviewOccurrenceBranch,
+    stepIndex: number,
+    movement: MoveReviewMovementWitness,
+    moveUci: Uci,
+    captured?: MoveReviewColoredPieceWitness,
+  ): boolean => {
+    const matches = path.premises.filter(
+      (premise): premise is Extract<MoveReviewRelocationRecapturePremise, { contract: 'legal_move' }> =>
+        premise.contract === 'legal_move' && premise.role === role,
+    );
+    const premise = matches[0];
+    const legalOwners = premise
+      ? [
+          premise.issuerEvidenceId,
+          premise.issuerOccurrenceId,
+          `legal-move:${premise.legalMoveSemanticId}`,
+        ].sort()
+      : [];
+    return (
+      matches.length === 1 &&
+      premise?.branchId === branch.branchId &&
+      premise.branchRole === branch.branchRole &&
+      premise.stepIndex === stepIndex &&
+      premise.moveUci === moveUci &&
+      movementWitnessEquals(premise.movement, movement) &&
+      !!premise.capture &&
+      premise.sourcePremiseIds.length === legalOwners.length &&
+      premise.sourcePremiseIds.every((value, index) => value === legalOwners[index]) &&
+      (!captured || coloredPieceEquals(premise.capture, captured))
+    );
+  };
+  const recapturedAttacker: MoveReviewColoredPieceWitness = {
+    side: targetCapture.movement.side,
+    piece: targetCapture.movement.pieceAfter,
+    square: participants.recaptureSquare,
+  };
+
+  return (
+    legalEndpoint(
+      'relocated_target_capture',
+      relocatedBranch,
+      targetCapture.relocatedStepIndex,
+      targetCapture.movement,
+      targetCapture.moveUci,
+      participants.capturedTarget,
+    ) &&
+    relationReference('relocated_recapture_inventory', relocatedBranch, targetCapture.relocatedStepIndex) &&
+    relationReference('retained_recapture_inventory', retainedBranch, targetCapture.retainedStepIndex) &&
+    legalEndpoint(
+      'retained_target_capture',
+      retainedBranch,
+      targetCapture.retainedStepIndex,
+      targetCapture.movement,
+      targetCapture.moveUci,
+      participants.capturedTarget,
+    ) &&
+    legalEndpoint(
+      'relocated_responder_recapture',
+      relocatedBranch,
+      relocatedRecapture.stepIndex,
+      relocatedRecapture.movement,
+      relocatedRecapture.moveUci,
+      recapturedAttacker,
+    ) &&
+    legalEndpoint(
+      'retained_other_recapture',
+      retainedBranch,
+      retainedRecapture.stepIndex,
+      retainedRecapture.movement,
+      retainedRecapture.moveUci,
+      recapturedAttacker,
+    ) &&
+    path.closedAbsenceUses.length === 1 &&
+    path.closedAbsenceUses[0]!.branchId === retainedBranch.branchId &&
+    path.closedAbsenceUses[0]!.branchRole === retainedBranch.branchRole &&
+    path.closedAbsenceUses[0]!.afterStepIndex === targetCapture.retainedStepIndex &&
+    path.closedAbsenceUses[0]!.query ===
+      `legal-move-from-to:${participants.trackedResponderAtSeed.side}:${participants.trackedResponderAtSeed.square}:${participants.recaptureSquare}` &&
+    targetCapture.movement.to === participants.recaptureSquare &&
+    relocatedRecapture.movement.to === participants.recaptureSquare &&
+    retainedRecapture.movement.to === participants.recaptureSquare &&
+    continuityReference(
+      'relocated_branch_target_continuity',
+      relocatedBranch,
+      targetCapture.relocatedStepIndex,
+      participants.targetAtCommonRoot,
+      participants.capturedTarget,
+    ) &&
+    continuityReference(
+      'retained_branch_target_continuity',
+      retainedBranch,
+      targetCapture.retainedStepIndex,
+      participants.targetAtCommonRoot,
+      participants.capturedTarget,
+    ) &&
+    continuityReference(
+      'relocated_branch_attacker_continuity',
+      relocatedBranch,
+      targetCapture.relocatedStepIndex,
+      participants.attackerAtCommonRoot,
+      participants.attackerAtCapture,
+    ) &&
+    continuityReference(
+      'retained_branch_attacker_continuity',
+      retainedBranch,
+      targetCapture.retainedStepIndex,
+      participants.attackerAtCommonRoot,
+      participants.attackerAtCapture,
+    ) &&
+    continuityReference(
+      'relocated_responder_continuity',
+      relocatedBranch,
+      relocatedRecapture.stepIndex,
+      participants.trackedResponderAtSeed,
+      participants.trackedResponderAtStaging,
+    ) &&
+    continuityReference(
+      'retained_responder_continuity',
+      retainedBranch,
+      retainedRecapture.stepIndex,
+      participants.trackedResponderAtSeed,
+      participants.trackedResponderAtSeed,
+    ) &&
+    relocationUses.length === 1
+  );
 }
 
 function projectPassedPawnProgressProof(value: unknown): MoveReviewPassedPawnProgressProof | undefined {
@@ -3621,11 +4388,11 @@ interface ProjectedBoundedPathShell {
 
 function projectBoundedPathShell(
   value: unknown,
-  premiseCount: number,
+  minimumPremiseCount: number,
   absenceCount: number,
   minimumStateCount: number,
   maximumStateCount?: number,
-  maximumPremiseCount: number | undefined = premiseCount,
+  maximumPremiseCount?: number,
 ): ProjectedBoundedPathShell | undefined {
   if (
     !isObject(value) ||
@@ -3636,7 +4403,7 @@ function projectBoundedPathShell(
   if (
     !pathOccurrenceId ||
     !Array.isArray(value.premises) ||
-    value.premises.length < premiseCount ||
+    value.premises.length < minimumPremiseCount ||
     (maximumPremiseCount !== undefined && value.premises.length > maximumPremiseCount) ||
     !Array.isArray(value.closed_absence_uses) ||
     value.closed_absence_uses.length !== absenceCount ||
@@ -3924,7 +4691,10 @@ function boundedPathsFitBranches(
     [...path.premises, ...path.closedAbsenceUses, ...path.closedStateUses].every(item => {
       const branch = branchById.get(item.branchId);
       const stepIndex = 'stepIndex' in item ? item.stepIndex : item.afterStepIndex;
-      return branch?.branchRole === item.branchRole && !!branch.steps[stepIndex];
+      const step = branch?.steps[stepIndex];
+      const move =
+        'moveUci' in item ? item.moveUci : 'overallMoveUci' in item ? item.overallMoveUci : undefined;
+      return branch?.branchRole === item.branchRole && !!step && (!move || step.moveUci === move);
     }),
   );
 }
@@ -3982,6 +4752,8 @@ export function moveReviewOccurrenceBranches(
       return [explanation.proof.releasedRouteBranch, explanation.proof.retainedBlockerBranch];
     case 'capture_exclusion_move_order':
       return [explanation.proof.vacatingBranch, explanation.proof.immediateCaptureBranch];
+    case 'relocation_enables_recapture':
+      return [explanation.proof.relocatedResponderBranch, explanation.proof.retainedResponderBranch];
     case 'passed_pawn_progress_realized_after_only_legal_reply':
       return explanation.proof.branches;
   }
@@ -3998,9 +4770,61 @@ export function moveReviewOccurrenceBranchProof(
   branchIndex: number,
 ): MoveReviewProof | undefined {
   const branch = moveReviewOccurrenceBranches(explanation)[branchIndex];
-  return branch
-    ? proofFromOccurrenceSteps(explanation.id + '-branch-' + branchIndex, branch.steps)
-    : undefined;
+  if (!branch) return;
+  const annotations: MoveReviewAnnotation[] =
+    explanation.proofKind === 'relocation_enables_recapture'
+      ? branchIndex === 0
+        ? [
+            {
+              atPly: explanation.proof.relocation.stepIndex + 1,
+              shape: {
+                kind: 'arrow',
+                orig: explanation.proof.relocation.movement.from,
+                dest: explanation.proof.relocation.movement.to,
+                brush: 'blue',
+              },
+            },
+            {
+              atPly: explanation.proof.targetCapture.relocatedStepIndex + 1,
+              shape: {
+                kind: 'arrow',
+                orig: explanation.proof.targetCapture.movement.from,
+                dest: explanation.proof.targetCapture.movement.to,
+                brush: 'red',
+              },
+            },
+            {
+              atPly: explanation.proof.relocatedResponderRecapture.stepIndex + 1,
+              shape: {
+                kind: 'arrow',
+                orig: explanation.proof.relocatedResponderRecapture.movement.from,
+                dest: explanation.proof.relocatedResponderRecapture.movement.to,
+                brush: 'green',
+              },
+            },
+          ]
+        : [
+            {
+              atPly: explanation.proof.targetCapture.retainedStepIndex + 1,
+              shape: {
+                kind: 'arrow',
+                orig: explanation.proof.targetCapture.movement.from,
+                dest: explanation.proof.targetCapture.movement.to,
+                brush: 'red',
+              },
+            },
+            {
+              atPly: explanation.proof.retainedOtherRecapture.stepIndex + 1,
+              shape: {
+                kind: 'arrow',
+                orig: explanation.proof.retainedOtherRecapture.movement.from,
+                dest: explanation.proof.retainedOtherRecapture.movement.to,
+                brush: 'green',
+              },
+            },
+          ]
+      : [];
+  return proofFromOccurrenceSteps(explanation.id + '-branch-' + branchIndex, branch.steps, annotations);
 }
 
 export function moveReviewProofById(
@@ -4022,6 +4846,7 @@ export function moveReviewProofById(
 function proofFromOccurrenceSteps(
   id: string,
   steps: readonly (MoveReviewOccurrenceStep | MoveReviewPassedPawnStep)[],
+  annotations: MoveReviewAnnotation[],
 ): MoveReviewProof | undefined {
   if (!semanticId(id) || steps.length < 1) return;
   return {
@@ -4032,7 +4857,7 @@ function proofFromOccurrenceSteps(
       label: step.moveUci,
       fenAfter: step.fenAfter,
     })),
-    annotations: [],
+    annotations,
   };
 }
 

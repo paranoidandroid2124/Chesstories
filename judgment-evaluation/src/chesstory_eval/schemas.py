@@ -651,6 +651,17 @@ class SchemaRegistry:
                             errors.append(
                                 f"{value_location}.move_uci: does not equal its branch occurrence"
                             )
+                        overall_move = value.get("overall_move_uci")
+                        if (
+                            isinstance(step_index, int)
+                            and 0 <= step_index < len(steps)
+                            and isinstance(steps[step_index], Mapping)
+                            and isinstance(overall_move, str)
+                            and overall_move != steps[step_index].get("move_uci")
+                        ):
+                            errors.append(
+                                f"{value_location}.overall_move_uci: does not equal its branch occurrence"
+                            )
                         after_step_index = value.get("after_step_index")
                         position = value.get("position")
                         if (
@@ -715,6 +726,82 @@ class SchemaRegistry:
                 errors.append(
                     f"{path_location}.premises: result_id values must be unique"
                 )
+            premises = [
+                premise
+                for premise in path.get("premises", [])
+                if isinstance(premise, Mapping)
+            ]
+            continuity = [
+                (premise_index, premise)
+                for premise_index, premise in enumerate(premises)
+                if premise.get("contract") == "object_continuity_step"
+            ]
+            continuity_keys = [
+                (
+                    premise.get("role"),
+                    premise.get("branch_id"),
+                    premise.get("step_index"),
+                    premise.get("issuer_occurrence_id"),
+                )
+                for _, premise in continuity
+            ]
+            if len(continuity_keys) != len(set(continuity_keys)):
+                errors.append(
+                    f"{path_location}.premises: object-continuity occurrence bindings must be unique"
+                )
+
+            retained: list[Mapping[str, Any]] = []
+            for premise_index, premise in continuity:
+                premise_location = f"{path_location}.premises[{premise_index}]"
+                source_ids = premise.get("source_premise_ids")
+                footprint_id = premise.get("transition_footprint_id")
+                legal_move_id = premise.get("legal_move_semantic_id")
+                issuer_evidence_id = premise.get("issuer_evidence_id")
+                issuer_occurrence_id = premise.get("issuer_occurrence_id")
+                if all(
+                    isinstance(value, str)
+                    for value in (
+                        footprint_id,
+                        legal_move_id,
+                        issuer_evidence_id,
+                        issuer_occurrence_id,
+                    )
+                ) and source_ids != sorted(
+                    [
+                        issuer_evidence_id,
+                        issuer_occurrence_id,
+                        f"legal-move:{legal_move_id}",
+                        f"transition-footprint:{footprint_id}",
+                    ]
+                ):
+                    errors.append(
+                        f"{premise_location}.source_premise_ids: continuity must retain exactly its four certified owners"
+                    )
+
+                before = premise.get("before")
+                after = premise.get("after")
+                selected = premise.get("selected_transition")
+                transition_kind = premise.get("transition_kind")
+                if not isinstance(before, Mapping) or not isinstance(after, Mapping):
+                    continue
+                if transition_kind == "retained":
+                    retained.append(premise)
+                    if "selected_transition" in premise or before != after:
+                        errors.append(
+                            f"{premise_location}: retained continuity must omit selected_transition and retain one exact object"
+                        )
+                elif transition_kind in ("primary", "secondary"):
+                    if not isinstance(selected, Mapping) or (
+                        selected.get("side") != before.get("side")
+                        or selected.get("from") != before.get("square")
+                        or selected.get("piece_before") != before.get("piece")
+                        or selected.get("to") != after.get("square")
+                        or selected.get("piece_after") != after.get("piece")
+                    ):
+                        errors.append(
+                            f"{premise_location}.selected_transition: does not bind the exact before/after object"
+                        )
+
             use_ids = [
                 use.get("use_id")
                 for collection in ("closed_absence_uses", "closed_state_uses")
@@ -725,6 +812,347 @@ class SchemaRegistry:
                 errors.append(
                     f"{path_location}: closed use_id values must be unique within the proof path"
                 )
+            if continuity:
+                continuity_roles = {
+                    premise.get("role") for _, premise in continuity
+                }
+                continuity_states = [
+                    state
+                    for state in path.get("closed_state_uses", [])
+                    if isinstance(state, Mapping) and state.get("role") in continuity_roles
+                ]
+                if len(continuity_states) != len(retained):
+                    errors.append(
+                        f"{path_location}.closed_state_uses: every retained continuity step needs exactly one state binding"
+                    )
+                for premise in retained:
+                    after = premise.get("after")
+                    if not isinstance(after, Mapping):
+                        continue
+                    expected_query = (
+                        f"occupied-by:{after.get('side')}:{after.get('piece')}@{after.get('square')}"
+                    )
+                    matches = [
+                        state
+                        for state in continuity_states
+                        if state.get("role") == premise.get("role")
+                        and state.get("branch_id") == premise.get("branch_id")
+                        and state.get("branch_role") == premise.get("branch_role")
+                        and state.get("after_step_index") == premise.get("step_index")
+                        and state.get("query") == expected_query
+                    ]
+                    if len(matches) != 1:
+                        errors.append(
+                            f"{path_location}.closed_state_uses: retained continuity is not paired to one exact occupied state"
+                        )
+
+        if {
+            "relocated_responder_branch",
+            "retained_responder_branch",
+            "relocation",
+            "target_capture",
+            "relocated_responder_recapture",
+            "retained_other_recapture",
+        }.issubset(proof):
+            self._validate_relocation_transport_references(proof, location, errors)
+
+    @staticmethod
+    def _validate_relocation_transport_references(
+        proof: Mapping[str, Any],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        paths = proof.get("proof_paths")
+        participants = proof.get("participants")
+        relocated = proof.get("relocated_responder_branch")
+        retained = proof.get("retained_responder_branch")
+        relocation = proof.get("relocation")
+        target_capture = proof.get("target_capture")
+        relocated_recapture = proof.get("relocated_responder_recapture")
+        retained_recapture = proof.get("retained_other_recapture")
+        if not (
+            isinstance(paths, list)
+            and len(paths) == 1
+            and isinstance(paths[0], Mapping)
+            and isinstance(participants, Mapping)
+            and isinstance(relocated, Mapping)
+            and isinstance(retained, Mapping)
+            and isinstance(relocation, Mapping)
+            and isinstance(target_capture, Mapping)
+            and isinstance(relocated_recapture, Mapping)
+            and isinstance(retained_recapture, Mapping)
+        ):
+            return
+        premises = paths[0].get("premises")
+        if not isinstance(premises, list):
+            return
+        continuity = [
+            premise
+            for premise in premises
+            if isinstance(premise, Mapping)
+            and premise.get("contract") == "object_continuity_step"
+        ]
+
+        def continuity_reference(
+            role: str,
+            branch: Mapping[str, Any],
+            until: Any,
+            root_piece: Any,
+            endpoint_piece: Any,
+        ) -> bool:
+            uses = [premise for premise in continuity if premise.get("role") == role]
+            endpoint_references_match = (
+                isinstance(root_piece, Mapping)
+                and isinstance(endpoint_piece, Mapping)
+                and (
+                    root_piece == endpoint_piece
+                    if until == 0
+                    else bool(uses)
+                    and uses[0].get("before") == root_piece
+                    and uses[-1].get("after") == endpoint_piece
+                )
+            )
+            return (
+                isinstance(until, int)
+                and until >= 0
+                and [premise.get("step_index") for premise in uses]
+                == list(range(until))
+                and all(
+                    premise.get("branch_id") == branch.get("branch_id")
+                    and premise.get("branch_role") == branch.get("branch_role")
+                    for premise in uses
+                )
+                and endpoint_references_match
+            )
+
+        sequences = (
+            (
+                "relocated_branch_target_continuity",
+                relocated,
+                target_capture.get("relocated_step_index"),
+                participants.get("target_at_common_root"),
+                participants.get("captured_target"),
+            ),
+            (
+                "retained_branch_target_continuity",
+                retained,
+                target_capture.get("retained_step_index"),
+                participants.get("target_at_common_root"),
+                participants.get("captured_target"),
+            ),
+            (
+                "relocated_branch_attacker_continuity",
+                relocated,
+                target_capture.get("relocated_step_index"),
+                participants.get("attacker_at_common_root"),
+                participants.get("attacker_at_capture"),
+            ),
+            (
+                "retained_branch_attacker_continuity",
+                retained,
+                target_capture.get("retained_step_index"),
+                participants.get("attacker_at_common_root"),
+                participants.get("attacker_at_capture"),
+            ),
+            (
+                "relocated_responder_continuity",
+                relocated,
+                relocated_recapture.get("step_index"),
+                participants.get("tracked_responder_at_seed"),
+                participants.get("tracked_responder_at_staging"),
+            ),
+            (
+                "retained_responder_continuity",
+                retained,
+                retained_recapture.get("step_index"),
+                participants.get("tracked_responder_at_seed"),
+                participants.get("tracked_responder_at_seed"),
+            ),
+        )
+        for role, branch, until, root_piece, endpoint_piece in sequences:
+            if not continuity_reference(role, branch, until, root_piece, endpoint_piece):
+                errors.append(
+                    f"{location}.proof_paths[0].premises: {role} does not retain every ordered branch occurrence"
+                )
+
+        relation_premises = [
+            premise
+            for premise in premises
+            if isinstance(premise, Mapping)
+            and premise.get("contract") == "capture_recapture_inventory"
+        ]
+
+        def relation_reference(
+            role: str,
+            branch: Mapping[str, Any],
+            step_index: Any,
+        ) -> bool:
+            matches = [
+                premise for premise in relation_premises if premise.get("role") == role
+            ]
+            return (
+                len(matches) == 1
+                and isinstance(step_index, int)
+                and matches[0].get("branch_id") == branch.get("branch_id")
+                and matches[0].get("branch_role") == branch.get("branch_role")
+                and matches[0].get("step_index") == step_index
+            )
+
+        relation_references_closed = relation_reference(
+            "relocated_recapture_inventory",
+            relocated,
+            target_capture.get("relocated_step_index"),
+        ) and relation_reference(
+            "retained_recapture_inventory",
+            retained,
+            target_capture.get("retained_step_index"),
+        )
+        if not relation_references_closed:
+            errors.append(
+                f"{location}.proof_paths[0].premises: recapture inventories do not bind their target-capture occurrences"
+            )
+
+        absences = paths[0].get("closed_absence_uses")
+        tracked_responder = participants.get("tracked_responder_at_seed")
+        recapture_square = participants.get("recapture_square")
+        absence = (
+            absences[0]
+            if isinstance(absences, list)
+            and len(absences) == 1
+            and isinstance(absences[0], Mapping)
+            else None
+        )
+        expected_absence_query = (
+            f"legal-move-from-to:{tracked_responder.get('side')}:"
+            f"{tracked_responder.get('square')}:{recapture_square}"
+            if isinstance(tracked_responder, Mapping)
+            and isinstance(recapture_square, str)
+            else None
+        )
+        if not (
+            isinstance(absence, Mapping)
+            and absence.get("branch_id") == retained.get("branch_id")
+            and absence.get("branch_role") == retained.get("branch_role")
+            and absence.get("after_step_index")
+            == target_capture.get("retained_step_index")
+            and absence.get("query") == expected_absence_query
+        ):
+            errors.append(
+                f"{location}.proof_paths[0].closed_absence_uses: retained seed absence does not bind its capture occurrence and query"
+            )
+
+        legal_premises = [
+            premise
+            for premise in premises
+            if isinstance(premise, Mapping)
+            and premise.get("contract") == "legal_move"
+        ]
+
+        def legal_endpoint(
+            role: str,
+            branch: Mapping[str, Any],
+            step_index: Any,
+            endpoint: Mapping[str, Any],
+            captured_target: Any = None,
+        ) -> bool:
+            matches = [
+                premise for premise in legal_premises if premise.get("role") == role
+            ]
+            premise = matches[0] if len(matches) == 1 else None
+            source_ids = premise.get("source_premise_ids") if premise else None
+            source_owners = (
+                [
+                    premise.get("issuer_evidence_id"),
+                    premise.get("issuer_occurrence_id"),
+                    f"legal-move:{premise.get('legal_move_semantic_id')}",
+                ]
+                if premise
+                else []
+            )
+            return (
+                isinstance(premise, Mapping)
+                and isinstance(step_index, int)
+                and premise.get("branch_id") == branch.get("branch_id")
+                and premise.get("branch_role") == branch.get("branch_role")
+                and premise.get("step_index") == step_index
+                and premise.get("move_uci") == endpoint.get("move_uci")
+                and premise.get("movement") == endpoint.get("movement")
+                and isinstance(premise.get("capture"), Mapping)
+                and all(isinstance(owner, str) for owner in source_owners)
+                and source_ids == sorted(source_owners)
+                and (
+                    captured_target is None
+                    or premise.get("capture") == captured_target
+                )
+            )
+
+        target_movement = target_capture.get("movement")
+        recaptured_attacker = (
+            {
+                "side": target_movement.get("side"),
+                "piece": target_movement.get("piece_after"),
+                "square": participants.get("recapture_square"),
+            }
+            if isinstance(target_movement, Mapping)
+            and isinstance(participants.get("recapture_square"), str)
+            else None
+        )
+        endpoint_references_closed = (
+            legal_endpoint(
+                "relocated_target_capture",
+                relocated,
+                target_capture.get("relocated_step_index"),
+                target_capture,
+                participants.get("captured_target"),
+            )
+            and legal_endpoint(
+                "retained_target_capture",
+                retained,
+                target_capture.get("retained_step_index"),
+                target_capture,
+                participants.get("captured_target"),
+            )
+            and legal_endpoint(
+                "relocated_responder_recapture",
+                relocated,
+                relocated_recapture.get("step_index"),
+                relocated_recapture,
+                recaptured_attacker,
+            )
+            and legal_endpoint(
+                "retained_other_recapture",
+                retained,
+                retained_recapture.get("step_index"),
+                retained_recapture,
+                recaptured_attacker,
+            )
+            and isinstance(participants.get("recapture_square"), str)
+            and isinstance(target_capture.get("movement"), Mapping)
+            and target_capture["movement"].get("to")
+            == participants.get("recapture_square")
+            and isinstance(relocated_recapture.get("movement"), Mapping)
+            and relocated_recapture["movement"].get("to")
+            == participants.get("recapture_square")
+            and isinstance(retained_recapture.get("movement"), Mapping)
+            and retained_recapture["movement"].get("to")
+            == participants.get("recapture_square")
+        )
+        relocation_uses = [
+            premise
+            for premise in continuity
+            if premise.get("role") == "relocated_responder_continuity"
+            and premise.get("step_index") == relocation.get("step_index")
+            and premise.get("overall_move_uci") == relocation.get("move_uci")
+            and premise.get("selected_transition") == relocation.get("movement")
+        ]
+        if not endpoint_references_closed:
+            errors.append(
+                f"{location}: top-level capture references do not bind their exact premise occurrences and recapture square"
+            )
+        if len(relocation_uses) != 1:
+            errors.append(
+                f"{location}.relocation: does not bind one exact continuity transition"
+            )
 
     def validate_registry(self) -> None:
         roots: list[tuple[Mapping[str, Any], Path]] = []

@@ -10,6 +10,7 @@ import lila.chessjudgment.analysis.structure.{
   TransitionStructuralDelta
 }
 import lila.chessjudgment.model.line.{ CanonicalPositionHistoryStep, LegalReplayStep, PrincipalVariationEvidence }
+import lila.chessjudgment.model.position.BoardTransitionFootprint
 
 private final class CanonicalReplayTransitionCalculation(
     beforeAnalysis: PositionAnalysis,
@@ -235,7 +236,8 @@ private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
   */
 private[chessjudgment] final case class ReplayLegalMoveOccurrence private[judgment] (
     step: LineReplayStep,
-    movement: CanonicalRootLegalMove
+    movement: CanonicalRootLegalMove,
+    footprint: BoardTransitionFootprint
 ):
   private val exactLowerFact = movement.fact.detail match
     case RelationWitnessDetail.LegalMove(side, from, role, to, moveUci, capture) =>
@@ -250,9 +252,13 @@ private[chessjudgment] final case class ReplayLegalMoveOccurrence private[judgme
   require(
     movement.fact.kind == RelationFactKind.LegalMove &&
       !movement.fact.hasLineProof && exactLowerFact && exactSnapshot &&
-      EvidenceRef.sameMove(movement.moveUci, step.moveUci),
+      EvidenceRef.sameMove(movement.moveUci, step.moveUci) &&
+      footprint.pieceTransitions.map(RelationMoveTransitionWitness.from).count(_ == movement.witness) == 1,
     "a replay legal-move occurrence must retain its exact canonical transition"
   )
+
+  private[chessjudgment] lazy val footprintId: String =
+    ReplayLegalMoveOccurrence.footprintId(footprint)
 
   private[chessjudgment] lazy val occurrenceId: String =
     BoundedCausalIdentity.digest(
@@ -268,6 +274,65 @@ private[chessjudgment] final case class ReplayLegalMoveOccurrence private[judgme
 
   private[chessjudgment] def certifiedSourcePremiseIds: List[String] =
     List(s"legal-move:${movement.fact.semanticId}")
+
+private[chessjudgment] object ReplayLegalMoveOccurrence:
+  private def footprintId(footprint: BoardTransitionFootprint): String =
+    def piece(value: Option[chess.Piece]): String = value
+      .map(exact => s"${exact.color.toString.toLowerCase}:${exact.role.name.toLowerCase}")
+      .getOrElse("vacant")
+    val cells = footprint.cellChanges.sortBy(_.square.key).map(change =>
+      s"${change.square.key.toLowerCase}:${piece(change.before)}>${piece(change.after)}"
+    )
+    val movements = footprint.pieceTransitions
+      .map(RelationMoveTransitionWitness.from)
+      .sortBy(_.stableKey)
+      .map(_.stableKey)
+    BoundedCausalIdentity.digest(List(
+      "canonical-transition-footprint:v1",
+      cells.mkString("[", ",", "]"),
+      movements.mkString("[", ",", "]"),
+      footprint.affectedGeometricControlOrigins.toList.map(_.key.toLowerCase).sorted.mkString("[", ",", "]"),
+      footprint.affectedOccupiedRayOrigins.toList.map(_.key.toLowerCase).sorted.mkString("[", ",", "]")
+    ))
+
+  def leavesUntouched(
+      occurrence: ReplayLegalMoveOccurrence,
+      piece: RelationColoredPieceWitness
+  ): Boolean =
+    occurrence.footprint.cellChanges.forall(change =>
+      !change.square.key.equalsIgnoreCase(piece.square.key)
+    ) && occurrence.footprint.pieceTransitions.forall(transition =>
+      !transition.from.key.equalsIgnoreCase(piece.square.key) &&
+      !transition.to.key.equalsIgnoreCase(piece.square.key)
+    )
+
+  def pieceTransitions(
+      occurrence: ReplayLegalMoveOccurrence
+  ): List[RelationMoveTransitionWitness] =
+    val exact = occurrence.footprint.pieceTransitions
+      .map(RelationMoveTransitionWitness.from)
+      .sortBy(_.stableKey)
+    require(
+      exact.map(_.stableKey).distinct.size == exact.size,
+      "one canonical footprint cannot issue duplicate piece transitions"
+    )
+    exact
+
+  def ownsTransition(
+      occurrence: ReplayLegalMoveOccurrence,
+      transition: RelationMoveTransitionWitness
+  ): Boolean = pieceTransitions(occurrence).count(_ == transition) == 1
+
+  def sameMove(left: ReplayLegalMoveOccurrence, right: ReplayLegalMoveOccurrence): Boolean =
+    left.movement.witness == right.movement.witness &&
+      EvidenceRef.sameMove(left.movement.moveUci, right.movement.moveUci) &&
+      left.movement.capture == right.movement.capture && left.movement.mode == right.movement.mode
+
+  def capturedTarget(
+      occurrence: ReplayLegalMoveOccurrence
+  ): Option[RelationColoredPieceWitness] = occurrence.movement.capture.map(capture =>
+    RelationColoredPieceWitness(capture.capturedSquare, capture.capturedRole, capture.capturedSide)
+  )
 
 /** Semantic time-axis address of one certified L1 result. The replay step
   * identifies the exact transition occurrence; graph binding later adds the
@@ -300,7 +365,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
       List(
         "replay-vertical-relation-occurrence:v1",
         BoundedCausalIdentity.stepKey(step),
-        contract.toString.toLowerCase,
+        VerticalRelationContractKind.id(contract),
         DerivedRelationResultKey.from(relation).stableKey,
         certifiedSourcePremiseIds.mkString("[", ",", "]")
       )
@@ -317,7 +382,15 @@ private[chessjudgment] object ReplayVerticalRelationOccurrence:
   private[chessjudgment] def certifiedSourcePremiseIds(
       relation: RelationFactEvidence
   ): List[String] =
-    val proof = relation.detail match
+    val premiseIds = proof(relation).sourcePremises.map(_.stableKey).sorted
+    require(
+      premiseIds.nonEmpty && premiseIds.distinct.size == premiseIds.size,
+      "a replay vertical occurrence needs exact role-distinct lower premises"
+    )
+    premiseIds
+
+  private def proof(relation: RelationFactEvidence): VerticalRelationDerivationProof =
+    relation.detail match
       case detail: RelationWitnessDetail.CaptureRecaptureInventory => detail.proof
       case detail: RelationWitnessDetail.CreatedCheckResponseInventory => detail.proof
       case detail: RelationWitnessDetail.RootCheckResponse => detail.proof
@@ -326,7 +399,6 @@ private[chessjudgment] object ReplayVerticalRelationOccurrence:
       case detail: RelationWitnessDetail.StalemateTransition => detail.proof
       case _ =>
         throw IllegalStateException("a replay vertical occurrence lost its vertical derivation proof")
-    proof.sourcePremises.map(_.stableKey).distinct.sorted
 
 /** Minimal transport form for one replay-owned L1 occurrence. It retains the
   * exact time-axis address and certified lower owners without exposing the
@@ -350,7 +422,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrenceBinding 
     BoundedCausalIdentity.digest(List(
       "replay-vertical-relation-occurrence-binding:v1",
       BoundedCausalIdentity.stepKey(step),
-      contract.toString.toLowerCase,
+      VerticalRelationContractKind.id(contract),
       result.stableKey,
       occurrenceId,
       certifiedSourcePremiseIds.mkString("[", ",", "]")
@@ -438,6 +510,9 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     val afterAnalysis: PositionAnalysis,
     private val calculation: CanonicalReplayTransitionCalculation
 ):
+  private[chessjudgment] lazy val positionAfterOccurrence: ReplayPositionOccurrence =
+    new ReplayPositionOccurrence(declared, afterAnalysis)
+
   def relationTransition: RelationInventoryTransition = calculation.relationTransition
   def relationDelta: RelationSemanticDelta = calculation.relationDelta
   def boardFootprint: lila.chessjudgment.model.position.BoardTransitionFootprint = calculation.boardFootprint
@@ -496,7 +571,7 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     calculation.structuralOccurrence(declared, occurrences)
 
   private[chessjudgment] lazy val legalMoveOccurrence: ReplayLegalMoveOccurrence =
-    ReplayLegalMoveOccurrence(declared, relationDelta.rootMove)
+    ReplayLegalMoveOccurrence(declared, relationDelta.rootMove, boardFootprint)
 
   private[judgment] def certifiesBinding(
       transition: StructuralTransitionBinding
@@ -572,8 +647,6 @@ private[chessjudgment] final class CanonicalLineReplay private (
     replaySteps.zip(legalSteps).toMap
   private val indexByReplayStep: Map[LineReplayStep, Int] =
     replaySteps.zipWithIndex.toMap
-  private val positionOccurrenceCache =
-    scala.collection.mutable.Map.empty[LineReplayStep, ReplayPositionOccurrence]
   require(
     indexByReplayStep.size == replaySteps.size,
     "a canonical replay cannot contain the same time-axis occurrence twice"
@@ -619,20 +692,27 @@ private[chessjudgment] final class CanonicalLineReplay private (
   private[chessjudgment] def positionAfter(
       step: LineReplayStep
   ): Option[ReplayPositionOccurrence] =
-    indexByReplayStep.get(step).flatMap { index =>
-      positionOccurrenceCache.synchronized {
-        positionOccurrenceCache.get(step).orElse(
-          occurrenceAnalyses.lift(index + 1).map { analysis =>
-            val occurrence = new ReplayPositionOccurrence(step, analysis)
-            positionOccurrenceCache.update(step, occurrence)
-            occurrence
-          }
-        )
-      }
-    }
+    transition(step).map(_.positionAfterOccurrence)
 
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
+
+  /** Projects one exact contiguous replay segment by traversing its lazy
+    * transition stream once. Callers that need every occurrence must not
+    * repeatedly index the stream by step.
+    */
+  private[chessjudgment] def transitionOccurrencesFor(
+      steps: List[LineReplayStep]
+  ): Option[List[CanonicalReplayTransition]] = steps match
+    case Nil => Some(Nil)
+    case first :: _ =>
+      indexByReplayStep.get(first).flatMap { firstIndex =>
+        Option.when(
+          replaySteps.slice(firstIndex, firstIndex + steps.size) == steps
+        ) {
+          transitionOccurrences.slice(firstIndex, firstIndex + steps.size).toList
+        }.filter(_.size == steps.size)
+      }
 
   private[chessjudgment] def legalMoveOccurrence(
       step: LineReplayStep
@@ -711,6 +791,13 @@ private[chessjudgment] final class CanonicalLineReplay private (
     exactRecaptureResolution(captureStep, this, recaptureStep)
       .flatMap(resolution => resolution.resource.map(resolution.occurrence -> _))
 
+  private[chessjudgment] def exactRecaptureOccurrenceMembership(
+      captureTransition: CanonicalReplayTransition,
+      recaptureTransition: CanonicalReplayTransition
+  ): Option[(ReplayVerticalRelationOccurrence, RelationLegalMoveResourceWitness)] =
+    exactRecaptureResolution(captureTransition, recaptureTransition)
+      .flatMap(resolution => resolution.resource.map(resolution.occurrence -> _))
+
   /** Closed recapture classification for consumers that must distinguish a
     * certified absence from an unresolved inventory. `None` never means
     * `Excluded`; it means that the canonical occurrence could not certify
@@ -742,24 +829,41 @@ private[chessjudgment] final class CanonicalLineReplay private (
     for
       _ <- indexByReplayStep.get(captureStep)
       _ <- recaptureReplay.indexByReplayStep.get(recaptureStep)
-      if recaptureStep.ply == captureStep.ply + 1
-      if PrincipalVariationEvidence.sameBoardState(captureStep.fenAfter, recaptureStep.fenBefore)
-      captureLegal <- legalStep(captureStep)
-      recaptureLegal <- recaptureReplay.legalStep(recaptureStep)
       captureTransition <- transition(captureStep)
       recaptureTransition <- recaptureReplay.transition(recaptureStep)
+      resolution <- exactRecaptureResolution(captureTransition, recaptureTransition)
+    yield resolution
+
+  private def exactRecaptureResolution(
+      captureTransition: CanonicalReplayTransition,
+      recaptureTransition: CanonicalReplayTransition
+  ): Option[ExactRecaptureResolution] =
+    val captureStep = captureTransition.declared
+    val recaptureStep = recaptureTransition.declared
+    val captureLegal = captureTransition.legal
+    val recaptureLegal = recaptureTransition.legal
+    for
+      _ <- Option.when(recaptureStep.ply == captureStep.ply + 1)(())
+      _ <- Option.when(PrincipalVariationEvidence.sameBoardState(captureStep.fenAfter, recaptureStep.fenBefore))(
+        ()
+      )
       captureRoot = captureTransition.relationDelta.rootMove
       recaptureRoot = recaptureTransition.relationDelta.rootMove
       if captureRoot.capture.nonEmpty
-      inventory <- only(verticalRelationOccurrences(
-        captureStep,
-        List(VerticalRelationContractKind.CaptureRecaptureInventory)
-      ).flatMap(occurrence =>
-        occurrence.relation.detail match
-          case detail: RelationWitnessDetail.CaptureRecaptureInventory =>
-            List(occurrence -> detail)
-          case _ => Nil
-      ))
+      inventory <- only(
+        captureTransition
+          .verticalRelationsFor(VerticalRelationContractKind.CaptureRecaptureInventory)
+          .flatMap(relation =>
+            relation.detail match
+              case detail: RelationWitnessDetail.CaptureRecaptureInventory =>
+                List(ReplayVerticalRelationOccurrence(
+                  captureStep,
+                  VerticalRelationContractKind.CaptureRecaptureInventory,
+                  relation
+                ) -> detail)
+              case _ => Nil
+          )
+      )
       (occurrence, detail) = inventory
       if detail.mover == captureRoot.witness && legalMovementMatches(detail.mover, captureLegal)
       if captureRoot.capture.exists(capture =>

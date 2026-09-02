@@ -328,6 +328,7 @@
         {"$ref": "#/$defs/vacatedGateOccurrenceExplanation"},
         {"$ref": "#/$defs/squareReleaseRouteOccurrenceExplanation"},
         {"$ref": "#/$defs/captureExclusionOccurrenceExplanation"},
+        {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceExplanation"},
         {"$ref": "#/$defs/passedPawnProgressOccurrenceExplanation"}
       ]
     },
@@ -434,6 +435,24 @@
         "proof_kind": {"const": "capture_exclusion_move_order"},
         "proof": {
           "$ref": "#/$defs/occurrenceCaptureExclusionMoveOrderProof"
+        }
+      }
+    },
+    "relocationEnablesRecaptureOccurrenceExplanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause_evidence_id",
+        "subject_occurrence",
+        "proof_kind",
+        "proof"
+      ],
+      "properties": {
+        "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "subject_occurrence": {"$ref": "#/$defs/explanationSubjectOccurrence"},
+        "proof_kind": {"const": "relocation_enables_recapture"},
+        "proof": {
+          "$ref": "#/$defs/occurrenceRelocationEnablesRecaptureProof"
         }
       }
     },
@@ -1446,6 +1465,312 @@
         },
         "participants": {"$ref": "#/$defs/occurrenceCaptureExclusionParticipants"},
         "later_deferred_step_index": {"type": "integer", "minimum": 2}
+      }
+    },
+    "occurrenceRelocationEnablesRecaptureProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "relocated_responder_branch",
+        "retained_responder_branch",
+        "proof_paths",
+        "participants",
+        "relocation",
+        "target_capture",
+        "relocated_responder_recapture",
+        "retained_other_recapture"
+      ],
+      "properties": {
+        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "relocated_responder_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {
+              "properties": {
+                "branch_role": {"const": "relocated_responder"}
+              }
+            }
+          ]
+        },
+        "retained_responder_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/occurrenceExplanationBranch"},
+            {
+              "properties": {
+                "branch_role": {"const": "retained_responder"}
+              }
+            }
+          ]
+        },
+        "proof_paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureProofPath"}
+        },
+        "participants": {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureParticipants"},
+        "relocation": {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureIndexedMovement"},
+        "target_capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["movement", "move_uci", "relocated_step_index", "retained_step_index"],
+          "properties": {
+            "movement": {"$ref": "#/$defs/boundedCausalMovement"},
+            "move_uci": {"$ref": "#/$defs/uciMove"},
+            "relocated_step_index": {"type": "integer", "minimum": 0},
+            "retained_step_index": {"type": "integer", "minimum": 0}
+          }
+        },
+        "relocated_responder_recapture": {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureIndexedMovement"},
+        "retained_other_recapture": {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureIndexedMovement"}
+      }
+    },
+    "occurrenceRelocationEnablesRecaptureProofPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
+      "properties": {
+        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "premises": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureRelationPremiseUse"},
+              {"$ref": "#/$defs/occurrenceRelocationEnablesRecaptureLegalMovePremiseUse"},
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role", "contract", "transition_kind", "overall_move_uci", "before", "after",
+                  "legal_move_semantic_id", "transition_footprint_id", "issuer_evidence_id",
+                  "issuer_occurrence_id", "source_premise_ids", "branch_id", "branch_role", "step_index"
+                ],
+                "properties": {
+                  "role": {"enum": [
+                    "relocated_branch_target_continuity",
+                    "retained_branch_target_continuity",
+                    "relocated_responder_continuity",
+                    "retained_responder_continuity",
+                    "relocated_branch_attacker_continuity",
+                    "retained_branch_attacker_continuity"
+                  ]},
+                  "contract": {"const": "object_continuity_step"},
+                  "transition_kind": {"enum": ["retained", "primary", "secondary"]},
+                  "overall_move_uci": {"$ref": "#/$defs/uciMove"},
+                  "before": {"$ref": "#/$defs/boundedCausalPiece"},
+                  "after": {"$ref": "#/$defs/boundedCausalPiece"},
+                  "selected_transition": {"$ref": "#/$defs/boundedCausalMovement"},
+                  "legal_move_semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                  "transition_footprint_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                  "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+                  "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                  "source_premise_ids": {
+                    "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true,
+                    "items": {"$ref": "#/$defs/nonEmptyString"}
+                  },
+                  "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                  "branch_role": {"enum": ["relocated_responder", "retained_responder"]},
+                  "step_index": {"type": "integer", "minimum": 0}
+                },
+                "oneOf": [
+                  {
+                    "properties": {"transition_kind": {"const": "retained"}},
+                    "not": {"required": ["selected_transition"]}
+                  },
+                  {
+                    "required": ["selected_transition"],
+                    "properties": {"transition_kind": {"enum": ["primary", "secondary"]}}
+                  }
+                ]
+              }
+            ]
+          },
+          "allOf": [
+            {"contains": {"properties": {"role": {"const": "relocated_recapture_inventory"}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"role": {"const": "retained_recapture_inventory"}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"role": {"const": "relocated_target_capture"}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"role": {"const": "relocated_responder_recapture"}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"role": {"const": "retained_target_capture"}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"role": {"const": "retained_other_recapture"}}}, "minContains": 1, "maxContains": 1},
+            {
+              "contains": {
+                "properties": {
+                  "role": {"const": "relocated_branch_target_continuity"},
+                  "contract": {"const": "object_continuity_step"}
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {"const": "relocated_branch_attacker_continuity"},
+                  "contract": {"const": "object_continuity_step"}
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {"const": "relocated_responder_continuity"},
+                  "contract": {"const": "object_continuity_step"}
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {"const": "retained_responder_continuity"},
+                  "contract": {"const": "object_continuity_step"}
+                }
+              },
+              "minContains": 1
+            }
+          ]
+        },
+        "closed_absence_uses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+              {"properties": {
+                "role": {"const": "retained_seed_recapture_absent"},
+                "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
+                "query": {"type": "string", "pattern": "^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$"},
+                "branch_role": {"const": "retained_responder"}
+              }}
+            ]
+          }
+        },
+        "closed_state_uses": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "allOf": [
+              {"$ref": "#/$defs/occurrenceExplanationClosureUse"},
+              {"properties": {
+                "role": {"enum": [
+                  "relocated_branch_target_continuity",
+                  "retained_branch_target_continuity",
+                  "relocated_responder_continuity",
+                  "retained_responder_continuity",
+                  "relocated_branch_attacker_continuity",
+                  "retained_branch_attacker_continuity"
+                ]},
+                "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
+                "query": {"type": "string", "pattern": "^occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8]$"},
+                "branch_role": {"enum": ["relocated_responder", "retained_responder"]}
+              }}
+            ]
+          }
+        }
+      }
+    },
+    "occurrenceRelocationEnablesRecaptureRelationPremiseUse": {
+      "allOf": [
+        {"$ref": "#/$defs/occurrenceExplanationRelationPremiseUse"},
+        {"properties": {
+          "role": {"enum": ["relocated_recapture_inventory", "retained_recapture_inventory"]},
+          "contract": {"const": "capture_recapture_inventory"},
+          "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}
+        }},
+        {"oneOf": [
+          {"properties": {
+            "role": {"const": "relocated_recapture_inventory"},
+            "branch_role": {"const": "relocated_responder"}
+          }},
+          {"properties": {
+            "role": {"const": "retained_recapture_inventory"},
+            "branch_role": {"const": "retained_responder"}
+          }}
+        ]}
+      ]
+    },
+    "occurrenceRelocationEnablesRecaptureLegalMovePremiseUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role", "contract", "move_uci", "movement", "movement_mode", "legal_move_semantic_id",
+        "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids", "branch_id", "branch_role", "step_index", "capture"
+      ],
+      "properties": {
+        "role": {"enum": [
+          "relocated_target_capture",
+          "relocated_responder_recapture",
+          "retained_target_capture",
+          "retained_other_recapture"
+        ]},
+        "contract": {"const": "legal_move"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "movement": {"$ref": "#/$defs/boundedCausalMovement"},
+        "movement_mode": {"enum": ["controlled_destination", "pawn_advance", "pawn_double_advance", "castling"]},
+        "legal_move_semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_premise_ids": {
+          "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"enum": ["relocated_responder", "retained_responder"]},
+        "step_index": {"type": "integer", "minimum": 0},
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["square", "piece", "side"],
+          "properties": {
+            "square": {"$ref": "#/$defs/square"},
+            "piece": {"$ref": "#/$defs/pieceRole"},
+            "side": {"$ref": "#/$defs/side"}
+          }
+        }
+      }
+    },
+    "occurrenceRelocationEnablesRecaptureParticipants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attacker_at_common_root",
+        "attacker_at_capture",
+        "target_at_common_root",
+        "captured_target",
+        "recapture_square",
+        "tracked_responder_at_seed",
+        "tracked_responder_at_staging",
+        "other_recapturer"
+      ],
+      "properties": {
+        "attacker_at_common_root": {"$ref": "#/$defs/boundedCausalPiece"},
+        "attacker_at_capture": {"$ref": "#/$defs/boundedCausalPiece"},
+        "target_at_common_root": {"$ref": "#/$defs/boundedCausalPiece"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
+        "recapture_square": {"$ref": "#/$defs/square"},
+        "tracked_responder_at_seed": {"$ref": "#/$defs/boundedCausalPiece"},
+        "tracked_responder_at_staging": {"$ref": "#/$defs/boundedCausalPiece"},
+        "other_recapturer": {"$ref": "#/$defs/boundedCausalPiece"}
+      }
+    },
+    "occurrenceRelocationEnablesRecaptureIndexedMovement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["movement", "move_uci", "step_index"],
+      "properties": {
+        "movement": {"$ref": "#/$defs/boundedCausalMovement"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "step_index": {"type": "integer", "minimum": 0}
       }
     },
     "occurrenceExplanationBranch": {

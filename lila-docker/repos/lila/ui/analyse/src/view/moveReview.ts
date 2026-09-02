@@ -674,7 +674,7 @@ function branchLabel(provenance: MoveReviewAnyBranch['rootProvenance'], copy: Mo
     : copy.analyzedAlternative;
 }
 
-type MoveReviewParticipant = MoveReviewMovementWitness | MoveReviewColoredPieceWitness;
+type MoveReviewParticipant = MoveReviewMovementWitness | MoveReviewColoredPieceWitness | Key;
 type MoveReviewPremise = MoveReviewAnyProofPath['premises'][number];
 
 function renderOccurrenceParticipants(
@@ -692,14 +692,16 @@ function renderOccurrenceParticipants(
       (Object.entries(participants) as [string, MoveReviewParticipant][]).map(([role, participant]) =>
         hl('section.move-review__participant', [
           hl('h5', structureRoleLabel(role, copy, copy.structureLabels.participants)),
-          renderWitness(participant, copy),
+          typeof participant === 'string'
+            ? renderFact(copy.structureLabels.square, participant, 'square')
+            : renderWitness(participant, copy),
         ]),
       ),
     ),
   ]);
 }
 
-function renderWitness(value: MoveReviewParticipant, copy: MoveReviewCopy): VNode {
+function renderWitness(value: Exclude<MoveReviewParticipant, Key>, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
   return 'from' in value
     ? renderFacts([
@@ -733,6 +735,24 @@ function renderPremise(premise: MoveReviewPremise, index: number, copy: MoveRevi
       dependency && renderPassedPawnDependency(dependency, copy),
     ]);
   }
+  if ('transitionKind' in premise)
+    return hl('section.move-review__premise', [
+      hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
+      renderFacts([
+        renderFact(labels.contract, labels.contractLabels[premise.contract] ?? labels.contract),
+        renderFact(labels.result, structureRoleLabel(premise.transitionKind, copy, premise.transitionKind)),
+        renderFact(labels.move, premise.overallMoveUci, 'move'),
+        renderFact(labels.afterStep, premise.stepIndex + 1),
+      ]),
+      hl('div.move-review__continuity-before', [hl('h6', labels.from), renderWitness(premise.before, copy)]),
+      hl('div.move-review__continuity-after', [hl('h6', labels.to), renderWitness(premise.after, copy)]),
+      premise.selectedTransition
+        ? hl('div.move-review__continuity-transition', [
+            hl('h6', labels.move),
+            renderWitness(premise.selectedTransition, copy),
+          ])
+        : undefined,
+    ]);
   const contract = labels.contractLabels[premise.contract] ?? labels.contract;
   if ('movement' in premise)
     return hl('section.move-review__premise', [
@@ -873,6 +893,16 @@ function renderLaterConsumer(explanation: MoveReviewOccurrenceExplanation, copy:
         hl('h4', labels.laterConsumer),
         renderFact(labels.afterStep, explanation.proof.laterDeferredStepIndex + 1),
         renderWitness(explanation.proof.participants.deferredMove, copy),
+      ]);
+    case 'relocation_enables_recapture':
+      return hl('section.move-review__later-consumer.move-review__typed-section', [
+        hl('h4', labels.laterConsumer),
+        hl('h5', structureRoleLabel('relocated_target_capture', copy, labels.capture)),
+        renderFact(labels.move, explanation.proof.targetCapture.moveUci, 'move'),
+        renderWitness(explanation.proof.targetCapture.movement, copy),
+        hl('h5', structureRoleLabel('relocated_responder_recapture', copy, labels.reply)),
+        renderFact(labels.move, explanation.proof.relocatedResponderRecapture.moveUci, 'move'),
+        renderWitness(explanation.proof.relocatedResponderRecapture.movement, copy),
       ]);
     case 'passed_pawn_progress_realized_after_only_legal_reply':
       return hl('section.move-review__later-consumer.move-review__typed-section', [

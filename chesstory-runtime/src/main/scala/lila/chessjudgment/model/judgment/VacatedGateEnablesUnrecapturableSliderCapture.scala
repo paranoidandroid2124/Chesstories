@@ -107,7 +107,7 @@ private[chessjudgment] sealed trait VacatedGateEnablesUnrecapturableSliderCaptur
   final override def stateBindings = vacatedGatePersistence ++ retainedGatePositionStates
   final def stableKey: String =
     List(
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       premiseUses.map(_.stableKey).mkString("[", ",", "]"),
       absenceBindings.map(_.stableKey).mkString("[", ",", "]"),
       stateBindings.map(_.stableKey).mkString("[", ",", "]")
@@ -311,7 +311,7 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
       "retained-gate-root",
       BoundedCausalIdentity.evidenceRecordKey(retainedGate.lineOwner),
       BoundedCausalIdentity.evidenceRecordKey(retainedGate.transitionOwner),
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")

@@ -15,7 +15,8 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
   ): JudgmentAssemblyContext =
     val relationRecords = RelationCausalProofAssembler.fromDemand(allocator, demand)
     val directContext = context.withEvidence(
-      captureExclusionRecords(allocator, demand) ++ relationRecords
+      captureExclusionRecords(allocator, demand) ++
+        relocationEnablesRecaptureRecords(allocator, demand) ++ relationRecords
     )
     val passedPawnDemand = PassedPawnResultEventAssembler.changedDependencyDemand(
       directContext,
@@ -92,50 +93,116 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
       allocator: JudgmentProvenanceAllocator,
       demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
-    val familyDemands = CaptureExclusionProofDemand.from(demand)
-    val derived = familyDemands.flatMap { exactDemand =>
-      CaptureExclusionMoveOrderProof
-        .certifyDemanded(
-          exactDemand.subject,
-          exactDemand.vacatingBranch,
-          exactDemand.immediateBranch,
-          exactDemand.occurrences
-        )
-        .map(exact => exact.dependency.value -> exact)
+    val certified = CaptureExclusionProofDemand.from(demand).flatMap { exactDemand =>
+      CaptureExclusionMoveOrderProof.certifyDemanded(
+        exactDemand.subject,
+        exactDemand.vacatingBranch,
+        exactDemand.immediateBranch,
+        exactDemand.occurrences
+      )
     }
-    require(
-      derived.map(_._1).distinct.size == derived.size,
-      "one capture-exclusion dependency may be produced only once"
+    occurrenceProofRecords(
+      family = BoundedCausalContractKind.CaptureExclusionMoveOrder,
+      allocator = allocator,
+      subject = demand.subject
+    )(certified)(
+      semanticId = _.semantic.semanticId,
+      occurrenceId = _.occurrence.occurrenceId,
+      dependencyId = _.dependency.value,
+      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+      parentSources = _.parentSources,
+      payload = exact =>
+        CaptureExclusionMoveOrderEvidence(
+          exact.semantic,
+          exact.occurrence,
+          demand.subject.publicOccurrence,
+          exact.dependency.value,
+          exact
+        )
     )
 
-    derived
-      .map { case (_, exact) =>
-        val subject = exact.subject.publicOccurrence
-        val proofPathIds = exact.occurrence.proofPaths.map(_.pathOccurrenceId).sorted
-        require(
-          proofPathIds.nonEmpty && proofPathIds.distinct.size == proofPathIds.size,
-          "a capture-exclusion record must retain every independent proof path"
+  private def relocationEnablesRecaptureRecords(
+      allocator: JudgmentProvenanceAllocator,
+      demand: OccurrenceExplanationDemand
+  ): List[EvidenceRecord] =
+    val certified = RelocationEnablesRecaptureProofDemand.from(demand).flatMap { exactDemand =>
+      RelocationEnablesRecaptureProof.certifyDemanded(
+        exactDemand.subject,
+        exactDemand.relocatedBranch,
+        exactDemand.retainedBranch,
+        exactDemand.occurrences
+      )
+    }
+    occurrenceProofRecords(
+      family = BoundedCausalContractKind.RelocationEnablesRecapture,
+      allocator = allocator,
+      subject = demand.subject
+    )(certified)(
+      semanticId = _.semantic.semanticId,
+      occurrenceId = _.occurrence.occurrenceId,
+      dependencyId = _.dependency.value,
+      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+      parentSources = _.parentSources,
+      payload = exact =>
+        RelocationEnablesRecaptureEvidence(
+          exact.semantic,
+          exact.occurrence,
+          demand.subject.publicOccurrence,
+          exact.dependency.value,
+          exact
         )
-        EvidenceRecord(
-          EvidenceRef(
-            allocator.evidenceId(
-              s"causal-proof:${BoundedCausalContractKind.CaptureExclusionMoveOrder.semanticNamespace}:${exact.semantic.semanticId}:${exact.occurrence.occurrenceId}:${exact.dependency.value}:${proofPathIds.mkString(":")}:subject:${subject.occurrenceId}"
-            ),
-            EvidenceProducer.CausalProofProducer,
-            EvidenceLayer.CausalProof,
-            subject.start,
-            Some(subject.line),
-            exact.subject.transitionOwner.ref.scope,
-            EvidenceConfidence.LegalReplayVerified
+    )
+
+  private[assembly] def occurrenceProofRecords[A](
+      family: BoundedCausalContractKind,
+      allocator: JudgmentProvenanceAllocator,
+      subject: CertifiedRootOccurrence
+  )(
+      certified: => List[A]
+  )(
+      semanticId: A => String,
+      occurrenceId: A => String,
+      dependencyId: A => String,
+      proofPathIds: A => List[String],
+      parentSources: A => List[EvidenceRef],
+      payload: A => EvidencePayload
+  ): List[EvidenceRecord] =
+    val familyNamespace = family.semanticNamespace
+    val exact = certified
+    require(
+      exact.map(occurrenceId).distinct.size == exact.size,
+      s"one exact $familyNamespace occurrence may be produced only once"
+    )
+    require(
+      exact.map(dependencyId).distinct.size == exact.size,
+      s"one exact $familyNamespace dependency may be produced only once"
+    )
+    exact.map { proof =>
+      val paths = proofPathIds(proof).sorted
+      val parents = parentSources(proof)
+      require(
+        paths.nonEmpty && paths.distinct.size == paths.size,
+        s"a $familyNamespace record must retain every independent proof path"
+      )
+      require(
+        parents.nonEmpty && parents == parents.sortBy(_.id) &&
+          parents.map(_.id).distinct.size == parents.size,
+        s"a $familyNamespace record needs canonical distinct lower owners"
+      )
+      val publicSubject = subject.publicOccurrence
+      EvidenceRecord(
+        EvidenceRef(
+          allocator.evidenceId(
+            s"causal-proof:$familyNamespace:${semanticId(proof)}:${occurrenceId(proof)}:${dependencyId(proof)}:${paths.mkString(":")}:subject:${publicSubject.occurrenceId}"
           ),
-          CaptureExclusionMoveOrderEvidence(
-            exact.semantic,
-            exact.occurrence,
-            subject,
-            exact.dependency.value,
-            exact
-          ),
-          exact.parentSources
-        )
-      }
-      .sortBy(_.ref.id)
+          EvidenceProducer.CausalProofProducer,
+          EvidenceLayer.CausalProof,
+          publicSubject.start,
+          Some(publicSubject.line),
+          subject.transitionOwner.ref.scope,
+          EvidenceConfidence.LegalReplayVerified
+        ),
+        payload(proof),
+        parents
+      )
+    }.sortBy(_.ref.id)

@@ -24,13 +24,15 @@ ROOT = Path(__file__).resolve().parents[1]
 FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 
-def _produced_occurrence_commentary() -> dict[str, object]:
+def _produced_occurrence_commentary(
+    fixture_name: str = "occurrence-explanation-produced.json",
+) -> dict[str, object]:
     produced = json.loads(
         (
             ROOT
             / "fixtures"
             / "public-commentary-v6"
-            / "occurrence-explanation-produced.json"
+            / fixture_name
         ).read_text(encoding="utf-8")
     )
     commentaries = [
@@ -44,8 +46,10 @@ def _produced_occurrence_commentary() -> dict[str, object]:
     return copy.deepcopy(commentaries[0])
 
 
-def _produced_occurrence_explanation() -> dict[str, object]:
-    commentary = _produced_occurrence_commentary()
+def _produced_occurrence_explanation(
+    fixture_name: str = "occurrence-explanation-produced.json",
+) -> dict[str, object]:
+    commentary = _produced_occurrence_commentary(fixture_name)
     explanations = commentary["occurrence_explanations"]
     if len(explanations) != 1:
         raise AssertionError("Scala producer fixture must contain one occurrence explanation")
@@ -111,6 +115,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                 {"$ref": "#/$defs/vacatedGateOccurrenceExplanation"},
                 {"$ref": "#/$defs/squareReleaseRouteOccurrenceExplanation"},
                 {"$ref": "#/$defs/captureExclusionOccurrenceExplanation"},
+                {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceExplanation"},
                 {"$ref": "#/$defs/passedPawnProgressOccurrenceExplanation"},
             ],
         )
@@ -132,7 +137,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             with self.subTest(retired_field=retired_field), self.assertRaises(ContractError):
                 registry.validate_document(retired, move_path, label="retired explanation lane")
 
-    def test_six_occurrence_typed_proof_contracts_are_closed_and_distinct(self) -> None:
+    def test_seven_occurrence_typed_proof_contracts_are_closed_and_distinct(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
@@ -156,6 +161,10 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             "captureExclusionOccurrenceExplanation": (
                 "capture_exclusion_move_order",
                 "occurrenceCaptureExclusionMoveOrderProof",
+            ),
+            "relocationEnablesRecaptureOccurrenceExplanation": (
+                "relocation_enables_recapture",
+                "occurrenceRelocationEnablesRecaptureProof",
             ),
             "passedPawnProgressOccurrenceExplanation": (
                 "passed_pawn_progress_realized_after_only_legal_reply",
@@ -193,6 +202,242 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                     }.issubset(proof["required"])
                 )
                 self.assertNotIn("subject_occurrence", proof["properties"])
+
+    def test_relocation_producer_fixture_retains_complete_object_continuity(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+        move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
+        explanation = _produced_occurrence_explanation(
+            "relocation-enables-recapture-produced.json"
+        )
+        self.assertEqual(
+            _occurrence_explanation_errors(registry, move_path, explanation), []
+        )
+        self.assertEqual(explanation["proof_kind"], "relocation_enables_recapture")
+        proof = explanation["proof"]
+        self.assertEqual(len(proof["proof_paths"]), 1)
+        path = proof["proof_paths"][0]
+        continuity = [
+            premise
+            for premise in path["premises"]
+            if premise["contract"] == "object_continuity_step"
+        ]
+        self.assertGreater(len(continuity), 9)
+        self.assertEqual(
+            {premise["role"] for premise in continuity},
+            {
+                "relocated_branch_target_continuity",
+                "retained_branch_target_continuity",
+                "relocated_responder_continuity",
+                "retained_responder_continuity",
+                "relocated_branch_attacker_continuity",
+                "retained_branch_attacker_continuity",
+            },
+        )
+        self.assertTrue(
+            any(
+                premise["transition_kind"] == "secondary"
+                and premise["overall_move_uci"] == "e8c8"
+                and premise["selected_transition"]["from"] == "a8"
+                and premise["selected_transition"]["to"] == "d8"
+                for premise in continuity
+            )
+        )
+        self.assertNotEqual(
+            proof["participants"]["captured_target"]["square"],
+            proof["participants"]["recapture_square"],
+        )
+        self.assertNotEqual(
+            proof["participants"]["tracked_responder_at_seed"],
+            proof["participants"]["other_recapturer"],
+        )
+        occurrence_keys = [
+            (
+                premise["role"],
+                premise["branch_id"],
+                premise["step_index"],
+                premise["issuer_occurrence_id"],
+            )
+            for premise in continuity
+        ]
+        self.assertEqual(len(occurrence_keys), len(set(occurrence_keys)))
+        for premise in continuity:
+            self.assertEqual(
+                premise["source_premise_ids"],
+                sorted(
+                    [
+                        premise["issuer_evidence_id"],
+                        premise["issuer_occurrence_id"],
+                        f"legal-move:{premise['legal_move_semantic_id']}",
+                        f"transition-footprint:{premise['transition_footprint_id']}",
+                    ]
+                ),
+            )
+        endpoint_premises = {
+            premise["role"]: premise
+            for premise in path["premises"]
+            if premise["contract"] == "legal_move"
+        }
+        self.assertEqual(
+            endpoint_premises["relocated_target_capture"]["capture"],
+            proof["participants"]["captured_target"],
+        )
+        self.assertEqual(
+            endpoint_premises["retained_target_capture"]["capture"],
+            proof["participants"]["captured_target"],
+        )
+        for premise in endpoint_premises.values():
+            self.assertEqual(
+                premise["source_premise_ids"],
+                sorted(
+                    [
+                        premise["issuer_evidence_id"],
+                        premise["issuer_occurrence_id"],
+                        f"legal-move:{premise['legal_move_semantic_id']}",
+                    ]
+                ),
+            )
+
+        def remove_continuity(candidate: dict[str, object]) -> None:
+            candidate_path = candidate["proof"]["proof_paths"][0]
+            premises = candidate_path["premises"]
+            index = next(
+                index
+                for index, premise in enumerate(premises)
+                if premise.get("role") == "relocated_branch_target_continuity"
+                and premise.get("step_index") == 2
+            )
+            premises.pop(index)
+
+        def duplicate_occurrence_binding(candidate: dict[str, object]) -> None:
+            candidate_path = candidate["proof"]["proof_paths"][0]
+            premise = next(
+                premise
+                for premise in candidate_path["premises"]
+                if premise.get("contract") == "object_continuity_step"
+            )
+            duplicate = copy.deepcopy(premise)
+            old_owner = f"transition-footprint:{duplicate['transition_footprint_id']}"
+            duplicate["transition_footprint_id"] = "f" * 64
+            duplicate["source_premise_ids"] = sorted(
+                "transition-footprint:" + "f" * 64 if value == old_owner else value
+                for value in duplicate["source_premise_ids"]
+            )
+            candidate_path["premises"].append(duplicate)
+
+        def remove_secondary_transition(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("transition_kind") == "secondary"
+            )
+            del premise["selected_transition"]
+
+        def replace_target_capture_victim(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("role") == "relocated_target_capture"
+            )
+            premise["capture"] = copy.deepcopy(
+                candidate["proof"]["participants"]["other_recapturer"]
+            )
+
+        def detach_recapture_premise_endpoint(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("role") == "retained_other_recapture"
+            )
+            premise["movement"]["from"] = "a1"
+
+        def replace_continuity_legal_owner(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("contract") == "object_continuity_step"
+            )
+            premise["source_premise_ids"] = sorted(
+                "legal-move:" + "f" * 64
+                if value.startswith("legal-move:")
+                else value
+                for value in premise["source_premise_ids"]
+            )
+
+        def replace_endpoint_legal_owner(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("role") == "relocated_target_capture"
+            )
+            premise["source_premise_ids"] = sorted(
+                "legal-move:" + "f" * 64
+                if value.startswith("legal-move:")
+                else value
+                for value in premise["source_premise_ids"]
+            )
+
+        def detach_recapture_inventory_occurrence(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("role") == "relocated_recapture_inventory"
+            )
+            premise["step_index"] += 1
+
+        def detach_seed_absence_query(candidate: dict[str, object]) -> None:
+            absence = candidate["proof"]["proof_paths"][0]["closed_absence_uses"][0]
+            absence["query"] = "legal-move-from-to:black:a1:a2"
+
+        def detach_seed_absence_occurrence(candidate: dict[str, object]) -> None:
+            absence = candidate["proof"]["proof_paths"][0]["closed_absence_uses"][0]
+            absence["after_step_index"] += 1
+
+        def replace_recaptured_attacker(candidate: dict[str, object]) -> None:
+            premises = candidate["proof"]["proof_paths"][0]["premises"]
+            premise = next(
+                premise
+                for premise in premises
+                if premise.get("role") == "relocated_responder_recapture"
+            )
+            premise["capture"] = copy.deepcopy(
+                candidate["proof"]["participants"]["other_recapturer"]
+            )
+
+        def detach_recapture_square(candidate: dict[str, object]) -> None:
+            candidate["proof"]["participants"]["recapture_square"] = "a1"
+
+        def replace_tracked_responder_seed(candidate: dict[str, object]) -> None:
+            candidate["proof"]["participants"]["tracked_responder_at_seed"] = (
+                copy.deepcopy(candidate["proof"]["participants"]["other_recapturer"])
+            )
+
+        for mutate in (
+            remove_continuity,
+            duplicate_occurrence_binding,
+            remove_secondary_transition,
+            replace_target_capture_victim,
+            detach_recapture_premise_endpoint,
+            replace_continuity_legal_owner,
+            replace_endpoint_legal_owner,
+            detach_recapture_inventory_occurrence,
+            detach_seed_absence_query,
+            detach_seed_absence_occurrence,
+            replace_recaptured_attacker,
+            detach_recapture_square,
+            replace_tracked_responder_seed,
+        ):
+            candidate = copy.deepcopy(explanation)
+            mutate(candidate)
+            with self.subTest(mutation=mutate.__name__):
+                self.assertTrue(
+                    _occurrence_explanation_errors(registry, move_path, candidate)
+                )
 
     def test_occurrence_transport_rejects_only_broken_generic_wiring(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")

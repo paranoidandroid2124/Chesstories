@@ -171,6 +171,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 "cache_dependency",
                 "host",
                 "coverage_categories",
+                "p0_corrections",
                 "contracts",
                 "complete_game_ledger",
             },
@@ -180,6 +181,22 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertIs(self.manifest["runtime_consumed"], False)
         self.assertIs(self.manifest["cache_dependency"], False)
         self.assertEqual(set(self.manifest["coverage_categories"]), COVERAGE_CATEGORIES)
+        corrections = self.manifest["p0_corrections"]
+        self.assertEqual(len(corrections), 1)
+        correction = corrections[0]
+        self.assertEqual(correction["id"], "canonical-causal-identity-keys")
+        self.assertEqual(correction["status"], "fixed")
+        self.assertEqual(
+            set(correction["owners"]),
+            {
+                "CausalBranchRole.stableKey",
+                "VerticalRelationContractKind.id",
+                "BoundedCausalContractKind.semanticNamespace",
+            },
+        )
+        self.assertTrue(correction["affected_identity_inputs"])
+        for fixture in correction["producer_fixtures"]:
+            self.assertTrue(_repo_path(fixture).is_file())
 
         serialized = json.dumps(self.manifest, sort_keys=True)
         for stale in STALE_OWNERSHIP_NAMES:
@@ -198,7 +215,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
         ]
         for values in (contract_kinds, proof_types, formal_tests, producer_handlers):
             self.assertEqual(len(values), len(set(values)))
-        self.assertEqual(len(self.contracts), 6)
+        self.assertEqual(len(self.contracts), 7)
         for contract in self.contracts:
             self.assertEqual(set(contract), CONTRACT_KEYS)
             self.assertEqual(set(contract["audit_mapping"]), AUDIT_MAPPING_KEYS)
@@ -283,7 +300,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
             self.assertIn(f"case '{proof_kind}':", decoder)
         self.assertIn("function renderOccurrenceExplanation(", renderer)
         self.assertIn(
-            "test('decodes all six proof kinds as their exact discriminated variants'",
+            "test('decodes all seven proof kinds as their exact discriminated variants'",
             decoder_test,
         )
         self.assertIn(
@@ -292,14 +309,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
         )
 
     def test_each_family_has_one_producer_proof_wire_and_formal_test(self) -> None:
-        declared_producer_files = {contract["producer"]["file"] for contract in self.contracts}
-        discovered_producer_files = {
-            path.relative_to(REPO).as_posix()
-            for path in ASSEMBLY.glob("*.scala")
-            if "EvidenceProducer.CausalProofProducer" in path.read_text(encoding="utf-8")
-        }
-        self.assertEqual(discovered_producer_files, declared_producer_files)
-
         runtime_text = _repo_path(self.manifest["host"]["runtime"]["file"]).read_text(
             encoding="utf-8"
         )
@@ -337,6 +346,14 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 len(re.findall(rf"\bclass {re.escape(proof['symbol'])}\b", proof_text)), 1
             )
             self.assertIn(proof["symbol"], producer_text)
+            self.assertEqual(
+                {
+                    path.relative_to(REPO).as_posix()
+                    for path in ASSEMBLY.glob("*.scala")
+                    if proof["symbol"] in path.read_text(encoding="utf-8")
+                },
+                {producer["file"]},
+            )
 
             formal_test = contract["formal_test"]
             formal_text = _repo_path(formal_test["file"]).read_text(encoding="utf-8")
@@ -371,7 +388,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 for contract in self.contracts
                 if "direct_fixture" in contract["audit_mapping"]["consumers"]
             ],
-            ["CaptureExclusionMoveOrder"],
+            ["CaptureExclusionMoveOrder", "RelocationEnablesRecapture"],
         )
         for contract in self.contracts:
             audit = contract["audit_mapping"]
@@ -612,6 +629,11 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 124,
                 125,
             ),
+            "ai-revolution-recapture-relocation": (
+                "ref-dc427a9593ab48248d19627b245fafaa",
+                104,
+                105,
+            ),
             "ai-revolution-square-release-prohaszka-wang": (
                 "ref-dc427a9593ab48248d19627b245fafaa",
                 130,
@@ -630,6 +652,8 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 ("ref-edf868ccf0a3425488f55ef6b4b08acf", 71, 76),
             "beating-najdorf-fedoseev-indjic":
                 ("ref-6661fa92ce6d237a8eb6c8e9e6c49fe", 293, 300),
+            "beating-najdorf-qe2-recapture-relocation":
+                ("ref-6661fa92ce6d237a8eb6c8e9e6c49fe", 231, 232, 233),
             "najdorf-bg5-v1-burridge-williamson":
                 ("ref-638dbc429db08ca52ef07553822722d8b", 305),
             "najdorf-bg5-v2-qc1-qd2":
@@ -809,7 +833,13 @@ class L2ProofProvenanceTest(unittest.TestCase):
         }
         self.assertEqual(
             exact_cases,
-            {"ruy-lopez-game-12", "ai-revolution-square-release-prohaszka-wang"},
+            {
+                "ruy-lopez-game-12",
+                "najdorf-game-16",
+                "ai-revolution-recapture-relocation",
+                "ai-revolution-square-release-prohaszka-wang",
+                "beating-najdorf-qe2-recapture-relocation",
+            },
         )
 
     def _assert_registered_locator(self, locator: dict[str, object]) -> None:

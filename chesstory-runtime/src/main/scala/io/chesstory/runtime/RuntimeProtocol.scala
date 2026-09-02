@@ -324,6 +324,13 @@ object RuntimeProtocol:
             "proof_kind" -> "capture_exclusion_move_order",
             "proof" -> captureExclusionMoveOrderProofJson(proof)
           )
+        case proof: RootOwnedEffectProof.RelocationEnablesRecapture =>
+          Json.obj(
+            "cause_evidence_id" -> certified.causeEvidence.id,
+            "subject_occurrence" -> explanationSubjectJson(certified.subject),
+            "proof_kind" -> "relocation_enables_recapture",
+            "proof" -> relocationEnablesRecaptureProofJson(proof)
+          )
         case proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
           Json.obj(
             "cause_evidence_id" -> certified.causeEvidence.id,
@@ -374,7 +381,7 @@ object RuntimeProtocol:
         case exact: BoundedCausalPublicPremiseUse =>
           Json.obj(
             "role" -> causalRoleCode(exact.role),
-            "contract" -> causalEnumCode(exact.contract),
+            "contract" -> exact.contract,
             "result_id" -> exact.resultId,
             "issuer_evidence_id" -> exact.issuerEvidenceId,
             "issuer_occurrence_id" -> exact.issuerOccurrenceId,
@@ -385,6 +392,8 @@ object RuntimeProtocol:
           )
         case exact: BoundedCausalPublicLegalMoveUse =>
           causalLegalMovePremiseJson(exact)
+        case exact: BoundedCausalPublicObjectContinuityUse =>
+          causalObjectContinuityPremiseJson(exact)
 
     private def causalLegalMovePremiseJson(
         premise: BoundedCausalPublicLegalMoveUse
@@ -416,6 +425,36 @@ object RuntimeProtocol:
             "side" -> premise.capturedSide.get
           )
         )
+      ).getOrElse(Json.obj())
+
+    private def causalObjectContinuityPremiseJson(
+        premise: BoundedCausalPublicObjectContinuityUse
+    ): JsObject =
+      Json.obj(
+        "role" -> causalRoleCode(premise.role),
+        "contract" -> "object_continuity_step",
+        "transition_kind" -> causalEnumCode(premise.transitionKind),
+        "overall_move_uci" -> EvidenceRef.normalizeMove(premise.overallMoveUci),
+        "before" -> Json.obj(
+          "side" -> premise.side,
+          "square" -> premise.beforeSquare,
+          "piece" -> premise.beforePiece
+        ),
+        "after" -> Json.obj(
+          "side" -> premise.side,
+          "square" -> premise.afterSquare,
+          "piece" -> premise.afterPiece
+        ),
+        "legal_move_semantic_id" -> premise.legalMoveSemanticId,
+        "transition_footprint_id" -> premise.transitionFootprintId,
+        "issuer_evidence_id" -> premise.issuerEvidenceId,
+        "issuer_occurrence_id" -> premise.issuerOccurrenceId,
+        "source_premise_ids" -> premise.sourcePremiseIds,
+        "branch_id" -> premise.branchId,
+        "branch_role" -> causalRoleCode(premise.branchRole),
+        "step_index" -> premise.stepIndex
+      ) ++ premise.selectedTransition.map(transition =>
+        Json.obj("selected_transition" -> movementWitnessJson(transition))
       ).getOrElse(Json.obj())
 
     private def causalAbsenceUseJson(use: BoundedCausalPublicClosedAbsenceUse): JsObject =
@@ -638,6 +677,53 @@ object RuntimeProtocol:
           "captured_target" -> coloredPieceWitnessJson(result.capturedTarget)
         ),
         "later_deferred_step_index" -> result.laterDeferredStepIndex
+      )
+
+    private def relocationEnablesRecaptureProofJson(
+        proof: RootOwnedEffectProof.RelocationEnablesRecapture
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyId,
+        "relocated_responder_branch" -> causalBranchJson(result.publicRelocatedBranch),
+        "retained_responder_branch" -> causalBranchJson(result.publicRetainedBranch),
+        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
+        "participants" -> Json.obj(
+          "attacker_at_common_root" -> coloredPieceWitnessJson(result.attackerAtCommonRoot),
+          "attacker_at_capture" -> coloredPieceWitnessJson(result.attackerAtCapture),
+          "target_at_common_root" -> coloredPieceWitnessJson(result.targetAtCommonRoot),
+          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
+          "recapture_square" -> result.recaptureSquare.key.toLowerCase,
+          "tracked_responder_at_seed" -> coloredPieceWitnessJson(result.trackedResponderAtSeed),
+          "tracked_responder_at_staging" ->
+            coloredPieceWitnessJson(result.trackedResponderAtStaging),
+          "other_recapturer" -> coloredPieceWitnessJson(result.otherRecapturer)
+        ),
+        "relocation" -> Json.obj(
+          "movement" -> movementWitnessJson(result.relocationMove),
+          "move_uci" -> EvidenceRef.normalizeMove(result.relocationMoveUci),
+          "step_index" -> result.relocationStepIndex
+        ),
+        "target_capture" -> Json.obj(
+          "movement" -> movementWitnessJson(result.targetCaptureMove),
+          "move_uci" -> EvidenceRef.normalizeMove(result.targetCaptureMoveUci),
+          "relocated_step_index" -> result.relocatedCaptureStepIndex,
+          "retained_step_index" -> result.retainedCaptureStepIndex
+        ),
+        "relocated_responder_recapture" -> Json.obj(
+          "movement" -> movementWitnessJson(result.relocatedResponderRecapture),
+          "move_uci" -> EvidenceRef.normalizeMove(result.relocatedResponderRecaptureMoveUci),
+          "step_index" -> result.relocatedRecaptureStepIndex
+        ),
+        "retained_other_recapture" -> Json.obj(
+          "movement" -> movementWitnessJson(result.retainedOtherRecapture),
+          "move_uci" -> EvidenceRef.normalizeMove(result.retainedOtherRecaptureMoveUci),
+          "step_index" -> result.retainedRecaptureStepIndex
+        )
       )
 
     private def explanationSubjectJson(subject: ExplanationSubjectOccurrence): JsObject =

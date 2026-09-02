@@ -31,6 +31,10 @@ const occurrenceFixtureUrl = new URL(
   '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json',
   import.meta.url,
 );
+const relocationFixtureUrl = new URL(
+  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json',
+  import.meta.url,
+);
 const bestChoiceFixtureUrl = new URL(
   '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/best-choice-produced.json',
   import.meta.url,
@@ -299,6 +303,58 @@ test('renders the producer occurrence as ordered typed paths and provenance-owne
   assert.equal(findNodes(panel, 'div.cg-wrap.is2d').length, 2);
 });
 
+test('renders the Scala-produced relocation occurrence as continuity, branches, and board arrows', () => {
+  const job = completedFrom(fixture(relocationFixtureUrl));
+  const review = verdictReview(job);
+  const explanation = review.explanations[0]!;
+  assert.equal(explanation.proofKind, 'relocation_enables_recapture');
+  if (explanation.proofKind !== 'relocation_enables_recapture') return;
+  const panel = renderMoveReview(
+    props({
+      job,
+      view: {
+        selectedCandidateUci: explanation.subjectOccurrence.moveUci,
+        evidenceExpanded: true,
+        expandedProofId: explanation.id,
+      },
+    }),
+  );
+  const text = renderedText(panel);
+  assert.match(text, /Piece continuity/);
+  assert.match(text, /Secondary move/);
+  assert.match(text, /e8c8/);
+  assert.match(text, /e5d6/);
+  assert.match(text, /d8d6/);
+  assert.match(text, /e7d6/);
+  assert.deepEqual(findNodes(panel, 'header.move-review__branch-header').map(renderedText), [
+    'Analyzed alternative e8c8',
+    'Actual move · Analysis continuation d7d5',
+  ]);
+  assert.deepEqual(
+    findNodes(panel, 'button.move-review__proof-entry-button').map(button =>
+      renderedText(findNode(button, 'strong')),
+    ),
+    ['Verified candidate line', moveReviewCopy('en-US').familyLabels.relocation_enables_recapture],
+  );
+  const path = explanation.proof.proofPaths[0];
+  assert.equal(
+    findNodes(panel, 'section.move-review__participant').length,
+    Object.keys(explanation.proof.participants).length,
+  );
+  assert.equal(findNodes(panel, 'section.move-review__premise').length, path.premises.length);
+  assert.equal(
+    findNodes(findNode(panel, 'section.move-review__closed-absence'), 'li').length,
+    path.closedAbsenceUses.length,
+  );
+  assert.equal(
+    findNodes(findNode(panel, 'section.move-review__closed-state'), 'li').length,
+    path.closedStateUses.length,
+  );
+  assert.deepEqual(renderedBoardConfig(panel).drawable?.autoShapes, [
+    { orig: 'a8', dest: 'd8', brush: 'blue' },
+  ]);
+});
+
 test('omits a move stage when the transmitted step provenance is absent', () => {
   const job = structuredClone(completedJob);
   const explanation = verdictReview(job).explanations[0]!;
@@ -454,6 +510,7 @@ test('limits Korean explanation copy to finite structural labels', () => {
     vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
     square_release_route: '칸 해방 후 기물 경로',
     capture_exclusion_move_order: '포획 응수를 배제한 수순',
+    relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
     passed_pawn_progress_realized_after_only_legal_reply: '유일 합법 응수 후 통과폰 전진',
   });
   assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
@@ -464,6 +521,7 @@ test('limits Korean explanation copy to finite structural labels', () => {
       'Unrecapturable slider capture through a vacated gate',
     square_release_route: 'Route through a released square',
     capture_exclusion_move_order: 'Move order excluding the capture reply',
+    relocation_enables_recapture: 'Recapture enabled by relocation',
     passed_pawn_progress_realized_after_only_legal_reply: 'Passed-pawn progress after the only legal reply',
   });
   assert.equal('dependency' in moveReviewCopy('ko-KR').structureLabels, false);

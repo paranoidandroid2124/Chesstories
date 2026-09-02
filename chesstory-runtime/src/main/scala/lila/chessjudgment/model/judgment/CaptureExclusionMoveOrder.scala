@@ -93,7 +93,7 @@ private[chessjudgment] sealed trait CaptureExclusionMoveOrderManifest
   final override def stateBindings = retainedStates
   final def stableKey: String =
     List(
-      contractKind.toString.toLowerCase,
+      contractKind.semanticNamespace,
       legalMoves.map(_.stableKey).mkString("[", ",", "]"),
       replyAbsences.map(_.stableKey).mkString("[", ",", "]"),
       retainedStates.map(_.stableKey).mkString("[", ",", "]")
@@ -502,9 +502,7 @@ private[chessjudgment] final case class CaptureExclusionMoveOrderDemand private[
 
 private[chessjudgment] object CaptureExclusionMoveOrderDemand:
   def sameMove(left: ReplayLegalMoveOccurrence, right: ReplayLegalMoveOccurrence): Boolean =
-    left.movement.witness == right.movement.witness &&
-      EvidenceRef.sameMove(left.movement.moveUci, right.movement.moveUci) &&
-      left.movement.capture == right.movement.capture && left.movement.mode == right.movement.mode
+    ReplayLegalMoveOccurrence.sameMove(left, right)
 
 private[chessjudgment] object CaptureExclusionMoveOrderProof:
   private final case class StateAuthority(
@@ -562,20 +560,20 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       rootBoard <- PrincipalVariationEvidence.semanticBoardStateFen(vacatingRoot.fenBefore)
       immediateBoard <- PrincipalVariationEvidence.semanticBoardStateFen(immediateRoot.fenBefore)
       if rootBoard == immediateBoard
-      vacatingMove <- RecordBoundLegalMoveOccurrence.certified(
-        vacatingLineRecord,
-        demand.vacatingMove
-      )
-      immediateDeferredMove <- RecordBoundLegalMoveOccurrence.certified(
+      vacatingMove <- RecordBoundLegalMoveOccurrence.atIndex(vacatingLineRecord, 0, demand.vacatingMove)
+      immediateDeferredMove <- RecordBoundLegalMoveOccurrence.atIndex(
         immediateLineRecord,
+        0,
         demand.immediateDeferredMove
       )
-      immediateCaptureReply <- RecordBoundLegalMoveOccurrence.certified(
+      immediateCaptureReply <- RecordBoundLegalMoveOccurrence.atIndex(
         immediateLineRecord,
+        1,
         demand.immediateCaptureReply
       )
-      laterDeferredMove <- RecordBoundLegalMoveOccurrence.certified(
+      laterDeferredMove <- RecordBoundLegalMoveOccurrence.atIndex(
         vacatingLineRecord,
+        demand.laterDeferredStepIndex,
         demand.laterDeferredMove
       )
       if sameMove(immediateDeferredMove, laterDeferredMove)
@@ -707,11 +705,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       stateBindings
     )
     val path = CausalProofPathOccurrence.from(proposition, manifest)
-    val proofSet = BoundedCausalProofSet.from(
-      proposition,
-      causalOccurrence,
-      List(path)
-    )
+    val proofSet = BoundedCausalProofSet.from(proposition, causalOccurrence, List(path))
     val semantic = CaptureExclusionMoveOrderSemanticProof(
       proposition,
       vacatingMove.movement,
@@ -822,8 +816,7 @@ private[chessjudgment] object CaptureExclusionMoveOrderProof:
       left: RecordBoundLegalMoveOccurrence,
       right: RecordBoundLegalMoveOccurrence
   ): Boolean =
-    left.movement == right.movement && EvidenceRef.sameMove(left.moveUci, right.moveUci) &&
-      left.capture == right.capture && left.movementMode == right.movementMode
+    RecordBoundLegalMoveOccurrence.sameMove(left, right)
 
   private def coloredOrigin(
       movement: RelationMoveTransitionWitness

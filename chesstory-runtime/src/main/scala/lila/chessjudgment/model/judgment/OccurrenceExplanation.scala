@@ -35,6 +35,9 @@ object OccurrenceExplanationCause:
       case RootOwnedEffectProof.CaptureExclusionMoveOrder(_, result) =>
         result.subjectOccurrence == subject &&
           List(result.vacatingBranch, result.immediateBranch).exists(branchOwnsSubject(_, subject))
+      case RootOwnedEffectProof.RelocationEnablesRecapture(_, result) =>
+        result.subjectOccurrence == subject &&
+          List(result.relocatedBranch, result.retainedBranch).exists(branchOwnsSubject(_, subject))
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result) =>
         result.subjectOccurrence == subject &&
           branchOwnsSubject(result.analysisContinuationBranch, subject)

@@ -12,11 +12,6 @@ enum MoveChoiceVerdict:
   case Mistake
   case Blunder
 
-  def isActionableLoss: Boolean =
-    this match
-      case Inaccuracy | Mistake | Blunder => true
-      case _                              => false
-
 final case class AdmittedRootRankingPair private[chessjudgment] (
     bestMoveUci: String,
     secondMoveUci: String
