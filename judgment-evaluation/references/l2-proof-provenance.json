@@ -1207,38 +1207,119 @@
       "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
     },
     {
-      "case_id": "game-changer-disruptive-bishop-resources",
+      "case_id": "game-changer-bishop-interference-illustrations",
+      "locators": [
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 417}
+      ],
+      "game": "Non-game ...Bg2/...Bf3 theme illustrations",
+      "position_anchor": "Two schematic diagrams that the author explicitly says do not represent actual positions",
+      "occurrence_evidence": "motif_only",
+      "causal_proposition_support": "motif_only",
+      "premise": [
+        "The source imagines Qh4 with Re1-e3-h3 in one diagram and Qh4 with Nge2 in another."
+      ],
+      "current_move_change": [
+        "The diagrams illustrate ...Bg2 controlling h3 and ...Bf3 pinning a knight on e2, but they supply no certified transition occurrence."
+      ],
+      "branch_response": [
+        "The captions mention ...Bg2 followed by ...Bf1 and, separately, ...Bf3 as hypothetical interference rather than game or analysis replay branches."
+      ],
+      "pedagogical_alternatives": [
+        "The two diagrams motivate the author's later move choices but are not exact sibling lines."
+      ],
+      "later_consumer": [
+        "No exact later consumer occurrence is attached to either schematic diagram."
+      ],
+      "needed_closed_absence": [
+        "No legal resource presence or absence may be certified from a schematic position without an admitted LegalLine and lower inventory."
+      ],
+      "sibling_difference": [
+        "The diagrams are distinct motifs, not branches from one certified root."
+      ],
+      "transposition_occurrence": [
+        "No game-history or transposition occurrence exists for these non-actual diagrams."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["higher_layer_responsibility"]
+    },
+    {
+      "case_id": "game-changer-bb7-bishop-interference",
       "locators": [
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 417},
-        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 424}
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 420}
       ],
-      "game": "Disruptive ...Bg2/...Bf3 resource case",
-      "position_anchor": "13...Re8 14.Nf4 Qd7 15.Qh4 Bf3 and the 13...Nd7 and 13.Ne2 analysis branches",
+      "game": "First critical moment after 12...Bb7: Sadler-Smallfish practice and AlphaZero analysis",
+      "position_anchor": "The common root after 12...Bb7 13.Nh3, before the practice 13...Re8 and AlphaZero-analysis 13...Nd7 branches",
       "occurrence_evidence": "exact",
       "causal_proposition_support": "exact_occurrence_component",
       "premise": [
-        "The source compares several educational branches that preserve different bishop-disruption resources."
+        "After 12...Bb7, Black's light-squared bishop has returned from h1 to b7 while the dark-squared bishop remains on b4.",
+        "The practice line and AlphaZero analysis start from the same board root but retain distinct source and replay occurrences."
       ],
       "current_move_change": [
-        "The ...Re8/...Qd7 sequence prepares ...Bf3 in one branch; ...Nd7 and the 13.Ne2-related line alter the same light-square contest differently."
+        "In the practice line, 13...Re8 vacates f8 for the dark-squared b4 bishop to retreat, 14...Qd7 defends the Nxg6 combination and threatens ...e5 with a queen trade, and 15...Bf3 itself moves the light-squared b7 bishop to attack d1 and cover h5.",
+        "In the AlphaZero analysis, 15.Be4 begins the exact sequence that exchanges the disruptive light-squared bishop."
       ],
       "branch_response": [
-        "13...Re8 14.Nf4 Qd7 15.Qh4 Bf3 is one exact practice line."
+        "The practice occurrence is 13...Re8 14.Nf4 Qd7 15.Qh4 Bf3 16.a3 Bd6 17.Ne4 Bxe4 18.Bxe4 Nc6.",
+        "The separate AlphaZero-analysis occurrence is 13...Nd7 14.Qh4 Bd6 15.Be4 Bd5 16.Nxd5 exd5 17.Bxd5."
       ],
       "pedagogical_alternatives": [
-        "13...Nd7 14.Qh4 and the 13.Ne2-related elimination of the light-squared bishop are separate educational branches, not rank projections."
+        "13...Re8 and 13...Nd7 are same-root educational choices, but expected score and best-defence language remain assessment rather than proof premises."
       ],
       "later_consumer": [
-        "...Bf3 or the alternative bishop elimination consumes each branch's preceding setup."
+        "The practice continuation answers 15...Bf3 with 16.a3 and 17.Ne4; the analysis continuation consumes 15.Be4 through 15...Bd5 16.Nxd5 and the following captures."
       ],
       "needed_closed_absence": [
-        "A current proof would need all exact branch owners and the closed presence or absence of each disruptive bishop resource."
+        "No source proposition or current lower certificate says that 13...Re8 or 14...Qd7 creates the b7-f3 bishop move; joining either move to 15...Bf3 as preparation is unsupported.",
+        "A bounded proof of tactical effectiveness would need exact attack, reply, and closed-resource records rather than expected score."
       ],
       "sibling_difference": [
-        "There are more than two relevant branches and more than one valid repair; selecting one engine-ranked sibling would discard source structure."
+        "The two root choices lead to distinct practice and analysis continuations; they are not an engine-rank identity or one merged history."
       ],
       "transposition_occurrence": [
-        "No specific transposition is promoted; each analysis occurrence remains independently identified."
+        "No transposition is claimed; the common semantic root does not merge the practice-game and AlphaZero-analysis occurrences."
+      ],
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+    },
+    {
+      "case_id": "game-changer-bxc3-bishop-interference",
+      "locators": [
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 421},
+        {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 424}
+      ],
+      "game": "Second critical moment after 12...Bxc3: Qh4 and Ne2 practice choices",
+      "position_anchor": "The distinct common root after 12...Bxc3, with 13.Qh4 and 13.Ne2 retained as separate game occurrences",
+      "occurrence_evidence": "exact",
+      "causal_proposition_support": "exact_occurrence_component",
+      "premise": [
+        "Before White's thirteenth move, the queen on g4 already controls g2 and f3.",
+        "The 13.Qh4 and 13.Ne2 continuations share a board root but belong to separate Sadler-Smallfish and Smallfish-Sadler practice games; the 13...Kh8 continuation is an analysis branch within the 13.Qh4 discussion."
+      ],
+      "current_move_change": [
+        "13.Qh4 moves the queen away from g4 before the practice continuation, while 13.Ne2 preserves the queen's pre-existing g2/f3 control and begins the Ng1-e2-f4-e6 route.",
+        "Neither branch makes ...Bf3 illegal: the exact continuations contain that move and differ in its time-local tactical effect."
+      ],
+      "branch_response": [
+        "The 13.Qh4 practice game continues 13...Bxb2+ 14.Kxb2 Nd7 15.f3, while a separate 13...Kh8 analysis contains 15...Bg2 17...Bf3 19.Rxe6.",
+        "The separate 13.Ne2 practice game continues 13...Bxb2+ 14.Kxb2 Bd5 15.Qh4 Nd7 16.Nf4 16...Bf3 17.Nxe6."
+      ],
+      "pedagogical_alternatives": [
+        "13.bxc3 and 13.Qh3 are additional source alternatives in the 13.Qh4 game; they are not merged with the 13.Ne2 game or selected by engine rank."
+      ],
+      "later_consumer": [
+        "The 13...Kh8 analysis later contains 19.Rxe6 and the separate 13.Ne2 practice game later contains 17.Nxe6, but the source does not certify either move as a bounded causal consumer of the preceding ...Bf3 occurrence."
+      ],
+      "needed_closed_absence": [
+        "The source's phrase 'no ...Bf3 ideas' is not a legal-resource absence: ...Bf3 occurs as 17...Bf3 in the 13...Kh8 analysis and 16...Bf3 in the 13.Ne2 practice game.",
+        "A proof of whether the resource is effective would require exact tactical consequence and reply closure without importing the author's evaluation."
+      ],
+      "sibling_difference": [
+        "13.Qh4 and 13.Ne2 are same-root move choices with independent game occurrences; their practice and analysis continuations must not be collapsed into one branch history."
+      ],
+      "transposition_occurrence": [
+        "No transposition is claimed; semantic root equality does not merge the 13.Qh4 game, its 13...Kh8 analysis, and the separate 13.Ne2 practice game."
       ],
       "mapped_contracts": [],
       "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]

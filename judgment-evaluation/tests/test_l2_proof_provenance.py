@@ -532,7 +532,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 self.assertIn(reference["support"], REFERENCE_SUPPORT)
                 self._assert_registered_locator(reference["locator"])
 
-        expected_page_spans = {
+        expected_locator_pages = {
             "ruy-lopez-game-12": ("ref-b6054fc614ae9d9c17933ce856013081", 78, 83),
             "ruy-lopez-game-15": ("ref-b6054fc614ae9d9c17933ce856013081", 98, 105),
             "najdorf-game-15": ("ref-b7e552e8d8914cdc31ce1002fbb8252e", 123, 132),
@@ -552,9 +552,18 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 344,
                 353,
             ),
-            "game-changer-disruptive-bishop-resources": (
+            "game-changer-bishop-interference-illustrations": (
                 "ref-4f1abd0745b24746b58928d162f837f6",
                 417,
+            ),
+            "game-changer-bb7-bishop-interference": (
+                "ref-4f1abd0745b24746b58928d162f837f6",
+                417,
+                420,
+            ),
+            "game-changer-bxc3-bishop-interference": (
+                "ref-4f1abd0745b24746b58928d162f837f6",
+                421,
                 424,
             ),
             "silicon-road-game-64": ("ref-7a451d5c87b9422a901f0486386aeb44", 503, 520),
@@ -576,7 +585,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 508,
             ),
         }
-        self.assertEqual({entry["case_id"] for entry in self.ledger}, set(expected_page_spans))
+        self.assertEqual({entry["case_id"] for entry in self.ledger}, set(expected_locator_pages))
         used_categories: set[str] = set()
         for entry in self.ledger:
             self.assertEqual(set(entry), LEDGER_KEYS)
@@ -608,13 +617,23 @@ class L2ProofProvenanceTest(unittest.TestCase):
                     entry["causal_proposition_support"], {"exact", "exact_occurrence_component"}
                 )
 
-            document_id, first_page, last_page = expected_page_spans[entry["case_id"]]
+            document_id, *pages = expected_locator_pages[entry["case_id"]]
+            self.assertEqual(pages, list(dict.fromkeys(pages)))
             self.assertEqual(
                 entry["locators"],
                 [
-                    {"document_id": document_id, "pdf_page": first_page},
-                    {"document_id": document_id, "pdf_page": last_page},
+                    {"document_id": document_id, "pdf_page": page}
+                    for page in pages
                 ],
+            )
+            locator_keys = [
+                (locator["document_id"], locator["pdf_page"])
+                for locator in entry["locators"]
+            ]
+            self.assertEqual(
+                len(locator_keys),
+                len(set(locator_keys)),
+                f"{entry['case_id']} has duplicate locators",
             )
             for locator in entry["locators"]:
                 self._assert_registered_locator(locator)
@@ -648,6 +667,67 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertEqual(
             ruy_game_15["current_coverage_categories"], ["l2_join_or_demand_gap"]
         )
+
+        bishop_illustrations = ledger_by_id[
+            "game-changer-bishop-interference-illustrations"
+        ]
+        self.assertEqual(bishop_illustrations["occurrence_evidence"], "motif_only")
+        self.assertEqual(bishop_illustrations["causal_proposition_support"], "motif_only")
+        self.assertEqual(
+            bishop_illustrations["current_coverage_categories"],
+            ["higher_layer_responsibility"],
+        )
+        self.assertIn(
+            "do not represent actual positions",
+            bishop_illustrations["position_anchor"].lower(),
+        )
+        serialized_bishop_illustrations = json.dumps(bishop_illustrations).lower()
+        self.assertIsNone(
+            re.search(r"\b\d{1,2}(?:\.\.\.|\.)[a-z]", serialized_bishop_illustrations),
+            "non-actual illustrations must not contain a numbered replay occurrence",
+        )
+        self.assertEqual(bishop_illustrations["mapped_contracts"], [])
+
+        bb7_bishop = ledger_by_id["game-changer-bb7-bishop-interference"]
+        self.assertEqual(bb7_bishop["occurrence_evidence"], "exact")
+        self.assertEqual(bb7_bishop["causal_proposition_support"], "exact_occurrence_component")
+        self.assertEqual(
+            bb7_bishop["current_coverage_categories"],
+            ["l2_join_or_demand_gap", "higher_layer_responsibility"],
+        )
+        self.assertEqual(bb7_bishop["mapped_contracts"], [])
+        bb7_anchor = bb7_bishop["position_anchor"].lower()
+        self.assertIn("12...bb7", bb7_anchor)
+        self.assertNotIn("12...bxc3", bb7_anchor)
+        bb7_sources = " ".join(bb7_bishop["branch_response"]).lower()
+        for source_token in (
+            "practice occurrence",
+            "13...re8",
+            "alphazero-analysis occurrence",
+            "13...nd7",
+        ):
+            self.assertIn(source_token, bb7_sources)
+
+        bxc3_bishop = ledger_by_id["game-changer-bxc3-bishop-interference"]
+        self.assertEqual(bxc3_bishop["occurrence_evidence"], "exact")
+        self.assertEqual(
+            bxc3_bishop["causal_proposition_support"], "exact_occurrence_component"
+        )
+        self.assertEqual(
+            bxc3_bishop["current_coverage_categories"],
+            ["l2_join_or_demand_gap", "higher_layer_responsibility"],
+        )
+        self.assertEqual(bxc3_bishop["mapped_contracts"], [])
+        bxc3_anchor = bxc3_bishop["position_anchor"].lower()
+        self.assertIn("12...bxc3", bxc3_anchor)
+        self.assertNotIn("12...bb7", bxc3_anchor)
+        bxc3_sources = " ".join(bxc3_bishop["branch_response"]).lower()
+        for source_token in (
+            "13.qh4 practice game",
+            "13...kh8 analysis",
+            "13.ne2 practice game",
+        ):
+            self.assertIn(source_token, bxc3_sources)
 
         exact_cases = {
             entry["case_id"]
