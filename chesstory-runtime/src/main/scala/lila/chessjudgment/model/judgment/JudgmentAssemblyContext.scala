@@ -140,10 +140,22 @@ final case class AdmittedMoveReviewInput(
     admittedRootRankingPair: Option[AdmittedRootRankingPair],
     positionHistory: CanonicalPositionHistory
 ):
-  private val admittedRootMoves = legalLines.map(line => EvidenceRef.normalizeMove(line.rootMove))
+  val legalRootMoves: List[String] = positionHistory.currentLegalMoveUcis
+  val admittedRootMoves: List[String] = legalLines.map(line => EvidenceRef.normalizeMove(line.rootMove))
+  val rootMovesWithoutAdmittedLine: List[String] =
+    legalRootMoves.filterNot(admittedRootMoves.contains)
+
   require(
     admittedRootMoves.size == legalLines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,
     "one root move must have exactly one admitted LegalLine owner"
+  )
+  require(
+    admittedRootMoves.forall(legalRootMoves.contains),
+    "every admitted LegalLine root must belong to the legal root move universe"
+  )
+  require(
+    legalRootMoves.contains(EvidenceRef.normalizeMove(playedMoveUci)),
+    "the observed move must belong to the legal root move universe"
   )
   require(
     assessmentCandidates.map(candidate => EvidenceRef.normalizeMove(candidate.lineRootMove)).distinct.size ==

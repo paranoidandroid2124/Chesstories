@@ -80,6 +80,39 @@ class OccurrenceExplanationProductionTest extends munit.FunSuite:
     assertEquals(proof.subjectOccurrence.moveUci, immediateMoves.head)
     assertSubjectBranchOwnership(proof)
 
+  test("focused evidence survives one root result and preserves legal roots without admitted lines"):
+    val history = rootHistory
+    val legalRoots = history.currentLegalMoveUcis
+    val prepared = MoveReviewInputAdmission
+      .prepareFocusedMoveReview(
+        history,
+        immediateMoves.head,
+        resultingFen(history, immediateMoves.head),
+        PositionRuleAssessment.assess(history),
+        List(admittedLine(history, vacatingMoves, 600)),
+        List(
+          admittedLine(history, vacatingMoves, 600),
+          admittedLine(history, immediateMoves, 0)
+        )
+      ) match
+      case Some(PreparedFocusedPositionCommentary.MoveReview(review)) => review.preparedInput
+      case other => fail(s"expected a review from the available analysis lines, found $other")
+
+    assert(legalRoots.size > prepared.admittedRootMoves.size)
+    assertEquals(prepared.legalRootMoves, legalRoots)
+    assertEquals(prepared.admittedRootMoves.toSet, Set(vacatingMoves.head, immediateMoves.head))
+    assertEquals(prepared.admittedRootRankingPair, None)
+    assertEquals(
+      prepared.rootMovesWithoutAdmittedLine,
+      legalRoots.filterNot(prepared.admittedRootMoves.contains)
+    )
+
+    val packet = MoveReviewJudgmentOrchestrator
+      .executePreparedReview(prepared, None)
+      .getOrElse(fail("expected played-vs-best judgment from focused evidence"))
+      .packet
+    assert(packet.primary.isInstanceOf[PlayerFacingPrimary.MoveVerdict])
+
   test("assessment rank and selection roles do not enter causal proof identity"):
     val vacatingBest = execute(
       played = "b2b4",

@@ -160,9 +160,19 @@ owner는 필요하지 않다. line ID만 같다는 이유로 다른 시간 occur
 
 ## 계산 범위와 P2 line availability
 
-Explanation branch universe는 이미 실제 producer가 제공하고 합법 replay로
-admission된 root/focus line의 합집합이다. 현재 engine work 정책의 MultiPV
-상한이나 Assessment의 후보 선택을 L2 계약으로 승격하지 않는다.
+`AdmittedMoveReviewInput.legalRootMoves`는 board에서 생성한 완전한 합법 root
+move 집합을 보존한다. `legalLines`는 실제 producer가 제공하고 합법 replay로
+admission된 root/focus line의 합집합일 뿐이다. `rootMovesWithoutAdmittedLine`은
+전자의 원소 중 후자에 없는 수를 계산한다. 이 상태는 의미 조립에 사용할 line이
+없다는 뜻이지, 그 수가 존재하지 않거나 반증되었거나 engine 내부에서 전혀
+검색되지 않았다는 뜻이 아니다.
+
+현재 engine work 정책의 MultiPV 상한과 report 수 검사는 runtime의 계산 비용
+경계에만 남는다. 의미 admission은 그 상한과 같은 개수의 root line을 요구하지
+않으며, MultiPV나 Assessment 후보 선택을 L2 계약으로 승격하지 않는다.
+focused report가 서로 다른 best/played line을 직접 제공하면 `PlayedVsBest`는 그
+두 line만으로 닫힌다. root ranking의 두 번째 수는 played가 best일 때
+`BestVsSecond`를 만드는 경우에만 요구한다.
 
 필요한 sibling이 inventory에 없으면 새 Stockfish 실행, 별도 analyzer,
 추론 replay 또는 테스트 전용 line source를 만들지 않는다. proof는 생산되지

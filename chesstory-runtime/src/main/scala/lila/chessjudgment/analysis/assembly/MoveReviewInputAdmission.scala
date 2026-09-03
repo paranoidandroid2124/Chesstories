@@ -78,7 +78,8 @@ object MoveReviewInputAdmission:
   /** Prepares the sole v6 player review. The root-search bundle owns the
     * assessment ranking; a focused comparison is admitted only when the
     * played move was outside that bundle. Every unique replay actually
-    * produced by those two reports remains available as a LegalLine.
+    * produced by those two reports remains available as a LegalLine, while
+    * the complete legal root move universe remains independently available.
     */
   def prepareFocusedMoveReview(
       positionHistory: CanonicalPositionHistory,
@@ -96,7 +97,6 @@ object MoveReviewInputAdmission:
 
     for
       _ <- Option.when(legalMoveIndex >= 0)(())
-      _ <- Option.when(rootEvaluations.size == legalMoves.size.min(3))((): Unit)
       admittedRoot <- materializeAdmissions(positionHistory, rootEvaluations)
       rootMoves = admittedRoot.flatMap(_.evaluation.moves.headOption).map(EvidenceRef.normalizeMove)
       _ <- Option.when(
@@ -186,7 +186,10 @@ object MoveReviewInputAdmission:
             admittedRootRanking = rankedRoot.map(admitted =>
               EvidenceRef.normalizeMove(admitted.evaluation.moves.head)
             )
-            admittedRootRankingPair <- AdmittedRootRankingPair.fromAdmittedRanking(admittedRootRanking)
+            admittedRootRankingPair <-
+              if EvidenceRef.sameMove(bestMove, playedMove) then
+                AdmittedRootRankingPair.fromAdmittedRanking(admittedRootRanking).map(Some(_))
+              else Some(None)
           yield
             PreparedFocusedPositionCommentary.MoveReview(
               PreparedFocusedMoveReview.materialized(
@@ -196,7 +199,7 @@ object MoveReviewInputAdmission:
                 rankedRoot.indexWhere(_.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, playedMove))) match
                   case -1    => None
                   case index => Some(index + 1),
-                prepared.copy(admittedRootRankingPair = Some(admittedRootRankingPair)),
+                prepared.copy(admittedRootRankingPair = admittedRootRankingPair),
                 drawClaims
               )
             )
