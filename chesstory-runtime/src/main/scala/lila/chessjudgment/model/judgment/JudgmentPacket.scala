@@ -19,7 +19,7 @@ enum PlayerFacingPrimary:
 final class EvidenceBackedJudgmentPacket private (
     private[chessjudgment] val assembly: JudgmentAssemblyContext,
     val primary: PlayerFacingPrimary,
-    val occurrenceExplanations: List[CertifiedOccurrenceExplanation]
+    val occurrenceRelations: List[OccurrenceRelationProof]
 ):
   def candidateLines: List[CandidateLineNode] = assembly.lines
 
@@ -35,11 +35,10 @@ object EvidenceBackedJudgmentPacket:
         assembly.relativeAssessments,
         assembly.evidenceGraph
       )
-      explanations <- certifiedOccurrenceExplanations(assembly)
     yield new EvidenceBackedJudgmentPacket(
       assembly,
       primary,
-      explanations
+      certifiedOccurrenceRelations(assembly)
     )
 
   /** Sole projection from quantitative Assessment to the public verdict shape.
@@ -72,26 +71,15 @@ object EvidenceBackedJudgmentPacket:
         }
       case _ => None
 
-  private def certifiedOccurrenceExplanations(
+  /** Each typed relation is certified independently. An ineligible relation
+    * record is omitted without removing its siblings or the primary verdict.
+    */
+  private def certifiedOccurrenceRelations(
       assembly: JudgmentAssemblyContext
-  ): Option[List[CertifiedOccurrenceExplanation]] =
-    val causeRecords = assembly.evidenceGraph.records.filter(
-      _.payload.isInstanceOf[OccurrenceExplanationCauseEvidence]
-    )
-    val certified = causeRecords.map(
-      CertifiedOccurrenceExplanation.fromRecord(_, assembly.evidenceGraph)
-    )
-    Option.when(certified.forall(_.nonEmpty)) {
-      val exact = certified.flatten.sortBy(_.causeEvidence.id)
-      require(
-        exact.map(_.causeEvidence.id).distinct.size == exact.size &&
-          exact.map(value =>
-            value.subject.occurrenceId -> value.rootOwnedProof.occurrenceIdentity.producerIndependentKey
-          ).distinct.size == exact.size,
-        "each requested proof occurrence needs one packet Cause owner"
-      )
-      exact
-    }
+  ): List[OccurrenceRelationProof] =
+    assembly.evidenceGraph.records
+      .flatMap(OccurrenceRelationProof.fromRecord(_, assembly.evidenceGraph))
+      .sortBy(_.source.id)
 
   private def structurallyClosed(assembly: JudgmentAssemblyContext): Boolean =
     val rootPresent = assembly.root.nonEmpty

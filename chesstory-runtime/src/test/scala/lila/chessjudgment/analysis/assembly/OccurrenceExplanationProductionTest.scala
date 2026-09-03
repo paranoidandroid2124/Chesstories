@@ -36,8 +36,8 @@ class OccurrenceExplanationProductionTest extends munit.FunSuite:
     assertEquals(actionableProof.subjectOccurrence.moveUci, "b2b4")
     assertEquals(actionableProof.immediateBranch.rootProvenance, CausalRootProvenance.ObservedGameRoot)
     assertEquals(actionableProof.vacatingBranch.rootProvenance, CausalRootProvenance.CounterfactualAnalyzedRoot)
-    assertEquals(actionable.occurrenceExplanations.size, 1)
-    assertEquals(quiet.occurrenceExplanations.size, 1)
+    assertEquals(actionable.occurrenceRelations.size, 1)
+    assertEquals(quiet.occurrenceRelations.size, 1)
 
   test("played best owns the observed vacating branch without a duplicate Played line"):
     val packet = execute(
@@ -175,12 +175,8 @@ class OccurrenceExplanationProductionTest extends munit.FunSuite:
       ),
       None
     )
-    assertEquals(
-      broken.evidenceGraph.records.count(_.payload.isInstanceOf[OccurrenceExplanationCauseEvidence]),
-      0
-    )
 
-  test("no explanation demand performs no typed family or occurrence Cause production"):
+  test("no explanation demand performs no typed family relation production"):
     val raw = review("b2b4", 600, 0)
     val prepared = MoveReviewInputAdmission.admit(raw).getOrElse(fail("expected admitted review"))
     val packet = MoveReviewJudgmentOrchestrator
@@ -189,7 +185,7 @@ class OccurrenceExplanationProductionTest extends munit.FunSuite:
       .packet
 
     assertEquals(captureProofRecords(packet).size, 0)
-    assertEquals(packet.occurrenceExplanations.size, 0)
+    assertEquals(packet.occurrenceRelations.size, 0)
 
   test("an available line without the exact reply/absence join is not guessed into a proof"):
     val packet = MoveReviewJudgmentOrchestrator
@@ -206,7 +202,7 @@ class OccurrenceExplanationProductionTest extends munit.FunSuite:
       .getOrElse(fail("assessment should survive a missing exact L2 join"))
 
     assertEquals(captureProofRecords(packet).size, 0)
-    assertEquals(packet.occurrenceExplanations.size, 0)
+    assertEquals(packet.occurrenceRelations.size, 0)
 
   test("transposed histories share one proposition without merging occurrences or proof paths"):
     val sharedRoot = rootFen.replace(" 1 17", " 4 17")

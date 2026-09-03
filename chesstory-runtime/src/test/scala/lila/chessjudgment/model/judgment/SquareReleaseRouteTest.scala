@@ -411,7 +411,7 @@ class SquareReleaseRouteTest extends munit.FunSuite:
     assertEquals(proofs.flatMap(_.proofPaths.map(_.pathOccurrenceId)).distinct.size, 1)
     assertEquals(proofs.head.occurrenceProof.occurrence.firstRouteStepIndex, 2)
 
-  test("the exact proof reaches its occurrence Cause directly"):
+  test("the exact proof reaches its occurrence relation directly"):
     val lower = EvidenceFactAssembler.assemble(
       RawMoveReviewInput(
         fen = rootFen,
@@ -432,17 +432,11 @@ class SquareReleaseRouteTest extends munit.FunSuite:
     assert(proofRecords.head.referencesLine(proofPayload.occurrence.releasedRouteLine))
     assert(proofRecords.head.referencesLine(proofPayload.occurrence.retainedBlockerLine))
 
-    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
-      facts,
-      JudgmentProvenanceAllocator.forInput(facts.input),
-      exactDemand(facts)
-    )
-    val exactCauses = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
-          if cause.proofSource == proofRecords.head.ref => cause
-    }
-    assertEquals(exactCauses.size, 1)
-    assertEquals(exactCauses.head.subject, proofPayload.subjectOccurrence)
+    val relation = OccurrenceRelationProof
+      .fromRecord(proofRecords.head, facts.evidenceGraph)
+      .getOrElse(fail("expected the typed proof to certify directly"))
+    assertEquals(relation.source, proofRecords.head.ref)
+    assertEquals(relation.subjectOccurrence, proofPayload.subjectOccurrence)
 
   private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     OccurrenceExplanationAssembler.enrichProofs(

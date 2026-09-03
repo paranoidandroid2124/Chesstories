@@ -290,7 +290,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assertEquals(exact.occurrence.exploitStep.moveUci, "a1a7")
     assertEquals(exact.occurrence.proofPaths.head.premiseUses.last.stepIndex, 2)
 
-  test("the exact gate-release proof reaches its occurrence Cause directly"):
+  test("the exact gate-release proof reaches its occurrence relation directly"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -312,17 +312,11 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assert(causalPayload.hasCompleteProofPaths)
     assert(causalPayload.exactOccurrenceCertified(causalRecords.head))
 
-    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
-      facts,
-      JudgmentProvenanceAllocator.forInput(facts.input),
-      exactDemand(facts)
-    )
-    val causes = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
-          if cause.proofSource == causalRecords.head.ref => cause
-    }
-    assertEquals(causes.size, 1)
-    assertEquals(causes.head.subject, causalPayload.subjectOccurrence)
+    val relation = OccurrenceRelationProof
+      .fromRecord(causalRecords.head, facts.evidenceGraph)
+      .getOrElse(fail("expected the typed proof to certify directly"))
+    assertEquals(relation.source, causalRecords.head.ref)
+    assertEquals(relation.subjectOccurrence, causalPayload.subjectOccurrence)
 
   private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     OccurrenceExplanationAssembler.enrichProofs(

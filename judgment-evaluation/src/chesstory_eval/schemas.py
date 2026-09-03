@@ -296,12 +296,12 @@ class SchemaRegistry:
         location: str,
         errors: list[str],
     ) -> None:
-        """Validate only public proof identity, ownership, and occurrence wiring."""
+        """Validate only public relation proof identity and occurrence wiring."""
 
         if isinstance(value, Mapping):
             if isinstance(value.get("primary"), Mapping):
-                if isinstance(value.get("occurrence_explanations"), list):
-                    self._validate_occurrence_explanation_transport(value, location, errors)
+                if isinstance(value.get("occurrence_relations"), list):
+                    self._validate_occurrence_relation_transport(value, location, errors)
             for key, child in value.items():
                 self._validate_public_proof_transport(
                     child,
@@ -358,42 +358,35 @@ class SchemaRegistry:
                 f"{branch.get(role_key)!r}"
             )
 
-    def _validate_occurrence_explanation_transport(
+    def _validate_occurrence_relation_transport(
         self,
         commentary: Mapping[str, Any],
         location: str,
         errors: list[str],
     ) -> None:
-        explanations = commentary.get("occurrence_explanations")
-        if not isinstance(explanations, list):
+        relations = commentary.get("occurrence_relations")
+        if not isinstance(relations, list):
             return
-        seen_causes: set[str] = set()
         seen_proofs: set[tuple[Any, Any, Any, Any]] = set()
-        for index, explanation in enumerate(explanations):
-            if not isinstance(explanation, Mapping):
+        for index, relation in enumerate(relations):
+            if not isinstance(relation, Mapping):
                 continue
-            item_location = f"{location}.occurrence_explanations[{index}]"
-            cause_id = explanation.get("cause_evidence_id")
-            if isinstance(cause_id, str):
-                if cause_id in seen_causes:
-                    errors.append(f"{item_location}.cause_evidence_id: duplicate occurrence Cause owner")
-                seen_causes.add(cause_id)
-
-            proof_kind = explanation.get("proof_kind")
-            proof = explanation.get("proof")
+            item_location = f"{location}.occurrence_relations[{index}]"
+            relation_kind = relation.get("relation_kind")
+            proof = relation.get("proof")
             if not isinstance(proof, Mapping):
                 continue
             proof_identity = (
-                proof_kind,
+                relation_kind,
                 proof.get("semantic_id"),
                 proof.get("occurrence_id"),
                 proof.get("dependency_fingerprint"),
             )
             if proof_identity in seen_proofs:
-                errors.append(f"{item_location}: duplicate typed proof occurrence")
+                errors.append(f"{item_location}: duplicate typed relation occurrence")
             seen_proofs.add(proof_identity)
 
-            subject = explanation.get("subject_occurrence")
+            subject = relation.get("subject_occurrence")
             if isinstance(subject, Mapping):
                 if subject.get("occurrence_id") != subject.get("transition_evidence_id"):
                     errors.append(

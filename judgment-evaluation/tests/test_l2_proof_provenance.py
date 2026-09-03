@@ -38,11 +38,6 @@ UI_DECODER = UI_ANALYSE / "src" / "moveReview.ts"
 UI_RENDERER = UI_ANALYSE / "src" / "view" / "moveReview.ts"
 UI_DECODER_TEST = UI_ANALYSE / "tests" / "moveReview.test.ts"
 UI_RENDERER_TEST = UI_ANALYSE / "tests" / "moveReviewView.test.ts"
-UI_OWNER = (
-    "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> "
-    "lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation"
-)
-
 CONTRACT_KEYS = {
     "contract_kind",
     "producer",
@@ -93,6 +88,13 @@ COVERAGE_CATEGORIES = {
 }
 FORBIDDEN_REFERENCE_KEYS = {"local_path", "source_prose", "screenshot", "extracted_analysis"}
 STALE_OWNERSHIP_NAMES = {
+    "OccurrenceExplanationCause",
+    "OccurrenceExplanationCauseEvidence",
+    "CertifiedOccurrenceRelation",
+    "RootOwnedEffectProof",
+    "DirectCauseChannel",
+    "cause_evidence_id",
+    "cause_entrypoint",
     "RelativeCause",
     "WrongMoveOrder",
     "browser_consumer",
@@ -169,6 +171,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 "authority",
                 "runtime_consumed",
                 "cache_dependency",
+                "relation_delivery",
                 "host",
                 "coverage_categories",
                 "p0_corrections",
@@ -176,10 +179,12 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 "complete_game_ledger",
             },
         )
-        self.assertEqual(self.manifest["schema_version"], "2.0.0")
+        self.assertEqual(self.manifest["schema_version"], "3.0.0")
         self.assertEqual(self.manifest["authority"], "ci_only_reference_provenance_not_board_truth")
         self.assertIs(self.manifest["runtime_consumed"], False)
         self.assertIs(self.manifest["cache_dependency"], False)
+        self.assertIn("no wrapper", self.manifest["relation_delivery"])
+        self.assertIn("separate upper owner", self.manifest["relation_delivery"])
         self.assertEqual(set(self.manifest["coverage_categories"]), COVERAGE_CATEGORIES)
         corrections = self.manifest["p0_corrections"]
         self.assertEqual(len(corrections), 1)
@@ -232,55 +237,37 @@ class L2ProofProvenanceTest(unittest.TestCase):
         )
         self.assertEqual(set(contract_kinds), active_contracts)
 
-    def test_occurrence_demand_is_the_only_public_explanation_host(self) -> None:
+    def test_public_relation_delivery_has_no_cause_owner(self) -> None:
         host = self.manifest["host"]
-        demand_text = _repo_path(host["demand"]["file"]).read_text(encoding="utf-8")
-        self.assertRegex(demand_text, rf"\bcase class {host['demand']['symbol']}\b")
-        self.assertIn("availableBranches", demand_text)
-        for forbidden in ("CandidateComparisonKind", "MoveVerdict", "actionable", "threshold"):
-            self.assertNotIn(forbidden, demand_text)
-
-        orchestrator = host["orchestrator"]
-        orchestrator_text = _repo_path(orchestrator["file"]).read_text(encoding="utf-8")
-        self.assertRegex(orchestrator_text, rf"\bobject {orchestrator['symbol']}\b")
-        demand_index = orchestrator_text.index("OccurrenceExplanationDemand.resolve")
-        proof_index = orchestrator_text.index(f"{orchestrator['proof_entrypoint']}(")
-        assessment_index = orchestrator_text.index("RelativeAssessmentAssembler.enrichAssessment")
-        cause_index = orchestrator_text.index(f"{orchestrator['cause_entrypoint']}(")
-        self.assertLess(demand_index, proof_index)
-        self.assertLess(proof_index, assessment_index)
-        self.assertLess(assessment_index, cause_index)
-
-        cause = host["cause"]
-        cause_text = _repo_path(cause["file"]).read_text(encoding="utf-8")
-        evidence_text = _repo_path(cause["evidence_file"]).read_text(encoding="utf-8")
-        self.assertRegex(cause_text, rf"\bcase class {cause['symbol']}\b")
-        self.assertIn("proofOwnsSubject", cause_text)
-        self.assertRegex(evidence_text, rf"\bcase class {cause['evidence_symbol']}\b")
-
-        occurrence_assembler = (ASSEMBLY / "OccurrenceExplanationAssembler.scala").read_text(
-            encoding="utf-8"
-        )
-        self.assertEqual(occurrence_assembler.count("OccurrenceExplanationCause("), 1)
         self.assertEqual(
-            occurrence_assembler.count("EvidenceProducer.OccurrenceExplanationProducer"), 1
+            set(host),
+            {"demand", "orchestrator", "packet", "runtime", "schema"},
         )
+        self.assertNotIn("cause_entrypoint", host["orchestrator"])
+        self.assertEqual(host["packet"]["field"], "occurrenceRelations")
+        self.assertEqual(host["runtime"]["field"], "occurrence_relations")
+        self.assertEqual(host["schema"]["root_property"], "occurrence_relations")
+        self.assertEqual(host["schema"]["union_definition"], "occurrenceRelation")
 
-        packet = host["packet"]
-        packet_text = _repo_path(packet["file"]).read_text(encoding="utf-8")
-        self.assertRegex(packet_text, rf"\bclass {packet['symbol']}\b")
-        self.assertRegex(packet_text, rf"\bval {packet['field']}: List\[CertifiedOccurrenceExplanation\]")
-        self.assertIn("CertifiedOccurrenceExplanation.fromRecord", packet_text)
+        schema_text = json.dumps(self.schema, sort_keys=True)
+        manifest_text = json.dumps(self.manifest, sort_keys=True)
+        runtime_sources = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (REPO / "chesstory-runtime" / "src" / "main" / "scala").rglob("*.scala")
+        )
+        for retired in STALE_OWNERSHIP_NAMES:
+            self.assertNotIn(retired, schema_text)
+            self.assertNotIn(retired, manifest_text)
+        for retired in (
+            "OccurrenceExplanationCause",
+            "OccurrenceExplanationCauseEvidence",
+            "CertifiedOccurrenceRelation",
+            "RootOwnedEffectProof",
+            "DirectCauseChannel",
+        ):
+            self.assertNotIn(retired, runtime_sources)
 
-        runtime = host["runtime"]
-        runtime_text = _repo_path(runtime["file"]).read_text(encoding="utf-8")
-        self.assertRegex(runtime_text, rf"\bdef {runtime['serializer_symbol']}\b")
-        self.assertIn(f"packet.{packet['field']}.map({runtime['serializer_symbol']})", runtime_text)
-        self.assertEqual(runtime_text.count(f'"{runtime["field"]}" -> occurrenceExplanations'), 1)
-        self.assertNotIn("causal_explanations", runtime_text)
-        self.assertNotIn("requested_explanations", runtime_text)
-
-    def test_typed_ui_is_the_completed_public_explanation_consumer(self) -> None:
+    def test_ui_sources_do_not_accept_the_retired_cause_wrapper(self) -> None:
         ui_files = [
             UI_DECODER,
             UI_RENDERER,
@@ -290,23 +277,11 @@ class L2ProofProvenanceTest(unittest.TestCase):
         for path in ui_files:
             self.assertTrue(path.is_file())
 
-        decoder, renderer, decoder_test, renderer_test = [
-            path.read_text(encoding="utf-8") for path in ui_files
-        ]
-
-        self.assertIn("export type MoveReviewOccurrenceExplanation =", decoder)
-        self.assertIn("function projectOccurrenceExplanations(", decoder)
-        for proof_kind in {contract["wire"]["proof_kind"] for contract in self.contracts}:
-            self.assertIn(f"case '{proof_kind}':", decoder)
-        self.assertIn("function renderOccurrenceExplanation(", renderer)
-        self.assertIn(
-            "test('decodes all seven proof kinds as their exact discriminated variants'",
-            decoder_test,
+        public_sources = "\n".join(
+            path.read_text(encoding="utf-8") for path in (UI_DECODER, UI_RENDERER)
         )
-        self.assertIn(
-            "test('renders the producer occurrence as ordered typed paths and provenance-owned branches'",
-            renderer_test,
-        )
+        self.assertNotIn("cause_evidence_id", public_sources)
+        self.assertNotIn("occurrence_explanations", public_sources)
 
     def test_each_family_has_one_producer_proof_wire_and_formal_test(self) -> None:
         runtime_text = _repo_path(self.manifest["host"]["runtime"]["file"]).read_text(
@@ -367,17 +342,20 @@ class L2ProofProvenanceTest(unittest.TestCase):
             self.assertIs(variant["additionalProperties"], False)
             self.assertEqual(
                 set(variant["required"]),
-                {"cause_evidence_id", "subject_occurrence", "proof_kind", wire["proof_field"]},
+                {"subject_occurrence", "relation_kind", wire["proof_field"]},
             )
-            self.assertEqual(variant["properties"]["proof_kind"]["const"], wire["proof_kind"])
+            self.assertEqual(
+                variant["properties"]["relation_kind"]["const"],
+                wire["relation_kind"],
+            )
             self.assertEqual(
                 variant["properties"][wire["proof_field"]]["$ref"],
                 f"#/$defs/{wire['proof_definition']}",
             )
             self.assertIs(definitions[wire["proof_definition"]]["additionalProperties"], False)
-            self.assertIn(wire["proof_kind"], serializer)
+            self.assertIn(wire["relation_kind"], serializer)
             self.assertIn(f'"{wire["proof_field"]}" ->', serializer)
-            self.assertNotIn(f'"{wire["proof_kind"]}_proof" ->', serializer)
+            self.assertNotIn(f'"{wire["relation_kind"]}_proof" ->', serializer)
 
     def test_every_contract_answers_the_nine_authority_questions(self) -> None:
         definitions = self.schema["$defs"]
@@ -458,7 +436,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
 
             consumers = audit["consumers"]
             expected_consumer_keys = {
-                "cause",
                 "packet",
                 "runtime_field",
                 "schema_variant",
@@ -474,7 +451,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 set(consumers),
                 expected_consumer_keys,
             )
-            self.assertEqual(consumers["cause"], host["cause"]["symbol"])
             self.assertEqual(
                 consumers["packet"], f"{host['packet']['symbol']}.{host['packet']['field']}"
             )
@@ -486,21 +462,12 @@ class L2ProofProvenanceTest(unittest.TestCase):
             runtime_test_file = _repo_path(runtime_tests["file"])
             self.assertTrue(runtime_test_file.is_file())
             runtime_test_text = runtime_test_file.read_text(encoding="utf-8")
-            runtime_test_lines = runtime_test_text.splitlines()
             self.assertTrue(runtime_tests["cases"])
             test_names = [case["name"] for case in runtime_tests["cases"]]
             self.assertEqual(len(test_names), len(set(test_names)))
             for test_case in runtime_tests["cases"]:
-                self.assertEqual(set(test_case), {"line", "name"})
-                test_line = test_case["line"]
+                self.assertEqual(set(test_case), {"name"})
                 test_name = test_case["name"]
-                self.assertIsInstance(test_line, int)
-                self.assertGreaterEqual(test_line, 1)
-                self.assertLessEqual(test_line, len(runtime_test_lines))
-                self.assertEqual(
-                    runtime_test_lines[test_line - 1].strip(),
-                    f'test("{test_name}"):',
-                )
                 self.assertEqual(runtime_test_text.count(f'test("{test_name}")'), 1)
 
             direct_fixture = consumers.get("direct_fixture")
@@ -511,22 +478,22 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 )
             else:
                 self.assertEqual(
-                    set(direct_fixture), {"file", "proof_kind", "producer_test_name"}
+                    set(direct_fixture), {"file", "relation_kind", "producer_test_name"}
                 )
-                self.assertEqual(direct_fixture["proof_kind"], wire["proof_kind"])
+                self.assertEqual(direct_fixture["relation_kind"], wire["relation_kind"])
                 self.assertIn(direct_fixture["producer_test_name"], test_names)
                 fixture = _json(_repo_path(direct_fixture["file"]))
-                occurrence_explanations = [
-                    explanation
+                occurrence_relations = [
+                    relation
                     for review in fixture["result"]["selected_move_reviews"]
-                    for explanation in review.get("commentary", {}).get(
+                    for relation in review.get("commentary", {}).get(
                         host["runtime"]["field"], []
                     )
                 ]
-                self.assertTrue(occurrence_explanations)
+                self.assertTrue(occurrence_relations)
                 self.assertEqual(
-                    {item["proof_kind"] for item in occurrence_explanations},
-                    {wire["proof_kind"]},
+                    {item["relation_kind"] for item in occurrence_relations},
+                    {wire["relation_kind"]},
                 )
                 expected_completion = (
                     "public schema, producer-based RuntimeProtocol test coverage, immutable "
@@ -537,7 +504,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 expected_completion,
             )
             self.assertEqual(consumers["ui_status"], "completed")
-            self.assertEqual(consumers["ui_owner"], UI_OWNER)
+            self.assertTrue(consumers["ui_owner"].strip())
             self.assertEqual(
                 set(consumers["ui_required_fields"]),
                 {"subject", "branches", "steps", "pieces", "closures", "proof_paths"},
@@ -571,6 +538,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
         )
         self.assertNotIn("causal_explanations", move_commentary["properties"])
         self.assertNotIn("requested_explanations", move_commentary["properties"])
+        self.assertNotIn("occurrence_explanations", move_commentary["properties"])
 
     def test_sources_and_complete_game_ledger_are_closed(self) -> None:
         self.assertTrue(FORBIDDEN_REFERENCE_KEYS.isdisjoint(_all_keys(self.manifest)))

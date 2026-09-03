@@ -67,8 +67,7 @@
             "depth" : 16
           }
         },
-        "occurrence_explanations" : [ {
-          "cause_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:occurrence-explanation:MjI4Om1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OmV2aWRlbmNlOnRyYW5zaXRpb246TVRveGZETTFPbkl6YXpNdk0zQnhNeTg0THpSUU15ODRMemd2VURjdlN6Y2dZaUJ4SUMwZ01DQXhmRFE2WkRka05Yd3hPako4TXpZNmNqTnJNeTgwY1RNdk9DOHpjRkF6THpndk9DOVFOeTlMTnlCM0lIRWdaRFlnTUNBeXw1MDpjYXVzYWwtcHJvcG9zaXRpb246cmVsb2NhdGlvbi1lbmFibGVzLXJlY2FwdHVyZTp2MXw2NDo2NDMwZDJmMDNiNzg0ZGE0ZmEwYzAzMjU5OWFiZDZmMDk1NjgwZGMwOTc0NjI4NWE2MmRmYTJiZTg2MTIxMDc4fDY0OmUwZGQ5ZDVmMjY5OTI2ZDQ4ZTFiMmZiZWU1ZGMxMGM5ZTc5N2U0YjI4NzMzYjI4ZjIwMjhlYzQwZjAzZWNkYTN8NjQ6NDE0YWYxYmQ5ZWM4ZDQ0ZTZlYmE5NjFmODRmNDNhNTA5ZWM2N2E2NzQxOTMxMTc5YTk0MTczYjQ2NTY3M2U0Znw2NjpbMTA1OGVlY2MzZDYxZmYyYjFmMTI3MzQ2YjliZWUyMGNkNjkwYTBmNGVlZGQ3YjQ4MDc0ZGViNzllNTczYTQ2ZF0",
+        "occurrence_relations" : [ {
           "subject_occurrence" : {
             "occurrence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNXwxOjJ8MzY6cjNrMy80cTMvOC8zcFAzLzgvOC9QNy9LNyB3IHEgZDYgMCAy",
             "line_owner_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:line:MTYxOm1vdmUtcmV2aWV3OjEzZmY3NzczZGNmMzlkMzM2ZTFlZDUzNzRlNmM2ZGI2NTZjMGJkYWQzYWY0YWI3MzM4M2UwNjY4NjRkZTE4ZTE6MTpkN2Q1OnBvc2l0aW9uOk5qcGlaV1p2Y21WOE1Ub3hmRE0xT25JemF6TXZNM0J4TXk4NEx6UlFNeTg0THpndlVEY3ZTemNnWWlCeElDMGdNQ0F4fDE6MXw1OkJsYWNrfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNQ",
@@ -85,7 +84,7 @@
               "ply" : 2
             }
           },
-          "proof_kind" : "relocation_enables_recapture",
+          "relation_kind" : "relocation_enables_recapture",
           "proof" : {
             "source_evidence_id" : "move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:causal-proof:causal-proposition:relocation-enables-recapture:v1:6430d2f03b784da4fa0c032599abd6f095680dc09746285a62dfa2be86121078:e0dd9d5f269926d48e1b2fbee5dc10c9e797e4b28733b28f2028ec40f03ecda3:414af1bd9ec8d44e6eba961f84f43a509ec67a6741931179a94173b465673e4f:1058eecc3d61ff2b1f127346b9bee20cd690a0f4eedd7b48074deb79e573a46d:subject:move-review:13ff7773dcf39d336e1ed5374e6c6db656c0bdad3af4ab73383e066864de18e1:1:d7d5:evidence:transition:MToxfDM1OnIzazMvM3BxMy84LzRQMy84LzgvUDcvSzcgYiBxIC0gMCAxfDQ6ZDdkNXwxOjJ8MzY6cjNrMy80cTMvOC8zcFAzLzgvOC9QNy9LNyB3IHEgZDYgMCAy",
             "semantic_id" : "6430d2f03b784da4fa0c032599abd6f095680dc09746285a62dfa2be86121078",

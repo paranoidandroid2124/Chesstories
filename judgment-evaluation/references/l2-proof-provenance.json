@@ -1,8 +1,9 @@
 {
-  "schema_version": "2.0.0",
+  "schema_version": "3.0.0",
   "authority": "ci_only_reference_provenance_not_board_truth",
   "runtime_consumed": false,
   "cache_dependency": false,
+  "relation_delivery": "Each of the seven narrow exact local typed proof records is independently graph-certified and projected directly as its own occurrence relation; no wrapper, separate upper owner, or admission record exists.",
   "host": {
     "demand": {
       "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationDemand.scala",
@@ -11,29 +12,22 @@
     "orchestrator": {
       "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/MoveReviewJudgmentOrchestrator.scala",
       "symbol": "MoveReviewJudgmentOrchestrator",
-      "proof_entrypoint": "OccurrenceExplanationAssembler.enrichProofs",
-      "cause_entrypoint": "OccurrenceExplanationAssembler.enrichCauses"
-    },
-    "cause": {
-      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/OccurrenceExplanation.scala",
-      "symbol": "OccurrenceExplanationCause",
-      "evidence_file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-      "evidence_symbol": "OccurrenceExplanationCauseEvidence"
+      "proof_entrypoint": "OccurrenceExplanationAssembler.enrichProofs"
     },
     "packet": {
       "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/JudgmentPacket.scala",
       "symbol": "EvidenceBackedJudgmentPacket",
-      "field": "occurrenceExplanations"
+      "field": "occurrenceRelations"
     },
     "runtime": {
       "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-      "serializer_symbol": "occurrenceExplanationJson",
-      "field": "occurrence_explanations"
+      "serializer_symbol": "occurrenceRelationJson",
+      "field": "occurrence_relations"
     },
     "schema": {
       "file": "judgment-evaluation/schemas/public-v6/move-meaning-response.schema.json",
-      "root_property": "occurrence_explanations",
-      "union_definition": "occurrenceExplanation"
+      "root_property": "occurrence_relations",
+      "union_definition": "occurrenceRelation"
     }
   },
   "coverage_categories": [
@@ -62,10 +56,10 @@
         "BoundedCausalDependencyFingerprint"
       ],
       "producer_fixtures": [
-        "judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json",
+        "judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json",
         "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json"
       ],
-      "invariant": "Every path, dependency, closed-use, and Cause identity consumes the canonical branch-role and contract keys; semantic proposition, occurrence, branch, move sequence, and lower-premise contents remain unchanged."
+      "invariant": "Every path, dependency, closed-use, and typed relation identity consumes the canonical branch-role and contract keys; semantic proposition, occurrence, branch, move sequence, and lower-premise contents remain unchanged."
     }
   ],
   "contracts": [
@@ -81,8 +75,8 @@
         "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence"
       },
       "wire": {
-        "proof_kind": "unique_check_reply_defender_displacement_before_capture",
-        "variant_definition": "uniqueCheckReplyOccurrenceExplanation",
+        "relation_kind": "unique_check_reply_defender_displacement_before_capture",
+        "variant_definition": "uniqueCheckReplyOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrenceUniqueCheckReplyProof"
       },
@@ -118,22 +112,20 @@
           "cache_owner": "sole producer deterministic graph record; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "uniqueCheckReplyOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "uniqueCheckReplyOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 548,
                 "name": "v6 commentary serializes unique-check-reply defender displacement before capture"
               }
             ]
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal-resource, relation, and position-state truth."
@@ -171,8 +163,8 @@
         "symbol": "SoleRecapturerRemovalBeforeTargetCaptureEvidence"
       },
       "wire": {
-        "proof_kind": "sole_recapturer_removal_before_target_capture",
-        "variant_definition": "soleRecapturerOccurrenceExplanation",
+        "relation_kind": "sole_recapturer_removal_before_target_capture",
+        "variant_definition": "soleRecapturerOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrenceSoleRecapturerProof"
       },
@@ -208,22 +200,20 @@
           "cache_owner": "sole producer deterministic graph record; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "soleRecapturerOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "soleRecapturerOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 678,
                 "name": "v6 commentary serializes the exact sole-recapturer removal proof"
               }
             ]
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of capture/recapture and position-state truth."
@@ -267,8 +257,8 @@
         "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureEvidence"
       },
       "wire": {
-        "proof_kind": "vacated_gate_enables_unrecapturable_slider_capture",
-        "variant_definition": "vacatedGateOccurrenceExplanation",
+        "relation_kind": "vacated_gate_enables_unrecapturable_slider_capture",
+        "variant_definition": "vacatedGateOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrenceVacatedGateProof"
       },
@@ -304,22 +294,20 @@
           "cache_owner": "sole producer deterministic graph record; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "vacatedGateOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "vacatedGateOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 1201,
                 "name": "v6 commentary keeps direct line-access proof in its exact typed channel"
               }
             ]
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of slider reach, capture resources, and position state."
@@ -364,8 +352,8 @@
         "symbol": "SquareReleaseRouteEvidence"
       },
       "wire": {
-        "proof_kind": "square_release_route",
-        "variant_definition": "squareReleaseRouteOccurrenceExplanation",
+        "relation_kind": "square_release_route",
+        "variant_definition": "squareReleaseRouteOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrenceSquareReleaseRouteProof"
       },
@@ -401,26 +389,23 @@
           "cache_owner": "sole producer deterministic graph record; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "squareReleaseRouteOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "squareReleaseRouteOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 1316,
                 "name": "v6 commentary serializes the exact one-leg square-release route proof"
               },
               {
-                "line": 1442,
                 "name": "v6 commentary preserves the Silicon Road multi-leg route and all five check replies"
               }
             ]
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal moves, capture/check resources, vacancy, and piece state."
@@ -498,8 +483,8 @@
         "symbol": "CaptureExclusionMoveOrderEvidence"
       },
       "wire": {
-        "proof_kind": "capture_exclusion_move_order",
-        "variant_definition": "captureExclusionOccurrenceExplanation",
+        "relation_kind": "capture_exclusion_move_order",
+        "variant_definition": "captureExclusionOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrenceCaptureExclusionMoveOrderProof"
       },
@@ -535,31 +520,28 @@
           "cache_owner": "sole producer deterministic graph record; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "captureExclusionOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "captureExclusionOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 745,
-                "name": "Scala producer matches the immutable occurrence-explanation public-v6 fixture"
+                "name": "Scala producer matches the immutable occurrence-relation public-v6 fixture"
               },
               {
-                "line": 810,
-                "name": "v6 commentary serializes the capture-exclusion occurrence result from its occurrence Cause"
+                "name": "v6 commentary serializes the capture-exclusion occurrence relation"
               }
             ]
           },
           "direct_fixture": {
-            "file": "judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json",
-            "proof_kind": "capture_exclusion_move_order",
-            "producer_test_name": "Scala producer matches the immutable occurrence-explanation public-v6 fixture"
+            "file": "judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json",
+            "relation_kind": "capture_exclusion_move_order",
+            "producer_test_name": "Scala producer matches the immutable occurrence-relation public-v6 fixture"
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, immutable Scala-produced fixture, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins canonical LegalMove occurrences and closed state/absence record IDs; it does not recalculate legal moves, capture maps, rays, or piece state."
@@ -608,8 +590,8 @@
         "symbol": "RelocationEnablesRecaptureEvidence"
       },
       "wire": {
-        "proof_kind": "relocation_enables_recapture",
-        "variant_definition": "relocationEnablesRecaptureOccurrenceExplanation",
+        "relation_kind": "relocation_enables_recapture",
+        "variant_definition": "relocationEnablesRecaptureOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrenceRelocationEnablesRecaptureProof"
       },
@@ -637,7 +619,7 @@
         "proof_paths_transposition": {
           "cardinality": "exactly_one_current_contract",
           "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
-          "rule": "Each role has one exact lower authority, so one occurrence has one conjunctive path; semantic_id may coincide after transposition while subject occurrence, both branch owners, ordered replay occurrences, path_occurrence_id, and Cause remain distinct"
+          "rule": "Each role has one exact lower authority, so one occurrence has one conjunctive path; semantic_id may coincide after transposition while subject occurrence, both branch owners, ordered replay occurrences, and path_occurrence_id remain distinct"
         },
         "dependency_cache": {
           "changed_dependencies": ["subject transition occurrence", "both branch owners, root transitions, and complete replays", "all capture-recapture result and source IDs", "every legal-move occurrence and source ID", "all six object continuities with selected primary or secondary transition, transition-footprint, and retained-state IDs", "closed seed-to-recapture-square absence ID", "all proof path occurrence IDs"],
@@ -645,27 +627,25 @@
           "cache_owner": "sole producer deterministic graph record; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "relocationEnablesRecaptureOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "relocationEnablesRecaptureOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 907,
-                "name": "v6 commentary serializes relocation-enabled recapture from its occurrence Cause"
+                "name": "v6 commentary serializes the relocation-enabled recapture occurrence relation"
               }
             ]
           },
           "direct_fixture": {
             "file": "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json",
-            "proof_kind": "relocation_enables_recapture",
-            "producer_test_name": "v6 commentary serializes relocation-enabled recapture from its occurrence Cause"
+            "relation_kind": "relocation_enables_recapture",
+            "producer_test_name": "v6 commentary serializes the relocation-enabled recapture occurrence relation"
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, immutable Scala-produced fixture, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer joins admitted LegalLine replay, canonical LegalMove occurrences, capture-recapture result owners, and closed position-state and relation-absence records; PositionRelationExtractor remains the owner of legal moves, capture-recapture resources, and piece state."
@@ -750,8 +730,8 @@
         "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence"
       },
       "wire": {
-        "proof_kind": "passed_pawn_progress_realized_after_only_legal_reply",
-        "variant_definition": "passedPawnProgressOccurrenceExplanation",
+        "relation_kind": "passed_pawn_progress_realized_after_only_legal_reply",
+        "variant_definition": "passedPawnProgressOccurrenceRelation",
         "proof_field": "proof",
         "proof_definition": "occurrencePassedPawnProgressProof"
       },
@@ -787,22 +767,20 @@
           "cache_owner": "sole producer may reuse only an exact graph owner whose full dependencies match; no separate public cache"
         },
         "consumers": {
-          "cause": "OccurrenceExplanationCause",
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceExplanations",
-          "runtime_field": "occurrence_explanations",
-          "schema_variant": "passedPawnProgressOccurrenceExplanation",
+          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
+          "runtime_field": "occurrence_relations",
+          "schema_variant": "passedPawnProgressOccurrenceRelation",
           "runtime_producer_tests": {
             "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
             "cases": [
               {
-                "line": 1518,
-                "name": "v6 commentary serializes the closed passed-pawn occurrence result from its occurrence Cause"
+                "name": "v6 commentary serializes the closed passed-pawn occurrence relation"
               }
             ]
           },
           "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
           "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceExplanations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceExplanation",
+          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
           "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
         },
         "no_recomputation_owner": "The L2 producer consumes the existing passed-pawn event, relation issuers, position-state issuers, and singleton legal-reply inventory; it does not recompute pawn structure or legal replies."

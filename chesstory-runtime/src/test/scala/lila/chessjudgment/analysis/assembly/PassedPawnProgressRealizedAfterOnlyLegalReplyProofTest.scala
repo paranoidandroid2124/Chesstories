@@ -270,11 +270,9 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
       _.payload.isInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
     )
     assert(proofRecords.nonEmpty)
-    assert(resolved.evidenceGraph.records.exists {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) =>
-        proofRecords.exists(_.ref == cause.proofSource)
-      case _ => false
-    })
+    assert(resolved.occurrenceRelations.exists(relation =>
+      proofRecords.exists(_.ref == relation.source)
+    ))
 
   test("without an occurrence request the passed-pawn event and L2 proof are not computed"):
     val prepared = MoveReviewInputAdmission
@@ -289,7 +287,7 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     assert(!packet.evidenceGraph.records.exists(
       _.payload.isInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
     ))
-    assertEquals(packet.occurrenceExplanations, Nil)
+    assertEquals(packet.occurrenceRelations, Nil)
 
   test("more than one legal root reply remains fail closed"):
     val raw = RawMoveReviewInput(

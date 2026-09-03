@@ -5,7 +5,7 @@ import lila.chessjudgment.model.line.EngineLine
 
 class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
 
-  test("one ready occurrence Cause cannot hide duplicate producers"):
+  test("an invalid or unregistered typed relation cannot remove a certified sibling or primary"):
     val packet = MoveReviewJudgmentOrchestrator
       .execute(
         RawMoveReviewInput(
@@ -17,21 +17,31 @@ class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
           )
         )
       )
-      .getOrElse(fail("expected an exact occurrence Cause fixture"))
+      .getOrElse(fail("expected an exact occurrence relation fixture"))
     val graph = packet.evidenceGraph
-    val owner = graph.records.collectFirst {
-      case record @ EvidenceRecord(_, OccurrenceExplanationCauseEvidence(_), _) => record
-    }.getOrElse(fail("expected one proof-admitted occurrence Cause"))
-    val duplicate = owner.copy(ref = owner.ref.copy(id = s"${owner.ref.id}:duplicate-owner"))
-
-    val conflict = intercept[IllegalArgumentException] {
-      EvidenceBackedJudgmentPacket.fromAssembly(
-        packet.assembly.withEvidence(duplicate)
+    val valid = graph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) => record
+    }.getOrElse(fail("expected one certified occurrence relation proof"))
+    val invalid = valid.copy(
+      ref = valid.ref.copy(
+        id = s"${valid.ref.id}:invalid-owner",
+        producer = EvidenceProducer.EngineEvalProducer
       )
-    }
-    assert(conflict.getMessage.contains("each requested proof occurrence"))
+    )
 
-  test("comparison and occurrence Cause owner ids are stable across admitted input order"):
+    assertEquals(OccurrenceRelationProof.fromRecord(invalid, graph), None)
+    val withInvalid = packet.assembly.withEvidence(invalid)
+    assert(!withInvalid.evidenceGraph.proofEligible(invalid))
+    val rebuilt = EvidenceBackedJudgmentPacket
+      .fromAssembly(withInvalid)
+      .getOrElse(fail("an invalid relation must not remove the primary packet"))
+    assertEquals(rebuilt.primary, packet.primary)
+    assertEquals(
+      rebuilt.occurrenceRelations.map(_.source),
+      packet.occurrenceRelations.map(_.source)
+    )
+
+  test("comparison and occurrence relation owner ids are stable across admitted input order"):
     val lines = List(
       EngineLine(List("c4f7", "f8f7", "d1d8"), scoreCp = 600, mate = Some(1), depth = 24),
       EngineLine(List("d1d8", "f8d8"), scoreCp = 0, depth = 24)
@@ -45,14 +55,12 @@ class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
             variations = variations
           )
         )
-        .getOrElse(fail("expected an exact occurrence Cause fixture"))
+        .getOrElse(fail("expected an exact occurrence relation fixture"))
       val comparisons = packet.evidenceGraph.records.collect {
         case EvidenceRecord(ref, CandidateComparisonEvidence(_), _) => ref.id
       }.sorted
-      val causes = packet.evidenceGraph.records.collect {
-        case EvidenceRecord(ref, OccurrenceExplanationCauseEvidence(_), _) => ref.id
-      }.sorted
-      comparisons -> causes
+      val relations = packet.occurrenceRelations.map(_.source.id).sorted
+      comparisons -> relations
 
     val forward = ownerIds(lines)
     val reversed = ownerIds(lines.reverse)
@@ -60,7 +68,7 @@ class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
     assert(forward._1.forall(!_.matches(".*:\\d+$")))
     assert(forward._2.forall(!_.matches(".*:\\d+$")))
 
-  test("independent typed proof records remain independent occurrence Causes"):
+  test("independent typed proof records remain independent occurrence relations"):
     val uniquePacket = resolved(
       RawMoveReviewInput(
         fen = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
@@ -90,16 +98,14 @@ class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
       }.getOrElse(fail("expected the sole-recapturer proof"))
     )
 
-    val causes = List(uniquePacket, solePacket).flatMap(_.evidenceGraph.records.collect {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) => cause
-    })
-    assertEquals(causes.size, 2)
+    val relations = List(uniquePacket, solePacket).flatMap(_.occurrenceRelations)
+    assertEquals(relations.size, 2)
     assertEquals(
-      causes.map(_.proofSource.id).toSet,
+      relations.map(_.source.id).toSet,
       proofRecords.map(_.ref.id).toSet
     )
 
   private def resolved(input: RawMoveReviewInput): EvidenceBackedJudgmentPacket =
     MoveReviewJudgmentOrchestrator
       .execute(input)
-      .getOrElse(fail("expected an exact occurrence Cause fixture"))
+      .getOrElse(fail("expected an exact occurrence relation fixture"))

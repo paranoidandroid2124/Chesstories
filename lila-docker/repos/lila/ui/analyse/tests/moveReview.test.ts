@@ -17,7 +17,7 @@ import {
   normalizeMoveReviewLocale,
   selectedMoveReviewCandidate,
   type IssuedMoveReviewEngineWork,
-  type MoveReviewProofKind,
+  type MoveReviewRelationKind,
   type MoveReviewSubject,
 } from '../src/moveReview';
 import {
@@ -37,7 +37,7 @@ const objects = (value: unknown): JsonObject[] => value as JsonObject[];
 const hashId = (value: number): string => value.toString(16).padStart(64, '0');
 
 const producerFixtureUrl = new URL(
-  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json',
+  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json',
   import.meta.url,
 );
 const relocationProducerFixtureUrl = new URL(
@@ -65,16 +65,16 @@ function producedCommentary(raw: JsonObject): JsonObject {
   return object(selected.find(review => object(review).commentary)?.commentary);
 }
 
-function producedOccurrence(raw = producedResponse()): JsonObject {
-  return objects(producedCommentary(raw).occurrence_explanations)[0]!;
+function producedRelation(raw = producedResponse()): JsonObject {
+  return objects(producedCommentary(raw).occurrence_relations)[0]!;
 }
 
 function producedRelocationResponse(): JsonObject {
   return JSON.parse(readFileSync(relocationProducerFixtureUrl, 'utf8')) as JsonObject;
 }
 
-function producedRelocationOccurrence(): JsonObject {
-  return producedOccurrence(producedRelocationResponse());
+function producedRelocationRelation(): JsonObject {
+  return producedRelation(producedRelocationResponse());
 }
 
 function producedDecodeContext(raw: JsonObject): ReturnType<typeof decodeContext> {
@@ -90,9 +90,9 @@ function decodeProduced(raw: JsonObject) {
   return decodeMoveReviewSnapshot(raw, producedDecodeContext(raw));
 }
 
-function responseWithOccurrences(occurrences: JsonObject[]): JsonObject {
+function responseWithRelations(relations: JsonObject[]): JsonObject {
   const raw = producedResponse();
-  producedCommentary(raw).occurrence_explanations = occurrences;
+  producedCommentary(raw).occurrence_relations = relations;
   return raw;
 }
 
@@ -186,10 +186,10 @@ function proofBase(): JsonObject {
   };
 }
 
-function schemaOccurrence(proofKind: MoveReviewProofKind, multiplePaths = false): JsonObject {
-  const source = producedOccurrence();
-  if (proofKind === 'capture_exclusion_move_order') return structuredClone(source);
-  if (proofKind === 'relocation_enables_recapture') return structuredClone(producedRelocationOccurrence());
+function schemaRelation(relationKind: MoveReviewRelationKind, multiplePaths = false): JsonObject {
+  const source = producedRelation();
+  if (relationKind === 'capture_exclusion_move_order') return structuredClone(source);
+  if (relationKind === 'relocation_enables_recapture') return structuredClone(producedRelocationRelation());
 
   const captureProof = object(source.proof);
   const counterfactualSource = object(captureProof.vacating_branch);
@@ -201,13 +201,12 @@ function schemaOccurrence(proofKind: MoveReviewProofKind, multiplePaths = false)
   const capturedTarget = object(captureParticipants.captured_target);
   const subjectOccurrence = structuredClone(object(source.subject_occurrence));
   const outer = (proof: JsonObject): JsonObject => ({
-    cause_evidence_id: 'schema-fixture:' + proofKind,
     subject_occurrence: subjectOccurrence,
-    proof_kind: proofKind,
+    relation_kind: relationKind,
     proof,
   });
 
-  if (proofKind === 'unique_check_reply_defender_displacement_before_capture') {
+  if (relationKind === 'unique_check_reply_defender_displacement_before_capture') {
     const displacement = copyBranch(counterfactualSource, 'displacement_then_capture', 3);
     const immediate = copyBranch(observedSource, 'immediate_capture_with_defender', 2);
     const path = {
@@ -255,7 +254,7 @@ function schemaOccurrence(proofKind: MoveReviewProofKind, multiplePaths = false)
     });
   }
 
-  if (proofKind === 'sole_recapturer_removal_before_target_capture') {
+  if (relationKind === 'sole_recapturer_removal_before_target_capture') {
     const removal = copyBranch(counterfactualSource, 'removal_then_target_capture', 3);
     const immediate = copyBranch(observedSource, 'immediate_target_capture', 2);
     const path = {
@@ -303,7 +302,7 @@ function schemaOccurrence(proofKind: MoveReviewProofKind, multiplePaths = false)
     });
   }
 
-  if (proofKind === 'vacated_gate_enables_unrecapturable_slider_capture') {
+  if (relationKind === 'vacated_gate_enables_unrecapturable_slider_capture') {
     const vacated = copyBranch(counterfactualSource, 'gate_vacated_then_capture');
     const retained = copyBranch(observedSource, 'gate_retained');
     const absenceSpecs = [
@@ -365,7 +364,7 @@ function schemaOccurrence(proofKind: MoveReviewProofKind, multiplePaths = false)
     });
   }
 
-  if (proofKind === 'square_release_route') {
+  if (relationKind === 'square_release_route') {
     const released = copyBranch(counterfactualSource, 'released_square_route');
     const retained = copyBranch(observedSource, 'retained_blocker');
     const path = (pathIndex: number) => ({
@@ -586,7 +585,7 @@ test('fails closed on unknown schemas, Chess960, execution drift, and illegal en
   assert.equal(decodeMoveReviewSnapshot(illegal, decodeContext()), undefined);
 });
 
-test('projects an exact primary while withholding an unproved L2 cause', () => {
+test('projects an exact primary without inventing an occurrence relation', () => {
   const decoded = decodeMoveReviewSnapshot(rawResponse(), decodeContext());
   assert.equal(decoded?.kind, 'completed');
   if (decoded?.kind !== 'completed') return;
@@ -596,7 +595,7 @@ test('projects an exact primary while withholding an unproved L2 cause', () => {
   if (!played || played.review.kind !== 'move-verdict') return;
   assert.equal(played.review.core.bestUci, 'c7c5');
   assert.equal(played.review.core.verdictSymbol, '?!');
-  assert.deepEqual(played.review.explanations, []);
+  assert.deepEqual(played.review.relations, []);
   assert.equal(played.review.comparisonProof?.moves[0]?.uci, 'e7e5');
   assert.equal(
     moveReviewProofById(played.review, played.review.comparisonProof!.id),
@@ -647,7 +646,7 @@ test('preserves BestChoice and its transmitted runner-up comparison without synt
   }
 });
 
-test('decodes the immutable Scala-produced occurrence fixture end to end', () => {
+test('decodes the immutable Scala-produced occurrence relation fixture end to end', () => {
   const raw = producedResponse();
   const decoded = decodeProduced(raw);
   assert.equal(decoded?.kind, 'completed');
@@ -656,14 +655,14 @@ test('decodes the immutable Scala-produced occurrence fixture end to end', () =>
   assert.equal(played?.review.kind, 'move-verdict');
   if (played?.review.kind !== 'move-verdict') return;
 
-  assert.equal(played.review.explanations.length, 1);
-  const explanation = played.review.explanations[0]!;
-  assert.equal(explanation.proofKind, 'capture_exclusion_move_order');
-  assert.equal(explanation.id, `occurrence-explanation-${explanation.proof.occurrenceId}`);
-  assert.equal(explanation.subjectOccurrence.moveUci, 'b2b4');
-  assert.equal(explanation.subjectOccurrence.rootProvenance, 'observed_game_root');
+  assert.equal(played.review.relations.length, 1);
+  const relation = played.review.relations[0]!;
+  assert.equal(relation.relationKind, 'capture_exclusion_move_order');
+  assert.equal(relation.id, `occurrence-relation-${relation.proof.sourceEvidenceId}`);
+  assert.equal(relation.subjectOccurrence.moveUci, 'b2b4');
+  assert.equal(relation.subjectOccurrence.rootProvenance, 'observed_game_root');
 
-  const branches = moveReviewOccurrenceBranches(explanation);
+  const branches = moveReviewOccurrenceBranches(relation);
   assert.deepEqual(
     branches.map(branch => branch.rootProvenance),
     ['counterfactual_analyzed_root', 'observed_game_root'],
@@ -673,18 +672,18 @@ test('decodes the immutable Scala-produced occurrence fixture end to end', () =>
     [Array(5).fill('certified_analysis_move'), ['observed_game_move', 'certified_analysis_move']],
   );
 
-  const paths = moveReviewOccurrenceProofPaths(explanation);
+  const paths = moveReviewOccurrenceProofPaths(relation);
   assert.equal(paths.length, 1);
-  assert.equal(paths[0]?.pathOccurrenceId, explanation.proof.proofPaths[0]?.pathOccurrenceId);
-  if (explanation.proofKind !== 'capture_exclusion_move_order') return;
+  assert.equal(paths[0]?.pathOccurrenceId, relation.proof.proofPaths[0]?.pathOccurrenceId);
+  if (relation.relationKind !== 'capture_exclusion_move_order') return;
   assert.deepEqual(
-    explanation.proof.proofPaths[0].premises.map(premise => premise.role),
+    relation.proof.proofPaths[0].premises.map(premise => premise.role),
     ['vacating_move', 'immediate_deferred_move', 'immediate_capture_reply', 'later_deferred_move'],
   );
-  assert.equal(explanation.proof.proofPaths[0].closedAbsenceUses.length, 2);
-  assert.equal(explanation.proof.proofPaths[0].closedStateUses.length, 14);
-  assert.equal(explanation.proof.participants.capturedTarget.square, 'd4');
-  const branchProof = moveReviewOccurrenceBranchProof(explanation, 0)!;
+  assert.equal(relation.proof.proofPaths[0].closedAbsenceUses.length, 2);
+  assert.equal(relation.proof.proofPaths[0].closedStateUses.length, 14);
+  assert.equal(relation.proof.participants.capturedTarget.square, 'd4');
+  const branchProof = moveReviewOccurrenceBranchProof(relation, 0)!;
   assert.equal(moveReviewProofById(played.review, branchProof.id)?.id, branchProof.id);
 });
 
@@ -696,12 +695,12 @@ test('decodes the immutable Scala-produced relocation fixture with complete obje
   const played = selectedMoveReviewCandidate(decoded.evidence);
   assert.equal(played?.review.kind, 'move-verdict');
   if (played?.review.kind !== 'move-verdict') return;
-  const explanation = played.review.explanations[0]!;
-  assert.equal(explanation.proofKind, 'relocation_enables_recapture');
-  assert.equal(explanation.subjectOccurrence.moveUci, 'd7d5');
-  if (explanation.proofKind !== 'relocation_enables_recapture') return;
+  const relation = played.review.relations[0]!;
+  assert.equal(relation.relationKind, 'relocation_enables_recapture');
+  assert.equal(relation.subjectOccurrence.moveUci, 'd7d5');
+  if (relation.relationKind !== 'relocation_enables_recapture') return;
 
-  const branches = moveReviewOccurrenceBranches(explanation);
+  const branches = moveReviewOccurrenceBranches(relation);
   assert.deepEqual(
     branches.map(branch => branch.steps.map(step => step.provenance)),
     [
@@ -709,7 +708,7 @@ test('decodes the immutable Scala-produced relocation fixture with complete obje
       ['observed_game_move', ...Array(2).fill('certified_analysis_move')],
     ],
   );
-  const path = explanation.proof.proofPaths[0];
+  const path = relation.proof.proofPaths[0];
   const continuity = path.premises.filter(premise => 'transitionKind' in premise);
   assert.ok(continuity.length > 9);
   assert.ok(continuity.some(premise => premise.transitionKind === 'secondary'));
@@ -740,20 +739,20 @@ test('decodes the immutable Scala-produced relocation fixture with complete obje
   assert.equal(liveRoles.get('relocated_branch_attacker_continuity:1'), 'e5-e5');
   assert.equal(liveRoles.get('retained_responder_continuity:0'), 'a8-a8');
   assert.notDeepEqual(
-    explanation.proof.participants.trackedResponderAtSeed,
-    explanation.proof.participants.otherRecapturer,
+    relation.proof.participants.trackedResponderAtSeed,
+    relation.proof.participants.otherRecapturer,
   );
   assert.equal(
     path.closedStateUses.length,
     continuity.filter(premise => premise.transitionKind === 'retained').length,
   );
-  assert.equal(explanation.proof.participants.capturedTarget.square, 'd5');
-  assert.equal(explanation.proof.participants.recaptureSquare, 'd6');
+  assert.equal(relation.proof.participants.capturedTarget.square, 'd5');
+  assert.equal(relation.proof.participants.recaptureSquare, 'd6');
   assert.notEqual(
-    explanation.proof.participants.capturedTarget.square,
-    explanation.proof.participants.recaptureSquare,
+    relation.proof.participants.capturedTarget.square,
+    relation.proof.participants.recaptureSquare,
   );
-  const branchProof = moveReviewOccurrenceBranchProof(explanation, 0)!;
+  const branchProof = moveReviewOccurrenceBranchProof(relation, 0)!;
   assert.deepEqual(branchProof.annotations, [
     { atPly: 1, shape: { kind: 'arrow', orig: 'a8', dest: 'd8', brush: 'blue' } },
     { atPly: 4, shape: { kind: 'arrow', orig: 'e5', dest: 'd6', brush: 'red' } },
@@ -762,7 +761,7 @@ test('decodes the immutable Scala-produced relocation fixture with complete obje
   assert.equal(moveReviewProofById(played.review, branchProof.id)?.id, branchProof.id);
 });
 
-test('fails closed when relocation continuity loses an occurrence, owner, transition, or endpoint', () => {
+test('drops only the relocation relation when continuity loses an occurrence, owner, transition, or endpoint', () => {
   const mutations: Array<(proof: JsonObject) => void> = [
     proof => {
       const premises = objects(object(objects(proof.proof_paths)[0]).premises);
@@ -851,13 +850,19 @@ test('fails closed when relocation continuity loses an occurrence, owner, transi
 
   for (const mutate of mutations) {
     const raw = producedRelocationResponse();
-    mutate(object(producedOccurrence(raw).proof));
-    assert.equal(decodeProduced(raw), undefined);
+    mutate(object(producedRelation(raw).proof));
+    const decoded = decodeProduced(raw);
+    assert.equal(decoded?.kind, 'completed');
+    if (decoded?.kind !== 'completed') continue;
+    const played = selectedMoveReviewCandidate(decoded.evidence);
+    assert.equal(played?.review.kind, 'move-verdict');
+    if (played?.review.kind !== 'move-verdict') continue;
+    assert.deepEqual(played.review.relations, []);
   }
 });
 
-test('decodes all seven proof kinds as their exact discriminated variants', () => {
-  const proofKinds: MoveReviewProofKind[] = [
+test('decodes all seven relation kinds as their exact discriminated variants', () => {
+  const relationKinds: MoveReviewRelationKind[] = [
     'unique_check_reply_defender_displacement_before_capture',
     'sole_recapturer_removal_before_target_capture',
     'vacated_gate_enables_unrecapturable_slider_capture',
@@ -867,66 +872,63 @@ test('decodes all seven proof kinds as their exact discriminated variants', () =
     'passed_pawn_progress_realized_after_only_legal_reply',
   ];
 
-  for (const proofKind of proofKinds) {
+  for (const relationKind of relationKinds) {
     const raw =
-      proofKind === 'relocation_enables_recapture'
+      relationKind === 'relocation_enables_recapture'
         ? producedRelocationResponse()
-        : responseWithOccurrences([schemaOccurrence(proofKind)]);
+        : responseWithRelations([schemaRelation(relationKind)]);
     const decoded = decodeProduced(raw);
-    assert.equal(decoded?.kind, 'completed', proofKind);
+    assert.equal(decoded?.kind, 'completed', relationKind);
     if (decoded?.kind !== 'completed') continue;
     const played = selectedMoveReviewCandidate(decoded.evidence);
-    assert.equal(played?.review.kind, 'move-verdict', proofKind);
+    assert.equal(played?.review.kind, 'move-verdict', relationKind);
     if (played?.review.kind !== 'move-verdict') continue;
-    assert.equal(played.review.explanations.length, 1, proofKind);
-    assert.equal(played.review.explanations[0]?.proofKind, proofKind);
-    assert.ok(moveReviewOccurrenceBranches(played.review.explanations[0]!).length >= 1);
-    assert.ok(moveReviewOccurrenceProofPaths(played.review.explanations[0]!).length >= 1);
+    assert.equal(played.review.relations.length, 1, relationKind);
+    assert.equal(played.review.relations[0]?.relationKind, relationKind);
+    assert.ok(moveReviewOccurrenceBranches(played.review.relations[0]!).length >= 1);
+    assert.ok(moveReviewOccurrenceProofPaths(played.review.relations[0]!).length >= 1);
   }
 });
 
-test('preserves multiple independent occurrence explanations without semantic or line deduplication', () => {
-  const first = producedOccurrence();
+test('preserves multiple independent occurrence relations without semantic or line deduplication', () => {
+  const first = producedRelation();
   const second = structuredClone(first);
-  second.cause_evidence_id = 'second-independent-cause';
   const secondProof = object(second.proof);
+  secondProof.source_evidence_id = 'second-independent-relation-source';
   secondProof.occurrence_id = hashId(900);
   object(objects(secondProof.proof_paths)[0]).path_occurrence_id = hashId(901);
 
-  const decoded = decodeProduced(responseWithOccurrences([first, second]));
+  const decoded = decodeProduced(responseWithRelations([first, second]));
   assert.equal(decoded?.kind, 'completed');
   if (decoded?.kind !== 'completed') return;
   const played = selectedMoveReviewCandidate(decoded.evidence);
   assert.equal(played?.review.kind, 'move-verdict');
   if (played?.review.kind !== 'move-verdict') return;
 
-  assert.equal(played.review.explanations.length, 2);
+  assert.equal(played.review.relations.length, 2);
   assert.deepEqual(
-    played.review.explanations.map(explanation => explanation.id),
-    [first, second].map(occurrence => `occurrence-explanation-${object(occurrence.proof).occurrence_id}`),
+    played.review.relations.map(relation => relation.id),
+    [first, second].map(relation => `occurrence-relation-${object(relation.proof).source_evidence_id}`),
   );
   assert.deepEqual(
-    played.review.explanations.map(explanation => explanation.causeEvidenceId),
-    [first.cause_evidence_id, second.cause_evidence_id],
+    played.review.relations.map(relation => relation.proof.sourceEvidenceId),
+    [object(first.proof).source_evidence_id, secondProof.source_evidence_id],
   );
+  assert.equal(played.review.relations[0]?.proof.semanticId, played.review.relations[1]?.proof.semanticId);
   assert.equal(
-    played.review.explanations[0]?.proof.semanticId,
-    played.review.explanations[1]?.proof.semanticId,
-  );
-  assert.equal(
-    moveReviewOccurrenceBranches(played.review.explanations[0]!)[0]?.lineId,
-    moveReviewOccurrenceBranches(played.review.explanations[1]!)[0]?.lineId,
+    moveReviewOccurrenceBranches(played.review.relations[0]!)[0]?.lineId,
+    moveReviewOccurrenceBranches(played.review.relations[1]!)[0]?.lineId,
   );
   assert.notEqual(
-    moveReviewOccurrenceProofPaths(played.review.explanations[0]!)[0]?.pathOccurrenceId,
-    moveReviewOccurrenceProofPaths(played.review.explanations[1]!)[0]?.pathOccurrenceId,
+    moveReviewOccurrenceProofPaths(played.review.relations[0]!)[0]?.pathOccurrenceId,
+    moveReviewOccurrenceProofPaths(played.review.relations[1]!)[0]?.pathOccurrenceId,
   );
 });
 
-test('fails closed on cause, proof occurrence, and cross-proof path occurrence collisions', () => {
+test('does not use relation identifier collisions as a global admission gate', () => {
   const mutations: Array<(first: JsonObject, second: JsonObject) => void> = [
     (first, second) => {
-      second.cause_evidence_id = first.cause_evidence_id;
+      object(second.proof).source_evidence_id = object(first.proof).source_evidence_id;
     },
     (first, second) => {
       object(second.proof).occurrence_id = object(first.proof).occurrence_id;
@@ -938,51 +940,103 @@ test('fails closed on cause, proof occurrence, and cross-proof path occurrence c
     },
   ];
   for (const mutate of mutations) {
-    const first = producedOccurrence();
+    const first = producedRelation();
     const second = structuredClone(first);
-    second.cause_evidence_id = 'second-independent-cause';
+    object(second.proof).source_evidence_id = 'second-independent-relation-source';
     object(second.proof).occurrence_id = hashId(910);
     object(objects(object(second.proof).proof_paths)[0]).path_occurrence_id = hashId(911);
     mutate(first, second);
-    assert.equal(decodeProduced(responseWithOccurrences([first, second])), undefined);
+    const decoded = decodeProduced(responseWithRelations([first, second]));
+    assert.equal(decoded?.kind, 'completed');
+    if (decoded?.kind !== 'completed') continue;
+    const played = selectedMoveReviewCandidate(decoded.evidence);
+    assert.equal(played?.review.kind, 'move-verdict');
+    if (played?.review.kind !== 'move-verdict') continue;
+    assert.equal(played.review.relations.length, 2);
   }
 });
 
+test('preserves a valid occurrence relation and move verdict when its sibling is invalid', () => {
+  const valid = producedRelation();
+  const invalid = structuredClone(valid);
+  invalid.relation_kind = 'unknown_relation_kind';
+
+  const decoded = decodeProduced(responseWithRelations([invalid, valid]));
+  assert.equal(decoded?.kind, 'completed');
+  if (decoded?.kind !== 'completed') return;
+  const played = selectedMoveReviewCandidate(decoded.evidence);
+  assert.equal(played?.review.kind, 'move-verdict');
+  if (played?.review.kind !== 'move-verdict') return;
+  assert.equal(played.review.relations.length, 1);
+  assert.equal(played.review.relations[0]?.proof.sourceEvidenceId, object(valid.proof).source_evidence_id);
+});
+
 test('preserves every transmitted square-route and passed-pawn proof path in wire order', () => {
-  for (const proofKind of [
+  for (const relationKind of [
     'square_release_route',
     'passed_pawn_progress_realized_after_only_legal_reply',
   ] as const) {
-    const occurrence = schemaOccurrence(proofKind, true);
-    const wirePathIds = objects(object(occurrence.proof).proof_paths).map(path => path.path_occurrence_id);
-    const decoded = decodeProduced(responseWithOccurrences([occurrence]));
-    assert.equal(decoded?.kind, 'completed', proofKind);
+    const relation = schemaRelation(relationKind, true);
+    const wirePathIds = objects(object(relation.proof).proof_paths).map(path => path.path_occurrence_id);
+    const decoded = decodeProduced(responseWithRelations([relation]));
+    assert.equal(decoded?.kind, 'completed', relationKind);
     if (decoded?.kind !== 'completed') continue;
     const played = selectedMoveReviewCandidate(decoded.evidence);
-    assert.equal(played?.review.kind, 'move-verdict', proofKind);
+    assert.equal(played?.review.kind, 'move-verdict', relationKind);
     if (played?.review.kind !== 'move-verdict') continue;
     assert.deepEqual(
-      moveReviewOccurrenceProofPaths(played.review.explanations[0]!).map(path => path.pathOccurrenceId),
+      moveReviewOccurrenceProofPaths(played.review.relations[0]!).map(path => path.pathOccurrenceId),
       wirePathIds,
-      proofKind,
+      relationKind,
     );
   }
 });
 
-test('fails closed on missing, unknown, extra, legacy, and uncertified occurrence fields', () => {
+test('drops an invalid occurrence relation without dropping its move verdict', () => {
   const mutations: ((raw: JsonObject) => void)[] = [
     raw => {
-      delete object(producedOccurrence(raw).proof).semantic_id;
+      delete object(producedRelation(raw).proof).semantic_id;
     },
     raw => {
-      object(producedOccurrence(raw).proof).extra_field = true;
+      object(producedRelation(raw).proof).extra_field = true;
     },
     raw => {
-      producedOccurrence(raw).proof_kind = 'unknown_proof_kind';
+      producedRelation(raw).relation_kind = 'unknown_relation_kind';
     },
     raw => {
-      delete branchStep(object(object(producedOccurrence(raw).proof).immediate_capture_branch), 0).provenance;
+      delete branchStep(object(object(producedRelation(raw).proof).immediate_capture_branch), 0).provenance;
     },
+    raw => {
+      producedRelation(raw).cause_evidence_id = 'retired-cause-owner';
+    },
+    raw => {
+      object(producedRelation(raw).proof).capture_exclusion_move_order_proof = object(
+        producedRelation(raw).proof,
+      );
+    },
+    raw => {
+      const proof = object(producedRelation(raw).proof);
+      const path = object(objects(proof.proof_paths)[0]);
+      const premises = objects(path.premises);
+      premises[0] = { ...premises[0], role: 'invented_role' };
+    },
+  ];
+
+  for (const mutate of mutations) {
+    const raw = producedResponse();
+    mutate(raw);
+    const decoded = decodeProduced(raw);
+    assert.equal(decoded?.kind, 'completed');
+    if (decoded?.kind !== 'completed') continue;
+    const played = selectedMoveReviewCandidate(decoded.evidence);
+    assert.equal(played?.review.kind, 'move-verdict');
+    if (played?.review.kind !== 'move-verdict') continue;
+    assert.deepEqual(played.review.relations, []);
+  }
+});
+
+test('fails closed on malformed relation arrays and retired commentary fields', () => {
+  const mutations: ((raw: JsonObject) => void)[] = [
     raw => {
       producedCommentary(raw).causal_explanations = [];
     },
@@ -990,18 +1044,10 @@ test('fails closed on missing, unknown, extra, legacy, and uncertified occurrenc
       producedCommentary(raw).requested_explanations = [];
     },
     raw => {
-      object(producedOccurrence(raw).proof).capture_exclusion_move_order_proof = object(
-        producedOccurrence(raw).proof,
-      );
-    },
-    raw => {
       producedCommentary(raw).occurrence_explanations = [];
     },
     raw => {
-      const proof = object(producedOccurrence(raw).proof);
-      const path = object(objects(proof.proof_paths)[0]);
-      const premises = objects(path.premises);
-      premises[0] = { ...premises[0], role: 'invented_role' };
+      producedCommentary(raw).occurrence_relations = [];
     },
   ];
 

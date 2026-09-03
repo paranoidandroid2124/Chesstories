@@ -227,7 +227,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       context.certifiedRootOccurrence(first.occurrence.immediateCaptureLine).get
     ))
 
-  test("the certified family reaches one occurrence Cause directly"):
+  test("the certified family reaches one occurrence relation directly"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -255,16 +255,11 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       proofRecord.copy(ref = proofRecord.ref.copy(line = None))
     ))
 
-    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
-      facts,
-      JudgmentProvenanceAllocator.forInput(facts.input),
-      exactDemand(facts)
-    )
-    val causes = withCauses.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
-          if cause.proofSource == proofRecord.ref => record
-    }
-    assertEquals(causes.size, 1)
+    val relation = OccurrenceRelationProof
+      .fromRecord(proofRecord, facts.evidenceGraph)
+      .getOrElse(fail("expected the typed proof to certify directly"))
+    assertEquals(relation.source, proofRecord.ref)
+    assertEquals(relation.subjectOccurrence, proofPayload.subjectOccurrence)
 
   private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     OccurrenceExplanationAssembler.enrichProofs(

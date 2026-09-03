@@ -25,7 +25,7 @@ import {
   type MoveReviewJobState,
   type MoveReviewLocale,
   type MoveReviewMovementWitness,
-  type MoveReviewOccurrenceExplanation,
+  type MoveReviewOccurrenceRelation,
   type MoveReviewPassedPawnPositionState,
   type MoveReviewProof,
   type MoveReviewVerdictSymbol,
@@ -253,8 +253,8 @@ function renderReviewBody(props: MoveReviewPanelProps, evidence: MoveReviewEvide
           hl('span.move-review__eyebrow', played.label),
           hl('h3', verdictLabel),
           hl('p.move-review__core-comparison', renderCoreComparison(played, best, core, props.copy)),
-          review.kind === 'move-verdict' && !review.explanations.length
-            ? hl('p', props.copy.noVerifiedExplanation)
+          review.kind === 'move-verdict' && !review.relations.length
+            ? hl('p', props.copy.noOccurrenceRelations)
             : review.kind === 'abstained'
               ? hl('p', props.copy.candidateUnavailable)
               : undefined,
@@ -536,12 +536,10 @@ function renderStructuredReview(
     },
     [
       review.comparisonProof && renderAssessmentProof(review.comparisonProof, candidate, props),
-      ...review.explanations.map((explanation, index) =>
-        renderOccurrenceExplanation(explanation, index, props),
-      ),
+      ...review.relations.map((relation, index) => renderOccurrenceRelation(relation, index, props)),
       !review.comparisonProof &&
-        !review.explanations.length &&
-        hl('p.move-review__empty-explanation', props.copy.noVerifiedExplanation),
+        !review.relations.length &&
+        hl('p.move-review__empty-explanation', props.copy.noOccurrenceRelations),
     ],
   );
 }
@@ -576,14 +574,14 @@ function renderAssessmentProof(
   ]);
 }
 
-function renderOccurrenceExplanation(
-  explanation: MoveReviewOccurrenceExplanation,
+function renderOccurrenceRelation(
+  relation: MoveReviewOccurrenceRelation,
   index: number,
   props: MoveReviewPanelProps,
 ): VNode {
-  const expanded = props.view.expandedProofId === explanation.id;
-  const contentId = `move-review-proof-${explanation.id}`;
-  return hl('article.move-review__proof-entry', { key: explanation.id }, [
+  const expanded = props.view.expandedProofId === relation.id;
+  const contentId = `move-review-proof-${relation.id}`;
+  return hl('article.move-review__proof-entry', { key: relation.id }, [
     hl(
       'button.move-review__proof-entry-button',
       {
@@ -592,39 +590,39 @@ function renderOccurrenceExplanation(
           'aria-expanded': expanded ? 'true' : 'false',
           ...(expanded ? { 'aria-controls': contentId } : {}),
         },
-        on: { click: () => props.actions.toggleProof(explanation.id) },
+        on: { click: () => props.actions.toggleProof(relation.id) },
       },
       [
         hl('span.move-review__proof-entry-copy', [
-          hl('strong', props.copy.familyLabels[explanation.proofKind]),
+          hl('strong', props.copy.familyLabels[relation.relationKind]),
           hl('span.move-review__proof-entry-summary', [
             hl('span', `${props.copy.proofPath} ${index + 1}`),
-            hl('code.move-review__typed-value.is-move', explanation.subjectOccurrence.moveUci),
+            hl('code.move-review__typed-value.is-move', relation.subjectOccurrence.moveUci),
           ]),
         ]),
         hl('span.move-review__proof-entry-chevron', { attrs: { 'aria-hidden': 'true' } }, '⌄'),
       ],
     ),
-    expanded && renderOccurrenceExplanationDetails(explanation, contentId, props),
+    expanded && renderOccurrenceRelationDetails(relation, contentId, props),
   ]);
 }
 
-function renderOccurrenceExplanationDetails(
-  explanation: MoveReviewOccurrenceExplanation,
+function renderOccurrenceRelationDetails(
+  relation: MoveReviewOccurrenceRelation,
   contentId: string,
   props: MoveReviewPanelProps,
 ): VNode {
-  const paths = moveReviewOccurrenceProofPaths(explanation);
-  const branches = moveReviewOccurrenceBranches(explanation);
+  const paths = moveReviewOccurrenceProofPaths(relation);
+  const branches = moveReviewOccurrenceBranches(relation);
   return hl(`div#${contentId}.move-review__typed-path`, [
     hl(
       'div.move-review__branches',
-      branches.map((branch, index) => renderOccurrenceBranch(explanation, branch, index, props)),
+      branches.map((branch, index) => renderOccurrenceBranch(relation, branch, index, props)),
     ),
-    renderOccurrenceParticipants(explanation, props.copy),
+    renderOccurrenceParticipants(relation, props.copy),
     ...paths.map((path, index) => renderOccurrenceProofPath(path, index, props.copy)),
-    renderLaterConsumer(explanation, props.copy),
-    renderOccurrenceProvenance(explanation, branches, paths, props.copy),
+    renderLaterConsumer(relation, props.copy),
+    renderOccurrenceProvenance(relation, branches, paths, props.copy),
   ]);
 }
 
@@ -652,12 +650,12 @@ function renderOccurrenceProofPath(path: MoveReviewAnyProofPath, index: number, 
 }
 
 function renderOccurrenceBranch(
-  explanation: MoveReviewOccurrenceExplanation,
+  relation: MoveReviewOccurrenceRelation,
   branch: MoveReviewAnyBranch,
   index: number,
   props: MoveReviewPanelProps,
 ): VNode {
-  const proof = moveReviewOccurrenceBranchProof(explanation, index);
+  const proof = moveReviewOccurrenceBranchProof(relation, index);
   const rootMove = 'rootMove' in branch ? branch.rootMove : branch.line.rootMove;
   return hl('section.move-review__branch', { key: branch.branchId }, [
     hl('header.move-review__branch-header', [
@@ -677,14 +675,11 @@ function branchLabel(provenance: MoveReviewAnyBranch['rootProvenance'], copy: Mo
 type MoveReviewParticipant = MoveReviewMovementWitness | MoveReviewColoredPieceWitness | Key;
 type MoveReviewPremise = MoveReviewAnyProofPath['premises'][number];
 
-function renderOccurrenceParticipants(
-  explanation: MoveReviewOccurrenceExplanation,
-  copy: MoveReviewCopy,
-): VNode {
+function renderOccurrenceParticipants(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const participants =
-    explanation.proofKind === 'passed_pawn_progress_realized_after_only_legal_reply'
-      ? { rootActor: explanation.proof.rootActor, realizingActor: explanation.proof.realizingActor }
-      : explanation.proof.participants;
+    relation.relationKind === 'passed_pawn_progress_realized_after_only_legal_reply'
+      ? { rootActor: relation.proof.rootActor, realizingActor: relation.proof.realizingActor }
+      : relation.proof.participants;
   return hl('section.move-review__participants.move-review__typed-section', [
     hl('h4', copy.structureLabels.participants),
     hl(
@@ -862,54 +857,54 @@ function renderClosures(
   ]);
 }
 
-function renderLaterConsumer(explanation: MoveReviewOccurrenceExplanation, copy: MoveReviewCopy): VNode {
+function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
-  switch (explanation.proofKind) {
+  switch (relation.relationKind) {
     case 'unique_check_reply_defender_displacement_before_capture':
-      return renderConsumer(explanation.proof.realizingMove, explanation.proof.participants.realizer, copy);
+      return renderConsumer(relation.proof.realizingMove, relation.proof.participants.realizer, copy);
     case 'sole_recapturer_removal_before_target_capture':
       return renderConsumer(
-        explanation.proof.postRemovalTargetCaptureMove,
-        explanation.proof.participants.postRemovalTargetCapture,
+        relation.proof.postRemovalTargetCaptureMove,
+        relation.proof.participants.postRemovalTargetCapture,
         copy,
       );
     case 'vacated_gate_enables_unrecapturable_slider_capture':
-      return renderConsumer(explanation.proof.exploitMove, explanation.proof.participants.exploit, copy);
+      return renderConsumer(relation.proof.exploitMove, relation.proof.participants.exploit, copy);
     case 'square_release_route':
       return hl('section.move-review__later-consumer.move-review__typed-section', [
         hl('h4', labels.laterConsumer),
         hl(
           'ol.move-review__typed-list',
-          explanation.proof.route.map(step =>
+          relation.proof.route.map(step =>
             hl('li', [renderFact(labels.move, step.moveUci, 'move'), renderWitness(step, copy)]),
           ),
         ),
-        explanation.proof.terminalReplyMove
-          ? renderFact(labels.move, explanation.proof.terminalReplyMove, 'move')
+        relation.proof.terminalReplyMove
+          ? renderFact(labels.move, relation.proof.terminalReplyMove, 'move')
           : undefined,
       ]);
     case 'capture_exclusion_move_order':
       return hl('section.move-review__later-consumer.move-review__typed-section', [
         hl('h4', labels.laterConsumer),
-        renderFact(labels.afterStep, explanation.proof.laterDeferredStepIndex + 1),
-        renderWitness(explanation.proof.participants.deferredMove, copy),
+        renderFact(labels.afterStep, relation.proof.laterDeferredStepIndex + 1),
+        renderWitness(relation.proof.participants.deferredMove, copy),
       ]);
     case 'relocation_enables_recapture':
       return hl('section.move-review__later-consumer.move-review__typed-section', [
         hl('h4', labels.laterConsumer),
         hl('h5', structureRoleLabel('relocated_target_capture', copy, labels.capture)),
-        renderFact(labels.move, explanation.proof.targetCapture.moveUci, 'move'),
-        renderWitness(explanation.proof.targetCapture.movement, copy),
+        renderFact(labels.move, relation.proof.targetCapture.moveUci, 'move'),
+        renderWitness(relation.proof.targetCapture.movement, copy),
         hl('h5', structureRoleLabel('relocated_responder_recapture', copy, labels.reply)),
-        renderFact(labels.move, explanation.proof.relocatedResponderRecapture.moveUci, 'move'),
-        renderWitness(explanation.proof.relocatedResponderRecapture.movement, copy),
+        renderFact(labels.move, relation.proof.relocatedResponderRecapture.moveUci, 'move'),
+        renderWitness(relation.proof.relocatedResponderRecapture.movement, copy),
       ]);
     case 'passed_pawn_progress_realized_after_only_legal_reply':
       return hl('section.move-review__later-consumer.move-review__typed-section', [
         hl('h4', labels.laterConsumer),
-        renderFact(labels.reply, explanation.proof.closedLegalReplyInventory.legalReplyMove, 'move'),
-        renderFact(labels.move, explanation.proof.realizingMove, 'move'),
-        renderWitness(explanation.proof.realizingActor, copy),
+        renderFact(labels.reply, relation.proof.closedLegalReplyInventory.legalReplyMove, 'move'),
+        renderFact(labels.move, relation.proof.realizingMove, 'move'),
+        renderWitness(relation.proof.realizingActor, copy),
       ]);
   }
 }
@@ -923,7 +918,7 @@ function renderConsumer(move: Uci, participant: MoveReviewMovementWitness, copy:
 }
 
 function renderOccurrenceProvenance(
-  explanation: MoveReviewOccurrenceExplanation,
+  relation: MoveReviewOccurrenceRelation,
   branches: MoveReviewAnyBranch[],
   paths: MoveReviewAnyProofPath[],
   copy: MoveReviewCopy,
@@ -932,12 +927,11 @@ function renderOccurrenceProvenance(
   return hl('details.move-review__provenance', [
     hl('summary', labels.provenanceDetails),
     renderFacts([
-      renderFact(labels.causeEvidenceId, explanation.causeEvidenceId),
-      renderFact(labels.proofOccurrenceId, explanation.proof.occurrenceId),
-      renderFact(labels.subjectOccurrenceId, explanation.subjectOccurrence.occurrenceId),
-      renderFact(labels.semanticId, explanation.proof.semanticId),
-      renderFact(labels.sourceEvidenceId, explanation.proof.sourceEvidenceId),
-      renderFact(labels.dependencyFingerprint, explanation.proof.dependencyFingerprint),
+      renderFact(labels.proofOccurrenceId, relation.proof.occurrenceId),
+      renderFact(labels.subjectOccurrenceId, relation.subjectOccurrence.occurrenceId),
+      renderFact(labels.semanticId, relation.proof.semanticId),
+      renderFact(labels.sourceEvidenceId, relation.proof.sourceEvidenceId),
+      renderFact(labels.dependencyFingerprint, relation.proof.dependencyFingerprint),
     ]),
     ...branches.map((branch, index) =>
       hl('section', [

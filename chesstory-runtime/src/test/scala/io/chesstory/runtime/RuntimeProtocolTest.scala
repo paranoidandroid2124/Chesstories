@@ -567,21 +567,20 @@ class RuntimeProtocolTest extends munit.FunSuite:
       commentary.keys.intersect(Set("structural_idea_units", "responsibility_links")),
       Set.empty[String]
     )
-    val occurrenceResult = (commentary \ "occurrence_explanations").as[List[JsObject]] match
+    val occurrenceResult = (commentary \ "occurrence_relations").as[List[JsObject]] match
       case exact :: Nil => exact
       case other        => fail(s"expected one L2 occurrence result, found ${other.size}")
 
     assertEquals(
       occurrenceResult.keys,
       Set(
-        "cause_evidence_id",
         "subject_occurrence",
-        "proof_kind",
+        "relation_kind",
         "proof"
       )
     )
     assertEquals(
-      (occurrenceResult \ "proof_kind").as[String],
+      (occurrenceResult \ "relation_kind").as[String],
       "unique_check_reply_defender_displacement_before_capture"
     )
     val forbiddenDuplicateFields = Set(
@@ -692,11 +691,11 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an evidence-backed sole-recapturer-removal packet"))
 
-    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_relations")
       .as[List[JsObject]] match
         case exact :: Nil => exact
         case other        => fail(s"expected one removal occurrence result, found ${other.size}")
-    assertEquals((occurrenceResult \ "proof_kind").as[String], "sole_recapturer_removal_before_target_capture")
+    assertEquals((occurrenceResult \ "relation_kind").as[String], "sole_recapturer_removal_before_target_capture")
     val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
     assertEquals((subject \ "move_uci").as[String], "d1d5")
     assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
@@ -742,7 +741,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "legal-capture:black:d5"
     )
 
-  test("Scala producer matches the immutable occurrence-explanation public-v6 fixture"):
+  test("Scala producer matches the immutable occurrence-relation public-v6 fixture"):
     val rootFen =
       "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
     val vacatingMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
@@ -793,21 +792,21 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .as[List[JsObject]]
       .find(review => (review \ "move_uci").as[String] == immediateMoves.head)
       .getOrElse(fail("expected the played review in the produced fixture"))
-    val occurrenceResults = (playedReview \ "commentary" \ "occurrence_explanations").as[List[JsObject]]
+    val occurrenceResults = (playedReview \ "commentary" \ "occurrence_relations").as[List[JsObject]]
     assertEquals(occurrenceResults.size, 1)
-    assertEquals((occurrenceResults.head \ "proof_kind").as[String], "capture_exclusion_move_order")
+    assertEquals((occurrenceResults.head \ "relation_kind").as[String], "capture_exclusion_move_order")
 
     val fixturePath = Paths.get(
       "..",
       "judgment-evaluation",
       "fixtures",
       "public-commentary-v6",
-      "occurrence-explanation-produced.json"
+      "occurrence-relation-produced.json"
     )
     val fixture = Json.parse(Files.readString(fixturePath, StandardCharsets.UTF_8))
     assertEquals(Json.parse(Json.stringify(response)), fixture)
 
-  test("v6 commentary serializes the capture-exclusion occurrence result from its occurrence Cause"):
+  test("v6 commentary serializes the capture-exclusion occurrence relation"):
     val rootFen =
       "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
     val referenceMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
@@ -827,19 +826,18 @@ class RuntimeProtocolTest extends munit.FunSuite:
 
     val commentary = RuntimeProtocol.moveCommentaryJson(packet)
     assertEquals((commentary \ "causal_explanations").asOpt[List[JsObject]].getOrElse(Nil), Nil)
-    val occurrenceResult = (commentary \ "occurrence_explanations").as[List[JsObject]] match
+    val occurrenceResult = (commentary \ "occurrence_relations").as[List[JsObject]] match
       case exact :: Nil => exact
       case other        => fail(s"expected one capture-exclusion occurrence result, found ${other.size}")
     assertEquals(
       occurrenceResult.keys,
       Set(
-        "cause_evidence_id",
         "subject_occurrence",
-        "proof_kind",
+        "relation_kind",
         "proof"
       )
     )
-    assertEquals((occurrenceResult \ "proof_kind").as[String], "capture_exclusion_move_order")
+    assertEquals((occurrenceResult \ "relation_kind").as[String], "capture_exclusion_move_order")
     val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
     assertEquals((subject \ "move_uci").as[String], "b2b4")
     assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
@@ -904,7 +902,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((proof \ "participants" \ "captured_target" \ "square").as[String], "d4")
     assertEquals((proof \ "later_deferred_step_index").as[Int], 4)
 
-  test("v6 commentary serializes relocation-enabled recapture from its occurrence Cause"):
+  test("v6 commentary serializes the relocation-enabled recapture occurrence relation"):
     val rootFen = "r3k3/3pq3/8/4P3/8/8/P7/K7 b q - 0 1"
     val relocatedMoves = List("e8c8", "a2a3", "d7d5", "e5d6", "d8d6")
     val retainedMoves = List("d7d5", "e5d6", "e7d6")
@@ -954,12 +952,12 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .as[List[JsObject]]
       .find(review => (review \ "move_uci").as[String] == retainedMoves.head)
       .getOrElse(fail("expected the played review in the relocation fixture"))
-    val occurrenceResult = (playedReview \ "commentary" \ "occurrence_explanations")
+    val occurrenceResult = (playedReview \ "commentary" \ "occurrence_relations")
       .as[List[JsObject]] match
         case exact :: Nil => exact
         case other =>
           fail(s"expected one relocation-enabled-recapture occurrence result, found ${other.size}")
-    assertEquals((occurrenceResult \ "proof_kind").as[String], "relocation_enables_recapture")
+    assertEquals((occurrenceResult \ "relation_kind").as[String], "relocation_enables_recapture")
     val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]
     assertEquals((subject \ "move_uci").as[String], retainedMoves.head)
     assertEquals((subject \ "root_provenance").as[String], "observed_game_root")
@@ -1215,12 +1213,12 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an exact direct line-access packet"))
 
-    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_relations")
       .as[List[JsObject]] match
       case exact :: Nil => exact
       case other        => fail(s"expected one line-access occurrence result, found ${other.size}")
     assertEquals(
-      (occurrenceResult \ "proof_kind").as[String],
+      (occurrenceResult \ "relation_kind").as[String],
       "vacated_gate_enables_unrecapturable_slider_capture"
     )
     assertEquals(
@@ -1330,11 +1328,11 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected an exact square-release route packet"))
 
-    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_relations")
       .as[List[JsObject]] match
       case exact :: Nil => exact
       case other        => fail(s"expected one square-release occurrence result, found ${other.size}")
-    assertEquals((occurrenceResult \ "proof_kind").as[String], "square_release_route")
+    assertEquals((occurrenceResult \ "relation_kind").as[String], "square_release_route")
     assertEquals(
       occurrenceResult.keys.intersect(
         Set("actor", "targets", "mechanisms", "consequences", "witnesses", "proof_line_moves", "horizon", "proof_segment")
@@ -1467,9 +1465,9 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected the exact Silicon Road route packet"))
 
-    val occurrenceResults = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+    val occurrenceResults = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_relations")
       .as[List[JsObject]]
-      .filter(occurrenceResult => (occurrenceResult \ "proof_kind").as[String] == "square_release_route")
+      .filter(occurrenceResult => (occurrenceResult \ "relation_kind").as[String] == "square_release_route")
     val proofs = occurrenceResults.map(occurrenceResult =>
       (occurrenceResult \ "proof").as[JsObject]
     )
@@ -1515,7 +1513,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     )
     assertEquals((path \ "closed_state_uses").as[List[JsObject]].size, 13)
 
-  test("v6 commentary serializes the closed passed-pawn occurrence result from its occurrence Cause"):
+  test("v6 commentary serializes the closed passed-pawn occurrence relation"):
     val raw = RawMoveReviewInput(
       fen = "7k/5K2/6P1/8/8/8/8/8 w - - 0 1",
       playedMoveUci = "g6g7",
@@ -1531,14 +1529,14 @@ class RuntimeProtocolTest extends munit.FunSuite:
       case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
     }
     assert(passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords.nonEmpty, "the closed passed-pawn result must reach the typed L2 producer")
-    val certifiedOccurrenceExplanations = resolved.occurrenceExplanations.collect {
-      case certified
-          if certified.rootOwnedProof.isInstanceOf[
-            RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply
-          ] => certified
+    val certifiedOccurrenceRelations = resolved.occurrenceRelations.collect {
+      case relation
+          if relation.isInstanceOf[
+            OccurrenceRelationProof.PassedPawnProgressRealizedAfterOnlyLegalReply
+          ] => relation
     }
     assert(
-      certifiedOccurrenceExplanations.nonEmpty,
+      certifiedOccurrenceRelations.nonEmpty,
       clues(
         passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords.map(_.ref.id),
         resolved.evidenceGraph.records.collect {
@@ -1553,17 +1551,16 @@ class RuntimeProtocolTest extends munit.FunSuite:
       Set.empty[String]
     )
     assertEquals((commentary \ "causal_explanations").asOpt[List[JsObject]].getOrElse(Nil), Nil)
-    val occurrenceResult = (commentary \ "occurrence_explanations").as[List[JsObject]]
+    val occurrenceResult = (commentary \ "occurrence_relations").as[List[JsObject]]
       .find(item =>
-        (item \ "proof_kind").as[String] == "passed_pawn_progress_realized_after_only_legal_reply"
+        (item \ "relation_kind").as[String] == "passed_pawn_progress_realized_after_only_legal_reply"
       )
       .getOrElse(fail("expected the typed passed-pawn occurrence result in public commentary"))
     assertEquals(
       occurrenceResult.keys,
       Set(
-        "cause_evidence_id",
         "subject_occurrence",
-        "proof_kind",
+        "relation_kind",
         "proof"
       )
     )
@@ -1696,10 +1693,10 @@ class RuntimeProtocolTest extends munit.FunSuite:
       )
       .map(_.packet)
       .getOrElse(fail("expected the observed best passed-pawn occurrence"))
-    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_explanations")
+    val occurrenceResult = (RuntimeProtocol.moveCommentaryJson(packet) \ "occurrence_relations")
       .as[List[JsObject]]
       .find(item =>
-        (item \ "proof_kind").as[String] == "passed_pawn_progress_realized_after_only_legal_reply"
+        (item \ "relation_kind").as[String] == "passed_pawn_progress_realized_after_only_legal_reply"
       )
       .getOrElse(fail("expected the passed-pawn occurrence result"))
     val subject = (occurrenceResult \ "subject_occurrence").as[JsObject]

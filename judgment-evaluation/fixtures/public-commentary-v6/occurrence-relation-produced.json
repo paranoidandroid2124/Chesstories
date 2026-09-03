@@ -67,8 +67,7 @@
             "depth" : 16
           }
         },
-        "occurrence_explanations" : [ {
-          "cause_evidence_id" : "move-review:c79f86ec5d00fe978ad4b919d6a9be94cb5610c2d8a45d8b5238cb8a859abd58:32:b2b4:evidence:occurrence-explanation:MzI1Om1vdmUtcmV2aWV3OmM3OWY4NmVjNWQwMGZlOTc4YWQ0YjkxOWQ2YTliZTk0Y2I1NjEwYzJkOGE0NWQ4YjUyMzhjYjhhODU5YWJkNTg6MzI6YjJiNDpldmlkZW5jZTp0cmFuc2l0aW9uOk1qb3pNbnczTURweU1uRnlZbXN4THpGaWNHNHhjREZ3TDNBeWNERnVjREV2VUhBeWNETXZNMUJRTXk4eVVESk9UbEF2TVZCQ01sQlFNUzlTTVVKUlVqRkxNU0IzSUMwZ0xTQXhJREUzZkRRNllqSmlOSHd5T2pNemZEY3hPbkl5Y1hKaWF6RXZNV0p3YmpGd01YQXZjREp3TVc1d01TOVFjREp3TXk4eFVERlFVRE12TWxBeVRrNVFMekpDTWxCUU1TOVNNVUpSVWpGTE1TQmlJQzBnTFNBd0lERTN8NTA6Y2F1c2FsLXByb3Bvc2l0aW9uOmNhcHR1cmUtZXhjbHVzaW9uLW1vdmUtb3JkZXI6djF8NjQ6YWQ4ZTkzOWQ4NjAwM2UwMmEyYzc0MjJkZGE3OGI3ZDFiNzJhMjhiOTQ5NTM5ODQ4NzBmZTVmNGVmN2JlZGM5Y3w2NDo4OTcwOWExZmIzODAyOTlkZWRhZGYyMzA4MzNiY2I2MjZjZWEyNDViZDNiOWRlNTZhYzEyYTkyMjBlNDM1NDYxfDY0OmMzNzgxZjU3MDA1NTkyNjVjYzgzOGVmMmU2MTRlNmU3OTE3YzRmMmJkZDkwOGMyNzQzZTM5YTdlMTdlYjZhNDZ8NjY6WzM3YjFhOGI0NDg4MjZhMjMxMjNlMDRiNTI4YzIwZjJkODk3Yzc4NzQxMTU2NmEwNTg1MGQ2MGNkMzE4ZDA3MmZd",
+        "occurrence_relations" : [ {
           "subject_occurrence" : {
             "occurrence_id" : "move-review:c79f86ec5d00fe978ad4b919d6a9be94cb5610c2d8a45d8b5238cb8a859abd58:32:b2b4:evidence:transition:MjozMnw3MDpyMnFyYmsxLzFicG4xcDFwL3AycDFucDEvUHAycDMvM1BQMy8yUDJOTlAvMVBCMlBQMS9SMUJRUjFLMSB3IC0gLSAxIDE3fDQ6YjJiNHwyOjMzfDcxOnIycXJiazEvMWJwbjFwMXAvcDJwMW5wMS9QcDJwMy8xUDFQUDMvMlAyTk5QLzJCMlBQMS9SMUJRUjFLMSBiIC0gLSAwIDE3",
             "line_owner_evidence_id" : "move-review:c79f86ec5d00fe978ad4b919d6a9be94cb5610c2d8a45d8b5238cb8a859abd58:32:b2b4:evidence:line:MjEwOm1vdmUtcmV2aWV3OmM3OWY4NmVjNWQwMGZlOTc4YWQ0YjkxOWQ2YTliZTk0Y2I1NjEwYzJkOGE0NWQ4YjUyMzhjYjhhODU5YWJkNTg6MzI6YjJiNDpwb3NpdGlvbjpOanBpWldadmNtVjhNam96TW53M01EcHlNbkZ5WW1zeEx6RmljRzR4Y0RGd0wzQXljREZ1Y0RFdlVIQXljRE12TTFCUU15OHlVREpPVGxBdk1WQkNNbEJRTVM5U01VSlJVakZMTVNCM0lDMGdMU0F4SURFM3wyOjMyfDU6V2hpdGV8NzA6cjJxcmJrMS8xYnBuMXAxcC9wMnAxbnAxL1BwMnAzLzNQUDMvMlAyTk5QLzFQQjJQUDEvUjFCUVIxSzEgdyAtIC0gMSAxN3w0OmIyYjQ",
@@ -85,7 +84,7 @@
               "ply" : 33
             }
           },
-          "proof_kind" : "capture_exclusion_move_order",
+          "relation_kind" : "capture_exclusion_move_order",
           "proof" : {
             "source_evidence_id" : "move-review:c79f86ec5d00fe978ad4b919d6a9be94cb5610c2d8a45d8b5238cb8a859abd58:32:b2b4:evidence:causal-proof:causal-proposition:capture-exclusion-move-order:v1:ad8e939d86003e02a2c7422dda78b7d1b72a28b94953984870fe5f4ef7bedc9c:89709a1fb380299dedadf230833bcb626cea245bd3b9de56ac12a9220e435461:c3781f5700559265cc838ef2e614e6e7917c4f2bdd908c2743e39a7e17eb6a46:37b1a8b448826a23123e04b528c20f2d897c787411566a05850d60cd318d072f:subject:move-review:c79f86ec5d00fe978ad4b919d6a9be94cb5610c2d8a45d8b5238cb8a859abd58:32:b2b4:evidence:transition:MjozMnw3MDpyMnFyYmsxLzFicG4xcDFwL3AycDFucDEvUHAycDMvM1BQMy8yUDJOTlAvMVBCMlBQMS9SMUJRUjFLMSB3IC0gLSAxIDE3fDQ6YjJiNHwyOjMzfDcxOnIycXJiazEvMWJwbjFwMXAvcDJwMW5wMS9QcDJwMy8xUDFQUDMvMlAyTk5QLzJCMlBQMS9SMUJRUjFLMSBiIC0gLSAwIDE3",
             "semantic_id" : "ad8e939d86003e02a2c7422dda78b7d1b72a28b94953984870fe5f4ef7bedc9c",

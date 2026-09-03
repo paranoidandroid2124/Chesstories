@@ -25,7 +25,7 @@ FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 
 def _produced_occurrence_commentary(
-    fixture_name: str = "occurrence-explanation-produced.json",
+    fixture_name: str = "occurrence-relation-produced.json",
 ) -> dict[str, object]:
     produced = json.loads(
         (
@@ -39,34 +39,34 @@ def _produced_occurrence_commentary(
         review["commentary"]
         for review in produced["result"]["selected_move_reviews"]
         if "commentary" in review
-        and review["commentary"].get("occurrence_explanations")
+        and review["commentary"].get("occurrence_relations")
     ]
     if len(commentaries) != 1:
         raise AssertionError("Scala producer fixture must contain one occurrence commentary")
     return copy.deepcopy(commentaries[0])
 
 
-def _produced_occurrence_explanation(
-    fixture_name: str = "occurrence-explanation-produced.json",
+def _produced_occurrence_relation(
+    fixture_name: str = "occurrence-relation-produced.json",
 ) -> dict[str, object]:
     commentary = _produced_occurrence_commentary(fixture_name)
-    explanations = commentary["occurrence_explanations"]
-    if len(explanations) != 1:
-        raise AssertionError("Scala producer fixture must contain one occurrence explanation")
-    return explanations[0]
+    relations = commentary["occurrence_relations"]
+    if len(relations) != 1:
+        raise AssertionError("Scala producer fixture must contain one occurrence relation")
+    return relations[0]
 
 
-def _occurrence_explanation_errors(
+def _occurrence_relation_errors(
     registry: SchemaRegistry,
     move_path: Path,
     candidate: dict[str, object],
 ) -> list[str]:
     errors: list[str] = []
-    explanation_schema = registry.load(move_path)["$defs"]["occurrenceExplanation"]
-    registry._validate(candidate, explanation_schema, move_path, "$", errors)
+    relation_schema = registry.load(move_path)["$defs"]["occurrenceRelation"]
+    registry._validate(candidate, relation_schema, move_path, "$", errors)
     if not errors:
-        registry._validate_occurrence_explanation_transport(
-            {"primary": {}, "occurrence_explanations": [candidate]},
+        registry._validate_occurrence_relation_transport(
+            {"primary": {}, "occurrence_relations": [candidate]},
             "$",
             errors,
         )
@@ -87,7 +87,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             response_jsonl_length=0,
         )
 
-    def test_public_l2_schema_exposes_only_occurrence_typed_proof_families(self) -> None:
+    def test_public_l2_schema_exposes_only_occurrence_typed_relation_families(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         schema = registry.load(move_path)
@@ -108,17 +108,36 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            definitions["occurrenceExplanation"]["oneOf"],
+            definitions["occurrenceRelation"]["oneOf"],
             [
-                {"$ref": "#/$defs/uniqueCheckReplyOccurrenceExplanation"},
-                {"$ref": "#/$defs/soleRecapturerOccurrenceExplanation"},
-                {"$ref": "#/$defs/vacatedGateOccurrenceExplanation"},
-                {"$ref": "#/$defs/squareReleaseRouteOccurrenceExplanation"},
-                {"$ref": "#/$defs/captureExclusionOccurrenceExplanation"},
-                {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceExplanation"},
-                {"$ref": "#/$defs/passedPawnProgressOccurrenceExplanation"},
+                {"$ref": "#/$defs/uniqueCheckReplyOccurrenceRelation"},
+                {"$ref": "#/$defs/soleRecapturerOccurrenceRelation"},
+                {"$ref": "#/$defs/vacatedGateOccurrenceRelation"},
+                {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
+                {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
+                {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"},
+                {"$ref": "#/$defs/passedPawnProgressOccurrenceRelation"},
             ],
         )
+        serialized = json.dumps(definitions, sort_keys=True)
+        self.assertNotIn("cause_evidence_id", serialized)
+        for retired_definition in (
+            "occurrenceExplanation",
+            "uniqueCheckReplyOccurrenceExplanation",
+            "soleRecapturerOccurrenceExplanation",
+            "vacatedGateOccurrenceExplanation",
+            "squareReleaseRouteOccurrenceExplanation",
+            "captureExclusionOccurrenceExplanation",
+            "relocationEnablesRecaptureOccurrenceExplanation",
+            "passedPawnProgressOccurrenceExplanation",
+            "explanationSubjectOccurrence",
+            "explanationSubjectPosition",
+            "occurrenceExplanationBranch",
+            "occurrenceExplanationRelationPremiseUse",
+            "occurrenceExplanationClosureUse",
+            "occurrenceExplanationPosition",
+        ):
+            self.assertNotIn(retired_definition, definitions)
 
     def test_ready_response_rejects_retired_explanation_properties(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
@@ -131,61 +150,66 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         }
         registry.validate_document(ready, move_path, label="producer assessment commentary")
 
-        for retired_field in ("causal_explanations", "requested_explanations"):
+        for retired_field in (
+            "causal_explanations",
+            "requested_explanations",
+            "occurrence_explanations",
+        ):
             retired = copy.deepcopy(ready)
             retired["move_commentary"][retired_field] = []
             with self.subTest(retired_field=retired_field), self.assertRaises(ContractError):
                 registry.validate_document(retired, move_path, label="retired explanation lane")
 
-    def test_seven_occurrence_typed_proof_contracts_are_closed_and_distinct(self) -> None:
+    def test_seven_occurrence_relation_contracts_are_closed_and_distinct(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
         contracts = {
-            "uniqueCheckReplyOccurrenceExplanation": (
+            "uniqueCheckReplyOccurrenceRelation": (
                 "unique_check_reply_defender_displacement_before_capture",
                 "occurrenceUniqueCheckReplyProof",
             ),
-            "soleRecapturerOccurrenceExplanation": (
+            "soleRecapturerOccurrenceRelation": (
                 "sole_recapturer_removal_before_target_capture",
                 "occurrenceSoleRecapturerProof",
             ),
-            "vacatedGateOccurrenceExplanation": (
+            "vacatedGateOccurrenceRelation": (
                 "vacated_gate_enables_unrecapturable_slider_capture",
                 "occurrenceVacatedGateProof",
             ),
-            "squareReleaseRouteOccurrenceExplanation": (
+            "squareReleaseRouteOccurrenceRelation": (
                 "square_release_route",
                 "occurrenceSquareReleaseRouteProof",
             ),
-            "captureExclusionOccurrenceExplanation": (
+            "captureExclusionOccurrenceRelation": (
                 "capture_exclusion_move_order",
                 "occurrenceCaptureExclusionMoveOrderProof",
             ),
-            "relocationEnablesRecaptureOccurrenceExplanation": (
+            "relocationEnablesRecaptureOccurrenceRelation": (
                 "relocation_enables_recapture",
                 "occurrenceRelocationEnablesRecaptureProof",
             ),
-            "passedPawnProgressOccurrenceExplanation": (
+            "passedPawnProgressOccurrenceRelation": (
                 "passed_pawn_progress_realized_after_only_legal_reply",
                 "occurrencePassedPawnProgressProof",
             ),
         }
 
-        for outer_name, (proof_kind, proof_definition) in contracts.items():
+        for outer_name, (relation_kind, proof_definition) in contracts.items():
             with self.subTest(contract=outer_name):
                 outer = definitions[outer_name]
                 self.assertFalse(outer["additionalProperties"])
                 self.assertEqual(
                     set(outer["required"]),
                     {
-                        "cause_evidence_id",
                         "subject_occurrence",
-                        "proof_kind",
+                        "relation_kind",
                         "proof",
                     },
                 )
-                self.assertEqual(outer["properties"]["proof_kind"], {"const": proof_kind})
+                self.assertEqual(
+                    outer["properties"]["relation_kind"], {"const": relation_kind}
+                )
                 self.assertEqual(
                     outer["properties"]["proof"],
                     {"$ref": f"#/$defs/{proof_definition}"},
@@ -206,14 +230,14 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
     def test_relocation_producer_fixture_retains_complete_object_continuity(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
-        explanation = _produced_occurrence_explanation(
+        relation = _produced_occurrence_relation(
             "relocation-enables-recapture-produced.json"
         )
         self.assertEqual(
-            _occurrence_explanation_errors(registry, move_path, explanation), []
+            _occurrence_relation_errors(registry, move_path, relation), []
         )
-        self.assertEqual(explanation["proof_kind"], "relocation_enables_recapture")
-        proof = explanation["proof"]
+        self.assertEqual(relation["relation_kind"], "relocation_enables_recapture")
+        proof = relation["proof"]
         self.assertEqual(len(proof["proof_paths"]), 1)
         path = proof["proof_paths"][0]
         continuity = [
@@ -432,17 +456,17 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             detach_recapture_square,
             replace_tracked_responder_seed,
         ):
-            candidate = copy.deepcopy(explanation)
+            candidate = copy.deepcopy(relation)
             mutate(candidate)
             with self.subTest(mutation=mutate.__name__):
                 self.assertTrue(
-                    _occurrence_explanation_errors(registry, move_path, candidate)
+                    _occurrence_relation_errors(registry, move_path, candidate)
                 )
 
     def test_occurrence_transport_rejects_only_broken_generic_wiring(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
-        explanation = _produced_occurrence_explanation()
+        relation = _produced_occurrence_relation()
         proof_key = "proof"
 
         mutations = (
@@ -466,35 +490,34 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             ][0]["position"].update(fen=FEN),
         )
         for index, mutate in enumerate(mutations):
-            candidate = copy.deepcopy(explanation)
+            candidate = copy.deepcopy(relation)
             mutate(candidate)
             with self.subTest(wiring_mutation=index):
                 self.assertTrue(
-                    _occurrence_explanation_errors(registry, move_path, candidate)
+                    _occurrence_relation_errors(registry, move_path, candidate)
                 )
 
-    def test_occurrence_transport_rejects_duplicate_owner_and_proof_occurrence(self) -> None:
+    def test_occurrence_transport_rejects_duplicate_relation_occurrence(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
-        explanation = _produced_occurrence_explanation()
-        duplicate = copy.deepcopy(explanation)
+        relation = _produced_occurrence_relation()
+        duplicate = copy.deepcopy(relation)
         errors: list[str] = []
-        registry._validate_occurrence_explanation_transport(
+        registry._validate_occurrence_relation_transport(
             {
                 "primary": {},
-                "occurrence_explanations": [explanation, duplicate],
+                "occurrence_relations": [relation, duplicate],
             },
             "$",
             errors,
         )
-        self.assertTrue(any("duplicate occurrence Cause owner" in error for error in errors))
-        self.assertTrue(any("duplicate typed proof occurrence" in error for error in errors))
+        self.assertTrue(any("duplicate typed relation occurrence" in error for error in errors))
 
-    def test_occurrence_explanations_are_optional_but_nonempty_when_present(self) -> None:
+    def test_occurrence_relations_are_optional_but_nonempty_when_present(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         move_commentary = registry.load(move_path)["$defs"]["moveCommentary"]
-        occurrence_property = move_commentary["properties"]["occurrence_explanations"]
-        self.assertNotIn("occurrence_explanations", move_commentary["required"])
+        occurrence_property = move_commentary["properties"]["occurrence_relations"]
+        self.assertNotIn("occurrence_relations", move_commentary["required"])
         errors: list[str] = []
         registry._validate([], occurrence_property, move_path, "$", errors)
         self.assertTrue(errors)

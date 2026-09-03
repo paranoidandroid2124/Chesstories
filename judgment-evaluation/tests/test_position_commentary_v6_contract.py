@@ -37,9 +37,9 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
         self.assertEqual(selected[0]["selection"]["roles"], ["best", "played"])
         self.assertEqual(selected[0]["commentary"]["primary"]["kind"], "best_choice")
 
-    def test_producer_occurrence_explanation_fixtures_match_both_public_contracts(self) -> None:
+    def test_producer_occurrence_relation_fixtures_match_both_public_contracts(self) -> None:
         for fixture_name in (
-            "occurrence-explanation-produced.json",
+            "occurrence-relation-produced.json",
             "relocation-enables-recapture-produced.json",
         ):
             with self.subTest(fixture=fixture_name):
@@ -54,12 +54,12 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
                     review["commentary"]
                     for review in selected
                     if "commentary" in review
-                    and "occurrence_explanations" in review["commentary"]
+                    and "occurrence_relations" in review["commentary"]
                 ]
                 self.assertEqual(len(commentaries), 1)
                 commentary = commentaries[0]
                 self.assertNotIn("causal_explanations", commentary)
-                self.assertTrue(commentary["occurrence_explanations"])
+                self.assertTrue(commentary["occurrence_relations"])
                 self.registry.validate_document(
                     {
                         "schema_version": "chesstory.move-meaning.response.v6",
@@ -70,7 +70,7 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
                     / "schemas"
                     / "public-v6"
                     / "move-meaning-response.schema.json",
-                    label=f"Scala-produced occurrence explanation: {fixture_name}",
+                    label=f"Scala-produced occurrence relation: {fixture_name}",
                 )
 
     @staticmethod

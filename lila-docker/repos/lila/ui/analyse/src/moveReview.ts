@@ -90,7 +90,7 @@ export interface MoveReviewCandidate {
   review: MoveReviewCandidateReview;
 }
 
-export type MoveReviewProofKind =
+export type MoveReviewRelationKind =
   | 'unique_check_reply_defender_displacement_before_capture'
   | 'sole_recapturer_removal_before_target_capture'
   | 'vacated_gate_enables_unrecapturable_slider_capture'
@@ -698,34 +698,33 @@ export type MoveReviewOccurrenceProof =
   | MoveReviewRelocationEnablesRecaptureProof
   | MoveReviewPassedPawnProgressProof;
 
-interface MoveReviewOccurrenceExplanationBase {
+interface MoveReviewOccurrenceRelationBase {
   id: string;
-  causeEvidenceId: string;
   subjectOccurrence: MoveReviewSubjectOccurrence;
 }
 
-export type MoveReviewOccurrenceExplanation = MoveReviewOccurrenceExplanationBase &
+export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase &
   (
     | {
-        proofKind: 'unique_check_reply_defender_displacement_before_capture';
+        relationKind: 'unique_check_reply_defender_displacement_before_capture';
         proof: MoveReviewUniqueCheckReplyProof;
       }
     | {
-        proofKind: 'sole_recapturer_removal_before_target_capture';
+        relationKind: 'sole_recapturer_removal_before_target_capture';
         proof: MoveReviewSoleRecapturerProof;
       }
     | {
-        proofKind: 'vacated_gate_enables_unrecapturable_slider_capture';
+        relationKind: 'vacated_gate_enables_unrecapturable_slider_capture';
         proof: MoveReviewVacatedGateProof;
       }
-    | { proofKind: 'square_release_route'; proof: MoveReviewSquareReleaseProof }
-    | { proofKind: 'capture_exclusion_move_order'; proof: MoveReviewCaptureExclusionProof }
+    | { relationKind: 'square_release_route'; proof: MoveReviewSquareReleaseProof }
+    | { relationKind: 'capture_exclusion_move_order'; proof: MoveReviewCaptureExclusionProof }
     | {
-        proofKind: 'relocation_enables_recapture';
+        relationKind: 'relocation_enables_recapture';
         proof: MoveReviewRelocationEnablesRecaptureProof;
       }
     | {
-        proofKind: 'passed_pawn_progress_realized_after_only_legal_reply';
+        relationKind: 'passed_pawn_progress_realized_after_only_legal_reply';
         proof: MoveReviewPassedPawnProgressProof;
       }
   );
@@ -737,7 +736,7 @@ export type MoveReviewCandidateReview =
   | {
       kind: 'move-verdict';
       core: MoveReviewCore;
-      explanations: MoveReviewOccurrenceExplanation[];
+      relations: MoveReviewOccurrenceRelation[];
       comparisonProof?: MoveReviewProof;
     }
   | { kind: 'single-candidate-insight'; proof: MoveReviewProof }
@@ -868,7 +867,7 @@ export interface MoveReviewCopy {
   played: string;
   alternative: string;
   candidateMoves: string;
-  noVerifiedExplanation: string;
+  noOccurrenceRelations: string;
   lineInsight: string;
   forcedSingleMove: string;
   candidateUnavailable: string;
@@ -883,7 +882,7 @@ export interface MoveReviewCopy {
   actualMove: string;
   analyzedAlternative: string;
   analysisContinuation: string;
-  familyLabels: Record<MoveReviewProofKind, string>;
+  familyLabels: Record<MoveReviewRelationKind, string>;
   structureLabels: {
     participants: string;
     laterConsumer: string;
@@ -904,7 +903,6 @@ export interface MoveReviewCopy {
     reply: string;
     yes: string;
     no: string;
-    causeEvidenceId: string;
     proofOccurrenceId: string;
     subjectOccurrenceId: string;
     semanticId: string;
@@ -982,7 +980,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     played: '둔 수',
     alternative: '대안',
     candidateMoves: '후보 수',
-    noVerifiedExplanation: '판정은 가능하지만, 기준 수와의 차이를 설명할 원인은 검증되지 않았습니다.',
+    noOccurrenceRelations: '판정은 가능하지만, 전달된 occurrence 관계는 없습니다.',
     lineInsight: '검증된 후보 수순',
     forcedSingleMove: '강제된 단일 수',
     candidateUnavailable: '이 후보 수의 분석이 보류되었습니다.',
@@ -1035,11 +1033,10 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       reply: '성립한 응수',
       yes: '예',
       no: '아니요',
-      causeEvidenceId: '원인 근거 ID',
       proofOccurrenceId: '증명 occurrence ID',
       subjectOccurrenceId: '대상 occurrence ID',
       semanticId: 'semantic ID',
-      sourceEvidenceId: '출처 근거 ID',
+      sourceEvidenceId: '관계 출처 근거 ID',
       dependencyFingerprint: '의존 지문',
       branchId: '분기 ID',
       lineId: '수순 ID',
@@ -1189,8 +1186,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     played: 'Played',
     alternative: 'Alternative',
     candidateMoves: 'Candidate moves',
-    noVerifiedExplanation:
-      'The verdict is available, but no cause for the difference from the reference move was verified.',
+    noOccurrenceRelations: 'The verdict is available, but no occurrence relation was provided.',
     lineInsight: 'Verified candidate line',
     forcedSingleMove: 'Forced single move',
     candidateUnavailable: 'Analysis was withheld for this candidate.',
@@ -1245,11 +1241,10 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       reply: 'Certified reply',
       yes: 'Yes',
       no: 'No',
-      causeEvidenceId: 'Cause evidence ID',
       proofOccurrenceId: 'Proof occurrence ID',
       subjectOccurrenceId: 'Subject occurrence ID',
       semanticId: 'Semantic ID',
-      sourceEvidenceId: 'Source evidence ID',
+      sourceEvidenceId: 'Relation source evidence ID',
       dependencyFingerprint: 'Dependency fingerprint',
       branchId: 'Branch ID',
       lineId: 'Line ID',
@@ -2007,7 +2002,7 @@ function projectCommentary(
 ): MoveReviewCandidateReview | undefined {
   if (
     !isObject(value) ||
-    !hasOnlyKeys(value, ['primary', 'occurrence_explanations'], ['primary']) ||
+    !hasOnlyKeys(value, ['primary', 'occurrence_relations'], ['primary']) ||
     !isObject(value.primary)
   )
     return;
@@ -2095,8 +2090,8 @@ function projectCommentary(
   } else return;
   const bestUci = primary.kind === 'best_choice' ? reviewedEndpoint?.moves[0] : referenceEndpoint?.moves[0];
   if (!bestUci || !verdictCode || !referenceEndpoint || !reviewedEndpoint) return;
-  const explanations = projectOccurrenceExplanations(value.occurrence_explanations, move, subject);
-  if (!explanations) return;
+  const relations = projectOccurrenceRelations(value.occurrence_relations, move, subject);
+  if (!relations) return;
   const comparisonProof = buildProof(`pv:${move}`, subject.before.fen, reviewedEndpoint.moves, []);
   const coreFields: MoveReviewCoreFields = {
     verdictRef,
@@ -2114,145 +2109,127 @@ function projectCommentary(
   return {
     kind: 'move-verdict',
     core,
-    explanations,
+    relations,
     ...(comparisonProof ? { comparisonProof } : {}),
   };
 }
 
-function projectOccurrenceExplanations(
+function projectOccurrenceRelations(
   value: unknown,
   candidateMove: Uci,
   subject: MoveReviewSubject,
-): MoveReviewOccurrenceExplanation[] | undefined {
+): MoveReviewOccurrenceRelation[] | undefined {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length < 1) return;
-  const explanations = value.map(item => projectOccurrenceExplanation(item, candidateMove, subject));
-  if (!explanations.every((item): item is MoveReviewOccurrenceExplanation => !!item)) return;
-  const pathOccurrenceIds = explanations.flatMap(explanation =>
-    moveReviewOccurrenceProofPaths(explanation).map(path => path.pathOccurrenceId),
-  );
-  return unique(explanations.map(item => item.causeEvidenceId)) &&
-    unique(explanations.map(item => item.proof.occurrenceId)) &&
-    unique(pathOccurrenceIds)
-    ? explanations
-    : undefined;
+  return value.flatMap(item => {
+    const relation = projectOccurrenceRelation(item, candidateMove, subject);
+    return relation ? [relation] : [];
+  });
 }
 
-function projectOccurrenceExplanation(
+function projectOccurrenceRelation(
   value: unknown,
   candidateMove: Uci,
   subject: MoveReviewSubject,
-): MoveReviewOccurrenceExplanation | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ['cause_evidence_id', 'subject_occurrence', 'proof_kind', 'proof'])
-  )
-    return;
-  const causeEvidenceId = nonEmptyWireString(value.cause_evidence_id);
-  const proofKind = occurrenceProofKind(value.proof_kind);
+): MoveReviewOccurrenceRelation | undefined {
+  if (!isObject(value) || !hasExactKeys(value, ['subject_occurrence', 'relation_kind', 'proof'])) return;
+  const relationKind = occurrenceRelationKind(value.relation_kind);
   const subjectOccurrence = projectSubjectOccurrence(value.subject_occurrence, candidateMove, subject);
-  if (!causeEvidenceId || !proofKind || !subjectOccurrence) return;
+  if (!relationKind || !subjectOccurrence) return;
 
-  switch (proofKind) {
+  switch (relationKind) {
     case 'unique_check_reply_defender_displacement_before_capture': {
       const proof = projectUniqueCheckReplyProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
     case 'sole_recapturer_removal_before_target_capture': {
       const proof = projectSoleRecapturerProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
     case 'vacated_gate_enables_unrecapturable_slider_capture': {
       const proof = projectVacatedGateProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
     case 'square_release_route': {
       const proof = projectSquareReleaseProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
     case 'capture_exclusion_move_order': {
       const proof = projectCaptureExclusionProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
     case 'relocation_enables_recapture': {
       const proof = projectRelocationEnablesRecaptureProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
     case 'passed_pawn_progress_realized_after_only_legal_reply': {
       const proof = projectPassedPawnProgressProof(value.proof);
-      const explanation = proof
+      const relation = proof
         ? {
-            id: occurrenceExplanationId(proof.occurrenceId),
-            causeEvidenceId,
+            id: occurrenceRelationId(proof.sourceEvidenceId),
             subjectOccurrence,
-            proofKind,
+            relationKind,
             proof,
           }
         : undefined;
-      return explanation && occurrenceProofOwnsSubject(explanation) ? explanation : undefined;
+      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
     }
   }
 }
 
-function occurrenceExplanationId(proofOccurrenceId: string): string {
-  return `occurrence-explanation-${proofOccurrenceId}`;
+function occurrenceRelationId(sourceEvidenceId: string): string {
+  return `occurrence-relation-${sourceEvidenceId}`;
 }
 
-function occurrenceProofKind(value: unknown): MoveReviewProofKind | undefined {
+function occurrenceRelationKind(value: unknown): MoveReviewRelationKind | undefined {
   return value === 'unique_check_reply_defender_displacement_before_capture' ||
     value === 'sole_recapturer_removal_before_target_capture' ||
     value === 'vacated_gate_enables_unrecapturable_slider_capture' ||
@@ -4716,9 +4693,9 @@ function passedPawnPathsFitBranch(
   );
 }
 
-function occurrenceProofOwnsSubject(explanation: MoveReviewOccurrenceExplanation): boolean {
-  const subject = explanation.subjectOccurrence;
-  const branches = moveReviewOccurrenceBranches(explanation);
+function occurrenceRelationOwnsSubject(relation: MoveReviewOccurrenceRelation): boolean {
+  const subject = relation.subjectOccurrence;
+  const branches = moveReviewOccurrenceBranches(relation);
   const observed = branches.filter(branch => branch.rootProvenance === 'observed_game_root');
   if (observed.length !== 1) return false;
   const branch = observed[0]!;
@@ -4738,93 +4715,91 @@ function occurrenceProofOwnsSubject(explanation: MoveReviewOccurrenceExplanation
   );
 }
 
-export function moveReviewOccurrenceBranches(
-  explanation: MoveReviewOccurrenceExplanation,
-): MoveReviewAnyBranch[] {
-  switch (explanation.proofKind) {
+export function moveReviewOccurrenceBranches(relation: MoveReviewOccurrenceRelation): MoveReviewAnyBranch[] {
+  switch (relation.relationKind) {
     case 'unique_check_reply_defender_displacement_before_capture':
-      return [explanation.proof.displacementBranch, explanation.proof.immediateCaptureBranch];
+      return [relation.proof.displacementBranch, relation.proof.immediateCaptureBranch];
     case 'sole_recapturer_removal_before_target_capture':
-      return [explanation.proof.removalBranch, explanation.proof.immediateCaptureBranch];
+      return [relation.proof.removalBranch, relation.proof.immediateCaptureBranch];
     case 'vacated_gate_enables_unrecapturable_slider_capture':
-      return [explanation.proof.vacatedGateBranch, explanation.proof.retainedGateBranch];
+      return [relation.proof.vacatedGateBranch, relation.proof.retainedGateBranch];
     case 'square_release_route':
-      return [explanation.proof.releasedRouteBranch, explanation.proof.retainedBlockerBranch];
+      return [relation.proof.releasedRouteBranch, relation.proof.retainedBlockerBranch];
     case 'capture_exclusion_move_order':
-      return [explanation.proof.vacatingBranch, explanation.proof.immediateCaptureBranch];
+      return [relation.proof.vacatingBranch, relation.proof.immediateCaptureBranch];
     case 'relocation_enables_recapture':
-      return [explanation.proof.relocatedResponderBranch, explanation.proof.retainedResponderBranch];
+      return [relation.proof.relocatedResponderBranch, relation.proof.retainedResponderBranch];
     case 'passed_pawn_progress_realized_after_only_legal_reply':
-      return explanation.proof.branches;
+      return relation.proof.branches;
   }
 }
 
 export function moveReviewOccurrenceProofPaths(
-  explanation: MoveReviewOccurrenceExplanation,
+  relation: MoveReviewOccurrenceRelation,
 ): MoveReviewAnyProofPath[] {
-  return explanation.proof.proofPaths;
+  return relation.proof.proofPaths;
 }
 
 export function moveReviewOccurrenceBranchProof(
-  explanation: MoveReviewOccurrenceExplanation,
+  relation: MoveReviewOccurrenceRelation,
   branchIndex: number,
 ): MoveReviewProof | undefined {
-  const branch = moveReviewOccurrenceBranches(explanation)[branchIndex];
+  const branch = moveReviewOccurrenceBranches(relation)[branchIndex];
   if (!branch) return;
   const annotations: MoveReviewAnnotation[] =
-    explanation.proofKind === 'relocation_enables_recapture'
+    relation.relationKind === 'relocation_enables_recapture'
       ? branchIndex === 0
         ? [
             {
-              atPly: explanation.proof.relocation.stepIndex + 1,
+              atPly: relation.proof.relocation.stepIndex + 1,
               shape: {
                 kind: 'arrow',
-                orig: explanation.proof.relocation.movement.from,
-                dest: explanation.proof.relocation.movement.to,
+                orig: relation.proof.relocation.movement.from,
+                dest: relation.proof.relocation.movement.to,
                 brush: 'blue',
               },
             },
             {
-              atPly: explanation.proof.targetCapture.relocatedStepIndex + 1,
+              atPly: relation.proof.targetCapture.relocatedStepIndex + 1,
               shape: {
                 kind: 'arrow',
-                orig: explanation.proof.targetCapture.movement.from,
-                dest: explanation.proof.targetCapture.movement.to,
+                orig: relation.proof.targetCapture.movement.from,
+                dest: relation.proof.targetCapture.movement.to,
                 brush: 'red',
               },
             },
             {
-              atPly: explanation.proof.relocatedResponderRecapture.stepIndex + 1,
+              atPly: relation.proof.relocatedResponderRecapture.stepIndex + 1,
               shape: {
                 kind: 'arrow',
-                orig: explanation.proof.relocatedResponderRecapture.movement.from,
-                dest: explanation.proof.relocatedResponderRecapture.movement.to,
+                orig: relation.proof.relocatedResponderRecapture.movement.from,
+                dest: relation.proof.relocatedResponderRecapture.movement.to,
                 brush: 'green',
               },
             },
           ]
         : [
             {
-              atPly: explanation.proof.targetCapture.retainedStepIndex + 1,
+              atPly: relation.proof.targetCapture.retainedStepIndex + 1,
               shape: {
                 kind: 'arrow',
-                orig: explanation.proof.targetCapture.movement.from,
-                dest: explanation.proof.targetCapture.movement.to,
+                orig: relation.proof.targetCapture.movement.from,
+                dest: relation.proof.targetCapture.movement.to,
                 brush: 'red',
               },
             },
             {
-              atPly: explanation.proof.retainedOtherRecapture.stepIndex + 1,
+              atPly: relation.proof.retainedOtherRecapture.stepIndex + 1,
               shape: {
                 kind: 'arrow',
-                orig: explanation.proof.retainedOtherRecapture.movement.from,
-                dest: explanation.proof.retainedOtherRecapture.movement.to,
+                orig: relation.proof.retainedOtherRecapture.movement.from,
+                dest: relation.proof.retainedOtherRecapture.movement.to,
                 brush: 'green',
               },
             },
           ]
       : [];
-  return proofFromOccurrenceSteps(explanation.id + '-branch-' + branchIndex, branch.steps, annotations);
+  return proofFromOccurrenceSteps(relation.id + '-branch-' + branchIndex, branch.steps, annotations);
 }
 
 export function moveReviewProofById(
@@ -4835,9 +4810,9 @@ export function moveReviewProofById(
     return review.proof.id === proofId ? review.proof : undefined;
   if (review.kind !== 'move-verdict') return;
   if (review.comparisonProof?.id === proofId) return review.comparisonProof;
-  for (const explanation of review.explanations)
-    for (const [index] of moveReviewOccurrenceBranches(explanation).entries()) {
-      const proof = moveReviewOccurrenceBranchProof(explanation, index);
+  for (const relation of review.relations)
+    for (const [index] of moveReviewOccurrenceBranches(relation).entries()) {
+      const proof = moveReviewOccurrenceBranchProof(relation, index);
       if (proof?.id === proofId) return proof;
     }
   return;

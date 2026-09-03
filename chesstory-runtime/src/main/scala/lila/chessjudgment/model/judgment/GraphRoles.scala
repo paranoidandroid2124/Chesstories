@@ -46,4 +46,3 @@ enum EvidenceLayer:
   case PassedPawnResultEvent
   case CandidateComparison
   case RelativeAssessment
-  case OccurrenceExplanation

@@ -230,10 +230,10 @@ object RuntimeProtocol:
               "runner_up_endpoint" -> endpointJson(candidate.evaluation, comparison.mover)
             )
           )
-      val occurrenceExplanations = packet.occurrenceExplanations.map(occurrenceExplanationJson)
+      val occurrenceRelations = packet.occurrenceRelations.map(occurrenceRelationJson)
       base ++ Option
-        .when(occurrenceExplanations.nonEmpty)(
-          Json.obj("occurrence_explanations" -> occurrenceExplanations)
+        .when(occurrenceRelations.nonEmpty)(
+          Json.obj("occurrence_relations" -> occurrenceRelations)
         )
         .getOrElse(Json.obj())
 
@@ -282,60 +282,54 @@ object RuntimeProtocol:
             "move_ucis" -> moveUcis.toList.map(EvidenceRef.normalizeMove).sorted
           )
 
-    private def occurrenceExplanationJson(
-        certified: CertifiedOccurrenceExplanation
+    private def occurrenceRelationJson(
+        proof: OccurrenceRelationProof
     ): JsObject =
-      certified.rootOwnedProof match
-        case proof: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture =>
+      val subject = proof.subjectOccurrence
+      proof match
+        case proof: OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "unique_check_reply_defender_displacement_before_capture",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "unique_check_reply_defender_displacement_before_capture",
             "proof" ->
               uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture =>
+        case proof: OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "sole_recapturer_removal_before_target_capture",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "sole_recapturer_removal_before_target_capture",
             "proof" ->
               soleRecapturerRemovalBeforeTargetCaptureProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture =>
+        case proof: OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "vacated_gate_enables_unrecapturable_slider_capture",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "vacated_gate_enables_unrecapturable_slider_capture",
             "proof" ->
               vacatedGateEnablesUnrecapturableSliderCaptureProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.SquareReleaseRoute =>
+        case proof: OccurrenceRelationProof.SquareReleaseRoute =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "square_release_route",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "square_release_route",
             "proof" -> squareReleaseRouteProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.CaptureExclusionMoveOrder =>
+        case proof: OccurrenceRelationProof.CaptureExclusionMoveOrder =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "capture_exclusion_move_order",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "capture_exclusion_move_order",
             "proof" -> captureExclusionMoveOrderProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.RelocationEnablesRecapture =>
+        case proof: OccurrenceRelationProof.RelocationEnablesRecapture =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "relocation_enables_recapture",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "relocation_enables_recapture",
             "proof" -> relocationEnablesRecaptureProofJson(proof)
           )
-        case proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
+        case proof: OccurrenceRelationProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
           Json.obj(
-            "cause_evidence_id" -> certified.causeEvidence.id,
-            "subject_occurrence" -> explanationSubjectJson(certified.subject),
-            "proof_kind" -> "passed_pawn_progress_realized_after_only_legal_reply",
+            "subject_occurrence" -> relationSubjectJson(subject),
+            "relation_kind" -> "passed_pawn_progress_realized_after_only_legal_reply",
             "proof" ->
               passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(proof)
           )
@@ -496,7 +490,7 @@ object RuntimeProtocol:
       )
 
     private def uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson(
-        proof: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture
+        proof: OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -521,7 +515,7 @@ object RuntimeProtocol:
       )
 
     private def soleRecapturerRemovalBeforeTargetCaptureProofJson(
-        proof: RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture
+        proof: OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -546,7 +540,7 @@ object RuntimeProtocol:
       )
 
     private def vacatedGateEnablesUnrecapturableSliderCaptureProofJson(
-        proof: RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture
+        proof: OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -569,7 +563,7 @@ object RuntimeProtocol:
       )
 
     private def squareReleaseRouteProofJson(
-        proof: RootOwnedEffectProof.SquareReleaseRoute
+        proof: OccurrenceRelationProof.SquareReleaseRoute
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -658,7 +652,7 @@ object RuntimeProtocol:
           )
 
     private def captureExclusionMoveOrderProofJson(
-        proof: RootOwnedEffectProof.CaptureExclusionMoveOrder
+        proof: OccurrenceRelationProof.CaptureExclusionMoveOrder
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -680,7 +674,7 @@ object RuntimeProtocol:
       )
 
     private def relocationEnablesRecaptureProofJson(
-        proof: RootOwnedEffectProof.RelocationEnablesRecapture
+        proof: OccurrenceRelationProof.RelocationEnablesRecapture
     ): JsObject =
       val source = proof.source
       val result = proof.result
@@ -726,7 +720,7 @@ object RuntimeProtocol:
         )
       )
 
-    private def explanationSubjectJson(subject: ExplanationSubjectOccurrence): JsObject =
+    private def relationSubjectJson(subject: ExplanationSubjectOccurrence): JsObject =
       Json.obj(
         "occurrence_id" -> subject.occurrenceId,
         "line_owner_evidence_id" -> subject.lineOwnerEvidenceId,
@@ -745,7 +739,7 @@ object RuntimeProtocol:
       )
 
     private def passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(
-        proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply
+        proof: OccurrenceRelationProof.PassedPawnProgressRealizedAfterOnlyLegalReply
     ): JsObject =
       val source = proof.source
       val result = proof.result

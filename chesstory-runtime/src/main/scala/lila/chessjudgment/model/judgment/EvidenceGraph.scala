@@ -70,177 +70,85 @@ object EvidenceSemanticAnchor:
   def of(kind: EvidenceSemanticAnchorKind, values: String*): EvidenceSemanticAnchor =
     EvidenceSemanticAnchor(kind, values.toList)
 
-/** Exact typed proof owned by one root-causal effect. */
-enum RootOwnedEffectProof:
+/** One exact local relation proof. The proof record is its own authority; no
+  * upper Cause record decides whether it may survive or be projected.
+  */
+enum OccurrenceRelationProof:
   case UniqueCheckReplyDefenderDisplacementBeforeCapture(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence
   )
   case SoleRecapturerRemovalBeforeTargetCapture(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: SoleRecapturerRemovalBeforeTargetCaptureEvidence
   )
   case VacatedGateEnablesUnrecapturableSliderCapture(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: VacatedGateEnablesUnrecapturableSliderCaptureEvidence
   )
   case SquareReleaseRoute(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: SquareReleaseRouteEvidence
   )
   case CaptureExclusionMoveOrder(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: CaptureExclusionMoveOrderEvidence
   )
   case RelocationEnablesRecapture(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: RelocationEnablesRecaptureEvidence
   )
   case PassedPawnProgressRealizedAfterOnlyLegalReply(
-      source: EvidenceRef,
+      override val source: EvidenceRef,
       result: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence
   )
 
-  /** Compact producer-issued identity for one exact proof occurrence. */
-  private[chessjudgment] final def occurrenceIdentity: RootOwnedEffectOccurrenceIdentity =
+  def source: EvidenceRef
+
+  final def subjectOccurrence: ExplanationSubjectOccurrence =
     this match
-      case RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.UniqueCheckReplyDefenderDisplacementBeforeCapture,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyId,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
-      case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyId,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
-      case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.VacatedGateEnablesUnrecapturableSliderCapture,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyId,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
-      case RootOwnedEffectProof.SquareReleaseRoute(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.SquareReleaseRoute,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyId,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
-      case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.CaptureExclusionMoveOrder,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyId,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
-      case RootOwnedEffectProof.RelocationEnablesRecapture(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.RelocationEnablesRecapture,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyId,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
-      case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(source, result) =>
-        RootOwnedEffectOccurrenceIdentity(
-          family = BoundedCausalContractKind.PassedPawnProgressRealizedAfterOnlyLegalReply,
-          sourceEvidenceId = source.id,
-          semanticId = result.semanticId,
-          occurrenceId = result.occurrenceId,
-          dependencyFingerprint = result.dependencyFingerprint,
-          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
-        )
+      case OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) =>
+        result.subjectOccurrence
+      case OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture(_, result) =>
+        result.subjectOccurrence
+      case OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result) =>
+        result.subjectOccurrence
+      case OccurrenceRelationProof.SquareReleaseRoute(_, result) =>
+        result.subjectOccurrence
+      case OccurrenceRelationProof.CaptureExclusionMoveOrder(_, result) =>
+        result.subjectOccurrence
+      case OccurrenceRelationProof.RelocationEnablesRecapture(_, result) =>
+        result.subjectOccurrence
+      case OccurrenceRelationProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result) =>
+        result.subjectOccurrence
 
-private[chessjudgment] final case class RootOwnedEffectOccurrenceIdentity(
-    family: BoundedCausalContractKind,
-    sourceEvidenceId: String,
-    semanticId: String,
-    occurrenceId: String,
-    dependencyFingerprint: String,
-    proofPathOccurrenceIds: List[String]
-):
-  require(sourceEvidenceId.nonEmpty, "an exact L2 proof occurrence requires a source owner")
-  require(semanticId.nonEmpty, "an exact L2 proof occurrence requires a semantic id")
-  require(occurrenceId.nonEmpty, "an exact L2 proof occurrence requires an occurrence id")
-  require(dependencyFingerprint.nonEmpty, "an exact L2 proof occurrence requires a dependency fingerprint")
-  require(
-    proofPathOccurrenceIds.nonEmpty && proofPathOccurrenceIds.distinct.size == proofPathOccurrenceIds.size,
-    "an exact L2 proof occurrence requires distinct owned proof paths"
-  )
-  require(
-    proofPathOccurrenceIds == proofPathOccurrenceIds.sorted,
-    "an exact L2 proof occurrence requires canonical proof-path order"
-  )
+object OccurrenceRelationProof:
+  private[chessjudgment] def fromRecord(
+      record: EvidenceRecord,
+      graph: TypedEvidenceGraph
+  ): Option[OccurrenceRelationProof] =
+    graph.record(record.ref)
+      .filter(registered => registered == record && graph.proofEligible(registered))
+      .flatMap(fromTypedProofRecord)
 
-  private[judgment] def stableKey: String =
-    List(
-      family.semanticNamespace,
-      sourceEvidenceId,
-      semanticId,
-      occurrenceId,
-      dependencyFingerprint,
-      proofPathOccurrenceIds.mkString("[", ",", "]")
-    ).map(RootOwnedEffectOccurrenceIdentity.atom).mkString
-
-  /** Exact chess occurrence independent of the evidence owner id. Used only
-    * to reject a second producer for the same typed truth.
-    */
-  private[judgment] def producerIndependentKey: String =
-    List(
-      family.semanticNamespace,
-      semanticId,
-      occurrenceId,
-      dependencyFingerprint,
-      proofPathOccurrenceIds.mkString("[", ",", "]")
-    ).map(RootOwnedEffectOccurrenceIdentity.atom).mkString
-
-private[chessjudgment] object RootOwnedEffectOccurrenceIdentity:
-  private[judgment] def atom(value: String): String = s"${value.length}:$value"
-
-/** One exact typed proof occurrence prepared for an upper Cause consumer. */
-private[chessjudgment] final case class DirectCauseChannel(
-    rootOwnedProof: RootOwnedEffectProof
-):
-  /** The typed producer's proposition and occurrence identity. */
-  private[chessjudgment] def typedProofIdentity: RootOwnedEffectOccurrenceIdentity =
-    rootOwnedProof.occurrenceIdentity
-
-private[chessjudgment] object DirectCauseChannel:
-  private[chessjudgment] def fromTypedProofRecord(
+  private def fromTypedProofRecord(
       record: EvidenceRecord
-  ): Option[DirectCauseChannel] =
+  ): Option[OccurrenceRelationProof] =
     record match
       case EvidenceRecord(ref, payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(ref, payload)))
+        Some(OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(ref, payload))
       case EvidenceRecord(ref, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(ref, payload)))
+        Some(OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture(ref, payload))
       case EvidenceRecord(ref, payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(ref, payload)))
+        Some(OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture(ref, payload))
       case EvidenceRecord(ref, payload: SquareReleaseRouteEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.SquareReleaseRoute(ref, payload)))
+        Some(OccurrenceRelationProof.SquareReleaseRoute(ref, payload))
       case EvidenceRecord(ref, payload: CaptureExclusionMoveOrderEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.CaptureExclusionMoveOrder(ref, payload)))
+        Some(OccurrenceRelationProof.CaptureExclusionMoveOrder(ref, payload))
       case EvidenceRecord(ref, payload: RelocationEnablesRecaptureEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.RelocationEnablesRecapture(ref, payload)))
+        Some(OccurrenceRelationProof.RelocationEnablesRecapture(ref, payload))
       case EvidenceRecord(ref, payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) =>
-        Some(DirectCauseChannel(RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(ref, payload)))
+        Some(OccurrenceRelationProof.PassedPawnProgressRealizedAfterOnlyLegalReply(ref, payload))
       case _ => None
 
 enum RelationParticipantRole:
@@ -5749,10 +5657,6 @@ final case class RelativeAssessmentEvidence(
     assessment: RelativeMoveAssessment
 ) extends EvidencePayload
 
-private[chessjudgment] final case class OccurrenceExplanationCauseEvidence(
-    cause: OccurrenceExplanationCause
-) extends EvidencePayload
-
 final case class EvidenceRecord(
     ref: EvidenceRef,
     payload: EvidencePayload,
@@ -5784,8 +5688,6 @@ final case class EvidenceRecord(
         List(fact.referenceLine, fact.candidateLine)
       case RelativeAssessmentEvidence(assessment) =>
         List(assessment.reference.ref, assessment.candidate.ref)
-      case OccurrenceExplanationCauseEvidence(cause) =>
-        List(cause.subject.line)
       case _ =>
         Nil
   def referencesLine(line: LineNodeRef): Boolean =
@@ -6250,44 +6152,7 @@ final class TypedEvidenceGraph private (
         case RelativeAssessmentEvidence(assessment) =>
           exactAuthority(record, EvidenceProducer.RelativeMoveProducer, EvidenceLayer.RelativeAssessment) &&
             record.ref == assessment.evidence && record.ref.line.contains(assessment.candidate.ref)
-        case OccurrenceExplanationCauseEvidence(cause) =>
-          occurrenceExplanationAncestryVerified(record, cause)
       )
-
-  private def occurrenceExplanationAncestryVerified(
-      record: EvidenceRecord,
-      cause: OccurrenceExplanationCause
-  ): Boolean =
-    val parentIds = List(cause.subject.transitionEvidenceId, cause.proofSource.id)
-    val transitionBound = byId.get(cause.subject.transitionEvidenceId).exists {
-      case EvidenceRecord(ref, MoveTransitionEvidence(moveUci, from, to, _), _) =>
-        record.parents.headOption.contains(ref) &&
-          record.ref.scope == ref.scope &&
-          ref.producer == EvidenceProducer.MoveTransitionProducer &&
-          ref.layer == EvidenceLayer.MoveTransition &&
-          EvidenceRef.sameMove(moveUci, cause.subject.moveUci) &&
-          from == cause.subject.start && to == cause.subject.destination
-      case _ => false
-    }
-    val proofBound = byId.get(cause.proofSource.id).exists { proofRecord =>
-      proofRecord.ref == cause.proofSource &&
-        DirectCauseChannel.fromTypedProofRecord(proofRecord).exists(channel =>
-          channel.typedProofIdentity == cause.proofOccurrence &&
-            OccurrenceExplanationCause.proofOwnsSubject(channel, cause.subject)
-        )
-    }
-    exactAuthority(
-      record,
-      EvidenceProducer.OccurrenceExplanationProducer,
-      EvidenceLayer.OccurrenceExplanation
-    ) &&
-      record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-      record.ref.position == cause.subject.start &&
-      record.ref.line.contains(cause.subject.line) &&
-      cause.subject.rootProvenance == CausalRootProvenance.ObservedGameRoot &&
-      record.parents.map(_.id) == parentIds &&
-      parentIds.distinct.size == parentIds.size &&
-      transitionBound && proofBound
 
   private def exactAuthority(
       record: EvidenceRecord,

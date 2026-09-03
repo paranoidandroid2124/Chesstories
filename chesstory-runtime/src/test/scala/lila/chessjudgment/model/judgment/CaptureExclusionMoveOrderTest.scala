@@ -185,22 +185,15 @@ class CaptureExclusionMoveOrderTest extends munit.FunSuite:
     assertNotEquals(first.dependencyId, second.dependencyId)
     assertNotEquals(first.vacatingBranch.branchId, second.vacatingBranch.branchId)
 
-  test("the typed proof reaches the requested subject occurrence Cause directly"):
+  test("the typed proof certifies its requested subject occurrence directly"):
     val facts = enriched(rootFen, vacatingMoves, immediateMoves)
     val proofRecord = captureRecord(facts)
-    val demand = exactDemand(facts)
-    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
-      facts,
-      JudgmentProvenanceAllocator.forInput(facts.input),
-      demand
-    )
-    val causes = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) => cause
-    }
+    val relation = OccurrenceRelationProof
+      .fromRecord(proofRecord, facts.evidenceGraph)
+      .getOrElse(fail("expected the typed proof to certify directly"))
 
-    assertEquals(causes.size, 1)
-    assertEquals(causes.head.subject.moveUci, immediateMoves.head)
-    assertEquals(causes.head.proofSource.id, proofRecord.ref.id)
+    assertEquals(relation.subjectOccurrence.moveUci, immediateMoves.head)
+    assertEquals(relation.source, proofRecord.ref)
 
   private def enriched(
       fen: String,

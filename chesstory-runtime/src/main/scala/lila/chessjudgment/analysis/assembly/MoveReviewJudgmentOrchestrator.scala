@@ -18,7 +18,7 @@ object MoveReviewJudgmentOrchestrator:
       )
     }.map(_.packet)
 
-  /** Sole fact, Assessment, requested Explanation, and packet authority for an admitted review. */
+  /** Sole fact, Assessment, requested relation, and packet authority for an admitted review. */
   def executePreparedReview(
       preparedInput: AdmittedMoveReviewInput,
       explanationRequest: Option[ExplanationRequest]
@@ -44,16 +44,7 @@ object MoveReviewJudgmentOrchestrator:
         evidenceClosed(comparisonContext) && preRelativeAssessmentPayloadsClosed(comparisonContext)
       )((): Unit)
       assessmentContext = RelativeAssessmentAssembler.enrichAssessment(comparisonContext)
-      completedContext = explanationDemand
-        .map(demand =>
-          OccurrenceExplanationAssembler.enrichCauses(
-            assessmentContext,
-            JudgmentProvenanceAllocator.forInput(preparedInput),
-            demand
-          )
-        )
-        .getOrElse(assessmentContext)
-      packet <- EvidenceBackedJudgmentPacket.fromAssembly(completedContext)
+      packet <- EvidenceBackedJudgmentPacket.fromAssembly(assessmentContext)
     yield ReviewExecution(packet, preparedInput)
 
   private def preRelativeAssessmentPayloadsClosed(context: JudgmentAssemblyContext): Boolean =
@@ -62,7 +53,6 @@ object MoveReviewJudgmentOrchestrator:
   private def lateStagePayload(payload: EvidencePayload): Boolean =
     payload match
       case _: RelativeAssessmentEvidence => true
-      case _: OccurrenceExplanationCauseEvidence => true
       case _                              => false
 
   private def evidenceClosed(context: JudgmentAssemblyContext): Boolean =

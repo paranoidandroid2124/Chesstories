@@ -19,33 +19,32 @@ Assessment는 후보 수의 평가와 선택을 소유한다. `CandidateLineNode
 존재하는지, 어느 branch가 인과 기준인지, proof ID나 dependency fingerprint가
 무엇인지 결정하지 않는다.
 
-### Occurrence-directed Explanation proof
+### Occurrence-directed relation proof
 
-Explanation은 인증된 수순 occurrence에 대한 명시적 요청에서만 실행된다.
+관계 증명은 인증된 수순 occurrence에 대한 명시적 요청에서만 실행된다.
 `ExplanationRequest`가 수·before/after position·ply를 지정하고,
 `OccurrenceExplanationDemand`가 이를 그래프의 유일한 observed root
 occurrence에 결속한다. 각 증명군은 이미 등록된 `LegalLine` replay와
 L0/L0.5/L1 결과를 자기 체스 의미에 따라 orientation한다. 평가 role, rank,
 verdict 또는 점수로 branch를 고르지 않는다.
 
-요청이 없으면 `OccurrenceExplanationAssembler`는 typed L2 proof나
-`OccurrenceExplanationCause`를 생산하지 않는다. 요청 자체도 체스 명제의
-premise가 아니다.
+요청이 없으면 `OccurrenceExplanationAssembler`는 typed L2 relation proof를
+생산하지 않는다. 요청 자체도 체스 명제의 premise가 아니다. 생산된 각 typed
+proof record는 자기 subject occurrence를 직접 소유하며, 공개 생존을 허가하는
+별도의 상위 owner record나 묶음은 없다.
 
 ### Structured Presentation
 
-Presentation은 Assessment와 0..N개의 exact explanation proof를 나란히
+Presentation은 Assessment와 0..N개의 exact occurrence relation을 나란히
 투영한다. Runtime과 public schema는 자연어 문장이 아니라 subject occurrence,
 typed branch와 ordered step, actor/target, lower premise, closed absence/state,
 독립 proof path와 dependency fingerprint를 운반한다.
 
 프런트의 목표 소비는 이 구조로 실제 root와 분석 branch, 수순 timeline,
 보드 강조, 폐쇄 라벨과 proof-path 선택을 표시하는 것이다. 체스 의미를 다시
-판정하거나 family별 장문 문장을 별도 진실 원천으로 만들 수 없다. 현재 확인된
-UI branch는 이전 `causal_explanations` transport를 읽으므로 이 계약의 실제
-소비자로 승인되지 않았다. 현 완료 경계는 exact Runtime/schema와 immutable
-producer fixture까지다. 프런트 구현과 테스트는 별도 작업에서
-`occurrence_explanations` fixture를 직접 소비한 뒤에만 완료로 기록한다.
+판정하거나 family별 장문 문장을 별도 진실 원천으로 만들 수 없다. Runtime,
+schema와 UI는 동일한 `occurrence_relations` 배열을 소비한다. 각 항목의 공개
+wrapper는 정확히 `subject_occurrence`, `relation_kind`, `proof`만 운반한다.
 
 ## Line 소유권과 occurrence provenance
 
@@ -71,7 +70,7 @@ counterfactual root는 `CounterfactualAnalyzedRoot`이며, observed branch에서
 history가 인증하는 것은 root뿐이다. 뒤의 PV suffix는
 `CertifiedAnalysisMove`이지 실제 대국 수순이 아니다.
 
-현재 공개 explanation subject는 history가 인증한 observed root occurrence다.
+현재 공개 relation subject는 history가 인증한 observed root occurrence다.
 상대 응수나 뒤 occurrence를 별도 subject로 요청하는 실제 상위 producer가
 생기기 전에는 이를 지원한다고 주장하거나 빈 API를 만들지 않는다.
 
@@ -81,7 +80,7 @@ history가 인증하는 것은 root뿐이다. 뒤의 PV suffix는
 - **L0.5**는 같은 합법 수의 before/after에서 직접 인증되는 정확한 변화다.
 - **L1**은 한 transition 직후의 자원·제약과 폐쇄 인벤토리다.
 - **L2**는 둘 이상의 ordered occurrence 또는 exact sibling을 기존 하부
-  record로 연결하는 bounded causal proof다.
+  record로 연결하는 exact local relation proof다.
 
 L2는 공격맵, 합법수, ray, pin, pawn structure를 다시 계산하지 않는다.
 평가 변화나 책의 `best`, `only`, `prevents`, `plan`, `counterplay`도 premise로
@@ -115,8 +114,8 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 ## 현재 typed 증명군과 유일 생산자
 
 모든 가족은 explicit occurrence demand 아래서만 실행된다.
-`OccurrenceExplanationAssembler`가 유일한 orchestration·graph admission
-경계이고, 가족별 체스 명제는 아래 생산자가 직접 인증한다.
+`OccurrenceExplanationAssembler`가 현재 orchestration 경계이고, 가족별 체스
+명제는 아래 생산자가 typed relation record로 직접 인증한다.
 
 | typed 증명군 | 유일 graph/proof 생산자 |
 | --- | --- |
@@ -125,6 +124,7 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 | `VacatedGateEnablesUnrecapturableSliderCapture` | `RelationCausalProofAssembler.vacatedGateCapture` |
 | `SquareReleaseRoute` | `RelationCausalProofAssembler.squareReleaseRoute` |
 | `CaptureExclusionMoveOrder` | `OccurrenceExplanationAssembler.captureExclusionRecords`, backed directly by `CaptureExclusionMoveOrderProof.certifyDemanded` |
+| `RelocationEnablesRecapture` | `OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords`, backed directly by `RelocationEnablesRecaptureProof.certifyDemanded` |
 | `PassedPawnProgressRealizedAfterOnlyLegalReply` | `PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand`; its lower event is solely produced by `PassedPawnResultEventAssembler.fromDemand` |
 
 `RelationCausalProofAssembler`가 공유하는 것은 deterministic graph ownership뿐이다.
@@ -140,20 +140,23 @@ player job의 현재 흐름은 다음과 같다.
    `LegalLine` inventory를 만든다.
 2. 그 inventory를 참조하는 Assessment projection을 별도로 만든다.
 3. 상위 `ExplanationRequest`가 있으면 exact observed subject를 resolve한다.
-4. 여섯 가족의 유일 producer가 등록된 branch와 하부 inventory만 소비하여
+4. 일곱 가족의 유일 producer가 등록된 branch와 하부 inventory만 소비하여
    proof를 fail-closed로 생산한다.
-5. `OccurrenceExplanationCause`가 exact subject transition owner와 exact
-   typed proof owner를 두 parent로 결속한다.
-6. `EvidenceBackedJudgmentPacket.occurrenceExplanations`가 인증된 Cause/proof
-   쌍만 보존한다.
-7. `RuntimeProtocol`이 이를 public-v6의 `occurrence_explanations`로 투영한다.
+5. `OccurrenceRelationProof.fromRecord`가 각 typed graph record의 eligibility와
+   exact subject ownership을 직접 확인한다. 별도 wrapper나 evidence owner를
+   만들지 않는다.
+6. `EvidenceBackedJudgmentPacket.occurrenceRelations`가
+   `List[OccurrenceRelationProof]`로 각 인증 관계를 서로 독립적으로 보존한다.
+7. `RuntimeProtocol`이 이를 public-v6의 `occurrence_relations`로 투영한다.
 8. schema와 Python boundary는 ID, enum, shape와 cross-reference를 검증할 뿐
    가족의 체스 논리를 복제하지 않는다.
 
 공개 branch에는 `line_owner_evidence_id`,
 `root_transition_evidence_id`, typed root provenance와 ordered steps가 남는다.
-outer `subject_occurrence`가 proof의 표시 대상을 한 번만 소유하며, Cause는
-line ID만 같다는 이유로 다른 시간 occurrence의 proof를 받아들이지 않는다.
+outer `subject_occurrence`가 proof의 표시 대상을 한 번만 소유하며, 별도 상위
+owner는 필요하지 않다. line ID만 같다는 이유로 다른 시간 occurrence의 proof를
+받아들이지 않는다. 한 relation의 생산 또는 인증 실패는 이미 성립한 하부
+명제나 다른 relation을 제거하지 않는다.
 
 ## 계산 범위와 P2 line availability
 
@@ -173,7 +176,7 @@ admission된 root/focus line의 합집합이다. 현재 engine work 정책의 Mu
 
 ## 소비 경계
 
-Assessment는 무엇이 좋은 수인지 말할 수 있고, typed Explanation은 인증된
+Assessment는 무엇이 좋은 수인지 말할 수 있고, typed occurrence relation은 인증된
 occurrence 사이의 좁은 인과 명제만 말할 수 있다. Presentation은 둘을 보여
 주지만 어느 쪽의 의미도 새로 만들지 않는다. 일반 준비·예방·반격·기동,
 장기 계획, 의도와 가치 판단은 exact 하부 closure와 별도 L2 join이 없으면

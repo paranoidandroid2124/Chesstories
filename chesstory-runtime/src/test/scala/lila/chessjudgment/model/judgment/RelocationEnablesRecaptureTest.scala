@@ -228,7 +228,7 @@ class RelocationEnablesRecaptureTest extends munit.FunSuite:
     assert(retainedProof.occurrenceProof.proves(retainedRecord, retainedProof))
     assert(relocatedProof.occurrenceProof.proves(relocatedRecord, relocatedProof))
 
-  test("transposed relocated histories retain distinct occurrences, dependencies, paths, and Causes"):
+  test("transposed relocated histories retain distinct occurrences, dependencies, paths, and relations"):
     val rootFen = "1nb3k1/8/1q6/8/3N4/8/P6P/K7 b - - 0 1"
     val firstOrder = List("c8b7", "a2a3", "g8h8", "h2h3", "b8c6", "d4c6", "b7c6")
     val secondOrder = List("g8h8", "h2h3", "c8b7", "a2a3", "b8c6", "d4c6", "b7c6")
@@ -259,13 +259,12 @@ class RelocationEnablesRecaptureTest extends munit.FunSuite:
     assert(proofs.forall(_.proofPaths.size == 1))
     assertEquals(proofs.map(_.relocatedBranch.lineOwnerEvidenceId).distinct.size, 2)
 
-    val causeContext = OccurrenceExplanationAssembler.enrichCauses(proofContext, allocator, demand)
-    val causes = causeContext.evidenceGraph.records.collect {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _)
-          if cause.proofOccurrence.family == BoundedCausalContractKind.RelocationEnablesRecapture => cause
-    }
-    assertEquals(causes.size, 2)
-    assertEquals(causes.map(_.proofOccurrence.occurrenceId).distinct.size, 2)
+    val relations = proofRecords(proofContext).flatMap(record =>
+      OccurrenceRelationProof.fromRecord(record, proofContext.evidenceGraph)
+    )
+    assertEquals(relations.size, 2)
+    assertEquals(relations.map(_.subjectOccurrence).distinct, List(demand.subject.publicOccurrence))
+    assertEquals(relations.map(_.source).toSet, proofRecords(proofContext).map(_.ref).toSet)
 
   test("an unrelated observed root cannot borrow two sibling proof branches"):
     val facts = EvidenceFactAssembler.assemble(

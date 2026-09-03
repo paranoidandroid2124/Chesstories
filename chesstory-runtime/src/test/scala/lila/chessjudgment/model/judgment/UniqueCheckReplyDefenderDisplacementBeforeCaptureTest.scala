@@ -416,7 +416,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       0
     )
 
-  test("the exact L2 occurrence owns one requested Cause directly"):
+  test("the exact L2 occurrence certifies its requested relation directly"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -440,33 +440,11 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertEquals(causalRecords.size, 1)
     assert(facts.evidenceGraph.proofEligible(causalRecords.head))
 
-    val duplicateOwner = causalRecords.head.copy(
-      ref = causalRecords.head.ref.copy(id = s"${causalRecords.head.ref.id}:duplicate")
-    )
-    val duplicated = facts.withEvidence(duplicateOwner)
-    assert(duplicated.evidenceGraph.proofEligible(duplicateOwner))
-    val duplicateFailure = intercept[IllegalArgumentException] {
-      OccurrenceExplanationAssembler.enrichCauses(
-        duplicated,
-        JudgmentProvenanceAllocator.forInput(lowerFacts.input),
-        exactDemand(duplicated)
-      )
-    }
-    assertEquals(
-      duplicateFailure.getMessage,
-      "requirement failed: one demanded typed proof may own only one occurrence Cause"
-    )
-    val withCauses = OccurrenceExplanationAssembler.enrichCauses(
-      facts,
-      JudgmentProvenanceAllocator.forInput(facts.input),
-      exactDemand(facts)
-    )
-    val causes = withCauses.evidenceGraph.records.collect {
-      case EvidenceRecord(_, OccurrenceExplanationCauseEvidence(cause), _) => cause
-    }
-    assertEquals(causes.size, 1)
-    assertEquals(causes.head.proofSource, causalRecords.head.ref)
-    assertEquals(causes.head.subject, exactDemand(facts).subject.publicOccurrence)
+    val relation = OccurrenceRelationProof
+      .fromRecord(causalRecords.head, facts.evidenceGraph)
+      .getOrElse(fail("expected the typed proof to certify directly"))
+    assertEquals(relation.source, causalRecords.head.ref)
+    assertEquals(relation.subjectOccurrence, exactDemand(facts).subject.publicOccurrence)
 
   private def produceExplanations(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     OccurrenceExplanationAssembler.enrichProofs(

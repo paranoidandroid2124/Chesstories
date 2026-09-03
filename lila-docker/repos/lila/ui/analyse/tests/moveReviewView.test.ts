@@ -28,7 +28,7 @@ const object = (value: unknown): JsonObject => value as JsonObject;
 const objects = (value: unknown): JsonObject[] => value as JsonObject[];
 
 const occurrenceFixtureUrl = new URL(
-  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-explanation-produced.json',
+  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json',
   import.meta.url,
 );
 const relocationFixtureUrl = new URL(
@@ -105,8 +105,8 @@ function verdictReview(job: CompletedJob): VerdictReview {
   return candidate.review;
 }
 
-const producerExplanationId = verdictReview(completedJob).explanations[0]!.id;
-const producerFirstBranchProofId = `${producerExplanationId}-branch-0`;
+const producerRelationId = verdictReview(completedJob).relations[0]!.id;
+const producerFirstBranchProofId = `${producerRelationId}-branch-0`;
 
 function completedWith(symbol: MoveReviewVerdictSymbol): CompletedJob {
   const job = structuredClone(completedJob);
@@ -251,10 +251,10 @@ test('renders the immutable BestChoice producer fixture with its runner-up', () 
   assert.equal(findNodes(summary, 'span.move-review__verdict-badge').length, 0);
 });
 
-test('renders the producer occurrence as ordered typed paths and provenance-owned branches', () => {
+test('renders the producer occurrence relation as ordered typed paths and provenance-owned branches', () => {
   const panel = renderMoveReview(
     props({
-      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
+      view: { evidenceExpanded: true, expandedProofId: producerRelationId },
     }),
   );
   const text = renderedText(panel);
@@ -295,27 +295,31 @@ test('renders the producer occurrence as ordered typed paths and provenance-owne
   assert.equal(findNodes(panel, 'section.move-review__later-consumer.move-review__typed-section').length, 1);
   const provenance = findNode(panel, 'details.move-review__provenance');
   assert.equal(provenance.data?.attrs?.open, undefined);
-  const decodedExplanation = verdictReview(completedJob).explanations[0]!;
+  const decodedRelation = verdictReview(completedJob).relations[0]!;
   const visible = renderedTextWithout(panel, 'details.move-review__provenance');
-  assert.doesNotMatch(visible, /capture_exclusion_move_order|proofKind|causeEvidenceId|capturedTarget/);
-  assert.doesNotMatch(visible, new RegExp(decodedExplanation.proof.occurrenceId));
-  assert.match(renderedText(provenance), new RegExp(decodedExplanation.proof.occurrenceId));
+  assert.doesNotMatch(visible, /capture_exclusion_move_order|relationKind|sourceEvidenceId|capturedTarget/);
+  assert.doesNotMatch(visible, new RegExp(decodedRelation.proof.occurrenceId));
+  const provenanceText = renderedText(provenance);
+  assert.match(provenanceText, new RegExp(decodedRelation.proof.occurrenceId));
+  assert.match(provenanceText, /Relation source evidence ID/);
+  assert.match(provenanceText, new RegExp(decodedRelation.proof.sourceEvidenceId));
+  assert.doesNotMatch(provenanceText, /Cause evidence ID/);
   assert.equal(findNodes(panel, 'div.cg-wrap.is2d').length, 2);
 });
 
-test('renders the Scala-produced relocation occurrence as continuity, branches, and board arrows', () => {
+test('renders the Scala-produced relocation relation as continuity, branches, and board arrows', () => {
   const job = completedFrom(fixture(relocationFixtureUrl));
   const review = verdictReview(job);
-  const explanation = review.explanations[0]!;
-  assert.equal(explanation.proofKind, 'relocation_enables_recapture');
-  if (explanation.proofKind !== 'relocation_enables_recapture') return;
+  const relation = review.relations[0]!;
+  assert.equal(relation.relationKind, 'relocation_enables_recapture');
+  if (relation.relationKind !== 'relocation_enables_recapture') return;
   const panel = renderMoveReview(
     props({
       job,
       view: {
-        selectedCandidateUci: explanation.subjectOccurrence.moveUci,
+        selectedCandidateUci: relation.subjectOccurrence.moveUci,
         evidenceExpanded: true,
-        expandedProofId: explanation.id,
+        expandedProofId: relation.id,
       },
     }),
   );
@@ -336,10 +340,10 @@ test('renders the Scala-produced relocation occurrence as continuity, branches, 
     ),
     ['Verified candidate line', moveReviewCopy('en-US').familyLabels.relocation_enables_recapture],
   );
-  const path = explanation.proof.proofPaths[0];
+  const path = relation.proof.proofPaths[0];
   assert.equal(
     findNodes(panel, 'section.move-review__participant').length,
-    Object.keys(explanation.proof.participants).length,
+    Object.keys(relation.proof.participants).length,
   );
   assert.equal(findNodes(panel, 'section.move-review__premise').length, path.premises.length);
   assert.equal(
@@ -357,13 +361,13 @@ test('renders the Scala-produced relocation occurrence as continuity, branches, 
 
 test('omits a move stage when the transmitted step provenance is absent', () => {
   const job = structuredClone(completedJob);
-  const explanation = verdictReview(job).explanations[0]!;
-  assert.equal(explanation.proofKind, 'capture_exclusion_move_order');
-  if (explanation.proofKind !== 'capture_exclusion_move_order') return;
-  delete (explanation.proof.immediateCaptureBranch.steps[0] as { provenance?: unknown }).provenance;
+  const relation = verdictReview(job).relations[0]!;
+  assert.equal(relation.relationKind, 'capture_exclusion_move_order');
+  if (relation.relationKind !== 'capture_exclusion_move_order') return;
+  delete (relation.proof.immediateCaptureBranch.steps[0] as { provenance?: unknown }).provenance;
 
   const panel = renderMoveReview(
-    props({ job, view: { evidenceExpanded: true, expandedProofId: explanation.id } }),
+    props({ job, view: { evidenceExpanded: true, expandedProofId: relation.id } }),
   );
   const stages = findNodes(panel, 'span.move-review__proof-stage').map(renderedText);
   assert.equal(stages.filter(stage => stage === 'Actual move').length, 0);
@@ -371,15 +375,15 @@ test('omits a move stage when the transmitted step provenance is absent', () => 
   assert.equal(stages.filter(stage => stage === 'Analysis continuation').length, 1);
 });
 
-test('preserves multiple independent occurrence explanations in wire order', () => {
+test('preserves multiple independent occurrence relations in wire order', () => {
   const raw = fixture();
-  const occurrences = objects(commentary(raw).occurrence_explanations);
-  const second = structuredClone(occurrences[0]!);
-  second.cause_evidence_id = 'second-independent-cause';
+  const relations = objects(commentary(raw).occurrence_relations);
+  const second = structuredClone(relations[0]!);
   const secondProof = object(second.proof);
+  secondProof.source_evidence_id = 'second-independent-relation-source';
   secondProof.occurrence_id = 'e'.repeat(64);
   object(objects(secondProof.proof_paths)[0]).path_occurrence_id = 'f'.repeat(64);
-  commentary(raw).occurrence_explanations = [occurrences[0]!, second];
+  commentary(raw).occurrence_relations = [relations[0]!, second];
 
   const panel = renderMoveReview(props({ job: completedFrom(raw), view: { evidenceExpanded: true } }));
   assert.deepEqual(
@@ -396,24 +400,24 @@ test('preserves multiple independent occurrence explanations in wire order', () 
     findNodes(panel, 'article.move-review__proof-entry').map(entry => entry.key),
     [
       `pv:${playedUci}`,
-      `occurrence-explanation-${object(occurrences[0]!.proof).occurrence_id}`,
-      `occurrence-explanation-${secondProof.occurrence_id}`,
+      `occurrence-relation-${object(relations[0]!.proof).source_evidence_id}`,
+      `occurrence-relation-${secondProof.source_evidence_id}`,
     ],
   );
 });
 
-test('keeps Assessment comparison proof and Explanation branches separate', () => {
+test('keeps Assessment comparison proof and occurrence relation branches separate', () => {
   const assessment = renderMoveReview(
     props({ view: { evidenceExpanded: true, expandedProofId: `pv:${playedUci}` } }),
   );
   assert.equal(findNodes(assessment, 'div.cg-wrap.is2d').length, 1);
   assert.equal(findNodes(assessment, 'section.move-review__branch').length, 0);
 
-  const explanation = renderMoveReview(
-    props({ view: { evidenceExpanded: true, expandedProofId: producerExplanationId } }),
+  const relation = renderMoveReview(
+    props({ view: { evidenceExpanded: true, expandedProofId: producerRelationId } }),
   );
-  assert.equal(findNodes(explanation, 'div.cg-wrap.is2d').length, 2);
-  assert.equal(findNodes(explanation, 'section.move-review__branch').length, 2);
+  assert.equal(findNodes(relation, 'div.cg-wrap.is2d').length, 2);
+  assert.equal(findNodes(relation, 'section.move-review__branch').length, 2);
 });
 
 test('keeps proof navigation, mini-board frames, and Study actions intact', () => {
@@ -426,7 +430,7 @@ test('keeps proof navigation, mini-board frames, and Study actions intact', () =
         pinFrame: frame => calls.push(`pin:${frame.proofId}:${frame.ply}`),
         addProof: proofId => calls.push(`add:${proofId}`),
       },
-      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
+      view: { evidenceExpanded: true, expandedProofId: producerRelationId },
     }),
   );
   const moves = findNodes(panel, 'button.move-review__proof-san');
@@ -448,7 +452,7 @@ test('keeps proof navigation, mini-board frames, and Study actions intact', () =
     props({
       view: {
         evidenceExpanded: true,
-        expandedProofId: producerExplanationId,
+        expandedProofId: producerRelationId,
         pinnedFrame: { proofId: producerFirstBranchProofId, ply: 2 },
       },
     }),
@@ -482,19 +486,19 @@ test('preserves certified proof annotations on candidate mini-boards', () => {
   ]);
 });
 
-test('shows a verdict-only explanation absence without inventing a cause', () => {
+test('shows a verdict-only response without inventing an occurrence relation', () => {
   const job = structuredClone(completedJob);
-  verdictReview(job).explanations = [];
+  verdictReview(job).relations = [];
   const panel = renderMoveReview(props({ job, view: { evidenceExpanded: true } }));
-  assert.match(renderedText(panel), /no cause .* was verified/i);
+  assert.match(renderedText(panel), /no occurrence relation was provided/i);
   assert.equal(findNodes(panel, 'section.move-review__branch').length, 0);
 });
 
-test('limits Korean explanation copy to finite structural labels', () => {
+test('limits Korean relation copy to finite structural labels', () => {
   const panel = renderMoveReview(
     props({
       locale: 'ko-KR',
-      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
+      view: { evidenceExpanded: true, expandedProofId: producerRelationId },
     }),
   );
   const text = renderedText(panel);
@@ -580,7 +584,7 @@ test('offers the added Study line without duplicating its add action', () => {
       canWrite: true,
       addedProofId: proofId,
       actions: { viewAddedLine: id => (viewed = id) },
-      view: { evidenceExpanded: true, expandedProofId: producerExplanationId },
+      view: { evidenceExpanded: true, expandedProofId: producerRelationId },
     }),
   );
   assert.match(renderedText(panel), /Line added to Study/);
@@ -590,7 +594,7 @@ test('offers the added Study line without duplicating its add action', () => {
   assert.equal(viewed, proofId);
 });
 
-test('keeps forced and position-action outcomes separate from explanations', () => {
+test('keeps forced and position-action outcomes separate from occurrence relations', () => {
   const forced = structuredClone(completedJob);
   const candidate = forced.snapshot.evidence.candidates.find(item => item.roles.includes('played'))!;
   candidate.review = {
