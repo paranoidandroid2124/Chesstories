@@ -33,8 +33,8 @@ object RelativeAssessmentAssembler:
       }
       .getOrElse(context)
 
-  /** Assessment-only projection. Typed Explanation proofs and their Causes
-    * are owned by the occurrence-directed producer before this stage.
+  /** Assessment-only projection. Typed occurrence relation proofs are owned
+    * by the occurrence-directed producer before this stage.
     */
   def enrichAssessment(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     relativeAssemblyInputs(context)

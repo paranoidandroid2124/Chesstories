@@ -68,6 +68,122 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(parents.count(_ == owner.lineEvidence), 1)
     assertEquals(parents.map(_.id).distinct.size, parents.size)
 
+  test("every admitted replay ply owns one graph position and transition occurrence"):
+    val packet = producedPacket(ranking.head)
+    val assembly = packet.assembly
+    val continuationEdges = assembly.transitions.filter(_.role == TransitionEdgeRole.LineContinuation)
+    val continuationPositions = assembly.positions.filter(_.role == PositionNodeRole.LineOccurrence)
+    val positionOccurrenceRecords = packet.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, _: PositionOccurrenceEvidence, _) => record
+    }
+    val replayPlyCount = assembly.lineReplays.valuesIterator.map(_.replaySteps.size).sum
+    val continuationPlyCount = replayPlyCount - assembly.legalLines.size
+
+    assertEquals(assembly.transitions.size, replayPlyCount)
+    assertEquals(assembly.transitionReplays.size, replayPlyCount)
+    assertEquals(continuationEdges.size, continuationPlyCount)
+    assertEquals(continuationPositions.size, continuationPlyCount)
+    continuationEdges.foreach { edge =>
+      val owner = assembly.legalLines.find(line => edge.evidence.line.contains(line.ref))
+        .getOrElse(fail("expected the continuation's LegalLine owner"))
+      val record = packet.evidenceGraph.record(edge.evidence)
+        .getOrElse(fail("expected the continuation transition evidence"))
+      assertEquals(record.parents, List(owner.evidence))
+      assert(packet.evidenceGraph.proofEligible(record))
+      val destination = positionOccurrenceRecords.filter(_.ref.position == edge.to) match
+        case exact :: Nil => exact
+        case records      => fail(s"expected one destination occurrence, found ${records.size}")
+      assertEquals(destination.ref.line, edge.evidence.line)
+      assertEquals(destination.parents, List(edge.evidence))
+      assert(packet.evidenceGraph.proofEligible(destination))
+    }
+
+  test("a continuation transition cannot lose its certified line parent"):
+    val packet = producedPacket(ranking.head)
+    val continuationEdge = packet.assembly.transitions
+      .find(_.role == TransitionEdgeRole.LineContinuation)
+      .getOrElse(fail("expected one line-continuation transition"))
+    val continuation = packet.evidenceGraph.record(continuationEdge.evidence)
+      .getOrElse(fail("expected its transition record"))
+    val forged = continuation.copy(parents = Nil)
+    val forgedGraph = TypedEvidenceGraph.empty.addAll(
+      packet.evidenceGraph.records.map(record =>
+        if record.ref == forged.ref then forged else record
+      )
+    )
+
+    assert(!forgedGraph.proofEligible(forged))
+    assertEquals(
+      EvidenceBackedJudgmentPacket.fromAssembly(
+        packet.assembly.copy(evidenceGraph = forgedGraph)
+      ),
+      None
+    )
+
+  test("a suffix position cannot borrow another continuation from the same line"):
+    val packet = producedPacket(ranking.head)
+    val line = packet.assembly.legalLines.head
+    val continuations = packet.assembly.transitions
+      .filter(_.evidence.line.contains(line.ref))
+      .sortBy(_.to.ply)
+    val List(first, second) = continuations: @unchecked
+    val occurrence = packet.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(ref, _: PositionOccurrenceEvidence, _)
+          if ref.position == first.to => record
+    } match
+      case exact :: Nil => exact
+      case records      => fail(s"expected one suffix position occurrence, found ${records.size}")
+    val forged = occurrence.copy(parents = List(second.evidence))
+    val graph = TypedEvidenceGraph.empty.addAll(
+      packet.evidenceGraph.records.map(record =>
+        if record.ref == forged.ref then forged else record
+      )
+    )
+
+    assert(!graph.proofEligible(forged))
+    assertEquals(
+      EvidenceBackedJudgmentPacket.fromAssembly(
+        packet.assembly.copy(evidenceGraph = graph)
+      ),
+      None
+    )
+
+  test("an independent lower transition cannot suppress an otherwise closed packet"):
+    val packet = producedPacket(ranking.head)
+    val continuationEdge = packet.assembly.transitions
+      .find(_.role == TransitionEdgeRole.LineContinuation)
+      .getOrElse(fail("expected one line-continuation transition"))
+    val continuation = packet.evidenceGraph.record(continuationEdge.evidence)
+      .getOrElse(fail("expected its transition record"))
+    val duplicate = continuation.copy(
+      ref = continuation.ref.copy(id = s"${continuation.ref.id}:orphan-duplicate")
+    )
+    val graph = packet.evidenceGraph.add(duplicate)
+
+    assert(graph.proofEligible(duplicate))
+    val rebuilt = EvidenceBackedJudgmentPacket
+      .fromAssembly(packet.assembly.copy(evidenceGraph = graph))
+      .getOrElse(fail("expected the independent lower transition to survive beside the packet"))
+    assertEquals(rebuilt.primary, packet.primary)
+    assertEquals(rebuilt.occurrenceRelations, packet.occurrenceRelations)
+
+  test("a continuation structural delta cannot lose its exact line parent"):
+    val packet = producedPacket(ranking.head)
+    val structural = packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+          if payload.role == TransitionEdgeRole.LineContinuation => record
+    }.getOrElse(fail("expected one line-continuation structural delta"))
+    val forged = structural.copy(
+      parents = structural.parents.filterNot(_.layer == EvidenceLayer.Line)
+    )
+    val graph = TypedEvidenceGraph.empty.addAll(
+      packet.evidenceGraph.records.map(record =>
+        if record.ref == forged.ref then forged else record
+      )
+    )
+
+    assert(!graph.proofEligible(forged))
+
   test("a third-ranked played move produces only its primary assessment comparison"):
     val packet = producedPacket(ranking(2))
     val (assessment, parents) = soleAssessmentRecord(packet)

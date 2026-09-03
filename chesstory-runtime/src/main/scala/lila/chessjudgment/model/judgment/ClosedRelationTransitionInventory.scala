@@ -287,8 +287,8 @@ private[chessjudgment] final class CanonicalRelationTransitionInventory private 
   private[chessjudgment] def materializeOccurrence(
       occurrenceId: String,
       edge: MoveTransitionEdge,
-      lineOwner: Option[LineNodeRef],
-      lineEvidence: Option[EvidenceRef],
+      lineOwner: LineNodeRef,
+      lineEvidence: EvidenceRef,
       outputRecords: List[EvidenceRecord]
   ): List[EvidenceRecord] =
     require(

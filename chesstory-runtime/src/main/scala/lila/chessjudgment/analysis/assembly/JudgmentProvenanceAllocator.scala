@@ -41,6 +41,21 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       id = Some(s"$prefix:position:${lineRootPositionKey(role, fen, ply, line)}")
     )
 
+  def lineOccurrencePositionRef(
+      line: LineNodeRef,
+      plyOffset: Int,
+      predecessor: PositionNodeRef,
+      fen: String,
+      ply: Int,
+      sideToMove: Option[Color]
+  ): PositionNodeRef =
+    PositionNodeRef(
+      fen = fen,
+      ply = ply,
+      sideToMove = sideToMove,
+      id = Some(s"$prefix:position:${lineOccurrencePositionKey(line, plyOffset, predecessor, fen, ply)}")
+    )
+
   def lineOccurrenceKey(
       line: AdmittedLegalLine,
       root: PositionNodeRef
@@ -75,6 +90,25 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       occurrenceFen(to.fen)
     ))
 
+  def lineTransitionOccurrenceKey(
+      line: LineNodeRef,
+      plyOffset: Int,
+      from: PositionNodeRef,
+      moveUci: String,
+      to: PositionNodeRef
+  ): String =
+    exactKey(List(
+      line.id,
+      plyOffset.toString,
+      from.id.getOrElse(""),
+      from.ply.toString,
+      occurrenceFen(from.fen),
+      EvidenceRef.normalizeMove(moveUci),
+      to.id.getOrElse(""),
+      to.ply.toString,
+      occurrenceFen(to.fen)
+    ))
+
   def evidenceId(suffix: String): String =
     s"$prefix:evidence:$suffix"
 
@@ -88,6 +122,22 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       line: LineNodeRef
   ): String =
     exactKey(List(key(role), ply.toString, occurrenceFen(fen), line.id))
+
+  def lineOccurrencePositionKey(
+      line: LineNodeRef,
+      plyOffset: Int,
+      predecessor: PositionNodeRef,
+      fen: String,
+      ply: Int
+  ): String =
+    exactKey(List(
+      key(PositionNodeRole.LineOccurrence),
+      line.id,
+      plyOffset.toString,
+      predecessor.id.getOrElse(""),
+      ply.toString,
+      occurrenceFen(fen)
+    ))
 
   def evidenceRef(
       suffix: String,

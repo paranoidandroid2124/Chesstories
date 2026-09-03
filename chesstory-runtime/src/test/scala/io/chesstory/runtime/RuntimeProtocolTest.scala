@@ -1604,7 +1604,8 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((analysisContinuation \ "role").as[String], "observed_root_with_analyzed_continuation")
     assertEquals((analysisContinuation \ "root_provenance").as[String], "observed_game_root")
     assertEquals((analysisContinuation \ "reply_move").as[String], "h8h7")
-    assert((analysisContinuation \ "source_occurrence_id").as[String].nonEmpty)
+    val sourceOccurrenceId = (analysisContinuation \ "source_occurrence_id").as[String]
+    assert(resolved.evidenceGraph.byId.contains(sourceOccurrenceId))
     assertEquals(
       (inventory \ "analysis_continuation_branch_id").as[String],
       (analysisContinuation \ "branch_id").as[String]
@@ -1624,6 +1625,13 @@ class RuntimeProtocolTest extends munit.FunSuite:
       Set((analysisContinuation \ "branch_id").as[String])
     )
     assert(proofPaths.forall(path => (path \ "premises").as[List[JsObject]].nonEmpty))
+    val sourcePremiseIds = proofPaths.flatMap(path =>
+      (path \ "premises").as[List[JsObject]].flatMap(premise =>
+        (premise \ "source_premise_ids").as[List[String]]
+      )
+    ).toSet
+    assert(sourcePremiseIds.nonEmpty)
+    assertEquals(sourcePremiseIds -- resolved.evidenceGraph.byId.keySet, Set.empty[String])
     assert(proofPaths.forall(path =>
       (path \ "premises").as[List[JsObject]].forall(premise =>
         Set("dependency", "result")((premise \ "role").as[String])
@@ -1645,7 +1653,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
         issuerLine.keys == Set("line_id", "root_move") &&
         !issuer.keys.contains("query") && sourceIds.contains(evidenceOwner) &&
         !sourceIds.contains((issuer \ "semantic_proof_id").as[String]) &&
-        sourceIds.contains((issuer \ "issuer_occurrence_id").as[String]) &&
+        !sourceIds.contains((issuer \ "issuer_occurrence_id").as[String]) &&
         (issuer \ "scope").as[String] == "legal_line"
     })
     assert(proofPaths.forall(path => (path \ "closure_use_ids").as[List[String]].nonEmpty))

@@ -121,7 +121,7 @@ private[chessjudgment] final case class CertifiedRootOccurrence private[chessjud
         case payload @ MoveTransitionEvidence(moveUci, from, to, _) =>
           moveUci == transition.moveUci && from == transition.from && to == transition.to &&
             payload.canonicalTransitionProof.exists(
-              _.provesMove(moveUci, from, to, transitionOwner.ref.scope)
+              _.provesMove(moveUci, from, to, transitionOwner.ref.scope, transitionOwner.ref.line)
             )
         case _ => false) &&
       occurrence.start == transition.from && occurrence.destination == transition.to &&
@@ -298,6 +298,20 @@ final case class JudgmentAssemblyContext(
           s"transition '${edge.evidence.id}' is owned by more than one line-root occurrence"
         )
 
+  private[chessjudgment] def lineForTransition(
+      edge: MoveTransitionEdge
+  ): Option[LegalLineNode] =
+    edge.evidence.line match
+      case Some(line) =>
+        legalLines.filter(_.ref == line) match
+          case exact :: Nil => Some(exact)
+          case Nil         => None
+          case _ =>
+            throw IllegalArgumentException(
+              s"transition '${edge.evidence.id}' has more than one LegalLine owner"
+            )
+      case None => lineForRootTransition(edge)
+
   /** Joins the already admitted root transition to a continuation line that
     * starts at the transition result. No move is replayed here.
     */
@@ -337,44 +351,40 @@ final case class JudgmentAssemblyContext(
   def root: Option[PositionNodeRef] =
     position(PositionNodeRole.Before).map(_.ref)
 
-  def withPosition(node: PositionNode, analysis: PositionAnalysis): JudgmentAssemblyContext =
-    require(
-      analysis.occurrence.plyCount == node.ref.ply &&
-        analysis.position.color == node.ref.sideToMove.getOrElse(analysis.position.color) &&
-        PrincipalVariationEvidence.sameBoardState(analysis.occurrence.fen, node.ref.fen),
-      "a position analysis must describe its registered position occurrence"
-    )
-    val updated = appendWithoutCollision(
-      items = positions,
-      item = node,
-      sameIdentity = (left, right) => left.ref == right.ref,
-      sameExclusiveRole = (left, right) =>
-        left.role == right.role && Set(
-          PositionNodeRole.Before,
-          PositionNodeRole.AfterPlayed,
-          PositionNodeRole.AfterReference
-        )(left.role),
-      identity = s"position '${node.ref.id.getOrElse(node.ref.fen)}'",
-      role = s"position role '${node.role}'"
-    )
-    updated match
-      case None =>
-        positionAnalyses.get(node.ref) match
-          case Some(existing) if existing.asInstanceOf[AnyRef] eq analysis.asInstanceOf[AnyRef] => this
-          case Some(_) =>
-            throw IllegalArgumentException(
-              s"position '${node.ref.id.getOrElse(node.ref.fen)}' has more than one analysis owner"
-            )
-          case None =>
-            throw IllegalArgumentException(
-              s"position '${node.ref.id.getOrElse(node.ref.fen)}' is registered without its analysis"
-            )
-      case Some(accepted) =>
-        positionAnalyses.get(node.ref) match
-          case Some(_) =>
-            throw IllegalArgumentException(s"position '${node.ref.id.getOrElse(node.ref.fen)}' analysis collision")
-          case None =>
-            copy(positions = accepted, positionAnalyses = positionAnalyses.updated(node.ref, analysis))
+  /** Appends a known-new occurrence batch after one linear collision check. */
+  private[chessjudgment] def withNewPositions(
+      additions: List[(PositionNode, PositionAnalysis)]
+  ): JudgmentAssemblyContext =
+    if additions.isEmpty then this
+    else
+      val nodes = additions.map(_._1)
+      val refs = nodes.map(_.ref)
+      val existingRefs = positions.iterator.map(_.ref).toSet
+      val exclusiveRoles = Set(
+        PositionNodeRole.Before,
+        PositionNodeRole.AfterPlayed,
+        PositionNodeRole.AfterReference
+      )
+      val claimedExclusiveRoles = (positions ++ nodes).collect {
+        case node if exclusiveRoles(node.role) => node.role
+      }
+      require(
+        additions.forall((node, analysis) => positionAnalysisMatches(node, analysis)),
+        "every batched position analysis must describe its registered occurrence"
+      )
+      require(
+        refs.distinct.size == refs.size && refs.forall(ref => !existingRefs(ref)) &&
+          refs.forall(ref => !positionAnalyses.contains(ref)),
+        "a batched position occurrence must be new and uniquely owned"
+      )
+      require(
+        claimedExclusiveRoles.distinct.size == claimedExclusiveRoles.size,
+        "a batched position cannot collide with an exclusive position role"
+      )
+      copy(
+        positions = positions ++ nodes,
+        positionAnalyses = positionAnalyses ++ additions.map { case (node, analysis) => node.ref -> analysis }
+      )
 
   def withLegalLine(line: LegalLineNode, replay: CanonicalLineReplay): JudgmentAssemblyContext =
     require(
@@ -420,52 +430,36 @@ final case class JudgmentAssemblyContext(
       case None           => this
       case Some(accepted) => copy(lines = accepted)
 
-  def withTransition(
-      edge: MoveTransitionEdge,
-      admittedReplay: CanonicalLineReplay
+  /** Appends a known-new transition batch after one linear collision check. */
+  private[chessjudgment] def withNewTransitions(
+      additions: List[(MoveTransitionEdge, CanonicalLineReplay)]
   ): JudgmentAssemblyContext =
-    val exactTransition = admittedReplay.replaySteps match
-      case step :: Nil =>
-        step.ply == edge.to.ply &&
-          edge.to.ply == edge.from.ply + 1 &&
-          EvidenceRef.sameMove(step.moveUci, edge.moveUci) &&
-          PrincipalVariationEvidence.sameBoardState(step.fenBefore, edge.from.fen) &&
-          PrincipalVariationEvidence.sameBoardState(step.fenAfter, edge.to.fen)
-      case _ => false
-    require(
-      exactTransition,
-      s"transition '${edge.evidence.id}' must reuse its one admitted line step"
-    )
-    val updated = appendWithoutCollision(
-      items = transitions,
-      item = edge,
-      sameIdentity = (left, right) => left.evidence.id == right.evidence.id,
-      sameExclusiveRole = (left, right) =>
-        left.role == right.role && Set(TransitionEdgeRole.Played, TransitionEdgeRole.Reference)(left.role),
-      identity = s"transition evidence '${edge.evidence.id}'",
-      role = s"transition role '${edge.role}'"
-    )
-    updated match
-      case None =>
-        transitionReplays.get(edge.evidence.id) match
-          case Some(existing) if existing.asInstanceOf[AnyRef] eq admittedReplay.asInstanceOf[AnyRef] => this
-          case Some(_) =>
-            throw IllegalArgumentException(
-              s"transition '${edge.evidence.id}' has more than one replay owner"
-            )
-          case None =>
-            throw IllegalArgumentException(
-              s"transition '${edge.evidence.id}' is registered without its replay"
-            )
-      case Some(accepted) =>
-        transitionReplays.get(edge.evidence.id) match
-          case Some(_) =>
-            throw IllegalArgumentException(s"transition '${edge.evidence.id}' replay collision")
-          case None =>
-            copy(
-              transitions = accepted,
-              transitionReplays = transitionReplays.updated(edge.evidence.id, admittedReplay)
-            )
+    if additions.isEmpty then this
+    else
+      val edges = additions.map(_._1)
+      val ids = edges.map(_.evidence.id)
+      val existingIds = transitions.iterator.map(_.evidence.id).toSet
+      val exclusiveRoles = Set(TransitionEdgeRole.Played, TransitionEdgeRole.Reference)
+      val claimedExclusiveRoles = (transitions ++ edges).collect {
+        case edge if exclusiveRoles(edge.role) => edge.role
+      }
+      require(
+        additions.forall(exactTransitionReplay),
+        "every batched transition must reuse its exact admitted line step"
+      )
+      require(
+        ids.distinct.size == ids.size && ids.forall(id => !existingIds(id)) &&
+          ids.forall(id => !transitionReplays.contains(id)),
+        "a batched transition occurrence must be new and uniquely owned"
+      )
+      require(
+        claimedExclusiveRoles.distinct.size == claimedExclusiveRoles.size,
+        "a batched transition cannot collide with an exclusive transition role"
+      )
+      copy(
+        transitions = transitions ++ edges,
+        transitionReplays = transitionReplays ++ additions.map { case (edge, replay) => edge.evidence.id -> replay }
+      )
 
   private[chessjudgment] def withLineRootOccurrence(
       line: LineNodeRef,
@@ -515,6 +509,26 @@ final case class JudgmentAssemblyContext(
     items match
       case item :: Nil => Some(item)
       case _           => None
+
+  private def positionAnalysisMatches(
+      node: PositionNode,
+      analysis: PositionAnalysis
+  ): Boolean =
+    analysis.occurrence.plyCount == node.ref.ply &&
+      analysis.position.color == node.ref.sideToMove.getOrElse(analysis.position.color) &&
+      PrincipalVariationEvidence.sameBoardState(analysis.occurrence.fen, node.ref.fen)
+
+  private def exactTransitionReplay(
+      edge: MoveTransitionEdge,
+      admittedReplay: CanonicalLineReplay
+  ): Boolean =
+    admittedReplay.replaySteps match
+      case step :: Nil =>
+        step.ply == edge.to.ply && edge.to.ply == edge.from.ply + 1 &&
+          EvidenceRef.sameMove(step.moveUci, edge.moveUci) &&
+          PrincipalVariationEvidence.sameBoardState(step.fenBefore, edge.from.fen) &&
+          PrincipalVariationEvidence.sameBoardState(step.fenAfter, edge.to.fen)
+      case _ => false
 
   private def isAdmittedObservedRoot(
       edge: MoveTransitionEdge,

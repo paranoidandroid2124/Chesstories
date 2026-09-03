@@ -13,14 +13,14 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
       allocator: JudgmentProvenanceAllocator,
       demand: PassedPawnResultEventAssembler.PassedPawnResultDemand
   ): List[EvidenceRecord] =
-    val records = demand.rootLines.toList.sortBy(_.id).flatMap { line =>
-      val lineRecords = context.evidenceGraph.recordsFor(line)
-      val proofOwnersBySemantic = lineRecords.collect {
-        case record @ EvidenceRecord(_, proof: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _)
-            if context.evidenceGraph.proofEligible(record) =>
-          proof.semanticIdentity -> record
-      }.groupMap(_._1)(_._2)
-      lineRecords.flatMap {
+    val line = demand.rootLine
+    val lineRecords = context.evidenceGraph.recordsFor(line)
+    val proofOwnersBySemantic = lineRecords.collect {
+      case record @ EvidenceRecord(_, proof: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _)
+          if context.evidenceGraph.proofEligible(record) =>
+        proof.semanticIdentity -> record
+    }.groupMap(_._1)(_._2)
+    val records = lineRecords.flatMap {
         case source @ EvidenceRecord(_, event: PassedPawnResultEventEvidence, _)
             if event.rootLine == line && context.evidenceGraph.proofEligible(source) =>
           exactRootReplyInventoryOwner(context.evidenceGraph, source, event).toList.flatMap { inventoryOwner =>
@@ -66,7 +66,6 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
             }
           }
         case _ => Nil
-      }
     }
     require(
       records.map(_.ref.id).distinct.size == records.size,

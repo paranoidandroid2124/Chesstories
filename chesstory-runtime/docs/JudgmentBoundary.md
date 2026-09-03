@@ -70,6 +70,15 @@ counterfactual root는 `CounterfactualAnalyzedRoot`이며, observed branch에서
 history가 인증하는 것은 root뿐이다. 뒤의 PV suffix는
 `CertifiedAnalysisMove`이지 실제 대국 수순이 아니다.
 
+그러나 admission된 PV suffix의 각 ply도 독립 graph occurrence로 실체화된다.
+각 suffix position은 정확한 incoming `LineContinuation` transition을 부모로
+가지며, 그 transition은 해당 `LegalLine` replay를 부모로 가진다. 따라서 같은
+`LegalLine` 안의 cycle이나 서로 다른 admitted `LegalLine`들이 같은 semantic
+position으로 합쳐지는 transposition에서도 history occurrence와 evidence ID는
+합쳐지지 않는다. 한 `LegalLine` 안의 새 branch나 nested transposition까지
+지원한다는 뜻은 아니다. 이 소유권은 분석 occurrence를 observed game history로
+승격시키지 않는다.
+
 현재 공개 relation subject는 history가 인증한 observed root occurrence다.
 상대 응수나 뒤 occurrence를 별도 subject로 요청하는 실제 상위 producer가
 생기기 전에는 이를 지원한다고 주장하거나 빈 API를 만들지 않는다.
@@ -81,6 +90,10 @@ history가 인증하는 것은 root뿐이다. 뒤의 PV suffix는
 - **L1**은 한 transition 직후의 자원·제약과 폐쇄 인벤토리다.
 - **L2**는 둘 이상의 ordered occurrence 또는 exact sibling을 기존 하부
   record로 연결하는 exact local relation proof다.
+
+L0/L0.5/L1 record는 root뿐 아니라 admission된 replay의 모든 ply occurrence에
+demand와 무관하게 생성된다. L2 관계의 생산·인증·공개 실패는 이미 성립한 이
+하부 record나 다른 관계를 제거하지 않는다.
 
 L2는 공격맵, 합법수, ray, pin, pawn structure를 다시 계산하지 않는다.
 평가 변화나 책의 `best`, `only`, `prevents`, `plan`, `counterplay`도 premise로
@@ -125,7 +138,7 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 | `SquareReleaseRoute` | `RelationCausalProofAssembler.squareReleaseRoute` |
 | `CaptureExclusionMoveOrder` | `OccurrenceExplanationAssembler.captureExclusionRecords`, backed directly by `CaptureExclusionMoveOrderProof.certifyDemanded` |
 | `RelocationEnablesRecapture` | `OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords`, backed directly by `RelocationEnablesRecaptureProof.certifyDemanded` |
-| `PassedPawnProgressRealizedAfterOnlyLegalReply` | `PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand`; its lower event is solely produced by `PassedPawnResultEventAssembler.fromDemand` |
+| `PassedPawnProgressRealizedAfterOnlyLegalReply` | `PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand`; its lower event is solely produced by `PassedPawnResultEventAssembler.fromDemand`, which consumes only already registered per-step `LegalLine`, `MoveTransition`, and `StructuralDelta` occurrences and never synthesizes continuation occurrences from replay |
 
 `RelationCausalProofAssembler`가 공유하는 것은 deterministic graph ownership뿐이다.
 각 가족의 private demand가 available root occurrences를 자기 lower facts로
@@ -138,17 +151,21 @@ player job의 현재 흐름은 다음과 같다.
 
 1. 실제 engine report에서 합법 replay를 admission하여 role-neutral
    `LegalLine` inventory를 만든다.
-2. 그 inventory를 참조하는 Assessment projection을 별도로 만든다.
-3. 상위 `ExplanationRequest`가 있으면 exact observed subject를 resolve한다.
-4. 일곱 가족의 유일 producer가 등록된 branch와 하부 inventory만 소비하여
+2. 각 line의 root와 모든 suffix ply를 독립 position/transition occurrence로
+   실체화한다.
+3. 모든 transition occurrence에 대해 exact relation delta와 structural record를
+   생산한다.
+4. 그 inventory를 참조하는 Assessment projection을 별도로 만든다.
+5. 상위 `ExplanationRequest`가 있으면 exact observed subject를 resolve한다.
+6. 일곱 가족의 유일 producer가 등록된 branch와 하부 inventory만 소비하여
    proof를 fail-closed로 생산한다.
-5. `OccurrenceRelationProof.fromRecord`가 각 typed graph record의 eligibility와
+7. `OccurrenceRelationProof.fromRecord`가 각 typed graph record의 eligibility와
    exact subject ownership을 직접 확인한다. 별도 wrapper나 evidence owner를
    만들지 않는다.
-6. `EvidenceBackedJudgmentPacket.occurrenceRelations`가
+8. `EvidenceBackedJudgmentPacket.occurrenceRelations`가
    `List[OccurrenceRelationProof]`로 각 인증 관계를 서로 독립적으로 보존한다.
-7. `RuntimeProtocol`이 이를 public-v6의 `occurrence_relations`로 투영한다.
-8. schema와 Python boundary는 ID, enum, shape와 cross-reference를 검증할 뿐
+9. `RuntimeProtocol`이 이를 public-v6의 `occurrence_relations`로 투영한다.
+10. schema와 Python boundary는 ID, enum, shape와 cross-reference를 검증할 뿐
    가족의 체스 논리를 복제하지 않는다.
 
 공개 branch에는 `line_owner_evidence_id`,

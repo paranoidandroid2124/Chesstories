@@ -15,60 +15,6 @@ object PassedPawnResultEventAssembler:
       parents: List[EvidenceRef]
   )
 
-  private[assembly] final case class PassedPawnChangedOccurrence(
-      line: LineNodeRef,
-      seed: PassedPawnResultTransitionSeed,
-      replayOccurrenceKey: String
-  ):
-    require(
-      seed.observation.lineOccurrenceRecord.ref.line.contains(line),
-      "a passed-pawn changed occurrence needs its exact line owner"
-    )
-    require(replayOccurrenceKey.nonEmpty, "a passed-pawn changed occurrence needs its replay owner")
-
-    def lineOwner: EvidenceRecord = seed.observation.lineOccurrenceRecord
-    def step: LineReplayStep = seed.step
-    def resultKind: PassedPawnResultKind = seed.resultKind
-
-    def stableKey: String =
-      List(
-        BoundedCausalIdentity.lineKey(line),
-        BoundedCausalIdentity.evidenceRecordKey(lineOwner),
-        seed.stableKey,
-        replayOccurrenceKey
-      ).mkString("|")
-
-  private[assembly] final case class PassedPawnRootDemand(
-      rootLine: LineNodeRef,
-      rootOccurrence: CertifiedRootOccurrence,
-      rootLineOwner: EvidenceRecord,
-      rootLinePayload: LineFactEvidence,
-      mainReplay: CanonicalLineReplay,
-      structuralOwner: EvidenceRecord,
-      structural: StructuralDeltaEvidence,
-      changedOccurrences: List[PassedPawnChangedOccurrence]
-  ):
-    def rootTransition: MoveTransitionEdge = rootOccurrence.transition
-    require(rootLineOwner.ref.line.contains(rootLine) && rootLinePayload.line == rootLine)
-    require(structuralOwner.ref.line.contains(rootLine) && structural.line.contains(rootLine))
-    require(rootTransition.matches(structuralOwner))
-    require(changedOccurrences.nonEmpty, "a passed-pawn root demand needs an exact changed occurrence")
-    require(
-      changedOccurrences.map(_.stableKey).distinct.size == changedOccurrences.size,
-      "a passed-pawn root demand cannot duplicate a changed occurrence"
-    )
-
-    def stableKey: String =
-      List(
-        rootOccurrence.publicOccurrence.stableKey,
-        BoundedCausalIdentity.lineKey(rootLine),
-        BoundedCausalIdentity.evidenceRecordKey(rootLineOwner),
-        BoundedCausalIdentity.evidenceRecordKey(structuralOwner),
-        rootOccurrence.transitionOwner.ref.id,
-        mainReplay.replaySteps.map(BoundedCausalIdentity.stepKey).mkString("[", ",", "]"),
-        changedOccurrences.map(_.stableKey).sorted.mkString("[", ",", "]")
-      ).mkString("|")
-
   /** Exact structural changed-dependency dispatch for the passed-pawn family.
     * A root is retained when its admitted main replay owns a
     * PassedPawnProgress consequence together with its direct transition
@@ -77,279 +23,150 @@ object PassedPawnResultEventAssembler:
     */
   private[assembly] final case class PassedPawnResultDemand(
       subject: CertifiedRootOccurrence,
-      roots: List[PassedPawnRootDemand]
+      trace: CausalLineTrace,
+      resultSeeds: List[PassedPawnResultTransitionSeed]
   ):
-    require(roots.nonEmpty, "a passed-pawn result demand needs a changed root occurrence")
-    val rootLines: Set[LineNodeRef] = roots.map(_.rootLine).toSet
     require(
-      subject.isObserved && roots.map(_.rootLine) == List(subject.line),
-      "the passed-pawn consumer may retain only the exact requested occurrence"
+      subject.isObserved &&
+        trace.replay.headOption.contains(subject.rootStep) &&
+        subject.replay.replaySteps.startsWith(trace.replay),
+      "the passed-pawn consumer may retain only a contiguous prefix of the requested occurrence"
     )
-    require(rootLines.size == roots.size, "a passed-pawn result demand cannot duplicate a root")
+    require(resultSeeds.nonEmpty, "a passed-pawn result demand needs a graph-owned changed occurrence")
+    require(
+      resultSeeds.map(_.stableKey).distinct.size == resultSeeds.size &&
+        resultSeeds.forall(_.belongsTo(trace)),
+      "a passed-pawn result demand cannot duplicate or detach a changed occurrence"
+    )
 
-    val stableKey: String =
-      BoundedCausalIdentity.digest(
-        List(
-          "passed-pawn-result-demand:v4",
-          subject.publicOccurrence.stableKey
-        ) ++ roots.map(_.stableKey)
-      )
+    val rootLine: LineNodeRef = subject.line
 
   private[assembly] def fromDemand(
       allocator: JudgmentProvenanceAllocator,
       demand: PassedPawnResultDemand
   ): List[EvidenceRecord] =
-    demand.roots.flatMap { rootDemand =>
-        val rootLine = rootDemand.rootLine
-        val transition = rootDemand.rootTransition
-        val lineRecord = rootDemand.rootLineOwner
-        val linePayload = rootDemand.rootLinePayload
-        val structuralRecord = rootDemand.structuralOwner
-        val structural = rootDemand.structural
-        val drafts = for
-          lineTrace <- PassedPawnResultEventProof.causalTrace(
-            lineRecord,
-            linePayload,
-            Some(rootDemand.mainReplay),
-            Some(rootDemand.rootOccurrence)
-          ).toList
-          rootReplayStep <- linePayload.lineReplaySteps.headOption.toList
-          rootStructuralOccurrence <- structural.replayStructuralOccurrence.toList
-          if lineTrace.observation(rootReplayStep).exists(observation =>
-            observation.lineOccurrenceOwner == lineRecord.ref &&
-              observation.structuralOccurrence == rootStructuralOccurrence
-          )
-          rootCanonicalTransition <- lineTrace.transition(rootReplayStep).toList
-          rootMovement = rootCanonicalTransition.relationDelta.rootMove
-          mainChangedOccurrences = changedOccurrencesOwnedBy(
-            rootDemand.changedOccurrences,
-            line = rootLine,
-            lineOwner = lineRecord,
-            replay = rootDemand.mainReplay,
-            admittedSteps = rootDemand.mainReplay.replaySteps.toSet,
-            trace = lineTrace
-          )
-          rootKindCandidates = PassedPawnResultEventProof.eventCandidateKinds(
-            lineTrace,
-            mainChangedOccurrences.map(_.seed)
-          )
-          rootKind <- rootKindCandidates
-          directFunctionDurable = linePayload.rootActorSurvivesLine.contains(true)
-          rootResultSeeds = mainChangedOccurrences
-            .filter(occurrence =>
-              occurrence.step == rootReplayStep &&
-                occurrence.resultKind == rootKind
-            )
-            .map(_.seed)
-          _ = require(
-            rootResultSeeds.forall(seed =>
-              seed.observation.structuralOccurrence == rootStructuralOccurrence &&
-                structural.consequences.count(_ == seed.consequence) == 1
+    val subject = demand.subject
+    val rootLine = subject.line
+    val transition = subject.transition
+    val lineRecord = subject.lineOwner
+    val drafts = for
+      rootReplayStep <- demand.trace.replay.headOption.toList
+      rootObservation <- demand.trace.observation(rootReplayStep).toList
+      if rootObservation.lineOccurrenceOwner == lineRecord.ref &&
+        rootObservation.transitionOccurrenceOwner == transition.evidence
+      structural = rootObservation.structural
+      rootMovement = rootObservation.movement
+      rootKind <- PassedPawnResultEventProof.eventCandidateKinds(demand.trace, demand.resultSeeds)
+      rootResultSeeds = demand.resultSeeds.filter(seed =>
+        seed.step == rootReplayStep && seed.resultKind == rootKind
+      )
+      _ = require(
+        rootResultSeeds.forall(seed =>
+          seed.observation.structuralOccurrenceRecord == rootObservation.structuralOccurrenceRecord &&
+            structural.consequences.count(_ == seed.consequence) == 1
+        ),
+        "a root result seed must retain the exact graph-owned structural occurrence and consequence"
+      )
+      rootResultProofs = rootResultSeeds.map(_.resultProof)
+      _ = require(
+        rootResultProofs.map(_.stableKey).distinct.size == rootResultProofs.size,
+        "one exact root result transition proof may be consumed only once"
+      )
+      rootIdentity = PassedPawnResultEventIdentityBuilder.from(
+        rootMove = rootLine.rootMove,
+        actor = rootMovement,
+        kind = rootKind
+      )
+      episode <- PassedPawnResultEpisodeBuilder.fromLine(
+        rootIdentity = rootIdentity,
+        rootConsequences = rootResultProofs.map(_.consequence),
+        trace = demand.trace,
+        resultSeeds = demand.resultSeeds.filter(_.resultKind == rootKind)
+      ).toList
+      if episode.causalEpisodeProven && episode.resultRoutes.nonEmpty
+      payload = PassedPawnResultEventEvidence(
+        rootTransition = structural.transition,
+        subjectOccurrence = subject.publicOccurrence,
+        causalEpisode = episode,
+        directResultProofs = rootResultProofs,
+        canonicalRootTransitionProof = structural.canonicalTransitionProof
+      )
+    yield
+      val occurrenceKey = allocator.key(episodeOccurrenceKey(payload))
+      PassedPawnResultEventDraft(
+        suffix =
+          s"passed-pawn-result-event:subject:${allocator.key(payload.subjectOccurrence.stableKey)}:${rootLine.rootMove}:${allocator.key(payload.passedPawnResultKind.id)}:causal:$occurrenceKey",
+        position = transition.from,
+        line = rootLine,
+        scope = transition.role.scope,
+        payload = payload,
+        parents = payload.lowerOccurrenceOwners
+      )
+    uniqueDraftsById(
+      drafts
+        .filter(_.payload.onlyLegalReplyRealized)
+        .map(draft =>
+          EvidenceRecord(
+            ref = allocator.evidenceRef(
+              suffix = draft.suffix,
+              producer = EvidenceProducer.PassedPawnResultEventProducer,
+              layer = EvidenceLayer.PassedPawnResultEvent,
+              position = draft.position,
+              line = Some(draft.line),
+              scope = draft.scope,
+              confidence = EvidenceConfidence.Mixed
             ),
-            "a root result seed must retain the exact structural-delta occurrence and consequence"
-          )
-          rootResultProofs = rootResultSeeds
-            .filter(seed =>
-              val durabilityProven = directFunctionDurable || !TransitionConsequenceKind
-                .requiresRootActorSurvival(seed.consequence.kind)
-              durabilityProven
-            )
-            .map(seed =>
-              PassedPawnResultTransitionProof
-                .certify(
-                  seed.resultKind,
-                  lineRecord.ref,
-                  rootStructuralOccurrence,
-                  structural.transition,
-                  seed.consequence,
-                  rootMovement
-                )
-                .getOrElse(
-                  throw new IllegalArgumentException(
-                    "a root result seed must bind the graph-owned structural transition"
-                  )
-                )
-            )
-          _ = require(
-            rootResultProofs.map(_.stableKey).distinct.size == rootResultProofs.size,
-            "one exact root result transition proof may be consumed only once"
-          )
-          establishedConsequences = rootResultProofs.map(_.consequence)
-          rootIdentity = PassedPawnResultEventIdentityBuilder.from(
-            rootMove = rootLine.rootMove,
-            actor = rootMovement,
-            kind = rootKind
-          )
-          mainLineEpisode = PassedPawnResultEpisodeBuilder.fromLine(
-            rootTransition = structural.transition,
-            rootLineRecord = lineRecord,
-            rootStructuralOccurrence = rootStructuralOccurrence,
-            rootIdentity = rootIdentity,
-            rootConsequences = establishedConsequences,
-            line = linePayload,
-            trace = lineTrace,
-            resultSeeds = mainChangedOccurrences
-              .filter(_.resultKind == rootKind)
-              .map(_.seed)
-          )
-          episode = mainLineEpisode
-          if episode.causalEpisodeProven && episode.resultRoutes.nonEmpty
-          payload = PassedPawnResultEventEvidence(
-            rootTransition = structural.transition,
-            subjectOccurrence = rootDemand.rootOccurrence.publicOccurrence,
-            causalEpisode = episode,
-            directResultProofs = rootResultProofs,
-            canonicalRootTransitionProof = structural.canonicalTransitionProof
-          )
-        yield
-          val occurrenceKey = allocator.key(episodeOccurrenceKey(payload))
-          val parents = List(
-            structuralRecord.ref,
-            transition.evidence
-          ) ++ payload.lineOccurrenceOwners
-          require(
-            parents.map(_.id).distinct.size == parents.size,
-            "a passed-pawn result event cannot hide duplicate parent owners"
-          )
-          PassedPawnResultEventDraft(
-            suffix =
-              s"passed-pawn-result-event:subject:${allocator.key(payload.subjectOccurrence.stableKey)}:${rootLine.rootMove}:${allocator.key(payload.passedPawnResultKind.id)}:causal:$occurrenceKey",
-            position = transition.from,
-            line = rootLine,
-            scope = transition.role.scope,
-            payload = payload,
-            parents = parents
-          )
-        uniqueDraftsById(
-          drafts
-          .filter(draft =>
-            PassedPawnResultEventProof.decisiveResultProof(draft.payload)
-          )
-          .map(draft =>
-            EvidenceRecord(
-              ref = allocator.evidenceRef(
-                suffix = draft.suffix,
-                producer = EvidenceProducer.PassedPawnResultEventProducer,
-                layer = EvidenceLayer.PassedPawnResultEvent,
-                position = draft.position,
-                line = Some(draft.line),
-                scope = draft.scope,
-                confidence = EvidenceConfidence.Mixed
-              ),
-              payload = draft.payload,
-              parents = draft.parents
-            )
+            payload = draft.payload,
+            parents = draft.parents
           )
         )
-      }
+    )
 
   private[assembly] def changedDependencyDemand(
       context: JudgmentAssemblyContext,
       demand: OccurrenceExplanationDemand
   ): Option[PassedPawnResultDemand] =
-    observedRootDemand(context, demand.subject).map(root => PassedPawnResultDemand(demand.subject, List(root)))
+    observedRootDemand(context, demand.subject)
 
   private def observedRootDemand(
       context: JudgmentAssemblyContext,
       rootOccurrence: CertifiedRootOccurrence
-  ): Option[PassedPawnRootDemand] =
-    val rootLine = rootOccurrence.line
-    val rootTransition = rootOccurrence.transition
+  ): Option[PassedPawnResultDemand] =
     for
-      linePayload <- rootOccurrence.lineOwner.payload match
-        case payload: LineFactEvidence if payload.line == rootLine => Some(payload)
-        case _                                                    => None
-      structuralOwnerAndPayload <- uniqueStructuralRecord(context.evidenceGraph, rootLine)
-      (structuralOwner, structural) = structuralOwnerAndPayload
-      if rootTransition.matches(structuralOwner)
+      trace <- graphOwnedTrace(context, rootOccurrence)
+      rootObservation <- trace.observation(rootOccurrence.rootStep)
+      structural <- rootObservation.structuralOccurrenceRecord.payload match
+        case payload: StructuralDeltaEvidence => Some(payload)
+        case _                                => None
       legalReply <- structural.certifiedRootResponseMoves
         .map(_.map(EvidenceRef.normalizeMove))
         .collect { case reply :: Nil => reply }
-      analyzedReply <- rootOccurrence.replay.replaySteps.lift(1)
+      analyzedReply <- trace.replay.lift(1)
       if EvidenceRef.sameMove(analyzedReply.moveUci, legalReply)
-      changes = changedOccurrencesFor(
-        rootLine,
-        rootOccurrence.lineOwner,
-        linePayload,
-        rootOccurrence.replay,
-        rootOccurrence.replay.replaySteps.toSet,
-        Some(rootOccurrence)
+      resultSeeds = trace.replay.flatMap(step =>
+        trace.observation(step).toList.flatMap(observation =>
+          observation.consequences
+            .filter(_.kind == TransitionConsequenceKind.PassedPawnProgress)
+            .flatMap(PassedPawnResultTransitionSeed.direct(observation, _))
+        )
       ).sortBy(_.stableKey)
-      if changes.nonEmpty
-    yield PassedPawnRootDemand(
-      rootLine,
-      rootOccurrence,
-      rootOccurrence.lineOwner,
-      linePayload,
-      rootOccurrence.replay,
-      structuralOwner,
-      structural,
-      changes
-    )
+      if resultSeeds.nonEmpty
+    yield PassedPawnResultDemand(rootOccurrence, trace, resultSeeds)
 
-  private def changedOccurrencesFor(
-      line: LineNodeRef,
-      lineOwner: EvidenceRecord,
-      linePayload: LineFactEvidence,
-      replay: CanonicalLineReplay,
-      admittedSteps: Set[LineReplayStep],
-      rootOccurrence: Option[CertifiedRootOccurrence] = None
-  ): List[PassedPawnChangedOccurrence] =
-    val replayOccurrenceKey = passedPawnReplayOccurrenceKey(replay)
-    replay
-      .structuralConsequenceOccurrences(TransitionConsequenceKind.PassedPawnProgress)
-      .flatMap {
-        case (step, consequences) if admittedSteps(step) =>
-          require(
-            consequences.distinct.size == consequences.size,
-            "one replay occurrence cannot duplicate an exact passed-pawn consequence"
-          )
-          PassedPawnResultEventProof
-            .exactStructuralObservation(lineOwner, linePayload, step, replay, rootOccurrence)
-            .toList
-            .flatMap(observation =>
-              consequences.flatMap(consequence =>
-                PassedPawnResultTransitionSeed
-                  .direct(observation, consequence)
-                  .map(seed =>
-                    PassedPawnChangedOccurrence(
-                      line,
-                      seed,
-                      replayOccurrenceKey
-                    )
-                  )
-              )
-            )
-        case _ => Nil
-      }
-
-  private def passedPawnReplayOccurrenceKey(replay: CanonicalLineReplay): String =
-    BoundedCausalIdentity.digest(
-      "passed-pawn-replay-occurrence:v1" ::
-        replay.replaySteps.map(BoundedCausalIdentity.stepKey)
-    )
-
-  private def changedOccurrencesOwnedBy(
-      occurrences: List[PassedPawnChangedOccurrence],
-      line: LineNodeRef,
-      lineOwner: EvidenceRecord,
-      replay: CanonicalLineReplay,
-      admittedSteps: Set[LineReplayStep],
-      trace: CausalLineTrace
-  ): List[PassedPawnChangedOccurrence] =
-    val replayOccurrenceKey = passedPawnReplayOccurrenceKey(replay)
-    val owned = occurrences.filter(occurrence =>
-      occurrence.line == line &&
-        occurrence.lineOwner == lineOwner &&
-        occurrence.replayOccurrenceKey == replayOccurrenceKey
-    )
-    require(
-      owned.forall(occurrence =>
-        admittedSteps(occurrence.step) && occurrence.seed.belongsTo(trace)
-      ),
-      "a passed-pawn changed occurrence must retain its exact replay path and line owner"
-    )
-    owned
+  private def graphOwnedTrace(
+      context: JudgmentAssemblyContext,
+      rootOccurrence: CertifiedRootOccurrence
+  ): Option[CausalLineTrace] =
+    context.evidenceGraph
+      .lineTransitionOccurrencePrefix(
+        rootOccurrence.line,
+        rootOccurrence.transition.evidence.id
+      )
+      .flatMap(occurrences =>
+        rootOccurrence.replay
+          .subset(occurrences.map(_.step))
+          .flatMap(CausalLineTrace.from(occurrences, _))
+      )
 
   private[assembly] def episodeOccurrenceKey(
       payload: PassedPawnResultEventEvidence
@@ -366,6 +183,8 @@ object PassedPawnResultEventAssembler:
           fenAfter = event.step.fenAfter
         ).stableKey,
         event.lineOccurrenceOwner.id,
+        event.transitionOccurrenceOwner.id,
+        event.structuralOccurrenceOwner.id,
         event.structuralOccurrence.occurrenceId,
         exact(event.structuralConsequences.map(_.stableKey).sorted)
       ))
@@ -401,146 +220,7 @@ object PassedPawnResultEventAssembler:
     )
     records
 
-  private def uniqueStructuralRecord(
-      graph: TypedEvidenceGraph,
-      line: LineNodeRef
-  ): Option[(EvidenceRecord, StructuralDeltaEvidence)] =
-    graph.recordsFor(line).collect {
-      case record @ EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
-          if ref.producer == EvidenceProducer.StructuralDeltaProducer &&
-            ref.layer == EvidenceLayer.StructuralDelta &&
-            ref.confidence == EvidenceConfidence.BoardDerived &&
-            payload.line.contains(line) && EvidenceRef.sameMove(payload.moveUci, line.rootMove) &&
-            payload.transitionIsCertified && payload.canonicalOutputShapeCertified &&
-            graph.proofEligible(record) =>
-        record -> payload
-    } match
-      case record :: Nil => Some(record)
-      case _             => None
-
 private[assembly] object PassedPawnResultEventProof:
-  def causalTrace(
-      lineOwner: EvidenceRecord,
-      line: LineFactEvidence,
-      replay: Option[CanonicalLineReplay] = None,
-      rootOccurrence: Option[CertifiedRootOccurrence] = None
-  ): Option[CausalLineTrace] =
-    replay
-      .filter(_.matches(line.lineReplaySteps))
-      .map(causalTrace(_, List(lineOwner -> line), rootOccurrence))
-
-  private[assembly] def causalTrace(
-      replay: CanonicalLineReplay,
-      lineOwners: List[(EvidenceRecord, LineFactEvidence)]
-  ): CausalLineTrace =
-    causalTrace(replay, lineOwners, None)
-
-  private def causalTrace(
-      replay: CanonicalLineReplay,
-      lineOwners: List[(EvidenceRecord, LineFactEvidence)],
-      rootOccurrence: Option[CertifiedRootOccurrence]
-  ): CausalLineTrace =
-    causalTrace(
-      replay,
-      lineOwners,
-      lineOwners.map { case (record, line) => record.ref.id -> line.lineReplaySteps.toSet }.toMap,
-      rootOccurrence
-    )
-
-  private[assembly] def causalTrace(
-      replay: CanonicalLineReplay,
-      lineOwners: List[(EvidenceRecord, LineFactEvidence)],
-      exactOwnerSteps: Map[String, Set[LineReplayStep]],
-      rootOccurrence: Option[CertifiedRootOccurrence]
-  ): CausalLineTrace =
-    val replayStepSet = replay.replaySteps.toSet
-    val ownerIds = lineOwners.map(_._1.ref.id)
-    require(
-      ownerIds.distinct.size == ownerIds.size,
-      "one causal line owner id cannot have multiple producers"
-    )
-    val ownerLinesById = lineOwners.map { case (record, line) => record.ref.id -> line }.toMap
-    val assignments = exactOwnerSteps.toList.flatMap { case (ownerId, steps) =>
-      steps.toList.map(step => step -> ownerId)
-    }
-    val assignmentOwnersByStep = assignments.groupMap(_._1)(_._2)
-    require(
-      assignmentOwnersByStep.values.forall(_.size == 1),
-      "one causal replay step cannot have multiple observation producers"
-    )
-    val manifestCertified =
-      lineOwners.nonEmpty &&
-        exactOwnerSteps.keySet == ownerIds.toSet && exactOwnerSteps.values.forall(_.nonEmpty) &&
-        assignments.forall { case (step, ownerId) =>
-          replayStepSet(step) && ownerLinesById.get(ownerId).exists(_.lineReplaySteps.contains(step))
-        } &&
-        replay.replaySteps.forall(assignmentOwnersByStep.contains)
-    CausalLineTrace.from(
-      replay.replaySteps,
-      Option.when(manifestCertified)(
-        replay.replaySteps.flatMap(step =>
-          lineOwners.flatMap { case (record, line) =>
-            Option
-              .when(exactOwnerSteps.get(record.ref.id).exists(_(step)))(())
-              .flatMap(_ => exactStructuralObservation(record, line, step, replay, rootOccurrence))
-          }
-        )
-      ).getOrElse(Nil),
-      Some(replay)
-    )
-
-  private[assembly] def exactStructuralObservation(
-      lineOwner: EvidenceRecord,
-      line: LineFactEvidence,
-      step: LineReplayStep,
-      replay: CanonicalLineReplay,
-      rootOccurrence: Option[CertifiedRootOccurrence] = None
-  ): Option[CausalStepObservation] =
-    for
-      canonical <- replay.transition(step)
-      ownedReplay <- line.certifiedReplay
-      if lineOwner.payload == line
-      if lineOwner.ref.producer == EvidenceProducer.LegalLineProducer
-      if lineOwner.ref.layer == EvidenceLayer.Line
-      if lineOwner.ref.confidence == EvidenceConfidence.LegalReplayVerified
-      if lineOwner.ref.line.contains(line.line) && lineOwner.ref.scope == EvidenceScope.LegalLine
-      if ownedReplay.replaySteps.contains(step)
-      ownedOccurrence <- ownedReplay.structuralOccurrence(step)
-      occurrence <- replay.structuralOccurrence(step)
-      if ownedOccurrence == occurrence
-      role <- transitionRoleForOccurrence(line.line, step, replay, rootOccurrence)
-      movement = canonical.relationDelta.rootMove
-      transition = StructuralTransitionBinding(
-        moveUci = step.moveUci,
-        role = role,
-        from = PositionNodeRef(step.fenBefore, step.ply - 1, Some(movement.side)),
-        to = PositionNodeRef(step.fenAfter, step.ply, Some(!movement.side)),
-        line = Some(line.line),
-        perspective = movement.side,
-        actorRole = Some(movement.beforeRole)
-      )
-    yield CausalStepObservation(
-      step,
-      transition,
-      occurrence.consequences.filter(_.establishesState),
-      movement,
-      lineOwner,
-      occurrence
-    )
-
-  private def transitionRoleForOccurrence(
-      line: LineNodeRef,
-      step: LineReplayStep,
-      replay: CanonicalLineReplay,
-      rootOccurrence: Option[CertifiedRootOccurrence]
-  ): Option[TransitionEdgeRole] =
-    rootOccurrence match
-      case Some(root) if replay.replaySteps.headOption.contains(step) =>
-        Option.when(
-          root.isObserved && root.remainsCertified && root.line == line && root.rootStep == step
-        )(root.transition.role)
-      case _ => Some(TransitionEdgeRole.Alternative)
-
   def eventCandidateKinds(
       trace: CausalLineTrace,
       resultSeeds: List[PassedPawnResultTransitionSeed]
@@ -588,19 +268,6 @@ private[assembly] object PassedPawnResultEventProof:
       )
       if enabled then reached + to else reached
     } - root
-
-  private def rootActor(
-      rootLine: LineNodeRef,
-      structural: StructuralDeltaEvidence
-  ): Option[(_root_.chess.Square, _root_.chess.Piece)] =
-    structural.certifiedRootStep
-      .filter(step => EvidenceRef.sameMove(step.uci, rootLine.rootMove))
-      .map(step => step.move.orig -> step.move.piece)
-
-  def decisiveResultProof(
-      event: PassedPawnResultEventEvidence
-  ): Boolean =
-    event.onlyLegalReplyRealized
 
 private[assembly] object PassedPawnResultEventIdentityBuilder:
   def from(

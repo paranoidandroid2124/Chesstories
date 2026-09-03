@@ -43,7 +43,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
     CausalBranchOccurrence.fromCertifiedOccurrences(
       PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation(
         EvidenceRef.normalizeMove(replyMove),
-        event.causalEpisode.root.structuralOccurrence.occurrenceId
+        event.causalEpisode.root.structuralOccurrenceOwner.id
       ),
       rootProvenance,
       event.rootLine,
@@ -72,7 +72,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
       val rootProvenance = event.subjectOccurrence.rootProvenance
       branch.role == PassedPawnProgressBranchRole.ObservedRootWithAnalyzedContinuation(
         EvidenceRef.normalizeMove(replyMove),
-        event.causalEpisode.root.structuralOccurrence.occurrenceId
+        event.causalEpisode.root.structuralOccurrenceOwner.id
       ) && branch.rootProvenance == rootProvenance && branch.line == event.rootLine &&
         branch.lineOwnerEvidenceId == event.subjectOccurrence.lineOwnerEvidenceId &&
         branch.rootTransitionEvidenceId == event.subjectOccurrence.transitionEvidenceId &&
@@ -250,44 +250,12 @@ private[chessjudgment] final case class PassedPawnProgressPremiseUse private (
     ).mkString("|")
 
 private[chessjudgment] object PassedPawnProgressPremiseUse:
-  private def lineOccurrenceOwnerStepBinding(
-      ownerId: String,
-      occurrenceId: String,
-      step: LineReplayStep
-  ): String =
-    BoundedCausalIdentity.digest(List(
-      "passed-pawn-progress-realized-after-only-legal-reply-line-owner-step:v1",
-      ownerId,
-      BoundedCausalIdentity.stepKey(step),
-      occurrenceId
-    ))
-
   private def structuralPremiseIds(event: PassedPawnResultEventNode): List[String] =
-    (List(
+    List(
       event.lineOccurrenceOwner.id,
-      event.structuralOccurrence.occurrenceId,
-      lineOccurrenceOwnerStepBinding(
-        event.lineOccurrenceOwner.id,
-        event.structuralOccurrence.occurrenceId,
-        event.step
-      )
-    ) ++ event.structuralOccurrence.sourcePremiseKeys).distinct.sorted
-
-  private def resultPremiseIds(proof: PassedPawnResultTransitionProof): List[String] =
-    (List(
-      proof.sourceLineOccurrenceOwner.id,
-      proof.sourceOccurrenceId,
-      lineOccurrenceOwnerStepBinding(
-        proof.sourceLineOccurrenceOwner.id,
-        proof.sourceOccurrenceId,
-        LineReplayStep(
-          proof.sourceTransition.to.ply,
-          proof.sourceTransition.moveUci,
-          proof.sourceTransition.from.fen,
-          proof.sourceTransition.to.fen
-        )
-      )
-    ) ++ proof.sourcePremiseKeys).distinct.sorted
+      event.transitionOccurrenceOwner.id,
+      event.structuralOccurrenceOwner.id
+    ).distinct.sorted
 
   def dependency(
       dependency: PassedPawnResultDependency,
@@ -317,13 +285,18 @@ private[chessjudgment] object PassedPawnProgressPremiseUse:
         branch.stepAt(toStepIndex).exists(_.step == dependency.to.step),
       "a typed passed-pawn dependency must bind its exact ordered occurrence endpoints"
     )
-    val lineOccurrenceOwners = List(dependency.from.lineOccurrenceOwner.id, dependency.to.lineOccurrenceOwner.id).distinct
+    val lowerOccurrenceOwners =
+      (structuralPremiseIds(dependency.from) ++ structuralPremiseIds(dependency.to)).distinct
     require(
-      lineOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)) &&
+      lowerOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)) &&
         dependency.lowerIssuerRecords.forall(owner => sourceRecord.parents.contains(owner.ref)),
       "a typed passed-pawn dependency must retain every exact lower occurrence owner"
     )
     val witness = PassedPawnResultDependencyPremiseWitness.from(dependency, stateBindings)
+    require(
+      witness.requiredSourcePremiseIds.forall(id => sourceRecord.parents.exists(_.id == id)),
+      "a typed passed-pawn dependency must retain every graph-owned proof occurrence"
+    )
     PassedPawnProgressPremiseUse(
       PassedPawnProgressPremiseRole.Dependency(dependencyIndex),
       "passed_pawn_progress_dependency",
@@ -354,14 +327,15 @@ private[chessjudgment] object PassedPawnProgressPremiseUse:
     )
     require(
       branch.stepAt(stepIndex).exists(_.step == route.sourceEvent.step) &&
-        sourceRecord.parents.exists(_.id == route.resultProof.sourceLineOccurrenceOwner.id),
-      "a passed-pawn result premise must bind its realizing occurrence and line owner"
+        route.resultProof.sourceStructuralOccurrenceOwner == route.sourceEvent.structuralOccurrenceOwner &&
+        structuralPremiseIds(route.sourceEvent).forall(id => sourceRecord.parents.exists(_.id == id)),
+      "a passed-pawn result premise must bind its graph-owned realizing occurrence"
     )
     PassedPawnProgressPremiseUse(
       PassedPawnProgressPremiseRole.Result,
       "passed_pawn_progress",
       route.resultProof.stableKey,
-      (sourceRecord.ref.id :: resultPremiseIds(route.resultProof)).distinct.sorted,
+      (sourceRecord.ref.id :: structuralPremiseIds(route.sourceEvent)).distinct.sorted,
       branch.branchId,
       branch.role,
       stepIndex,

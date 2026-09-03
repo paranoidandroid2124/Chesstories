@@ -5,6 +5,7 @@ enum PositionNodeRole:
   case AfterPlayed
   case AfterReference
   case AfterAlternative
+  case LineOccurrence
 
   def scope: EvidenceScope =
     this match
@@ -12,6 +13,7 @@ enum PositionNodeRole:
       case AfterPlayed      => EvidenceScope.AfterPlayedPosition
       case AfterReference   => EvidenceScope.AfterReferencePosition
       case AfterAlternative => EvidenceScope.AlternativeTransition
+      case LineOccurrence   => EvidenceScope.LegalLine
 
 enum LineNodeRole:
   case Played
@@ -28,12 +30,14 @@ enum TransitionEdgeRole:
   case Played
   case Reference
   case Alternative
+  case LineContinuation
 
   def scope: EvidenceScope =
     this match
       case Played      => EvidenceScope.PlayedTransition
       case Reference   => EvidenceScope.ReferenceTransition
       case Alternative => EvidenceScope.AlternativeTransition
+      case LineContinuation => EvidenceScope.LegalLine
 
 enum EvidenceLayer:
   case PositionOccurrence

@@ -87,6 +87,12 @@ object EvidenceBackedJudgmentPacket:
     val graphIds = graphRecords.map(_.ref.id)
     val uniqueGraphIds = graphIds.distinct.size == graphIds.size
     val registeredById = graphRecords.map(record => record.ref.id -> record).toMap
+    val positionOccurrenceRecordsByRef = graphRecords.collect {
+      case record @ EvidenceRecord(ref, _: PositionOccurrenceEvidence, _) => ref.position -> record
+    }.groupMap(_._1)(_._2)
+    val evaluationRecordsByLine = graphRecords.collect {
+      case record @ EvidenceRecord(_, CandidateLineEvaluationEvidence(line, _), _) => line -> record
+    }.groupMap(_._1)(_._2)
     def registered(ref: EvidenceRef): Boolean =
       registeredById.get(ref.id).exists(_.ref == ref)
     val positionRefs = assembly.positions.map(_.ref).toSet
@@ -159,11 +165,7 @@ object EvidenceBackedJudgmentPacket:
           false
       }
     def exactEvaluationEvidence(line: CandidateLineNode): Boolean =
-      graphRecords.collect {
-        case record @ EvidenceRecord(_, CandidateLineEvaluationEvidence(payloadLine, _), _)
-            if payloadLine == line.ref =>
-          record
-      } match
+      evaluationRecordsByLine.getOrElse(line.ref, Nil) match
         case List(EvidenceRecord(ref, CandidateLineEvaluationEvidence(_, evaluation), parents)) =>
           val exactAuthority = evaluation match
             case CandidateLineEvaluation.EngineSearch(_) =>
@@ -184,33 +186,20 @@ object EvidenceBackedJudgmentPacket:
     def exactTransitionEvidence(transition: MoveTransitionEdge): Boolean =
       positionRefs.contains(transition.from) &&
         positionRefs.contains(transition.to) &&
-        registeredById.get(transition.evidence.id).exists {
-          case record @ EvidenceRecord(ref, payload @ MoveTransitionEvidence(moveUci, from, to, _), parents) =>
-            ref == transition.evidence &&
-              ref.producer == EvidenceProducer.MoveTransitionProducer &&
-              ref.layer == EvidenceLayer.MoveTransition &&
-              ref.position == transition.from &&
-              ref.line.isEmpty &&
-              ref.scope == transition.role.scope &&
-              moveUci == transition.moveUci &&
-              from == transition.from &&
-              to == transition.to &&
-              parents.isEmpty &&
-              payload.canonicalTransitionProof.exists(
-                _.provesMove(moveUci, from, to, ref.scope)
-              ) &&
-              transition.matches(record)
-          case _ =>
-            false
-        }
-    val legalLineOwnerRecords = graphRecords.filter(record =>
-      record.ref.producer == EvidenceProducer.LegalLineProducer &&
-        record.ref.layer == EvidenceLayer.Line &&
-        record.ref.scope == EvidenceScope.LegalLine
-    )
-    val exactLegalLineOwnerSet =
-      legalLineOwnerRecords.size == assembly.legalLines.size &&
-        legalLineOwnerRecords.map(_.ref).toSet == assembly.legalLines.map(_.evidence).toSet
+        assembly.evidenceGraph.record(transition.evidence).exists(record =>
+          transition.matches(record) && assembly.evidenceGraph.proofEligible(record)
+        )
+    def positionOccurrenceRecord(position: PositionNode): Option[EvidenceRecord] =
+      positionOccurrenceRecordsByRef.getOrElse(position.ref, Nil) match
+        case record :: Nil => Some(record)
+        case _             => None
+    def exactPositionEvidence(position: PositionNode): Boolean =
+      positionOccurrenceRecord(position).exists(record =>
+        record.ref.scope == position.role.scope &&
+          (if position.role == PositionNodeRole.LineOccurrence then record.ref.line.nonEmpty
+           else record.ref.line.isEmpty) &&
+          assembly.evidenceGraph.proofEligible(record)
+      )
     val assessmentProjectionClosed =
       assembly.lines.forall(candidate =>
         assembly.legalLines.filter(_.ref == candidate.ref) match
@@ -218,34 +207,56 @@ object EvidenceBackedJudgmentPacket:
           case _            => false
       )
     val transitionEvidenceIds = assembly.transitions.map(_.evidence.id).toSet
+    val continuationTransitions = assembly.transitions.filter(_.role == TransitionEdgeRole.LineContinuation)
+    val transitionsByEvidenceId = assembly.transitions.groupBy(_.evidence.id)
+    val continuationTransitionsByLine = continuationTransitions.flatMap(edge =>
+      edge.evidence.line.map(_ -> edge)
+    ).groupMap(_._1)(_._2)
+    def exactLineOccurrenceEdges(line: LegalLineNode): Option[List[MoveTransitionEdge]] =
+      for
+        replay <- assembly.lineReplay(line.ref)
+        rootOccurrence <- assembly.lineRootOccurrence(line.ref)
+        rootTransition <- transitionsByEvidenceId.getOrElse(rootOccurrence.transitionEvidenceId, Nil) match
+          case exact :: Nil => Some(exact)
+          case _            => None
+        if rootOccurrence.start == rootTransition.from
+        if rootOccurrence.destination == rootTransition.to
+        continuations = continuationTransitionsByLine
+          .getOrElse(line.ref, Nil)
+          .sortBy(_.to.ply)
+        edges = rootTransition :: continuations
+        steps <- Option.when(edges.size == replay.replaySteps.size)(
+          edges.flatMap(edge =>
+            assembly.transitionReplay(edge).flatMap(_.replaySteps match
+              case step :: Nil => Some(step)
+              case _           => None
+            )
+          )
+        )
+        if steps == replay.replaySteps
+        if rootTransition.role != TransitionEdgeRole.LineContinuation
+        if rootTransition.evidence.line.isEmpty
+        if edges.zip(edges.drop(1)).forall { case (before, after) => before.to == after.from }
+      yield edges
+    val lineOccurrenceEdges = assembly.legalLines.map(line => exactLineOccurrenceEdges(line))
+    val exactOccurrenceEdges = lineOccurrenceEdges.flatten.flatten
+    val continuationPositions = assembly.positions.filter(_.role == PositionNodeRole.LineOccurrence)
+    val transitionPositionClosure = assembly.root.exists(root =>
+      positionRefs == (assembly.transitions.map(_.to).toSet + root)
+    )
     val exactLegalLineOccurrenceClosure =
-      assembly.lineReplays.keySet == legalLineRefs &&
+        assembly.lineReplays.keySet == legalLineRefs &&
         assembly.lineRootOccurrences.keySet == legalLineRefs &&
         assembly.transitionReplays.keySet == transitionEvidenceIds &&
-        assembly.transitions.size == assembly.legalLines.size &&
-        assembly.lineRootOccurrences.values.map(_.transitionEvidenceId).toSet == transitionEvidenceIds &&
-        assembly.lineRootOccurrences.values.map(_.transitionEvidenceId).toSet.size ==
-          assembly.lineRootOccurrences.size &&
-        assembly.legalLines.map { line =>
-          for
-            replay <- assembly.lineReplay(line.ref)
-            rootStep <- replay.replaySteps.headOption
-            occurrence <- assembly.lineRootOccurrence(line.ref)
-            transition <- assembly.transitions.filter(_.evidence.id == occurrence.transitionEvidenceId) match
-              case exact :: Nil => Some(exact)
-              case _            => None
-            transitionReplay <- assembly.transitionReplay(transition)
-            exactTransitionStep <- transitionReplay.replaySteps match
-              case exact :: Nil => Some(exact)
-              case _            => None
-          yield
-            occurrence.start == transition.from &&
-              occurrence.destination == transition.to &&
-              rootStep == exactTransitionStep &&
-              EvidenceRef.sameMove(line.ref.rootMove, transition.moveUci)
-        }.forall(_.contains(true))
+        lineOccurrenceEdges.forall(_.nonEmpty) &&
+        exactOccurrenceEdges.map(_.evidence.id).distinct.size == exactOccurrenceEdges.size &&
+        exactOccurrenceEdges.map(_.evidence.id).toSet == transitionEvidenceIds &&
+        continuationTransitions.map(_.to).distinct.size == continuationTransitions.size &&
+        continuationPositions.map(_.ref).toSet == continuationTransitions.map(_.to).toSet &&
+        transitionPositionClosure
     val nodeAndTransitionEvidenceClosed =
-      assembly.legalLines.forall(exactLineEvidence) &&
+      assembly.positions.forall(exactPositionEvidence) &&
+        assembly.legalLines.forall(exactLineEvidence) &&
         assembly.lines.forall(exactEvaluationEvidence) &&
         assembly.transitions.forall(exactTransitionEvidence)
     val passedPawnResultEvidenceClosed =
@@ -275,11 +286,7 @@ object EvidenceBackedJudgmentPacket:
       assembly.lines.map(line => line.ref -> line).toMap
     def canonicalLineParents(line: CandidateLineNode): List[EvidenceRef] =
       line.lineEvidence ::
-        graphRecords.collect {
-          case EvidenceRecord(evalRef, CandidateLineEvaluationEvidence(payloadLine, _), _)
-              if payloadLine == line.ref =>
-            evalRef
-        }
+        evaluationRecordsByLine.getOrElse(line.ref, Nil).map(_.ref)
     val comparisonParentsCanonical =
       comparisonRecords.forall { case (record, fact) =>
         val comparedLineParents =
@@ -353,7 +360,6 @@ object EvidenceBackedJudgmentPacket:
       primaryRolesUnique &&
       uniqueGraphIds &&
       graphClosed &&
-      exactLegalLineOwnerSet &&
       assessmentProjectionClosed &&
       exactLegalLineOccurrenceClosure &&
       nodeAndTransitionEvidenceClosed &&

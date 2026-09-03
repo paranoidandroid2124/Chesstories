@@ -9,6 +9,28 @@ object TransitionFactNormalizer:
       edge: MoveTransitionEdge,
       replay: CanonicalLineReplay
   ): EvidenceRecord =
+    require(
+      edge.role != TransitionEdgeRole.LineContinuation && edge.evidence.line.isEmpty,
+      "a root transition cannot claim suffix line ownership"
+    )
+    moveTransitionRecord(edge, replay, Nil)
+
+  def fromLineContinuation(
+      edge: MoveTransitionEdge,
+      replay: CanonicalLineReplay,
+      lineOwner: EvidenceRef
+  ): EvidenceRecord =
+    require(
+      edge.role == TransitionEdgeRole.LineContinuation && edge.evidence.line == lineOwner.line,
+      "a line continuation must retain its exact LegalLine owner"
+    )
+    moveTransitionRecord(edge, replay, List(lineOwner))
+
+  private def moveTransitionRecord(
+      edge: MoveTransitionEdge,
+      replay: CanonicalLineReplay,
+      parents: List[EvidenceRef]
+  ): EvidenceRecord =
     val root = replay.onlyTransition
       .map(_.relationDelta.rootMove)
       .getOrElse(throw IllegalArgumentException("a move transition needs exactly one admitted legal replay step"))
@@ -17,7 +39,7 @@ object TransitionFactNormalizer:
       role = edge.role,
       from = edge.from,
       to = edge.to,
-      line = None,
+      line = edge.evidence.line,
       perspective = root.side,
       actorRole = Some(root.beforeRole)
     )
@@ -31,7 +53,8 @@ object TransitionFactNormalizer:
         from = edge.from,
         to = edge.to,
         canonicalTransitionProof = Some(proof)
-      )
+      ),
+      parents = parents
     )
 
   def fromStructuralDelta(

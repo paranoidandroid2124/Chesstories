@@ -42,6 +42,22 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     assertEquals(branch.steps.map(_.moveUci), List("g6g7", "h8h7", "g7g8q"))
     assertEquals(branch.steps.map(_.index), List(0, 1, 2))
     assertEquals(branch.steps.map(_.ply), List(1, 2, 3))
+    assertEquals(branch.sourceOccurrenceId, event.causalEpisode.root.structuralOccurrenceOwner.id)
+    assert(resolved.evidenceGraph.byId.contains(branch.sourceOccurrenceId))
+    assertEquals(eventRecord.parents, event.lowerOccurrenceOwners)
+    assert(
+      event.causalEpisode.resultSteps.forall(result =>
+        resolved.evidenceGraph.record(result.transitionOccurrenceOwner).contains(result.transitionOccurrenceRecord) &&
+          resolved.evidenceGraph.record(result.structuralOccurrenceOwner).contains(result.structuralOccurrenceRecord) &&
+          resolved.evidenceGraph.proofEligible(result.transitionOccurrenceRecord) &&
+          resolved.evidenceGraph.proofEligible(result.structuralOccurrenceRecord)
+      )
+    )
+    assert(
+      event.causalEpisode.resultSteps
+        .filterNot(_.step == event.causalEpisode.root.step)
+        .forall(_.structuralTransition.role == TransitionEdgeRole.LineContinuation)
+    )
     assertEquals(
       branch.steps.map(_.provenance),
       List("observed_game_move", "certified_analysis_move", "certified_analysis_move")
@@ -303,6 +319,108 @@ class PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest extends munit.FunSu
     assert(!resolved.evidenceGraph.records.exists(
       _.payload.isInstanceOf[PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence]
     ))
+
+  test("a missing middle graph-owned StructuralDelta invalidates demand and persisted proofs"):
+    val resolved = MoveReviewJudgmentOrchestrator
+      .execute(singletonAnalysisContinuation)
+      .getOrElse(fail("expected the singleton analysis continuation to assemble"))
+    val eventRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnResultEventEvidence, _) => record
+    }.getOrElse(fail("expected the persisted passed-pawn event"))
+    val proofRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
+    }.getOrElse(fail("expected the persisted passed-pawn proof"))
+    val missing = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+          if payload.role == TransitionEdgeRole.LineContinuation &&
+            EvidenceRef.sameMove(payload.moveUci, "h8h7") =>
+        record
+    }.getOrElse(fail("expected the graph-owned middle-reply StructuralDelta"))
+    assert(eventRecord.parents.contains(missing.ref))
+    val incompleteGraph = TypedEvidenceGraph.empty.addAll(
+      resolved.evidenceGraph.records.filterNot(_.ref == missing.ref)
+    )
+    val incompleteContext = resolved.assembly.copy(evidenceGraph = incompleteGraph)
+    val occurrenceDemand = OccurrenceExplanationDemand
+      .resolve(
+        resolved.assembly,
+        ExplanationRequest.forObservedMove(resolved.assembly.input)
+      )
+      .getOrElse(fail("expected the exact observed-occurrence demand"))
+
+    assertEquals(
+      PassedPawnResultEventAssembler.changedDependencyDemand(incompleteContext, occurrenceDemand),
+      None
+    )
+    assert(!incompleteGraph.proofEligible(eventRecord))
+    assert(!incompleteGraph.proofEligible(proofRecord))
+
+  test("an unrelated trailing graph occurrence cannot suppress an earlier closed relation"):
+    val withTrailingReply = singletonAnalysisContinuation.copy(
+      variations = singletonAnalysisContinuation.variations.map {
+        case line if EvidenceRef.sameMove(line.moves.headOption.getOrElse(""), "g6g7") =>
+          line.copy(moves = line.moves :+ "h7h6")
+        case line => line
+      }
+    )
+    val resolved = MoveReviewJudgmentOrchestrator
+      .execute(withTrailingReply)
+      .getOrElse(fail("expected the longer analysis continuation to assemble"))
+    val eventRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnResultEventEvidence, _) => record
+    }.getOrElse(fail("expected the earlier persisted passed-pawn event"))
+    val proofRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
+    }.getOrElse(fail("expected the earlier persisted passed-pawn proof"))
+    val trailing = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+          if payload.role == TransitionEdgeRole.LineContinuation &&
+            EvidenceRef.sameMove(payload.moveUci, "h7h6") =>
+        record
+    }.getOrElse(fail("expected the unrelated trailing StructuralDelta"))
+    val incompleteGraph = TypedEvidenceGraph.empty.addAll(
+      resolved.evidenceGraph.records.filterNot(_.ref == trailing.ref)
+    )
+    val incompleteContext = resolved.assembly.copy(evidenceGraph = incompleteGraph)
+    val occurrenceDemand = OccurrenceExplanationDemand
+      .resolve(
+        resolved.assembly,
+        ExplanationRequest.forObservedMove(resolved.assembly.input)
+      )
+      .getOrElse(fail("expected the exact observed-occurrence demand"))
+
+    assert(!eventRecord.parents.contains(trailing.ref))
+    assert(PassedPawnResultEventAssembler.changedDependencyDemand(incompleteContext, occurrenceDemand).nonEmpty)
+    assert(incompleteGraph.proofEligible(eventRecord))
+    assert(incompleteGraph.proofEligible(proofRecord))
+
+  test("a later capture of the promoted actor cannot erase its earlier closed relation"):
+    val resolved = MoveReviewJudgmentOrchestrator
+      .execute(
+        RawMoveReviewInput(
+          fen = "r6k/5K2/6P1/8/8/8/8/8 w - - 0 1",
+          playedMoveUci = "g6g7",
+          variations = List(
+            EngineLine(List("f7e6"), scoreCp = 600, depth = 20),
+            EngineLine(List("g6g7", "h8h7", "g7g8q", "a8g8"), scoreCp = -600, depth = 20)
+          )
+        )
+      )
+      .getOrElse(fail("expected the post-result capture line to assemble"))
+    val eventRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnResultEventEvidence, _) => record
+    }.getOrElse(fail("expected the earlier persisted passed-pawn event"))
+    val proofRecord = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) => record
+    }.getOrElse(fail("expected the earlier persisted passed-pawn proof"))
+    val laterCapture = resolved.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+          if EvidenceRef.sameMove(payload.moveUci, "a8g8") => record
+    }.getOrElse(fail("expected the later capture occurrence"))
+
+    assert(!eventRecord.parents.contains(laterCapture.ref))
+    assert(resolved.evidenceGraph.proofEligible(eventRecord))
+    assert(resolved.evidenceGraph.proofEligible(proofRecord))
 
   test("a structural passed-pawn change without a later certified analysis result publishes no L2 name"):
     val raw = RawMoveReviewInput(

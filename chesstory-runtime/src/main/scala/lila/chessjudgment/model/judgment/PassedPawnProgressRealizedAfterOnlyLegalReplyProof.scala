@@ -98,7 +98,7 @@ private[chessjudgment] final class PassedPawnProgressOccurrenceProof private[che
   )
   require(
     subject.isObserved && subject.remainsCertified && event.subjectOccurrence == subject.publicOccurrence &&
-      sourceRecord.payload == event && event.retainsLineOccurrenceOwners(sourceRecord) &&
+      sourceRecord.payload == event && event.retainsLowerOccurrenceOwners(sourceRecord) &&
       resultRoutes.forall(event.exactOnlyReplyResultRoutes.contains) &&
       semanticIdentity == PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.exactSemanticIdentity(event, resultRoutes) &&
       dependencyManifest.subjectOccurrence == subject.publicOccurrence &&
@@ -137,7 +137,7 @@ private[chessjudgment] final class PassedPawnProgressOccurrenceProof private[che
       sourceRecord.ref.layer == EvidenceLayer.PassedPawnResultEvent &&
       sourceRecord.ref.position == event.rootTransition.from && sourceRecord.ref.line.contains(event.rootLine) &&
       sourceRecord.parents.contains(replyInventoryRecord.ref) &&
-      event.subjectOccurrence == subject.publicOccurrence && event.retainsLineOccurrenceOwners(sourceRecord) &&
+      event.subjectOccurrence == subject.publicOccurrence && event.retainsLowerOccurrenceOwners(sourceRecord) &&
       event.rootTransitionIsCertified &&
       event.onlyLegalReplyRealized && resultRoutes.forall(event.exactOnlyReplyResultRoutes.contains) &&
       payload.eventSource == sourceRecord.ref && payload.event == event &&

@@ -647,9 +647,22 @@ private[chessjudgment] final class CanonicalLineReplay private (
     replaySteps.zip(legalSteps).toMap
   private val indexByReplayStep: Map[LineReplayStep, Int] =
     replaySteps.zipWithIndex.toMap
+  private val indexByTransitionKey: Map[(Int, String, String, String), Int] =
+    replaySteps.zipWithIndex.map { case (step, index) =>
+      CanonicalLineReplay.transitionKey(
+        step.ply,
+        step.moveUci,
+        step.fenBefore,
+        step.fenAfter
+      ) -> index
+    }.toMap
   require(
     indexByReplayStep.size == replaySteps.size,
     "a canonical replay cannot contain the same time-axis occurrence twice"
+  )
+  require(
+    indexByTransitionKey.size == replaySteps.size,
+    "a canonical replay cannot contain the same normalized transition occurrence twice"
   )
 
   private lazy val occurrenceAnalyses: LazyList[PositionAnalysis] =
@@ -697,6 +710,17 @@ private[chessjudgment] final class CanonicalLineReplay private (
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
 
+  private[chessjudgment] def transitionIndex(
+      moveUci: String,
+      from: PositionNodeRef,
+      to: PositionNodeRef
+  ): Option[Int] =
+    Option
+      .when(to.ply == from.ply + 1)(
+        CanonicalLineReplay.transitionKey(to.ply, moveUci, from.fen, to.fen)
+      )
+      .flatMap(indexByTransitionKey.get)
+
   /** Projects one exact contiguous replay segment by traversing its lazy
     * transition stream once. Callers that need every occurrence must not
     * repeatedly index the stream by step.
@@ -713,6 +737,29 @@ private[chessjudgment] final class CanonicalLineReplay private (
           transitionOccurrences.slice(firstIndex, firstIndex + steps.size).toList
         }.filter(_.size == steps.size)
       }
+
+  /** Reuses every admitted transition calculation while projecting the
+    * one-step replays owned by transition edges. The lazy transition stream is
+    * traversed once, regardless of line length.
+    */
+  private[chessjudgment] def singleStepReplays
+      : Option[List[(CanonicalReplayTransition, CanonicalLineReplay)]] =
+    val projected = replaySteps
+      .zip(legalSteps)
+      .to(LazyList)
+      .zip(transitionOccurrences)
+      .map { case ((step, legal), transition) =>
+        transition -> new CanonicalLineReplay(
+          replaySteps = List(step),
+          legalSteps = List(legal),
+          suppliedOccurrenceAnalyses = Some(LazyList(transition.beforeAnalysis, transition.afterAnalysis)),
+          suppliedTransitions = Some(LazyList(transition))
+        )
+      }
+      .toList
+    Option.when(
+      projected.size == replaySteps.size && projected.map(_._1.declared) == replaySteps
+    )(projected)
 
   private[chessjudgment] def legalMoveOccurrence(
       step: LineReplayStep
@@ -1050,6 +1097,19 @@ private[chessjudgment] final class CanonicalLineReplay private (
 
 private[chessjudgment] object CanonicalLineReplay:
 
+  private def transitionKey(
+      ply: Int,
+      moveUci: String,
+      fenBefore: String,
+      fenAfter: String
+  ): (Int, String, String, String) =
+    (
+      ply,
+      EvidenceRef.normalizeMove(moveUci),
+      PrincipalVariationEvidence.normalizeFen(fenBefore),
+      PrincipalVariationEvidence.normalizeFen(fenAfter)
+    )
+
   private def freshTransitions(
       replaySteps: List[LineReplayStep],
       legalSteps: List[LegalReplayStep],
@@ -1288,9 +1348,10 @@ private[chessjudgment] final class CanonicalTransitionProof private (
       moveUci: String,
       from: PositionNodeRef,
       to: PositionNodeRef,
-      scope: EvidenceScope
+      scope: EvidenceScope,
+      line: Option[LineNodeRef]
   ): Boolean =
-    transitionBinding.line.isEmpty && transitionBinding.role.scope == scope &&
+    transitionBinding.line == line && transitionBinding.role.scope == scope &&
       EvidenceRef.sameMove(transitionBinding.moveUci, moveUci) &&
       transitionBinding.from == from && transitionBinding.to == to &&
       proves(transitionBinding)
