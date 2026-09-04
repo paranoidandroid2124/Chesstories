@@ -74,7 +74,13 @@ object RelativeAssessmentAssembler:
       candidate <- context.lineForRootMove(input.playedMoveUci)
       referenceTransition <-
         if EvidenceRef.sameMove(reference.ref.rootMove, input.playedMoveUci) then Some(None)
-        else context.referenceTransition.map(Some(_))
+        else
+          context
+            .lineRootOccurrence(reference.ref)
+            .flatMap(occurrence =>
+              context.transitions.find(_.evidence.id == occurrence.transitionEvidenceId)
+            )
+            .map(Some(_))
       root <- context.position(PositionNodeRole.Before).map(_.ref)
       mover <- root.sideToMove.orElse(input.sideToMove)
     yield RelativeAssemblyInputs(
@@ -117,50 +123,34 @@ object RelativeAssessmentAssembler:
       root: PositionNodeRef,
       allocator: JudgmentProvenanceAllocator
   ): Option[EvidenceRecord] =
-    val ordered = context.lines
-      .sortBy(_.rank)
-    val orderedRootMoves = ordered.map(line => EvidenceRef.normalizeMove(line.ref.rootMove))
-    require(
-      orderedRootMoves.distinct.size == orderedRootMoves.size,
-      "candidate comparison inputs must have one admitted line per root move"
-    )
+    val ordered = context.lines.sortBy(_.rank)
     val playedIsBest = EvidenceRef.sameMove(reference.ref.rootMove, candidate.ref.rootMove)
     val comparisonInput =
       if !playedIsBest then
         Some((CandidateComparisonKind.PlayedVsBest, reference, candidate))
       else
-        admittedRootRankingPair.map { pair =>
-          if !EvidenceRef.sameMove(pair.bestMoveUci, reference.ref.rootMove) then
-            throw IllegalStateException("admitted ranking best move does not match the reference line")
-          val second = ordered
-            .find(line => EvidenceRef.sameMove(line.ref.rootMove, pair.secondMoveUci))
-            .getOrElse(throw IllegalStateException("admitted ranking second move was not projected"))
-          (CandidateComparisonKind.BestVsSecond, reference, second)
-        }
-    comparisonInput.map { case (kind, refLine, candLine) =>
-      val comparison = CandidateComparisonFact
-        .fromLines(kind, mover, refLine, candLine)
-        .getOrElse(
-          throw IllegalStateException(
-            s"admitted candidate comparison '$kind' has no exact distinct line pair"
-          )
-        )
+        for
+          pair <- admittedRootRankingPair
+          if EvidenceRef.sameMove(pair.bestMoveUci, reference.ref.rootMove)
+          second <- ordered.find(line => EvidenceRef.sameMove(line.ref.rootMove, pair.secondMoveUci))
+        yield (CandidateComparisonKind.BestVsSecond, reference, second)
+    comparisonInput.flatMap { case (kind, refLine, candLine) =>
       val parents =
         parentsForLine(context, refLine) ++ parentsForLine(context, candLine)
-      require(
-        parents.map(_.id).distinct.size == parents.size,
-        s"candidate comparison '$kind' repeats a direct line owner"
-      )
-      val semanticKey = CandidateComparisonSemanticKey.from(comparison)
-      TransitionFactNormalizer.fromCandidateComparison(
-        id = allocator.evidenceId(
-          s"candidate-comparison:${allocator.exactKey(List(semanticKey.stableKey))}"
-        ),
-        comparison = comparison,
-        position = root,
-        scope = EvidenceScope.Counterfactual,
-        parents = parents
-      )
+      for
+        _ <- Option.when(parents.map(_.id).distinct.size == parents.size)(())
+        comparison <- CandidateComparisonFact.fromLines(kind, mover, refLine, candLine)
+      yield
+        val semanticKey = CandidateComparisonSemanticKey.from(comparison)
+        TransitionFactNormalizer.fromCandidateComparison(
+          id = allocator.evidenceId(
+            s"candidate-comparison:${allocator.exactKey(List(semanticKey.stableKey))}"
+          ),
+          comparison = comparison,
+          position = root,
+          scope = EvidenceScope.Counterfactual,
+          parents = parents
+        )
     }
 
   private def parentsForLine(

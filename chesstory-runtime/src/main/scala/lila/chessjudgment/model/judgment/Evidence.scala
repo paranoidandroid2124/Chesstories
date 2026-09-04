@@ -30,10 +30,8 @@ enum EvidenceProducer:
 enum EvidenceScope:
   case BeforePosition
   case AfterPlayedPosition
-  case AfterReferencePosition
   case CurrentPosition
   case PlayedTransition
-  case ReferenceTransition
   case AlternativeTransition
   case LegalLine
   case BestLine

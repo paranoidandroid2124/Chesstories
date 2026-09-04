@@ -551,8 +551,8 @@ object NodeLineTransitionAssembler:
   def assemble(input: AdmittedMoveReviewInput): Option[JudgmentAssemblyContext] =
     val allocator = JudgmentProvenanceAllocator.forInput(input)
     val predecessorReplay = CanonicalLineReplay.fromHistory(input.positionHistory.segmentReplaySteps)
+    val playedLine = input.playedRootLineOwner
     for
-      playedLine <- input.playedRootLineOwner
       playedReplayStep <- playedLine.replay.replaySteps.headOption
       beforeAnalysis <- playedLine.replay.analysisBefore(playedReplayStep)
       afterPlayedAnalysis <- playedLine.replay.analysisAfter(playedReplayStep)
@@ -586,49 +586,13 @@ object NodeLineTransitionAssembler:
           )
         )
       rootLines <- Option.when(rootLineOptions.forall(_.nonEmpty))(rootLineOptions.flatten)
-      candidateLineOptions = input.assessmentCandidates.map(candidate =>
-        rootLines.filter(line => EvidenceRef.sameMove(line.node.ref.rootMove, candidate.lineRootMove)) match
-          case legalLine :: Nil =>
-            CandidateLineAssembler.fromProjection(candidate, legalLine, before.node.ref, allocator)
-          case _ => None
-      )
-      candidateLines <- Option.when(candidateLineOptions.forall(_.nonEmpty))(candidateLineOptions.flatten)
-      afterReferenceOption = input.referenceCandidate match
-        case Some(reference)
-            if !EvidenceRef.sameMove(reference.lineRootMove, input.playedMoveUci) =>
-          (for
-            fen <- input.afterReferenceFen
-            referenceAssembly <- rootLines.filter(assembly =>
-              EvidenceRef.sameMove(reference.lineRootMove, assembly.node.ref.rootMove)
-            ) match
-              case assembly :: Nil => Some(assembly)
-              case _               => None
-            replayStep <- referenceAssembly.replay.replaySteps.headOption
-            analysis <- referenceAssembly.replay.analysisAfter(replayStep)
-            if PrincipalVariationEvidence.sameBoardState(replayStep.fenAfter, fen)
-            transitionReplay <- admittedTransition(
-              referenceAssembly.replay,
-              input.beforeFen,
-              reference.lineRootMove,
-              fen
-            )
-          yield
-            Some(reference -> (PositionNodeAssembler.fromAnalysis(
-              role = PositionNodeRole.AfterReference,
-              fen = fen,
-              ply = input.beforePly + 1,
-              analysis = analysis,
-              allocator = allocator,
-              scope = EvidenceScope.AfterReferencePosition
-            ) -> transitionReplay)))
-        case Some(_) => Some(None)
-        case None    => None
-      afterReference <- afterReferenceOption
+      candidateLines = input.assessmentCandidates.flatMap { candidate =>
+        rootLines
+          .find(line => EvidenceRef.sameMove(line.node.ref.rootMove, candidate.lineRootMove))
+          .flatMap(CandidateLineAssembler.fromProjection(candidate, _, before.node.ref, allocator))
+      }
       alternativeRootLines = rootLines.filterNot(assembly =>
-        EvidenceRef.sameMove(assembly.node.ref.rootMove, input.playedMoveUci) ||
-          input.referenceCandidate.exists(reference =>
-            EvidenceRef.sameMove(assembly.node.ref.rootMove, reference.lineRootMove)
-          )
+        EvidenceRef.sameMove(assembly.node.ref.rootMove, input.playedMoveUci)
       )
       afterAlternativeOptions = alternativeRootLines.map { assembly =>
         assembly.replay.replaySteps.headOption.flatMap { first =>
@@ -667,16 +631,6 @@ object NodeLineTransitionAssembler:
           allocator = allocator
         )
       )
-      referenceTransition = afterReference.map { case (reference, (referencePosition, replay)) =>
-        TransitionEdgeAssembler.fromMove(
-          role = TransitionEdgeRole.Reference,
-          from = before.node,
-          moveUci = reference.lineRootMove,
-          to = referencePosition.node,
-          replay = replay,
-          allocator = allocator
-        )
-      }
       alternativeTransitionOptions = afterAlternatives.map { case (line, position, replay) =>
         val move = line.node.ref.rootMove
         admittedTransition(replay, input.beforeFen, move, position.node.ref.fen).map { transitionReplay =>
@@ -693,7 +647,7 @@ object NodeLineTransitionAssembler:
       alternativeTransitions <- Option.when(alternativeTransitionOptions.forall(_.nonEmpty))(
         alternativeTransitionOptions.flatten
       )
-      transitionAssemblies = playedTransition :: (referenceTransition.toList ++ alternativeTransitions)
+      transitionAssemblies = playedTransition :: alternativeTransitions
       if transitionAssemblies.size == rootLines.size
       if transitionAssemblies.map(_.edge.evidence.id).distinct.size == transitionAssemblies.size
       rootLineBindingOptions = transitionAssemblies.map(transition =>
@@ -705,7 +659,6 @@ object NodeLineTransitionAssembler:
       if rootLineBindings.map(_._1).toSet == rootLines.map(_.node.ref).toSet
       rootContext =
         val rootPositions = List(before, afterPlayed) ++
-          afterReference.toList.map(_._2._1) ++
           afterAlternatives.map(_._2)
         val context = JudgmentAssemblyContext
           .empty(input)

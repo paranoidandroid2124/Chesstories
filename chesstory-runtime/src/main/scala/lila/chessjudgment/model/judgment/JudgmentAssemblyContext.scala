@@ -52,7 +52,6 @@ final case class AdmittedMoveReviewInput(
     beforePly: Int,
     sideToMove: Option[Color],
     afterPlayedFen: String,
-    afterReferenceFen: Option[String],
     legalLines: List[AdmittedLegalLine],
     assessmentCandidates: List[AdmittedAssessmentCandidate],
     admittedRootRankingPair: Option[AdmittedRootRankingPair],
@@ -60,6 +59,7 @@ final case class AdmittedMoveReviewInput(
 ):
   private val legalRootMoves: List[String] = positionHistory.currentLegalMoveUcis
   private val admittedRootMoves: List[String] = legalLines.map(line => EvidenceRef.normalizeMove(line.rootMove))
+  private val playedLineOwners = legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, playedMoveUci))
 
   require(
     admittedRootMoves.size == legalLines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,
@@ -70,8 +70,8 @@ final case class AdmittedMoveReviewInput(
     "every admitted LegalLine root must belong to the legal root move universe"
   )
   require(
-    legalRootMoves.contains(EvidenceRef.normalizeMove(playedMoveUci)),
-    "the observed move must belong to the legal root move universe"
+    playedLineOwners.size == 1,
+    "the observed move needs exactly one admitted LegalLine owner"
   )
   require(
     assessmentCandidates.map(candidate => EvidenceRef.normalizeMove(candidate.lineRootMove)).distinct.size ==
@@ -89,28 +89,18 @@ final case class AdmittedMoveReviewInput(
     "every assessment candidate must bind the full replay of one admitted LegalLine"
   )
   require(
-    assessmentCandidates.count(candidate => EvidenceRef.sameMove(candidate.lineRootMove, playedMoveUci)) == 1,
-    "the observed move needs exactly one assessment projection"
+    assessmentCandidates.count(_.role == LineNodeRole.Played) <= 1,
+    "an admitted review may have at most one played assessment projection"
   )
   require(
-    assessmentCandidates.count(_.role == LineNodeRole.BestReference) == 1,
-    "an admitted review needs exactly one assessment reference projection"
+    assessmentCandidates.count(_.role == LineNodeRole.BestReference) <= 1,
+    "an admitted review may have at most one assessment reference projection"
   )
 
-  def playedRootLineOwner: Option[AdmittedLegalLine] =
-    legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, playedMoveUci)) match
-      case line :: Nil => Some(line)
-      case _           => None
+  def playedRootLineOwner: AdmittedLegalLine = playedLineOwners.head
 
   def referenceCandidate: Option[AdmittedAssessmentCandidate] =
-    assessmentCandidates.filter(_.role == LineNodeRole.BestReference) match
-      case line :: Nil => Some(line)
-      case _           => None
-
-  def legalLineFor(candidate: AdmittedAssessmentCandidate): Option[AdmittedLegalLine] =
-    legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, candidate.lineRootMove)) match
-      case line :: Nil => Some(line)
-      case _           => None
+    assessmentCandidates.find(_.role == LineNodeRole.BestReference)
 
 final case class JudgmentAssemblyContext(
     input: AdmittedMoveReviewInput,
@@ -180,9 +170,6 @@ final case class JudgmentAssemblyContext(
   def playedTransition: Option[MoveTransitionEdge] =
     transition(TransitionEdgeRole.Played)
 
-  def referenceTransition: Option[MoveTransitionEdge] =
-    transition(TransitionEdgeRole.Reference)
-
   def root: Option[PositionNodeRef] =
     position(PositionNodeRole.Before).map(_.ref)
 
@@ -197,8 +184,7 @@ final case class JudgmentAssemblyContext(
       val existingRefs = positions.iterator.map(_.ref).toSet
       val exclusiveRoles = Set(
         PositionNodeRole.Before,
-        PositionNodeRole.AfterPlayed,
-        PositionNodeRole.AfterReference
+        PositionNodeRole.AfterPlayed
       )
       val claimedExclusiveRoles = (positions ++ nodes).collect {
         case node if exclusiveRoles(node.role) => node.role
@@ -274,7 +260,7 @@ final case class JudgmentAssemblyContext(
       val edges = additions.map(_._1)
       val ids = edges.map(_.evidence.id)
       val existingIds = transitions.iterator.map(_.evidence.id).toSet
-      val exclusiveRoles = Set(TransitionEdgeRole.Played, TransitionEdgeRole.Reference)
+      val exclusiveRoles = Set(TransitionEdgeRole.Played)
       val claimedExclusiveRoles = (transitions ++ edges).collect {
         case edge if exclusiveRoles(edge.role) => edge.role
       }

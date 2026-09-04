@@ -2768,7 +2768,7 @@ final class TypedEvidenceGraph private (
             fact.candidateSelection == SemanticLineKey.from(assessment.candidate) &&
             endpointBound(assessment.candidate, source) &&
             assessment.referenceTransition.exists(edge =>
-              edge.role == TransitionEdgeRole.Reference &&
+              edge.role == TransitionEdgeRole.Alternative &&
                 edge.from == assessment.played.from &&
                 EvidenceRef.sameMove(edge.moveUci, assessment.reference.ref.rootMove)
             )

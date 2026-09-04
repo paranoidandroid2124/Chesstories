@@ -279,7 +279,7 @@ object MoveReviewInputAdmission:
           evaluation = admitted.evaluation
         )
       }
-      val playedAdmission =
+      val playedAssessment =
         ranked
           .find { case (admitted, _) =>
             admitted.evaluation.moves.headOption.exists(move => EvidenceRef.sameMove(move, playedMove))
@@ -288,7 +288,7 @@ object MoveReviewInputAdmission:
             admitted.evaluation.moves.size >= 2 || admitted.automaticTerminal.nonEmpty
           }
       val played =
-        playedAdmission
+        playedAssessment
           .filterNot { case (admitted, _) =>
             reference.flatMap(_.rootMove).exists(referenceMove =>
               admitted.evaluation.moves.headOption.exists(EvidenceRef.sameMove(referenceMove, _))
@@ -305,7 +305,7 @@ object MoveReviewInputAdmission:
       val alternatives =
         ranked
           .filterNot { case (_, index) =>
-            reference.exists(_.rank == index + 1) || playedAdmission.exists(_._2 == index)
+            reference.exists(_.rank == index + 1) || playedAssessment.exists(_._2 == index)
           }
           .map { case (admitted, index) =>
             AdmittedAssessmentCandidate(
@@ -322,38 +322,21 @@ object MoveReviewInputAdmission:
           replay = admitted.replay
         )
       }
-      Option
-        .when(
-          candidates.map(line => line.role -> line.rank).distinct.size == candidates.size &&
-            legalLines.map(_.rootMove).distinct.size == legalLines.size
-        )(candidates)
-        .flatMap { exactCandidates =>
-          playedAdmission.flatMap { case (admittedPlayed, _) =>
-            reference.flatMap { _ =>
-              for
-                graphPlayedMove <- admittedPlayed.evaluation.moves.headOption.map(EvidenceRef.normalizeMove)
-                graphAfterPlayed <- admittedPlayed.replay.replaySteps.headOption.map(_.fenAfter)
-                afterReference = reference
-                  .filterNot(_.rootMove.exists(EvidenceRef.sameMove(_, graphPlayedMove)))
-                  .flatMap(candidate =>
-                    legalLines
-                      .find(line => EvidenceRef.sameMove(line.rootMove, candidate.lineRootMove))
-                      .flatMap(_.replay.replaySteps.headOption)
-                  )
-                  .map(_.fenAfter)
-              yield AdmittedMoveReviewInput(
-                beforeFen = canonicalBeforeFen,
-                playedMoveUci = graphPlayedMove,
-                beforePly = beforePly,
-                sideToMove = side,
-                afterPlayedFen = graphAfterPlayed,
-                afterReferenceFen = afterReference,
-                legalLines = legalLines,
-                assessmentCandidates = exactCandidates,
-                admittedRootRankingPair = None,
-                positionHistory = history
-              )
-            }
+      legalLines
+        .find(line => EvidenceRef.sameMove(line.rootMove, playedMove))
+        .flatMap { playedLine =>
+          playedLine.replay.replaySteps.headOption.map { playedStep =>
+            AdmittedMoveReviewInput(
+              beforeFen = canonicalBeforeFen,
+              playedMoveUci = playedLine.rootMove,
+              beforePly = beforePly,
+              sideToMove = side,
+              afterPlayedFen = playedStep.fenAfter,
+              legalLines = legalLines,
+              assessmentCandidates = candidates,
+              admittedRootRankingPair = None,
+              positionHistory = history
+            )
           }
         }
 

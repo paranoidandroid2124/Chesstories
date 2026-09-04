@@ -36,6 +36,37 @@ class BestChoiceProductionTest extends munit.FunSuite:
       .flatMap(EvidenceBackedJudgmentPacket.fromAssembly)
       .getOrElse(fail("expected the lower assembly to project BestChoice"))
 
+  private val assessmentLayers = Set(
+    EvidenceLayer.Eval,
+    EvidenceLayer.CandidateComparison,
+    EvidenceLayer.RelativeAssessment
+  )
+
+  private def lowerEvidenceShape(
+      assembly: JudgmentAssemblyContext
+  ): List[(EvidenceRef, List[EvidenceRef])] =
+    assembly.evidenceGraph.records
+      .filterNot(record => assessmentLayers(record.ref.layer))
+      .map(record => record.ref -> record.parents)
+
+  private def assertSameLowerAssembly(
+      actual: JudgmentAssemblyContext,
+      expected: JudgmentAssemblyContext
+  ): Unit =
+    assertEquals(actual.positions, expected.positions)
+    assertEquals(actual.legalLines, expected.legalLines)
+    assertEquals(actual.transitions, expected.transitions)
+    assertEquals(actual.lineRootOccurrences, expected.lineRootOccurrences)
+    assertEquals(
+      actual.lineReplays.view.mapValues(_.replaySteps).toMap,
+      expected.lineReplays.view.mapValues(_.replaySteps).toMap
+    )
+    assertEquals(
+      actual.transitionReplays.view.mapValues(_.replaySteps).toMap,
+      expected.transitionReplays.view.mapValues(_.replaySteps).toMap
+    )
+    assertEquals(lowerEvidenceShape(actual), lowerEvidenceShape(expected))
+
   test("review assembly preserves per-ply lower facts without an assessment packet"):
     val assembly = MoveReviewAssembler
       .assemble(admittedReview(ranking.head))
@@ -44,6 +75,39 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(assembly), None)
     assert(assembly.lineReplays.valuesIterator.exists(_.replaySteps.nonEmpty))
     assert(assembly.positions.exists(_.role == PositionNodeRole.LineOccurrence))
+
+  test("removing assessment candidates leaves the lower occurrence ledger unchanged"):
+    val input = admittedReview(ranking.last)
+    val complete = MoveReviewAssembler
+      .assemble(input)
+      .getOrElse(fail("expected the complete review to assemble"))
+    val lowerOnly = MoveReviewAssembler
+      .assemble(input.copy(assessmentCandidates = Nil, admittedRootRankingPair = None))
+      .getOrElse(fail("expected the lower-only review to assemble"))
+
+    assert(EvidenceBackedJudgmentPacket.fromAssembly(complete).nonEmpty)
+    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(lowerOnly), None)
+    assertSameLowerAssembly(lowerOnly, complete)
+
+  test("a partial best-choice projection cannot suppress lower occurrences"):
+    val rankingPair = AdmittedRootRankingPair
+      .fromAdmittedRanking(ranking)
+      .getOrElse(fail("expected the admitted root ranking"))
+    val input = admittedReview(ranking.head).copy(admittedRootRankingPair = Some(rankingPair))
+    val complete = MoveReviewAssembler
+      .assemble(input)
+      .getOrElse(fail("expected the complete best-choice review to assemble"))
+    val partial = MoveReviewAssembler
+      .assemble(
+        input.copy(
+          assessmentCandidates = input.assessmentCandidates.filter(_.role == LineNodeRole.BestReference)
+        )
+      )
+      .getOrElse(fail("expected the partial assessment review to preserve its lower assembly"))
+
+    assert(EvidenceBackedJudgmentPacket.fromAssembly(complete).nonEmpty)
+    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(partial), None)
+    assertSameLowerAssembly(partial, complete)
 
   private def soleAssessmentRecord(
       packet: EvidenceBackedJudgmentPacket
@@ -70,7 +134,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
     val (assessment, parents) = soleAssessmentRecord(packet)
 
     assert(packet.primary.isInstanceOf[PlayerFacingPrimary.BestChoice])
-    assertEquals(packet.assembly.referenceTransition, None)
+    assertEquals(assessment.referenceTransition, None)
     assertEquals(packet.assembly.lineForRootTransition(played).map(_.ref), Some(owner.ref))
     assertEquals(assessment.reference, assessment.candidate)
     assertEquals(soleComparison(packet).kind, CandidateComparisonKind.BestVsSecond)
