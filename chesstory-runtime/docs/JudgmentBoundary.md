@@ -1,8 +1,8 @@
 # 체스토리 판단 경계
 
-이 문서는 현재 런타임의 의미 소유권만 기록한다. 가족별 정확한 명제,
-하부 premise, 폐쇄 부재, 공개 필드, 형식 테스트와 레퍼런스·커버리지 판정은
-[`l2-proof-provenance.json`](../../judgment-evaluation/references/l2-proof-provenance.json)이
+이 문서는 현재 런타임의 의미 소유권만 기록한다. 레퍼런스 관찰과 현재
+커버리지 결손은
+[`commentary-reference-ledger.json`](../../judgment-evaluation/references/commentary-reference-ledger.json)이
 소유한다. 이 문서에 그 원장을 복제하지 않는다. JSON 원장은 CI용 provenance
 인벤토리이며 런타임 보드 사실이나 증명 premise는 아니다.
 
@@ -19,32 +19,19 @@ Assessment는 후보 수의 평가와 선택을 소유한다. `CandidateLineNode
 존재하는지, 어느 branch가 인과 기준인지, proof ID나 dependency fingerprint가
 무엇인지 결정하지 않는다.
 
-### Occurrence-directed relation proof
+### Occurrence relation
 
-관계 증명은 인증된 수순 occurrence에 대한 명시적 요청에서만 실행된다.
-`ExplanationRequest`가 수·before/after position·ply를 지정하고,
-`OccurrenceExplanationDemand`가 이를 그래프의 유일한 observed root
-occurrence에 결속한다. 각 증명군은 이미 등록된 `LegalLine` replay와
-L0/L0.5/L1 결과를 자기 체스 의미에 따라 orientation한다. 평가 role, rank,
-verdict 또는 점수로 branch를 고르지 않는다.
-
-요청이 없으면 `OccurrenceExplanationAssembler`는 typed L2 relation proof를
-생산하지 않는다. 요청 자체도 체스 명제의 premise가 아니다. 생산된 각 typed
-proof record는 자기 subject occurrence를 직접 소유하며, 공개 생존을 허가하는
-별도의 상위 owner record나 묶음은 없다.
+현재 등록된 typed L2 relation producer와 relation demand 경로는 없다. 삭제된
+계약의 특수한 조건을 일반 관계로 이름만 바꾸어 남기지 않았으며, 새 관계 모델은
+아직 결정하지 않았다. 이 상태는 L0~L1 사실의 부재나 반증을 뜻하지 않는다.
+관계 생산 실패가 이미 성립한 하부 사실을 제거할 권한도 없다.
 
 ### Structured Presentation
 
-Presentation은 Assessment와 0..N개의 exact occurrence relation을 나란히
-투영한다. Runtime과 public schema는 자연어 문장이 아니라 subject occurrence,
-typed branch와 ordered step, actor/target, lower premise, closed absence/state,
-독립 proof path와 dependency fingerprint를 운반한다.
-
-프런트의 목표 소비는 이 구조로 실제 root와 분석 branch, 수순 timeline,
-보드 강조, 폐쇄 라벨과 proof-path 선택을 표시하는 것이다. 체스 의미를 다시
-판정하거나 family별 장문 문장을 별도 진실 원천으로 만들 수 없다. Runtime,
-schema와 UI는 동일한 `occurrence_relations` 배열을 소비한다. 각 항목의 공개
-wrapper는 정확히 `subject_occurrence`, `relation_kind`, `proof`만 운반한다.
+현재 public-v6 move commentary는 Assessment의 `primary`만 운반한다. 삭제된
+relation payload를 빈 배열, 범용 wrapper, legacy alias로 유지하지 않는다.
+Presentation은 체스 의미를 다시 판정하거나 자유 문장을 별도 진실 원천으로
+만들 수 없다.
 
 ## Line 소유권과 occurrence provenance
 
@@ -57,18 +44,17 @@ role, rank와 evaluation은 이 projection에만 있다. projection의 선택이
 바뀌어도 같은 replay의 `LegalLine` owner와 root transition identity는 바뀌지
 않는다. 반대로 assessment candidate가 없는 line을 평가 사실로 가장하지 않는다.
 
-실제성은 line selection role이 아니라 다음 인증의 결합이 소유한다.
+현재 입력이 실제 대국 occurrence로 확정하는 범위는 observed root 한 수뿐이다.
+그 결합은 다음 기존 소유자로 보존된다.
 
 - canonical game history와 정확히 일치하는 root move 및 before/after position
 - 그 root의 exact `MoveTransitionEdge` owner
 - 그 transition을 시작하는 exact `LegalLine` owner와 canonical replay
-- typed `CausalRootProvenance`
 
-따라서 observed 수가 engine best인 경우에도 그 단일 `LegalLine` owner가
-`ObservedGameRoot`가 될 수 있다. 별도 played owner를 복제하지 않는다.
-counterfactual root는 `CounterfactualAnalyzedRoot`이며, observed branch에서도
-history가 인증하는 것은 root뿐이다. 뒤의 PV suffix는
-`CertifiedAnalysisMove`이지 실제 대국 수순이 아니다.
+따라서 observed 수가 engine best인 경우에도 그 단일 `LegalLine` owner를
+별도 played owner로 복제하지 않는다. 다른 root와 모든 PV suffix는 합법 재생된
+분석 occurrence일 뿐 실제 대국 수순으로 승격되지 않는다. 현재 이 차이를 별도
+provenance ADT나 이름뿐인 wrapper로 다시 복제하지 않는다.
 
 그러나 admission된 PV suffix의 각 ply도 독립 graph occurrence로 실체화된다.
 각 suffix position은 정확한 incoming `LineContinuation` transition을 부모로
@@ -79,64 +65,31 @@ position으로 합쳐지는 transposition에서도 history occurrence와 evidenc
 지원한다는 뜻은 아니다. 이 소유권은 분석 occurrence를 observed game history로
 승격시키지 않는다.
 
-현재 공개 relation subject는 history가 인증한 observed root occurrence다.
-상대 응수나 뒤 occurrence를 별도 subject로 요청하는 실제 상위 producer가
-생기기 전에는 이를 지원한다고 주장하거나 빈 API를 만들지 않는다.
+현재 공개 relation subject는 없다. 상대 응수나 뒤 occurrence를 별도 subject로
+요청하는 생산 경로도 지원한다고 주장하거나 빈 API로 예약하지 않는다.
 
 ## L0~L2 권한
 
 - **L0**는 한 position occurrence의 폐쇄된 보드 사실과 부재다.
 - **L0.5**는 같은 합법 수의 before/after에서 직접 인증되는 정확한 변화다.
 - **L1**은 한 transition 직후의 자원·제약과 폐쇄 인벤토리다.
-- **L2**는 둘 이상의 ordered occurrence 또는 exact sibling을 기존 하부
-  record로 연결하는 exact local relation proof다.
+- **L2** typed relation producer는 현재 없다.
 
 L0/L0.5/L1 record는 root뿐 아니라 admission된 replay의 모든 ply occurrence에
 demand와 무관하게 생성된다. L2 관계의 생산·인증·공개 실패는 이미 성립한 이
 하부 record나 다른 관계를 제거하지 않는다.
 
-L2는 공격맵, 합법수, ray, pin, pawn structure를 다시 계산하지 않는다.
-평가 변화나 책의 `best`, `only`, `prevents`, `plan`, `counterplay`도 premise로
-사용하지 않는다. 필요한 하부 사실이 없으면 L0~L1 실패로 추정하지 않고
-coverage 결손으로 남긴다.
+평가 변화나 책의 `best`, `only`, `prevents`, `plan`, `counterplay`를 하부 사실로
+가장하지 않는다. 필요한 하부 사실이 없으면 미관찰·미검색·반증을 섞지 않고
+coverage 결손으로 남긴다. 같은 semantic position의 transposition도 history
+occurrence와 proof path를 합치는 근거가 아니다.
 
-## 공통 L2 봉인 조건
+## 현재 관계 상태
 
-각 typed proof는 다음을 모두 보존해야 한다.
-
-1. 정확한 subject transition/history occurrence와 그 `LegalLine` owner
-2. 가족 의미로 orientation된 branch와 ordered step occurrence
-3. 정확한 기물 identity, 좌표, actor와 target
-4. 소비한 모든 L0/L0.5/L1 result 및 source evidence ID
-5. 필요한 합법 자원 부재와 상태를 발급한 폐쇄 인벤토리
-6. 서로 독립인 모든 proof path
-7. semantic proposition과 별도의 branch/history/transposition occurrence
-8. subject, branch owner와 root transition, proposition, premise, closure,
-   path를 포함한 완전한 record/dependency identity
-
-같은 semantic position의 transposition은 proposition을 공유할 수 있다.
-그러나 history occurrence, branch occurrence와 proof path를 합치지 않는다.
-같은 actor/target이나 같은 문구를 이유로 서로 다른 증명을 dedup하지 않는다.
-
-L2에는 별도의 결과 캐시나 재사용 권위가 없다. dependency fingerprint는
-인증된 proof identity를 닫기 위한 값이지 demand 없이 계산하거나 오래된 결과를
-재사용할 권한이 아니다. 평가 score, rank, verdict와 comparison identity는
-fingerprint에 들어가지 않는다. 실제 replay, subject transition, lower record,
-closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
-
-## 현재 typed 증명군과 유일 생산자
-
-모든 가족은 explicit occurrence demand 아래서만 실행된다.
-`OccurrenceExplanationAssembler`가 현재 orchestration 경계이고, 가족별 체스
-명제는 아래 생산자가 typed relation record로 직접 인증한다.
-
-| typed 증명군 | 유일 graph/proof 생산자 |
-| --- | --- |
-| `RelocationEnablesRecapture` | `OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords`, backed directly by `RelocationEnablesRecaptureProof.certifyDemanded` |
-
-각 가족의 private demand가 available root occurrences를 자기 lower facts로
-orientation하며 공통 평가 pair나 범용 branch graph는 없다. 상세 명제와
-레퍼런스 지지 수준은 canonical provenance 인벤토리에서만 유지한다.
+현재 typed relation family, 전용 proof type, occurrence demand assembler,
+packet relation lane, public serializer와 public schema relation variant는 없다.
+따라서 관계별 producer·봉인 조건·dependency fingerprint도 현재 권위로 문서화할
+대상이 아니다. 레퍼런스 원장의 사례는 관찰과 미해결 근거만 보존한다.
 
 ## 생산부터 공개까지
 
@@ -149,24 +102,12 @@ player job의 현재 흐름은 다음과 같다.
 3. 모든 transition occurrence에 대해 exact relation delta와 structural record를
    생산한다.
 4. 그 inventory를 참조하는 Assessment projection을 별도로 만든다.
-5. 상위 `ExplanationRequest`가 있으면 exact observed subject를 resolve한다.
-6. typed relation producer가 등록된 branch와 하부 inventory만 소비하여
-   proof를 fail-closed로 생산한다.
-7. `OccurrenceRelationProof.fromRecord`가 각 typed graph record의 eligibility와
-   exact subject ownership을 직접 확인한다. 별도 wrapper나 evidence owner를
-   만들지 않는다.
-8. `EvidenceBackedJudgmentPacket.occurrenceRelations`가
-   `List[OccurrenceRelationProof]`로 각 인증 관계를 서로 독립적으로 보존한다.
-9. `RuntimeProtocol`이 이를 public-v6의 `occurrence_relations`로 투영한다.
-10. schema와 Python boundary는 ID, enum, shape와 cross-reference를 검증할 뿐
-   가족의 체스 논리를 복제하지 않는다.
+5. Assessment 결과를 public-v6 `primary` commentary로 투영한다.
+6. schema와 Python boundary는 공개 JSON shape를 검증한다.
 
-공개 branch에는 `line_owner_evidence_id`,
-`root_transition_evidence_id`, typed root provenance와 ordered steps가 남는다.
-outer `subject_occurrence`가 proof의 표시 대상을 한 번만 소유하며, 별도 상위
-owner는 필요하지 않다. line ID만 같다는 이유로 다른 시간 occurrence의 proof를
-받아들이지 않는다. 한 relation의 생산 또는 인증 실패는 이미 성립한 하부
-명제나 다른 relation을 제거하지 않는다.
+현재 이 흐름에는 relation 생산·packet·serializer·public schema lane이 없다.
+그 부재는 이미 성립한 하부 명제를 삭제하거나 의미 부재로 판정하는 gate가
+아니다.
 
 ## 계산 범위와 P2 line availability
 
@@ -196,13 +137,11 @@ focused report가 서로 다른 best/played line을 직접 제공하면 `PlayedV
 
 ## 소비 경계
 
-Assessment는 무엇이 좋은 수인지 말할 수 있고, typed occurrence relation은 인증된
-occurrence 사이의 좁은 인과 명제만 말할 수 있다. Presentation은 둘을 보여
-주지만 어느 쪽의 의미도 새로 만들지 않는다. 일반 준비·예방·반격·기동,
-장기 계획, 의도와 가치 판단은 exact 하부 closure와 별도 L2 join이 없으면
-현재 증명군의 상위 의미로 승인하지 않는다.
+Assessment는 무엇이 좋은 수인지 말할 수 있지만 occurrence 사이의 관계를
+대신 만들 수 없다. Presentation도 공개 payload에 없는 의미를 새로 만들지
+않는다. 일반 준비·예방·반격·기동, 장기 계획, 의도와 가치 판단을 현재의
+Assessment나 삭제된 계약 이름으로 승인하지 않는다.
 
-공개 계약·레퍼런스 anchor·지원/비지원 명제·coverage 분류·형식 테스트가
-변경되면 반드시
-[`l2-proof-provenance.json`](../../judgment-evaluation/references/l2-proof-provenance.json)을
-같이 갱신한다. 별도 개념 청사진이나 가족별 문서를 추가하지 않는다.
+레퍼런스 관찰이나 locator가 변경되면 반드시
+[`commentary-reference-ledger.json`](../../judgment-evaluation/references/commentary-reference-ledger.json)을
+같이 갱신한다. 빈 계약이나 미래 구조 청사진을 추가하지 않는다.

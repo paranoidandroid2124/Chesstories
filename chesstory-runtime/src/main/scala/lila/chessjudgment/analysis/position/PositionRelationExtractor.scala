@@ -962,7 +962,7 @@ object PositionRelationExtractor:
     private val actualLegalMoves = actualLegalMoveEffects.map(_._1)
     private val state = new ClosedPositionStateFacet(position, canonicalInCheck)
     private lazy val semanticFen = chess.format.Fen.write(position).value
-    /** The full typed query is the complete cache key. L1 and L2 both enter
+    /** The full typed query is the complete cache key. Every consumer enters
       * through `certifyAbsence`, so one inventory adjudicates each query once.
       */
     private val absenceCertificateCache =

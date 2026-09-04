@@ -30,7 +30,7 @@ private[chessjudgment] final case class PawnTopologyProduction(
   * projections of the canonical geometric-control inventory shared by every
   * piece; pawn topology does not produce those edges again. Terms such as
   * "weak", "backward", "space" and "outpost" are deliberately absent: they
-  * require a separate causal contract rather than a static label.
+  * require separately witnessed propositions rather than static labels.
   */
 private[chessjudgment] final case class PawnTopologySnapshot private (
     byFile: Map[(Color, File), List[Square]],

@@ -47,87 +47,6 @@ final case class LineRootOccurrence(
 ):
   require(transitionEvidenceId.trim.nonEmpty, "a line-root occurrence requires its exact transition")
 
-final case class ExplanationSubjectOccurrence private[chessjudgment] (
-    occurrenceId: String,
-    line: LineNodeRef,
-    lineOwnerEvidenceId: String,
-    transitionEvidenceId: String,
-    moveUci: String,
-    start: PositionNodeRef,
-    destination: PositionNodeRef,
-    rootProvenance: CausalRootProvenance
-):
-  require(occurrenceId == transitionEvidenceId, "the subject occurrence id must be its exact transition owner")
-  require(lineOwnerEvidenceId.nonEmpty, "an explanation subject needs its LegalLine owner")
-  require(
-    rootProvenance == CausalRootProvenance.ObservedGameRoot,
-    "an explanation subject must be the history-observed root occurrence"
-  )
-
-  private[chessjudgment] val stableKey: String =
-    BoundedCausalIdentity.digest(List(
-      "explanation-subject-occurrence:v1",
-      occurrenceId,
-      BoundedCausalIdentity.lineKey(line),
-      lineOwnerEvidenceId,
-      transitionEvidenceId,
-      EvidenceRef.normalizeMove(moveUci),
-      PrincipalVariationEvidence.normalizeFen(start.fen),
-      start.ply.toString,
-      PrincipalVariationEvidence.normalizeFen(destination.fen),
-      destination.ply.toString,
-      rootProvenance.toString
-    ))
-
-/** One graph-owned line root with its exact LegalLine replay and transition.
-  * Selection roles and engine ranks do not decide whether the root was
-  * observed. That provenance is closed against the admitted history move.
-  */
-private[chessjudgment] final case class CertifiedRootOccurrence private[chessjudgment] (
-    line: LineNodeRef,
-    lineOwner: EvidenceRecord,
-    replay: CanonicalLineReplay,
-    occurrence: LineRootOccurrence,
-    transition: MoveTransitionEdge,
-    transitionOwner: EvidenceRecord,
-    rootProvenance: CausalRootProvenance
-):
-  val rootStep: LineReplayStep = replay.replaySteps.head
-
-  def isObserved: Boolean =
-    rootProvenance == CausalRootProvenance.ObservedGameRoot
-
-  def parentSources: List[EvidenceRef] =
-    List(lineOwner.ref, transitionOwner.ref).sortBy(_.id)
-
-  def publicOccurrence: ExplanationSubjectOccurrence =
-    ExplanationSubjectOccurrence(
-      occurrence.transitionEvidenceId,
-      line,
-      lineOwner.ref.id,
-      transitionOwner.ref.id,
-      EvidenceRef.normalizeMove(transition.moveUci),
-      transition.from,
-      transition.to,
-      rootProvenance
-    )
-
-  def remainsCertified: Boolean =
-    CertifiedLineReplayRecord.from(lineOwner).exists(authority =>
-      authority.line == line && authority.replay == replay
-    ) &&
-      transitionOwner.ref == transition.evidence &&
-      (transitionOwner.payload match
-        case payload @ MoveTransitionEvidence(moveUci, from, to, _) =>
-          moveUci == transition.moveUci && from == transition.from && to == transition.to &&
-            payload.canonicalTransitionProof.exists(
-              _.provesMove(moveUci, from, to, transitionOwner.ref.scope, transitionOwner.ref.line)
-            )
-        case _ => false) &&
-      occurrence.start == transition.from && occurrence.destination == transition.to &&
-      occurrence.transitionEvidenceId == transition.evidence.id &&
-      replay.replaySteps.headOption.contains(rootStep)
-
 final case class AdmittedMoveReviewInput(
     beforeFen: String,
     playedMoveUci: String,
@@ -231,60 +150,6 @@ final case class JudgmentAssemblyContext(
   ): Option[LineRootOccurrence] =
     lineRootOccurrences.get(line)
 
-  /** Sole role-neutral authority for the root occurrence of one admitted
-    * line. It joins already registered owners only; no board fact is replayed
-    * or recomputed here.
-    */
-  private[chessjudgment] def certifiedRootOccurrence(
-      line: LineNodeRef
-  ): Option[CertifiedRootOccurrence] =
-    for
-      registeredLine <- legalLines.find(_.ref == line)
-      lineOwner <- evidenceGraph.uniqueProofEligibleLineFactRecordFor(line).map(_._1)
-      replay <- lineReplay(line)
-      occurrence <- lineRootOccurrence(line)
-      transition <- transitions.filter(_.evidence.id == occurrence.transitionEvidenceId) match
-        case exact :: Nil => Some(exact)
-        case _            => None
-      transitionOwner <- evidenceGraph.record(transition.evidence)
-      if evidenceGraph.proofEligible(transitionOwner)
-      transitionReplay <- transitionReplay(transition)
-      rootStep <- replay.replaySteps.headOption
-      exactTransitionStep <- transitionReplay.replaySteps match
-        case exact :: Nil => Some(exact)
-        case _            => None
-      if registeredLine.evidence == lineOwner.ref
-      if lineOwner.ref.line.contains(line)
-      if occurrence.start == transition.from && occurrence.destination == transition.to
-      if rootStep == exactTransitionStep
-      if EvidenceRef.sameMove(rootStep.moveUci, transition.moveUci)
-      if PrincipalVariationEvidence.sameBoardState(rootStep.fenBefore, transition.from.fen)
-      if PrincipalVariationEvidence.sameBoardState(rootStep.fenAfter, transition.to.fen)
-    yield
-      val provenance =
-        if isAdmittedObservedRoot(transition, rootStep) then CausalRootProvenance.ObservedGameRoot
-        else CausalRootProvenance.CounterfactualAnalyzedRoot
-      CertifiedRootOccurrence(
-        line,
-        lineOwner,
-        replay,
-        occurrence,
-        transition,
-        transitionOwner,
-        provenance
-      )
-
-  private[chessjudgment] def certifiedRootOccurrences: Option[List[CertifiedRootOccurrence]] =
-    val certified = legalLines.map(line => certifiedRootOccurrence(line.ref))
-    Option.when(certified.forall(_.nonEmpty)) {
-      val exact = certified.flatten
-      require(
-        exact.count(_.isObserved) == 1,
-        "an admitted review must have exactly one history-observed root occurrence"
-      )
-      exact
-    }
-
   private[chessjudgment] def lineForRootTransition(
       edge: MoveTransitionEdge
   ): Option[LegalLineNode] =
@@ -311,28 +176,6 @@ final case class JudgmentAssemblyContext(
               s"transition '${edge.evidence.id}' has more than one LegalLine owner"
             )
       case None => lineForRootTransition(edge)
-
-  /** Joins the already admitted root transition to a continuation line that
-    * starts at the transition result. No move is replayed here.
-    */
-  private[chessjudgment] def continuationReplay(
-      transition: StructuralTransitionBinding,
-      continuationLine: LineNodeRef
-  ): Option[CanonicalLineReplay] =
-    for
-      edge <- exactlyOne(transitions.filter(edge =>
-        edge.role == transition.role &&
-          edge.from == transition.from &&
-          edge.to == transition.to &&
-          EvidenceRef.sameMove(edge.moveUci, transition.moveUci)
-      ))
-      root <- transitionReplay(edge)
-      continuation <- lineReplay(continuationLine)
-      first <- continuation.replaySteps.headOption
-      if PrincipalVariationEvidence.sameBoardState(first.fenBefore, transition.to.fen)
-      rebased <- continuation.rebased(transition.to.ply + 1)
-      combined <- CanonicalLineReplay.concatenate(root, rebased)
-    yield combined
 
   def transition(role: TransitionEdgeRole): Option[MoveTransitionEdge] =
     exactlyOne(transitions.filter(_.role == role))
@@ -529,19 +372,6 @@ final case class JudgmentAssemblyContext(
           PrincipalVariationEvidence.sameBoardState(step.fenBefore, edge.from.fen) &&
           PrincipalVariationEvidence.sameBoardState(step.fenAfter, edge.to.fen)
       case _ => false
-
-  private def isAdmittedObservedRoot(
-      edge: MoveTransitionEdge,
-      rootStep: LineReplayStep
-  ): Boolean =
-    input.positionHistory.currentPly == input.beforePly &&
-      PrincipalVariationEvidence.sameBoardState(input.positionHistory.currentFen, input.beforeFen) &&
-      edge.from.ply == input.beforePly &&
-      PrincipalVariationEvidence.sameBoardState(edge.from.fen, input.beforeFen) &&
-      EvidenceRef.sameMove(edge.moveUci, input.playedMoveUci) &&
-      EvidenceRef.sameMove(rootStep.moveUci, input.playedMoveUci) &&
-      PrincipalVariationEvidence.sameBoardState(edge.to.fen, input.afterPlayedFen) &&
-      PrincipalVariationEvidence.sameBoardState(rootStep.fenAfter, input.afterPlayedFen)
 
   private def appendWithoutCollision[A](
       items: List[A],

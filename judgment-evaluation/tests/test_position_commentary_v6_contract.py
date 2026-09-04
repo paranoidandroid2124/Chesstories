@@ -37,36 +37,6 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
         self.assertEqual(selected[0]["selection"]["roles"], ["best", "played"])
         self.assertEqual(selected[0]["commentary"]["primary"]["kind"], "best_choice")
 
-    def test_producer_occurrence_relation_fixture_matches_the_public_contract(self) -> None:
-        fixture_name = "relocation-enables-recapture-produced.json"
-        fixture_path = ROOT / "fixtures" / "public-commentary-v6" / fixture_name
-        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-
-        self.validate("position-commentary-response.schema.json", fixture)
-        selected = fixture["result"]["selected_move_reviews"]
-        commentaries = [
-            review["commentary"]
-            for review in selected
-            if "commentary" in review
-            and "occurrence_relations" in review["commentary"]
-        ]
-        self.assertEqual(len(commentaries), 1)
-        commentary = commentaries[0]
-        self.assertNotIn("causal_explanations", commentary)
-        self.assertTrue(commentary["occurrence_relations"])
-        self.registry.validate_document(
-            {
-                "schema_version": "chesstory.move-meaning.response.v6",
-                "status": "ready",
-                "move_commentary": commentary,
-            },
-            ROOT
-            / "schemas"
-            / "public-v6"
-            / "move-meaning-response.schema.json",
-            label=f"Scala-produced occurrence relation: {fixture_name}",
-        )
-
     @staticmethod
     def progress(phase: str, *, issued: int, accepted: int) -> dict[str, object]:
         return {

@@ -18,8 +18,7 @@ enum PlayerFacingPrimary:
 
 final class EvidenceBackedJudgmentPacket private (
     private[chessjudgment] val assembly: JudgmentAssemblyContext,
-    val primary: PlayerFacingPrimary,
-    val occurrenceRelations: List[OccurrenceRelationProof]
+    val primary: PlayerFacingPrimary
 ):
   def candidateLines: List[CandidateLineNode] = assembly.lines
 
@@ -35,14 +34,9 @@ object EvidenceBackedJudgmentPacket:
         assembly.relativeAssessments,
         assembly.evidenceGraph
       )
-    yield new EvidenceBackedJudgmentPacket(
-      assembly,
-      primary,
-      certifiedOccurrenceRelations(assembly)
-    )
+    yield new EvidenceBackedJudgmentPacket(assembly, primary)
 
   /** Sole projection from quantitative Assessment to the public verdict shape.
-    * Neither comparison kind can identify or admit an Explanation proof.
     */
   private def selectPrimary(
       relativeAssessments: List[RelativeMoveAssessment],
@@ -70,16 +64,6 @@ object EvidenceBackedJudgmentPacket:
           case _ => None
         }
       case _ => None
-
-  /** Each typed relation is certified independently. An ineligible relation
-    * record is omitted without removing its siblings or the primary verdict.
-    */
-  private def certifiedOccurrenceRelations(
-      assembly: JudgmentAssemblyContext
-  ): List[OccurrenceRelationProof] =
-    assembly.evidenceGraph.records
-      .flatMap(OccurrenceRelationProof.fromRecord(_, assembly.evidenceGraph))
-      .sortBy(_.source.id)
 
   private def structurallyClosed(assembly: JudgmentAssemblyContext): Boolean =
     val rootPresent = assembly.root.nonEmpty

@@ -5,15 +5,6 @@ import lila.chessjudgment.model.line.CanonicalPositionHistory
 
 class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
 
-  private def replayFrom(fen: String, moves: List[String]): CanonicalLineReplay =
-    val history = CanonicalPositionHistory
-      .from(fen, Nil, fen)
-      .flatMap(_.extend(moves))
-      .getOrElse(fail(s"expected a legal replay for ${moves.mkString(" ")}"))
-    CanonicalLineReplay
-      .fromHistory(history.segmentReplaySteps)
-      .getOrElse(fail("expected a canonical replay"))
-
   private def twoPlyReplay: CanonicalLineReplay =
     val history = CanonicalPositionHistory
       .from(Standard.initialFen.value, Nil, Standard.initialFen.value)
@@ -39,88 +30,3 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
     assertEquals(firstBefore.occurrence.plyCount, first.ply - 1)
     assertEquals(firstAfter.occurrence.plyCount, first.ply)
     assertEquals(secondAfter.occurrence.plyCount, second.ply)
-
-  test("rebasing changes only occurrence plies and shares the owned calculations"):
-    val replay = twoPlyReplay
-    assertEquals(replay.rebased(0), None)
-
-    val rebased = replay.rebased(4).getOrElse(fail("expected a positive occurrence rebase"))
-    val originalFirst = replay.replaySteps.head
-    val rebasedFirst = rebased.replaySteps.head
-    val originalBefore = replay.analysisBefore(originalFirst).getOrElse(fail("expected original source"))
-    val originalAfter = replay.analysisAfter(originalFirst).getOrElse(fail("expected original destination"))
-    val rebasedBefore = rebased.analysisBefore(rebasedFirst).getOrElse(fail("expected rebased source"))
-    val rebasedAfter = rebased.analysisAfter(rebasedFirst).getOrElse(fail("expected rebased destination"))
-
-    assertEquals(rebasedFirst.ply, 4)
-    assertEquals(rebasedBefore.occurrence.plyCount, 3)
-    assertEquals(rebasedAfter.occurrence.plyCount, 4)
-    assert(rebasedBefore.position eq originalBefore.position)
-    assert(rebasedAfter.position eq originalAfter.position)
-    assert(rebasedBefore.actualLegalMoves eq originalBefore.actualLegalMoves)
-    assert(rebasedAfter.boardRelations eq originalAfter.boardRelations)
-
-  test("transposed replay destinations share semantic occurrence identity without sharing steps"):
-    val first = replayFrom(
-      Standard.initialFen.value,
-      List("g1f3", "g8f6", "g2g3", "g7g6")
-    )
-    val second = replayFrom(
-      Standard.initialFen.value,
-      List("g2g3", "g7g6", "g1f3", "g8f6")
-    )
-    val firstStep = first.replaySteps.last
-    val secondStep = second.replaySteps.last
-    val firstOccurrence = first.positionAfter(firstStep).getOrElse(fail("missing first destination"))
-    val secondOccurrence = second.positionAfter(secondStep).getOrElse(fail("missing transposed destination"))
-
-    assertNotEquals(firstStep, secondStep)
-    assert(
-      lila.chessjudgment.model.line.PrincipalVariationEvidence.sameBoardState(
-        firstOccurrence.position.fen,
-        secondOccurrence.position.fen
-      )
-    )
-    assertEquals(firstOccurrence.position.ply, secondOccurrence.position.ply)
-    assertEquals(firstOccurrence.occurrenceId, secondOccurrence.occurrenceId)
-
-  test("exact recapture membership returns its occurrence-owned L1 key and resource"):
-    val replay = replayFrom(
-      "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
-      List("d1d8", "f8d8")
-    )
-    val capture :: recapture :: Nil = replay.replaySteps: @unchecked
-
-    val (key, resource) = replay
-      .exactRecaptureMembership(capture, recapture)
-      .getOrElse(fail("expected the exact recapture membership"))
-
-    assertEquals(key.kind, RelationFactKind.CaptureRecaptureInventory)
-    assert(EvidenceRef.sameMove(resource.moveUci, "f8d8"))
-    assertEquals(resource.movement, replay.transition(recapture).map(_.relationDelta.rootMove.witness).get)
-
-    val captureReplay = replay.subset(List(capture)).getOrElse(fail("expected the capture occurrence"))
-    val recaptureReplay = replay.subset(List(recapture)).getOrElse(fail("expected the reply occurrence"))
-    assertEquals(
-      captureReplay.exactRecaptureMembership(capture, recaptureReplay, recapture),
-      Some(key -> resource)
-    )
-
-  test("exact check-response membership rejects the same semantic move from another occurrence"):
-    val replay = replayFrom(
-      "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
-      List("c4f7", "f8f7")
-    )
-    val check :: response :: Nil = replay.replaySteps: @unchecked
-    val (key, witness) = replay
-      .exactCheckResponseMembership(check, response)
-      .getOrElse(fail("expected the exact check-response membership"))
-
-    assertEquals(key.kind, RelationFactKind.CreatedCheckResponseInventory)
-    assert(EvidenceRef.sameMove(witness.resource.moveUci, "f8f7"))
-
-    val foreignResponse = replay
-      .rebased(4)
-      .getOrElse(fail("expected a rebased occurrence"))
-      .replaySteps(1)
-    assertEquals(replay.exactCheckResponseMembership(check, foreignResponse), None)

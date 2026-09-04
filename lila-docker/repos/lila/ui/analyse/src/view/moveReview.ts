@@ -1,21 +1,13 @@
-import type { DrawShape } from '@lichess-org/chessground/draw';
 import { renderBoardPreview } from 'lib/view/boardPreview';
 import { hl, type VNode } from 'lib/view/snabbdom';
 import {
   formatMoveReviewPercent,
   formatMoveReviewPercentagePointChange,
-  moveReviewOccurrenceBranchProof,
-  moveReviewOccurrenceBranches,
-  moveReviewOccurrenceProofPaths,
   moveReviewVerdictCodeLabel,
   selectedMoveReviewCandidate,
-  type MoveReviewAnnotationShape,
-  type MoveReviewBoundedProofPath,
   type MoveReviewCandidate,
   type MoveReviewCandidateRole,
   type MoveReviewCandidateReview,
-  type MoveReviewClosureUse,
-  type MoveReviewColoredPieceWitness,
   type MoveReviewCopy,
   type MoveReviewCore,
   type MoveReviewDrawClaim,
@@ -23,9 +15,6 @@ import {
   type MoveReviewFrameSelection,
   type MoveReviewJobState,
   type MoveReviewLocale,
-  type MoveReviewMovementWitness,
-  type MoveReviewOccurrenceBranch,
-  type MoveReviewOccurrenceRelation,
   type MoveReviewProof,
   type MoveReviewVerdictSymbol,
   type MoveReviewViewState,
@@ -252,11 +241,7 @@ function renderReviewBody(props: MoveReviewPanelProps, evidence: MoveReviewEvide
           hl('span.move-review__eyebrow', played.label),
           hl('h3', verdictLabel),
           hl('p.move-review__core-comparison', renderCoreComparison(played, best, core, props.copy)),
-          review.kind === 'move-verdict' && !review.relations.length
-            ? hl('p', props.copy.noOccurrenceRelations)
-            : review.kind === 'abstained'
-              ? hl('p', props.copy.candidateUnavailable)
-              : undefined,
+          review.kind === 'abstained' ? hl('p', props.copy.candidateUnavailable) : undefined,
         ]),
       ],
     ),
@@ -533,13 +518,7 @@ function renderStructuredReview(
         'aria-labelledby': `move-review-candidate-${candidate.uci}`,
       },
     },
-    [
-      review.comparisonProof && renderAssessmentProof(review.comparisonProof, candidate, props),
-      ...review.relations.map((relation, index) => renderOccurrenceRelation(relation, index, props)),
-      !review.comparisonProof &&
-        !review.relations.length &&
-        hl('p.move-review__empty-explanation', props.copy.noOccurrenceRelations),
-    ],
+    [review.comparisonProof && renderAssessmentProof(review.comparisonProof, candidate, props)],
   );
 }
 
@@ -573,277 +552,10 @@ function renderAssessmentProof(
   ]);
 }
 
-function renderOccurrenceRelation(
-  relation: MoveReviewOccurrenceRelation,
-  index: number,
-  props: MoveReviewPanelProps,
-): VNode {
-  const expanded = props.view.expandedProofId === relation.id;
-  const contentId = `move-review-proof-${relation.id}`;
-  return hl('article.move-review__proof-entry', { key: relation.id }, [
-    hl(
-      'button.move-review__proof-entry-button',
-      {
-        attrs: {
-          type: 'button',
-          'aria-expanded': expanded ? 'true' : 'false',
-          ...(expanded ? { 'aria-controls': contentId } : {}),
-        },
-        on: { click: () => props.actions.toggleProof(relation.id) },
-      },
-      [
-        hl('span.move-review__proof-entry-copy', [
-          hl('strong', props.copy.familyLabels[relation.relationKind]),
-          hl('span.move-review__proof-entry-summary', [
-            hl('span', `${props.copy.proofPath} ${index + 1}`),
-            hl('code.move-review__typed-value.is-move', relation.subjectOccurrence.moveUci),
-          ]),
-        ]),
-        hl('span.move-review__proof-entry-chevron', { attrs: { 'aria-hidden': 'true' } }, '⌄'),
-      ],
-    ),
-    expanded && renderOccurrenceRelationDetails(relation, contentId, props),
-  ]);
-}
-
-function renderOccurrenceRelationDetails(
-  relation: MoveReviewOccurrenceRelation,
-  contentId: string,
-  props: MoveReviewPanelProps,
-): VNode {
-  const paths = moveReviewOccurrenceProofPaths(relation);
-  const branches = moveReviewOccurrenceBranches(relation);
-  return hl(`div#${contentId}.move-review__typed-path`, [
-    hl(
-      'div.move-review__branches',
-      branches.map((branch, index) => renderOccurrenceBranch(relation, branch, index, props)),
-    ),
-    renderOccurrenceParticipants(relation, props.copy),
-    ...paths.map((path, index) => renderOccurrenceProofPath(path, index, props.copy)),
-    renderLaterConsumer(relation, props.copy),
-    renderOccurrenceProvenance(relation, branches, paths, props.copy),
-  ]);
-}
-
-function renderOccurrenceProofPath(path: MoveReviewBoundedProofPath, index: number, copy: MoveReviewCopy): VNode {
-  return hl('section.move-review__proof-path.move-review__typed-section', { key: path.pathOccurrenceId }, [
-    hl('h4', `${copy.proofPath} ${index + 1}`),
-    hl('section.move-review__premises', [
-      hl('h5', copy.premises),
-      hl(
-        'ol.move-review__typed-list',
-        path.premises.map((premise, premiseIndex) => hl('li', [renderPremise(premise, premiseIndex, copy)])),
-      ),
-    ]),
-    path.closedAbsenceUses.length
-      ? renderClosures(copy.closedAbsence, path.closedAbsenceUses, 'closed-absence', copy)
-      : undefined,
-    path.closedStateUses.length
-      ? renderClosures(copy.closedState, path.closedStateUses, 'closed-state', copy)
-      : undefined,
-  ]);
-}
-
-function renderOccurrenceBranch(
-  relation: MoveReviewOccurrenceRelation,
-  branch: MoveReviewOccurrenceBranch,
-  index: number,
-  props: MoveReviewPanelProps,
-): VNode {
-  const proof = moveReviewOccurrenceBranchProof(relation, index);
-  return hl('section.move-review__branch', { key: branch.branchId }, [
-    hl('header.move-review__branch-header', [
-      hl('h4', branchLabel(branch.rootProvenance, props.copy)),
-      hl('code.move-review__typed-value.is-move', branch.rootMove),
-    ]),
-    proof && renderProof(proof, undefined, props, branch),
-  ]);
-}
-
-function branchLabel(provenance: MoveReviewOccurrenceBranch['rootProvenance'], copy: MoveReviewCopy): string {
-  return provenance === 'observed_game_root'
-    ? `${copy.actualMove} · ${copy.analysisContinuation}`
-    : copy.analyzedAlternative;
-}
-
-type MoveReviewParticipant = MoveReviewMovementWitness | MoveReviewColoredPieceWitness | Key;
-type MoveReviewPremise = MoveReviewBoundedProofPath['premises'][number];
-
-function renderOccurrenceParticipants(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
-  const participants = relation.proof.participants;
-  return hl('section.move-review__participants.move-review__typed-section', [
-    hl('h4', copy.structureLabels.participants),
-    hl(
-      'div.move-review__participant-list',
-      (Object.entries(participants) as [string, MoveReviewParticipant][]).map(([role, participant]) =>
-        hl('section.move-review__participant', [
-          hl('h5', structureRoleLabel(role, copy, copy.structureLabels.participants)),
-          typeof participant === 'string'
-            ? renderFact(copy.structureLabels.square, participant, 'square')
-            : renderWitness(participant, copy),
-        ]),
-      ),
-    ),
-  ]);
-}
-
-function renderWitness(value: Exclude<MoveReviewParticipant, Key>, copy: MoveReviewCopy): VNode {
-  const labels = copy.structureLabels;
-  return 'from' in value
-    ? renderFacts([
-        renderFact(labels.side, copy.colorLabels[value.side]),
-        renderFact(
-          labels.piece,
-          value.pieceBefore === value.pieceAfter
-            ? labels.pieceLabels[value.pieceBefore]
-            : `${labels.pieceLabels[value.pieceBefore]} → ${labels.pieceLabels[value.pieceAfter]}`,
-          'piece',
-        ),
-        renderFact(labels.from, value.from, 'square'),
-        renderFact(labels.to, value.to, 'square'),
-      ])
-    : renderFacts([
-        renderFact(labels.side, copy.colorLabels[value.side]),
-        renderFact(labels.piece, labels.pieceLabels[value.piece], 'piece'),
-        renderFact(labels.square, value.square, 'square'),
-      ]);
-}
-
-function renderPremise(premise: MoveReviewPremise, index: number, copy: MoveReviewCopy): VNode {
-  const labels = copy.structureLabels;
-  if ('transitionKind' in premise)
-    return hl('section.move-review__premise', [
-      hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
-      renderFacts([
-        renderFact(labels.contract, labels.contractLabels[premise.contract] ?? labels.contract),
-        renderFact(labels.result, structureRoleLabel(premise.transitionKind, copy, premise.transitionKind)),
-        renderFact(labels.move, premise.overallMoveUci, 'move'),
-        renderFact(labels.afterStep, premise.stepIndex + 1),
-      ]),
-      hl('div.move-review__continuity-before', [hl('h6', labels.from), renderWitness(premise.before, copy)]),
-      hl('div.move-review__continuity-after', [hl('h6', labels.to), renderWitness(premise.after, copy)]),
-      premise.selectedTransition
-        ? hl('div.move-review__continuity-transition', [
-            hl('h6', labels.move),
-            renderWitness(premise.selectedTransition, copy),
-          ])
-        : undefined,
-    ]);
-  const contract = labels.contractLabels[premise.contract] ?? labels.contract;
-  if ('movement' in premise)
-    return hl('section.move-review__premise', [
-      hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
-      renderFacts([
-        renderFact(labels.contract, contract),
-        renderFact(labels.move, premise.moveUci, 'move'),
-        renderFact(labels.afterStep, premise.stepIndex + 1),
-      ]),
-      renderWitness(premise.movement, copy),
-      premise.capture
-        ? hl('div.move-review__premise-capture', [
-            hl('h6', labels.capture),
-            renderWitness(premise.capture, copy),
-          ])
-        : undefined,
-    ]);
-  return hl('section.move-review__premise', [
-    hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
-    renderFacts([renderFact(labels.contract, contract), renderFact(labels.afterStep, premise.stepIndex + 1)]),
-  ]);
-}
-
-function renderClosures(
-  label: string,
-  closures: MoveReviewClosureUse[],
-  className: 'closed-absence' | 'closed-state',
-  copy: MoveReviewCopy,
-): VNode {
-  return hl(`section.move-review__${className}`, [
-    hl('h5', label),
-    hl(
-      'ol.move-review__typed-list',
-      closures.map(closure =>
-        hl('li', [
-          hl('strong', structureRoleLabel(closure.role, copy, label)),
-          renderFacts([
-            renderFact(copy.structureLabels.afterStep, closure.afterStepIndex + 1),
-            renderFact(copy.structureLabels.positionPly, closure.position.ply),
-          ]),
-        ]),
-      ),
-    ),
-  ]);
-}
-
-function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
-  const labels = copy.structureLabels;
-  return hl('section.move-review__later-consumer.move-review__typed-section', [
-    hl('h4', labels.laterConsumer),
-    hl('h5', structureRoleLabel('relocated_target_capture', copy, labels.capture)),
-    renderFact(labels.move, relation.proof.targetCapture.moveUci, 'move'),
-    renderWitness(relation.proof.targetCapture.movement, copy),
-    hl('h5', structureRoleLabel('relocated_responder_recapture', copy, labels.reply)),
-    renderFact(labels.move, relation.proof.relocatedResponderRecapture.moveUci, 'move'),
-    renderWitness(relation.proof.relocatedResponderRecapture.movement, copy),
-  ]);
-}
-
-function renderOccurrenceProvenance(
-  relation: MoveReviewOccurrenceRelation,
-  branches: MoveReviewOccurrenceBranch[],
-  paths: MoveReviewBoundedProofPath[],
-  copy: MoveReviewCopy,
-): VNode {
-  const labels = copy.structureLabels;
-  return hl('details.move-review__provenance', [
-    hl('summary', labels.provenanceDetails),
-    renderFacts([
-      renderFact(labels.proofOccurrenceId, relation.proof.occurrenceId),
-      renderFact(labels.subjectOccurrenceId, relation.subjectOccurrence.occurrenceId),
-      renderFact(labels.semanticId, relation.proof.semanticId),
-      renderFact(labels.sourceEvidenceId, relation.proof.sourceEvidenceId),
-      renderFact(labels.dependencyFingerprint, relation.proof.dependencyFingerprint),
-    ]),
-    ...branches.map((branch, index) =>
-      hl('section', [
-        hl('h5', `${branchLabel(branch.rootProvenance, copy)} ${index + 1}`),
-        renderFacts([
-          renderFact(labels.branchId, branch.branchId),
-          renderFact(labels.lineId, branch.lineId),
-        ]),
-      ]),
-    ),
-    ...paths.flatMap((path, index) => [
-      renderFact(`${labels.pathOccurrenceId} ${index + 1}`, path.pathOccurrenceId),
-      ...[...path.closedAbsenceUses, ...path.closedStateUses].map((closure, closureIndex) =>
-        renderFact(`${labels.closureUseId} ${closureIndex + 1}`, closure.useId),
-      ),
-    ]),
-  ]);
-}
-
-function structureRoleLabel(role: string, copy: MoveReviewCopy, fallback: string): string {
-  const exact = copy.structureLabels.roleLabels[role];
-  if (exact) return exact;
-  return fallback;
-}
-
-function renderFacts(items: VNode[]): VNode {
-  return hl('dl.move-review__typed-fields', items);
-}
-
-function renderFact(label: string, value: string | number, tone?: 'move' | 'square' | 'piece'): VNode {
-  return hl('div.move-review__typed-field', [
-    hl('dt', label),
-    hl('dd', [hl(`code.move-review__typed-value${tone ? `.is-${tone}` : ''}`, String(value))]),
-  ]);
-}
-
 function renderProof(
   proof: MoveReviewProof,
   contentId: string | undefined,
   props: MoveReviewPanelProps,
-  branch?: MoveReviewOccurrenceBranch,
 ): VNode {
   const frame = activeFrame(proof, props.view);
   const pinned = props.view.pinnedFrame;
@@ -868,7 +580,7 @@ function renderProof(
         hl(
           'div.move-review__proof-moves',
           { on: { mouseleave: props.actions.clearPreview } },
-          renderProofMoves(proof, frame, pinned, props, branch),
+          renderProofMoves(proof, frame, pinned, props),
         ),
         props.canWrite &&
           !added &&
@@ -910,7 +622,6 @@ function renderProofMoves(
   active: MoveReviewFrameSelection,
   pinned: MoveReviewFrameSelection | undefined,
   props: MoveReviewPanelProps,
-  branch?: MoveReviewOccurrenceBranch,
 ): VNode[] {
   return proof.moves.map((move, index) => {
     const ply = index + 1;
@@ -918,9 +629,7 @@ function renderProofMoves(
     const isActive = active.ply === ply;
     const isPinned = pinned?.proofId === proof.id && pinned.ply === ply;
     const step = `${props.copy.proofStep} ${ply}`;
-    const stage = branch && proofMoveStage(branch, ply, props.copy);
     return hl('span.move-review__proof-move', [
-      stage && hl('span.move-review__proof-stage', stage),
       hl('span.move-review__proof-index', String(ply)),
       hl(
         'button.move-review__proof-san',
@@ -945,16 +654,6 @@ function renderProofMoves(
   });
 }
 
-function proofMoveStage(branch: MoveReviewOccurrenceBranch, ply: number, copy: MoveReviewCopy): string | undefined {
-  const provenance = branch.steps?.[ply - 1]?.provenance;
-  if (provenance === 'observed_game_move') return copy.actualMove;
-  if (provenance === 'certified_analysis_move')
-    return branch.rootProvenance === 'counterfactual_analyzed_root'
-      ? copy.analyzedAlternative
-      : copy.analysisContinuation;
-  return undefined;
-}
-
 function activeFrame(proof: MoveReviewProof, view: MoveReviewViewState): MoveReviewFrameSelection {
   const valid = (frame?: MoveReviewFrameSelection): frame is MoveReviewFrameSelection =>
     frame?.proofId === proof.id && frame.ply >= 1 && frame.ply <= proof.moves.length;
@@ -963,21 +662,9 @@ function activeFrame(proof: MoveReviewProof, view: MoveReviewViewState): MoveRev
   return { proofId: proof.id, ply: 1 };
 }
 
-function proofBoard(proof: MoveReviewProof, ply: number): { fen: FEN; uci?: Uci; shapes: DrawShape[] } {
+function proofBoard(proof: MoveReviewProof, ply: number): { fen: FEN; uci?: Uci } {
   const move = proof.moves[ply - 1]!;
-  return {
-    fen: move.fenAfter,
-    uci: move.uci,
-    shapes: proof.annotations
-      .filter(annotation => annotation.atPly === ply)
-      .map(annotation => annotationDrawShape(annotation.shape)),
-  };
-}
-
-function annotationDrawShape(shape: MoveReviewAnnotationShape): DrawShape {
-  return shape.kind === 'arrow'
-    ? { orig: shape.orig, dest: shape.dest, brush: shape.brush }
-    : { orig: shape.key, brush: shape.brush };
+  return { fen: move.fenAfter, uci: move.uci };
 }
 
 function proofFrameLabel(proof: MoveReviewProof, ply: number, copy: MoveReviewCopy): string {

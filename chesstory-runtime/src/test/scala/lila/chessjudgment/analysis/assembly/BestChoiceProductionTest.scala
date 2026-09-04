@@ -29,10 +29,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
 
     assertEquals(prepared.assessmentCandidates.flatMap(_.rootMove).toSet, ranking.toSet)
     MoveReviewJudgmentOrchestrator
-      .executePreparedReview(
-        prepared,
-        Some(ExplanationRequest.forObservedMove(prepared))
-      )
+      .executePreparedReview(prepared)
       .getOrElse(fail("expected the sole production pipeline to close BestChoice"))
       .packet
 
@@ -165,7 +162,6 @@ class BestChoiceProductionTest extends munit.FunSuite:
       .fromAssembly(packet.assembly.copy(evidenceGraph = graph))
       .getOrElse(fail("expected the independent lower transition to survive beside the packet"))
     assertEquals(rebuilt.primary, packet.primary)
-    assertEquals(rebuilt.occurrenceRelations, packet.occurrenceRelations)
 
   test("a continuation structural delta cannot lose its exact line parent"):
     val packet = producedPacket(ranking.head)

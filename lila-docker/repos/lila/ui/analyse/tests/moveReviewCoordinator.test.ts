@@ -47,7 +47,6 @@ function completedSnapshot(request: MoveReviewSourceRequest): CompletedSnapshot 
                   fenAfter: request.subject.after.fen,
                 },
               ],
-              annotations: [],
             },
           },
         },

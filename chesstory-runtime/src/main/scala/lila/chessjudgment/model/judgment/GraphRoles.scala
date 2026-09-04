@@ -46,6 +46,5 @@ enum EvidenceLayer:
   case MoveTransition
   case Relation
   case StructuralDelta
-  case CausalProof
   case CandidateComparison
   case RelativeAssessment

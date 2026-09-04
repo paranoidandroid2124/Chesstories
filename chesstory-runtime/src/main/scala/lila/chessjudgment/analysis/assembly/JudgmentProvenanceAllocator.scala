@@ -174,7 +174,7 @@ object JudgmentProvenanceAllocator:
 
   def forInput(input: AdmittedMoveReviewInput): JudgmentProvenanceAllocator =
     val history = input.positionHistory
-    val historyOccurrence = BoundedCausalIdentity.digest(
+    val historyOccurrence = EvidenceIdentity.digest(
       List(
         "canonical-history-occurrence:v1",
         history.initialFen,

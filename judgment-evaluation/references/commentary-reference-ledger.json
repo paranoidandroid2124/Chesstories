@@ -3,217 +3,16 @@
   "authority": "ci_only_reference_provenance_not_board_truth",
   "runtime_consumed": false,
   "cache_dependency": false,
-  "relation_delivery": "Each current typed relation proof record is independently graph-certified and projected directly as its own occurrence relation; no wrapper, separate upper owner, or admission record exists.",
-  "host": {
-    "demand": {
-      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationDemand.scala",
-      "symbol": "OccurrenceExplanationDemand"
-    },
-    "orchestrator": {
-      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/MoveReviewJudgmentOrchestrator.scala",
-      "symbol": "MoveReviewJudgmentOrchestrator",
-      "proof_entrypoint": "OccurrenceExplanationAssembler.enrichProofs"
-    },
-    "packet": {
-      "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/JudgmentPacket.scala",
-      "symbol": "EvidenceBackedJudgmentPacket",
-      "field": "occurrenceRelations"
-    },
-    "runtime": {
-      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
-      "serializer_symbol": "occurrenceRelationJson",
-      "field": "occurrence_relations"
-    },
-    "schema": {
-      "file": "judgment-evaluation/schemas/public-v6/move-meaning-response.schema.json",
-      "root_property": "occurrence_relations",
-      "union_definition": "occurrenceRelation"
-    }
-  },
-  "coverage_categories": [
-    "current_exact_proof",
-    "lower_fact_gap",
-    "l2_join_or_demand_gap",
-    "higher_layer_responsibility"
-  ],
-  "p0_corrections": [
-    {
-      "id": "canonical-causal-identity-keys",
-      "status": "fixed",
-      "owners": [
-        "CausalBranchRole.stableKey",
-        "VerticalRelationContractKind.id",
-        "BoundedCausalContractKind.semanticNamespace"
-      ],
-      "affected_identity_inputs": [
-        "ReplayVerticalRelationOccurrence",
-        "ReplayVerticalRelationOccurrenceBinding",
-        "CausalVerticalRelationPremiseUse",
-        "CausalClosedAbsenceBinding",
-        "CausalClosedStateBinding",
-        "BoundedCausalContractManifest.stableKey implementations",
-        "BoundedCausalDependencyManifest",
-        "BoundedCausalDependencyFingerprint"
-      ],
-      "producer_fixtures": [
-        "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json"
-      ],
-      "invariant": "Every path, dependency, closed-use, and typed relation identity consumes the canonical branch-role and contract keys; semantic proposition, occurrence, branch, move sequence, and lower-premise contents remain unchanged."
-    }
-  ],
-  "contracts": [
-    {
-      "contract_kind": "RelocationEnablesRecapture",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
-        "symbol": "OccurrenceExplanationAssembler",
-        "method": "relocationEnablesRecaptureRecords"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "RelocationEnablesRecaptureEvidence"
-      },
-      "wire": {
-        "relation_kind": "relocation_enables_recapture",
-        "variant_definition": "relocationEnablesRecaptureOccurrenceRelation",
-        "proof_field": "proof",
-        "proof_definition": "occurrenceRelocationEnablesRecaptureProof"
-      },
-      "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala#OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords",
-        "coordinate_piece_identity_proposition": {
-          "statement": "Across two same-root admitted lines, the same identified attacker captures the same identified target; the tracked responder's exact seed-to-staging relocation and retained trajectory enable its recapture on the capture mover's landing square in the relocated-responder branch, while the retained-responder sibling keeps that responder at seed and certifies the exact seed-to-recapture-square legal move absent.",
-          "wire_fields": ["participants", "attacker_at_common_root", "attacker_at_capture", "target_at_common_root", "captured_target", "recapture_square", "tracked_responder_at_seed", "tracked_responder_at_staging", "other_recapturer", "relocation", "target_capture", "relocated_responder_recapture", "retained_other_recapture"]
-        },
-        "lower_premises": {
-          "contracts": ["capture_recapture_inventory", "legal_move", "object_continuity_step"],
-          "dynamic_id_fields": ["result_id", "legal_move_semantic_id", "transition_footprint_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
-          "issuer_source_kinds": ["capture-recapture relation result owner", "canonical LegalMove owner", "canonical transition-footprint owner", "canonical source premise IDs"]
-        },
-        "closed_inventory": {
-          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
-          "fields": ["semantic_proof_id", "query", "position"],
-          "certified_absence_or_state": ["retained_seed_recapture_absent", "complete moved-or-retained object continuity for target, attacker, and responder in both branches", "every retained step's exact OccupiedBy state", "every moved or retained step's exact transition-footprint occurrence"]
-        },
-        "branch_occurrence": {
-          "roles": ["relocated_responder", "retained_responder"],
-          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
-          "provenance_fields": ["root_provenance", "provenance"]
-        },
-        "proof_paths_transposition": {
-          "cardinality": "exactly_one_current_contract",
-          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
-          "rule": "Each role has one exact lower authority, so one occurrence has one conjunctive path; semantic_id may coincide after transposition while subject occurrence, both branch owners, ordered replay occurrences, and path_occurrence_id remain distinct"
-        },
-        "dependency_cache": {
-          "changed_dependencies": ["subject transition occurrence", "both branch owners, root transitions, and complete replays", "all capture-recapture result and source IDs", "every legal-move occurrence and source ID", "all six object continuities with selected primary or secondary transition, transition-footprint, and retained-state IDs", "closed seed-to-recapture-square absence ID", "all proof path occurrence IDs"],
-          "fingerprint_field": "dependency_fingerprint",
-          "cache_owner": "sole producer deterministic graph record; no separate public cache"
-        },
-        "consumers": {
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
-          "runtime_field": "occurrence_relations",
-          "schema_variant": "relocationEnablesRecaptureOccurrenceRelation",
-          "runtime_producer_tests": {
-            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
-            "cases": [
-              {
-                "name": "v6 commentary serializes the relocation-enabled recapture occurrence relation"
-              }
-            ]
-          },
-          "direct_fixture": {
-            "file": "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json",
-            "relation_kind": "relocation_enables_recapture",
-            "producer_test_name": "v6 commentary serializes the relocation-enabled recapture occurrence relation"
-          },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, immutable Scala-produced fixture, and typed lila analyse decode/render coverage",
-          "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
-          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
-        },
-        "no_recomputation_owner": "The L2 producer joins admitted LegalLine replay, canonical LegalMove occurrences, capture-recapture result owners, and closed position-state and relation-absence records; PositionRelationExtractor remains the owner of legal moves, capture-recapture resources, and piece state."
-      },
-      "implementation_status": "current_exact_proof",
-      "reference_support": "exact_proposition_anchor",
-      "references": [
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e",
-            "pdf_page": 137
-          }
-        },
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e",
-            "pdf_page": 139
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 104
-          }
-        },
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 105
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
-            "pdf_page": 231
-          }
-        },
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
-            "pdf_page": 232
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
-            "pdf_page": 233
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "best_move",
-        "forced_recapture",
-        "general_move_order",
-        "overload",
-        "preparation",
-        "preservation",
-        "sole_recapturer",
-        "unique_recapture"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/RelocationEnablesRecaptureTest.scala",
-        "symbol": "RelocationEnablesRecaptureTest"
-      }
-    }
-  ],
-  "complete_game_ledger": [
+  "cases": [
     {
       "case_id": "ruy-lopez-game-12",
       "locators": [
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 78},
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 83}
       ],
-      "game": "Game 12, E. L'Ami-E. Van den Doel",
+      "source_context": "Game 12, E. L'Ami-E. Van den Doel",
       "position_anchor": "17.d5 and the immediate 17.b4 sibling",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "Before 17.d5, the white pawn on d4 remains the target of the black e-pawn capture in the immediate-b4 sibling.",
         "Both lines contain exact legal continuations from the same root position."
@@ -239,9 +38,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed for this bounded sibling proof."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "najdorf-game-15",
@@ -249,10 +46,9 @@
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 123},
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 132}
       ],
-      "game": "Game 15, Areshchenko-Dominguez",
+      "source_context": "Game 15, Areshchenko-Dominguez",
       "position_anchor": "The plans introduced after 9...Nc6 and realized at 14...Nc4 and 20...Bxc6",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "After 9...Nc6 the chapter identifies separate queenside piece-placement plans whose occurrences are later revisited."
       ],
@@ -277,9 +73,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is required in the reviewed chain; both later occurrences must retain their own times."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "najdorf-game-16",
@@ -287,10 +81,9 @@
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 132},
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 145}
       ],
-      "game": "Game 16, Naumann-Areshchenko",
+      "source_context": "Game 16, Naumann-Areshchenko",
       "position_anchor": "The same-root 11...Bb7 relocated-responder branch and 11...Nc6?! retained-responder sibling before the matched Nxc6 capture",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "The same white knight from d4 captures the same black knight on c6 in both exact branches.",
         "The tracked black bishop starts on c8; the other recapturer is the black queen on b6."
@@ -318,9 +111,7 @@
       ],
       "transposition_occurrence": [
         "The notes also identify a 12...Nc6 continuation that can transpose to the later ...Bxc6 variation; move-order occurrence must not be merged with its equal board state."
-      ],
-      "mapped_contracts": ["RelocationEnablesRecapture"],
-      "current_coverage_categories": ["current_exact_proof"]
+      ]
     },
     {
       "case_id": "najdorf-game-18",
@@ -328,10 +119,9 @@
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 152},
         {"document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e", "pdf_page": 164}
       ],
-      "game": "Game 18, Stupavski-Palac",
+      "source_context": "Game 18, Stupavski-Palac",
       "position_anchor": "13...b4, 15.Nf4, 15...Kh8, and the two valid twentieth-move repairs",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "White's Nf3 plan is Bf4, then e5, then a c3-knight jump to d5.",
         "After 15.Nf4 Black faces concrete kingside threats before the threatened ...a4 gain.",
@@ -366,9 +156,7 @@
       ],
       "transposition_occurrence": [
         "The chapter notes a separate transposition at 13.a3 Nc6 14.Be3 Bf6; that occurrence must remain distinct from the game occurrence even if the position matches."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "game-changer-bold-sir-lancelot",
@@ -376,10 +164,9 @@
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 158},
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 164}
       ],
-      "game": "Bold Sir Lancelot, AlphaZero-Stockfish",
+      "source_context": "Bold Sir Lancelot, AlphaZero-Stockfish",
       "position_anchor": "24.Kh2, 25.Rh1, 27.Ng1, 35.Ng6, and 47.Rxd5",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "The later rook and knight routes require g1 to be vacated and retained at the relevant times."
       ],
@@ -403,9 +190,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is used; every later occurrence must retain its own history position."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "silicon-road-game-33",
@@ -413,10 +198,9 @@
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 269},
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 272}
       ],
-      "game": "Game 33",
+      "source_context": "Game 33",
       "position_anchor": "The queen exchange, the knight on f5, 29.g6, and 35.Re7",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "After the queen exchange, the knight on f5 blocks access to e7 before the later pawn and rook sequence."
       ],
@@ -440,9 +224,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is identified in the reviewed case."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "van-delft-game-24",
@@ -450,10 +232,9 @@
         {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 124},
         {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 129}
       ],
-      "game": "Game 24, Vladimir Epishin-David Miedema",
+      "source_context": "Game 24, Vladimir Epishin-David Miedema",
       "position_anchor": "13...Qxb3 and the later 40...b5 pawn break",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "13...Qxb3 accepts a material imbalance whose compensation is expressed through a long pawn-chain and manoeuvring phase."
       ],
@@ -477,9 +258,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is identified in the reviewed case."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "ai-revolution-recapture-relocation",
@@ -487,10 +266,9 @@
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 104},
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 105}
       ],
-      "game": "FIDE Candidates 2020-21 chapter analysis citing Wojtaszek-D. Navara, Prague 2021",
+      "source_context": "FIDE Candidates 2020-21 chapter analysis citing Wojtaszek-D. Navara, Prague 2021",
       "position_anchor": "After 13.a5 Rfe8 14.Re1, the game branch 14...Bxf4?! and parenthetical analysis sibling 14...Bxf3! before the matched c6-bishop capture on f3",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "The same black bishop from c6 captures the same white knight on f3 in both exact analysis branches.",
         "The tracked white queen starts on c1; the other recapturer is the white bishop on g2."
@@ -516,9 +294,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed; the c1-f4-f3 queen occurrence history remains distinct from the g2-f3 bishop occurrence."
-      ],
-      "mapped_contracts": ["RelocationEnablesRecapture"],
-      "current_coverage_categories": ["current_exact_proof"]
+      ]
     },
     {
       "case_id": "ai-revolution-square-release-goryachkina-dubov",
@@ -526,10 +302,9 @@
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 124},
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 125}
       ],
-      "game": "Goryachkina-Dubov",
+      "source_context": "Goryachkina-Dubov",
       "position_anchor": "...Rc6 vacates b6 before the d5-b6-c4-a3-b1 knight route",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "The rook occupies b6 before ...Rc6 and the same knight later needs b6 as its first route square."
       ],
@@ -553,9 +328,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed for this release-use occurrence relation."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "ai-revolution-square-release-prohaszka-wang",
@@ -563,10 +336,9 @@
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 130},
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 131}
       ],
-      "game": "P. Prohaszka-K. Wang",
+      "source_context": "P. Prohaszka-K. Wang",
       "position_anchor": "30.Bg2 before 31.Rc6 and the 30.R1d2 sibling",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "The bishop blocks the rook's route square before 30.Bg2."
       ],
@@ -590,9 +362,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed for this release-use occurrence relation."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "ai-revolution-passed-pawn-route",
@@ -600,10 +370,9 @@
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 507},
         {"document_id": "ref-dc427a9593ab48248d19627b245fafaa", "pdf_page": 508}
       ],
-      "game": "Passed-pawn route example",
+      "source_context": "Passed-pawn route example",
       "position_anchor": "37.Nxa6, 39.a6, and 41.a8=Q",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "The source records the exact later passed-pawn progress and promotion occurrences."
       ],
@@ -627,9 +396,7 @@
       ],
       "transposition_occurrence": [
         "Semantic equality may be shared after transposition, but subject and route occurrences remain separate."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap"]
+      ]
     },
     {
       "case_id": "ruy-lopez-game-15",
@@ -637,10 +404,9 @@
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 98},
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 105}
       ],
-      "game": "Game 15, P. Leko-D. Navara; 11...Qd7 analysis branch citing M. Kuusela-K. Miettinen, correspondence 2014",
+      "source_context": "Game 15, P. Leko-D. Navara; 11...Qd7 analysis branch citing M. Kuusela-K. Miettinen, correspondence 2014",
       "position_anchor": "The analyzed 11...Qd7 12.Rg1 Bh5 13.Rg3 f5 14.Rg5 sequence; it is not the Leko-Navara main line",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "In the book's 11...Qd7 analysis branch, after 12.Rg1 Bh5 the queen on d7 threatens ...Qh3 and White covers h3 with 13.Rg3."
       ],
@@ -664,9 +430,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed, but Rg3, ...f5, and Rg5 must remain distinct analyzed occurrences."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "van-delft-game-20",
@@ -674,10 +438,9 @@
         {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 106},
         {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 109}
       ],
-      "game": "Game 20",
+      "source_context": "Game 20",
       "position_anchor": "Actual 15...Be6 before 16.Nd4, contrasted with prerequisite-first ...Na6 and only then ...Be6",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "The analysis inserts 15...Na6 16.Bxa6 bxa6 17.Rad1 before ...Be6; the game plays 15...Be6 immediately."
       ],
@@ -701,9 +464,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is required; the identical move name must not erase its different occurrence history."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "van-delft-game-54",
@@ -711,10 +472,9 @@
         {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 264},
         {"document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975", "pdf_page": 269}
       ],
-      "game": "Game 54",
+      "source_context": "Game 54",
       "position_anchor": "King's Indian move order transposing to a Benoni at 9.Be2 before 14.e5",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "The game reaches the later Benoni position through a distinct King's Indian history."
       ],
@@ -731,16 +491,14 @@
         "The d6 advance and knight transfers consume the changed central structure."
       ],
       "needed_closed_absence": [
-        "The current contracts do not close the long compensation proposition or all defensive resources across the sacrifice sequence."
+        "Current lower facts do not close the long compensation proposition or all defensive resources across the sacrifice sequence, and no relation producer owns that join."
       ],
       "sibling_difference": [
         "Equal semantic positions reached by a different opening order must preserve the distinct historical occurrence."
       ],
       "transposition_occurrence": [
         "The position at 9.Be2 is a transposition; semantic identity may be shared but the King's Indian history must remain separate."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "game-changer-not-so-quiet-game",
@@ -748,10 +506,9 @@
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 344},
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 353}
       ],
-      "game": "Not-so-Quiet Game",
+      "source_context": "Not-so-Quiet Game",
       "position_anchor": "13...Ne7, 15...f5, 16...Ng6, and 17...Nf4 after the 13...f5 analysis sibling",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "The analysis contrasts immediate 13...f5 with a preparatory knight transfer beginning 13...Ne7."
       ],
@@ -775,19 +532,16 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed; the long actual-line chain itself is the missing host topology."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "game-changer-bishop-interference-illustrations",
       "locators": [
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 417}
       ],
-      "game": "Non-game ...Bg2/...Bf3 theme illustrations",
+      "source_context": "Non-game ...Bg2/...Bf3 theme illustrations",
       "position_anchor": "Two schematic diagrams that the author explicitly says do not represent actual positions",
       "occurrence_evidence": "motif_only",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "The source imagines Qh4 with Re1-e3-h3 in one diagram and Qh4 with Nge2 in another."
       ],
@@ -811,9 +565,7 @@
       ],
       "transposition_occurrence": [
         "No game-history or transposition occurrence exists for these non-actual diagrams."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "game-changer-bb7-bishop-interference",
@@ -821,10 +573,9 @@
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 417},
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 420}
       ],
-      "game": "First critical moment after 12...Bb7: Sadler-Smallfish practice and AlphaZero analysis",
+      "source_context": "First critical moment after 12...Bb7: Sadler-Smallfish practice and AlphaZero analysis",
       "position_anchor": "The common root after 12...Bb7 13.Nh3, before the practice 13...Re8 and AlphaZero-analysis 13...Nd7 branches",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "After 12...Bb7, Black's light-squared bishop has returned from h1 to b7 while the dark-squared bishop remains on b4.",
         "The practice line and AlphaZero analysis start from the same board root but retain distinct source and replay occurrences."
@@ -852,9 +603,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; the common semantic root does not merge the practice-game and AlphaZero-analysis occurrences."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "game-changer-bxc3-bishop-interference",
@@ -862,10 +611,9 @@
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 421},
         {"document_id": "ref-4f1abd0745b24746b58928d162f837f6", "pdf_page": 424}
       ],
-      "game": "Second critical moment after 12...Bxc3: Qh4 and Ne2 practice choices",
+      "source_context": "Second critical moment after 12...Bxc3: Qh4 and Ne2 practice choices",
       "position_anchor": "The distinct common root after 12...Bxc3, with 13.Qh4 and 13.Ne2 retained as separate game occurrences",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "Before White's thirteenth move, the queen on g4 already controls g2 and f3.",
         "The 13.Qh4 and 13.Ne2 continuations share a board root but belong to separate Sadler-Smallfish and Smallfish-Sadler practice games; the 13...Kh8 continuation is an analysis branch within the 13.Qh4 discussion."
@@ -893,9 +641,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; semantic root equality does not merge the 13.Qh4 game, its 13...Kh8 analysis, and the separate 13.Ne2 practice game."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "silicon-road-game-64",
@@ -903,10 +649,9 @@
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 503},
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 520}
       ],
-      "game": "Game 64, Semi-Slav",
+      "source_context": "Game 64, Semi-Slav",
       "position_anchor": "Actual 20.Re1 -> 26.Rd6 -> 36.Rc3 chain, with multiple Black repair branches in the surrounding analysis",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "The source treats quiet 20.Re1 as the earlier change that opens the e-file before the later rook activity.",
         "Before 36.Rc3, the other white rook attacks the bishop on a6; that attack is a premise for giving up one rook for the c-pawn continuation.",
@@ -935,9 +680,7 @@
       ],
       "transposition_occurrence": [
         "No specific transposition is asserted from the retained direct-read judgment."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "silicon-road-game-97",
@@ -945,10 +688,9 @@
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 795},
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 812}
       ],
-      "game": "Game 97, Sicilian",
+      "source_context": "Game 97, Sicilian",
       "position_anchor": "Actual 32.Bc4 and 33.Bxf6 resource sequence, followed by c4/e2 coverage, the g-pawn threat, and the 47.Rd5+ / d8=Q plan",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "Before 32.Bc4, Black has the ...c5-c4 resource and pressure associated with the queen on the b-file and b2.",
         "The directly reviewed game also connects the later c4-bishop/e2 coverage and g-pawn promotion threat to the long continuation."
@@ -976,9 +718,7 @@
       ],
       "transposition_occurrence": [
         "No specific transposition is asserted from the retained direct-read judgment."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "silicon-road-game-101",
@@ -986,10 +726,9 @@
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 835},
         {"document_id": "ref-7a451d5c87b9422a901f0486386aeb44", "pdf_page": 846}
       ],
-      "game": "Game 101",
+      "source_context": "Game 101",
       "position_anchor": "Actual 16...Bg4 prerequisite, 20...b5 queen-sacrifice occurrence, 21.Rf1 ...Rfd8 22.Rb1 ...a5 23.Bxc3 strengthening-before-queen-capture order, and the b4/c3/later a-pawn compensation",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "The source identifies 16...Bg4, placing the black bishop on g4 to block the h1-a8 diagonal, as a prerequisite for the later operation.",
         "The reviewed imbalance after the queen sacrifice includes Black passed pawns on b4 and c3 and a later a-pawn; their compensation value is not itself a proof premise."
@@ -1018,19 +757,16 @@
       ],
       "transposition_occurrence": [
         "No specific transposition is asserted from the retained direct-read judgment."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap", "higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "basman-williams-grischuk-mvl",
       "locators": [
         {"document_id": "ref-009749ddb7ef4fe0a033b33e9712fc74", "pdf_page": 19}
       ],
-      "game": "A. Grischuk-M. Vachier-Lagrave, FIDE Grand Prix (Riga) 2019",
+      "source_context": "A. Grischuk-M. Vachier-Lagrave, FIDE Grand Prix (Riga) 2019",
       "position_anchor": "The actual 17.gxf3 recapture and the source's immediate 17.Bxf3 alternative after 16...Bxf3",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "After 16...Bxf3, White can answer with the g2-pawn or the bishop on e2; this is the recapture choice itself, not a preceding preparation occurrence."
       ],
@@ -1054,19 +790,16 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; the game and analysis recapture occurrences remain distinct."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["higher_layer_responsibility"]
+      ]
     },
     {
       "case_id": "basman-williams-fedoseev-mikhailovsky",
       "locators": [
         {"document_id": "ref-009749ddb7ef4fe0a033b33e9712fc74", "pdf_page": 81}
       ],
-      "game": "V. Fedoseev-Mikhailovsky, Chess.com (Internet) 2020",
+      "source_context": "V. Fedoseev-Mikhailovsky, Chess.com (Internet) 2020",
       "position_anchor": "The quoted actual 15.Rae1 preparation and the later 21.e5 pawn break",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "The source explicitly says 15.Rae1 aims to prepare the eventual e4-e5 advance."
       ],
@@ -1090,9 +823,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; 15.Rae1 and 21.e5 must remain separate ordered game occurrences."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "modernized-benko-rb1-e4",
@@ -1100,10 +831,9 @@
         {"document_id": "ref-edf868ccf0a3425488f55ef6b4b08acf", "pdf_page": 71},
         {"document_id": "ref-edf868ccf0a3425488f55ef6b4b08acf", "pdf_page": 76}
       ],
-      "game": "The 9.Rb1 and 9.e4 repertoire branches after 8...Bb7",
+      "source_context": "The 9.Rb1 and 9.e4 repertoire branches after 8...Bb7",
       "position_anchor": "The 9.Rb1 branch's 11...axb5 12.axb5 pawn recapture and the 9.e4 branch's 11...axb5 12.Bxb5 bishop recapture",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact_occurrence_component",
       "premise": [
         "Both source branches start after 8...Bb7, with the white rook on a1, pawn on a4, and bishop able to participate in the later b5 recapture choice."
       ],
@@ -1127,9 +857,7 @@
       ],
       "transposition_occurrence": [
         "A transposition noted inside the 9.e4 analysis does not merge that branch with the independent 9.Rb1 occurrence."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "beating-najdorf-qe2-recapture-relocation",
@@ -1138,10 +866,9 @@
         {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 232},
         {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 233}
       ],
-      "game": "Beating the Najdorf: Rare Lines, 6.Qe2 e5 repertoire analysis",
+      "source_context": "Beating the Najdorf: Rare Lines, 6.Qe2 e5 repertoire analysis",
       "position_anchor": "After the common 7...Be7 8.Bg5 Be6 root, the retained-responder 9.Bxf6 sibling and relocated-responder 9.O-O-O Nbd7 branch before the matched Bxf6 capture",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "The same white bishop from g5 captures the same black knight on f6 in both exact analysis branches.",
         "The tracked black knight starts on b8; the other recapturer is the black bishop on e7."
@@ -1167,9 +894,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is needed; the b8-d7-f6 knight history and e7-f6 bishop occurrence remain independent."
-      ],
-      "mapped_contracts": ["RelocationEnablesRecapture"],
-      "current_coverage_categories": ["current_exact_proof"]
+      ]
     },
     {
       "case_id": "beating-najdorf-fedoseev-indjic",
@@ -1177,10 +902,9 @@
         {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 293},
         {"document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe", "pdf_page": 300}
       ],
-      "game": "The 7...h5 repertoire analysis citing V. Fedoseev-A. Indjic, lichess.org (Internet blitz) 2020",
+      "source_context": "The 7...h5 repertoire analysis citing V. Fedoseev-A. Indjic, lichess.org (Internet blitz) 2020",
       "position_anchor": "The stated 8...Nbd7-to-f6 recapture plan contrasted with the exact 14...Nb6 ...17.fxg4 Nc4 analysis subvariation before 19.Bxf6",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "motif_only",
       "premise": [
         "After 7...h5 8.Bg5 Nbd7, the source describes the d7 knight as the intended recapturer if White trades Bxf6."
       ],
@@ -1204,19 +928,16 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; the d7-b6-c4 occurrence history is the identity constraint that must be preserved."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     },
     {
       "case_id": "najdorf-bg5-v1-burridge-williamson",
       "locators": [
         {"document_id": "ref-638dbc429db08ca52ef07553822722d8b", "pdf_page": 305}
       ],
-      "game": "Burridge-Williamson, email 2016 repertoire analysis",
+      "source_context": "Burridge-Williamson, email 2016 repertoire analysis",
       "position_anchor": "20.Rxd8 Raxd8 and the rejected 20...Rfxd8 sibling before their corresponding 21.Ng6+ branch occurrences",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "After 20.Rxd8, Black can choose which rook recaptures on d8 while the f7- and h7-pawns remain candidate responders to the later knight check on g6."
       ],
@@ -1240,9 +961,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; both rook recapture roots and their 21.Ng6+ continuations retain independent occurrence identities."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["lower_fact_gap"]
+      ]
     },
     {
       "case_id": "najdorf-bg5-v2-qc1-qd2",
@@ -1250,10 +969,9 @@
         {"document_id": "ref-37f7d12776c8cc2f391b4b17add2d59", "pdf_page": 668},
         {"document_id": "ref-37f7d12776c8cc2f391b4b17add2d59", "pdf_page": 669}
       ],
-      "game": "Repertoire analysis after 18...Rac8",
+      "source_context": "Repertoire analysis after 18...Rac8",
       "position_anchor": "19.Qc1 preserving the d-file rook route, contrasted with 19.Qd2 before ...Nb6",
       "occurrence_evidence": "exact",
-      "causal_proposition_support": "exact",
       "premise": [
         "At the common root after 18...Rac8, the white rook is on d1 and the queen can choose c1 or d2 from h6."
       ],
@@ -1277,9 +995,7 @@
       ],
       "transposition_occurrence": [
         "No transposition is claimed; the Qc1 and Qd2 branch occurrences remain distinct even if a later position were semantically equal."
-      ],
-      "mapped_contracts": [],
-      "current_coverage_categories": ["l2_join_or_demand_gap"]
+      ]
     }
   ]
 }

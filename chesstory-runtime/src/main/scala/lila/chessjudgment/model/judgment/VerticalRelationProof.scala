@@ -123,7 +123,7 @@ final case class RelationCheckResponseWitness(
   private[chessjudgment] def stableKey: String =
     s"${resource.stableKey}:${modes.map(_.stableKey).mkString(",")}"
 
-final case class RelationControlledKingDestinationWitness(
+final case class KingDestinationControlWitness(
     resource: RelationMovementResourceWitness,
     controllers: List[RelationPieceWitness]
 ):
@@ -1502,8 +1502,8 @@ private[chessjudgment] object VerticalRelationWitnessProjection:
 
   def controlledKingDestination(
       destination: PositionRelationExtractor.ClosedLegalResourceRestriction
-  ): RelationControlledKingDestinationWitness =
-    RelationControlledKingDestinationWitness(
+  ): KingDestinationControlWitness =
+    KingDestinationControlWitness(
       movementResource(destination.movement),
       destination.postMoveControllers
     )

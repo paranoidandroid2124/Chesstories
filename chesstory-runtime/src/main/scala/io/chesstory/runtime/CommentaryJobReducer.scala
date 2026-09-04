@@ -5,7 +5,6 @@ import java.security.MessageDigest
 import java.util.Locale
 
 import lila.chessjudgment.analysis.assembly.{
-  ExplanationRequest,
   MoveReviewInputAdmission,
   MoveReviewJudgmentOrchestrator,
   PreparedFocusedMoveReview,
@@ -347,7 +346,7 @@ private[runtime] object EngineLineAdmission:
     case ReportedWhiteEngineScore.Centipawns(value) =>
       Some(EngineLine(fullMoves, value, None, suffix.depth))
     case ReportedWhiteEngineScore.Mate(value) =>
-      normalizeMateDistanceFromInitialPosition(value, whitePrefixMoves, blackPrefixMoves).map { initialPositionMate =>
+      normalizeMateDistance(value, whitePrefixMoves, blackPrefixMoves).map { initialPositionMate =>
         EngineLine(
           fullMoves,
           Integer.signum(initialPositionMate) * MateScoreCpCarrier,
@@ -356,7 +355,7 @@ private[runtime] object EngineLineAdmission:
         )
       }
 
-  private def normalizeMateDistanceFromInitialPosition(
+  private def normalizeMateDistance(
       searchPositionMate: Int,
       whitePrefixMoves: Int,
       blackPrefixMoves: Int
@@ -700,10 +699,7 @@ object CommentaryJobReducer:
       context: ReviewContext,
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    MoveReviewJudgmentOrchestrator.executePreparedReview(
-      context.preparedInput,
-      Some(ExplanationRequest.forObservedMove(context.preparedInput))
-    ) match
+    MoveReviewJudgmentOrchestrator.executePreparedReview(context.preparedInput) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
       case Some(execution) =>
         completeReview(

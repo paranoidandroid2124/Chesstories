@@ -135,7 +135,7 @@ object ChesstoryRuntime:
             case "DELETE" => cancelPositionCommentaryJob(exchange, commentaryJobs, jobId)
             case _ => methodNotAllowedForJob(exchange, "GET, DELETE", Option.when(validJobId(jobId))(jobId))
         case List(jobId, "engine-work-reports") =>
-          submitPositionCommentaryEngineWorkReport(exchange, commentaryJobs, jobId)
+          submitEngineWorkReport(exchange, commentaryJobs, jobId)
         case _ =>
           respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "job_route_not_found"))
     else
@@ -211,7 +211,7 @@ object ChesstoryRuntime:
         case None => respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, "job_not_found"))
         case Some(snapshot) => respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
 
-  private def submitPositionCommentaryEngineWorkReport(
+  private def submitEngineWorkReport(
       exchange: HttpExchange,
       commentaryJobs: CommentaryJobRegistry,
       jobId: String

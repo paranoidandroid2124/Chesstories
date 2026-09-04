@@ -25,7 +25,6 @@ enum EvidenceProducer:
   case RelationProducer
   case MoveTransitionProducer
   case StructuralDeltaProducer
-  case CausalProofProducer
   case RelativeMoveProducer
 
 enum EvidenceScope:

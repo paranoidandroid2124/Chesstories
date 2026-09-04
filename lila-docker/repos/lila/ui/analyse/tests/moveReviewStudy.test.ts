@@ -13,7 +13,6 @@ test('merges a literal backend proof from P and reuses Q without replaying it', 
       { uci: 'e7e5', label: 'e7e5', fenAfter: afterFen },
       { uci: 'g1f3', label: 'g1f3', fenAfter: continuationFen },
     ],
-    annotations: [],
   };
 
   const after = {

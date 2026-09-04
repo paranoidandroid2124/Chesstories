@@ -12,34 +12,18 @@ object MoveReviewJudgmentOrchestrator:
   /** Development-only direct v6 entrypoint; player jobs enter through executePreparedReview. */
   def execute(raw: RawMoveReviewInput): Option[EvidenceBackedJudgmentPacket] =
     MoveReviewInputAdmission.admit(raw).flatMap { prepared =>
-      executePreparedReview(
-        prepared,
-        Some(ExplanationRequest.forObservedMove(prepared))
-      )
+      executePreparedReview(prepared)
     }.map(_.packet)
 
-  /** Sole fact, Assessment, requested relation, and packet authority for an admitted review. */
+  /** Sole fact, Assessment, and packet authority for an admitted review. */
   def executePreparedReview(
-      preparedInput: AdmittedMoveReviewInput,
-      explanationRequest: Option[ExplanationRequest]
+      preparedInput: AdmittedMoveReviewInput
   ): Option[ReviewExecution] =
     for
       base <- NodeLineTransitionAssembler
         .assemble(preparedInput)
         .map(EvidenceFactAssembler.enrich)
-      explanationDemand = explanationRequest.flatMap(
-        OccurrenceExplanationDemand.resolve(base, _)
-      )
-      proofContext = explanationDemand
-        .map(demand =>
-          OccurrenceExplanationAssembler.enrichProofs(
-            base,
-            JudgmentProvenanceAllocator.forInput(preparedInput),
-            demand
-          )
-        )
-        .getOrElse(base)
-      comparisonContext = RelativeAssessmentAssembler.enrichComparisonEvidence(proofContext)
+      comparisonContext = RelativeAssessmentAssembler.enrichComparisonEvidence(base)
       _ <- Option.when(
         evidenceClosed(comparisonContext) && preRelativeAssessmentPayloadsClosed(comparisonContext)
       )((): Unit)
