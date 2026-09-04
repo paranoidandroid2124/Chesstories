@@ -96,177 +96,10 @@ function responseWithRelations(relations: JsonObject[]): JsonObject {
   return raw;
 }
 
-function copyBranch(source: JsonObject, branchRole: string, maximumSteps?: number): JsonObject {
-  const branch = structuredClone(source);
-  branch.branch_role = branchRole;
-  if (maximumSteps !== undefined) branch.steps = objects(branch.steps).slice(0, maximumSteps);
-  return branch;
-}
-
 function branchStep(branch: JsonObject, index: number): JsonObject {
   return objects(branch.steps)[index]!;
 }
 
-let fixtureSerial = 100;
-
-function nextHash(): string {
-  return hashId(fixtureSerial++);
-}
-
-function relationPremise(role: string, contract: string, branch: JsonObject, stepIndex: number): JsonObject {
-  const issuerOccurrenceId = nextHash();
-  return {
-    role,
-    contract,
-    result_id: contract + ':' + nextHash(),
-    issuer_evidence_id: 'schema-fixture',
-    issuer_occurrence_id: issuerOccurrenceId,
-    source_premise_ids: [issuerOccurrenceId, 'schema-fixture', 'source:' + nextHash()],
-    branch_id: branch.branch_id,
-    branch_role: branch.branch_role,
-    step_index: stepIndex,
-  };
-}
-
-function legalPremise(
-  role: string,
-  branch: JsonObject,
-  stepIndex: number,
-  movement: JsonObject,
-  movementMode: string,
-  capture?: JsonObject,
-): JsonObject {
-  const issuerOccurrenceId = nextHash();
-  return {
-    role,
-    contract: 'legal_move',
-    move_uci: branchStep(branch, stepIndex).move_uci,
-    movement: structuredClone(movement),
-    movement_mode: movementMode,
-    legal_move_semantic_id: nextHash(),
-    issuer_evidence_id: 'schema-fixture',
-    issuer_occurrence_id: issuerOccurrenceId,
-    source_premise_ids: [issuerOccurrenceId, 'schema-fixture', 'source:' + nextHash()],
-    branch_id: branch.branch_id,
-    branch_role: branch.branch_role,
-    step_index: stepIndex,
-    ...(capture ? { capture: structuredClone(capture) } : {}),
-  };
-}
-
-function closureUse(
-  role: string,
-  issuer: string,
-  query: string,
-  branch: JsonObject,
-  afterStepIndex: number,
-): JsonObject {
-  const step = branchStep(branch, afterStepIndex);
-  return {
-    use_id: nextHash(),
-    role,
-    semantic_proof_id: nextHash(),
-    issuer,
-    issuer_evidence_id: 'schema-fixture',
-    issuer_occurrence_id: nextHash(),
-    query,
-    branch_id: branch.branch_id,
-    branch_role: branch.branch_role,
-    after_step_index: afterStepIndex,
-    position: { fen: step.fen_after, ply: step.ply, scope: 'legal_line' },
-  };
-}
-
-function proofBase(): JsonObject {
-  return {
-    source_evidence_id: 'schema-fixture',
-    semantic_id: nextHash(),
-    occurrence_id: nextHash(),
-    dependency_fingerprint: nextHash(),
-  };
-}
-
-function schemaRelation(relationKind: MoveReviewRelationKind, multiplePaths = false): JsonObject {
-  const source = producedRelation();
-  if (relationKind === 'capture_exclusion_move_order') return structuredClone(source);
-  if (relationKind === 'relocation_enables_recapture') return structuredClone(producedRelocationRelation());
-
-  const captureProof = object(source.proof);
-  const counterfactualSource = object(captureProof.vacating_branch);
-  const observedSource = object(captureProof.immediate_capture_branch);
-  const captureParticipants = object(captureProof.participants);
-  const vacatingMove = object(captureParticipants.vacating_move);
-  const deferredMove = object(captureParticipants.deferred_move);
-  const captureReply = object(captureParticipants.capture_reply);
-  const capturedTarget = object(captureParticipants.captured_target);
-  const subjectOccurrence = structuredClone(object(source.subject_occurrence));
-  const outer = (proof: JsonObject): JsonObject => ({
-    subject_occurrence: subjectOccurrence,
-    relation_kind: relationKind,
-    proof,
-  });
-
-  if (relationKind === 'square_release_route') {
-    const released = copyBranch(counterfactualSource, 'released_square_route');
-    const retained = copyBranch(observedSource, 'retained_blocker');
-    const path = (pathIndex: number) => ({
-      path_occurrence_id: nextHash(),
-      premises: [
-        legalPremise('release_move', released, 0, vacatingMove, 'pawn_advance'),
-        legalPremise('route_move_0', released, 2, deferredMove, 'controlled_destination'),
-      ],
-      closed_absence_uses: [
-        closureUse(
-          'retained_blocker_first_route_leg_absent',
-          'position_relation_extractor.closed_relation_inventory',
-          'legal-move-from-to:white:b2:b4',
-          retained,
-          1,
-        ),
-      ],
-      closed_state_uses: [
-        'released_square_vacancy',
-        'route_piece_' + pathIndex,
-        'route_persistence_' + pathIndex,
-        'retained_blocker_persistence',
-        'retained_route_origin_persistence',
-        'retained_blocker_persistence',
-        'retained_route_origin_persistence',
-      ].map((role, index) => {
-        const branch = index < 3 ? released : retained;
-        return closureUse(
-          role,
-          'position_relation_extractor.closed_position_state_inventory',
-          role === 'released_square_vacancy' ? 'vacant:d4' : 'occupied-by:white:pawn@b2',
-          branch,
-          Math.min(index % 3, objects(branch.steps).length - 1),
-        );
-      }),
-    });
-    return outer({
-      ...proofBase(),
-      released_route_branch: released,
-      retained_blocker_branch: retained,
-      proof_paths: multiplePaths ? [path(0), path(1)] : [path(0)],
-      participants: {
-        releaser: vacatingMove,
-        released_blocker: capturedTarget,
-        route_piece: capturedTarget,
-      },
-      route: [
-        {
-          ...deferredMove,
-          move_uci: branchStep(released, 2).move_uci,
-          step_index: 2,
-        },
-      ],
-      terminal_step_index: 2,
-      terminal: { kind: 'occupation' },
-    });
-  }
-
-  throw new Error(`unsupported relation kind: ${relationKind}`);
-}
 test('emits the sole v6 standard played-focus request', () => {
   assert.deepEqual(buildMoveReviewJobRequest(requestId, subject, moveReviewEngineProfile), {
     schema_version: 'chesstory.position-commentary.job-request.v6',
@@ -606,7 +439,6 @@ test('drops only the relocation relation when continuity loses an occurrence, ow
 
 test('decodes every relation kind as its exact discriminated variant', () => {
   const relationKinds: MoveReviewRelationKind[] = [
-    'square_release_route',
     'capture_exclusion_move_order',
     'relocation_enables_recapture',
   ];
@@ -615,7 +447,7 @@ test('decodes every relation kind as its exact discriminated variant', () => {
     const raw =
       relationKind === 'relocation_enables_recapture'
         ? producedRelocationResponse()
-        : responseWithRelations([schemaRelation(relationKind)]);
+        : responseWithRelations([structuredClone(producedRelation())]);
     const decoded = decodeProduced(raw);
     assert.equal(decoded?.kind, 'completed', relationKind);
     if (decoded?.kind !== 'completed') continue;
@@ -708,21 +540,6 @@ test('preserves a valid occurrence relation and move verdict when its sibling is
   if (played?.review.kind !== 'move-verdict') return;
   assert.equal(played.review.relations.length, 1);
   assert.equal(played.review.relations[0]?.proof.sourceEvidenceId, object(valid.proof).source_evidence_id);
-});
-
-test('preserves every transmitted square-route proof path in wire order', () => {
-  const relation = schemaRelation('square_release_route', true);
-  const wirePathIds = objects(object(relation.proof).proof_paths).map(path => path.path_occurrence_id);
-  const decoded = decodeProduced(responseWithRelations([relation]));
-  assert.equal(decoded?.kind, 'completed');
-  if (decoded?.kind !== 'completed') return;
-  const played = selectedMoveReviewCandidate(decoded.evidence);
-  assert.equal(played?.review.kind, 'move-verdict');
-  if (played?.review.kind !== 'move-verdict') return;
-  assert.deepEqual(
-    moveReviewOccurrenceProofPaths(played.review.relations[0]!).map(path => path.pathOccurrenceId),
-    wirePathIds,
-  );
 });
 
 test('drops an invalid occurrence relation without dropping its move verdict', () => {

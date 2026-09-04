@@ -778,19 +778,6 @@ function renderClosures(
 function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
   switch (relation.relationKind) {
-    case 'square_release_route':
-      return hl('section.move-review__later-consumer.move-review__typed-section', [
-        hl('h4', labels.laterConsumer),
-        hl(
-          'ol.move-review__typed-list',
-          relation.proof.route.map(step =>
-            hl('li', [renderFact(labels.move, step.moveUci, 'move'), renderWitness(step, copy)]),
-          ),
-        ),
-        relation.proof.terminalReplyMove
-          ? renderFact(labels.move, relation.proof.terminalReplyMove, 'move')
-          : undefined,
-      ]);
     case 'capture_exclusion_move_order':
       return hl('section.move-review__later-consumer.move-review__typed-section', [
         hl('h4', labels.laterConsumer),
@@ -847,9 +834,6 @@ function renderOccurrenceProvenance(
 function structureRoleLabel(role: string, copy: MoveReviewCopy, fallback: string): string {
   const exact = copy.structureLabels.roleLabels[role];
   if (exact) return exact;
-  if (role.startsWith('route_move_')) return copy.structureLabels.route;
-  if (role.startsWith('route_piece_') || role.startsWith('route_persistence_'))
-    return copy.structureLabels.route;
   return fallback;
 }
 

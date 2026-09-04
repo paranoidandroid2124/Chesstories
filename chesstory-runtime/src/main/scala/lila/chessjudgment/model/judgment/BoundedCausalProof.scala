@@ -7,14 +7,11 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum BoundedCausalContractKind:
-  case SquareReleaseRoute
   case CaptureExclusionMoveOrder
   case RelocationEnablesRecapture
 
   def semanticNamespace: String =
     this match
-      case SquareReleaseRoute =>
-        "causal-proposition:square-release-route:v1"
       case CaptureExclusionMoveOrder =>
         "causal-proposition:capture-exclusion-move-order:v1"
       case RelocationEnablesRecapture =>
@@ -577,127 +574,6 @@ private[chessjudgment] object RecordBoundLegalMoveOccurrence:
       occurrence: RecordBoundLegalMoveOccurrence
   ): Option[RelationColoredPieceWitness] = ReplayLegalMoveOccurrence.capturedTarget(occurrence.occurrence)
 
-/** One exact same-object trajectory edge issued by `LineObjectTrajectory` and
-  * rebound to the selected footprint transitions at both endpoints. Every
-  * intervening legal occurrence and OccupiedBy state remains path-owned.
-  */
-private[chessjudgment] final case class RecordBoundObjectTrajectory private (
-    lineRecord: CertifiedLineReplayRecord,
-    trajectory: LineObjectTrajectory,
-    rootMovement: RecordBoundLegalMoveOccurrence,
-    futureMovement: RecordBoundLegalMoveOccurrence,
-    interveningMovements: List[RecordBoundLegalMoveOccurrence]
-):
-  require(
-    rootMovement.issuerRecord == lineRecord.issuerRecord &&
-      futureMovement.issuerRecord == lineRecord.issuerRecord &&
-      rootMovement.occurrence == trajectory.rootLegalOccurrence &&
-      futureMovement.occurrence == trajectory.futureLegalOccurrence &&
-      ReplayLegalMoveOccurrence.ownsTransition(rootMovement.occurrence, trajectory.rootTransition) &&
-      ReplayLegalMoveOccurrence.ownsTransition(futureMovement.occurrence, trajectory.futureTransition),
-    "an object trajectory needs exact graph-owned selected endpoint transitions"
-  )
-  private val retainedPiece = RelationColoredPieceWitness(
-    trajectory.rootTransition.to,
-    trajectory.rootTransition.afterRole,
-    trajectory.rootTransition.side
-  )
-  private val orderedMovements = rootMovement :: interveningMovements ::: List(futureMovement)
-  require(
-    RelationColoredPieceWitness(
-      trajectory.futureTransition.from,
-      trajectory.futureTransition.beforeRole,
-      trajectory.futureTransition.side
-    ) == retainedPiece &&
-      interveningMovements.map(_.occurrence) == trajectory.interveningLegalOccurrences &&
-      interveningMovements.forall(move =>
-        move.issuerRecord == lineRecord.issuerRecord && move.leavesUntouched(retainedPiece)
-      ) && trajectory.persistenceStates.forall(state =>
-        state.issuerRecord == lineRecord.issuerRecord && (state.query match
-          case PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece) => piece == retainedPiece
-          case _ => false)
-      ),
-    "an object trajectory must retain one physical mover through every untouched occurrence"
-  )
-
-  def persistenceStates: List[ClosedPositionStateAuthority] = trajectory.persistenceStates
-  def plyOffset: Int = trajectory.plyOffset
-
-  def stableKey: String = List(
-    BoundedCausalIdentity.evidenceRecordKey(lineRecord.issuerRecord),
-    rootMovement.occurrenceId,
-    rootMovement.transitionFootprintId,
-    trajectory.rootTransition.stableKey,
-    futureMovement.occurrenceId,
-    futureMovement.transitionFootprintId,
-    trajectory.futureTransition.stableKey,
-    interveningMovements.map(move =>
-      List(move.occurrenceId, move.transitionFootprintId).mkString(":")
-    ).mkString("[", ",", "]"),
-    persistenceStates.map(state =>
-      List(state.issuerEvidenceId, state.occurrence.occurrenceId, state.semanticProofId).mkString(":")
-    ).mkString("[", ",", "]")
-  ).mkString("|")
-
-  def remainsCertified: Boolean =
-    CertifiedLineReplayRecord.from(lineRecord.issuerRecord).contains(lineRecord) &&
-      RecordBoundLegalMoveOccurrence.exactSequence(lineRecord, orderedMovements.map(_.step)).contains(orderedMovements) &&
-      ReplayLegalMoveOccurrence.ownsTransition(rootMovement.occurrence, trajectory.rootTransition) &&
-      ReplayLegalMoveOccurrence.ownsTransition(futureMovement.occurrence, trajectory.futureTransition) &&
-      interveningMovements.forall(_.leavesUntouched(retainedPiece)) &&
-      interveningMovements.zip(trajectory.persistenceStates).forall { case (move, state) =>
-        ClosedPositionStateAuthority
-          .certifiedBy(lineRecord, move.positionAfterOccurrence, state.occurrence, state.proof)
-          .contains(state)
-      }
-
-private[chessjudgment] object RecordBoundObjectTrajectory:
-  def firstAfter(
-      issuerRecord: EvidenceRecord,
-      rootStep: LineReplayStep,
-      selectedRootTransition: RelationMoveTransitionWitness,
-      continuation: List[LineReplayStep]
-  ): Option[RecordBoundObjectTrajectory] =
-    CertifiedLineReplayRecord.from(issuerRecord).flatMap { lineRecord =>
-      val exact = LineObjectTrajectory
-        .findAll(
-          rootStep,
-          continuation,
-          lineRecord.replay,
-          _ => Some(lineRecord),
-          Some(selectedRootTransition)
-        )
-        .flatMap(fromTrajectory(lineRecord, _))
-      require(
-        exact.map(_.stableKey).distinct.size == exact.size,
-        "one replay cannot issue duplicate object trajectories"
-      )
-      exact match
-        case value :: Nil => Some(value)
-        case Nil          => None
-        case _ => throw IllegalStateException("one selected mover acquired multiple first future movements")
-    }
-
-  private def fromTrajectory(
-      lineRecord: CertifiedLineReplayRecord,
-      trajectory: LineObjectTrajectory
-  ): Option[RecordBoundObjectTrajectory] =
-    val expectedOccurrences =
-      trajectory.rootLegalOccurrence :: trajectory.interveningLegalOccurrences ::: List(trajectory.futureLegalOccurrence)
-    RecordBoundLegalMoveOccurrence
-      .exactSequence(lineRecord, expectedOccurrences.map(_.step))
-      .filter(_.map(_.occurrence) == expectedOccurrences)
-      .filter(_ => trajectory.persistenceStates.forall(_.issuerRecord == lineRecord.issuerRecord))
-      .map { movements =>
-        RecordBoundObjectTrajectory(
-          lineRecord,
-          trajectory,
-          movements.head,
-          movements.last,
-          movements.slice(1, movements.size - 1)
-        )
-      }
-
 private[chessjudgment] enum ObjectContinuityStepKind:
   case Retained
   case Primary
@@ -756,7 +632,7 @@ private[chessjudgment] object RecordBoundObjectContinuity:
       .when(indicesAreValid)(())
       .flatMap(_ => reboundPrefix(issuerRecord, branch, maxUntilExclusive))
       .flatMap { exactPrefix =>
-        val continuities = LineObjectTrajectory
+        val continuities = LineObjectContinuity
           .continuitiesEndingAt(exactPrefix, endpoints)
           .map(_.map(RecordBoundObjectContinuity(issuerRecord, branch, _)))
         Option.when(continuities.forall(_.nonEmpty))(continuities.flatten)

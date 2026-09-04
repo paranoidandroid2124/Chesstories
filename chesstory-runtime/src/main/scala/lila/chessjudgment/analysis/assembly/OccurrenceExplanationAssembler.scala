@@ -14,8 +14,7 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
   ): JudgmentAssemblyContext =
     context.withEvidence(
       captureExclusionRecords(allocator, demand) ++
-        relocationEnablesRecaptureRecords(allocator, demand) ++
-        squareReleaseRouteRecords(allocator, demand)
+        relocationEnablesRecaptureRecords(allocator, demand)
     )
 
   private def captureExclusionRecords(
@@ -74,38 +73,6 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
       parentSources = _.parentSources,
       payload = exact =>
         RelocationEnablesRecaptureEvidence(
-          exact.semantic,
-          exact.occurrence,
-          demand.subject.publicOccurrence,
-          exact.dependency.value,
-          exact
-        )
-    )
-
-  private def squareReleaseRouteRecords(
-      allocator: JudgmentProvenanceAllocator,
-      demand: OccurrenceExplanationDemand
-  ): List[EvidenceRecord] =
-    val certified = SquareReleaseRouteProofDemand.from(demand).flatMap { exactDemand =>
-      SquareReleaseRouteProof.certifyDemanded(
-        exactDemand.subject,
-        exactDemand.releasedSquareBranch,
-        exactDemand.retainedSquareBranch,
-        exactDemand.lowers
-      )
-    }
-    occurrenceProofRecords(
-      family = BoundedCausalContractKind.SquareReleaseRoute,
-      allocator = allocator,
-      subject = demand.subject
-    )(certified)(
-      semanticId = _.semantic.semanticId,
-      occurrenceId = _.occurrence.occurrenceId,
-      dependencyId = _.dependency.value,
-      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
-      parentSources = _.parentSources,
-      payload = exact =>
-        SquareReleaseRouteEvidence(
           exact.semantic,
           exact.occurrence,
           demand.subject.publicOccurrence,

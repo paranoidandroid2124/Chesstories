@@ -109,7 +109,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertEqual(
             definitions["occurrenceRelation"]["oneOf"],
             [
-                {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
                 {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
                 {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"},
             ],
@@ -118,7 +117,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertNotIn("cause_evidence_id", serialized)
         for retired_definition in (
             "occurrenceExplanation",
-            "squareReleaseRouteOccurrenceExplanation",
             "captureExclusionOccurrenceExplanation",
             "relocationEnablesRecaptureOccurrenceExplanation",
             "explanationSubjectOccurrence",
@@ -156,10 +154,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
         contracts = {
-            "squareReleaseRouteOccurrenceRelation": (
-                "square_release_route",
-                "occurrenceSquareReleaseRouteProof",
-            ),
             "captureExclusionOccurrenceRelation": (
                 "capture_exclusion_move_order",
                 "occurrenceCaptureExclusionMoveOrderProof",

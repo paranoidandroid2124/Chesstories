@@ -509,12 +509,10 @@ test('limits Korean relation copy to finite structural labels', () => {
   assert.match(text, /폐쇄 부재/);
   assert.match(text, /폐쇄 상태/);
   assert.deepEqual(moveReviewCopy('ko-KR').familyLabels, {
-    square_release_route: '칸 해방 후 기물 경로',
     capture_exclusion_move_order: '포획 응수를 배제한 수순',
     relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
   });
   assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
-    square_release_route: 'Route through a released square',
     capture_exclusion_move_order: 'Move order excluding the capture reply',
     relocation_enables_recapture: 'Recapture enabled by relocation',
   });

@@ -706,10 +706,20 @@ class L2ProofProvenanceTest(unittest.TestCase):
 
         goryachkina = ledger_by_id["ai-revolution-square-release-goryachkina-dubov"]
         self.assertEqual(goryachkina["causal_proposition_support"], "exact_occurrence_component")
-        self.assertEqual(goryachkina["current_coverage_categories"], ["lower_fact_gap"])
+        self.assertEqual(goryachkina["mapped_contracts"], [])
+        self.assertEqual(
+            goryachkina["current_coverage_categories"], ["l2_join_or_demand_gap"]
+        )
         self.assertNotIn(
             "retained-blocker sibling keeps b6 occupied",
             json.dumps(goryachkina).lower(),
+        )
+
+        prohaszka = ledger_by_id["ai-revolution-square-release-prohaszka-wang"]
+        self.assertEqual(prohaszka["causal_proposition_support"], "exact")
+        self.assertEqual(prohaszka["mapped_contracts"], [])
+        self.assertEqual(
+            prohaszka["current_coverage_categories"], ["l2_join_or_demand_gap"]
         )
 
         passed_pawn = ledger_by_id["ai-revolution-passed-pawn-route"]
@@ -805,7 +815,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
                 "ruy-lopez-game-12",
                 "najdorf-game-16",
                 "ai-revolution-recapture-relocation",
-                "ai-revolution-square-release-prohaszka-wang",
                 "beating-najdorf-qe2-recapture-relocation",
             },
         )

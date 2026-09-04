@@ -64,137 +64,6 @@
   ],
   "contracts": [
     {
-      "contract_kind": "SquareReleaseRoute",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
-        "symbol": "OccurrenceExplanationAssembler",
-        "method": "squareReleaseRouteRecords"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "SquareReleaseRouteEvidence"
-      },
-      "wire": {
-        "relation_kind": "square_release_route",
-        "variant_definition": "squareReleaseRouteOccurrenceRelation",
-        "proof_field": "proof",
-        "proof_definition": "occurrenceSquareReleaseRouteProof"
-      },
-      "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala#OccurrenceExplanationAssembler.squareReleaseRouteRecords",
-        "coordinate_piece_identity_proposition": {
-          "statement": "The identified releaser vacates the identified square and the same identified route piece consumes it through ordered exact route squares to a certified occupation, capture, or check terminal; the retained-blocker sibling lacks the first leg.",
-          "wire_fields": ["participants", "releaser", "released_blocker", "route_piece", "route", "terminal"]
-        },
-        "lower_premises": {
-          "contracts": ["legal_move", "capture_recapture_inventory", "created_check_response_inventory"],
-          "dynamic_id_fields": ["legal_move_semantic_id", "result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
-          "issuer_source_kinds": ["canonical LegalMove owner", "optional terminal relation result owner", "canonical source premise IDs"]
-        },
-        "closed_inventory": {
-          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
-          "fields": ["semantic_proof_id", "query", "position"],
-          "certified_absence_or_state": ["retained_blocker_first_route_leg_absent", "released_square_vacancy", "route_piece_N", "route_persistence_N", "retained_blocker_persistence", "retained_route_origin_persistence"]
-        },
-        "branch_occurrence": {
-          "roles": ["released_square_route", "retained_blocker"],
-          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
-          "provenance_fields": ["root_provenance", "provenance"]
-        },
-        "proof_paths_transposition": {
-          "cardinality": "one_or_more",
-          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
-          "rule": "semantic_id may coincide after transposition; each route occurrence, branch owner, ordered step sequence, and independent path_occurrence_id remains distinct"
-        },
-        "dependency_cache": {
-          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "every legal-move and terminal premise ID", "all vacancy, persistence, and absence IDs", "every proof path occurrence ID"],
-          "fingerprint_field": "dependency_fingerprint",
-          "cache_owner": "sole producer deterministic graph record; no separate public cache"
-        },
-        "consumers": {
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
-          "runtime_field": "occurrence_relations",
-          "schema_variant": "squareReleaseRouteOccurrenceRelation",
-          "runtime_producer_tests": {
-            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
-            "cases": [
-              {
-                "name": "v6 commentary serializes the exact one-leg square-release route proof"
-              },
-              {
-                "name": "v6 commentary preserves the Silicon Road multi-leg route and all five check replies"
-              }
-            ]
-          },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
-          "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
-          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
-        },
-        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal moves, capture/check resources, vacancy, and piece state."
-      },
-      "implementation_status": "current_exact_proof",
-      "reference_support": "exact_proposition_anchor",
-      "references": [
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 124
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 125
-          }
-        },
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 130
-          }
-        },
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 131
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
-            "pdf_page": 160
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
-            "pdf_page": 164
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "general_preparation",
-        "global_unbounded_piece_token_identity",
-        "good_move",
-        "maneuver",
-        "outpost",
-        "plan",
-        "sole_cause",
-        "unbounded_vacancy"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/SquareReleaseRouteTest.scala",
-        "symbol": "SquareReleaseRouteTest"
-      }
-    },
-    {
       "contract_kind": "CaptureExclusionMoveOrder",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
@@ -635,7 +504,7 @@
         "35.Ng6 and 47.Rxd5 are later consumers of earlier route and vacancy changes, not endpoints of a best-versus-second comparison."
       ],
       "needed_closed_absence": [
-        "A proof needs exact same-piece route identity, vacancy persistence, and an educational sibling or terminal closure for the claimed relation."
+        "Each move occurrence and board transition must remain independently owned; 25.Rh1 and 27.Ng1 need separate relation records pointing back to 24.Kh2 without a shared terminal gate."
       ],
       "sibling_difference": [
         "No exact sibling in the reviewed case establishes what fails if 24.Kh2 is omitted or reordered."
@@ -643,7 +512,7 @@
       "transposition_occurrence": [
         "No transposition is used; every later occurrence must retain its own history position."
       ],
-      "mapped_contracts": ["SquareReleaseRoute"],
+      "mapped_contracts": [],
       "current_coverage_categories": ["lower_fact_gap", "l2_join_or_demand_gap"]
     },
     {
@@ -672,7 +541,7 @@
         "35.Re7 consumes the earlier access and structure changes."
       ],
       "needed_closed_absence": [
-        "The route needs exact e7 access, same-rook identity, and a completed sibling showing which resource remains absent or present."
+        "The exact e7 access and same-rook occurrences need lower owners before any source-supported relation is added; an incomplete sibling must not be completed by inference."
       ],
       "sibling_difference": [
         "The available 29...fxg6 branch is incomplete for the claimed long causal relation."
@@ -680,7 +549,7 @@
       "transposition_occurrence": [
         "No transposition is identified in the reviewed case."
       ],
-      "mapped_contracts": ["SquareReleaseRoute"],
+      "mapped_contracts": [],
       "current_coverage_categories": ["lower_fact_gap", "higher_layer_responsibility"]
     },
     {
@@ -785,16 +654,16 @@
         "...Nb6 consumes the released b6 square; ...Nxb1 is the later capture terminal."
       ],
       "needed_closed_absence": [
-        "The actual line supplies the release and route occurrences, but a current SquareReleaseRoute proof additionally needs a certified retained-blocker sibling, blocker persistence, and first-leg absence."
+        "The actual line supplies separate release and route occurrences, but no current occurrence relation joins the release to its later use."
       ],
       "sibling_difference": [
-        "The required blocker-preserving sibling difference is not established by the directly reviewed source material."
+        "No blocker-preserving sibling is established, so none may be required or synthesized for the release-use occurrence relation."
       ],
       "transposition_occurrence": [
-        "No transposition is needed for this route proof."
+        "No transposition is needed for this release-use occurrence relation."
       ],
-      "mapped_contracts": ["SquareReleaseRoute"],
-      "current_coverage_categories": ["lower_fact_gap"]
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
     },
     {
       "case_id": "ai-revolution-square-release-prohaszka-wang",
@@ -822,16 +691,16 @@
         "31.Rc6 consumes the square released by 30.Bg2."
       ],
       "needed_closed_absence": [
-        "The released-square vacancy, exact rook route, retained blocker, and absence of the first route leg in the sibling must be certified."
+        "30.Bg2 and 31.Rc6 retain separate occurrence owners; the relation needs their exact transitions, the shared c6 witness, and the source locator."
       ],
       "sibling_difference": [
-        "30.R1d2 leaves the blocker relationship in place and does not realize 31.Rc6 through the released square."
+        "30.R1d2 is a source-supported comparison, but it does not own or gate the independently valid 30.Bg2 and 31.Rc6 occurrences."
       ],
       "transposition_occurrence": [
-        "No transposition is needed for this one-leg route proof."
+        "No transposition is needed for this release-use occurrence relation."
       ],
-      "mapped_contracts": ["SquareReleaseRoute"],
-      "current_coverage_categories": ["current_exact_proof"]
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
     },
     {
       "case_id": "ai-revolution-passed-pawn-route",
@@ -1512,7 +1381,7 @@
         "The current host does not supply both book branches as admitted paired replays rooted in the observed occurrence; no line is injected from the reference."
       ],
       "sibling_difference": [
-        "The local route proposition resembles SquareReleaseRoute, but the current contract cannot approve it without its required observed root and paired replay authority."
+        "The local route proposition needs an occurrence relation, but the current host does not own both source branches as admitted replays."
       ],
       "transposition_occurrence": [
         "No transposition is claimed; the Qc1 and Qd2 branch occurrences remain distinct even if a later position were semantically equal."

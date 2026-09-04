@@ -65,10 +65,6 @@ object EvidenceSemanticAnchor:
   * upper grouping record decides whether it may survive or be projected.
   */
 enum OccurrenceRelationProof:
-  case SquareReleaseRoute(
-      override val source: EvidenceRef,
-      result: SquareReleaseRouteEvidence
-  )
   case CaptureExclusionMoveOrder(
       override val source: EvidenceRef,
       result: CaptureExclusionMoveOrderEvidence
@@ -81,8 +77,6 @@ enum OccurrenceRelationProof:
 
   final def subjectOccurrence: ExplanationSubjectOccurrence =
     this match
-      case OccurrenceRelationProof.SquareReleaseRoute(_, result) =>
-        result.subjectOccurrence
       case OccurrenceRelationProof.CaptureExclusionMoveOrder(_, result) =>
         result.subjectOccurrence
       case OccurrenceRelationProof.RelocationEnablesRecapture(_, result) =>
@@ -101,8 +95,6 @@ object OccurrenceRelationProof:
       record: EvidenceRecord
   ): Option[OccurrenceRelationProof] =
     record match
-      case EvidenceRecord(ref, payload: SquareReleaseRouteEvidence, _) =>
-        Some(OccurrenceRelationProof.SquareReleaseRoute(ref, payload))
       case EvidenceRecord(ref, payload: CaptureExclusionMoveOrderEvidence, _) =>
         Some(OccurrenceRelationProof.CaptureExclusionMoveOrder(ref, payload))
       case EvidenceRecord(ref, payload: RelocationEnablesRecaptureEvidence, _) =>
@@ -1114,148 +1106,6 @@ private[chessjudgment] final case class PositionOccurrenceEvidence(
     occurrence: PositionOccurrenceState
 ) extends EvidencePayload
 
-/** Derivation-free public detail for the exact route terminal. Lower result
-  * ids and sources remain in each public proof path.
-  */
-enum SquareReleaseRoutePublicTerminal:
-  case Occupation
-  case Capture(
-      assertionId: String,
-      captured: RelationColoredPieceWitness,
-      geometricRecapturers: List[RelationPieceWitness],
-      legalRecaptures: List[RelationLegalMoveResourceWitness],
-      restrictedRecaptures: List[RelationRestrictedResourceWitness]
-  )
-  case CreatedCheck(
-      assertionId: String,
-      checkedSide: Color,
-      kingSquare: EvidenceSquare,
-      checkers: List[RelationPieceWitness],
-      responses: List[RelationCheckResponseWitness],
-      controlledKingDestinations: List[RelationControlledKingDestinationWitness],
-      terminal: RelationCheckTerminalState
-  )
-
-object SquareReleaseRoutePublicTerminal:
-  private[chessjudgment] def from(
-      terminal: SquareReleaseRouteTerminal
-  ): SquareReleaseRoutePublicTerminal =
-    terminal match
-      case SquareReleaseRouteTerminal.Occupation => Occupation
-      case SquareReleaseRouteTerminal.Capture(
-            assertionId,
-            _,
-            captured,
-            geometricRecapturers,
-            legalRecaptures,
-            restrictedRecaptures
-          ) =>
-        Capture(
-          assertionId,
-          captured,
-          geometricRecapturers,
-          legalRecaptures,
-          restrictedRecaptures
-        )
-      case SquareReleaseRouteTerminal.CreatedCheck(
-            assertionId,
-            _,
-            checkedSide,
-            kingSquare,
-            checkers,
-            responses,
-            controlledKingDestinations,
-            terminal
-          ) =>
-        CreatedCheck(
-          assertionId,
-          checkedSide,
-          kingSquare,
-          checkers,
-          responses,
-          controlledKingDestinations,
-          terminal
-        )
-
-/** Exact bounded square release consumed by an ordered same-object route.
-  * The retained-blocker sibling is closed immediately before the first route
-  * leg; a multi-leg released-route occurrence additionally retains its exact
-  * L1 terminal and certified reply when that terminal is ongoing.
-  */
-private[chessjudgment] final case class SquareReleaseRouteEvidence private[chessjudgment] (
-    semantic: SquareReleaseRouteSemanticProof,
-    occurrence: SquareReleaseRouteOccurrence,
-    subjectOccurrence: ExplanationSubjectOccurrence,
-    dependencyFingerprint: String,
-    private[chessjudgment] val occurrenceProof: CertifiedSquareReleaseRoute
-) extends EvidencePayload:
-  require(occurrence.semanticId == semantic.semanticId)
-  require(occurrence.subjectOccurrence == subjectOccurrence)
-  require(
-    dependencyFingerprint.matches("[0-9a-f]{64}"),
-    "a square-release-route result needs its complete dependency fingerprint"
-  )
-  def semanticId: String = semantic.semanticId
-  def occurrenceId: String = occurrence.occurrenceId
-  def dependencyId: String = dependencyFingerprint
-  def releasedRouteLine: LineNodeRef = occurrence.releasedRouteLine
-  def retainedBlockerLine: LineNodeRef = occurrence.retainedBlockerLine
-  def releasedRouteSteps: List[LineReplayStep] = occurrence.releasedRouteSteps
-  def retainedBlockerSteps: List[LineReplayStep] = occurrence.retainedBlockerSteps
-  def releasedRouteBranch: CausalBranchOccurrence = occurrence.releasedRouteBranch
-  def retainedBlockerBranch: CausalBranchOccurrence = occurrence.retainedBlockerBranch
-  def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicReleasedRouteBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(releasedRouteBranch)
-  def publicRetainedBlockerBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(retainedBlockerBranch)
-  def publicProofPaths: List[BoundedCausalPublicProofPath] =
-    BoundedCausalPublicProjection.mixedPaths(proofPaths)
-  def hasCompleteProofPaths: Boolean =
-    val persistenceCount = occurrence.routeStepIndices.zip(occurrence.routeStepIndices.drop(1))
-      .map { case (before, after) => after - before - 1 }
-      .sum
-    val expectedStates =
-      occurrence.firstRouteStepIndex + occurrence.routeStepIndices.size + persistenceCount +
-        occurrence.firstRouteStepIndex * 2
-    proofPaths.nonEmpty && proofPaths.forall(path =>
-      path.manifest.supplementalPremiseUses.size ==
-        1 + occurrence.routeStepIndices.size + occurrence.terminalReplyStepIndex.size &&
-        path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse]) &&
-        path.premiseUses.size == (semantic.terminal match
-          case SquareReleaseRouteTerminal.Occupation => 0
-          case _                                     => 1) &&
-        path.closedAbsenceUses.size == 1 && path.closedStateUses.size == expectedStates
-    )
-  def releaser: RelationMoveTransitionWitness = semantic.release
-  def releasedBlocker: RelationColoredPieceWitness = semantic.blocker
-  def routePiece: RelationColoredPieceWitness = semantic.routePiece
-  def route: List[RelationMoveTransitionWitness] = semantic.route
-  def routeMoves: List[String] = occurrence.routeSteps.map(_.moveUci)
-  def routeStepIndices: List[Int] = occurrence.routeStepIndices
-  def terminalStepIndex: Int = occurrence.terminalStepIndex
-  def terminalReplyMove: Option[String] = occurrence.terminalReplyStep.map(_.moveUci)
-  def publicTerminal: SquareReleaseRoutePublicTerminal =
-    SquareReleaseRoutePublicTerminal.from(semantic.terminal)
-
-  private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.proves(record, this)
-
-  private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.parentSources
-
-  private[chessjudgment] def lowerRecordsAreCanonical(
-      byId: Map[String, EvidenceRecord]
-  ): Boolean =
-    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
-
-  private[chessjudgment] def consumesDependencies(
-      subject: CertifiedRootOccurrence,
-      releasedRoute: CertifiedRootOccurrence,
-      retainedBlocker: CertifiedRootOccurrence
-  ): Boolean =
-    occurrenceProof.consumesDependencies(subject, releasedRoute, retainedBlocker)
-
 /** Exact move-order occurrence where vacating an ordinary capture target
   * excludes the immediate branch's capture reply before the same move
   * is realized later. It does not assert prevention, bestness, or a plan.
@@ -1385,52 +1235,6 @@ final case class LineReplayStep(
     fenAfter: String
 )
 
-final case class LineObjectTrajectory private (
-    plyOffset: Int,
-    private[chessjudgment] val rootLegalOccurrence: ReplayLegalMoveOccurrence,
-    private[chessjudgment] val rootTransition: RelationMoveTransitionWitness,
-    private[chessjudgment] val futureLegalOccurrence: ReplayLegalMoveOccurrence,
-    private[chessjudgment] val futureTransition: RelationMoveTransitionWitness,
-    private[chessjudgment] val interveningLegalOccurrences: List[ReplayLegalMoveOccurrence],
-    private[chessjudgment] val persistenceStates: List[ClosedPositionStateAuthority]
-):
-  require(
-    ReplayLegalMoveOccurrence.ownsTransition(rootLegalOccurrence, rootTransition) &&
-      ReplayLegalMoveOccurrence.ownsTransition(futureLegalOccurrence, futureTransition),
-    "an object trajectory must retain exact selected footprint transitions"
-  )
-  require(
-    rootTransition.side == futureTransition.side &&
-      rootTransition.afterRole == futureTransition.beforeRole &&
-      rootTransition.to == futureTransition.from,
-    "an object trajectory must retain one physical object between its selected transitions"
-  )
-  require(
-    interveningLegalOccurrences.map(_.step) == persistenceStates.map(_.step) &&
-      interveningLegalOccurrences.forall(occurrence =>
-        ReplayLegalMoveOccurrence.leavesUntouched(occurrence, trackedAfterRoot)
-      ) && persistenceStates.forall(state => state.query match
-        case PositionRelationExtractor.ClosedPositionStateQuery.OccupiedBy(piece) => piece == trackedAfterRoot
-        case _ => false
-      ),
-    "an object trajectory must retain every untouched footprint and occupant occurrence"
-  )
-
-  def rootStep: LineReplayStep = rootLegalOccurrence.step
-  def futureStep: LineReplayStep = futureLegalOccurrence.step
-  def interveningSteps: List[LineReplayStep] = interveningLegalOccurrences.map(_.step)
-  def rootBeforeRole: EvidencePieceRole = rootTransition.beforeRole
-  def pieceRole: EvidencePieceRole = rootTransition.afterRole
-  def futureAfterRole: EvidencePieceRole = futureTransition.afterRole
-  def color: Color = rootTransition.side
-  def rootFrom: EvidenceSquare = rootTransition.from
-  def rootTo: EvidenceSquare = rootTransition.to
-  def futureFrom: EvidenceSquare = futureTransition.from
-  def futureTo: EvidenceSquare = futureTransition.to
-
-  private def trackedAfterRoot: RelationColoredPieceWitness =
-    RelationColoredPieceWitness(rootTransition.to, rootTransition.afterRole, rootTransition.side)
-
 private[chessjudgment] final case class RecordBoundObjectContinuityStep(
     index: Int,
     legalOccurrence: RecordBoundLegalMoveOccurrence,
@@ -1499,66 +1303,11 @@ private[chessjudgment] final case class LineObjectContinuity(
     "object continuity must reach its exact endpoint"
   )
 
-object LineObjectTrajectory:
+object LineObjectContinuity:
   private final case class IssuedStep(
       index: Int,
       legalOccurrence: RecordBoundLegalMoveOccurrence
   )
-
-  private[chessjudgment] def findAll(
-      rootStep: LineReplayStep,
-      continuation: List[LineReplayStep],
-      replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[CertifiedLineReplayRecord],
-      selectedRootTransition: Option[RelationMoveTransitionWitness]
-  ): List[LineObjectTrajectory] =
-    val trajectories = issuedStep(replay, ownerAt, rootStep, 0).toList.flatMap { root =>
-      ReplayLegalMoveOccurrence
-        .pieceTransitions(root.legalOccurrence.occurrence)
-        .filter(transition => selectedRootTransition.forall(_ == transition))
-        .flatMap { rootTransition =>
-          val trackedAfterRoot = RelationColoredPieceWitness(
-            rootTransition.to,
-            rootTransition.afterRole,
-            rootTransition.side
-          )
-          firstFutureMovement(
-            trackedAfterRoot,
-            rootStep,
-            continuation,
-            replay,
-            ownerAt
-          ).map {
-            case (future, futureTransition, intervening, persistenceStates) =>
-              LineObjectTrajectory(
-                plyOffset = future.index,
-                rootLegalOccurrence = root.legalOccurrence.occurrence,
-                rootTransition = rootTransition,
-                futureLegalOccurrence = future.legalOccurrence.occurrence,
-                futureTransition = futureTransition,
-                interveningLegalOccurrences = intervening.map(_.legalOccurrence.occurrence),
-                persistenceStates = persistenceStates
-              )
-          }
-        }
-    }
-    val ordered = trajectories.sortBy(trajectory =>
-      (
-        trajectory.rootFrom.key,
-        trajectory.rootTo.key,
-        trajectory.futureStep.ply,
-        trajectory.futureFrom.key,
-        trajectory.futureTo.key
-      )
-    )
-    require(
-      ordered.map(value =>
-        (value.rootLegalOccurrence.occurrenceId, value.rootTransition.stableKey,
-          value.futureLegalOccurrence.occurrenceId, value.futureTransition.stableKey)
-      ).distinct.size == ordered.size,
-      "one replay cannot issue duplicate object trajectories"
-    )
-    ordered
 
   /** Follows one exact physical object backward from an endpoint through one
     * admitted replay prefix. Each step consumes the canonical transition
@@ -1574,18 +1323,6 @@ object LineObjectTrajectory:
       scanBackward(issuedPrefix.take(untilExclusive), endpointPiece)
     }
 
-  private def issuedStep(
-      replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[CertifiedLineReplayRecord],
-      step: LineReplayStep,
-      index: Int
-  ): Option[IssuedStep] =
-    for
-      transition <- replay.transition(step)
-      lineRecord <- ownerAt(step)
-      rebound <- RecordBoundLegalMoveOccurrence.certifiedBy(lineRecord, transition.legalMoveOccurrence)
-    yield IssuedStep(index, rebound)
-
   private def retainedState(
       step: IssuedStep,
       piece: RelationColoredPieceWitness
@@ -1596,43 +1333,6 @@ object LineObjectTrajectory:
         step.legalOccurrence.positionAfterOccurrence
       )((occurrence, scope) => occurrence.existingOccupantState(piece, scope))
     )
-
-  /** Finds the first later movement of the exact object selected at the root.
-    * Each replay step is inspected once. Retained steps consume the same
-    * no-touch/OccupiedBy binding used by endpoint-directed continuity.
-    */
-  private def firstFutureMovement(
-      trackedAfterRoot: RelationColoredPieceWitness,
-      rootStep: LineReplayStep,
-      continuation: List[LineReplayStep],
-      replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[CertifiedLineReplayRecord]
-  ): Option[(IssuedStep, RelationMoveTransitionWitness, List[IssuedStep], List[ClosedPositionStateAuthority])] =
-    @annotation.tailrec
-    def loop(
-        remaining: List[LineReplayStep],
-        previous: LineReplayStep,
-        index: Int,
-        intervening: List[IssuedStep],
-        persistence: List[ClosedPositionStateAuthority]
-    ): Option[(IssuedStep, RelationMoveTransitionWitness, List[IssuedStep], List[ClosedPositionStateAuthority])] =
-      remaining match
-        case Nil => None
-        case step :: tail =>
-          Option.when(step.ply == previous.ply + 1 && step.fenBefore == previous.fenAfter)(())
-            .flatMap(_ => issuedStep(replay, ownerAt, step, index)) match
-            case None => None
-            case Some(issued) =>
-              ReplayLegalMoveOccurrence.pieceTransitions(issued.legalOccurrence.occurrence).filter(transition =>
-                RelationColoredPieceWitness(transition.from, transition.beforeRole, transition.side) == trackedAfterRoot
-              ) match
-                case exact :: Nil => Some((issued, exact, intervening.reverse, persistence.reverse))
-                case Nil =>
-                  retainedState(issued, trackedAfterRoot) match
-                    case Some(state) => loop(tail, step, index + 1, issued :: intervening, state :: persistence)
-                    case None        => None
-                case _ => None
-    loop(continuation, rootStep, 1, Nil, Nil)
 
   private def scanBackward(
       issued: List[IssuedStep],
@@ -2886,8 +2586,6 @@ final case class EvidenceRecord(
     payload match
       case lineFact: LineFactEvidence =>
         List(lineFact.line)
-      case payload: SquareReleaseRouteEvidence =>
-        List(payload.occurrence.releasedRouteLine, payload.occurrence.retainedBlockerLine)
       case payload: CaptureExclusionMoveOrderEvidence =>
         List(payload.occurrence.vacatingLine, payload.occurrence.immediateLine)
       case payload: RelocationEnablesRecaptureEvidence =>
@@ -3437,9 +3135,6 @@ final class TypedEvidenceGraph private (
         case payload: StructuralDeltaEvidence =>
           structuralDeltaAncestryVerified(record, payload) &&
             payload.canonicalOutputShapeCertified
-        case payload: SquareReleaseRouteEvidence =>
-          exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
-            payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: CaptureExclusionMoveOrderEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)

@@ -90,10 +90,7 @@ export interface MoveReviewCandidate {
   review: MoveReviewCandidateReview;
 }
 
-export type MoveReviewRelationKind =
-  | 'square_release_route'
-  | 'capture_exclusion_move_order'
-  | 'relocation_enables_recapture';
+export type MoveReviewRelationKind = 'capture_exclusion_move_order' | 'relocation_enables_recapture';
 
 export type MoveReviewRootProvenance = 'counterfactual_analyzed_root' | 'observed_game_root';
 export type MoveReviewStepProvenance = 'observed_game_move' | 'certified_analysis_move';
@@ -130,8 +127,6 @@ export type MoveReviewOccurrenceBranchRole =
   | 'immediate_capture_with_defender'
   | 'removal_then_target_capture'
   | 'immediate_target_capture'
-  | 'released_square_route'
-  | 'retained_blocker'
   | 'vacating_then_deferred'
   | 'immediate_deferred_capture'
   | 'relocated_responder'
@@ -156,10 +151,6 @@ export interface MoveReviewMovementWitness {
   to: Key;
   pieceBefore: MoveReviewPieceRole;
   pieceAfter: MoveReviewPieceRole;
-}
-
-export interface MoveReviewLegalResourceWitness extends MoveReviewMovementWitness {
-  moveUci: Uci;
 }
 
 export interface MoveReviewPieceWitness {
@@ -292,67 +283,6 @@ interface MoveReviewOccurrenceProofBase {
   dependencyFingerprint: string;
 }
 
-export interface MoveReviewRouteResource extends MoveReviewLegalResourceWitness {
-  capture?: MoveReviewColoredPieceWitness;
-}
-
-export interface MoveReviewSquareReleaseRouteStep extends MoveReviewMovementWitness {
-  moveUci: Uci;
-  stepIndex: number;
-}
-
-export type MoveReviewSquareReleaseTerminal =
-  | { kind: 'occupation' }
-  | {
-      kind: 'capture';
-      assertionId: string;
-      capturedTarget: MoveReviewColoredPieceWitness;
-      geometricRecapturers: MoveReviewPieceWitness[];
-      legalRecaptures: MoveReviewRouteResource[];
-      restrictedRecaptures: {
-        piece: MoveReviewPieceWitness;
-        destination: Key;
-        kingSquare: Key;
-        postMoveControllers: MoveReviewPieceWitness[];
-      }[];
-    }
-  | {
-      kind: 'created_check';
-      assertionId: string;
-      checkedSide: MoveReviewColor;
-      kingSquare: Key;
-      checkers: MoveReviewPieceWitness[];
-      responses: {
-        resource: MoveReviewRouteResource;
-        modes: ('capture_checker' | 'interpose' | 'king_move')[];
-      }[];
-      controlledKingDestinations: { destination: Key; controllers: MoveReviewPieceWitness[] }[];
-      terminalState: 'ongoing' | 'checkmate';
-    };
-
-type MoveReviewSquareReleasePremise =
-  | MoveReviewRelationPremiseUse<
-      'terminal_resource',
-      'capture_recapture_inventory' | 'created_check_response_inventory',
-      'released_square_route'
-    >
-  | MoveReviewLegalMovePremiseUse<string, 'released_square_route'>;
-
-export interface MoveReviewSquareReleaseProof extends MoveReviewOccurrenceProofBase {
-  releasedRouteBranch: MoveReviewOccurrenceBranch<'released_square_route'>;
-  retainedBlockerBranch: MoveReviewOccurrenceBranch<'retained_blocker'>;
-  proofPaths: MoveReviewBoundedProofPath<MoveReviewSquareReleasePremise>[];
-  participants: {
-    releaser: MoveReviewMovementWitness;
-    releasedBlocker: MoveReviewColoredPieceWitness;
-    routePiece: MoveReviewColoredPieceWitness;
-  };
-  route: MoveReviewSquareReleaseRouteStep[];
-  terminalStepIndex: number;
-  terminalReplyMove?: Uci;
-  terminal: MoveReviewSquareReleaseTerminal;
-}
-
 type MoveReviewCaptureExclusionPremise = MoveReviewLegalMovePremiseUse<
   'vacating_move' | 'immediate_deferred_move' | 'immediate_capture_reply' | 'later_deferred_move',
   'vacating_then_deferred' | 'immediate_deferred_capture'
@@ -418,7 +348,6 @@ interface MoveReviewRelocationEnablesRecaptureProof extends MoveReviewOccurrence
 }
 
 export type MoveReviewOccurrenceProof =
-  | MoveReviewSquareReleaseProof
   | MoveReviewCaptureExclusionProof
   | MoveReviewRelocationEnablesRecaptureProof;
 
@@ -429,7 +358,6 @@ interface MoveReviewOccurrenceRelationBase {
 
 export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase &
   (
-    | { relationKind: 'square_release_route'; proof: MoveReviewSquareReleaseProof }
     | { relationKind: 'capture_exclusion_move_order'; proof: MoveReviewCaptureExclusionProof }
     | {
         relationKind: 'relocation_enables_recapture';
@@ -604,7 +532,6 @@ export interface MoveReviewCopy {
     positionPly: string;
     contract: string;
     result: string;
-    route: string;
     reply: string;
     yes: string;
     no: string;
@@ -710,7 +637,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: '분석 대안',
     analysisContinuation: '분석 후속',
     familyLabels: {
-      square_release_route: '칸 해방 후 기물 경로',
       capture_exclusion_move_order: '포획 응수를 배제한 수순',
       relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
     },
@@ -730,7 +656,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       positionPly: '포지션 ply',
       contract: '인증 관계',
       result: '결과 근거',
-      route: '경로',
       reply: '성립한 응수',
       yes: '예',
       no: '아니요',
@@ -763,9 +688,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         removalRecapture: '제거 후 재포획',
         postRemovalTargetCapture: '후속 포획',
         immediateSoleRecapture: '즉시 재포획',
-        releaser: '칸을 비운 기물',
-        releasedBlocker: '이동한 차단 기물',
-        routePiece: '경로 기물',
         vacatingMove: '칸을 비운 기물',
         deferredMove: '후속 기물',
         captureReply: '포획 응수',
@@ -784,9 +706,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         defender_removal: '수비 기물 제거',
         post_removal_target_capture_inventory: '제거 후 목표 포획',
         immediate_target_capture_inventory: '즉시 목표 포획',
-        terminal_resource: '종단 자원',
-        release_move: '칸 해방 수',
-        terminal_reply: '종단 응수',
         vacating_move: '칸 비움',
         immediate_deferred_move: '즉시 후속 수',
         immediate_capture_reply: '즉시 포획 응수',
@@ -810,16 +729,12 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         result: '결과 근거',
         delayed_capture_recapture_absent: '후속 재포획 부재',
         post_removal_replacement_recapture_absent: '대체 재포획 부재',
-        retained_blocker_first_route_leg_absent: '차단 유지 시 첫 경로 수 부재',
         capture_reply_absent: '포획 응수 부재',
         retained_seed_recapture_absent: '유지선 출발칸 재포획 부재',
         delayed_capture_actor_present: '후속 기물 유지',
         delayed_target_present: '목표 기물 유지',
         post_removal_exploit_actor_present: '후속 기물 유지',
         post_removal_target_present: '목표 기물 유지',
-        released_square_vacancy: '해방된 칸 비움',
-        retained_blocker_persistence: '차단 기물 유지',
-        retained_route_origin_persistence: '경로 출발점 유지',
         vacated_target: '비워진 목표 칸',
         reply_actor: '응수 기물 유지',
         deferred_actor: '후속 기물 유지',
@@ -897,7 +812,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: 'Analyzed alternative',
     analysisContinuation: 'Analysis continuation',
     familyLabels: {
-      square_release_route: 'Route through a released square',
       capture_exclusion_move_order: 'Move order excluding the capture reply',
       relocation_enables_recapture: 'Recapture enabled by relocation',
     },
@@ -917,7 +831,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       positionPly: 'Position ply',
       contract: 'Certified relation',
       result: 'Result',
-      route: 'Route',
       reply: 'Certified reply',
       yes: 'Yes',
       no: 'No',
@@ -950,9 +863,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         removalRecapture: 'Removal recapture',
         postRemovalTargetCapture: 'Later capture',
         immediateSoleRecapture: 'Immediate recapture',
-        releaser: 'Releasing piece',
-        releasedBlocker: 'Displaced blocker',
-        routePiece: 'Route piece',
         vacatingMove: 'Vacating piece',
         deferredMove: 'Deferred piece',
         captureReply: 'Capture reply',
@@ -971,9 +881,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         defender_removal: 'Defender removal',
         post_removal_target_capture_inventory: 'Later target capture',
         immediate_target_capture_inventory: 'Immediate target capture',
-        terminal_resource: 'Terminal resource',
-        release_move: 'Release move',
-        terminal_reply: 'Terminal reply',
         vacating_move: 'Vacating move',
         immediate_deferred_move: 'Immediate deferred move',
         immediate_capture_reply: 'Immediate capture reply',
@@ -997,16 +904,12 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         result: 'Result',
         delayed_capture_recapture_absent: 'Later recapture unavailable',
         post_removal_replacement_recapture_absent: 'Replacement recapture unavailable',
-        retained_blocker_first_route_leg_absent: 'First route move unavailable with blocker retained',
         capture_reply_absent: 'Capture reply unavailable',
         retained_seed_recapture_absent: 'Retained seed-square recapture unavailable',
         delayed_capture_actor_present: 'Later piece remains',
         delayed_target_present: 'Target remains',
         post_removal_exploit_actor_present: 'Later piece remains',
         post_removal_target_present: 'Target remains',
-        released_square_vacancy: 'Released square remains empty',
-        retained_blocker_persistence: 'Blocker remains',
-        retained_route_origin_persistence: 'Route origin remains',
         vacated_target: 'Vacated target square',
         reply_actor: 'Reply piece remains',
         deferred_actor: 'Deferred piece remains',
@@ -1803,18 +1706,6 @@ function projectOccurrenceRelation(
   if (!relationKind || !subjectOccurrence) return;
 
   switch (relationKind) {
-    case 'square_release_route': {
-      const proof = projectSquareReleaseProof(value.proof);
-      const relation = proof
-        ? {
-            id: occurrenceRelationId(proof.sourceEvidenceId),
-            subjectOccurrence,
-            relationKind,
-            proof,
-          }
-        : undefined;
-      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
-    }
     case 'capture_exclusion_move_order': {
       const proof = projectCaptureExclusionProof(value.proof);
       const relation = proof
@@ -1847,9 +1738,7 @@ function occurrenceRelationId(sourceEvidenceId: string): string {
 }
 
 function occurrenceRelationKind(value: unknown): MoveReviewRelationKind | undefined {
-  return value === 'square_release_route' ||
-    value === 'capture_exclusion_move_order' ||
-    value === 'relocation_enables_recapture'
+  return value === 'capture_exclusion_move_order' || value === 'relocation_enables_recapture'
     ? value
     : undefined;
 }
@@ -1927,288 +1816,6 @@ function projectOccurrenceProofBase(
   return sourceEvidenceId && semanticId && occurrenceId && dependencyFingerprint
     ? { sourceEvidenceId, semanticId, occurrenceId, dependencyFingerprint }
     : undefined;
-}
-
-function projectSquareReleaseProof(value: unknown): MoveReviewSquareReleaseProof | undefined {
-  const required = [
-    'source_evidence_id',
-    'semantic_id',
-    'occurrence_id',
-    'dependency_fingerprint',
-    'released_route_branch',
-    'retained_blocker_branch',
-    'proof_paths',
-    'participants',
-    'route',
-    'terminal_step_index',
-    'terminal',
-  ];
-  if (!isObject(value) || !hasOnlyKeys(value, [...required, 'terminal_reply_move'], required)) return;
-  const base = projectOccurrenceProofBase(value);
-  const releasedRouteBranch = projectOccurrenceBranch(
-    value.released_route_branch,
-    'released_square_route',
-    3,
-  );
-  const retainedBlockerBranch = projectOccurrenceBranch(value.retained_blocker_branch, 'retained_blocker', 2);
-  const proofPaths = projectArray(value.proof_paths, 1, undefined, projectSquareReleasePath);
-  const participants = projectSquareReleaseParticipants(value.participants);
-  const route = projectArray(value.route, 1, undefined, projectSquareReleaseRouteStep);
-  const terminalStepIndex = nonNegativeInteger(value.terminal_step_index);
-  const terminalReplyMove = Object.prototype.hasOwnProperty.call(value, 'terminal_reply_move')
-    ? uci(value.terminal_reply_move)
-    : undefined;
-  const terminal = projectSquareReleaseTerminal(value.terminal);
-  if (
-    !base ||
-    !releasedRouteBranch ||
-    !retainedBlockerBranch ||
-    !proofPaths ||
-    !participants ||
-    !route ||
-    terminalStepIndex === undefined ||
-    terminalStepIndex < 2 ||
-    (Object.prototype.hasOwnProperty.call(value, 'terminal_reply_move') && !terminalReplyMove) ||
-    !terminal ||
-    releasedRouteBranch.branchId === retainedBlockerBranch.branchId ||
-    !unique(proofPaths.map(path => path.pathOccurrenceId)) ||
-    !boundedPathsFitBranches(proofPaths, [releasedRouteBranch, retainedBlockerBranch])
-  )
-    return;
-  return {
-    ...base,
-    releasedRouteBranch,
-    retainedBlockerBranch,
-    proofPaths,
-    participants,
-    route,
-    terminalStepIndex,
-    ...(terminalReplyMove ? { terminalReplyMove } : {}),
-    terminal,
-  };
-}
-
-function projectSquareReleaseParticipants(
-  value: unknown,
-): MoveReviewSquareReleaseProof['participants'] | undefined {
-  if (!isObject(value) || !hasExactKeys(value, ['releaser', 'released_blocker', 'route_piece'])) return;
-  const releaser = projectMovementWitness(value.releaser);
-  const releasedBlocker = projectColoredPieceWitness(value.released_blocker);
-  const routePiece = projectColoredPieceWitness(value.route_piece);
-  return releaser && releasedBlocker && routePiece ? { releaser, releasedBlocker, routePiece } : undefined;
-}
-
-function projectSquareReleasePath(
-  value: unknown,
-): MoveReviewBoundedProofPath<MoveReviewSquareReleasePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 2, 1, 7);
-  if (!shell) return;
-  const premises = shell.premises.map(item =>
-    isObject(item) && item.contract === 'legal_move'
-      ? projectLegalMovePremise(
-          item,
-          role => /^(release_move|route_move_[0-9]+|terminal_reply)$/.test(role),
-          ['released_square_route'],
-        )
-      : projectRelationPremise(
-          item,
-          'terminal_resource',
-          ['capture_recapture_inventory', 'created_check_response_inventory'],
-          'released_square_route',
-          step => step >= 2,
-        ),
-  );
-  const absence = projectClosureUse(shell.closedAbsenceUses[0], {
-    role: 'retained_blocker_first_route_leg_absent',
-    issuer: 'position_relation_extractor.closed_relation_inventory',
-    branchRoles: ['retained_blocker'],
-    query: legalMoveQuery,
-    afterStep: step => step >= 1,
-  });
-  const states = shell.closedStateUses.map(item =>
-    projectClosureUse(item, {
-      role: role =>
-        /^(released_square_vacancy|route_piece_[0-9]+|route_persistence_[0-9]+|retained_blocker_persistence|retained_route_origin_persistence)$/.test(
-          role,
-        ),
-      issuer: 'position_relation_extractor.closed_position_state_inventory',
-      branchRoles: ['released_square_route', 'retained_blocker'],
-      query: vacantOrOccupiedQuery,
-    }),
-  );
-  if (
-    !premises.every((item): item is MoveReviewSquareReleasePremise => !!item) ||
-    !absence ||
-    !states.every((item): item is MoveReviewClosureUse => !!item) ||
-    !unique(states.map(item => item.useId))
-  )
-    return;
-  return {
-    pathOccurrenceId: shell.pathOccurrenceId,
-    premises,
-    closedAbsenceUses: [absence],
-    closedStateUses: states,
-  };
-}
-
-function projectSquareReleaseRouteStep(value: unknown): MoveReviewSquareReleaseRouteStep | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ['side', 'from', 'to', 'piece_before', 'piece_after', 'move_uci', 'step_index'])
-  )
-    return;
-  const movement = projectMovementWitness({
-    side: value.side,
-    from: value.from,
-    to: value.to,
-    piece_before: value.piece_before,
-    piece_after: value.piece_after,
-  });
-  const moveUci = uci(value.move_uci);
-  const stepIndex = nonNegativeInteger(value.step_index);
-  return movement && moveUci && stepIndex !== undefined && stepIndex >= 2
-    ? { ...movement, moveUci, stepIndex }
-    : undefined;
-}
-
-function projectSquareReleaseTerminal(value: unknown): MoveReviewSquareReleaseTerminal | undefined {
-  if (!isObject(value)) return;
-  if (value.kind === 'occupation') return hasExactKeys(value, ['kind']) ? { kind: 'occupation' } : undefined;
-  if (value.kind === 'capture') {
-    if (
-      !hasExactKeys(value, [
-        'kind',
-        'assertion_id',
-        'captured_target',
-        'geometric_recapturers',
-        'legal_recaptures',
-        'restricted_recaptures',
-      ])
-    )
-      return;
-    const assertionId = typedHash(value.assertion_id);
-    const capturedTarget = projectColoredPieceWitness(value.captured_target);
-    const geometricRecapturers = projectArray(value.geometric_recapturers, 0, undefined, projectPieceWitness);
-    const legalRecaptures = projectArray(value.legal_recaptures, 0, undefined, projectRouteResource);
-    const restrictedRecaptures = projectArray(
-      value.restricted_recaptures,
-      0,
-      undefined,
-      projectRestrictedRecapture,
-    );
-    return assertionId && capturedTarget && geometricRecapturers && legalRecaptures && restrictedRecaptures
-      ? {
-          kind: 'capture',
-          assertionId,
-          capturedTarget,
-          geometricRecapturers,
-          legalRecaptures,
-          restrictedRecaptures,
-        }
-      : undefined;
-  }
-  if (value.kind === 'created_check') {
-    if (
-      !hasExactKeys(value, [
-        'kind',
-        'assertion_id',
-        'checked_side',
-        'king_square',
-        'checkers',
-        'responses',
-        'controlled_king_destinations',
-        'terminal_state',
-      ])
-    )
-      return;
-    const assertionId = typedHash(value.assertion_id);
-    const checkedSide = wireColor(value.checked_side);
-    const kingSquare = key(value.king_square);
-    const checkers = projectArray(value.checkers, 1, undefined, projectPieceWitness);
-    const responses = projectArray(value.responses, 0, undefined, projectCheckResponse);
-    const controlledKingDestinations = projectArray(
-      value.controlled_king_destinations,
-      0,
-      undefined,
-      projectControlledKingDestination,
-    );
-    const terminalState =
-      value.terminal_state === 'ongoing' || value.terminal_state === 'checkmate'
-        ? value.terminal_state
-        : undefined;
-    return assertionId &&
-      checkedSide &&
-      kingSquare &&
-      checkers &&
-      responses &&
-      controlledKingDestinations &&
-      terminalState
-      ? {
-          kind: 'created_check',
-          assertionId,
-          checkedSide,
-          kingSquare,
-          checkers,
-          responses,
-          controlledKingDestinations,
-          terminalState,
-        }
-      : undefined;
-  }
-  return;
-}
-
-function projectRouteResource(value: unknown): MoveReviewRouteResource | undefined {
-  if (!isObject(value)) return;
-  const required = ['side', 'from', 'to', 'piece_before', 'piece_after', 'move_uci'];
-  if (!hasOnlyKeys(value, [...required, 'capture'], required)) return;
-  const resource = projectLegalResourceWitness(Object.fromEntries(required.map(name => [name, value[name]])));
-  const capture = Object.prototype.hasOwnProperty.call(value, 'capture')
-    ? projectColoredPieceWitness(value.capture)
-    : undefined;
-  if (!resource || (Object.prototype.hasOwnProperty.call(value, 'capture') && !capture)) return;
-  return { ...resource, ...(capture ? { capture } : {}) };
-}
-
-function projectRestrictedRecapture(
-  value: unknown,
-): Extract<MoveReviewSquareReleaseTerminal, { kind: 'capture' }>['restrictedRecaptures'][number] | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ['piece', 'destination', 'king_square', 'post_move_controllers'])
-  )
-    return;
-  const piece = projectPieceWitness(value.piece);
-  const destination = key(value.destination);
-  const kingSquare = key(value.king_square);
-  const postMoveControllers = projectArray(value.post_move_controllers, 1, undefined, projectPieceWitness);
-  return piece && destination && kingSquare && postMoveControllers
-    ? { piece, destination, kingSquare, postMoveControllers }
-    : undefined;
-}
-
-function projectCheckResponse(
-  value: unknown,
-): Extract<MoveReviewSquareReleaseTerminal, { kind: 'created_check' }>['responses'][number] | undefined {
-  if (!isObject(value) || !hasExactKeys(value, ['resource', 'modes'])) return;
-  const resource = projectRouteResource(value.resource);
-  if (!Array.isArray(value.modes) || value.modes.length < 1) return;
-  const modes = value.modes.filter(
-    (mode): mode is 'king_move' | 'capture_checker' | 'interpose' =>
-      mode === 'king_move' || mode === 'capture_checker' || mode === 'interpose',
-  );
-  return resource && modes.length === value.modes.length && unique(modes) ? { resource, modes } : undefined;
-}
-
-function projectControlledKingDestination(
-  value: unknown,
-):
-  | Extract<MoveReviewSquareReleaseTerminal, { kind: 'created_check' }>['controlledKingDestinations'][number]
-  | undefined {
-  if (!isObject(value) || !hasExactKeys(value, ['destination', 'controllers'])) return;
-  const destination = key(value.destination);
-  const controllers = projectArray(value.controllers, 1, undefined, projectPieceWitness);
-  return destination && controllers ? { destination, controllers } : undefined;
 }
 
 function projectCaptureExclusionProof(value: unknown): MoveReviewCaptureExclusionProof | undefined {
@@ -3296,30 +2903,6 @@ function projectMovementWitness(value: unknown): MoveReviewMovementWitness | und
     : undefined;
 }
 
-function projectLegalResourceWitness(value: unknown): MoveReviewLegalResourceWitness | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ['side', 'from', 'to', 'piece_before', 'piece_after', 'move_uci'])
-  )
-    return;
-  const movement = projectMovementWitness({
-    side: value.side,
-    from: value.from,
-    to: value.to,
-    piece_before: value.piece_before,
-    piece_after: value.piece_after,
-  });
-  const moveUci = uci(value.move_uci);
-  return movement && moveUci ? { ...movement, moveUci } : undefined;
-}
-
-function projectPieceWitness(value: unknown): MoveReviewPieceWitness | undefined {
-  if (!isObject(value) || !hasExactKeys(value, ['piece', 'square'])) return;
-  const piece = pieceRole(value.piece);
-  const square = key(value.square);
-  return piece && square ? { piece, square } : undefined;
-}
-
 function projectColoredPieceWitness(value: unknown): MoveReviewColoredPieceWitness | undefined {
   if (!isObject(value) || !hasExactKeys(value, ['side', 'piece', 'square'])) return;
   const side = wireColor(value.side);
@@ -3376,8 +2959,6 @@ function occurrenceRelationOwnsSubject(relation: MoveReviewOccurrenceRelation): 
 
 export function moveReviewOccurrenceBranches(relation: MoveReviewOccurrenceRelation): MoveReviewOccurrenceBranch[] {
   switch (relation.relationKind) {
-    case 'square_release_route':
-      return [relation.proof.releasedRouteBranch, relation.proof.retainedBlockerBranch];
     case 'capture_exclusion_move_order':
       return [relation.proof.vacatingBranch, relation.proof.immediateCaptureBranch];
     case 'relocation_enables_recapture':
