@@ -88,12 +88,11 @@ private final class CanonicalReplayTransitionCalculation(
   */
 private[chessjudgment] final case class ReplayVerticalRelationOccurrence private[judgment] (
     step: LineReplayStep,
-    contract: VerticalRelationContractKind,
     relation: RelationFactEvidence
 ):
   require(
-    VerticalRelationContractKind.forDetail(relation.detail).contains(contract),
-    "a replay vertical occurrence must retain its producing contract"
+    VerticalRelationContracts.proofOf(relation.detail).nonEmpty,
+    "a replay vertical occurrence must retain its vertical derivation"
   )
   require(
     relation.mentionsLineMove(step.moveUci) && (relation.origin match
@@ -113,7 +112,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
       List(
         "replay-vertical-relation-occurrence:v1",
         EvidenceIdentity.stepKey(step),
-        VerticalRelationContractKind.id(contract),
+        RelationFactKind.id(relation.kind),
         DerivedRelationResultKey.from(relation).stableKey,
         certifiedSourcePremiseIds.mkString("[", ",", "]")
       )
@@ -151,7 +150,6 @@ private[chessjudgment] object ReplayVerticalRelationOccurrence:
   */
 private[chessjudgment] final case class ReplayVerticalRelationOccurrenceBinding private (
     step: LineReplayStep,
-    contract: VerticalRelationContractKind,
     result: DerivedRelationResultKey,
     occurrenceId: String,
     certifiedSourcePremiseIds: List[String]
@@ -167,7 +165,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrenceBinding 
     EvidenceIdentity.digest(List(
       "replay-vertical-relation-occurrence-binding:v1",
       EvidenceIdentity.stepKey(step),
-      VerticalRelationContractKind.id(contract),
+      RelationFactKind.id(result.kind),
       result.stableKey,
       occurrenceId,
       certifiedSourcePremiseIds.mkString("[", ",", "]")
@@ -179,7 +177,6 @@ private[chessjudgment] object ReplayVerticalRelationOccurrenceBinding:
   ): ReplayVerticalRelationOccurrenceBinding =
     ReplayVerticalRelationOccurrenceBinding(
       occurrence.step,
-      occurrence.contract,
       DerivedRelationResultKey.from(occurrence.relation),
       occurrence.occurrenceId,
       occurrence.certifiedSourcePremiseIds
@@ -290,7 +287,7 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
         val key = DerivedRelationResultKey.from(relation)
         Option.when(expectedKeys(key))(
           ReplayVerticalRelationOccurrenceBinding.from(
-            ReplayVerticalRelationOccurrence(declared, contract, relation)
+            ReplayVerticalRelationOccurrence(declared, relation)
           )
         )
       }
@@ -441,7 +438,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
     transition(step).toList.flatMap { exactTransition =>
       contracts.flatMap(contract =>
         exactTransition.verticalRelationsFor(contract).map(relation =>
-          ReplayVerticalRelationOccurrence(step, contract, relation)
+          ReplayVerticalRelationOccurrence(step, relation)
         )
       )
     }
@@ -506,7 +503,6 @@ private[chessjudgment] final class CanonicalLineReplay private (
               case detail: RelationWitnessDetail.CaptureRecaptureInventory =>
                 List(ReplayVerticalRelationOccurrence(
                   captureStep,
-                  VerticalRelationContractKind.CaptureRecaptureInventory,
                   relation
                 ) -> detail)
               case _ => Nil
