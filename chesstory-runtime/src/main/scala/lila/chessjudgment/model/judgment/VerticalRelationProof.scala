@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.judgment
 
-import _root_.chess.{ Bishop, King, Pawn, Queen, Rook, Square }
+import _root_.chess.{ King, Pawn, Square }
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 
 /** Explicit proof strata. The numeric order is proof authority, not a score:
@@ -147,33 +147,6 @@ final case class RelationRestrictedResourceWitness(
 
   private[chessjudgment] def stableKey: String =
     s"${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}:${resource.stableKey}:${kingSquare.key.toLowerCase}:${postMoveControllers.map(value => s"${value.role.name.toLowerCase}@${value.square.key.toLowerCase}").mkString(",")}:${absolutePinPaths.map(_.stableKey).mkString("[", ",", "]")}"
-
-final case class RelationSliderReachWitness(
-    segment: List[RelationControlReachWitness],
-    firstOccupant: Option[RelationColoredPieceWitness]
-):
-  require(segment.nonEmpty, "a slider-reach witness needs one controlled square")
-  require(
-    segment.map(_.square).distinct.size == segment.size,
-    "a slider-reach witness cannot repeat a controlled square"
-  )
-  require(
-    segment.dropRight(1).forall(_.target == RelationControlTarget.Empty),
-    "a slider-reach witness cannot continue beyond its first occupant"
-  )
-  require(
-    firstOccupant match
-      case Some(occupant) =>
-        segment.last.square == occupant.square && (segment.last.target match
-          case RelationControlTarget.Friendly(role) => role == occupant.role
-          case RelationControlTarget.Enemy(role)    => role == occupant.role
-          case RelationControlTarget.Empty => false)
-      case None => segment.forall(_.target == RelationControlTarget.Empty),
-    "a slider-reach witness must close its exact first occupant"
-  )
-
-  private[chessjudgment] def stableKey: String =
-    s"${segment.map(_.stableKey).mkString("[", ",", "]")}:${firstOccupant.map(piece => s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}").getOrElse("edge")}" 
 
 enum RelationPawnConnectionKind:
   case GeometricSupport
@@ -333,20 +306,6 @@ private[chessjudgment] enum VerticalRelationPremiseRole:
       pawn: EvidenceSquare,
       semanticId: String
   )
-  case SliderReachControl(
-      occurrence: RelationSnapshotOccurrence,
-      side: _root_.chess.Color,
-      slider: RelationPieceWitness,
-      direction: RelationRayDirection,
-      control: RelationControlReachWitness
-  )
-  case SliderReachBarrier(
-      occurrence: RelationSnapshotOccurrence,
-      side: _root_.chess.Color,
-      slider: RelationPieceWitness,
-      direction: RelationRayDirection,
-      firstOccupant: Option[RelationColoredPieceWitness]
-  )
 
 private[chessjudgment] object VerticalRelationPremiseRole:
   def id(role: VerticalRelationPremiseRole): String =
@@ -389,10 +348,6 @@ private[chessjudgment] object VerticalRelationPremiseRole:
         s"pawn_topology_facet_source:${occurrence.toString.toLowerCase}:${side.toString.toLowerCase}:${pawn.key.toLowerCase}:${facet.stableKey}:${componentPawns.map(_.key.toLowerCase).mkString("[", ",", "]")}:$semanticId"
       case VerticalRelationPremiseRole.PawnPassageStateSource(occurrence, side, pawn, semanticId) =>
         s"pawn_passage_state_source:${occurrence.toString.toLowerCase}:${side.toString.toLowerCase}:${pawn.key.toLowerCase}:$semanticId"
-      case VerticalRelationPremiseRole.SliderReachControl(occurrence, side, slider, direction, control) =>
-        s"slider_reach_control:${occurrence.toString.toLowerCase}:${side.toString.toLowerCase}:${slider.role.name.toLowerCase}@${slider.square.key.toLowerCase}:${direction.stableKey}:${control.stableKey}"
-      case VerticalRelationPremiseRole.SliderReachBarrier(occurrence, side, slider, direction, occupant) =>
-        s"slider_reach_barrier:${occurrence.toString.toLowerCase}:${side.toString.toLowerCase}:${slider.role.name.toLowerCase}@${slider.square.key.toLowerCase}:${direction.stableKey}:${occupant.map(value => s"${value.side.toString.toLowerCase}:${value.role.name.toLowerCase}@${value.square.key.toLowerCase}").getOrElse("open")}"
 
   def accepts(
       role: VerticalRelationPremiseRole,
@@ -663,33 +618,6 @@ private[chessjudgment] object VerticalRelationPremiseRole:
           case RelationWitnessDetail.PawnPassage(owner, exactPawn, _) =>
             owner == side && exactPawn == pawn
           case _ => false)
-      case SliderReachControl(occurrence, side, slider, exactDirection, control) =>
-        val exactOccurrence = occurrence match
-          case RelationSnapshotOccurrence.Before =>
-            positionAt(RelationPremiseOccurrence.Before, RelationPremiseOccurrence.Removed)
-          case RelationSnapshotOccurrence.After =>
-            positionAt(RelationPremiseOccurrence.After, RelationPremiseOccurrence.Established)
-        exactOccurrence && (relation.detail match
-          case RelationWitnessDetail.GeometricControl(
-                exactSide,
-                attacker,
-                attackerRole,
-                target
-              ) =>
-            exactSide == side && attacker == slider.square && attackerRole == slider.role &&
-              target == control.square
-          case _ => false)
-      case SliderReachBarrier(occurrence, side, slider, exactDirection, firstOccupant) =>
-        val exactOccurrence = occurrence match
-          case RelationSnapshotOccurrence.Before =>
-            positionAt(RelationPremiseOccurrence.Before, RelationPremiseOccurrence.Removed)
-          case RelationSnapshotOccurrence.After =>
-            positionAt(RelationPremiseOccurrence.After, RelationPremiseOccurrence.Established)
-        exactOccurrence && (relation.detail match
-          case RelationWitnessDetail.RayBarrier(exactSide, attacker, attackerRole, occupants, geometry) =>
-            exactSide == side && attacker == slider.square && attackerRole == slider.role &&
-              occupants.headOption == firstOccupant && geometry.direction == exactDirection
-          case _ => false)
 
 private[chessjudgment] enum RelationSnapshotOccurrence:
   case Before
@@ -820,8 +748,7 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
     if states.nonEmpty &&
         !detail.isInstanceOf[RelationWitnessDetail.CaptureRecaptureInventory] &&
         !detail.isInstanceOf[RelationWitnessDetail.CreatedCheckResponseInventory] &&
-        !detail.isInstanceOf[RelationWitnessDetail.PawnTopologyTransition] &&
-        !detail.isInstanceOf[RelationWitnessDetail.SliderReachDelta]
+        !detail.isInstanceOf[RelationWitnessDetail.PawnTopologyTransition]
     then false
     else
       detail match
@@ -983,59 +910,6 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
               ) ++
               checkerRay
           ) && exactAbsences(Nil)
-
-        case RelationWitnessDetail.SliderReachDelta(
-              _,
-              side,
-              sliderBefore,
-              sliderAfter,
-              direction,
-              before,
-              after,
-              _
-            ) =>
-          val beforeStatePiece = sliderBefore.orElse(sliderAfter)
-          val afterStatePiece = sliderAfter.orElse(sliderBefore)
-          val expectedStates = (beforeStatePiece, afterStatePiece) match
-            case (Some(beforePiece), Some(afterPiece)) =>
-              List(
-                ClosedPositionStatePremise(
-                  RelationSnapshotOccurrence.Before,
-                  PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-                    side,
-                    beforePiece,
-                    direction,
-                    before
-                  )
-                ),
-                ClosedPositionStatePremise(
-                  RelationSnapshotOccurrence.After,
-                  PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-                    side,
-                    afterPiece,
-                    direction,
-                    after
-                  )
-                )
-              )
-            case _ => Nil
-          before != after && expectedStates.size == 2 &&
-            exactRoles(
-              VerticalRelationPremiseRole.RootMove ::
-                (VerticalSliderReachProofProjection.roles(
-                  RelationSnapshotOccurrence.Before,
-                  side,
-                  sliderBefore,
-                  direction,
-                  before
-                ) ++ VerticalSliderReachProofProjection.roles(
-                  RelationSnapshotOccurrence.After,
-                  side,
-                  sliderAfter,
-                  direction,
-                  after
-                ))
-            ) && exactAbsences(Nil) && exactStates(expectedStates)
 
         case RelationWitnessDetail.PawnTopologyTransition(_, before, after, changed, _) =>
           provesPawnTopologyFacets(before, after, changed)
@@ -1356,36 +1230,6 @@ private[chessjudgment] object VerticalRelationWitnessProjection:
       clause.absolutePinCauses.map(_.witness)
     )
 
-private[chessjudgment] object VerticalSliderReachProofProjection:
-  def roles(
-      occurrence: RelationSnapshotOccurrence,
-      side: _root_.chess.Color,
-      slider: Option[RelationPieceWitness],
-      direction: RelationRayDirection,
-      reach: Option[RelationSliderReachWitness]
-  ): List[VerticalRelationPremiseRole] =
-    require(reach.isEmpty || slider.nonEmpty, "a slider reach cannot lose its controller identity")
-    (slider, reach) match
-      case (Some(exactSlider), Some(exactReach)) =>
-        exactReach.segment.map(control =>
-          VerticalRelationPremiseRole.SliderReachControl(
-            occurrence,
-            side,
-            exactSlider,
-            direction,
-            control
-          )
-        ) ++ List(
-          VerticalRelationPremiseRole.SliderReachBarrier(
-            occurrence,
-            side,
-            exactSlider,
-            direction,
-            exactReach.firstOccupant
-          )
-        )
-      case _ => Nil
-
 private[chessjudgment] final class VerticalRelationInput private (
     delta: RelationSemanticDelta,
     controlSetDeltas: ControlSetDeltaResults
@@ -1452,13 +1296,6 @@ private[chessjudgment] final class VerticalRelationInput private (
     * whether that same producer should run.
     */
   private lazy val activeKindSet: Set[RelationFactKind] =
-    val sliderReachSourceChanged =
-      delta.ofKind(RelationFactKind.RayBarrier).nonEmpty ||
-        delta.ofKind(RelationFactKind.GeometricControl).exists(_.detail match
-          case RelationWitnessDetail.GeometricControl(_, _, role, _) =>
-            List(Bishop.name, Rook.name, Queen.name).exists(_.equalsIgnoreCase(role.name))
-          case _ => false
-        )
     val createdCheckChanged =
       delta.establishedOf(RelationFactKind.GeometricControl).exists(_.detail match
         case RelationWitnessDetail.GeometricControl(side, _, _, target) =>
@@ -1487,7 +1324,6 @@ private[chessjudgment] final class VerticalRelationInput private (
       Option.when(delta.beforeInventory.stateView.inCheck(rootMove.side))(
         RelationFactKind.RootCheckResponse
       ),
-      Option.when(sliderReachSourceChanged)(RelationFactKind.SliderReachDelta),
       Option.when(pawnTopologyChanged)(RelationFactKind.PawnTopologyTransition),
       Option.when(
         delta.afterInventory.kingTerminalState ==
@@ -1606,53 +1442,6 @@ private[chessjudgment] final class VerticalRelationInput private (
   private[judgment] def newlyEstablishedChecks: List[VerticalCheckTransitionSubject] =
     newlyEstablishedCheckInput
 
-  private lazy val sliderReachDeltaInput: List[VerticalSliderReachDeltaInput] =
-    delta.sliderReachTransition.changes.map { change =>
-      val beforeStatePiece = change.sliderBefore.orElse(change.sliderAfter).getOrElse(
-        throw IllegalArgumentException("a slider-reach transition lost its before-state identity")
-      )
-      val afterStatePiece = change.sliderAfter.orElse(change.sliderBefore).getOrElse(
-        throw IllegalArgumentException("a slider-reach transition lost its after-state identity")
-      )
-      VerticalSliderReachDeltaInput(
-        change.side,
-        change.sliderBefore,
-        change.sliderAfter,
-        change.direction,
-        change.before,
-        change.after,
-        List(
-          ClosedPositionStatePremise(
-            RelationSnapshotOccurrence.Before,
-            PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-              change.side,
-              beforeStatePiece,
-              change.direction,
-              change.before.map(_.witness)
-            )
-          ),
-          ClosedPositionStatePremise(
-            RelationSnapshotOccurrence.After,
-            PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-              change.side,
-              afterStatePiece,
-              change.direction,
-              change.after.map(_.witness)
-            )
-          )
-        ).sortBy(_.stableKey)
-      )
-    }.sortBy(_.stableKey)
-
-  private[judgment] def sliderReachDeltas: List[VerticalSliderReachDeltaInput] =
-    sliderReachDeltaInput
-
-  private lazy val sliderReachDeltaRelations: List[RelationFactEvidence] =
-    VerticalRelationContracts.computeSliderReachDeltas(this)
-
-  private[judgment] def sliderReachDeltaResults: List[RelationFactEvidence] =
-    sliderReachDeltaRelations
-
   /** Exact closed positive projections for a position occurrence. Consumers
     * query this owner for controls, legal moves, king responses, ray
     * corridors, or pawn topology and retain each projection's existing
@@ -1735,8 +1524,6 @@ private[chessjudgment] final class VerticalRelationInput private (
           inventory.inCheck && inventory.kingSquare.contains(kingSquare) &&
           checkers == inventory.checkers.map(_.controller).sortBy(value => value.square.key -> value.role.name) &&
           selected.size == 1 && response == checkResponse(selected.head)
-      case detail @ RelationWitnessDetail.SliderReachDelta(mover, _, _, _, _, _, _, _) =>
-        rootOwned(mover) && sliderReachDeltaResults.exists(_.detail == detail)
       case RelationWitnessDetail.PawnTopologyTransition(mover, before, after, changedFacets, _) =>
         val beforeTopology = positionInventory(RelationSnapshotOccurrence.Before).pawnTopologyView
         val afterTopology = positionInventory(RelationSnapshotOccurrence.After).pawnTopologyView
@@ -1853,24 +1640,6 @@ private[chessjudgment] final case class VerticalLegalRestrictionClause(
   def stableKey: String =
     s"${restriction.stableKey}:${absolutePinCauses.map(_.witness.stableKey).mkString("[", ",", "]")}"
 
-private[chessjudgment] final case class VerticalSliderReachDeltaInput(
-    side: _root_.chess.Color,
-    sliderBefore: Option[RelationPieceWitness],
-    sliderAfter: Option[RelationPieceWitness],
-    direction: RelationRayDirection,
-    before: Option[PositionRelationExtractor.ClosedSliderReach],
-    after: Option[PositionRelationExtractor.ClosedSliderReach],
-    states: List[ClosedPositionStatePremise]
-):
-  require(sliderBefore.nonEmpty || sliderAfter.nonEmpty, "a slider-reach delta needs one slider identity")
-  require(before.map(_.witness) != after.map(_.witness), "a slider-reach delta must change")
-  require(before.forall(reach => sliderBefore.contains(reach.slider) && reach.side == side))
-  require(after.forall(reach => sliderAfter.contains(reach.slider) && reach.side == side))
-  require(states.size == 2 && states.distinct.size == states.size && states == states.sortBy(_.stableKey))
-
-  def stableKey: String =
-    s"${side.toString.toLowerCase}:${sliderBefore.map(piece => s"${piece.role.name}@${piece.square.key}").getOrElse("-")}:${sliderAfter.map(piece => s"${piece.role.name}@${piece.square.key}").getOrElse("-")}:${direction.stableKey}"
-
 private[chessjudgment] final case class VerticalCheckTransitionSubject(
     relation: RelationFactEvidence,
     mover: RelationMoveTransitionWitness,
@@ -1970,8 +1739,6 @@ private[chessjudgment] object VerticalRelationContracts:
         () => deriveCreatedCheckResponseInventory(input)
       case RelationFactKind.RootCheckResponse =>
         () => deriveRootCheckResponse(input)
-      case RelationFactKind.SliderReachDelta =>
-        () => input.sliderReachDeltaResults
       case RelationFactKind.PawnTopologyTransition =>
         () => derivePawnTopologyTransitions(input)
       case RelationFactKind.StalemateTransition =>
@@ -1987,7 +1754,6 @@ private[chessjudgment] object VerticalRelationContracts:
       case RelationWitnessDetail.CaptureRecaptureInventory(_, _, _, _, _, proof) => Some(proof)
       case RelationWitnessDetail.CreatedCheckResponseInventory(_, _, _, _, _, _, _, proof) => Some(proof)
       case RelationWitnessDetail.RootCheckResponse(_, _, _, _, _, proof) => Some(proof)
-      case RelationWitnessDetail.SliderReachDelta(_, _, _, _, _, _, _, proof) => Some(proof)
       case RelationWitnessDetail.PawnTopologyTransition(_, _, _, _, proof) => Some(proof)
       case RelationWitnessDetail.StalemateTransition(_, _, _, proof) => Some(proof)
       case _                                                                            => None
@@ -2293,83 +2059,6 @@ private[chessjudgment] object VerticalRelationContracts:
       ),
       List(input.rootMove.moveUci)
     ))
-
-  private def sliderReachSources(
-      input: VerticalRelationInput,
-      occurrence: RelationSnapshotOccurrence,
-      side: _root_.chess.Color,
-      direction: RelationRayDirection,
-      reach: Option[PositionRelationExtractor.ClosedSliderReach]
-  ): List[(VerticalRelationPremiseRole, VerticalRelationPremiseSource, RelationFactEvidence)] =
-    reach.toList.flatMap { exact =>
-      require(
-        exact.side == side && exact.direction == direction,
-        "a slider-reach source changed owner or direction"
-      )
-      exact.controls.map { control =>
-        (
-          VerticalRelationPremiseRole.SliderReachControl(
-            occurrence,
-            side,
-            exact.slider,
-            direction,
-            RelationControlReachWitness(control.targetSquare, control.target)
-          ),
-          input.exactPositionSource(occurrence, control.source),
-          control.source
-        )
-      } ++ List {
-        val ray = exact.raySource
-        (
-          VerticalRelationPremiseRole.SliderReachBarrier(
-            occurrence,
-            side,
-            exact.slider,
-            direction,
-            exact.firstOccupant
-          ),
-          input.exactPositionSource(occurrence, ray),
-          ray
-        )
-      }
-    }
-
-  private[judgment] def computeSliderReachDeltas(
-      input: VerticalRelationInput
-  ): List[RelationFactEvidence] =
-    input.sliderReachDeltas.map { delta =>
-      val proof = VerticalRelationDerivationProof.fromRootAndSources(
-        VerticalRelationPremiseRole.RootMove,
-        input.rootMove,
-        sliderReachSources(
-          input,
-          RelationSnapshotOccurrence.Before,
-          delta.side,
-          delta.direction,
-          delta.before
-        ) ++ sliderReachSources(
-          input,
-          RelationSnapshotOccurrence.After,
-          delta.side,
-          delta.direction,
-          delta.after
-        ),
-        states = delta.states
-      )
-      RelationFactEvidence.from(
-        RelationWitnessDetail.SliderReachDelta(
-          input.rootMove.witness,
-          delta.side,
-          delta.sliderBefore,
-          delta.sliderAfter,
-          delta.direction,
-          delta.before.map(_.witness),
-          delta.after.map(_.witness),
-          proof
-        ),
-        List(input.rootMove.moveUci)
-      )
-    }.sortBy(_.semanticId)
 
   private final case class PawnTopologyOccurrence(
       witness: RelationPawnTopologyStateWitness,

@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.judgment
 
-import chess.{ Bishop, Color, King, Queen, Rook, Square }
+import chess.{ Color, King, Rook, Square }
 
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.analysis.position.PositionRelationExtractor.PositionRelationInventoryCertificate
@@ -99,9 +99,6 @@ private[chessjudgment] final class RelationSemanticDelta(
   lazy val geometricControlTransition: GeometricControlRelationTransition =
     relationTransition.geometricControlTransition(transitionFootprint)
 
-  lazy val sliderReachTransition: ClosedSliderReachTransitionInventory =
-    relationTransition.sliderReachTransition(transitionFootprint)
-
   private lazy val byDirectionAndKind: Map[(RelationChangeDirection, RelationFactKind), List[RelationSemanticChange]] =
     changes.groupMap(change => change.direction -> change.kind)(identity)
 
@@ -172,40 +169,6 @@ private[chessjudgment] final case class GeometricControlTargetSetChange(
       after.map(_.fact.semanticId).sorted.mkString(",")
     ).mkString(":")
 
-/** One exact directional reach change for a slider identity. The generic
-  * L1 reach fact consumes this inventory without reconstructing slider pairing
-  * or ray state independently.
-  */
-private[chessjudgment] final case class ClosedSliderReachChange(
-    side: Color,
-    sliderBefore: Option[RelationPieceWitness],
-    sliderAfter: Option[RelationPieceWitness],
-    direction: RelationRayDirection,
-    before: Option[PositionRelationExtractor.ClosedSliderReach],
-    after: Option[PositionRelationExtractor.ClosedSliderReach]
-):
-  require(sliderBefore.nonEmpty || sliderAfter.nonEmpty, "a slider-reach change needs one slider occurrence")
-  require(
-    before.map(_.witness) != after.map(_.witness),
-    "a slider-reach change must alter its exact directional reach"
-  )
-  require(
-    before.forall(reach => reach.side == side && sliderBefore.contains(reach.slider)) &&
-      after.forall(reach => reach.side == side && sliderAfter.contains(reach.slider)),
-    "a slider-reach change must retain its exact before and after slider occurrences"
-  )
-  def stableKey: String =
-    def piece(value: Option[RelationPieceWitness]): String =
-      value.map(item => s"${item.role.name.toLowerCase}@${item.square.key.toLowerCase}").getOrElse("-")
-    s"${side.toString.toLowerCase}:${piece(sliderBefore)}:${piece(sliderAfter)}:${direction.stableKey}"
-
-private[chessjudgment] final case class ClosedSliderReachTransitionInventory(
-    changes: List[ClosedSliderReachChange]
-):
-  require(
-    changes.map(_.stableKey).distinct.size == changes.size,
-    "one slider-reach transition cannot repeat a directional change"
-  )
 /** Exact relation facts changed by the canonical position producer for one
   * admitted legal transition. Unchanged position facts are deliberately not
   * copied here: transition proof consumes this sparse inventory instead of
@@ -240,79 +203,6 @@ private[chessjudgment] final case class RelationInventoryTransition(
   ): GeometricControlRelationTransition =
     val targetSetChanges = geometricControlTargetSetChanges(boardFootprint)
     GeometricControlRelationTransition(targetSetChanges)
-
-  def sliderReachTransition(
-      boardFootprint: BoardTransitionFootprint
-  ): ClosedSliderReachTransitionInventory =
-    def isSlider(role: EvidencePieceRole): Boolean =
-      List(Bishop.name, Rook.name, Queen.name).exists(_.equalsIgnoreCase(role.name))
-
-    def sliderAt(
-        inventory: PositionRelationInventoryCertificate,
-        square: EvidenceSquare
-    ): Option[(Color, RelationPieceWitness)] =
-      inventory.stateView.occupantAt(square).filter(piece => isSlider(piece.role)).map(piece =>
-        piece.side -> RelationPieceWitness(piece.square, piece.role)
-      )
-
-    def reachesByDirection(
-        reaches: List[PositionRelationExtractor.ClosedSliderReach]
-    ): Map[RelationRayDirection, PositionRelationExtractor.ClosedSliderReach] =
-      reaches.map(reach => reach.direction -> reach).toMap
-
-    val affectedSquares = (
-      boardFootprint.geometricControlOriginsToRefresh ++ boardFootprint.affectedOccupiedRayOrigins
-    ).toList.sortBy(_.key).map(square => EvidenceSquare(square.key))
-    val beforeSliders = affectedSquares.flatMap(square => sliderAt(beforeInventory, square))
-    val afterSliders = affectedSquares.flatMap(square => sliderAt(afterInventory, square))
-    val pairedFromBefore = beforeSliders.map { case before @ (side, slider) =>
-      val movement = boardFootprint.pieceTransitions.find(candidate =>
-        candidate.side == side && candidate.from.key.equalsIgnoreCase(slider.square.key) &&
-          candidate.beforeRole.name.equalsIgnoreCase(slider.role.name)
-      )
-      val movedAfter = movement.filter(candidate =>
-        isSlider(EvidencePieceRole(candidate.afterRole.name))
-      ).flatMap(candidate =>
-        sliderAt(afterInventory, EvidenceSquare(candidate.to.key)).filter { case (afterSide, afterSlider) =>
-          afterSide == side && afterSlider.role.name.equalsIgnoreCase(candidate.afterRole.name)
-        }
-      )
-      val stationaryAfter = Option.when(movement.isEmpty)(()).flatMap(_ =>
-        sliderAt(afterInventory, slider.square).filter(_ == before)
-      )
-      Some(before) -> movedAfter.orElse(stationaryAfter)
-    }
-    val usedAfter = pairedFromBefore.flatMap(_._2).toSet
-    val pairs = pairedFromBefore ++ afterSliders.filterNot(usedAfter).map(after => None -> Some(after))
-    val changes = pairs.flatMap { case (beforeSlider, afterSlider) =>
-      val side = beforeSlider.orElse(afterSlider).map(_._1).getOrElse(
-        throw IllegalArgumentException("a slider-reach transition lost both slider occurrences")
-      )
-      val beforePiece = beforeSlider.map(_._2)
-      val afterPiece = afterSlider.map(_._2)
-      val beforeByDirection = reachesByDirection(
-        beforePiece.toList.flatMap(piece => beforeInventory.sliderReachesFrom(piece.square))
-      )
-      val afterByDirection = reachesByDirection(
-        afterPiece.toList.flatMap(piece => afterInventory.sliderReachesFrom(piece.square))
-      )
-      (beforeByDirection.keySet ++ afterByDirection.keySet).toList.sortBy(_.stableKey).flatMap { direction =>
-        val beforeReach = beforeByDirection.get(direction)
-        val afterReach = afterByDirection.get(direction)
-        Option.when(beforeReach.map(_.witness) != afterReach.map(_.witness))(
-          ClosedSliderReachChange(
-            side = side,
-            sliderBefore = beforePiece,
-            sliderAfter = afterPiece,
-            direction = direction,
-            before = beforeReach,
-            after = afterReach
-          )
-        ).toList
-      }
-    }.sortBy(_.stableKey)
-
-    ClosedSliderReachTransitionInventory(changes)
 
   private def geometricControlTargetSetChanges(
       footprint: BoardTransitionFootprint

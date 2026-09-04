@@ -106,7 +106,6 @@ object PositionRelationExtractor:
           RelationFactKind.CaptureRecaptureInventory |
           RelationFactKind.CreatedCheckResponseInventory |
           RelationFactKind.RootCheckResponse |
-          RelationFactKind.SliderReachDelta |
           RelationFactKind.PawnTopologyTransition |
           RelationFactKind.StalemateTransition =>
         None
@@ -390,38 +389,6 @@ object PositionRelationExtractor:
       target: RelationControlTarget,
       mode: RelationMovementResourceMode
   )
-
-  /** One complete currently reachable slider segment in one direction. It is
-    * projected only from canonical control edges and the optional RayBarrier
-    * fact for the first occupant; no board ray is scanned again.
-    */
-  private[chessjudgment] final case class ClosedSliderReach private[position] (
-      side: Color,
-      slider: RelationPieceWitness,
-      direction: RelationRayDirection,
-      controls: List[ClosedGeometricControl],
-      firstOccupant: Option[RelationColoredPieceWitness],
-      raySource: RelationFactEvidence
-  ):
-    require(controls.nonEmpty, "a closed slider reach needs one controlled square")
-    require(
-      controls.forall(control => control.side == side && control.controller == slider),
-      "a closed slider reach must retain one exact controller occurrence"
-    )
-    require(
-      raySource.detail match
-        case RelationWitnessDetail.RayBarrier(owner, attacker, attackerRole, occupants, geometry) =>
-          owner == side && attacker == slider.square && attackerRole == slider.role &&
-            geometry.direction == direction && occupants.headOption == firstOccupant
-        case _ => false,
-      "a closed slider reach must bind its exact canonical ray topology"
-    )
-
-    def segment: List[RelationControlReachWitness] =
-      controls.map(control => RelationControlReachWitness(control.targetSquare, control.target))
-
-    def witness: RelationSliderReachWitness =
-      RelationSliderReachWitness(segment, firstOccupant)
 
   private[chessjudgment] enum ClosedLegalMovementMode:
     case ControlledDestination
@@ -863,12 +830,6 @@ object PositionRelationExtractor:
         postMoveControllers: List[RelationPieceWitness]
     )
     case PawnTopology(state: RelationPawnTopologyStateWitness)
-    case SliderReach(
-        side: Color,
-        slider: RelationPieceWitness,
-        direction: RelationRayDirection,
-        reach: Option[RelationSliderReachWitness]
-    )
 
     private[position] def admissible(state: ClosedPositionStateFacet): Boolean =
       this match
@@ -879,9 +840,6 @@ object PositionRelationExtractor:
             controllers == controllers.sortBy(controller => controller.square.key -> controller.role.name)
         case PawnTopology(exact) =>
           Square.fromKey(exact.square.key).nonEmpty
-        case SliderReach(_, slider, _, reach) =>
-          Square.fromKey(slider.square.key).nonEmpty &&
-            reach.toList.flatMap(_.segment).forall(value => Square.fromKey(value.square.key).nonEmpty)
 
     def stableKey: String =
       this match
@@ -889,8 +847,6 @@ object PositionRelationExtractor:
           s"own-king-exposure:${side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}:${resource.stableKey}:${kingSquare.key.toLowerCase}:${controllers.map(controller => s"${controller.role.name.toLowerCase}@${controller.square.key.toLowerCase}").mkString(",")}"
         case PawnTopology(state) =>
           s"pawn-topology:${state.stableKey}"
-        case SliderReach(side, slider, direction, reach) =>
-          s"slider-reach:${side.toString.toLowerCase}:${slider.role.name.toLowerCase}@${slider.square.key.toLowerCase}:${direction.stableKey}:${reach.map(_.stableKey).getOrElse("none")}"
 
   private[chessjudgment] final class ClosedPositionStateCertificate private[position] (
       val query: ClosedPositionStateQuery,
@@ -1196,89 +1152,6 @@ object PositionRelationExtractor:
         interpositionRay,
         closedKingTerminalState
       )
-
-    private val rayBarriersFromCache =
-      scala.collection.mutable.HashMap.empty[EvidenceSquare, List[RelationFactEvidence]]
-
-    private def rayBarriersFrom(origin: EvidenceSquare): List[RelationFactEvidence] =
-      rayBarriersFromCache.synchronized {
-        rayBarriersFromCache.getOrElseUpdate(
-          origin,
-          relationsFor(RelationDependencyKey.SliderOrigin(boardSquare(origin)))
-            .filter(_.kind == RelationFactKind.RayBarrier)
-            .filter(_.detail match
-              case RelationWitnessDetail.RayBarrier(_, attacker, _, _, _) => attacker == origin
-              case _ => false
-            )
-            .sortBy(_.semanticId)
-        )
-      }
-
-    private val sliderReachCache =
-      scala.collection.mutable.Map.empty[EvidenceSquare, List[ClosedSliderReach]]
-
-    private def buildSliderReaches(square: EvidenceSquare): List[ClosedSliderReach] =
-      state.occupantAt(square).toList.filter(coloredSlider =>
-        List(Bishop.name, Rook.name, Queen.name).exists(_.equalsIgnoreCase(coloredSlider.role.name))
-      ).flatMap { coloredSlider =>
-        val slider = RelationPieceWitness(coloredSlider.square, coloredSlider.role)
-        val controlsByTarget = indexedControlsFrom(slider.square).map(control => control.targetSquare -> control).toMap
-        rayBarriersFrom(slider.square).sortBy(_.detail match
-          case RelationWitnessDetail.RayBarrier(_, _, _, _, geometry) => geometry.direction.stableKey
-          case _ => ""
-        ).map { raySource =>
-          val (direction, raySquares, firstOccupant) = raySource.detail match
-            case RelationWitnessDetail.RayBarrier(side, attacker, attackerRole, occupants, geometry) =>
-              require(
-                side == coloredSlider.side && attacker == slider.square && attackerRole == slider.role,
-                "a canonical ray source changed slider identity"
-              )
-              (geometry.direction, geometry.squares, occupants.headOption)
-            case _ => throw IllegalArgumentException("a slider reach source changed relation kind")
-          val controlledCount = firstOccupant
-            .map(occupant => raySquares.indexOf(occupant.square) + 1)
-            .getOrElse(raySquares.size)
-          require(controlledCount > 0, "a ray occupant must belong to its canonical geometry")
-          val expectedSquares = raySquares.take(controlledCount)
-          val ordered = expectedSquares.map(square =>
-            controlsByTarget.getOrElse(
-              square,
-              throw IllegalArgumentException("a canonical slider ray lost one geometric-control edge")
-            )
-          )
-          require(
-            controlsByTarget.keySet.intersect(raySquares.toSet) == expectedSquares.toSet,
-            "a slider control inventory cannot continue beyond its first occupant"
-          )
-          require(
-            ordered.dropRight(1).forall(_.target == RelationControlTarget.Empty),
-            "a slider reach cannot continue beyond its first occupied square"
-          )
-          firstOccupant match
-            case Some(occupant) =>
-              val expectedTarget =
-                if occupant.side == coloredSlider.side then RelationControlTarget.Friendly(occupant.role)
-                else RelationControlTarget.Enemy(occupant.role)
-              require(
-                state.occupantAt(occupant.square).contains(occupant) &&
-                  ordered.last.target == expectedTarget,
-                "a slider ray occupant must match its exact closed target state"
-              )
-            case None =>
-              require(
-                ordered.forall(_.target == RelationControlTarget.Empty),
-                "an open slider ray cannot contain an occupied control target"
-              )
-          ClosedSliderReach(
-            coloredSlider.side,
-            slider,
-            direction,
-            ordered,
-            firstOccupant,
-            raySource
-          )
-        }
-      }
 
     private lazy val pawnFileGroupSources: Map[(Color, String), (List[EvidenceSquare], RelationFactEvidence)] =
       val entries = relationsOf(RelationFactKind.PawnFileGroup).map { relation =>
@@ -1761,12 +1634,6 @@ object PositionRelationExtractor:
         )
         .sortBy(_.semanticId)
 
-    private[chessjudgment] def sliderReachesFrom(
-        square: EvidenceSquare
-    ): List[ClosedSliderReach] = sliderReachCache.synchronized {
-      sliderReachCache.getOrElseUpdate(square, buildSliderReaches(square))
-    }
-
     private[chessjudgment] def pawnTopologyView: ClosedPawnTopology = closedPawnTopologyInventory
 
     /** File-only projection with an empty-footprint fast path. Consumers that
@@ -1871,10 +1738,6 @@ object PositionRelationExtractor:
                 )
             case ClosedPositionStateQuery.PawnTopology(exact) =>
               closedPawnTopologyInventory.stateWitness(exact.side, exact.square).contains(exact)
-            case ClosedPositionStateQuery.SliderReach(side, slider, direction, exact) =>
-              sliderReachesFrom(slider.square)
-                .find(reach => reach.side == side && reach.slider == slider && reach.direction == direction)
-                .map(_.witness) == exact
           )
         )(new ClosedPositionStateCertificate(query, this))
       )

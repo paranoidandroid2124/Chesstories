@@ -162,20 +162,6 @@ enum RelationControlTarget:
       case Friendly(role) => Some(role)
       case Enemy(role)    => Some(role)
 
-/** One square in the distance-ordered controlled segment established after a
-  * barrier disappears. The enclosing relation owns the controller and side.
-  */
-final case class RelationControlReachWitness(
-    square: EvidenceSquare,
-    target: RelationControlTarget
-):
-  private[chessjudgment] def stableKey: String =
-    val targetKey = target match
-      case RelationControlTarget.Empty          => "empty"
-      case RelationControlTarget.Friendly(role) => s"friendly:${role.name.toLowerCase}"
-      case RelationControlTarget.Enemy(role)    => s"enemy:${role.name.toLowerCase}"
-    s"${square.key.toLowerCase}:$targetKey"
-
 final case class RelationLegalCaptureWitness(
     capturedSquare: EvidenceSquare,
     capturedRole: EvidencePieceRole,
@@ -295,16 +281,6 @@ enum RelationWitnessDetail:
       response: RelationCheckResponseWitness,
       proof: VerticalRelationDerivationProof
   )
-  case SliderReachDelta(
-      mover: RelationMoveTransitionWitness,
-      side: Color,
-      sliderBefore: Option[RelationPieceWitness],
-      sliderAfter: Option[RelationPieceWitness],
-      direction: RelationRayDirection,
-      before: Option[RelationSliderReachWitness],
-      after: Option[RelationSliderReachWitness],
-      proof: VerticalRelationDerivationProof
-  )
   case PawnTopologyTransition(
       mover: RelationMoveTransitionWitness,
       before: Option[RelationPawnTopologyStateWitness],
@@ -396,8 +372,6 @@ object RelationWitnessDetail:
       case RelationControlTarget.Empty => tuple("empty", Nil)
       case RelationControlTarget.Friendly(roleValue) => tuple("friendly", List(role(roleValue)))
       case RelationControlTarget.Enemy(roleValue) => tuple("enemy", List(role(roleValue)))
-  private def controlReach(value: RelationControlReachWitness): String =
-    tuple("control-reach", List(square(value.square), controlTarget(value.target)))
   private def legalCapture(value: RelationLegalCaptureWitness): String =
     tuple(
       "legal-capture",
@@ -411,14 +385,6 @@ object RelationWitnessDetail:
     tuple(
       "movement-resource",
       List(square(value.destination), controlTarget(value.target), value.mode.stableKey)
-    )
-  private def sliderReach(value: RelationSliderReachWitness): String =
-    tuple(
-      "slider-reach",
-      List(
-        sequence(value.segment.map(controlReach)),
-        optional(value.firstOccupant)(coloredPiece)
-      )
     )
   private def pawnConnection(value: RelationPawnConnectionWitness): String =
     tuple(
@@ -591,26 +557,6 @@ object RelationWitnessDetail:
         ) ++ Option.when(includeDerivation)(
           proof.stableKey(RelationFactKind.RootCheckResponse)
         ).toList
-      case SliderReachDelta(mover, owner, sliderBefore, sliderAfter, direction, before, after, proof) =>
-        require(sliderBefore.nonEmpty || sliderAfter.nonEmpty, "a slider-reach delta needs one slider occurrence")
-        require(before != after, "a slider-reach delta must change its exact reachable segment")
-        require(
-          (sliderBefore.toList ++ sliderAfter.toList).forall(piece =>
-            List(Bishop.name, Rook.name, Queen.name).exists(_.equalsIgnoreCase(piece.role.name))
-          ),
-          "a slider-reach delta accepts only bishop, rook, or queen occurrences"
-        )
-        List(
-          moveTransition(mover),
-          side(owner),
-          optional(sliderBefore)(piece),
-          optional(sliderAfter)(piece),
-          direction.stableKey,
-          optional(before)(sliderReach),
-          optional(after)(sliderReach)
-        ) ++ Option.when(includeDerivation)(
-          proof.stableKey(RelationFactKind.SliderReachDelta)
-        ).toList
       case PawnTopologyTransition(mover, before, after, changedFacets, proof) =>
         require(before.nonEmpty, "a pawn topology transition needs its before occurrence")
         require(
@@ -688,7 +634,6 @@ object RelationWitnessDetail:
       case _: CaptureRecaptureInventory => RelationFactKind.CaptureRecaptureInventory
       case _: CreatedCheckResponseInventory => RelationFactKind.CreatedCheckResponseInventory
       case _: RootCheckResponse => RelationFactKind.RootCheckResponse
-      case _: SliderReachDelta => RelationFactKind.SliderReachDelta
       case _: PawnTopologyTransition => RelationFactKind.PawnTopologyTransition
       case _: StalemateTransition => RelationFactKind.StalemateTransition
       case _: PawnFileGroup        => RelationFactKind.PawnFileGroup
@@ -773,10 +718,6 @@ object RelationWitnessDetail:
         case RootCheckResponse(mover, _, kingSquare, checkers, response, _) =>
           List(mover.from, mover.to, kingSquare) ++ checkers.map(_.square) ++
             List(response.resource.movement.from, response.resource.movement.to)
-        case SliderReachDelta(mover, _, sliderBefore, sliderAfter, _, before, after, _) =>
-          List(mover.from, mover.to) ++ sliderBefore.map(_.square) ++ sliderAfter.map(_.square) ++
-            before.toList.flatMap(reach => reach.segment.map(_.square) ++ reach.firstOccupant.map(_.square)) ++
-            after.toList.flatMap(reach => reach.segment.map(_.square) ++ reach.firstOccupant.map(_.square))
         case PawnTopologyTransition(mover, before, after, _, _) =>
           List(mover.from, mover.to) ++ before.toList.flatMap(pawnTopologySquares) ++
             after.toList.flatMap(pawnTopologySquares)
@@ -808,8 +749,6 @@ object RelationWitnessDetail:
         List(kingSquare)
       case RootCheckResponse(_, _, kingSquare, _, _, _) =>
         List(kingSquare)
-      case SliderReachDelta(_, _, _, _, _, _, after, _) =>
-        after.toList.flatMap(_.segment.map(_.square))
       case PawnTopologyTransition(_, before, after, _, _) =>
         after.orElse(before).toList.map(_.square)
       case StalemateTransition(_, _, kingSquare, _) =>
@@ -932,19 +871,6 @@ object RelationWitnessDetail:
           ) ++ checkers.map(value =>
             part(value.square, RelationParticipantRole.Attacker, Some(value.role))
           )
-        case SliderReachDelta(mover, _, sliderBefore, sliderAfter, _, before, after, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole))
-          ) ++ sliderBefore.map(value =>
-            part(value.square, RelationParticipantRole.Controller, Some(value.role))
-          ) ++ sliderAfter.map(value =>
-            part(value.square, RelationParticipantRole.Controller, Some(value.role))
-          ) ++ (before.toList ++ after.toList).flatMap(reach =>
-            reach.segment.map(control =>
-              part(control.square, RelationParticipantRole.Target, control.target.pieceRole)
-            )
-          )
         case PawnTopologyTransition(mover, before, after, _, _) =>
           val states = before.toList ++ after.toList
           List(
@@ -1026,7 +952,6 @@ enum RelationFactKind:
   case CaptureRecaptureInventory
   case CreatedCheckResponseInventory
   case RootCheckResponse
-  case SliderReachDelta
   case PawnTopologyTransition
   case StalemateTransition
   case PawnFileGroup
@@ -1049,7 +974,6 @@ object RelationFactKind:
       case CaptureRecaptureInventory => "capture_recapture_inventory"
       case CreatedCheckResponseInventory => "created_check_response_inventory"
       case RootCheckResponse => "root_check_response"
-      case SliderReachDelta => "slider_reach_delta"
       case PawnTopologyTransition => "pawn_topology_transition"
       case StalemateTransition => "stalemate_transition"
       case PawnFileGroup         => "pawn_file_group"
@@ -1953,8 +1877,6 @@ final class RelationFactEvidence private (
       case RelationWitnessDetail.CreatedCheckResponseInventory(mover, _, _, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.RootCheckResponse(mover, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.SliderReachDelta(mover, _, _, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.PawnTopologyTransition(mover, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))

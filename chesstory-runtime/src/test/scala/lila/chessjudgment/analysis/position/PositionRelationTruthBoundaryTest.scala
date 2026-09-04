@@ -398,8 +398,8 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     assert(establishedPin.proofKeys.nonEmpty)
 
   test("semantic geometry is shared across clock fields while legal move occurrences remain distinct"):
-    val firstFen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1"
-    val secondFen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 37 92"
+    val firstFen = "4k3/8/8/8/3q4/8/P2R4/4K3 w - - 0 1"
+    val secondFen = "4k3/8/8/8/3q4/8/P2R4/4K3 w - - 37 92"
     val first = PositionAnalyzer.analyze(position(firstFen), firstFen, plyCount = 1)
     val second = PositionAnalyzer.analyze(position(secondFen), secondFen, plyCount = 183)
 
@@ -422,26 +422,20 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     assert(first.boardRelations != second.boardRelations)
     assert(!(first.boardRelations.asInstanceOf[AnyRef] eq second.boardRelations.asInstanceOf[AnyRef]))
 
-    val sliderReach = first.relationInventory
-      .sliderReachesFrom(EvidenceSquare("d4"))
-      .headOption
-      .getOrElse(fail("expected the first occurrence's queen reach"))
-    val sliderReachCertificate = first.relationInventory
-      .certifyState(PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-        sliderReach.side,
-        sliderReach.slider,
-        sliderReach.direction,
-        Some(sliderReach.witness)
-      ))
-      .getOrElse(fail("expected the first occurrence's slider-reach certificate"))
+    val firstPawnState = first.relationInventory.pawnTopologyView
+      .stateWitness(Color.White, EvidenceSquare("a2"))
+      .getOrElse(fail("expected the first occurrence's pawn state"))
+    val firstPawnCertificate = first.relationInventory
+      .certifyState(PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(firstPawnState))
+      .getOrElse(fail("expected the first occurrence's pawn-state certificate"))
     assert(
       closedSnapshot(first, PositionNodeRef(firstFen, 1, Some(Color.White)))
-        .bindState(sliderReachCertificate)
+        .bindState(firstPawnCertificate)
         .nonEmpty
     )
     assertEquals(
       closedSnapshot(second, PositionNodeRef(secondFen, 183, Some(Color.White)))
-        .bindState(sliderReachCertificate),
+        .bindState(firstPawnCertificate),
       None
     )
 

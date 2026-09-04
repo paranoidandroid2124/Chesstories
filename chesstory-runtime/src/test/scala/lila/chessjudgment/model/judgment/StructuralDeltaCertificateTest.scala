@@ -33,22 +33,6 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
     )
     assert(!injected.canonicalOutputShapeCertified)
 
-  test("slider reach remains an exact L1 result without a duplicate structural consequence"):
-    val beforeFen = "4k3/8/8/8/8/P7/8/R3K3 w - - 0 1"
-    val legal = PrincipalVariationEvidence
-      .legalMoveReplay(beforeFen, List("a1a2"), startPly = 0)
-      .flatMap(_.headOption)
-      .getOrElse(fail("expected legal a1a2"))
-    val replay = CanonicalLineReplay
-      .fromLegalReplay(List(legal))
-      .getOrElse(fail("expected canonical replay"))
-    val transition = replay.onlyTransition.getOrElse(fail("expected one replay transition"))
-    val reaches = transition.verticalRelationsFor(RelationFactKind.SliderReachDelta)
-
-    assert(reaches.nonEmpty)
-    assert(reaches.forall(_.kind == RelationFactKind.SliderReachDelta))
-    assertEquals(StructuralDeltaContracts.consequences(transition.structuralDelta), Nil)
-
   test("a passed pawn that changes file can lose passed status at its destination"):
     val record = structuralRecord(
       "k7/5p2/4n3/3P4/8/8/8/7K w - - 0 1",
