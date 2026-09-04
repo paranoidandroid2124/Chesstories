@@ -354,8 +354,8 @@ object LineFactNormalizer:
             capture = observed.capture
           )
         )
-        afterBalance -> (events ++ event)
-    }._2
+        afterBalance -> event.fold(events)(_ :: events)
+    }._2.reverse
 
   private def lastingMaterialOutcomeFor(
       events: List[MaterialOutcomeEvent],
@@ -367,18 +367,12 @@ object LineFactNormalizer:
       Option.when(finalSign != 0 && observedNet == closedNet) {
         val beneficiary = if finalSign > 0 then summary.sideToMove else !summary.sideToMove
         def keepsFinalSign(balance: Int): Boolean = finalSign * balance > 0
-        events.zipWithIndex.collectFirst {
-          case (event, index)
-              if event.side == beneficiary &&
-                keepsFinalSign(event.balanceAfterForMover) &&
-                events.drop(index).forall(next => keepsFinalSign(next.balanceAfterForMover)) &&
-                !(event.plyOffset == 0 && event.recapture && !event.promotion) =>
-            events
-              .drop(index)
-              .map(next => finalSign * next.balanceAfterForMover)
-              .minOption
-              .filter(_ > 0)
-              .map(_ => event)
-        }.flatten
+        val lastingEvents = events.drop(
+          events.lastIndexWhere(event => !keepsFinalSign(event.balanceAfterForMover)) + 1
+        )
+        lastingEvents.find(event =>
+          event.side == beneficiary &&
+            !(event.plyOffset == 0 && event.recapture && !event.promotion)
+        )
       }.flatten
     }

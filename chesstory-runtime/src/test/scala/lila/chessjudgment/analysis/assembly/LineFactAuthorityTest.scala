@@ -104,6 +104,44 @@ class LineFactAuthorityTest extends munit.FunSuite:
       List(0)
     )
 
+  test("material recovery accepts zero after the last loss and skips a promotion-only event"):
+    val (zeroRecovery, _) = normalizedLine(
+      id = "zero-material-recovery",
+      initialFen = "7k/2p2Kp1/3P3P/8/1Q6/8/8/8 w - - 0 1",
+      historyMoves = Nil,
+      rootFen = "7k/2p2Kp1/3P3P/8/1Q6/8/8/8 w - - 0 1",
+      moves = List("b4c5", "c7d6", "c5d6", "g7h6", "d6h6")
+    )
+    assertEquals(
+      zeroRecovery.lineConsequences
+        .filter(_.kind == LineConsequenceKind.RecoveryWindow)
+        .flatMap(_.eventOccurrence)
+        .map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
+      List(4 -> "d6h6")
+    )
+
+    val (promotionRecovery, _) = normalizedLine(
+      id = "promotion-material-recovery",
+      initialFen = "7k/Pp3Kp1/7P/8/5Q2/8/8/8 w - - 0 1",
+      historyMoves = Nil,
+      rootFen = "7k/Pp3Kp1/7P/8/5Q2/8/8/8 w - - 0 1",
+      moves = List("f4g5", "g7h6", "a7a8n", "b7b6", "g5h6")
+    )
+    assertEquals(
+      promotionRecovery.lineConsequences
+        .find(_.kind == LineConsequenceKind.MaterialGain)
+        .flatMap(_.eventOccurrence)
+        .map(_.plyOffset),
+      Some(2)
+    )
+    assertEquals(
+      promotionRecovery.lineConsequences
+        .filter(_.kind == LineConsequenceKind.RecoveryWindow)
+        .flatMap(_.eventOccurrence)
+        .map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
+      List(4 -> "g5h6")
+    )
+
   test("a queen-for-pawn blunder remains an exact capture sequence without an upper idea label"):
     val initialFen = "3r4/3p3k/8/8/8/8/8/3Q3K b - - 0 1"
     val rootFen = "3r3k/3p4/8/8/8/8/8/3Q3K w - - 1 2"

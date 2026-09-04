@@ -1262,9 +1262,7 @@ final case class LineMaterialSummary private[chessjudgment] (
   def hasRecaptureChain: Boolean = captures.exists(_.recapture)
 
   def hasObservedRecovery: Boolean =
-    runningBalancesForMover.zipWithIndex.exists { case (balance, index) =>
-      balance >= 0 && runningBalancesForMover.take(index).exists(_ < 0)
-    }
+    runningBalancesForMover.dropWhile(_ >= 0).drop(1).exists(_ >= 0)
 
   def hasClosedRecovery: Boolean =
     isClosed && hasObservedRecovery && observedNetCpForMover >= 0
@@ -1274,15 +1272,13 @@ final case class LineMaterialSummary private[chessjudgment] (
 
   private[chessjudgment] def durableRecoveryCaptureForMover: Option[LineMaterialCapture] =
     Option.when(hasClosedRecovery)(
-      events.zip(runningBalancesForMover).zipWithIndex.collectFirst {
-        case ((event, balance), index)
-            if event.movement.side == sideToMove &&
-              event.capture.nonEmpty &&
-              runningBalancesForMover.take(index).exists(_ < 0) &&
-              balance >= 0 &&
-              runningBalancesForMover.drop(index).forall(_ >= 0) =>
-          event.capture.get
-      }
+      events
+        .drop(runningBalancesForMover.lastIndexWhere(_ < 0) + 1)
+        .collectFirst {
+          case event
+              if event.movement.side == sideToMove && event.capture.nonEmpty =>
+            event.capture.get
+        }
     ).flatten
 
 object LineMaterialSummary:
