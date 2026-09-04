@@ -199,7 +199,6 @@ final case class RelationCombinationPremise private[chessjudgment] (
     s"${occurrence.toString.toLowerCase}:${RelationFactKind.id(kind)}:$semanticId"
 
 final case class RelationCombinationProof private[chessjudgment] (
-    contract: RelationCombinationContractKind,
     premises: List[RelationCombinationPremise],
     private[chessjudgment] val proofKeys: List[RelationProofKey]
 ):
@@ -216,14 +215,13 @@ final case class RelationCombinationProof private[chessjudgment] (
     "relation-combination proof keys must use canonical order"
   )
 
-  private[judgment] def stableKey: String =
+  private[judgment] def stableKey(kind: RelationFactKind): String =
     val premiseKey = premises.map(_.stableKey).mkString("[", ",", "]")
     val proofKey = proofKeys.map(_.stableKey).mkString("[", ",", "]")
-    s"contract:${RelationCombinationContractKind.id(contract)}:premises:$premiseKey:proof-keys:$proofKey"
+    s"contract:${RelationFactKind.id(kind)}:premises:$premiseKey:proof-keys:$proofKey"
 
 object RelationCombinationProof:
   private[chessjudgment] def from(
-      contract: RelationCombinationContractKind,
       premises: List[(RelationPremiseOccurrence, RelationFactEvidence)],
       proofKeys: List[RelationProofKey]
   ): RelationCombinationProof =
@@ -240,7 +238,6 @@ object RelationCombinationProof:
     }
     require(exact.distinct.size == exact.size, "a combined relation cannot consume one premise twice")
     RelationCombinationProof(
-      contract,
       exact.sortBy(_.stableKey),
       proofKeys.sortBy(_.stableKey)
     )
@@ -494,7 +491,7 @@ object RelationWitnessDetail:
           values(afterControllers.map(piece)),
           values(removedControllers.map(piece)),
           values(establishedControllers.map(piece))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option.when(includeDerivation)(proof.stableKey(RelationFactKind.GeometricControlSetDelta)).toList
       case CaptureRecaptureInventory(
             mover,
             captured,
@@ -2020,20 +2017,20 @@ object RelationFactEvidence:
     * details. Raw callers cannot turn an arbitrary label into legal-replay
     * authority by attaching a matching move list.
     */
-  private[chessjudgment] def certifiedTransitionContractBatch(
-      batch: TransitionRelationContractBatch,
+  private[chessjudgment] def certifiedControlSetDeltas(
+      unverified: ControlSetDeltaResults,
       delta: RelationSemanticDelta,
       legal: LegalReplayStep,
       footprint: BoardTransitionFootprint
-  ): Option[ClosedRelationCombinationResults] =
+  ): Option[ControlSetDeltaResults] =
     for
       certification <- legalReplayCertification(legal, footprint)
-      if batch.owns(delta)
-    yield batch.results.certifiedBy(certification.owner, certification.certify)
+      if unverified.owns(delta)
+    yield unverified.certifiedBy(certification.owner, certification.certify)
 
   private[chessjudgment] def certifiedVerticalBatch(
       unverified: ClosedVerticalRelationResults,
-      lowerResults: ClosedRelationCombinationResults,
+      lowerResults: ControlSetDeltaResults,
       delta: RelationSemanticDelta,
       legal: LegalReplayStep,
       footprint: BoardTransitionFootprint

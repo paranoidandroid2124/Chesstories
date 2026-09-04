@@ -1288,7 +1288,7 @@ private[chessjudgment] object VerticalRelationDerivationProof:
   */
 private[chessjudgment] final class ClosedVerticalRelationResults private (
     engine: ClosedVerticalRelationEngine,
-    private val lowerOwner: ClosedRelationCombinationResults,
+    private val lowerOwner: ControlSetDeltaResults,
     private val deltaOwner: RelationSemanticDelta,
     certify: RelationFactEvidence => RelationFactEvidence
 ):
@@ -1333,7 +1333,7 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
     exact
 
   private[judgment] def owns(
-      lowerResults: ClosedRelationCombinationResults,
+      lowerResults: ControlSetDeltaResults,
       delta: RelationSemanticDelta
   ): Boolean =
     lowerOwner.asInstanceOf[AnyRef].eq(lowerResults.asInstanceOf[AnyRef]) &&
@@ -1360,10 +1360,10 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
     )
 
 private final class ClosedVerticalRelationEngine(
-    combinations: ClosedRelationCombinationResults,
+    controlSetDeltas: ControlSetDeltaResults,
     delta: RelationSemanticDelta
 ):
-  private val input = VerticalRelationInput(delta, combinations)
+  private val input = VerticalRelationInput(delta, controlSetDeltas)
   private val rawByContract = scala.collection.mutable.Map.empty[
     VerticalRelationContractKind,
     List[RelationFactEvidence]
@@ -1426,12 +1426,12 @@ private final class ClosedVerticalRelationEngine(
 
 private[chessjudgment] object ClosedVerticalRelationResults:
   def derive(
-      combinations: ClosedRelationCombinationResults,
+      controlSetDeltas: ControlSetDeltaResults,
       delta: RelationSemanticDelta
   ): ClosedVerticalRelationResults =
     new ClosedVerticalRelationResults(
-      new ClosedVerticalRelationEngine(combinations, delta),
-      combinations,
+      new ClosedVerticalRelationEngine(controlSetDeltas, delta),
+      controlSetDeltas,
       delta,
       identity
     )
@@ -1514,23 +1514,19 @@ private[chessjudgment] object VerticalSliderReachProofProjection:
 
 private[chessjudgment] final class VerticalRelationInput private (
     delta: RelationSemanticDelta,
-    combinations: ClosedRelationCombinationResults
+    controlSetDeltas: ControlSetDeltaResults
 ):
   import VerticalRelationWitnessProjection.*
 
-  private var derivedBySemanticId = Map.empty[String, RelationFactEvidence]
-
-  private var retainedTransitionContracts = Set.empty[RelationCombinationContractKind]
-
-  def transitionResultsFor(contract: RelationCombinationContractKind): List[RelationFactEvidence] =
-    val results = combinations.resultsFor(contract)
-    if !retainedTransitionContracts(contract) then
-      retainDerived(results, allowExisting = true)
-      retainedTransitionContracts += contract
-    results
+  private val lowerRelations = controlSetDeltas.relations
+  private var derivedBySemanticId = lowerRelations.map(relation => relation.semanticId -> relation).toMap
+  require(
+    derivedBySemanticId.size == lowerRelations.size,
+    "control-set deltas cannot repeat a derivation identity"
+  )
 
   private lazy val controlSetChangeInput: List[VerticalControlSetChange] =
-    transitionResultsFor(RelationCombinationContractKind.GeometricControlSetDelta).map { relation =>
+    lowerRelations.map { relation =>
       relation.detail match
         case RelationWitnessDetail.GeometricControlSetDelta(
               mover,
@@ -1951,34 +1947,25 @@ private[chessjudgment] final class VerticalRelationInput private (
     inventory.certifyState(state.query)
 
   private[judgment] def admit(relations: List[RelationFactEvidence]): Unit =
-    retainDerived(relations, allowExisting = false)
-
-  private def retainDerived(
-      relations: List[RelationFactEvidence],
-      allowExisting: Boolean
-  ): Unit =
     val entries = relations.map(relation => relation.semanticId -> relation)
     require(
       entries.map(_._1).distinct.size == entries.size,
-      "one lower contract cannot repeat a derivation identity"
+      "one vertical contract cannot repeat a derivation identity"
     )
     entries.foreach { case (semanticId, relation) =>
-      derivedBySemanticId.get(semanticId) match
-        case Some(existing) =>
-          require(
-            allowExisting && existing.asInstanceOf[AnyRef].eq(relation.asInstanceOf[AnyRef]),
-            "a vertical derivation cannot replace or repeat a lower result"
-          )
-        case None =>
-          derivedBySemanticId = derivedBySemanticId.updated(semanticId, relation)
+      require(
+        !derivedBySemanticId.contains(semanticId),
+        "a vertical derivation cannot replace or repeat a lower result"
+      )
+      derivedBySemanticId = derivedBySemanticId.updated(semanticId, relation)
     }
 
 private[chessjudgment] object VerticalRelationInput:
   def apply(
       delta: RelationSemanticDelta,
-      combinations: ClosedRelationCombinationResults
+      controlSetDeltas: ControlSetDeltaResults
   ): VerticalRelationInput =
-    new VerticalRelationInput(delta, combinations)
+    new VerticalRelationInput(delta, controlSetDeltas)
 
 private[chessjudgment] final case class VerticalCaptureRecaptureInput(
     rootMove: CanonicalRootLegalMove,

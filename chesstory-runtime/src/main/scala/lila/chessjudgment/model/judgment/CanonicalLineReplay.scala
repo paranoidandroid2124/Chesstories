@@ -30,27 +30,27 @@ private final class CanonicalReplayTransitionCalculation(
   lazy val relationDelta: RelationSemanticDelta =
     CanonicalRelationDelta.semanticFrom(legalStep, boardFootprint, relationTransition)
 
-  lazy val relationContractBatch: TransitionRelationContractBatch =
-    TransitionRelationContractBatch.derive(relationDelta)
+  lazy val controlSetDeltas: ControlSetDeltaResults =
+    ControlSetDeltaResults.derive(relationDelta)
 
-  lazy val certifiedCombinations: ClosedRelationCombinationResults =
+  lazy val certifiedControlSetDeltas: ControlSetDeltaResults =
     RelationFactEvidence
-      .certifiedTransitionContractBatch(
-        relationContractBatch,
+      .certifiedControlSetDeltas(
+        controlSetDeltas,
         relationDelta,
         legalStep,
         boardFootprint
       )
       .getOrElse(
-        throw IllegalArgumentException("a closed relation batch failed legal-replay certification")
+        throw IllegalArgumentException("control-set deltas failed legal-replay certification")
       )
 
   lazy val certifiedVertical: ClosedVerticalRelationResults =
-    val unverified = ClosedVerticalRelationResults.derive(certifiedCombinations, relationDelta)
+    val unverified = ClosedVerticalRelationResults.derive(certifiedControlSetDeltas, relationDelta)
     RelationFactEvidence
       .certifiedVerticalBatch(
         unverified,
-        certifiedCombinations,
+        certifiedControlSetDeltas,
         relationDelta,
         legalStep,
         boardFootprint
@@ -263,7 +263,7 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     ClosedRelationTransitionInventory.close(
       declared,
       relationDelta,
-      calculation.certifiedCombinations,
+      calculation.certifiedControlSetDeltas,
       calculation.certifiedVertical
     )
 
