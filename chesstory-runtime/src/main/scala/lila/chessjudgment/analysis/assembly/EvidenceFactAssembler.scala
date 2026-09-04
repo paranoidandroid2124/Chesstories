@@ -7,9 +7,6 @@ import lila.chessjudgment.model.judgment.*
 
 object EvidenceFactAssembler:
 
-  def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    NodeLineTransitionAssembler.assemble(raw).map(enrich)
-
   def enrich(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     val input = context.input
     val allocator = JudgmentProvenanceAllocator.forInput(input)

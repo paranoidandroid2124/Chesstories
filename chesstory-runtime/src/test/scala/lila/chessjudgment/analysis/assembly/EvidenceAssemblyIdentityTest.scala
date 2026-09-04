@@ -71,8 +71,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     )
 
   test("a repeated move through a cycle keeps distinct graph occurrences"):
-    val cycle = EvidenceFactAssembler
-      .assemble(
+    val cycle = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17",
           playedMoveUci = "f3h2",
@@ -81,6 +81,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
+      .flatMap(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the repeated cycle to assemble"))
     val repeated = cycle.transitions.filter(edge => EvidenceRef.sameMove(edge.moveUci, "f3h2"))
 
@@ -104,8 +105,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     val rootFen = "4k3/6pp/8/8/8/8/PP2B3/4R1K1 w - - 0 1"
     val lineA = List("a2a3", "h7h6", "b2b3", "g7g6", "e2d3")
     val lineB = List("b2b3", "g7g6", "a2a3", "h7h6", "e2d3")
-    val transposed = EvidenceFactAssembler
-      .assemble(
+    val transposed = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = rootFen,
           playedMoveUci = lineA.head,
@@ -115,6 +116,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
+      .flatMap(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected both transposed histories to assemble"))
     val finalEdges = transposed.transitions
       .filter(edge => EvidenceRef.sameMove(edge.moveUci, "e2d3"))
@@ -163,8 +165,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assertEquals((outputsA ++ outputsB).map(_.ref.id).distinct.size, outputsA.size + outputsB.size)
 
   test("fresh double-check control stays on one transition occurrence"):
-    val assembled = EvidenceFactAssembler
-      .assemble(
+    val assembled = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = "4k3/8/r7/8/8/8/4B3/4R1K1 w - - 0 1",
           playedMoveUci = "e2d3",
@@ -174,6 +176,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
+      .flatMap(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the double-check review to assemble"))
     val freshChecks = assembled.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
@@ -226,8 +229,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assert(independentSiblings.forall(withoutDerived.proofEligible))
 
   test("a root check response binds the transition carrier and chosen legal response once"):
-    val assembled = EvidenceFactAssembler
-      .assemble(
+    val assembled = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = "k3r3/8/8/8/8/3B4/8/4K3 w - - 0 1",
           playedMoveUci = "d3e2",
@@ -237,6 +240,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
+      .flatMap(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the checked root response to assemble"))
     val response = assembled.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
@@ -251,8 +255,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assert(assembled.evidenceGraph.proofEligible(response))
 
   test("a root-and-absence stalemate proof materializes without a fabricated positive source"):
-    val assembled = EvidenceFactAssembler
-      .assemble(
+    val assembled = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = "k7/2Q5/2K5/8/8/8/8/8 w - - 0 1",
           playedMoveUci = "c7b6",
@@ -261,6 +265,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
+      .flatMap(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the stalemate transition to assemble"))
     val stalemate = assembled.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)

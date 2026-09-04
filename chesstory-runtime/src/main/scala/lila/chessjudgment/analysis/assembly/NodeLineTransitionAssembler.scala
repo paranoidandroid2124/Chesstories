@@ -547,9 +547,6 @@ object TransitionEdgeAssembler:
 
 object NodeLineTransitionAssembler:
 
-  def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    MoveReviewInputAdmission.admit(raw).flatMap(assemble)
-
   /** The sole node/line/transition assembly implementation for admitted review input. */
   def assemble(input: AdmittedMoveReviewInput): Option[JudgmentAssemblyContext] =
     val allocator = JudgmentProvenanceAllocator.forInput(input)
