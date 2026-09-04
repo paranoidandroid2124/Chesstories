@@ -4,7 +4,6 @@ import _root_.chess.{ Bishop, King, Pawn, Queen, Rook, Square }
 import scala.collection.immutable.VectorMap
 
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
-import lila.chessjudgment.model.position.{ BoardPieceTransition, BoardTransitionFootprint }
 
 /** Explicit proof strata. The numeric order is proof authority, not a score:
   * a derivation may consume only strictly lower strata.
@@ -377,10 +376,6 @@ private[chessjudgment] enum VerticalRelationPremiseRole:
       piece: RelationPieceWitness,
       resource: RelationMovementResourceWitness
   )
-  case LegalMoveResource(
-      occurrence: RelationSnapshotOccurrence,
-      resource: RelationLegalMoveResourceWitness
-  )
   case PawnTopologyFacetSource(
       occurrence: RelationSnapshotOccurrence,
       side: _root_.chess.Color,
@@ -440,8 +435,6 @@ private[chessjudgment] object VerticalRelationPremiseRole:
         s"absolute_pin:${occurrence.toString.toLowerCase}:${restrictedSide.toString.toLowerCase}:${pinner.square.key.toLowerCase}:${pinner.role.name.toLowerCase}:${pinned.square.key.toLowerCase}:${pinned.role.name.toLowerCase}:${kingSquare.key.toLowerCase}:${axis.toString.toLowerCase}"
       case VerticalRelationPremiseRole.MovementResource(pieceSide, piece, resource) =>
         s"movement_resource:${pieceSide.toString.toLowerCase}:${piece.square.key.toLowerCase}:${piece.role.name.toLowerCase}:${resource.stableKey}"
-      case VerticalRelationPremiseRole.LegalMoveResource(occurrence, resource) =>
-        s"legal_move_resource:${occurrence.toString.toLowerCase}:${resource.stableKey}"
       case VerticalRelationPremiseRole.PawnTopologyFacetSource(
             occurrence,
             side,
@@ -461,8 +454,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
   def accepts(
       role: VerticalRelationPremiseRole,
       source: VerticalRelationPremiseSource,
-      relation: RelationFactEvidence,
-      rootFootprint: BoardTransitionFootprint
+      relation: RelationFactEvidence
   ): Boolean =
     def positionAt(occurrences: RelationPremiseOccurrence*): Boolean =
       source match
@@ -482,17 +474,6 @@ private[chessjudgment] object VerticalRelationPremiseRole:
             beforeRole == resource.movement.beforeRole && to == resource.movement.to &&
             EvidenceRef.sameMove(moveUci, resource.moveUci) && capture == resource.capture
         case _ => false
-    def exactRootPieceTransition(movement: RelationMoveTransitionWitness): Boolean =
-      rootFootprint.pieceTransitions.count(transition =>
-        transition.side == movement.side &&
-          transition.from.key.equalsIgnoreCase(movement.from.key) &&
-          transition.to.key.equalsIgnoreCase(movement.to.key) &&
-          transition.beforeRole.name.equalsIgnoreCase(movement.beforeRole.name) &&
-          transition.afterRole.name.equalsIgnoreCase(movement.afterRole.name)
-      ) == 1
-    def legalMovement(movement: RelationMoveTransitionWitness): Boolean =
-      rootTransition && relation.detail.isInstanceOf[RelationWitnessDetail.LegalMove] &&
-        exactRootPieceTransition(movement)
     def enemyControl(
         controllingSide: _root_.chess.Color,
         controller: RelationPieceWitness,
@@ -615,11 +596,6 @@ private[chessjudgment] object VerticalRelationPremiseRole:
               target == resource.destination && resource.target == RelationControlTarget.Empty &&
               resource.mode == mode
           case _ => false)
-      case LegalMoveResource(occurrence, resource) =>
-        val exactOccurrence = occurrence match
-          case RelationSnapshotOccurrence.Before => positionAt(RelationPremiseOccurrence.Before)
-          case RelationSnapshotOccurrence.After  => positionAt(RelationPremiseOccurrence.After)
-        exactOccurrence && legalResource(resource)
       case PawnTopologyFacetSource(occurrence, side, pawn, facet, componentPawns, semanticId) =>
         val exactOccurrence = (occurrence, source) match
           case (
@@ -1600,9 +1576,6 @@ private[chessjudgment] final class VerticalRelationInput private (
   private[judgment] def controlSetChanges: List[VerticalControlSetChange] =
     controlSetChangeInput
 
-  def establishedPositionRelations(kind: RelationFactKind): List[RelationFactEvidence] =
-    delta.establishedOf(kind).map(_.relation)
-
   private[judgment] def exactPositionSource(
       occurrence: RelationSnapshotOccurrence,
       relation: RelationFactEvidence
@@ -1965,8 +1938,7 @@ private[chessjudgment] final class VerticalRelationInput private (
         VerticalRelationPremiseRole.accepts(
           premise.role,
           premise.source,
-          relation,
-          delta.transitionFootprint
+          relation
         )
     }
 

@@ -161,16 +161,22 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       closedInitial.inventory.stateView.pieces(Color.White, lila.chessjudgment.model.judgment.EvidencePieceRole("pawn")).size,
       8
     )
-    val vacantE4 = closedInitial.inventory.certifyState(
-      PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("e4"))
-    ).getOrElse(fail("expected the exact closed vacancy on e4"))
-    val cachedVacantE4 = closedInitial.inventory.certifyState(
-      PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("e4"))
-    ).getOrElse(fail("expected the cached exact vacancy on e4"))
-    assert(vacantE4.asInstanceOf[AnyRef] eq cachedVacantE4.asInstanceOf[AnyRef])
+    val pawnState = closedInitial.inventory.pawnTopologyView
+      .stateWitness(Color.White, EvidenceSquare("e2"))
+      .getOrElse(fail("expected the initial white e2 pawn state"))
+    val pawnStateQuery = PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(pawnState)
+    val certifiedPawnState = closedInitial.inventory
+      .certifyState(pawnStateQuery)
+      .getOrElse(fail("expected the exact closed pawn state"))
+    val cachedPawnState = closedInitial.inventory
+      .certifyState(pawnStateQuery)
+      .getOrElse(fail("expected the cached exact pawn state"))
+    assert(certifiedPawnState.asInstanceOf[AnyRef] eq cachedPawnState.asInstanceOf[AnyRef])
     assertEquals(
       closedInitial.inventory.certifyState(
-        PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("e2"))
+        PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(
+          pawnState.copy(doubled = !pawnState.doubled)
+        )
       ),
       None
     )
@@ -416,17 +422,26 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     assert(first.boardRelations != second.boardRelations)
     assert(!(first.boardRelations.asInstanceOf[AnyRef] eq second.boardRelations.asInstanceOf[AnyRef]))
 
-    val vacantA1 = first.relationInventory
-      .certifyState(PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("a1")))
-      .getOrElse(fail("expected the first occurrence's vacancy certificate"))
+    val sliderReach = first.relationInventory
+      .sliderReachesFrom(EvidenceSquare("d4"))
+      .headOption
+      .getOrElse(fail("expected the first occurrence's queen reach"))
+    val sliderReachCertificate = first.relationInventory
+      .certifyState(PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
+        sliderReach.side,
+        sliderReach.slider,
+        sliderReach.direction,
+        Some(sliderReach.witness)
+      ))
+      .getOrElse(fail("expected the first occurrence's slider-reach certificate"))
     assert(
       closedSnapshot(first, PositionNodeRef(firstFen, 1, Some(Color.White)))
-        .bindState(vacantA1)
+        .bindState(sliderReachCertificate)
         .nonEmpty
     )
     assertEquals(
       closedSnapshot(second, PositionNodeRef(secondFen, 183, Some(Color.White)))
-        .bindState(vacantA1),
+        .bindState(sliderReachCertificate),
       None
     )
 
