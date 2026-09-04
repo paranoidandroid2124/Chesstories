@@ -7,67 +7,6 @@ import lila.chessjudgment.model.judgment.*
   * exact lower occurrences; selection role, rank, verdict, and comparison
   * identity never participate.
   */
-private[assembly] final case class SoleRecapturerRemovalProofDemand private (
-    subject: CertifiedRootOccurrence,
-    removalBranch: CertifiedRootOccurrence,
-    immediateCaptureBranch: CertifiedRootOccurrence,
-    lower: SoleRecapturerRemovalBeforeTargetCaptureDemand
-):
-  require(subject == removalBranch || subject == immediateCaptureBranch)
-
-  def stableKey: String = List(
-    subject.transitionOwner.ref.id,
-    removalBranch.lineOwner.ref.id,
-    removalBranch.transitionOwner.ref.id,
-    immediateCaptureBranch.lineOwner.ref.id,
-    immediateCaptureBranch.transitionOwner.ref.id,
-    lower.stableKey
-  ).mkString("|")
-
-private[assembly] object SoleRecapturerRemovalProofDemand:
-  def from(demand: OccurrenceExplanationDemand): List[SoleRecapturerRemovalProofDemand] =
-    val exact = for
-      (removal, immediate) <- demand.subjectSiblingOrientations
-      lower <- lowerDemand(removal.replay, immediate.replay).toList
-    yield SoleRecapturerRemovalProofDemand(demand.subject, removal, immediate, lower)
-    canonical(exact, _.stableKey, "sole-recapturer-removal")
-
-  private def lowerDemand(
-      removal: CanonicalLineReplay,
-      immediate: CanonicalLineReplay
-  ): Option[SoleRecapturerRemovalBeforeTargetCaptureDemand] =
-    val removalSteps = removal.replaySteps
-    val immediateSteps = immediate.replaySteps
-    for
-      delayedCapture <- removalSteps.lift(2)
-      immediateCapture <- immediateSteps.headOption
-      if EvidenceRef.sameMove(delayedCapture.moveUci, immediateCapture.moveUci)
-      _ <- immediateSteps.lift(1)
-      if activates(removal, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
-      if activates(removal, 2, VerticalRelationContractKind.CaptureRecaptureInventory)
-      if activates(immediate, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
-      removalMembership <- for
-        root <- removalSteps.headOption
-        reply <- removalSteps.lift(1)
-        exact <- removal.exactRecaptureOccurrenceMembership(root, reply)
-      yield exact
-      delayedOccurrence <- exactVerticalOccurrence(
-        removal,
-        delayedCapture,
-        VerticalRelationContractKind.CaptureRecaptureInventory
-      )
-      immediateMembership <- for
-        reply <- immediateSteps.lift(1)
-        exact <- immediate.exactRecaptureOccurrenceMembership(immediateCapture, reply)
-      yield exact
-    yield SoleRecapturerRemovalBeforeTargetCaptureDemand(
-      removalMembership._1,
-      removalMembership._2,
-      delayedOccurrence,
-      immediateMembership._1,
-      immediateMembership._2
-    )
-
 private[assembly] final case class VacatedGateCaptureProofDemand private (
     subject: CertifiedRootOccurrence,
     vacatedGateBranch: CertifiedRootOccurrence,

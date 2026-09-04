@@ -206,54 +206,6 @@ function schemaRelation(relationKind: MoveReviewRelationKind, multiplePaths = fa
     proof,
   });
 
-  if (relationKind === 'sole_recapturer_removal_before_target_capture') {
-    const removal = copyBranch(counterfactualSource, 'removal_then_target_capture', 3);
-    const immediate = copyBranch(observedSource, 'immediate_target_capture', 2);
-    const path = {
-      path_occurrence_id: nextHash(),
-      premises: [
-        relationPremise('defender_removal', 'capture_recapture_inventory', removal, 0),
-        relationPremise('post_removal_target_capture_inventory', 'capture_recapture_inventory', removal, 2),
-        relationPremise('immediate_target_capture_inventory', 'capture_recapture_inventory', immediate, 0),
-      ],
-      closed_absence_uses: [
-        closureUse(
-          'post_removal_replacement_recapture_absent',
-          'position_relation_extractor.closed_relation_inventory',
-          'legal-capture:black:d4',
-          removal,
-          2,
-        ),
-      ],
-      closed_state_uses: Array.from({ length: 4 }, (_, index) =>
-        closureUse(
-          index % 2 ? 'post_removal_target_present' : 'post_removal_exploit_actor_present',
-          'position_relation_extractor.closed_position_state_inventory',
-          index % 2 ? 'occupied-by:white:pawn@d4' : 'occupied-by:white:pawn@b2',
-          removal,
-          index % 3,
-        ),
-      ),
-    };
-    const legalReply = { ...captureReply, move_uci: branchStep(immediate, 1).move_uci };
-    return outer({
-      ...proofBase(),
-      removal_branch: removal,
-      immediate_capture_branch: immediate,
-      proof_paths: [path],
-      participants: {
-        remover: vacatingMove,
-        removed_defender: capturedTarget,
-        removal_recapture: legalReply,
-        post_removal_target_capture: deferredMove,
-        captured_target: capturedTarget,
-        immediate_sole_recapture: legalReply,
-      },
-      post_removal_target_capture_move: branchStep(removal, 2).move_uci,
-      immediate_sole_recapture_move: branchStep(immediate, 1).move_uci,
-    });
-  }
-
   if (relationKind === 'vacated_gate_enables_unrecapturable_slider_capture') {
     const vacated = copyBranch(counterfactualSource, 'gate_vacated_then_capture');
     const retained = copyBranch(observedSource, 'gate_retained');
@@ -716,7 +668,6 @@ test('drops only the relocation relation when continuity loses an occurrence, ow
 
 test('decodes every relation kind as its exact discriminated variant', () => {
   const relationKinds: MoveReviewRelationKind[] = [
-    'sole_recapturer_removal_before_target_capture',
     'vacated_gate_enables_unrecapturable_slider_capture',
     'square_release_route',
     'capture_exclusion_move_order',

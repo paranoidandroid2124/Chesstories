@@ -2,9 +2,8 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Sole graph producer for the three relation-backed causal families. Each
-  * family orients exact roots from its own lower facts; only deterministic
-  * graph ownership is shared here.
+/** Produces relation-backed causal evidence from each family's exact lower
+  * facts; only deterministic graph ownership is shared here.
   */
 private[chessjudgment] object RelationCausalProofAssembler:
 
@@ -13,46 +12,13 @@ private[chessjudgment] object RelationCausalProofAssembler:
       demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
     val records =
-      soleRecapturerRemoval(allocator, demand) ++
-        vacatedGateCapture(allocator, demand) ++
+      vacatedGateCapture(allocator, demand) ++
         squareReleaseRoute(allocator, demand)
     require(
       records.map(_.ref.id).distinct.size == records.size,
       "one relation-causal evidence id may have only one graph owner"
     )
     records.sortBy(_.ref.id)
-
-  private def soleRecapturerRemoval(
-      allocator: JudgmentProvenanceAllocator,
-      demand: OccurrenceExplanationDemand
-  ): List[EvidenceRecord] =
-    val certified = SoleRecapturerRemovalProofDemand.from(demand).flatMap { exactDemand =>
-      SoleRecapturerRemovalBeforeTargetCaptureProof.certifyDemanded(
-        exactDemand.subject,
-        exactDemand.removalBranch,
-        exactDemand.immediateCaptureBranch,
-        exactDemand.lower
-      )
-    }
-    OccurrenceExplanationAssembler.occurrenceProofRecords(
-      family = BoundedCausalContractKind.SoleRecapturerRemovalBeforeTargetCapture,
-      allocator = allocator,
-      subject = demand.subject
-    )(certified)(
-      semanticId = _.semantic.semanticId,
-      occurrenceId = _.occurrence.occurrenceId,
-      dependencyId = _.dependency.value,
-      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
-      parentSources = _.parentSources,
-      payload = exact =>
-        SoleRecapturerRemovalBeforeTargetCaptureEvidence(
-          exact.semantic,
-          exact.occurrence,
-          demand.subject.publicOccurrence,
-          exact.dependency.value,
-          exact
-        )
-    )
 
   private def vacatedGateCapture(
       allocator: JudgmentProvenanceAllocator,

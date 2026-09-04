@@ -91,7 +91,6 @@ export interface MoveReviewCandidate {
 }
 
 export type MoveReviewRelationKind =
-  | 'sole_recapturer_removal_before_target_capture'
   | 'vacated_gate_enables_unrecapturable_slider_capture'
   | 'square_release_route'
   | 'capture_exclusion_move_order'
@@ -296,39 +295,6 @@ interface MoveReviewOccurrenceProofBase {
   dependencyFingerprint: string;
 }
 
-type MoveReviewSolePremise =
-  | MoveReviewRelationPremiseUse<
-      'defender_removal',
-      'capture_recapture_inventory',
-      'removal_then_target_capture'
-    >
-  | MoveReviewRelationPremiseUse<
-      'post_removal_target_capture_inventory',
-      'capture_recapture_inventory',
-      'removal_then_target_capture'
-    >
-  | MoveReviewRelationPremiseUse<
-      'immediate_target_capture_inventory',
-      'capture_recapture_inventory',
-      'immediate_target_capture'
-    >;
-
-export interface MoveReviewSoleRecapturerProof extends MoveReviewOccurrenceProofBase {
-  removalBranch: MoveReviewOccurrenceBranch<'removal_then_target_capture'>;
-  immediateCaptureBranch: MoveReviewOccurrenceBranch<'immediate_target_capture'>;
-  proofPaths: [MoveReviewBoundedProofPath<MoveReviewSolePremise>];
-  participants: {
-    remover: MoveReviewMovementWitness;
-    removedDefender: MoveReviewColoredPieceWitness;
-    removalRecapture: MoveReviewLegalResourceWitness;
-    postRemovalTargetCapture: MoveReviewMovementWitness;
-    capturedTarget: MoveReviewColoredPieceWitness;
-    immediateSoleRecapture: MoveReviewLegalResourceWitness;
-  };
-  postRemovalTargetCaptureMove: Uci;
-  immediateSoleRecaptureMove: Uci;
-}
-
 type MoveReviewVacatedGatePremise =
   | MoveReviewRelationPremiseUse<
       'gate_vacating_slider_reach',
@@ -481,7 +447,6 @@ interface MoveReviewRelocationEnablesRecaptureProof extends MoveReviewOccurrence
 }
 
 export type MoveReviewOccurrenceProof =
-  | MoveReviewSoleRecapturerProof
   | MoveReviewVacatedGateProof
   | MoveReviewSquareReleaseProof
   | MoveReviewCaptureExclusionProof
@@ -494,10 +459,6 @@ interface MoveReviewOccurrenceRelationBase {
 
 export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase &
   (
-    | {
-        relationKind: 'sole_recapturer_removal_before_target_capture';
-        proof: MoveReviewSoleRecapturerProof;
-      }
     | {
         relationKind: 'vacated_gate_enables_unrecapturable_slider_capture';
         proof: MoveReviewVacatedGateProof;
@@ -783,7 +744,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: '분석 대안',
     analysisContinuation: '분석 후속',
     familyLabels: {
-      sole_recapturer_removal_before_target_capture: '유일 재포획 기물 제거 후 목표 포획',
       vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
       square_release_route: '칸 해방 후 기물 경로',
       capture_exclusion_move_order: '포획 응수를 배제한 수순',
@@ -987,7 +947,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: 'Analyzed alternative',
     analysisContinuation: 'Analysis continuation',
     familyLabels: {
-      sole_recapturer_removal_before_target_capture: 'Sole-recapturer removal before target capture',
       vacated_gate_enables_unrecapturable_slider_capture:
         'Unrecapturable slider capture through a vacated gate',
       square_release_route: 'Route through a released square',
@@ -1911,18 +1870,6 @@ function projectOccurrenceRelation(
   if (!relationKind || !subjectOccurrence) return;
 
   switch (relationKind) {
-    case 'sole_recapturer_removal_before_target_capture': {
-      const proof = projectSoleRecapturerProof(value.proof);
-      const relation = proof
-        ? {
-            id: occurrenceRelationId(proof.sourceEvidenceId),
-            subjectOccurrence,
-            relationKind,
-            proof,
-          }
-        : undefined;
-      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
-    }
     case 'vacated_gate_enables_unrecapturable_slider_capture': {
       const proof = projectVacatedGateProof(value.proof);
       const relation = proof
@@ -1979,8 +1926,7 @@ function occurrenceRelationId(sourceEvidenceId: string): string {
 }
 
 function occurrenceRelationKind(value: unknown): MoveReviewRelationKind | undefined {
-  return value === 'sole_recapturer_removal_before_target_capture' ||
-    value === 'vacated_gate_enables_unrecapturable_slider_capture' ||
+  return value === 'vacated_gate_enables_unrecapturable_slider_capture' ||
     value === 'square_release_route' ||
     value === 'capture_exclusion_move_order' ||
     value === 'relocation_enables_recapture'
@@ -2061,143 +2007,6 @@ function projectOccurrenceProofBase(
   return sourceEvidenceId && semanticId && occurrenceId && dependencyFingerprint
     ? { sourceEvidenceId, semanticId, occurrenceId, dependencyFingerprint }
     : undefined;
-}
-
-function projectSoleRecapturerProof(value: unknown): MoveReviewSoleRecapturerProof | undefined {
-  const keys = [
-    'source_evidence_id',
-    'semantic_id',
-    'occurrence_id',
-    'dependency_fingerprint',
-    'removal_branch',
-    'immediate_capture_branch',
-    'proof_paths',
-    'participants',
-    'post_removal_target_capture_move',
-    'immediate_sole_recapture_move',
-  ];
-  if (!isObject(value) || !hasExactKeys(value, keys)) return;
-  const base = projectOccurrenceProofBase(value);
-  const removalBranch = projectOccurrenceBranch(value.removal_branch, 'removal_then_target_capture', 3, 3);
-  const immediateCaptureBranch = projectOccurrenceBranch(
-    value.immediate_capture_branch,
-    'immediate_target_capture',
-    2,
-    2,
-  );
-  const paths = projectArray(value.proof_paths, 1, 1, projectSoleRecapturerPath);
-  const participants = projectSoleRecapturerParticipants(value.participants);
-  const postRemovalTargetCaptureMove = uci(value.post_removal_target_capture_move);
-  const immediateSoleRecaptureMove = uci(value.immediate_sole_recapture_move);
-  if (
-    !base ||
-    !removalBranch ||
-    !immediateCaptureBranch ||
-    !paths ||
-    !participants ||
-    !postRemovalTargetCaptureMove ||
-    !immediateSoleRecaptureMove ||
-    removalBranch.branchId === immediateCaptureBranch.branchId ||
-    !boundedPathsFitBranches(paths, [removalBranch, immediateCaptureBranch])
-  )
-    return;
-  return {
-    ...base,
-    removalBranch,
-    immediateCaptureBranch,
-    proofPaths: paths as [MoveReviewBoundedProofPath<MoveReviewSolePremise>],
-    participants,
-    postRemovalTargetCaptureMove,
-    immediateSoleRecaptureMove,
-  };
-}
-
-function projectSoleRecapturerParticipants(
-  value: unknown,
-): MoveReviewSoleRecapturerProof['participants'] | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, [
-      'remover',
-      'removed_defender',
-      'removal_recapture',
-      'post_removal_target_capture',
-      'captured_target',
-      'immediate_sole_recapture',
-    ])
-  )
-    return;
-  const remover = projectMovementWitness(value.remover);
-  const removedDefender = projectColoredPieceWitness(value.removed_defender);
-  const removalRecapture = projectLegalResourceWitness(value.removal_recapture);
-  const postRemovalTargetCapture = projectMovementWitness(value.post_removal_target_capture);
-  const capturedTarget = projectColoredPieceWitness(value.captured_target);
-  const immediateSoleRecapture = projectLegalResourceWitness(value.immediate_sole_recapture);
-  return remover &&
-    removedDefender &&
-    removalRecapture &&
-    postRemovalTargetCapture &&
-    capturedTarget &&
-    immediateSoleRecapture
-    ? {
-        remover,
-        removedDefender,
-        removalRecapture,
-        postRemovalTargetCapture,
-        capturedTarget,
-        immediateSoleRecapture,
-      }
-    : undefined;
-}
-
-function projectSoleRecapturerPath(
-  value: unknown,
-): MoveReviewBoundedProofPath<MoveReviewSolePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 3, 1, 4, undefined, 3);
-  if (!shell) return;
-  const premiseSpecs = [
-    ['defender_removal', 'removal_then_target_capture', 0],
-    ['post_removal_target_capture_inventory', 'removal_then_target_capture', 2],
-    ['immediate_target_capture_inventory', 'immediate_target_capture', 0],
-  ] as const;
-  const premises = shell.premises.map((item, index) => {
-    const spec = premiseSpecs[index]!;
-    return projectRelationPremise(
-      item,
-      spec[0],
-      'capture_recapture_inventory',
-      spec[1],
-      step => step === spec[2],
-    );
-  });
-  const absence = projectClosureUse(shell.closedAbsenceUses[0], {
-    role: 'post_removal_replacement_recapture_absent',
-    issuer: 'position_relation_extractor.closed_relation_inventory',
-    branchRoles: ['removal_then_target_capture'],
-    query: legalCaptureQuery,
-    afterStep: step => step === 2,
-  });
-  const states = shell.closedStateUses.map(item =>
-    projectClosureUse(item, {
-      role: ['post_removal_exploit_actor_present', 'post_removal_target_present'],
-      issuer: 'position_relation_extractor.closed_position_state_inventory',
-      branchRoles: ['removal_then_target_capture'],
-      query: occupiedByQuery,
-    }),
-  );
-  if (
-    !premises.every((item): item is MoveReviewSolePremise => !!item) ||
-    !absence ||
-    !states.every((item): item is MoveReviewClosureUse => !!item) ||
-    !unique(states.map(item => item.useId))
-  )
-    return;
-  return {
-    pathOccurrenceId: shell.pathOccurrenceId,
-    premises,
-    closedAbsenceUses: [absence],
-    closedStateUses: states,
-  };
 }
 
 function projectVacatedGateProof(value: unknown): MoveReviewVacatedGateProof | undefined {
@@ -3774,8 +3583,6 @@ function occurrenceRelationOwnsSubject(relation: MoveReviewOccurrenceRelation): 
 
 export function moveReviewOccurrenceBranches(relation: MoveReviewOccurrenceRelation): MoveReviewOccurrenceBranch[] {
   switch (relation.relationKind) {
-    case 'sole_recapturer_removal_before_target_capture':
-      return [relation.proof.removalBranch, relation.proof.immediateCaptureBranch];
     case 'vacated_gate_enables_unrecapturable_slider_capture':
       return [relation.proof.vacatedGateBranch, relation.proof.retainedGateBranch];
     case 'square_release_route':
@@ -3928,7 +3735,6 @@ function resultIdMatchesContract(value: string, contract: string): boolean {
   return new RegExp('^' + contract + ':[0-9a-f]{64}$').test(value);
 }
 
-const legalCaptureQuery = /^legal-capture:(white|black):[a-h][1-8]$/;
 const legalMoveQuery = /^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$/;
 const legalCaptureOrMoveQuery =
   /^(legal-capture:(white|black):[a-h][1-8]|legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8])$/;

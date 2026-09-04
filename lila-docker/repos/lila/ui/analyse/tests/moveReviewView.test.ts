@@ -509,14 +509,12 @@ test('limits Korean relation copy to finite structural labels', () => {
   assert.match(text, /폐쇄 부재/);
   assert.match(text, /폐쇄 상태/);
   assert.deepEqual(moveReviewCopy('ko-KR').familyLabels, {
-    sole_recapturer_removal_before_target_capture: '유일 재포획 기물 제거 후 목표 포획',
     vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
     square_release_route: '칸 해방 후 기물 경로',
     capture_exclusion_move_order: '포획 응수를 배제한 수순',
     relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
   });
   assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
-    sole_recapturer_removal_before_target_capture: 'Sole-recapturer removal before target capture',
     vacated_gate_enables_unrecapturable_slider_capture:
       'Unrecapturable slider capture through a vacated gate',
     square_release_route: 'Route through a released square',

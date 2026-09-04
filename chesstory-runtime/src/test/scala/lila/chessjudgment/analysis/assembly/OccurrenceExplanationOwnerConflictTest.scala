@@ -5,22 +5,26 @@ import lila.chessjudgment.model.line.EngineLine
 
 class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
 
+  private val rootFen =
+    "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
+  private val lines = List(
+    EngineLine(List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4"), scoreCp = 600, depth = 24),
+    EngineLine(List("b2b4", "e5d4"), scoreCp = 0, depth = 24)
+  )
+
   test("an invalid or unregistered typed relation cannot remove a certified sibling or primary"):
     val packet = MoveReviewJudgmentOrchestrator
       .execute(
         RawMoveReviewInput(
-          fen = "8/4p2k/5n2/3r2B1/8/8/8/K2Q4 w - - 0 1",
-          playedMoveUci = "d1d5",
-          variations = List(
-            EngineLine(List("g5f6", "e7f6", "d1d5"), scoreCp = 600, depth = 24),
-            EngineLine(List("d1d5", "f6d5"), scoreCp = 0, depth = 24)
-          )
+          fen = rootFen,
+          playedMoveUci = "b2b4",
+          variations = lines
         )
       )
       .getOrElse(fail("expected an exact occurrence relation fixture"))
     val graph = packet.evidenceGraph
     val valid = graph.records.collectFirst {
-      case record @ EvidenceRecord(_, _: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) => record
+      case record @ EvidenceRecord(_, _: CaptureExclusionMoveOrderEvidence, _) => record
     }.getOrElse(fail("expected one certified occurrence relation proof"))
     val invalid = valid.copy(
       ref = valid.ref.copy(
@@ -42,16 +46,12 @@ class OccurrenceExplanationOwnerConflictTest extends munit.FunSuite:
     )
 
   test("comparison and occurrence relation owner ids are stable across admitted input order"):
-    val lines = List(
-      EngineLine(List("g5f6", "e7f6", "d1d5"), scoreCp = 600, depth = 24),
-      EngineLine(List("d1d5", "f6d5"), scoreCp = 0, depth = 24)
-    )
     def ownerIds(variations: List[EngineLine]): (List[String], List[String]) =
       val packet = MoveReviewJudgmentOrchestrator
         .execute(
           RawMoveReviewInput(
-            fen = "8/4p2k/5n2/3r2B1/8/8/8/K2Q4 w - - 0 1",
-            playedMoveUci = "d1d5",
+            fen = rootFen,
+            playedMoveUci = "b2b4",
             variations = variations
           )
         )

@@ -323,28 +323,11 @@
     },
     "occurrenceRelation": {
       "oneOf": [
-        {"$ref": "#/$defs/soleRecapturerOccurrenceRelation"},
         {"$ref": "#/$defs/vacatedGateOccurrenceRelation"},
         {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
         {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
         {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"}
       ]
-    },
-    "soleRecapturerOccurrenceRelation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "subject_occurrence",
-        "relation_kind",
-        "proof"
-      ],
-      "properties": {
-        "subject_occurrence": {"$ref": "#/$defs/relationSubjectOccurrence"},
-        "relation_kind": {"const": "sole_recapturer_removal_before_target_capture"},
-        "proof": {
-          "$ref": "#/$defs/occurrenceSoleRecapturerProof"
-        }
-      }
     },
     "vacatedGateOccurrenceRelation": {
       "type": "object",
@@ -406,154 +389,6 @@
         "proof": {
           "$ref": "#/$defs/occurrenceRelocationEnablesRecaptureProof"
         }
-      }
-    },
-    "occurrenceSoleRecapturerProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id",
-        "semantic_id",
-        "occurrence_id",
-        "dependency_fingerprint",
-        "removal_branch",
-        "immediate_capture_branch",
-        "proof_paths",
-        "participants",
-        "post_removal_target_capture_move",
-        "immediate_sole_recapture_move"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "removal_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/occurrenceRelationBranch"},
-            {"properties": {
-              "branch_role": {"const": "removal_then_target_capture"},
-              "steps": {"minItems": 3, "maxItems": 3}
-            }}
-          ]
-        },
-        "immediate_capture_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/occurrenceRelationBranch"},
-            {"properties": {
-              "branch_role": {"const": "immediate_target_capture"},
-              "steps": {"minItems": 2, "maxItems": 2}
-            }}
-          ]
-        },
-        "proof_paths": {
-          "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/occurrenceSoleRecapturerProofPath"}
-        },
-        "participants": {"$ref": "#/$defs/occurrenceSoleRecapturerParticipants"},
-        "post_removal_target_capture_move": {"$ref": "#/$defs/uciMove"},
-        "immediate_sole_recapture_move": {"$ref": "#/$defs/uciMove"}
-      }
-    },
-    "occurrenceSoleRecapturerProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array", "minItems": 3, "maxItems": 3,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceSoleRecapturerPremiseUse"},
-                {"properties": {
-                  "role": {"const": "defender_removal"},
-                  "branch_role": {"const": "removal_then_target_capture"},
-                  "step_index": {"const": 0}
-                }}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceSoleRecapturerPremiseUse"},
-                {"properties": {
-                  "role": {"const": "post_removal_target_capture_inventory"},
-                  "branch_role": {"const": "removal_then_target_capture"},
-                  "step_index": {"const": 2}
-                }}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceSoleRecapturerPremiseUse"},
-                {"properties": {
-                  "role": {"const": "immediate_target_capture_inventory"},
-                  "branch_role": {"const": "immediate_target_capture"},
-                  "step_index": {"const": 0}
-                }}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array", "minItems": 1, "maxItems": 1,
-          "items": {
-            "allOf": [
-              {"$ref": "#/$defs/occurrenceRelationClosureUse"},
-              {"properties": {
-                "role": {"const": "post_removal_replacement_recapture_absent"},
-                "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-                "query": {"type": "string", "pattern": "^legal-capture:(white|black):[a-h][1-8]$"},
-                "branch_role": {"const": "removal_then_target_capture"},
-                "after_step_index": {"const": 2}
-              }}
-            ]
-          }
-        },
-        "closed_state_uses": {
-          "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/occurrenceSoleRecapturerStateUse"}
-        }
-      }
-    },
-    "occurrenceSoleRecapturerPremiseUse": {
-      "allOf": [
-        {"$ref": "#/$defs/occurrenceRelationPremiseUse"},
-        {"properties": {
-          "role": {"enum": ["defender_removal", "post_removal_target_capture_inventory", "immediate_target_capture_inventory"]},
-          "contract": {"const": "capture_recapture_inventory"},
-          "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
-          "branch_role": {"enum": ["removal_then_target_capture", "immediate_target_capture"]}
-        }}
-      ]
-    },
-    "occurrenceSoleRecapturerStateUse": {
-      "allOf": [
-        {"$ref": "#/$defs/occurrenceRelationClosureUse"},
-        {"properties": {
-          "role": {"enum": ["post_removal_exploit_actor_present", "post_removal_target_present"]},
-          "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
-          "query": {"type": "string", "pattern": "^occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8]$"},
-          "branch_role": {"const": "removal_then_target_capture"}
-        }}
-      ]
-    },
-    "occurrenceSoleRecapturerParticipants": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "remover", "removed_defender", "removal_recapture", "post_removal_target_capture",
-        "captured_target", "immediate_sole_recapture"
-      ],
-      "properties": {
-        "remover": {"$ref": "#/$defs/boundedCausalMovement"},
-        "removed_defender": {"$ref": "#/$defs/boundedCausalPiece"},
-        "removal_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"},
-        "post_removal_target_capture": {"$ref": "#/$defs/boundedCausalMovement"},
-        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
-        "immediate_sole_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"}
       }
     },
     "occurrenceVacatedGateProof": {
@@ -1672,19 +1507,6 @@
         "to": {"type": "string", "pattern": "^[a-h][1-8]$"},
         "piece_before": {"$ref": "#/$defs/pieceRole"},
         "piece_after": {"$ref": "#/$defs/pieceRole"}
-      }
-    },
-    "boundedCausalLegalResource": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["side", "from", "to", "piece_before", "piece_after", "move_uci"],
-      "properties": {
-        "side": {"enum": ["white", "black"]},
-        "from": {"type": "string", "pattern": "^[a-h][1-8]$"},
-        "to": {"type": "string", "pattern": "^[a-h][1-8]$"},
-        "piece_before": {"$ref": "#/$defs/pieceRole"},
-        "piece_after": {"$ref": "#/$defs/pieceRole"},
-        "move_uci": {"$ref": "#/$defs/uciMove"}
       }
     },
     "boundedCausalPiece": {

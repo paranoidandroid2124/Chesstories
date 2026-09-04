@@ -287,13 +287,6 @@ object RuntimeProtocol:
     ): JsObject =
       val subject = proof.subjectOccurrence
       proof match
-        case proof: OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture =>
-          Json.obj(
-            "subject_occurrence" -> relationSubjectJson(subject),
-            "relation_kind" -> "sole_recapturer_removal_before_target_capture",
-            "proof" ->
-              soleRecapturerRemovalBeforeTargetCaptureProofJson(proof)
-          )
         case proof: OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture =>
           Json.obj(
             "subject_occurrence" -> relationSubjectJson(subject),
@@ -473,31 +466,6 @@ object RuntimeProtocol:
           "ply" -> use.position.ply,
           "scope" -> evidenceScopeCode(use.scope)
         )
-      )
-
-    private def soleRecapturerRemovalBeforeTargetCaptureProofJson(
-        proof: OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture
-    ): JsObject =
-      val source = proof.source
-      val result = proof.result
-      Json.obj(
-        "source_evidence_id" -> source.id,
-        "semantic_id" -> result.semanticId,
-        "occurrence_id" -> result.occurrenceId,
-        "dependency_fingerprint" -> result.dependencyId,
-        "removal_branch" -> causalBranchJson(result.publicRemovalBranch),
-        "immediate_capture_branch" -> causalBranchJson(result.publicImmediateCaptureBranch),
-        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
-        "participants" -> Json.obj(
-          "remover" -> movementWitnessJson(result.remover),
-          "removed_defender" -> coloredPieceWitnessJson(result.removedDefender),
-          "removal_recapture" -> legalResourceWitnessJson(result.removalRecapture),
-          "post_removal_target_capture" -> movementWitnessJson(result.laterExploit),
-          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
-          "immediate_sole_recapture" -> legalResourceWitnessJson(result.immediateSoleRecapture)
-        ),
-        "post_removal_target_capture_move" -> EvidenceRef.normalizeMove(result.postRemovalTargetCaptureMove),
-        "immediate_sole_recapture_move" -> EvidenceRef.normalizeMove(result.immediateSoleRecaptureMove)
       )
 
     private def vacatedGateEnablesUnrecapturableSliderCaptureProofJson(

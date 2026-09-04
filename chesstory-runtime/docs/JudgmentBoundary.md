@@ -132,7 +132,6 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 
 | typed 증명군 | 유일 graph/proof 생산자 |
 | --- | --- |
-| `SoleRecapturerRemovalBeforeTargetCapture` | `RelationCausalProofAssembler.soleRecapturerRemoval` |
 | `VacatedGateEnablesUnrecapturableSliderCapture` | `RelationCausalProofAssembler.vacatedGateCapture` |
 | `SquareReleaseRoute` | `RelationCausalProofAssembler.squareReleaseRoute` |
 | `CaptureExclusionMoveOrder` | `OccurrenceExplanationAssembler.captureExclusionRecords`, backed directly by `CaptureExclusionMoveOrderProof.certifyDemanded` |

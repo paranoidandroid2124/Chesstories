@@ -778,12 +778,6 @@ function renderClosures(
 function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
   switch (relation.relationKind) {
-    case 'sole_recapturer_removal_before_target_capture':
-      return renderConsumer(
-        relation.proof.postRemovalTargetCaptureMove,
-        relation.proof.participants.postRemovalTargetCapture,
-        copy,
-      );
     case 'vacated_gate_enables_unrecapturable_slider_capture':
       return renderConsumer(relation.proof.exploitMove, relation.proof.participants.exploit, copy);
     case 'square_release_route':

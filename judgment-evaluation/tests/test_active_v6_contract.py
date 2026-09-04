@@ -109,7 +109,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertEqual(
             definitions["occurrenceRelation"]["oneOf"],
             [
-                {"$ref": "#/$defs/soleRecapturerOccurrenceRelation"},
                 {"$ref": "#/$defs/vacatedGateOccurrenceRelation"},
                 {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
                 {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
@@ -120,7 +119,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertNotIn("cause_evidence_id", serialized)
         for retired_definition in (
             "occurrenceExplanation",
-            "soleRecapturerOccurrenceExplanation",
             "vacatedGateOccurrenceExplanation",
             "squareReleaseRouteOccurrenceExplanation",
             "captureExclusionOccurrenceExplanation",
@@ -160,10 +158,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
         contracts = {
-            "soleRecapturerOccurrenceRelation": (
-                "sole_recapturer_removal_before_target_capture",
-                "occurrenceSoleRecapturerProof",
-            ),
             "vacatedGateOccurrenceRelation": (
                 "vacated_gate_enables_unrecapturable_slider_capture",
                 "occurrenceVacatedGateProof",
