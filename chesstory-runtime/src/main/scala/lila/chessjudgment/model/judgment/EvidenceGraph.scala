@@ -531,7 +531,9 @@ object RelationWitnessDetail:
           values(geometricRecapturers.map(piece)),
           values(legalRecaptures.map(_.stableKey)),
           values(restrictedRecaptures.map(_.stableKey))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option
+          .when(includeDerivation)(proof.stableKey(RelationFactKind.CaptureRecaptureInventory))
+          .toList
       case CreatedCheckResponseInventory(
             mover,
             checkedSide,
@@ -569,7 +571,9 @@ object RelationWitnessDetail:
           values(responses.map(_.stableKey)),
           values(controlledKingDestinations.map(_.stableKey)),
           terminal.toString.toLowerCase
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option
+          .when(includeDerivation)(proof.stableKey(RelationFactKind.CreatedCheckResponseInventory))
+          .toList
       case RootCheckResponse(mover, respondingSide, kingSquare, checkers, response, proof) =>
         require(
           respondingSide == mover.side && checkers.nonEmpty &&
@@ -584,7 +588,9 @@ object RelationWitnessDetail:
           square(kingSquare),
           values(checkers.map(piece)),
           response.stableKey
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option.when(includeDerivation)(
+          proof.stableKey(RelationFactKind.RootCheckResponse)
+        ).toList
       case SliderReachDelta(mover, owner, sliderBefore, sliderAfter, direction, before, after, proof) =>
         require(sliderBefore.nonEmpty || sliderAfter.nonEmpty, "a slider-reach delta needs one slider occurrence")
         require(before != after, "a slider-reach delta must change its exact reachable segment")
@@ -602,7 +608,9 @@ object RelationWitnessDetail:
           direction.stableKey,
           optional(before)(sliderReach),
           optional(after)(sliderReach)
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option.when(includeDerivation)(
+          proof.stableKey(RelationFactKind.SliderReachDelta)
+        ).toList
       case PawnTopologyTransition(mover, before, after, changedFacets, proof) =>
         require(before.nonEmpty, "a pawn topology transition needs its before occurrence")
         require(
@@ -618,14 +626,18 @@ object RelationWitnessDetail:
           optional(before)(pawnTopologyState),
           optional(after)(pawnTopologyState),
           sequence(changedFacets.map(_.stableKey))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option.when(includeDerivation)(
+          proof.stableKey(RelationFactKind.PawnTopologyTransition)
+        ).toList
       case StalemateTransition(mover, stalledSide, kingSquare, proof) =>
         require(stalledSide != mover.side, "the after-position side to move must be the stalemated side")
         List(
           moveTransition(mover),
           side(stalledSide),
           square(kingSquare)
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
+        ) ++ Option.when(includeDerivation)(
+          proof.stableKey(RelationFactKind.StalemateTransition)
+        ).toList
       case PawnFileGroup(owner, file, pawns) =>
         List(side(owner), boardFile(file), values(pawns.map(square)))
       case PawnFrontOccupancy(owner, pawn, front, occupant) =>

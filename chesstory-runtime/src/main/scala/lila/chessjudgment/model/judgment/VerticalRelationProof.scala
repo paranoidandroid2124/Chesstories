@@ -806,7 +806,6 @@ private[chessjudgment] final case class VerticalRelationPremise private[chessjud
   * closed absence queries, but never occurrence-owned evidence references.
   */
 final case class VerticalRelationDerivationProof private[chessjudgment] (
-    private[chessjudgment] val contract: VerticalRelationContractKind,
     private val obligations: List[VerticalRelationPremise],
     private[chessjudgment] val absences: List[ClosedRelationAbsencePremise],
     private[chessjudgment] val states: List[ClosedPositionStatePremise]
@@ -860,8 +859,7 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
     * exact premise set, and unrelated lower facts are rejected.
     */
   private[chessjudgment] def proves(detail: RelationWitnessDetail): Boolean =
-    if !VerticalRelationContractKind.forDetail(detail).contains(contract) then false
-    else if states.nonEmpty &&
+    if states.nonEmpty &&
         !detail.isInstanceOf[RelationWitnessDetail.CaptureRecaptureInventory] &&
         !detail.isInstanceOf[RelationWitnessDetail.CreatedCheckResponseInventory] &&
         !detail.isInstanceOf[RelationWitnessDetail.PawnTopologyTransition] &&
@@ -1103,101 +1101,98 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
       after: Option[RelationPawnTopologyStateWitness],
       changed: List[RelationPawnTopologyFacet]
   ): Boolean =
-    if contract != VerticalRelationContractKind.PawnTopologyTransition then false
-    else
-      val rootPremises = obligations.filter(_.role == VerticalRelationPremiseRole.RootMove)
-      val facetPremises = obligations.flatMap { premise =>
-        premise.role match
-          case role @ VerticalRelationPremiseRole.PawnTopologyFacetSource(
-                occurrence,
-                side,
-                pawn,
-                facet,
-                componentPawns,
-                semanticId
-              ) =>
-            Some((premise, role, occurrence, side, pawn, facet, componentPawns, semanticId))
-          case VerticalRelationPremiseRole.RootMove => None
-          case _                                    => None
-      }
-      val passageStatePremises = obligations.flatMap { premise =>
-        premise.role match
-          case VerticalRelationPremiseRole.PawnPassageStateSource(
-                occurrence,
-                side,
-                pawn,
-                semanticId
-              ) => Some((premise, occurrence, side, pawn, semanticId))
-          case _ => None
-      }
-      val onlyTopologyRoles =
-        obligations.size == rootPremises.size + facetPremises.size + passageStatePremises.size
-      val exactFacetStates = facetPremises.forall {
-        case (premise, _, occurrence, side, pawn, facet, componentPawns, semanticId) =>
-          val state = occurrence match
-            case RelationSnapshotOccurrence.Before => before
-            case RelationSnapshotOccurrence.After  => after
-          state.exists(value =>
-            value.side == side && value.square == pawn && value.componentPawns == componentPawns
-          ) &&
-            changed.contains(facet) && premise.semanticId == semanticId
-      }
-      val exactFacets = facetPremises.map(_._6).toSet == changed.toSet &&
-        changed.forall(facet => facetPremises.exists(_._6 == facet))
-      val expectedPassageOccurrences = (before, after) match
-        case (Some(previous), Some(next)) if previous.square != next.square =>
-          Set(
-            (RelationSnapshotOccurrence.Before, previous.side, previous.square),
-            (RelationSnapshotOccurrence.After, next.side, next.square)
-          )
-        case _ => Set.empty[(RelationSnapshotOccurrence, _root_.chess.Color, EvidenceSquare)]
-      val exactPassageStates = passageStatePremises.forall {
-        case (premise, occurrence, side, pawn, semanticId) =>
-          expectedPassageOccurrences((occurrence, side, pawn)) && premise.semanticId == semanticId
-      } && passageStatePremises.map { case (_, occurrence, side, pawn, _) =>
-        (occurrence, side, pawn)
-      }.toSet == expectedPassageOccurrences
-      val expectedProtectedPasserAbsences = Option.when(
-        changed.contains(RelationPawnTopologyFacet.GeometricallyProtectedPasser)
-      )(
-        List(
-          RelationSnapshotOccurrence.Before -> before,
-          RelationSnapshotOccurrence.After -> after
-        ).flatMap { case (occurrence, state) =>
-          state.filter(value => value.passed && !value.geometricallyProtectedPasser).map(value =>
-            ClosedRelationAbsencePremise(
+    val rootPremises = obligations.filter(_.role == VerticalRelationPremiseRole.RootMove)
+    val facetPremises = obligations.flatMap { premise =>
+      premise.role match
+        case role @ VerticalRelationPremiseRole.PawnTopologyFacetSource(
               occurrence,
-              PositionRelationExtractor.ClosedRelationAbsenceQuery.GeometricPawnSupportOf(
-                value.side,
-                value.square
-              )
+              side,
+              pawn,
+              facet,
+              componentPawns,
+              semanticId
+            ) =>
+          Some((premise, role, occurrence, side, pawn, facet, componentPawns, semanticId))
+        case VerticalRelationPremiseRole.RootMove => None
+        case _                                    => None
+    }
+    val passageStatePremises = obligations.flatMap { premise =>
+      premise.role match
+        case VerticalRelationPremiseRole.PawnPassageStateSource(
+              occurrence,
+              side,
+              pawn,
+              semanticId
+            ) => Some((premise, occurrence, side, pawn, semanticId))
+        case _ => None
+    }
+    val onlyTopologyRoles =
+      obligations.size == rootPremises.size + facetPremises.size + passageStatePremises.size
+    val exactFacetStates = facetPremises.forall {
+      case (premise, _, occurrence, side, pawn, facet, componentPawns, semanticId) =>
+        val state = occurrence match
+          case RelationSnapshotOccurrence.Before => before
+          case RelationSnapshotOccurrence.After  => after
+        state.exists(value =>
+          value.side == side && value.square == pawn && value.componentPawns == componentPawns
+        ) &&
+          changed.contains(facet) && premise.semanticId == semanticId
+    }
+    val exactFacets = facetPremises.map(_._6).toSet == changed.toSet &&
+      changed.forall(facet => facetPremises.exists(_._6 == facet))
+    val expectedPassageOccurrences = (before, after) match
+      case (Some(previous), Some(next)) if previous.square != next.square =>
+        Set(
+          (RelationSnapshotOccurrence.Before, previous.side, previous.square),
+          (RelationSnapshotOccurrence.After, next.side, next.square)
+        )
+      case _ => Set.empty[(RelationSnapshotOccurrence, _root_.chess.Color, EvidenceSquare)]
+    val exactPassageStates = passageStatePremises.forall {
+      case (premise, occurrence, side, pawn, semanticId) =>
+        expectedPassageOccurrences((occurrence, side, pawn)) && premise.semanticId == semanticId
+    } && passageStatePremises.map { case (_, occurrence, side, pawn, _) =>
+      (occurrence, side, pawn)
+    }.toSet == expectedPassageOccurrences
+    val expectedProtectedPasserAbsences = Option.when(
+      changed.contains(RelationPawnTopologyFacet.GeometricallyProtectedPasser)
+    )(
+      List(
+        RelationSnapshotOccurrence.Before -> before,
+        RelationSnapshotOccurrence.After -> after
+      ).flatMap { case (occurrence, state) =>
+        state.filter(value => value.passed && !value.geometricallyProtectedPasser).map(value =>
+          ClosedRelationAbsencePremise(
+            occurrence,
+            PositionRelationExtractor.ClosedRelationAbsenceQuery.GeometricPawnSupportOf(
+              value.side,
+              value.square
             )
           )
-        }
-      ).toList.flatten.sortBy(_.stableKey)
-      val expectedPositionStates = before.map(state =>
-        ClosedPositionStatePremise(
-          RelationSnapshotOccurrence.Before,
-          PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(state)
         )
-      ).toList ++ after.map(state =>
-        ClosedPositionStatePremise(
-          RelationSnapshotOccurrence.After,
-          PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(state)
-        )
+      }
+    ).toList.flatten.sortBy(_.stableKey)
+    val expectedPositionStates = before.map(state =>
+      ClosedPositionStatePremise(
+        RelationSnapshotOccurrence.Before,
+        PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(state)
       )
-      rootPremises.size == 1 && onlyTopologyRoles && exactFacetStates && exactFacets && exactPassageStates &&
-        absences == expectedProtectedPasserAbsences && exactStates(expectedPositionStates)
+    ).toList ++ after.map(state =>
+      ClosedPositionStatePremise(
+        RelationSnapshotOccurrence.After,
+        PositionRelationExtractor.ClosedPositionStateQuery.PawnTopology(state)
+      )
+    )
+    rootPremises.size == 1 && onlyTopologyRoles && exactFacetStates && exactFacets && exactPassageStates &&
+      absences == expectedProtectedPasserAbsences && exactStates(expectedPositionStates)
 
-  private[judgment] def stableKey: String =
+  private[judgment] def stableKey(kind: RelationFactKind): String =
     val sourceKey = obligations.map(_.stableKey).mkString("[", ",", "]")
     val absenceKey = absences.map(_.stableKey).mkString("[", ",", "]")
     val stateKey = states.map(_.stableKey).mkString("[", ",", "]")
-    s"contract:${VerticalRelationContractKind.id(contract)}:premises:$sourceKey:absences:$absenceKey:states:$stateKey"
+    s"contract:${RelationFactKind.id(kind)}:premises:$sourceKey:absences:$absenceKey:states:$stateKey"
 
 private[chessjudgment] object VerticalRelationDerivationProof:
   private[judgment] def fromRootAndSources(
-      contract: VerticalRelationContractKind,
       rootRole: VerticalRelationPremiseRole,
       root: CanonicalRootLegalMove,
       premises: List[(VerticalRelationPremiseRole, VerticalRelationPremiseSource, RelationFactEvidence)],
@@ -1224,31 +1219,14 @@ private[chessjudgment] object VerticalRelationDerivationProof:
         relation.semanticId
       )
     }
-    fromPremises(contract, rootPremise :: exact, absences, states)
-
-  private[judgment] def from(
-      contract: VerticalRelationContractKind,
-      premises: List[(VerticalRelationPremiseRole, RelationFactEvidence)],
-      absences: List[ClosedRelationAbsencePremise] = Nil,
-      states: List[ClosedPositionStatePremise] = Nil
-  ): VerticalRelationDerivationProof =
-    fromSources(
-      contract,
-      premises.map { case (role, relation) =>
-        (role, VerticalRelationPremiseSource.Derived, relation)
-      },
-      absences,
-      states
-    )
+    fromPremises(rootPremise :: exact, absences, states)
 
   private[judgment] def fromSources(
-      contract: VerticalRelationContractKind,
       premises: List[(VerticalRelationPremiseRole, VerticalRelationPremiseSource, RelationFactEvidence)],
       absences: List[ClosedRelationAbsencePremise] = Nil,
       states: List[ClosedPositionStatePremise] = Nil
   ): VerticalRelationDerivationProof =
     fromPremises(
-      contract,
       premises.map { case (role, source, relation) =>
         VerticalRelationPremise(
           role,
@@ -1266,7 +1244,6 @@ private[chessjudgment] object VerticalRelationDerivationProof:
     )
 
   private[judgment] def fromPremises(
-      contract: VerticalRelationContractKind,
       premises: List[VerticalRelationPremise],
       absences: List[ClosedRelationAbsencePremise],
       states: List[ClosedPositionStatePremise]
@@ -1276,7 +1253,6 @@ private[chessjudgment] object VerticalRelationDerivationProof:
       "a vertical derivation needs one exact premise per role"
     )
     VerticalRelationDerivationProof(
-      contract,
       premises.sortBy(_.stableKey),
       absences.sortBy(_.stableKey),
       states.sortBy(_.stableKey)
@@ -1306,14 +1282,6 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
     )
   }
 
-  /** Exact changed-dependency key selected by the sole L1 dispatcher. This
-    * does not execute the selected contract or materialize its result.
-    */
-  private[chessjudgment] def activates(
-      contract: VerticalRelationContractKind
-  ): Boolean =
-    engine.activates(contract)
-
   private[judgment] lazy val byContract: VectorMap[
     VerticalRelationContractKind,
     List[RelationFactEvidence]
@@ -1323,14 +1291,6 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
       .foldLeft(VectorMap.empty[VerticalRelationContractKind, List[RelationFactEvidence]]) {
         case (closed, contract) => closed.updated(contract, resultsFor(contract))
       }
-
-  lazy val relations: List[RelationFactEvidence] =
-    val exact = byContract.valuesIterator.flatten.toList
-    require(
-      exact.map(_.semanticId).distinct.size == exact.size,
-      "closed vertical relations cannot repeat one derivation path"
-    )
-    exact
 
   private[judgment] def owns(
       lowerResults: ControlSetDeltaResults,
@@ -1371,8 +1331,6 @@ private final class ClosedVerticalRelationEngine(
 
   def activeContracts: List[VerticalRelationContractKind] = input.activeContracts
 
-  def activates(contract: VerticalRelationContractKind): Boolean = input.activates(contract)
-
   def resultsFor(contract: VerticalRelationContractKind): List[RelationFactEvidence] = synchronized {
     rawByContract.getOrElseUpdate(
       contract,
@@ -1391,7 +1349,8 @@ private final class ClosedVerticalRelationEngine(
             relation.proofStage == RelationProofStage.DerivedFact &&
               input.ownsOutput(relation.detail) &&
               proof.exists(exact =>
-                exact.contract == contract && exact.proves(relation.detail) && unresolved.isEmpty
+                VerticalRelationContractKind.forDetail(relation.detail).contains(contract) &&
+                  exact.proves(relation.detail) && unresolved.isEmpty
               )
           relation.semanticId -> (valid -> unresolved)
         }
@@ -1406,7 +1365,6 @@ private final class ClosedVerticalRelationEngine(
           results.map(_.semanticId).distinct.size == results.size,
           "one vertical contract cannot repeat a derivation path"
         )
-        input.admit(results)
         results
       }
     )
@@ -1519,9 +1477,9 @@ private[chessjudgment] final class VerticalRelationInput private (
   import VerticalRelationWitnessProjection.*
 
   private val lowerRelations = controlSetDeltas.relations
-  private var derivedBySemanticId = lowerRelations.map(relation => relation.semanticId -> relation).toMap
+  private val lowerBySemanticId = lowerRelations.map(relation => relation.semanticId -> relation).toMap
   require(
-    derivedBySemanticId.size == lowerRelations.size,
+    lowerBySemanticId.size == lowerRelations.size,
     "control-set deltas cannot repeat a derivation identity"
   )
 
@@ -1909,7 +1867,7 @@ private[chessjudgment] final class VerticalRelationInput private (
             delta.rootMove.fact.semanticId == premise.semanticId
         )(delta.rootMove.fact)
       case VerticalRelationPremiseSource.Derived =>
-        derivedBySemanticId.get(premise.semanticId)
+        lowerBySemanticId.get(premise.semanticId)
     candidate.exists { relation =>
       val exactStage = premise.source match
         case VerticalRelationPremiseSource.RootTransition =>
@@ -1945,20 +1903,6 @@ private[chessjudgment] final class VerticalRelationInput private (
       case RelationSnapshotOccurrence.Before => delta.beforeInventory
       case RelationSnapshotOccurrence.After  => delta.afterInventory
     inventory.certifyState(state.query)
-
-  private[judgment] def admit(relations: List[RelationFactEvidence]): Unit =
-    val entries = relations.map(relation => relation.semanticId -> relation)
-    require(
-      entries.map(_._1).distinct.size == entries.size,
-      "one vertical contract cannot repeat a derivation identity"
-    )
-    entries.foreach { case (semanticId, relation) =>
-      require(
-        !derivedBySemanticId.contains(semanticId),
-        "a vertical derivation cannot replace or repeat a lower result"
-      )
-      derivedBySemanticId = derivedBySemanticId.updated(semanticId, relation)
-    }
 
 private[chessjudgment] object VerticalRelationInput:
   def apply(
@@ -2223,7 +2167,6 @@ private[chessjudgment] object VerticalRelationContracts:
         )
       }
       val proof = VerticalRelationDerivationProof.fromRootAndSources(
-        VerticalRelationContractKind.CaptureRecaptureInventory,
         VerticalRelationPremiseRole.RootCapture,
         root,
         premises,
@@ -2345,7 +2288,6 @@ private[chessjudgment] object VerticalRelationContracts:
         )
       )
       val proof = VerticalRelationDerivationProof.fromSources(
-        VerticalRelationContractKind.CreatedCheckResponseInventory,
         premises,
         absences,
         states = states
@@ -2414,7 +2356,6 @@ private[chessjudgment] object VerticalRelationContracts:
         )
       ).flatten.toList
     val proof = VerticalRelationDerivationProof.fromRootAndSources(
-      VerticalRelationContractKind.RootCheckResponse,
       VerticalRelationPremiseRole.RootMove,
       input.rootMove,
       sources
@@ -2476,7 +2417,6 @@ private[chessjudgment] object VerticalRelationContracts:
   ): List[RelationFactEvidence] =
     input.sliderReachDeltas.map { delta =>
       val proof = VerticalRelationDerivationProof.fromRootAndSources(
-        VerticalRelationContractKind.SliderReachDelta,
         VerticalRelationPremiseRole.RootMove,
         input.rootMove,
         sliderReachSources(
@@ -2665,7 +2605,6 @@ private[chessjudgment] object VerticalRelationContracts:
           )
         ).toList
         val proof = VerticalRelationDerivationProof.fromRootAndSources(
-          VerticalRelationContractKind.PawnTopologyTransition,
           VerticalRelationPremiseRole.RootMove,
           root,
           premises,
@@ -2824,7 +2763,6 @@ private[chessjudgment] object VerticalRelationContracts:
       throw IllegalArgumentException("a stalemate position needs one exact king square")
     )
     val proof = VerticalRelationDerivationProof.fromRootAndSources(
-      VerticalRelationContractKind.StalemateTransition,
       VerticalRelationPremiseRole.RootMove,
       input.rootMove,
       Nil,

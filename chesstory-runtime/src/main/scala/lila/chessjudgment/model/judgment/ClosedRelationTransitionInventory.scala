@@ -309,7 +309,7 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
         Nil
       )
     }
-    val lowerRelationsBySemanticId = (semantic.transitionRelations ++ semantic.verticalRelations)
+    val transitionRelationsBySemanticId = semantic.transitionRelations
       .map(relation => relation.semanticId -> relation)
       .toMap
     val verticalBindings = semantic.verticalRelations.map { relation =>
@@ -362,7 +362,7 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
             // premise such as the chosen check response.
             Nil
           case VerticalRelationPremiseSource.Derived =>
-            List(Right(required(lowerRelationsBySemanticId.get(premise.semanticId).filter(source =>
+            List(Right(required(transitionRelationsBySemanticId.get(premise.semanticId).filter(source =>
               source.kind == premise.kind && source.assertionId == premise.assertionId &&
                 source.proofStage == premise.stage &&
                 RelationProofStage.rank(source.proofStage) < RelationProofStage.rank(relation.proofStage)
