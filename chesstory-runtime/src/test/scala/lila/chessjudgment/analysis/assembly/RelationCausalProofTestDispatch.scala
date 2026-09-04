@@ -7,22 +7,6 @@ import lila.chessjudgment.model.judgment.*
   */
 private[chessjudgment] object RelationCausalProofTestDispatch:
 
-  def forced(
-      context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    exactDemand(context).flatMap(demand =>
-      RelationCausalProofAssembler
-        .fromDemand(allocator, demand)
-        .collect {
-          case record @ EvidenceRecord(
-                _,
-                _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence,
-                _
-              ) => record
-        }
-    )
-
   def defense(
       context: JudgmentAssemblyContext
   ): List[CertifiedSoleRecapturerRemovalBeforeTargetCapture] =

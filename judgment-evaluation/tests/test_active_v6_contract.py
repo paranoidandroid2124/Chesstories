@@ -109,7 +109,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertEqual(
             definitions["occurrenceRelation"]["oneOf"],
             [
-                {"$ref": "#/$defs/uniqueCheckReplyOccurrenceRelation"},
                 {"$ref": "#/$defs/soleRecapturerOccurrenceRelation"},
                 {"$ref": "#/$defs/vacatedGateOccurrenceRelation"},
                 {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
@@ -121,7 +120,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertNotIn("cause_evidence_id", serialized)
         for retired_definition in (
             "occurrenceExplanation",
-            "uniqueCheckReplyOccurrenceExplanation",
             "soleRecapturerOccurrenceExplanation",
             "vacatedGateOccurrenceExplanation",
             "squareReleaseRouteOccurrenceExplanation",
@@ -157,15 +155,11 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             with self.subTest(retired_field=retired_field), self.assertRaises(ContractError):
                 registry.validate_document(retired, move_path, label="retired explanation lane")
 
-    def test_six_occurrence_relation_contracts_are_closed_and_distinct(self) -> None:
+    def test_occurrence_relation_contracts_are_closed_and_distinct(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
         contracts = {
-            "uniqueCheckReplyOccurrenceRelation": (
-                "unique_check_reply_defender_displacement_before_capture",
-                "occurrenceUniqueCheckReplyProof",
-            ),
             "soleRecapturerOccurrenceRelation": (
                 "sole_recapturer_removal_before_target_capture",
                 "occurrenceSoleRecapturerProof",

@@ -2,7 +2,7 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Sole graph producer for the four relation-backed causal families. Each
+/** Sole graph producer for the three relation-backed causal families. Each
   * family orients exact roots from its own lower facts; only deterministic
   * graph ownership is shared here.
   */
@@ -13,8 +13,7 @@ private[chessjudgment] object RelationCausalProofAssembler:
       demand: OccurrenceExplanationDemand
   ): List[EvidenceRecord] =
     val records =
-      uniqueCheckReply(allocator, demand) ++
-        soleRecapturerRemoval(allocator, demand) ++
+      soleRecapturerRemoval(allocator, demand) ++
         vacatedGateCapture(allocator, demand) ++
         squareReleaseRoute(allocator, demand)
     require(
@@ -22,38 +21,6 @@ private[chessjudgment] object RelationCausalProofAssembler:
       "one relation-causal evidence id may have only one graph owner"
     )
     records.sortBy(_.ref.id)
-
-  private def uniqueCheckReply(
-      allocator: JudgmentProvenanceAllocator,
-      demand: OccurrenceExplanationDemand
-  ): List[EvidenceRecord] =
-    val certified = UniqueCheckReplyProofDemand.from(demand).flatMap { exactDemand =>
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.certifyDemanded(
-        exactDemand.subject,
-        exactDemand.displacementBranch,
-        exactDemand.immediateCaptureBranch,
-        exactDemand.lower
-      )
-    }
-    OccurrenceExplanationAssembler.occurrenceProofRecords(
-      family = BoundedCausalContractKind.UniqueCheckReplyDefenderDisplacementBeforeCapture,
-      allocator = allocator,
-      subject = demand.subject
-    )(certified)(
-      semanticId = _.semantic.semanticId,
-      occurrenceId = _.occurrence.occurrenceId,
-      dependencyId = _.dependency.value,
-      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
-      parentSources = _.proof.parentSources,
-      payload = exact =>
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence(
-          exact.semantic,
-          exact.occurrence,
-          demand.subject.publicOccurrence,
-          exact.dependency.value,
-          exact.proof
-        )
-    )
 
   private def soleRecapturerRemoval(
       allocator: JudgmentProvenanceAllocator,

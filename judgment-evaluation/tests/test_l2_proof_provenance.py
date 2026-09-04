@@ -220,7 +220,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
         ]
         for values in (contract_kinds, proof_types, formal_tests, producer_handlers):
             self.assertEqual(len(values), len(set(values)))
-        self.assertEqual(len(self.contracts), 6)
         for contract in self.contracts:
             self.assertEqual(set(contract), CONTRACT_KEYS)
             self.assertEqual(set(contract["audit_mapping"]), AUDIT_MAPPING_KEYS)

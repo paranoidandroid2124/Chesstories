@@ -778,8 +778,6 @@ function renderClosures(
 function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
   switch (relation.relationKind) {
-    case 'unique_check_reply_defender_displacement_before_capture':
-      return renderConsumer(relation.proof.realizingMove, relation.proof.participants.realizer, copy);
     case 'sole_recapturer_removal_before_target_capture':
       return renderConsumer(
         relation.proof.postRemovalTargetCaptureMove,

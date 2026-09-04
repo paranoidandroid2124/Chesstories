@@ -287,13 +287,6 @@ object RuntimeProtocol:
     ): JsObject =
       val subject = proof.subjectOccurrence
       proof match
-        case proof: OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture =>
-          Json.obj(
-            "subject_occurrence" -> relationSubjectJson(subject),
-            "relation_kind" -> "unique_check_reply_defender_displacement_before_capture",
-            "proof" ->
-              uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson(proof)
-          )
         case proof: OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture =>
           Json.obj(
             "subject_occurrence" -> relationSubjectJson(subject),
@@ -480,31 +473,6 @@ object RuntimeProtocol:
           "ply" -> use.position.ply,
           "scope" -> evidenceScopeCode(use.scope)
         )
-      )
-
-    private def uniqueCheckReplyDefenderDisplacementBeforeCaptureProofJson(
-        proof: OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture
-    ): JsObject =
-      val source = proof.source
-      val result = proof.result
-      Json.obj(
-        "source_evidence_id" -> source.id,
-        "semantic_id" -> result.semanticId,
-        "occurrence_id" -> result.occurrenceId,
-        "dependency_fingerprint" -> result.dependencyId,
-        "displacement_branch" -> causalBranchJson(result.publicDisplacementBranch),
-        "immediate_capture_branch" -> causalBranchJson(result.publicImmediateCaptureBranch),
-        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
-        "participants" -> Json.obj(
-          "trigger" -> movementWitnessJson(result.triggerMovement),
-          "forced_reply" -> legalResourceWitnessJson(result.uniqueCheckReplyDefenderDisplacementBeforeCapture),
-          "realizer" -> movementWitnessJson(result.realizerMovement),
-          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
-          "immediate_defense" -> legalResourceWitnessJson(result.immediateDefenseResource),
-          "disabled_defender" -> coloredPieceWitnessJson(result.disabledDefender)
-        ),
-        "realizing_move" -> EvidenceRef.normalizeMove(result.realizingMove),
-        "immediate_capture_branch_legal_defense_move" -> EvidenceRef.normalizeMove(result.immediateDefenseMove)
       )
 
     private def soleRecapturerRemovalBeforeTargetCaptureProofJson(

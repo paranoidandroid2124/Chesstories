@@ -7,67 +7,6 @@ import lila.chessjudgment.model.judgment.*
   * exact lower occurrences; selection role, rank, verdict, and comparison
   * identity never participate.
   */
-private[assembly] final case class UniqueCheckReplyProofDemand private (
-    subject: CertifiedRootOccurrence,
-    displacementBranch: CertifiedRootOccurrence,
-    immediateCaptureBranch: CertifiedRootOccurrence,
-    lower: UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand
-):
-  require(subject == displacementBranch || subject == immediateCaptureBranch)
-
-  def stableKey: String = List(
-    subject.transitionOwner.ref.id,
-    displacementBranch.lineOwner.ref.id,
-    displacementBranch.transitionOwner.ref.id,
-    immediateCaptureBranch.lineOwner.ref.id,
-    immediateCaptureBranch.transitionOwner.ref.id,
-    lower.stableKey
-  ).mkString("|")
-
-private[assembly] object UniqueCheckReplyProofDemand:
-  def from(demand: OccurrenceExplanationDemand): List[UniqueCheckReplyProofDemand] =
-    val exact = for
-      (displacement, immediate) <- demand.subjectSiblingOrientations
-      lower <- lowerDemand(displacement.replay, immediate.replay).toList
-    yield UniqueCheckReplyProofDemand(demand.subject, displacement, immediate, lower)
-    canonical(exact, _.stableKey, "unique-check-reply")
-
-  private def lowerDemand(
-      displacement: CanonicalLineReplay,
-      immediate: CanonicalLineReplay
-  ): Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand] =
-    val displacementSteps = displacement.replaySteps
-    val immediateSteps = immediate.replaySteps
-    for
-      delayedCapture <- displacementSteps.lift(2)
-      immediateCapture <- immediateSteps.headOption
-      if EvidenceRef.sameMove(delayedCapture.moveUci, immediateCapture.moveUci)
-      _ <- immediateSteps.lift(1)
-      if activates(displacement, 0, VerticalRelationContractKind.CreatedCheckResponseInventory)
-      if activates(displacement, 2, VerticalRelationContractKind.CaptureRecaptureInventory)
-      if activates(immediate, 0, VerticalRelationContractKind.CaptureRecaptureInventory)
-      checkMembership <- for
-        trigger <- displacementSteps.headOption
-        reply <- displacementSteps.lift(1)
-        exact <- displacement.exactCheckResponseOccurrenceMembership(trigger, reply)
-      yield exact
-      captureOccurrence <- exactVerticalOccurrence(
-        displacement,
-        delayedCapture,
-        VerticalRelationContractKind.CaptureRecaptureInventory
-      )
-      immediateMembership <- for
-        reply <- immediateSteps.lift(1)
-        exact <- immediate.exactRecaptureOccurrenceMembership(immediateCapture, reply)
-      yield exact
-    yield UniqueCheckReplyDefenderDisplacementBeforeCaptureDemand(
-      checkMembership._1,
-      checkMembership._2,
-      captureOccurrence,
-      immediateMembership._1,
-      immediateMembership._2
-    )
-
 private[assembly] final case class SoleRecapturerRemovalProofDemand private (
     subject: CertifiedRootOccurrence,
     removalBranch: CertifiedRootOccurrence,

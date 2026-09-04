@@ -509,7 +509,6 @@ test('limits Korean relation copy to finite structural labels', () => {
   assert.match(text, /폐쇄 부재/);
   assert.match(text, /폐쇄 상태/);
   assert.deepEqual(moveReviewCopy('ko-KR').familyLabels, {
-    unique_check_reply_defender_displacement_before_capture: '유일 체크 응수로 수비수 이동 후 포획',
     sole_recapturer_removal_before_target_capture: '유일 재포획 기물 제거 후 목표 포획',
     vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
     square_release_route: '칸 해방 후 기물 경로',
@@ -517,8 +516,6 @@ test('limits Korean relation copy to finite structural labels', () => {
     relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
   });
   assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
-    unique_check_reply_defender_displacement_before_capture:
-      'Unique-check-reply defender displacement before capture',
     sole_recapturer_removal_before_target_capture: 'Sole-recapturer removal before target capture',
     vacated_gate_enables_unrecapturable_slider_capture:
       'Unrecapturable slider capture through a vacated gate',

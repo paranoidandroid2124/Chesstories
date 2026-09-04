@@ -65,10 +65,6 @@ object EvidenceSemanticAnchor:
   * upper grouping record decides whether it may survive or be projected.
   */
 enum OccurrenceRelationProof:
-  case UniqueCheckReplyDefenderDisplacementBeforeCapture(
-      override val source: EvidenceRef,
-      result: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence
-  )
   case SoleRecapturerRemovalBeforeTargetCapture(
       override val source: EvidenceRef,
       result: SoleRecapturerRemovalBeforeTargetCaptureEvidence
@@ -93,8 +89,6 @@ enum OccurrenceRelationProof:
 
   final def subjectOccurrence: ExplanationSubjectOccurrence =
     this match
-      case OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(_, result) =>
-        result.subjectOccurrence
       case OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture(_, result) =>
         result.subjectOccurrence
       case OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result) =>
@@ -119,8 +113,6 @@ object OccurrenceRelationProof:
       record: EvidenceRecord
   ): Option[OccurrenceRelationProof] =
     record match
-      case EvidenceRecord(ref, payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) =>
-        Some(OccurrenceRelationProof.UniqueCheckReplyDefenderDisplacementBeforeCapture(ref, payload))
       case EvidenceRecord(ref, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) =>
         Some(OccurrenceRelationProof.SoleRecapturerRemovalBeforeTargetCapture(ref, payload))
       case EvidenceRecord(ref, payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence, _) =>
@@ -1141,71 +1133,6 @@ private[chessjudgment] final case class PositionOccurrenceEvidence(
 /** Exact occurrence result for one bounded L2 family. It remains
   * package-private; the occurrence explanation host exposes only its certified
   * structured projection.
-  */
-private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence private[chessjudgment] (
-    semantic: UniqueCheckReplyDefenderDisplacementBeforeCaptureSemanticProof,
-    occurrence: UniqueCheckReplyDefenderDisplacementBeforeCaptureOccurrence,
-    subjectOccurrence: ExplanationSubjectOccurrence,
-    dependencyFingerprint: String,
-    private[chessjudgment] val occurrenceProof: UniqueCheckReplyDefenderDisplacementBeforeCaptureOccurrenceProof
-) extends EvidencePayload:
-  require(
-    occurrence.semanticId == semantic.semanticId,
-    "an L2 occurrence must retain its exact semantic proof"
-  )
-  require(occurrence.subjectOccurrence == subjectOccurrence)
-  require(
-    dependencyFingerprint.matches("[0-9a-f]{64}"),
-    "an L2 result needs its complete dependency fingerprint"
-  )
-  def semanticId: String = semantic.semanticId
-  def occurrenceId: String = occurrence.occurrenceId
-  def dependencyId: String = dependencyFingerprint
-  def displacementLine: LineNodeRef = occurrence.displacementLine
-  def immediateCaptureLine: LineNodeRef = occurrence.immediateCaptureLine
-  def displacementSteps: List[LineReplayStep] = occurrence.displacementSteps
-  def immediateCaptureSteps: List[LineReplayStep] = occurrence.immediateCaptureSteps
-  def displacementBranch: CausalBranchOccurrence = occurrence.displacementBranch
-  def immediateCaptureBranch: CausalBranchOccurrence = occurrence.immediateCaptureBranch
-  def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicDisplacementBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.displacementBranch)
-  def publicImmediateCaptureBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.immediateCaptureBranch)
-  def publicProofPaths: List[BoundedCausalPublicProofPath] =
-    BoundedCausalPublicProjection.verticalRelationPaths(occurrence.proofPaths)
-  def hasCompleteProofPaths: Boolean =
-    proofPaths.nonEmpty && proofPaths.forall(path =>
-      path.premiseUses.nonEmpty && path.closedAbsenceUses.nonEmpty
-    )
-  def triggerMovement: RelationMoveTransitionWitness = semantic.trigger
-  def uniqueCheckReplyDefenderDisplacementBeforeCapture: RelationLegalMoveResourceWitness = semantic.forcedReply
-  def realizerMovement: RelationMoveTransitionWitness = semantic.realizer
-  def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
-  def immediateDefenseResource: RelationLegalMoveResourceWitness = semantic.immediateDefense
-  def disabledDefender: RelationColoredPieceWitness = semantic.disabledDefender
-  def realizingMove: String = occurrence.realizerStep.moveUci
-  def immediateDefenseMove: String = occurrence.immediateReplyStep.moveUci
-
-  private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.proves(record, this)
-
-  private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.parentSources
-
-  private[chessjudgment] def lowerRecordsAreCanonical(
-      byId: Map[String, EvidenceRecord]
-  ): Boolean =
-    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
-  private[chessjudgment] def consumesDependencies(
-      subject: CertifiedRootOccurrence,
-      displacement: CertifiedRootOccurrence,
-      immediateCapture: CertifiedRootOccurrence
-  ): Boolean =
-    occurrenceProof.consumesDependencies(subject, displacement, immediateCapture)
-/** Exact occurrence of one defense obligation changing between two retained
-  * sibling branches. The mechanism remains family-specific;
-  * this payload does not claim general overload or defense collapse.
   */
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureEvidence private[chessjudgment] (
     semantic: SoleRecapturerRemovalBeforeTargetCaptureSemanticProof,
@@ -3293,8 +3220,6 @@ final case class EvidenceRecord(
     payload match
       case lineFact: LineFactEvidence =>
         List(lineFact.line)
-      case payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence =>
-        List(payload.occurrence.displacementLine, payload.occurrence.immediateCaptureLine)
       case payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence =>
         List(payload.occurrence.removalLine, payload.occurrence.immediateCaptureLine)
       case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence =>
@@ -3850,9 +3775,6 @@ final class TypedEvidenceGraph private (
         case payload: StructuralDeltaEvidence =>
           structuralDeltaAncestryVerified(record, payload) &&
             payload.canonicalOutputShapeCertified
-        case payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence =>
-          exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
-            payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)

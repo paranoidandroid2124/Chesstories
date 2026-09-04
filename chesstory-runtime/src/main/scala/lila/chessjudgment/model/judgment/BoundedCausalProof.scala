@@ -7,7 +7,6 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum BoundedCausalContractKind:
-  case UniqueCheckReplyDefenderDisplacementBeforeCapture
   case SoleRecapturerRemovalBeforeTargetCapture
   case VacatedGateEnablesUnrecapturableSliderCapture
   case SquareReleaseRoute
@@ -16,8 +15,6 @@ private[chessjudgment] enum BoundedCausalContractKind:
 
   def semanticNamespace: String =
     this match
-      case UniqueCheckReplyDefenderDisplacementBeforeCapture =>
-        "causal-proposition:unique-check-reply-defender-displacement-before-capture:v2"
       case SoleRecapturerRemovalBeforeTargetCapture =>
         "causal-proposition:sole-recapturer-removal-before-target-capture:v1"
       case VacatedGateEnablesUnrecapturableSliderCapture =>

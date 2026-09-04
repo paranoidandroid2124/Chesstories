@@ -3,7 +3,7 @@
   "authority": "ci_only_reference_provenance_not_board_truth",
   "runtime_consumed": false,
   "cache_dependency": false,
-  "relation_delivery": "Each of the six narrow exact local typed proof records is independently graph-certified and projected directly as its own occurrence relation; no wrapper, separate upper owner, or admission record exists.",
+  "relation_delivery": "Each current typed relation proof record is independently graph-certified and projected directly as its own occurrence relation; no wrapper, separate upper owner, or admission record exists.",
   "host": {
     "demand": {
       "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationDemand.scala",
@@ -63,94 +63,6 @@
     }
   ],
   "contracts": [
-    {
-      "contract_kind": "UniqueCheckReplyDefenderDisplacementBeforeCapture",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler",
-        "method": "uniqueCheckReply"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence"
-      },
-      "wire": {
-        "relation_kind": "unique_check_reply_defender_displacement_before_capture",
-        "variant_definition": "uniqueCheckReplyOccurrenceRelation",
-        "proof_field": "proof",
-        "proof_definition": "occurrenceUniqueCheckReplyProof"
-      },
-      "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.uniqueCheckReply",
-        "coordinate_piece_identity_proposition": {
-          "statement": "An exact checking move has one certified reply that displaces the identified defender; the same identified actor then captures the same target, while the immediate-capture sibling retains the defender resource.",
-          "wire_fields": ["participants", "trigger", "forced_reply", "realizer", "captured_target", "immediate_defense", "disabled_defender"]
-        },
-        "lower_premises": {
-          "contracts": ["created_check_response_inventory", "capture_recapture_inventory"],
-          "dynamic_id_fields": ["result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
-          "issuer_source_kinds": ["relation result owner", "canonical source premise IDs"]
-        },
-        "closed_inventory": {
-          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
-          "fields": ["semantic_proof_id", "query", "position"],
-          "certified_absence_or_state": ["delayed_capture_recapture_absent", "delayed_capture_actor_present", "delayed_target_present"]
-        },
-        "branch_occurrence": {
-          "roles": ["displacement_then_capture", "immediate_capture_with_defender"],
-          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
-          "provenance_fields": ["root_provenance", "provenance"]
-        },
-        "proof_paths_transposition": {
-          "cardinality": "exactly_one_current_contract",
-          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
-          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
-        },
-        "dependency_cache": {
-          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "all lower result and source IDs", "closed absence and state IDs", "proof path occurrence IDs"],
-          "fingerprint_field": "dependency_fingerprint",
-          "cache_owner": "sole producer deterministic graph record; no separate public cache"
-        },
-        "consumers": {
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
-          "runtime_field": "occurrence_relations",
-          "schema_variant": "uniqueCheckReplyOccurrenceRelation",
-          "runtime_producer_tests": {
-            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
-            "cases": [
-              {
-                "name": "v6 commentary serializes unique-check-reply defender displacement before capture"
-              }
-            ]
-          },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
-          "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
-          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
-        },
-        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of legal-resource, relation, and position-state truth."
-      },
-      "implementation_status": "current_exact_proof",
-      "reference_support": "motif_only",
-      "references": [
-        {
-          "support": "motif_only",
-          "locator": {
-            "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
-            "pdf_page": 178
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "forced_win",
-        "general_deflection",
-        "tempo"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/UniqueCheckReplyDefenderDisplacementBeforeCaptureTest.scala",
-        "symbol": "UniqueCheckReplyDefenderDisplacementBeforeCaptureTest"
-      }
-    },
     {
       "contract_kind": "SoleRecapturerRemovalBeforeTargetCapture",
       "producer": {

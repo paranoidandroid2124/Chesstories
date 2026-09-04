@@ -91,7 +91,6 @@ export interface MoveReviewCandidate {
 }
 
 export type MoveReviewRelationKind =
-  | 'unique_check_reply_defender_displacement_before_capture'
   | 'sole_recapturer_removal_before_target_capture'
   | 'vacated_gate_enables_unrecapturable_slider_capture'
   | 'square_release_route'
@@ -297,39 +296,6 @@ interface MoveReviewOccurrenceProofBase {
   dependencyFingerprint: string;
 }
 
-type MoveReviewUniquePremise =
-  | MoveReviewRelationPremiseUse<
-      'displacement_check_response',
-      'created_check_response_inventory',
-      'displacement_then_capture'
-    >
-  | MoveReviewRelationPremiseUse<
-      'delayed_capture_recapture',
-      'capture_recapture_inventory',
-      'displacement_then_capture'
-    >
-  | MoveReviewRelationPremiseUse<
-      'immediate_capture_recapture',
-      'capture_recapture_inventory',
-      'immediate_capture_with_defender'
-    >;
-
-export interface MoveReviewUniqueCheckReplyProof extends MoveReviewOccurrenceProofBase {
-  displacementBranch: MoveReviewOccurrenceBranch<'displacement_then_capture'>;
-  immediateCaptureBranch: MoveReviewOccurrenceBranch<'immediate_capture_with_defender'>;
-  proofPaths: [MoveReviewBoundedProofPath<MoveReviewUniquePremise>];
-  participants: {
-    trigger: MoveReviewMovementWitness;
-    forcedReply: MoveReviewLegalResourceWitness;
-    realizer: MoveReviewMovementWitness;
-    capturedTarget: MoveReviewColoredPieceWitness;
-    immediateDefense: MoveReviewLegalResourceWitness;
-    disabledDefender: MoveReviewColoredPieceWitness;
-  };
-  realizingMove: Uci;
-  immediateCaptureBranchLegalDefenseMove: Uci;
-}
-
 type MoveReviewSolePremise =
   | MoveReviewRelationPremiseUse<
       'defender_removal',
@@ -515,7 +481,6 @@ interface MoveReviewRelocationEnablesRecaptureProof extends MoveReviewOccurrence
 }
 
 export type MoveReviewOccurrenceProof =
-  | MoveReviewUniqueCheckReplyProof
   | MoveReviewSoleRecapturerProof
   | MoveReviewVacatedGateProof
   | MoveReviewSquareReleaseProof
@@ -529,10 +494,6 @@ interface MoveReviewOccurrenceRelationBase {
 
 export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase &
   (
-    | {
-        relationKind: 'unique_check_reply_defender_displacement_before_capture';
-        proof: MoveReviewUniqueCheckReplyProof;
-      }
     | {
         relationKind: 'sole_recapturer_removal_before_target_capture';
         proof: MoveReviewSoleRecapturerProof;
@@ -822,7 +783,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: '분석 대안',
     analysisContinuation: '분석 후속',
     familyLabels: {
-      unique_check_reply_defender_displacement_before_capture: '유일 체크 응수로 수비수 이동 후 포획',
       sole_recapturer_removal_before_target_capture: '유일 재포획 기물 제거 후 목표 포획',
       vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
       square_release_route: '칸 해방 후 기물 경로',
@@ -1027,8 +987,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: 'Analyzed alternative',
     analysisContinuation: 'Analysis continuation',
     familyLabels: {
-      unique_check_reply_defender_displacement_before_capture:
-        'Unique-check-reply defender displacement before capture',
       sole_recapturer_removal_before_target_capture: 'Sole-recapturer removal before target capture',
       vacated_gate_enables_unrecapturable_slider_capture:
         'Unrecapturable slider capture through a vacated gate',
@@ -1953,18 +1911,6 @@ function projectOccurrenceRelation(
   if (!relationKind || !subjectOccurrence) return;
 
   switch (relationKind) {
-    case 'unique_check_reply_defender_displacement_before_capture': {
-      const proof = projectUniqueCheckReplyProof(value.proof);
-      const relation = proof
-        ? {
-            id: occurrenceRelationId(proof.sourceEvidenceId),
-            subjectOccurrence,
-            relationKind,
-            proof,
-          }
-        : undefined;
-      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
-    }
     case 'sole_recapturer_removal_before_target_capture': {
       const proof = projectSoleRecapturerProof(value.proof);
       const relation = proof
@@ -2033,8 +1979,7 @@ function occurrenceRelationId(sourceEvidenceId: string): string {
 }
 
 function occurrenceRelationKind(value: unknown): MoveReviewRelationKind | undefined {
-  return value === 'unique_check_reply_defender_displacement_before_capture' ||
-    value === 'sole_recapturer_removal_before_target_capture' ||
+  return value === 'sole_recapturer_removal_before_target_capture' ||
     value === 'vacated_gate_enables_unrecapturable_slider_capture' ||
     value === 'square_release_route' ||
     value === 'capture_exclusion_move_order' ||
@@ -2116,130 +2061,6 @@ function projectOccurrenceProofBase(
   return sourceEvidenceId && semanticId && occurrenceId && dependencyFingerprint
     ? { sourceEvidenceId, semanticId, occurrenceId, dependencyFingerprint }
     : undefined;
-}
-
-function projectUniqueCheckReplyProof(value: unknown): MoveReviewUniqueCheckReplyProof | undefined {
-  const keys = [
-    'source_evidence_id',
-    'semantic_id',
-    'occurrence_id',
-    'dependency_fingerprint',
-    'displacement_branch',
-    'immediate_capture_branch',
-    'proof_paths',
-    'participants',
-    'realizing_move',
-    'immediate_capture_branch_legal_defense_move',
-  ];
-  if (!isObject(value) || !hasExactKeys(value, keys)) return;
-  const base = projectOccurrenceProofBase(value);
-  const displacementBranch = projectOccurrenceBranch(
-    value.displacement_branch,
-    'displacement_then_capture',
-    3,
-    3,
-  );
-  const immediateCaptureBranch = projectOccurrenceBranch(
-    value.immediate_capture_branch,
-    'immediate_capture_with_defender',
-    2,
-    2,
-  );
-  const paths = projectArray(value.proof_paths, 1, 1, projectUniqueCheckReplyPath);
-  const participants = projectUniqueCheckReplyParticipants(value.participants);
-  const realizingMove = uci(value.realizing_move);
-  const immediateCaptureBranchLegalDefenseMove = uci(value.immediate_capture_branch_legal_defense_move);
-  if (
-    !base ||
-    !displacementBranch ||
-    !immediateCaptureBranch ||
-    !paths ||
-    !participants ||
-    !realizingMove ||
-    !immediateCaptureBranchLegalDefenseMove ||
-    displacementBranch.branchId === immediateCaptureBranch.branchId ||
-    !boundedPathsFitBranches(paths, [displacementBranch, immediateCaptureBranch])
-  )
-    return;
-  return {
-    ...base,
-    displacementBranch,
-    immediateCaptureBranch,
-    proofPaths: paths as [MoveReviewBoundedProofPath<MoveReviewUniquePremise>],
-    participants,
-    realizingMove,
-    immediateCaptureBranchLegalDefenseMove,
-  };
-}
-
-function projectUniqueCheckReplyParticipants(
-  value: unknown,
-): MoveReviewUniqueCheckReplyProof['participants'] | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, [
-      'trigger',
-      'forced_reply',
-      'realizer',
-      'captured_target',
-      'immediate_defense',
-      'disabled_defender',
-    ])
-  )
-    return;
-  const trigger = projectMovementWitness(value.trigger);
-  const forcedReply = projectLegalResourceWitness(value.forced_reply);
-  const realizer = projectMovementWitness(value.realizer);
-  const capturedTarget = projectColoredPieceWitness(value.captured_target);
-  const immediateDefense = projectLegalResourceWitness(value.immediate_defense);
-  const disabledDefender = projectColoredPieceWitness(value.disabled_defender);
-  return trigger && forcedReply && realizer && capturedTarget && immediateDefense && disabledDefender
-    ? { trigger, forcedReply, realizer, capturedTarget, immediateDefense, disabledDefender }
-    : undefined;
-}
-
-function projectUniqueCheckReplyPath(
-  value: unknown,
-): MoveReviewBoundedProofPath<MoveReviewUniquePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 3, 1, 4, undefined, 3);
-  if (!shell) return;
-  const premiseSpecs = [
-    ['displacement_check_response', 'created_check_response_inventory', 'displacement_then_capture', 0],
-    ['delayed_capture_recapture', 'capture_recapture_inventory', 'displacement_then_capture', 2],
-    ['immediate_capture_recapture', 'capture_recapture_inventory', 'immediate_capture_with_defender', 0],
-  ] as const;
-  const premises = shell.premises.map((item, index) => {
-    const spec = premiseSpecs[index]!;
-    return projectRelationPremise(item, spec[0], spec[1], spec[2], step => step === spec[3]);
-  });
-  const absence = projectClosureUse(shell.closedAbsenceUses[0], {
-    role: 'delayed_capture_recapture_absent',
-    issuer: 'position_relation_extractor.closed_relation_inventory',
-    branchRoles: ['displacement_then_capture'],
-    query: legalCaptureQuery,
-    afterStep: step => step === 2,
-  });
-  const states = shell.closedStateUses.map(item =>
-    projectClosureUse(item, {
-      role: ['delayed_capture_actor_present', 'delayed_target_present'],
-      issuer: 'position_relation_extractor.closed_position_state_inventory',
-      branchRoles: ['displacement_then_capture'],
-      query: occupiedByQuery,
-    }),
-  );
-  if (
-    !premises.every((item): item is MoveReviewUniquePremise => !!item) ||
-    !absence ||
-    !states.every((item): item is MoveReviewClosureUse => !!item) ||
-    !unique(states.map(item => item.useId))
-  )
-    return;
-  return {
-    pathOccurrenceId: shell.pathOccurrenceId,
-    premises,
-    closedAbsenceUses: [absence],
-    closedStateUses: states,
-  };
 }
 
 function projectSoleRecapturerProof(value: unknown): MoveReviewSoleRecapturerProof | undefined {
@@ -3953,8 +3774,6 @@ function occurrenceRelationOwnsSubject(relation: MoveReviewOccurrenceRelation): 
 
 export function moveReviewOccurrenceBranches(relation: MoveReviewOccurrenceRelation): MoveReviewOccurrenceBranch[] {
   switch (relation.relationKind) {
-    case 'unique_check_reply_defender_displacement_before_capture':
-      return [relation.proof.displacementBranch, relation.proof.immediateCaptureBranch];
     case 'sole_recapturer_removal_before_target_capture':
       return [relation.proof.removalBranch, relation.proof.immediateCaptureBranch];
     case 'vacated_gate_enables_unrecapturable_slider_capture':
