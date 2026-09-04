@@ -13,7 +13,6 @@ private[chessjudgment] enum BoundedCausalContractKind:
   case SquareReleaseRoute
   case CaptureExclusionMoveOrder
   case RelocationEnablesRecapture
-  case PassedPawnProgressRealizedAfterOnlyLegalReply
 
   def semanticNamespace: String =
     this match
@@ -29,8 +28,6 @@ private[chessjudgment] enum BoundedCausalContractKind:
         "causal-proposition:capture-exclusion-move-order:v1"
       case RelocationEnablesRecapture =>
         "causal-proposition:relocation-enables-recapture:v1"
-      case PassedPawnProgressRealizedAfterOnlyLegalReply =>
-        "causal-proposition:passed-pawn-progress-realized-after-only-legal-reply:v1"
 
 private[chessjudgment] final case class SemanticPositionIdentity private (value: String)
 

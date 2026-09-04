@@ -13,27 +13,9 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
       demand: OccurrenceExplanationDemand
   ): JudgmentAssemblyContext =
     val relationRecords = RelationCausalProofAssembler.fromDemand(allocator, demand)
-    val directContext = context.withEvidence(
+    context.withEvidence(
       captureExclusionRecords(allocator, demand) ++
         relocationEnablesRecaptureRecords(allocator, demand) ++ relationRecords
-    )
-    val passedPawnDemand = PassedPawnResultEventAssembler.changedDependencyDemand(
-      directContext,
-      demand
-    )
-    val eventContext = directContext.withEvidence(
-      passedPawnDemand.toList.flatMap(
-        PassedPawnResultEventAssembler.fromDemand(allocator, _)
-      )
-    )
-    eventContext.withEvidence(
-      passedPawnDemand.toList.flatMap(
-        PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand(
-          eventContext,
-          allocator,
-          _
-        )
-      )
     )
 
   private def captureExclusionRecords(

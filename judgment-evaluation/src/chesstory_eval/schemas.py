@@ -403,9 +403,6 @@ class SchemaRegistry:
     def _occurrence_proof_branches(
         proof: Mapping[str, Any],
     ) -> list[Mapping[str, Any]]:
-        raw_branches = proof.get("branches")
-        if isinstance(raw_branches, list):
-            return [branch for branch in raw_branches if isinstance(branch, Mapping)]
         return [
             branch
             for key, branch in proof.items()
@@ -622,8 +619,6 @@ class SchemaRegistry:
                         for index_key in (
                             "step_index",
                             "after_step_index",
-                            "from_step_index",
-                            "to_step_index",
                         ):
                             step_index = value.get(index_key)
                             if step_index is not None and (
@@ -672,17 +667,6 @@ class SchemaRegistry:
                             errors.append(
                                 f"{value_location}.position: does not bind the supplied branch occurrence"
                             )
-
-                continuation_branch_id = value.get("analysis_continuation_branch_id")
-                if isinstance(continuation_branch_id, str):
-                    self._validate_branch_reference(
-                        continuation_branch_id,
-                        None,
-                        branches,
-                        "branch_role",
-                        f"{value_location}.analysis_continuation_branch_id",
-                        errors,
-                    )
 
                 source_ids = value.get("source_premise_ids")
                 if isinstance(source_ids, list):

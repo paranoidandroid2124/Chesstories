@@ -97,7 +97,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         self.assertNotIn("genericCausalChannel", definitions)
         self.assertNotIn("causalFacet", definitions)
         self.assertNotIn("wrongMoveOrderCausalFacet", definitions)
-        self.assertNotIn("passedPawnProgressFacet", definitions)
         self.assertNotIn("engineWorkRequiredResponse", definitions)
         self.assertNotIn("probeRequest", definitions)
         self.assertEqual(
@@ -116,7 +115,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                 {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
                 {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
                 {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"},
-                {"$ref": "#/$defs/passedPawnProgressOccurrenceRelation"},
             ],
         )
         serialized = json.dumps(definitions, sort_keys=True)
@@ -129,7 +127,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             "squareReleaseRouteOccurrenceExplanation",
             "captureExclusionOccurrenceExplanation",
             "relocationEnablesRecaptureOccurrenceExplanation",
-            "passedPawnProgressOccurrenceExplanation",
             "explanationSubjectOccurrence",
             "explanationSubjectPosition",
             "occurrenceExplanationBranch",
@@ -160,7 +157,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             with self.subTest(retired_field=retired_field), self.assertRaises(ContractError):
                 registry.validate_document(retired, move_path, label="retired explanation lane")
 
-    def test_seven_occurrence_relation_contracts_are_closed_and_distinct(self) -> None:
+    def test_six_occurrence_relation_contracts_are_closed_and_distinct(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
@@ -188,10 +185,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             "relocationEnablesRecaptureOccurrenceRelation": (
                 "relocation_enables_recapture",
                 "occurrenceRelocationEnablesRecaptureProof",
-            ),
-            "passedPawnProgressOccurrenceRelation": (
-                "passed_pawn_progress_realized_after_only_legal_reply",
-                "occurrencePassedPawnProgressProof",
             ),
         }
 

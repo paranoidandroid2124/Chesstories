@@ -515,7 +515,6 @@ test('limits Korean relation copy to finite structural labels', () => {
     square_release_route: '칸 해방 후 기물 경로',
     capture_exclusion_move_order: '포획 응수를 배제한 수순',
     relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
-    passed_pawn_progress_realized_after_only_legal_reply: '유일 합법 응수 후 통과폰 전진',
   });
   assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
     unique_check_reply_defender_displacement_before_capture:
@@ -526,7 +525,6 @@ test('limits Korean relation copy to finite structural labels', () => {
     square_release_route: 'Route through a released square',
     capture_exclusion_move_order: 'Move order excluding the capture reply',
     relocation_enables_recapture: 'Recapture enabled by relocation',
-    passed_pawn_progress_realized_after_only_legal_reply: 'Passed-pawn progress after the only legal reply',
   });
   assert.equal('dependency' in moveReviewCopy('ko-KR').structureLabels, false);
   assert.equal('dependency' in moveReviewCopy('en-US').structureLabels, false);

@@ -3,7 +3,7 @@
   "authority": "ci_only_reference_provenance_not_board_truth",
   "runtime_consumed": false,
   "cache_dependency": false,
-  "relation_delivery": "Each of the seven narrow exact local typed proof records is independently graph-certified and projected directly as its own occurrence relation; no wrapper, separate upper owner, or admission record exists.",
+  "relation_delivery": "Each of the six narrow exact local typed proof records is independently graph-certified and projected directly as its own occurrence relation; no wrapper, separate upper owner, or admission record exists.",
   "host": {
     "demand": {
       "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationDemand.scala",
@@ -717,101 +717,6 @@
         "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/RelocationEnablesRecaptureTest.scala",
         "symbol": "RelocationEnablesRecaptureTest"
       }
-    },
-    {
-      "contract_kind": "PassedPawnProgressRealizedAfterOnlyLegalReply",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.scala",
-        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler",
-        "method": "fromDemand"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence"
-      },
-      "wire": {
-        "relation_kind": "passed_pawn_progress_realized_after_only_legal_reply",
-        "variant_definition": "passedPawnProgressOccurrenceRelation",
-        "proof_field": "proof",
-        "proof_definition": "occurrencePassedPawnProgressProof"
-      },
-      "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.scala#PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand",
-        "coordinate_piece_identity_proposition": {
-          "statement": "For the identified observed root actor and its one certified legal reply, an identified actor on the certified analysis continuation realizes the exact passed-pawn result subject at the recorded later occurrence.",
-          "wire_fields": ["result_target_subjects", "root_actor", "realizing_actor", "root_move", "realizing_move", "root_ply", "realizing_ply"]
-        },
-        "lower_premises": {
-          "contracts": ["passed_pawn_progress_dependency", "passed_pawn_progress", "slider_reach_delta", "pawn_topology_transition", "capture_recapture_inventory"],
-          "dynamic_id_fields": ["lower_premise_ids", "lower_semantic_key", "result_key", "occurrence_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
-          "issuer_source_kinds": ["passed-pawn event owner", "relation result owner", "position-state witness owner", "canonical source premise IDs"]
-        },
-        "closed_inventory": {
-          "issuers": ["closed_legal_reply_inventory", "relation_issuers", "position_state_issuers"],
-          "fields": ["issuer_evidence_id", "legal_reply_move", "analysis_continuation_branch_id", "semantic_proof_id"],
-          "certified_absence_or_state": ["exactly one legal root reply", "object-state precondition", "line-access precondition", "response-continuation precondition"]
-        },
-        "branch_occurrence": {
-          "roles": ["observed_root_with_analyzed_continuation"],
-          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "source_occurrence_id", "steps"],
-          "provenance_fields": ["root_provenance", "provenance"]
-        },
-        "proof_paths_transposition": {
-          "cardinality": "one_or_more",
-          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id", "analysis_continuation_branch_id"],
-          "rule": "semantic_id may coincide after transposition; subject occurrence, continuation branch, realizing occurrence, and every path_occurrence_id remain distinct"
-        },
-        "dependency_cache": {
-          "changed_dependencies": ["subject transition occurrence", "line and transition owners", "closed singleton-reply inventory", "event owner", "all route premise and issuer IDs", "all closure and proof path IDs"],
-          "fingerprint_field": "dependency_fingerprint",
-          "cache_owner": "sole producer may reuse only an exact graph owner whose full dependencies match; no separate public cache"
-        },
-        "consumers": {
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
-          "runtime_field": "occurrence_relations",
-          "schema_variant": "passedPawnProgressOccurrenceRelation",
-          "runtime_producer_tests": {
-            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
-            "cases": [
-              {
-                "name": "v6 commentary serializes the closed passed-pawn occurrence relation"
-              }
-            ]
-          },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
-          "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
-          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
-        },
-        "no_recomputation_owner": "The L2 producer consumes the existing passed-pawn event, relation issuers, position-state issuers, and singleton legal-reply inventory; it does not recompute pawn structure or legal replies."
-      },
-      "implementation_status": "current_exact_proof",
-      "reference_support": "exact_occurrence_component",
-      "references": [
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 507
-          }
-        },
-        {
-          "support": "exact_occurrence_component",
-          "locator": {
-            "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
-            "pdf_page": 508
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "forced_win",
-        "inevitable_promotion",
-        "plan"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/analysis/assembly/PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest.scala",
-        "symbol": "PassedPawnProgressRealizedAfterOnlyLegalReplyProofTest"
-      }
     }
   ],
   "complete_game_ledger": [
@@ -1239,7 +1144,7 @@
       "transposition_occurrence": [
         "Semantic equality may be shared after transposition, but subject and route occurrences remain separate."
       ],
-      "mapped_contracts": ["PassedPawnProgressRealizedAfterOnlyLegalReply"],
+      "mapped_contracts": [],
       "current_coverage_categories": ["lower_fact_gap"]
     },
     {

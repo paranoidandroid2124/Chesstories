@@ -220,7 +220,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
         ]
         for values in (contract_kinds, proof_types, formal_tests, producer_handlers):
             self.assertEqual(len(values), len(set(values)))
-        self.assertEqual(len(self.contracts), 7)
+        self.assertEqual(len(self.contracts), 6)
         for contract in self.contracts:
             self.assertEqual(set(contract), CONTRACT_KEYS)
             self.assertEqual(set(contract["audit_mapping"]), AUDIT_MAPPING_KEYS)
@@ -715,6 +715,7 @@ class L2ProofProvenanceTest(unittest.TestCase):
 
         passed_pawn = ledger_by_id["ai-revolution-passed-pawn-route"]
         self.assertEqual(passed_pawn["causal_proposition_support"], "exact_occurrence_component")
+        self.assertEqual(passed_pawn["mapped_contracts"], [])
         self.assertEqual(passed_pawn["current_coverage_categories"], ["lower_fact_gap"])
 
         ruy_game_15 = ledger_by_id["ruy-lopez-game-15"]

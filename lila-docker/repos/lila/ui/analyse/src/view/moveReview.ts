@@ -10,8 +10,7 @@ import {
   moveReviewVerdictCodeLabel,
   selectedMoveReviewCandidate,
   type MoveReviewAnnotationShape,
-  type MoveReviewAnyBranch,
-  type MoveReviewAnyProofPath,
+  type MoveReviewBoundedProofPath,
   type MoveReviewCandidate,
   type MoveReviewCandidateRole,
   type MoveReviewCandidateReview,
@@ -25,8 +24,8 @@ import {
   type MoveReviewJobState,
   type MoveReviewLocale,
   type MoveReviewMovementWitness,
+  type MoveReviewOccurrenceBranch,
   type MoveReviewOccurrenceRelation,
-  type MoveReviewPassedPawnPositionState,
   type MoveReviewProof,
   type MoveReviewVerdictSymbol,
   type MoveReviewViewState,
@@ -626,17 +625,9 @@ function renderOccurrenceRelationDetails(
   ]);
 }
 
-function renderOccurrenceProofPath(path: MoveReviewAnyProofPath, index: number, copy: MoveReviewCopy): VNode {
-  const absences = 'closedAbsenceUses' in path ? path.closedAbsenceUses : [];
-  const states = 'closedStateUses' in path ? path.closedStateUses : [];
+function renderOccurrenceProofPath(path: MoveReviewBoundedProofPath, index: number, copy: MoveReviewCopy): VNode {
   return hl('section.move-review__proof-path.move-review__typed-section', { key: path.pathOccurrenceId }, [
     hl('h4', `${copy.proofPath} ${index + 1}`),
-    'realizationActor' in path
-      ? hl('div.move-review__path-realization', [
-          renderFact(copy.structureLabels.move, path.realizationMove, 'move'),
-          renderWitness(path.realizationActor, copy),
-        ])
-      : undefined,
     hl('section.move-review__premises', [
       hl('h5', copy.premises),
       hl(
@@ -644,42 +635,42 @@ function renderOccurrenceProofPath(path: MoveReviewAnyProofPath, index: number, 
         path.premises.map((premise, premiseIndex) => hl('li', [renderPremise(premise, premiseIndex, copy)])),
       ),
     ]),
-    absences.length ? renderClosures(copy.closedAbsence, absences, 'closed-absence', copy) : undefined,
-    states.length ? renderClosures(copy.closedState, states, 'closed-state', copy) : undefined,
+    path.closedAbsenceUses.length
+      ? renderClosures(copy.closedAbsence, path.closedAbsenceUses, 'closed-absence', copy)
+      : undefined,
+    path.closedStateUses.length
+      ? renderClosures(copy.closedState, path.closedStateUses, 'closed-state', copy)
+      : undefined,
   ]);
 }
 
 function renderOccurrenceBranch(
   relation: MoveReviewOccurrenceRelation,
-  branch: MoveReviewAnyBranch,
+  branch: MoveReviewOccurrenceBranch,
   index: number,
   props: MoveReviewPanelProps,
 ): VNode {
   const proof = moveReviewOccurrenceBranchProof(relation, index);
-  const rootMove = 'rootMove' in branch ? branch.rootMove : branch.line.rootMove;
   return hl('section.move-review__branch', { key: branch.branchId }, [
     hl('header.move-review__branch-header', [
       hl('h4', branchLabel(branch.rootProvenance, props.copy)),
-      hl('code.move-review__typed-value.is-move', rootMove),
+      hl('code.move-review__typed-value.is-move', branch.rootMove),
     ]),
     proof && renderProof(proof, undefined, props, branch),
   ]);
 }
 
-function branchLabel(provenance: MoveReviewAnyBranch['rootProvenance'], copy: MoveReviewCopy): string {
+function branchLabel(provenance: MoveReviewOccurrenceBranch['rootProvenance'], copy: MoveReviewCopy): string {
   return provenance === 'observed_game_root'
     ? `${copy.actualMove} · ${copy.analysisContinuation}`
     : copy.analyzedAlternative;
 }
 
 type MoveReviewParticipant = MoveReviewMovementWitness | MoveReviewColoredPieceWitness | Key;
-type MoveReviewPremise = MoveReviewAnyProofPath['premises'][number];
+type MoveReviewPremise = MoveReviewBoundedProofPath['premises'][number];
 
 function renderOccurrenceParticipants(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
-  const participants =
-    relation.relationKind === 'passed_pawn_progress_realized_after_only_legal_reply'
-      ? { rootActor: relation.proof.rootActor, realizingActor: relation.proof.realizingActor }
-      : relation.proof.participants;
+  const participants = relation.proof.participants;
   return hl('section.move-review__participants.move-review__typed-section', [
     hl('h4', copy.structureLabels.participants),
     hl(
@@ -720,16 +711,6 @@ function renderWitness(value: Exclude<MoveReviewParticipant, Key>, copy: MoveRev
 
 function renderPremise(premise: MoveReviewPremise, index: number, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
-  if ('lowerKind' in premise) {
-    const dependency = premise.role === 'dependency' ? premise.dependencyProof : undefined;
-    return hl('section.move-review__premise', [
-      hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
-      renderFacts([
-        renderFact(labels.afterStep, `${premise.fromStepIndex + 1} → ${premise.toStepIndex + 1}`),
-      ]),
-      dependency && renderPassedPawnDependency(dependency, copy),
-    ]);
-  }
   if ('transitionKind' in premise)
     return hl('section.move-review__premise', [
       hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
@@ -768,69 +749,6 @@ function renderPremise(premise: MoveReviewPremise, index: number, copy: MoveRevi
   return hl('section.move-review__premise', [
     hl('h6', structureRoleLabel(premise.role, copy, `${labels.premise} ${index + 1}`)),
     renderFacts([renderFact(labels.contract, contract), renderFact(labels.afterStep, premise.stepIndex + 1)]),
-  ]);
-}
-
-function renderPassedPawnDependency(
-  dependency: Extract<MoveReviewPremise, { role: 'dependency' }>['dependencyProof'],
-  copy: MoveReviewCopy,
-): VNode {
-  const labels = copy.structureLabels;
-  return hl('div.move-review__dependency', [
-    dependency.squares.length
-      ? hl(
-          'ol.move-review__typed-list',
-          dependency.squares.map(item => hl('li', [renderFact(labels.square, item.square, 'square')])),
-        )
-      : undefined,
-    dependency.pieces.length
-      ? hl(
-          'ol.move-review__typed-list',
-          dependency.pieces.map(item =>
-            hl('li', [
-              renderFacts([
-                renderFact(labels.side, copy.colorLabels[item.side]),
-                renderFact(labels.piece, labels.pieceLabels[item.piece], 'piece'),
-              ]),
-            ]),
-          ),
-        )
-      : undefined,
-    ...dependency.positionStateIssuers.map(item => renderPositionState(item.state, copy)),
-  ]);
-}
-
-function renderPositionState(state: MoveReviewPassedPawnPositionState, copy: MoveReviewCopy): VNode {
-  const labels = copy.structureLabels;
-  if (state.kind === 'pawn_topology')
-    return renderFacts([
-      renderFact(labels.side, copy.colorLabels[state.side]),
-      renderFact(labels.piece, labels.pieceLabels.pawn, 'piece'),
-      renderFact(labels.square, state.square, 'square'),
-      renderFact(labels.result, state.passed ? labels.yes : labels.no),
-    ]);
-  const witness: MoveReviewColoredPieceWitness = {
-    side: state.side,
-    piece: state.piece,
-    square: state.square,
-  };
-  return hl('div.move-review__position-state', [
-    renderWitness(witness, copy),
-    state.kind === 'slider_reach' && state.segment.length
-      ? hl(
-          'ol.move-review__typed-list',
-          state.segment.map(item =>
-            hl('li', [
-              renderFacts([
-                renderFact(labels.square, item.square, 'square'),
-                ...(item.occupantPiece
-                  ? [renderFact(labels.piece, labels.pieceLabels[item.occupantPiece], 'piece')]
-                  : []),
-              ]),
-            ]),
-          ),
-        )
-      : undefined,
   ]);
 }
 
@@ -899,13 +817,6 @@ function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveR
         renderFact(labels.move, relation.proof.relocatedResponderRecapture.moveUci, 'move'),
         renderWitness(relation.proof.relocatedResponderRecapture.movement, copy),
       ]);
-    case 'passed_pawn_progress_realized_after_only_legal_reply':
-      return hl('section.move-review__later-consumer.move-review__typed-section', [
-        hl('h4', labels.laterConsumer),
-        renderFact(labels.reply, relation.proof.closedLegalReplyInventory.legalReplyMove, 'move'),
-        renderFact(labels.move, relation.proof.realizingMove, 'move'),
-        renderWitness(relation.proof.realizingActor, copy),
-      ]);
   }
 }
 
@@ -919,8 +830,8 @@ function renderConsumer(move: Uci, participant: MoveReviewMovementWitness, copy:
 
 function renderOccurrenceProvenance(
   relation: MoveReviewOccurrenceRelation,
-  branches: MoveReviewAnyBranch[],
-  paths: MoveReviewAnyProofPath[],
+  branches: MoveReviewOccurrenceBranch[],
+  paths: MoveReviewBoundedProofPath[],
   copy: MoveReviewCopy,
 ): VNode {
   const labels = copy.structureLabels;
@@ -938,19 +849,15 @@ function renderOccurrenceProvenance(
         hl('h5', `${branchLabel(branch.rootProvenance, copy)} ${index + 1}`),
         renderFacts([
           renderFact(labels.branchId, branch.branchId),
-          renderFact(labels.lineId, 'lineId' in branch ? branch.lineId : branch.line.lineId),
+          renderFact(labels.lineId, branch.lineId),
         ]),
       ]),
     ),
     ...paths.flatMap((path, index) => [
       renderFact(`${labels.pathOccurrenceId} ${index + 1}`, path.pathOccurrenceId),
-      ...('closureUseIds' in path
-        ? path.closureUseIds.map((id, closureIndex) =>
-            renderFact(`${labels.closureUseId} ${closureIndex + 1}`, id),
-          )
-        : [...path.closedAbsenceUses, ...path.closedStateUses].map((closure, closureIndex) =>
-            renderFact(`${labels.closureUseId} ${closureIndex + 1}`, closure.useId),
-          )),
+      ...[...path.closedAbsenceUses, ...path.closedStateUses].map((closure, closureIndex) =>
+        renderFact(`${labels.closureUseId} ${closureIndex + 1}`, closure.useId),
+      ),
     ]),
   ]);
 }
@@ -979,7 +886,7 @@ function renderProof(
   proof: MoveReviewProof,
   contentId: string | undefined,
   props: MoveReviewPanelProps,
-  branch?: MoveReviewAnyBranch,
+  branch?: MoveReviewOccurrenceBranch,
 ): VNode {
   const frame = activeFrame(proof, props.view);
   const pinned = props.view.pinnedFrame;
@@ -1046,7 +953,7 @@ function renderProofMoves(
   active: MoveReviewFrameSelection,
   pinned: MoveReviewFrameSelection | undefined,
   props: MoveReviewPanelProps,
-  branch?: MoveReviewAnyBranch,
+  branch?: MoveReviewOccurrenceBranch,
 ): VNode[] {
   return proof.moves.map((move, index) => {
     const ply = index + 1;
@@ -1081,7 +988,7 @@ function renderProofMoves(
   });
 }
 
-function proofMoveStage(branch: MoveReviewAnyBranch, ply: number, copy: MoveReviewCopy): string | undefined {
+function proofMoveStage(branch: MoveReviewOccurrenceBranch, ply: number, copy: MoveReviewCopy): string | undefined {
   const provenance = branch.steps?.[ply - 1]?.provenance;
   if (provenance === 'observed_game_move') return copy.actualMove;
   if (provenance === 'certified_analysis_move')

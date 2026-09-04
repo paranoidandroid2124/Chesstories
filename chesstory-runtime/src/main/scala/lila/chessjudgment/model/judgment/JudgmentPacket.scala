@@ -259,14 +259,6 @@ object EvidenceBackedJudgmentPacket:
         assembly.legalLines.forall(exactLineEvidence) &&
         assembly.lines.forall(exactEvaluationEvidence) &&
         assembly.transitions.forall(exactTransitionEvidence)
-    val passedPawnResultEvidenceClosed =
-      graphRecords.forall {
-        case EvidenceRecord(ref, event: PassedPawnResultEventEvidence, _) =>
-          ref.line.contains(event.rootLine) &&
-            event.rootTransition.line.contains(event.rootLine)
-        case _ =>
-          true
-      }
     val assessmentRecords =
       graphRecords.collect {
         case EvidenceRecord(ref, RelativeAssessmentEvidence(assessment), parents) =>
@@ -363,7 +355,6 @@ object EvidenceBackedJudgmentPacket:
       assessmentProjectionClosed &&
       exactLegalLineOccurrenceClosure &&
       nodeAndTransitionEvidenceClosed &&
-      passedPawnResultEvidenceClosed &&
       assessmentsClosed &&
       soleAssessmentComparison &&
       comparisonParentsCanonical &&

@@ -267,43 +267,6 @@ class LineFactAuthorityTest extends munit.FunSuite:
     assert(binding.semanticProofId.matches("[0-9a-f]{64}"))
     assert(payload.lineConsequences.exists(_.kind == LineConsequenceKind.Mate))
 
-  test("capture and recapture keep one exact relation occurrence authority"):
-    val initialFen = "r5k1/p7/1B6/8/8/8/8/R3K3 b - - 0 1"
-    val rootFen = "r6k/p7/1B6/8/8/8/8/R3K3 w - - 1 2"
-    val (payload, line) = normalizedLine(
-      id = "capture-recapture-material-path",
-      initialFen = initialFen,
-      historyMoves = List("g8h8"),
-      rootFen = rootFen,
-      moves = List("a1a7", "a8a7", "b6a7")
-    )
-    val replay = payload.certifiedReplay.getOrElse(fail("expected the certified recapture replay"))
-    val steps = payload.lineReplaySteps
-    val lineRecord = EvidenceRecord(
-      EvidenceRef(
-        "capture-response-occurrence-owner",
-        EvidenceProducer.LegalLineProducer,
-        EvidenceLayer.Line,
-        PositionNodeRef(rootFen, 1, Some(White)),
-        Some(line),
-        EvidenceScope.LegalLine,
-        EvidenceConfidence.LegalReplayVerified
-      ),
-      payload
-    )
-    val trajectory = CaptureResponseFollowUpTrajectory
-      .find(steps.head, steps(1), steps(2), List(steps(1)), replay, _ => Some(lineRecord))
-      .getOrElse(fail("expected the exact capture-response continuation"))
-    assertEquals(
-      trajectory.relationOccurrenceAuthority.contract,
-      VerticalRelationContractKind.CaptureRecaptureInventory
-    )
-    assert(trajectory.relationOccurrenceAuthority.occurrenceId.matches("[0-9a-f]{64}"))
-    assert(trajectory.relationOccurrenceAuthority.certifiedSourcePremiseIds.nonEmpty)
-    assertEquals(trajectory.triggerStep, steps.head)
-    assertEquals(trajectory.replyStep, steps(1))
-    assertEquals(trajectory.followUpStep, steps(2))
-
   private def normalizedLine(
       id: String,
       initialFen: String,

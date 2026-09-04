@@ -138,7 +138,6 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 | `SquareReleaseRoute` | `RelationCausalProofAssembler.squareReleaseRoute` |
 | `CaptureExclusionMoveOrder` | `OccurrenceExplanationAssembler.captureExclusionRecords`, backed directly by `CaptureExclusionMoveOrderProof.certifyDemanded` |
 | `RelocationEnablesRecapture` | `OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords`, backed directly by `RelocationEnablesRecaptureProof.certifyDemanded` |
-| `PassedPawnProgressRealizedAfterOnlyLegalReply` | `PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler.fromDemand`; its lower event is solely produced by `PassedPawnResultEventAssembler.fromDemand`, which consumes only already registered per-step `LegalLine`, `MoveTransition`, and `StructuralDelta` occurrences and never synthesizes continuation occurrences from replay |
 
 `RelationCausalProofAssembler`가 공유하는 것은 deterministic graph ownership뿐이다.
 각 가족의 private demand가 available root occurrences를 자기 lower facts로

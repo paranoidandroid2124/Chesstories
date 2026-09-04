@@ -423,106 +423,7 @@ function schemaRelation(relationKind: MoveReviewRelationKind, multiplePaths = fa
     });
   }
 
-  const branchId = nextHash();
-  const line = {
-    line_id: subjectOccurrence.line_id,
-    root_move: subjectOccurrence.move_uci,
-  };
-  const sourceSteps = objects(observedSource.steps);
-  const steps = sourceSteps.map((step, index) => ({
-    ...structuredClone(step),
-    step_key: 'step:' + index,
-    line,
-  }));
-  const branch = {
-    branch_id: branchId,
-    role: 'observed_root_with_analyzed_continuation',
-    reply_move: sourceSteps[1]!.move_uci,
-    source_occurrence_id: nextHash(),
-    line,
-    line_owner_evidence_id: subjectOccurrence.line_owner_evidence_id,
-    root_transition_evidence_id: subjectOccurrence.transition_evidence_id,
-    root_provenance: 'observed_game_root',
-    steps,
-  };
-  const actor = (movement: JsonObject) => ({
-    side: movement.side,
-    piece_before: movement.piece_before,
-    piece_after: movement.piece_after,
-    from: movement.from,
-    to: movement.to,
-    legal_move_relation: nextHash(),
-  });
-  const path = () => ({
-    path_occurrence_id: nextHash(),
-    analysis_continuation_branch_id: branchId,
-    realization_actor: actor(captureReply),
-    realization_move: sourceSteps[1]!.move_uci,
-    realization_ply: sourceSteps[1]!.ply,
-    premises: [
-      {
-        role: 'dependency',
-        lower_kind: 'passed_pawn_progress_dependency',
-        lower_semantic_key: 'dependency',
-        source_premise_ids: ['dependency'],
-        branch_id: branchId,
-        branch_role: 'observed_root_with_analyzed_continuation',
-        from_step_index: 0,
-        to_step_index: 1,
-        dependency_proof: {
-          dependency_kind: 'object_state_precondition',
-          proof_kind: 'object_state',
-          squares: [{ role: 'root_from', square: deferredMove.from }],
-          pieces: [
-            {
-              role: 'root_before',
-              side: deferredMove.side,
-              piece: deferredMove.piece_before,
-            },
-          ],
-          relation_issuers: [],
-          position_state_issuers: [],
-        },
-      },
-      {
-        role: 'result',
-        lower_kind: 'passed_pawn_progress',
-        lower_semantic_key: 'result',
-        source_premise_ids: ['result'],
-        branch_id: branchId,
-        branch_role: 'observed_root_with_analyzed_continuation',
-        from_step_index: 1,
-        to_step_index: 1,
-      },
-    ],
-    closure_use_ids: [nextHash()],
-  });
-  return outer({
-    ...proofBase(),
-    event_evidence_id: 'schema-fixture:event',
-    result_target_subjects: ['schema-fixture:target'],
-    root_actor: actor(deferredMove),
-    realizing_actor: actor(captureReply),
-    root_line: line,
-    root_move: subjectOccurrence.move_uci,
-    root_ply: subjectOccurrence.destination.ply,
-    realizing_move: sourceSteps[1]!.move_uci,
-    realizing_ply: sourceSteps[1]!.ply,
-    result_ply_offset: 1,
-    closed_legal_reply_inventory: {
-      issuer_evidence_id: 'schema-fixture:reply',
-      root_after: {
-        fen: subjectOccurrence.destination.fen,
-        ply: subjectOccurrence.destination.ply,
-        scope: 'played_transition',
-      },
-      legal_reply_move: sourceSteps[1]!.move_uci,
-      analysis_continuation_branch_id: branchId,
-    },
-    branches: [branch],
-    proof_paths: multiplePaths ? [path(), path()] : [path()],
-    lower_premise_ids: ['dependency', 'result'],
-  });
+  throw new Error(`unsupported relation kind: ${relationKind}`);
 }
 test('emits the sole v6 standard played-focus request', () => {
   assert.deepEqual(buildMoveReviewJobRequest(requestId, subject, moveReviewEngineProfile), {
@@ -861,7 +762,7 @@ test('drops only the relocation relation when continuity loses an occurrence, ow
   }
 });
 
-test('decodes all seven relation kinds as their exact discriminated variants', () => {
+test('decodes all six relation kinds as their exact discriminated variants', () => {
   const relationKinds: MoveReviewRelationKind[] = [
     'unique_check_reply_defender_displacement_before_capture',
     'sole_recapturer_removal_before_target_capture',
@@ -869,7 +770,6 @@ test('decodes all seven relation kinds as their exact discriminated variants', (
     'square_release_route',
     'capture_exclusion_move_order',
     'relocation_enables_recapture',
-    'passed_pawn_progress_realized_after_only_legal_reply',
   ];
 
   for (const relationKind of relationKinds) {
@@ -971,25 +871,19 @@ test('preserves a valid occurrence relation and move verdict when its sibling is
   assert.equal(played.review.relations[0]?.proof.sourceEvidenceId, object(valid.proof).source_evidence_id);
 });
 
-test('preserves every transmitted square-route and passed-pawn proof path in wire order', () => {
-  for (const relationKind of [
-    'square_release_route',
-    'passed_pawn_progress_realized_after_only_legal_reply',
-  ] as const) {
-    const relation = schemaRelation(relationKind, true);
-    const wirePathIds = objects(object(relation.proof).proof_paths).map(path => path.path_occurrence_id);
-    const decoded = decodeProduced(responseWithRelations([relation]));
-    assert.equal(decoded?.kind, 'completed', relationKind);
-    if (decoded?.kind !== 'completed') continue;
-    const played = selectedMoveReviewCandidate(decoded.evidence);
-    assert.equal(played?.review.kind, 'move-verdict', relationKind);
-    if (played?.review.kind !== 'move-verdict') continue;
-    assert.deepEqual(
-      moveReviewOccurrenceProofPaths(played.review.relations[0]!).map(path => path.pathOccurrenceId),
-      wirePathIds,
-      relationKind,
-    );
-  }
+test('preserves every transmitted square-route proof path in wire order', () => {
+  const relation = schemaRelation('square_release_route', true);
+  const wirePathIds = objects(object(relation.proof).proof_paths).map(path => path.path_occurrence_id);
+  const decoded = decodeProduced(responseWithRelations([relation]));
+  assert.equal(decoded?.kind, 'completed');
+  if (decoded?.kind !== 'completed') return;
+  const played = selectedMoveReviewCandidate(decoded.evidence);
+  assert.equal(played?.review.kind, 'move-verdict');
+  if (played?.review.kind !== 'move-verdict') return;
+  assert.deepEqual(
+    moveReviewOccurrenceProofPaths(played.review.relations[0]!).map(path => path.pathOccurrenceId),
+    wirePathIds,
+  );
 });
 
 test('drops an invalid occurrence relation without dropping its move verdict', () => {

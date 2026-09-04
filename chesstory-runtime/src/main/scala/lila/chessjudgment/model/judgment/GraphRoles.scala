@@ -47,6 +47,5 @@ enum EvidenceLayer:
   case Relation
   case StructuralDelta
   case CausalProof
-  case PassedPawnResultEvent
   case CandidateComparison
   case RelativeAssessment
