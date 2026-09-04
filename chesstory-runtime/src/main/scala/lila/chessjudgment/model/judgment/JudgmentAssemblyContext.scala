@@ -58,10 +58,8 @@ final case class AdmittedMoveReviewInput(
     admittedRootRankingPair: Option[AdmittedRootRankingPair],
     positionHistory: CanonicalPositionHistory
 ):
-  val legalRootMoves: List[String] = positionHistory.currentLegalMoveUcis
-  val admittedRootMoves: List[String] = legalLines.map(line => EvidenceRef.normalizeMove(line.rootMove))
-  val rootMovesWithoutAdmittedLine: List[String] =
-    legalRootMoves.filterNot(admittedRootMoves.contains)
+  private val legalRootMoves: List[String] = positionHistory.currentLegalMoveUcis
+  private val admittedRootMoves: List[String] = legalLines.map(line => EvidenceRef.normalizeMove(line.rootMove))
 
   require(
     admittedRootMoves.size == legalLines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,

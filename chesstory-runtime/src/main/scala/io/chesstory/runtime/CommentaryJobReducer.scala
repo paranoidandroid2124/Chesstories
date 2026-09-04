@@ -644,10 +644,10 @@ object CommentaryJobReducer:
     ranked.headOption.flatMap(_.evaluation.moves.headOption) match
       case None => stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport)
       case Some(bestMove) =>
-        val playedCovered = ranked.exists(
+        val playedRootLineAdmitted = ranked.exists(
           _.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, active.playedMoveUci))
         )
-        if playedCovered then beginPreparedReview(active, ranked, Nil, ledger)
+        if playedRootLineAdmitted then beginPreparedReview(active, ranked, Nil, ledger)
         else
           val limits = EngineSearchLimits(
             active.policy.rootSearchDepth,

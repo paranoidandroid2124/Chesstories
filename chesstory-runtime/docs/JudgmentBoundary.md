@@ -119,12 +119,11 @@ primary-only이므로 `judgment`가 없으면 player job은 기존
 
 ## 계산 범위와 P2 line availability
 
-`AdmittedMoveReviewInput.legalRootMoves`는 board에서 생성한 완전한 합법 root
-move 집합을 보존한다. `legalLines`는 실제 producer가 제공하고 합법 replay로
-admission된 root/focus line의 합집합일 뿐이다. `rootMovesWithoutAdmittedLine`은
-전자의 원소 중 후자에 없는 수를 계산한다. 이 상태는 의미 조립에 사용할 line이
-없다는 뜻이지, 그 수가 존재하지 않거나 반증되었거나 engine 내부에서 전혀
-검색되지 않았다는 뜻이 아니다.
+`AdmittedMoveReviewInput`의 생성자 검증은 board에서 생성한 완전한 합법 root
+move 집합과 실제 producer가 제공하고 합법 replay로 admission된 `legalLines`의
+root/focus line 집합을 구분한다. 합법 root move에 대응하는 admitted line이 없는
+상태는 의미 조립에 사용할 line이 없다는 뜻이지, 그 수가 존재하지 않거나
+반증되었거나 engine 내부에서 전혀 검색되지 않았다는 뜻이 아니다.
 
 현재 engine work 정책의 MultiPV 상한과 report 수 검사는 runtime의 계산 비용
 경계에만 남는다. 의미 admission은 그 상한과 같은 개수의 root line을 요구하지

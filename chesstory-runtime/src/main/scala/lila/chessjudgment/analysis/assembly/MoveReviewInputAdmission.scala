@@ -242,7 +242,7 @@ object MoveReviewInputAdmission:
       legalLineEvaluations: List[AdmittedEvaluation],
       assessmentEvaluations: List[AdmittedEvaluation]
   ): Option[AdmittedMoveReviewInput] =
-    val legalRootMoves = legalLineEvaluations
+    val admittedLineRootMoves = legalLineEvaluations
       .flatMap(_.evaluation.moves.headOption)
       .map(EvidenceRef.normalizeMove)
     val assessmentRootMoves = assessmentEvaluations
@@ -257,8 +257,8 @@ object MoveReviewInputAdmission:
           case _            => false
       }
     }
-    if legalRootMoves.size != legalLineEvaluations.size ||
-        legalRootMoves.distinct.size != legalRootMoves.size ||
+    if admittedLineRootMoves.size != legalLineEvaluations.size ||
+        admittedLineRootMoves.distinct.size != admittedLineRootMoves.size ||
         assessmentRootMoves.size != assessmentEvaluations.size ||
         assessmentRootMoves.distinct.size != assessmentRootMoves.size ||
         !assessmentReplaysOwned
