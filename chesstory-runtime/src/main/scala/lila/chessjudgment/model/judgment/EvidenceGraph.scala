@@ -2945,20 +2945,19 @@ final class TypedEvidenceGraph private (
   def recordsFor(line: LineNodeRef): List[EvidenceRecord] =
     recordsByLine.getOrElse(line, Nil)
 
-  /** Resolves the contiguous graph-owned transition/structural occurrence
-    * prefix for one admitted LegalLine. A missing or ambiguous occurrence ends
-    * the prefix; unrelated later suffixes cannot invalidate an earlier proof.
+  /** Resolves graph-owned transition/structural occurrences for one admitted
+    * LegalLine. Each replay step is independent: a missing or ambiguous owner
+    * is unresolved, not absent or disproved, and cannot hide later occurrences.
     * No occurrence is synthesized from replay.
     */
-  private[chessjudgment] def lineTransitionOccurrencePrefix(
+  private[chessjudgment] def lineOccurrences(
       line: LineNodeRef,
       rootTransitionEvidenceId: String
   ): Option[List[GraphOwnedLineTransitionOccurrence]] =
     for
       (lineRecord, linePayload) <- uniqueProofEligibleLineFactRecordFor(line)
       replay <- linePayload.certifiedReplay
-      rootTransitionRecord <- byId.get(rootTransitionEvidenceId)
-      transitionRecords = rootTransitionRecord :: recordsFor(line).collect {
+      transitionRecords = byId.get(rootTransitionEvidenceId).toList ++ recordsFor(line).collect {
         case record @ EvidenceRecord(_, _: MoveTransitionEvidence, _) => record
       }
       structuralRecords = recordsFor(line).collect {
@@ -3016,9 +3015,7 @@ final class TypedEvidenceGraph private (
           canonical
         )
       }
-      prefix = resolved.takeWhile(_.nonEmpty).flatten
-      if prefix.nonEmpty
-    yield prefix
+    yield resolved.flatten
 
   def candidateComparisonRecord(ref: EvidenceRef): Option[EvidenceRecord] =
     record(ref)

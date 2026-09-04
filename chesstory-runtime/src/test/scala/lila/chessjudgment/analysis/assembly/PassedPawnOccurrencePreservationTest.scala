@@ -24,7 +24,7 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
     val root = packet.assembly.lineRootOccurrence(line.ref)
       .getOrElse(fail("expected the observed root occurrence"))
     val occurrences = packet.evidenceGraph
-      .lineTransitionOccurrencePrefix(line.ref, root.transitionEvidenceId)
+      .lineOccurrences(line.ref, root.transitionEvidenceId)
       .getOrElse(fail("expected graph-owned line occurrences"))
 
     assertEquals(occurrences.map(_.step.moveUci), List("g6g7", "h8h7", "g7g8q"))
@@ -38,3 +38,23 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
     ).toMap
     assert(passedPawnFacts("g6g7").contains("passed-pawn-advanced:white:g6-g7:rank-7"))
     assert(passedPawnFacts("g7g8q").contains("passed-pawn-promoted:white:g7-g8"))
+
+    val withoutMiddleStructural = packet.evidenceGraph.records.filterNot {
+      case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
+        ref.line.contains(line.ref) && EvidenceRef.sameMove(payload.moveUci, "h8h7")
+      case _ => false
+    }
+    assertEquals(packet.evidenceGraph.records.size - withoutMiddleStructural.size, 1)
+    val surviving = TypedEvidenceGraph.empty
+      .addAll(withoutMiddleStructural)
+      .lineOccurrences(line.ref, root.transitionEvidenceId)
+      .getOrElse(fail("expected the certified line after one unresolved occurrence"))
+
+    assertEquals(surviving.map(_.step.moveUci), List("g6g7", "g7g8q"))
+    assertEquals(surviving.map(_.structuralOccurrenceOwner.id).distinct.size, 2)
+    assert(
+      surviving.last.consequences
+        .filter(_.kind == TransitionConsequenceKind.PassedPawnProgress)
+        .flatMap(_.resultSubjectFacts.map(_.label))
+        .contains("passed-pawn-promoted:white:g7-g8")
+    )
