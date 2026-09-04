@@ -33,8 +33,8 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
 
   test("one-step replay projection is cached in declared occurrence order"):
     val replay = twoPlyReplay
-    val first = replay.singleStepReplays.getOrElse(fail("expected one-step replays"))
-    val second = replay.singleStepReplays.getOrElse(fail("expected cached one-step replays"))
+    val first = replay.singleStepReplays
+    val second = replay.singleStepReplays
 
     assert(first eq second)
     assertEquals(first.map(_._1.declared), replay.replaySteps)

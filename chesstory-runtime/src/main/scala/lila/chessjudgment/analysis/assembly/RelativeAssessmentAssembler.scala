@@ -82,7 +82,7 @@ object RelativeAssessmentAssembler:
             )
             .map(Some(_))
       root <- context.position(PositionNodeRole.Before).map(_.ref)
-      mover <- root.sideToMove.orElse(input.sideToMove)
+      mover <- root.sideToMove
     yield RelativeAssemblyInputs(
       input = input,
       played = played,

@@ -85,7 +85,7 @@ object RuntimeProtocol:
     else
       MoveReviewInputAdmission
         .admit(raw)
-        .flatMap(MoveReviewAssembler.assemble)
+        .map(MoveReviewAssembler.assemble)
         .flatMap(EvidenceBackedJudgmentPacket.fromAssembly)
         .fold(
           failure(requestId, 422, "move_review_not_buildable")

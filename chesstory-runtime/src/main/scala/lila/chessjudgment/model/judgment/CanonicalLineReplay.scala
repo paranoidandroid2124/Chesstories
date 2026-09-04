@@ -304,6 +304,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
     suppliedOccurrenceAnalyses: Option[LazyList[PositionAnalysis]] = None,
     suppliedTransitions: Option[LazyList[CanonicalReplayTransition]] = None
 ):
+  require(replaySteps.nonEmpty, "a canonical replay needs at least one transition occurrence")
   require(replaySteps.size == legalSteps.size, "a canonical replay requires one legal step per declared step")
 
   private val indexByReplayStep: Map[LineReplayStep, Int] =
@@ -373,7 +374,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
     * traversed once, regardless of line length.
     */
   private[chessjudgment] lazy val singleStepReplays
-      : Option[List[(CanonicalReplayTransition, CanonicalLineReplay)]] =
+      : List[(CanonicalReplayTransition, CanonicalLineReplay)] =
     val projected = replaySteps
       .zip(legalSteps)
       .to(LazyList)
@@ -387,9 +388,11 @@ private[chessjudgment] final class CanonicalLineReplay private (
         )
       }
       .toList
-    Option.when(
-      projected.size == replaySteps.size && projected.map(_._1.declared) == replaySteps
-    )(projected)
+    require(
+      projected.size == replaySteps.size && projected.map(_._1.declared) == replaySteps,
+      "a canonical replay must project every transition occurrence exactly once"
+    )
+    projected
 
   private[chessjudgment] def verticalRelationOccurrences(
       step: LineReplayStep,
@@ -538,43 +541,45 @@ private[chessjudgment] final class CanonicalLineReplay private (
     */
   private[chessjudgment] def rootedAt(
       rootAnalysis: PositionAnalysis
-  ): Option[CanonicalLineReplay] =
-    replaySteps.headOption.flatMap { first =>
-      val alreadyOwned = analysisBefore(first).exists(existing =>
-        existing.occurrence.plyCount == rootAnalysis.occurrence.plyCount &&
-          existing.relationInventory.sameOwner(rootAnalysis.relationInventory)
-      )
-      if alreadyOwned then Some(this)
-      else
-        val rebuilt = replaySteps.foldLeft(
-          Option((rootAnalysis, List.empty[LegalReplayStep], List(rootAnalysis)))
-        ) { case (state, declared) =>
-          state.flatMap { case (beforeAnalysis, admitted, analyses) =>
-            val matchingMoves = beforeAnalysis.actualLegalMoves.filter(move =>
-              EvidenceRef.sameMove(move.toUci.uci, declared.moveUci) &&
-                PrincipalVariationEvidence.sameBoardState(Fen.write(move.after).value, declared.fenAfter)
-            )
-            matchingMoves match
-              case move :: Nil
-                  if beforeAnalysis.occurrence.plyCount == declared.ply - 1 &&
-                    PrincipalVariationEvidence.sameBoardState(
-                      beforeAnalysis.occurrence.fen,
-                      declared.fenBefore
-                    ) =>
-                val legal = LegalReplayStep.fromMove(declared.ply, beforeAnalysis.position, move)
-                val afterAnalysis = PositionAnalyzer.analyzeAfter(beforeAnalysis, legal, declared.fenAfter)
-                Some((afterAnalysis, legal :: admitted, afterAnalysis :: analyses))
-              case _ => None
-          }
+  ): CanonicalLineReplay =
+    val first = replaySteps.head
+    val alreadyOwned = analysisBefore(first).exists(existing =>
+      existing.occurrence.plyCount == rootAnalysis.occurrence.plyCount &&
+        existing.relationInventory.sameOwner(rootAnalysis.relationInventory)
+    )
+    if alreadyOwned then this
+    else
+      replaySteps
+        .foldLeft(Option((rootAnalysis, List.empty[LegalReplayStep], List(rootAnalysis)))) {
+          case (state, declared) =>
+            state.flatMap { case (beforeAnalysis, admitted, analyses) =>
+              val matchingMoves = beforeAnalysis.actualLegalMoves.filter(move =>
+                EvidenceRef.sameMove(move.toUci.uci, declared.moveUci) &&
+                  PrincipalVariationEvidence.sameBoardState(Fen.write(move.after).value, declared.fenAfter)
+              )
+              matchingMoves match
+                case move :: Nil
+                    if beforeAnalysis.occurrence.plyCount == declared.ply - 1 &&
+                      PrincipalVariationEvidence.sameBoardState(
+                        beforeAnalysis.occurrence.fen,
+                        declared.fenBefore
+                      ) =>
+                  val legal = LegalReplayStep.fromMove(declared.ply, beforeAnalysis.position, move)
+                  val afterAnalysis = PositionAnalyzer.analyzeAfter(beforeAnalysis, legal, declared.fenAfter)
+                  Some((afterAnalysis, legal :: admitted, afterAnalysis :: analyses))
+                case _ => None
+            }
         }
-        rebuilt.map { case (_, admitted, analyses) =>
+        .map { case (_, admitted, analyses) =>
           new CanonicalLineReplay(
             replaySteps = replaySteps,
             legalSteps = admitted.reverse,
             suppliedOccurrenceAnalyses = Some(analyses.reverse.to(LazyList))
           )
         }
-    }
+        .getOrElse(
+          throw IllegalArgumentException("an admitted line cannot be rooted at another occurrence")
+        )
 
 private[chessjudgment] object CanonicalLineReplay:
 

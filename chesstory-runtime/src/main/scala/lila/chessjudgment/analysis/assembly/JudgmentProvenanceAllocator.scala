@@ -194,5 +194,5 @@ object JudgmentProvenanceAllocator:
       )
     )
     JudgmentProvenanceAllocator(
-      s"move-review:$historyOccurrence:${input.beforePly}:${EvidenceRef.normalizeMove(input.playedMoveUci)}"
+      s"move-review:$historyOccurrence:${history.currentPly}:${EvidenceRef.normalizeMove(input.playedMoveUci)}"
     )

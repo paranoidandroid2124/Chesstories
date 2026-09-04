@@ -264,12 +264,9 @@ object MoveReviewInputAdmission:
         !assessmentReplaysOwned
     then None
     else
-      val canonicalBeforeFen = history.currentFen
-      val beforePly = history.currentPly
-      val side = Some(history.currentPosition.color)
       val ranked = preferredRankedEvaluations(
         assessmentEvaluations,
-        side
+        history.currentPosition.color
       ).zipWithIndex
       val reference = ranked.headOption.map { case (admitted, index) =>
         AdmittedAssessmentCandidate(
@@ -317,27 +314,18 @@ object MoveReviewInputAdmission:
           }
       val candidates = reference.toList ++ played.toList ++ alternatives
       val legalLines = legalLineEvaluations.map { admitted =>
-        AdmittedLegalLine(
-          rootMove = EvidenceRef.normalizeMove(admitted.evaluation.moves.head),
-          replay = admitted.replay
-        )
+        AdmittedLegalLine(admitted.replay)
       }
       legalLines
         .find(line => EvidenceRef.sameMove(line.rootMove, playedMove))
-        .flatMap { playedLine =>
-          playedLine.replay.replaySteps.headOption.map { playedStep =>
-            AdmittedMoveReviewInput(
-              beforeFen = canonicalBeforeFen,
-              playedMoveUci = playedLine.rootMove,
-              beforePly = beforePly,
-              sideToMove = side,
-              afterPlayedFen = playedStep.fenAfter,
-              legalLines = legalLines,
-              assessmentCandidates = candidates,
-              admittedRootRankingPair = None,
-              positionHistory = history
-            )
-          }
+        .map { playedLine =>
+          AdmittedMoveReviewInput(
+            playedMoveUci = playedLine.rootMove,
+            legalLines = legalLines,
+            assessmentCandidates = candidates,
+            admittedRootRankingPair = None,
+            positionHistory = history
+          )
         }
 
   private def admitEvaluations(
@@ -464,7 +452,7 @@ object MoveReviewInputAdmission:
 
   private def preferredRankedEvaluations(
       evaluations: List[AdmittedEvaluation],
-      sideToMove: Option[Color]
+      sideToMove: Color
   ): List[AdmittedEvaluation] =
     val byRootMove = evaluations.zipWithIndex
       .groupBy { case (admitted, _) =>
@@ -480,12 +468,9 @@ object MoveReviewInputAdmission:
       .values
       .map(_.head)
       .toList
-    val ordered = sideToMove match
-      case Some(side) =>
-        selectedEvaluations.sortBy { case (admitted, originalRank) =>
-          (-admitted.evaluation.rankingScoreForMover(side), originalRank)
-        }
-      case None => selectedEvaluations.sortBy(_._2)
+    val ordered = selectedEvaluations.sortBy { case (admitted, originalRank) =>
+      (-admitted.evaluation.rankingScoreForMover(sideToMove), originalRank)
+    }
     ordered.map(_._1)
 
   private def automaticTerminal(history: CanonicalPositionHistory): Option[AutomaticTerminal] =

@@ -37,7 +37,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       val replay = CanonicalLineReplay
         .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
         .getOrElse(fail("expected a canonical occurrence replay"))
-      AdmittedLegalLine(move, replay)
+      AdmittedLegalLine(replay)
     val allocator = JudgmentProvenanceAllocator.forInput(input)
     val lineA = normalized(rootA)
     val lineB = normalized(rootB)
@@ -81,7 +81,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
-      .flatMap(MoveReviewAssembler.assemble)
+      .map(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the repeated cycle to assemble"))
     val repeated = cycle.transitions.filter(edge => EvidenceRef.sameMove(edge.moveUci, "f3h2"))
 
@@ -116,7 +116,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
-      .flatMap(MoveReviewAssembler.assemble)
+      .map(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected both transposed histories to assemble"))
     val finalEdges = transposed.transitions
       .filter(edge => EvidenceRef.sameMove(edge.moveUci, "e2d3"))
@@ -176,7 +176,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
-      .flatMap(MoveReviewAssembler.assemble)
+      .map(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the double-check review to assemble"))
     val freshChecks = assembled.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
@@ -240,7 +240,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
-      .flatMap(MoveReviewAssembler.assemble)
+      .map(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the checked root response to assemble"))
     val response = assembled.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
@@ -265,7 +265,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
           )
         )
       )
-      .flatMap(MoveReviewAssembler.assemble)
+      .map(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the stalemate transition to assemble"))
     val stalemate = assembled.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)

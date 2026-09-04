@@ -1,24 +1,14 @@
 package lila.chessjudgment.model.judgment
 
-import chess.Color
 import lila.chessjudgment.analysis.position.PositionAnalysis
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
 
-final case class AdmittedLegalLine(
-    rootMove: String,
+final case class AdmittedLegalLine private[chessjudgment] (
     replay: CanonicalLineReplay
 ):
-  require(rootMove.nonEmpty, "an admitted LegalLine needs its canonical root move")
-  require(
-    rootMove == EvidenceRef.normalizeMove(rootMove),
-    "an admitted LegalLine root move must be canonical"
-  )
-  require(
-    replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, rootMove)),
-    "an admitted LegalLine replay must begin with its declared root move"
-  )
+  val rootMove: String = EvidenceRef.normalizeMove(replay.replaySteps.head.moveUci)
 
-final case class AdmittedAssessmentCandidate(
+final case class AdmittedAssessmentCandidate private[chessjudgment] (
     lineRootMove: String,
     role: LineNodeRole,
     rank: Int,
@@ -46,12 +36,8 @@ final case class LineRootOccurrence(
 ):
   require(transitionEvidenceId.trim.nonEmpty, "a line-root occurrence requires its exact transition")
 
-final case class AdmittedMoveReviewInput(
-    beforeFen: String,
+final case class AdmittedMoveReviewInput private[chessjudgment] (
     playedMoveUci: String,
-    beforePly: Int,
-    sideToMove: Option[Color],
-    afterPlayedFen: String,
     legalLines: List[AdmittedLegalLine],
     assessmentCandidates: List[AdmittedAssessmentCandidate],
     admittedRootRankingPair: Option[AdmittedRootRankingPair],
@@ -62,12 +48,24 @@ final case class AdmittedMoveReviewInput(
   private val playedLineOwners = legalLines.filter(line => EvidenceRef.sameMove(line.rootMove, playedMoveUci))
 
   require(
-    admittedRootMoves.size == legalLines.size && admittedRootMoves.distinct.size == admittedRootMoves.size,
+    playedMoveUci == EvidenceRef.normalizeMove(playedMoveUci),
+    "the observed move must be canonical"
+  )
+  require(
+    admittedRootMoves.distinct.size == admittedRootMoves.size,
     "one root move must have exactly one admitted LegalLine owner"
   )
   require(
     admittedRootMoves.forall(legalRootMoves.contains),
     "every admitted LegalLine root must belong to the legal root move universe"
+  )
+  require(
+    legalLines.forall { line =>
+      val first = line.replay.replaySteps.head
+      first.ply == positionHistory.currentPly + 1 &&
+      PrincipalVariationEvidence.normalizeFen(first.fenBefore) == positionHistory.currentFen
+    },
+    "every admitted LegalLine must start at the exact reviewed occurrence"
   )
   require(
     playedLineOwners.size == 1,

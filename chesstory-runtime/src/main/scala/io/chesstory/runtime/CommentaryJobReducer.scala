@@ -697,8 +697,9 @@ object CommentaryJobReducer:
       context: ReviewContext,
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    MoveReviewAssembler.assemble(context.review.preparedInput)
-      .flatMap(EvidenceBackedJudgmentPacket.fromAssembly) match
+    EvidenceBackedJudgmentPacket.fromAssembly(
+      MoveReviewAssembler.assemble(context.review.preparedInput)
+    ) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
       case Some(packet) =>
         completeReview(

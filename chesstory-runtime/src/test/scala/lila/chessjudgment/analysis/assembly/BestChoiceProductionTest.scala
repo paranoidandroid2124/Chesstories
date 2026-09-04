@@ -31,9 +31,8 @@ class BestChoiceProductionTest extends munit.FunSuite:
     val prepared = admitted.copy(admittedRootRankingPair = Some(rankingPair))
 
     assertEquals(prepared.assessmentCandidates.flatMap(_.rootMove).toSet, ranking.toSet)
-    MoveReviewAssembler
-      .assemble(prepared)
-      .flatMap(EvidenceBackedJudgmentPacket.fromAssembly)
+    EvidenceBackedJudgmentPacket
+      .fromAssembly(MoveReviewAssembler.assemble(prepared))
       .getOrElse(fail("expected the lower assembly to project BestChoice"))
 
   private val assessmentLayers = Set(
@@ -68,22 +67,42 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(lowerEvidenceShape(actual), lowerEvidenceShape(expected))
 
   test("review assembly preserves per-ply lower facts without an assessment packet"):
-    val assembly = MoveReviewAssembler
-      .assemble(admittedReview(ranking.head))
-      .getOrElse(fail("expected the admitted lower review to assemble"))
+    val assembly = MoveReviewAssembler.assemble(admittedReview(ranking.head))
 
     assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(assembly), None)
     assert(assembly.lineReplays.valuesIterator.exists(_.replaySteps.nonEmpty))
     assert(assembly.positions.exists(_.role == PositionNodeRole.LineOccurrence))
 
+  test("an admitted line cannot be rebound from another root occurrence"):
+    val input = admittedReview(ranking.head)
+    val foreign = MoveReviewInputAdmission
+      .admit(
+        RawMoveReviewInput(
+          fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 2",
+          playedMoveUci = ranking.head,
+          variations = List(EngineLine(List("e2e4", "e7e5"), 30, None, 16))
+        )
+      )
+      .getOrElse(fail("expected a second exact root occurrence"))
+      .playedRootLineOwner
+    val rebound = input.legalLines.map(line =>
+      if EvidenceRef.sameMove(line.rootMove, foreign.rootMove) then foreign else line
+    )
+
+    intercept[IllegalArgumentException] {
+      input.copy(
+        legalLines = rebound,
+        assessmentCandidates = Nil,
+        admittedRootRankingPair = None
+      )
+    }
+
   test("removing assessment candidates leaves the lower occurrence ledger unchanged"):
     val input = admittedReview(ranking.last)
-    val complete = MoveReviewAssembler
-      .assemble(input)
-      .getOrElse(fail("expected the complete review to assemble"))
-    val lowerOnly = MoveReviewAssembler
-      .assemble(input.copy(assessmentCandidates = Nil, admittedRootRankingPair = None))
-      .getOrElse(fail("expected the lower-only review to assemble"))
+    val complete = MoveReviewAssembler.assemble(input)
+    val lowerOnly = MoveReviewAssembler.assemble(
+      input.copy(assessmentCandidates = Nil, admittedRootRankingPair = None)
+    )
 
     assert(EvidenceBackedJudgmentPacket.fromAssembly(complete).nonEmpty)
     assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(lowerOnly), None)
@@ -94,16 +113,13 @@ class BestChoiceProductionTest extends munit.FunSuite:
       .fromAdmittedRanking(ranking)
       .getOrElse(fail("expected the admitted root ranking"))
     val input = admittedReview(ranking.head).copy(admittedRootRankingPair = Some(rankingPair))
-    val complete = MoveReviewAssembler
-      .assemble(input)
-      .getOrElse(fail("expected the complete best-choice review to assemble"))
+    val complete = MoveReviewAssembler.assemble(input)
     val partial = MoveReviewAssembler
       .assemble(
         input.copy(
           assessmentCandidates = input.assessmentCandidates.filter(_.role == LineNodeRole.BestReference)
         )
       )
-      .getOrElse(fail("expected the partial assessment review to preserve its lower assembly"))
 
     assert(EvidenceBackedJudgmentPacket.fromAssembly(complete).nonEmpty)
     assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(partial), None)

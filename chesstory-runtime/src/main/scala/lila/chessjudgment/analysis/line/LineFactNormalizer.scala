@@ -48,7 +48,7 @@ object LineFactNormalizer:
       replay: CanonicalLineReplay,
       materialSummary: Option[LineMaterialSummary]
   ): List[LineMoveEvent] =
-    val singleStepReplays = replay.singleStepReplays.getOrElse(Nil)
+    val singleStepReplays = replay.singleStepReplays
     val replayEvents =
       facts.line.moves.zip(singleStepReplays).zipWithIndex.flatMap { case ((move, (transition, transitionReplay)), index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
@@ -164,7 +164,7 @@ object LineFactNormalizer:
       events: List[LineMoveEvent],
       materialSummary: Option[LineMaterialSummary]
   ): List[LineConsequence] =
-    val singleStepReplays = replay.singleStepReplays.getOrElse(Nil)
+    val singleStepReplays = replay.singleStepReplays
     val rootMove = facts.line.moves.headOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
     val rootSide = singleStepReplays.headOption.map(_._1.legal.move.piece.color)
     val outcome =
