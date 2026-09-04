@@ -24,15 +24,7 @@ private[chessjudgment] final class ClosedRelationTransitionInventory private (
   )
 
   val verticalRelations: List[RelationFactEvidence] =
-    vertical.byContract.iterator
-      .flatMap { case (contract, results) =>
-        results.iterator.map(relation => contract -> relation)
-      }
-      .toList
-      .sortBy { case (contract, relation) =>
-        VerticalRelationContractKind.id(contract) -> relation.semanticId
-      }
-      .map(_._2)
+    vertical.allResults
 
   require(
     verticalRelations.map(_.semanticId).distinct.size == verticalRelations.size,

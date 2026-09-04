@@ -56,9 +56,9 @@ object LineFactNormalizer:
         val relationDetails = transitionReplay.verticalRelationOccurrences(
           transition.declared,
           List(
-            VerticalRelationContractKind.RootCheckResponse,
-            VerticalRelationContractKind.CreatedCheckResponseInventory,
-            VerticalRelationContractKind.StalemateTransition
+            RelationFactKind.RootCheckResponse,
+            RelationFactKind.CreatedCheckResponseInventory,
+            RelationFactKind.StalemateTransition
           )
         ).map(_.relation.detail)
         val checkDefense = relationDetails.collect {
@@ -176,8 +176,8 @@ object LineFactNormalizer:
         transitionReplay.verticalRelationOccurrences(
           transition.declared,
           List(
-            VerticalRelationContractKind.CreatedCheckResponseInventory,
-            VerticalRelationContractKind.StalemateTransition
+            RelationFactKind.CreatedCheckResponseInventory,
+            RelationFactKind.StalemateTransition
           )
         ).flatMap(_.relation.detail match
           case RelationWitnessDetail.CreatedCheckResponseInventory(

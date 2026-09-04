@@ -56,7 +56,7 @@ private final class CanonicalReplayTransitionCalculation(
         boardFootprint
       )
       .getOrElse(
-        throw IllegalArgumentException("a closed vertical relation batch failed typed contract certification")
+        throw IllegalArgumentException("a closed vertical relation batch failed exact derivation certification")
       )
 
   lazy val structuralDelta: TransitionStructuralDelta =
@@ -65,7 +65,7 @@ private final class CanonicalReplayTransitionCalculation(
       afterAnalysis,
       legalStep,
       relationDelta,
-      certifiedVertical.resultsFor(VerticalRelationContractKind.PawnTopologyTransition)
+      certifiedVertical.resultsFor(RelationFactKind.PawnTopologyTransition)
     )
 
   lazy val structuralConsequences: List[TransitionConsequence] =
@@ -82,7 +82,7 @@ private final class CanonicalReplayTransitionCalculation(
       resultPremiseOccurrences
     )
 
-/** Semantic time-axis address of one certified L1 result. The replay step
+/** Semantic time-axis address of one certified derived relation. The replay step
   * identifies the exact transition occurrence; graph binding later adds the
   * concrete line occurrence without changing this relation meaning.
   */
@@ -154,11 +154,11 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrenceBinding 
     occurrenceId: String,
     certifiedSourcePremiseIds: List[String]
 ):
-  require(occurrenceId.matches("[0-9a-f]{64}"), "an L1 occurrence binding needs its canonical id")
+  require(occurrenceId.matches("[0-9a-f]{64}"), "a derived-relation occurrence binding needs its canonical id")
   require(
     certifiedSourcePremiseIds.nonEmpty &&
       certifiedSourcePremiseIds == certifiedSourcePremiseIds.distinct.sorted,
-    "an L1 occurrence binding needs exact canonical lower premise owners"
+    "a derived-relation occurrence binding needs exact canonical lower premise owners"
   )
 
   private[chessjudgment] def stableKey: String =
@@ -211,7 +211,7 @@ private[chessjudgment] object ReplayStructuralOccurrence:
       resultPremiseOccurrences.map(_.result) == expectedResultKeys &&
         resultPremiseOccurrences.map(_.occurrenceId).distinct.size == resultPremiseOccurrences.size &&
         resultPremiseOccurrences.forall(_.step == step),
-      "a structural occurrence must retain every consumed L1 result at this exact replay occurrence"
+      "a structural occurrence must retain every consumed derived relation at this exact replay occurrence"
     )
     val relationPremises = consequences.flatMap(consequence =>
       (consequence.subjectBindings ++ consequence.targetBindings).flatMap(binding =>
@@ -265,9 +265,9 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     )
 
   private[chessjudgment] def verticalRelationsFor(
-      contract: VerticalRelationContractKind
+      kind: RelationFactKind
   ): List[RelationFactEvidence] =
-    calculation.certifiedVertical.resultsFor(contract)
+    calculation.certifiedVertical.resultsFor(kind)
 
   private[chessjudgment] def closedRelationInventory: ClosedRelationTransitionInventory =
     closedRelationOutput
@@ -282,8 +282,9 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
 
   private[chessjudgment] lazy val structuralOccurrence: ReplayStructuralOccurrence =
     val expectedKeys = calculation.structuralConsequences.flatMap(_.resultPremiseKeys).toSet
-    val occurrences = VerticalRelationContractKind.values.toList.flatMap { contract =>
-      verticalRelationsFor(contract).flatMap { relation =>
+    val expectedKinds = expectedKeys.iterator.map(_.kind).toSet.toList.sortBy(RelationFactKind.id)
+    val occurrences = expectedKinds.flatMap { kind =>
+      verticalRelationsFor(kind).flatMap { relation =>
         val key = DerivedRelationResultKey.from(relation)
         Option.when(expectedKeys(key))(
           ReplayVerticalRelationOccurrenceBinding.from(
@@ -295,7 +296,7 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     require(
       occurrences.map(_.result).distinct.size == occurrences.size &&
         occurrences.map(_.result).toSet == expectedKeys,
-      "a structural occurrence must resolve every consumed L1 result exactly once"
+      "a structural occurrence must resolve every consumed derived relation exactly once"
     )
     calculation.structuralOccurrence(declared, occurrences)
 
@@ -429,15 +430,15 @@ private[chessjudgment] final class CanonicalLineReplay private (
 
   private[chessjudgment] def verticalRelationOccurrences(
       step: LineReplayStep,
-      contracts: List[VerticalRelationContractKind]
+      kinds: List[RelationFactKind]
   ): List[ReplayVerticalRelationOccurrence] =
     require(
-      contracts.distinct.size == contracts.size,
-      "one time-axis query cannot repeat an L1 contract"
+      kinds.distinct.size == kinds.size,
+      "one time-axis query cannot repeat a relation kind"
     )
     transition(step).toList.flatMap { exactTransition =>
-      contracts.flatMap(contract =>
-        exactTransition.verticalRelationsFor(contract).map(relation =>
+      kinds.flatMap(kind =>
+        exactTransition.verticalRelationsFor(kind).map(relation =>
           ReplayVerticalRelationOccurrence(step, relation)
         )
       )
@@ -497,7 +498,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
       if captureRoot.capture.nonEmpty
       inventory <- only(
         captureTransition
-          .verticalRelationsFor(VerticalRelationContractKind.CaptureRecaptureInventory)
+          .verticalRelationsFor(RelationFactKind.CaptureRecaptureInventory)
           .flatMap(relation =>
             relation.detail match
               case detail: RelationWitnessDetail.CaptureRecaptureInventory =>

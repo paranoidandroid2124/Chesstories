@@ -43,7 +43,7 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
       .fromLegalReplay(List(legal))
       .getOrElse(fail("expected canonical replay"))
     val transition = replay.onlyTransition.getOrElse(fail("expected one replay transition"))
-    val reaches = transition.verticalRelationsFor(VerticalRelationContractKind.SliderReachDelta)
+    val reaches = transition.verticalRelationsFor(RelationFactKind.SliderReachDelta)
 
     assert(reaches.nonEmpty)
     assert(reaches.forall(_.kind == RelationFactKind.SliderReachDelta))

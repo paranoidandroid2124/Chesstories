@@ -383,8 +383,8 @@ object LegalLineAssembler:
       val terminals = replay.verticalRelationOccurrences(
         terminalStep,
         List(
-          VerticalRelationContractKind.CreatedCheckResponseInventory,
-          VerticalRelationContractKind.StalemateTransition
+          RelationFactKind.CreatedCheckResponseInventory,
+          RelationFactKind.StalemateTransition
         )
       ).flatMap(occurrence =>
         occurrence.relation.detail match

@@ -706,11 +706,11 @@ object RelationWitnessDetail:
       case _: GeometricControlSetDelta =>
         RelationProofStage.TransitionFact
       case vertical =>
-        VerticalRelationContractKind.forDetail(vertical)
+        VerticalRelationContracts.proofOf(vertical)
           .map(_ => RelationProofStage.DerivedFact)
           .getOrElse(
             throw IllegalArgumentException(
-              s"relation '${vertical.detailName}' has no registered proof stage"
+              s"relation '${vertical.detailName}' has no derivation proof"
             )
           )
 
@@ -1713,7 +1713,7 @@ private[judgment] object ClosedRelationOutputBinding:
     )
 
 /** Persistent occurrence owner for one already-evaluated closed relation
-  * production. Contract closure remains in the semantic inventory; the
+  * production. Proof closure remains in the semantic inventory; the
   * occurrence persists only actual outputs and their exact source bindings.
   */
 final class ClosedRelationOccurrenceEvidence private (

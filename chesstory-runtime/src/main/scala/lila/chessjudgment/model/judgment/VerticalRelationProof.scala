@@ -1,8 +1,6 @@
 package lila.chessjudgment.model.judgment
 
 import _root_.chess.{ Bishop, King, Pawn, Queen, Rook, Square }
-import scala.collection.immutable.VectorMap
-
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 
 /** Explicit proof strata. The numeric order is proof authority, not a score:
@@ -25,46 +23,6 @@ private[chessjudgment] object RelationProofStage:
       case RelationProofStage.PositionFact   => "position_fact"
       case RelationProofStage.TransitionFact => "transition_fact"
       case RelationProofStage.DerivedFact    => "derived_fact"
-
-private[chessjudgment] enum VerticalRelationContractKind:
-  case CaptureRecaptureInventory
-  case CreatedCheckResponseInventory
-  case RootCheckResponse
-  case SliderReachDelta
-  case PawnTopologyTransition
-  case StalemateTransition
-
-private[chessjudgment] object VerticalRelationContractKind:
-  def id(kind: VerticalRelationContractKind): String =
-    kind match
-      case VerticalRelationContractKind.CaptureRecaptureInventory =>
-        "capture_recapture_inventory"
-      case VerticalRelationContractKind.CreatedCheckResponseInventory =>
-        "created_check_response_inventory"
-      case VerticalRelationContractKind.RootCheckResponse =>
-        "root_check_response"
-      case VerticalRelationContractKind.SliderReachDelta =>
-        "slider_reach_delta"
-      case VerticalRelationContractKind.PawnTopologyTransition =>
-        "pawn_topology_transition"
-      case VerticalRelationContractKind.StalemateTransition =>
-        "stalemate_transition"
-
-  def forDetail(detail: RelationWitnessDetail): Option[VerticalRelationContractKind] =
-    detail match
-      case _: RelationWitnessDetail.CaptureRecaptureInventory =>
-        Some(VerticalRelationContractKind.CaptureRecaptureInventory)
-      case _: RelationWitnessDetail.CreatedCheckResponseInventory =>
-        Some(VerticalRelationContractKind.CreatedCheckResponseInventory)
-      case _: RelationWitnessDetail.RootCheckResponse =>
-        Some(VerticalRelationContractKind.RootCheckResponse)
-      case _: RelationWitnessDetail.SliderReachDelta =>
-        Some(VerticalRelationContractKind.SliderReachDelta)
-      case _: RelationWitnessDetail.PawnTopologyTransition =>
-        Some(VerticalRelationContractKind.PawnTopologyTransition)
-      case _: RelationWitnessDetail.StalemateTransition =>
-        Some(VerticalRelationContractKind.StalemateTransition)
-      case _ => None
 
 final case class RelationLegalMoveResourceWitness(
     movement: RelationMoveTransitionWitness,
@@ -1258,9 +1216,8 @@ private[chessjudgment] object VerticalRelationDerivationProof:
       states.sortBy(_.stableKey)
     )
 
-/** The closed L1 ledger for one transition. Only contracts named by an exact
-  * changed dependency are run. An absent contract key certifies non-execution;
-  * an empty stored result certifies that an activated contract found no fact.
+/** The closed derived-relation ledger for one transition. Exact dependency changes select
+  * producers; every result survives independently of sibling output.
   */
 private[chessjudgment] final class ClosedVerticalRelationResults private (
     engine: ClosedVerticalRelationEngine,
@@ -1268,29 +1225,22 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
     private val deltaOwner: RelationSemanticDelta,
     certify: RelationFactEvidence => RelationFactEvidence
 ):
-  private val certifiedByContract = scala.collection.mutable.Map.empty[
-    VerticalRelationContractKind,
+  private val certifiedByKind = scala.collection.mutable.Map.empty[
+    RelationFactKind,
     List[RelationFactEvidence]
   ]
 
   private[chessjudgment] def resultsFor(
-      contract: VerticalRelationContractKind
+      kind: RelationFactKind
   ): List[RelationFactEvidence] = synchronized {
-    certifiedByContract.getOrElseUpdate(
-      contract,
-      engine.resultsFor(contract).map(certify)
+    certifiedByKind.getOrElseUpdate(
+      kind,
+      engine.resultsFor(kind).map(certify)
     )
   }
 
-  private[judgment] lazy val byContract: VectorMap[
-    VerticalRelationContractKind,
-    List[RelationFactEvidence]
-  ] =
-    engine.activeContracts
-      .sortBy(VerticalRelationContractKind.id)
-      .foldLeft(VectorMap.empty[VerticalRelationContractKind, List[RelationFactEvidence]]) {
-        case (closed, contract) => closed.updated(contract, resultsFor(contract))
-      }
+  private[judgment] lazy val allResults: List[RelationFactEvidence] =
+    engine.activeKinds.flatMap(resultsFor)
 
   private[judgment] def owns(
       lowerResults: ControlSetDeltaResults,
@@ -1324,20 +1274,18 @@ private final class ClosedVerticalRelationEngine(
     delta: RelationSemanticDelta
 ):
   private val input = VerticalRelationInput(delta, controlSetDeltas)
-  private val rawByContract = scala.collection.mutable.Map.empty[
-    VerticalRelationContractKind,
+  private val rawByKind = scala.collection.mutable.Map.empty[
+    RelationFactKind,
     List[RelationFactEvidence]
   ]
 
-  def activeContracts: List[VerticalRelationContractKind] = input.activeContracts
+  def activeKinds: List[RelationFactKind] = input.activeKinds
 
-  def resultsFor(contract: VerticalRelationContractKind): List[RelationFactEvidence] = synchronized {
-    rawByContract.getOrElseUpdate(
-      contract,
+  def resultsFor(kind: RelationFactKind): List[RelationFactEvidence] = synchronized {
+    rawByKind.getOrElseUpdate(
+      kind,
       {
-        val results =
-          if input.activates(contract) then VerticalRelationContracts.derive(contract, input).sortBy(_.semanticId)
-          else Nil
+        val results = VerticalRelationContracts.derive(kind, input).sortBy(_.semanticId)
         val validation = results.map { relation =>
           val proof = VerticalRelationContracts.proofOf(relation.detail)
           val unresolved = proof.toList.flatMap(exact =>
@@ -1346,11 +1294,10 @@ private final class ClosedVerticalRelationEngine(
               exact.states.filterNot(input.resolves).map(_.stableKey)
           )
           val valid =
-            relation.proofStage == RelationProofStage.DerivedFact &&
+            relation.kind == kind &&
               input.ownsOutput(relation.detail) &&
               proof.exists(exact =>
-                VerticalRelationContractKind.forDetail(relation.detail).contains(contract) &&
-                  exact.proves(relation.detail) && unresolved.isEmpty
+                exact.proves(relation.detail) && unresolved.isEmpty
               )
           relation.semanticId -> (valid -> unresolved)
         }
@@ -1359,11 +1306,11 @@ private final class ClosedVerticalRelationEngine(
         }
         require(
           validation.forall { case (_, (valid, _)) => valid },
-          s"vertical contract '${VerticalRelationContractKind.id(contract)}' emitted an unresolved derivation: ${invalid.mkString(",")}"
+          s"vertical relation producer '${RelationFactKind.id(kind)}' emitted an unresolved derivation: ${invalid.mkString(",")}"
         )
         require(
           results.map(_.semanticId).distinct.size == results.size,
-          "one vertical contract cannot repeat a derivation path"
+          "one vertical relation producer cannot repeat a derivation path"
         )
         results
       }
@@ -1510,7 +1457,7 @@ private[chessjudgment] final class VerticalRelationInput private (
             removedControllers,
             establishedControllers
           )
-        case _ => throw IllegalArgumentException("control-set contract changed relation kind")
+        case _ => throw IllegalArgumentException("a control-set result changed relation kind")
     }
 
   private[judgment] def controlSetChanges: List[VerticalControlSetChange] =
@@ -1532,10 +1479,10 @@ private[chessjudgment] final class VerticalRelationInput private (
     VerticalRelationPremiseSource.Position(premiseOccurrence)
 
   /** Exact dependency dispatch. These predicates inspect only the already
-    * closed delta/state keys; they never materialize an L1 result to decide
-    * whether that same contract should run.
+    * closed delta/state keys; they never materialize a derived result to decide
+    * whether that same producer should run.
     */
-  private lazy val activeContractSet: Set[VerticalRelationContractKind] =
+  private lazy val activeKindSet: Set[RelationFactKind] =
     val sliderReachSourceChanged =
       delta.ofKind(RelationFactKind.RayBarrier).nonEmpty ||
         delta.ofKind(RelationFactKind.GeometricControl).exists(_.detail match
@@ -1566,24 +1513,24 @@ private[chessjudgment] final class VerticalRelationInput private (
               inventory.stateView.occupantAt(target).exists(_.role.name.equalsIgnoreCase(Pawn.name))
           case _ => false)
     List(
-      Option.when(rootMove.capture.nonEmpty)(VerticalRelationContractKind.CaptureRecaptureInventory),
-      Option.when(createdCheckChanged)(VerticalRelationContractKind.CreatedCheckResponseInventory),
+      Option.when(rootMove.capture.nonEmpty)(RelationFactKind.CaptureRecaptureInventory),
+      Option.when(createdCheckChanged)(RelationFactKind.CreatedCheckResponseInventory),
       Option.when(delta.beforeInventory.stateView.inCheck(rootMove.side))(
-        VerticalRelationContractKind.RootCheckResponse
+        RelationFactKind.RootCheckResponse
       ),
-      Option.when(sliderReachSourceChanged)(VerticalRelationContractKind.SliderReachDelta),
-      Option.when(pawnTopologyChanged)(VerticalRelationContractKind.PawnTopologyTransition),
+      Option.when(sliderReachSourceChanged)(RelationFactKind.SliderReachDelta),
+      Option.when(pawnTopologyChanged)(RelationFactKind.PawnTopologyTransition),
       Option.when(
         delta.afterInventory.kingTerminalState ==
           PositionRelationExtractor.ClosedKingTerminalState.Stalemate
-      )(VerticalRelationContractKind.StalemateTransition)
+      )(RelationFactKind.StalemateTransition)
     ).flatten.toSet
 
-  private[judgment] def activeContracts: List[VerticalRelationContractKind] =
-    activeContractSet.toList.sortBy(VerticalRelationContractKind.id)
+  private[judgment] def activeKinds: List[RelationFactKind] =
+    activeKindSet.toList.sortBy(RelationFactKind.id)
 
-  private[judgment] def activates(contract: VerticalRelationContractKind): Boolean =
-    activeContractSet(contract)
+  private[judgment] def activates(kind: RelationFactKind): Boolean =
+    activeKindSet(kind)
 
   private[judgment] def rootMove: CanonicalRootLegalMove =
     delta.rootMove
@@ -1618,9 +1565,9 @@ private[chessjudgment] final class VerticalRelationInput private (
     }.sortBy(_.witness.stableKey)
     VerticalLegalRestrictionClause(restriction, pinCauses)
 
-  /** One shared, demand-created view for the L1 contracts that explain a
-    * root capture. The exact position inventory owns both source lists; this
-    * view prevents sibling contracts from rebuilding the same join.
+  /** One shared, demand-created view for the derived facts of a root capture.
+    * The exact position inventory owns both source lists; this view prevents
+    * sibling producers from rebuilding the same join.
     */
   private lazy val captureRecaptureInput: Option[VerticalCaptureRecaptureInput] =
     delta.rootMove.capture.map { captured =>
@@ -1666,9 +1613,9 @@ private[chessjudgment] final class VerticalRelationInput private (
   private[judgment] def captureRecapture: Option[VerticalCaptureRecaptureInput] =
     captureRecaptureInput
 
-  /** Shared interpretation of one newly established check. Double-check and
-    * response contracts consume this exact view instead of parsing the same
-    * control-set delta independently.
+  /** Shared interpretation of one newly established check. Check-response
+    * producers consume this exact view instead of parsing the same control-set
+    * delta independently.
     */
   private lazy val newlyEstablishedCheckInput: List[VerticalCheckTransitionSubject] =
     controlSetChanges.flatMap { change =>
@@ -2036,29 +1983,35 @@ private[chessjudgment] object BoundClosedPositionState:
       new BoundClosedPositionState(premise, proof, snapshot.scope, snapshot.inventory)
     )
 
-/** Single semantic owner of L1 chess implications. Creation and certification
-  * share these exact predicates; binders only resolve occurrence identities.
+/** Exact transition-scoped derived-fact producers, not an idea taxonomy or a
+  * survival gate. Creation and certification share these predicates; binders
+  * only resolve occurrence identities.
   */
 private[chessjudgment] object VerticalRelationContracts:
   import VerticalRelationWitnessProjection.*
 
   def derive(
-      contract: VerticalRelationContractKind,
+      kind: RelationFactKind,
       input: VerticalRelationInput
   ): List[RelationFactEvidence] =
-    contract match
-      case VerticalRelationContractKind.CaptureRecaptureInventory =>
-        deriveCaptureRecaptureInventory(input)
-      case VerticalRelationContractKind.CreatedCheckResponseInventory =>
-        deriveCreatedCheckResponseInventory(input)
-      case VerticalRelationContractKind.RootCheckResponse =>
-        deriveRootCheckResponse(input)
-      case VerticalRelationContractKind.SliderReachDelta =>
-        input.sliderReachDeltaResults
-      case VerticalRelationContractKind.PawnTopologyTransition =>
-        derivePawnTopologyTransitions(input)
-      case VerticalRelationContractKind.StalemateTransition =>
-        deriveStalemateTransition(input)
+    val produce = kind match
+      case RelationFactKind.CaptureRecaptureInventory =>
+        () => deriveCaptureRecaptureInventory(input)
+      case RelationFactKind.CreatedCheckResponseInventory =>
+        () => deriveCreatedCheckResponseInventory(input)
+      case RelationFactKind.RootCheckResponse =>
+        () => deriveRootCheckResponse(input)
+      case RelationFactKind.SliderReachDelta =>
+        () => input.sliderReachDeltaResults
+      case RelationFactKind.PawnTopologyTransition =>
+        () => derivePawnTopologyTransitions(input)
+      case RelationFactKind.StalemateTransition =>
+        () => deriveStalemateTransition(input)
+      case unsupported =>
+        throw IllegalArgumentException(
+          s"relation kind '${RelationFactKind.id(unsupported)}' has no vertical producer"
+        )
+    if input.activates(kind) then produce() else Nil
 
   def proofOf(detail: RelationWitnessDetail): Option[VerticalRelationDerivationProof] =
     detail match
@@ -2314,7 +2267,7 @@ private[chessjudgment] object VerticalRelationContracts:
     val inventory = before.kingResponses
     require(
       inventory.side == input.rootMove.side && inventory.inCheck,
-      "a root check-response contract requires the checked side's exact before-position inventory"
+      "a root check-response derivation requires the checked side's exact before-position inventory"
     )
     val selected = inventory.responses.filter(response =>
       EvidenceRef.sameMove(response.move.moveUci, input.rootMove.moveUci)
