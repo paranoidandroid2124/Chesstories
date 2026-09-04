@@ -2596,8 +2596,7 @@ final class TypedEvidenceGraph private (
         case CandidateComparisonEvidence(comparison) =>
           candidateComparisonAncestryVerified(record, comparison)
         case RelativeAssessmentEvidence(assessment) =>
-          exactAuthority(record, EvidenceProducer.RelativeMoveProducer, EvidenceLayer.RelativeAssessment) &&
-            record.ref == assessment.evidence && record.ref.line.contains(assessment.candidate.ref)
+          relativeAssessmentAncestryVerified(record, assessment)
       )
 
   private def exactPositionOccurrenceOwner(record: EvidenceRecord): Boolean =
@@ -2716,6 +2715,7 @@ final class TypedEvidenceGraph private (
         candidateSource.ref
       )
     )
+    record.ref.position.sideToMove.contains(comparison.comparison.mover) &&
     directParents.size == record.parents.size && canonicalInputs.exists {
       case (referenceSource, candidateSource, reference, candidate) =>
         CandidateComparisonRecordAuthority.exactShape(
@@ -2733,6 +2733,67 @@ final class TypedEvidenceGraph private (
           )
           .contains(comparison)
     }
+
+  private def relativeAssessmentAncestryVerified(
+      record: EvidenceRecord,
+      assessment: RelativeMoveAssessment
+  ): Boolean =
+    val directParents = record.parents.flatMap(parent => byId.get(parent.id).filter(_.ref == parent))
+    def parent(ref: EvidenceRef): Option[EvidenceRecord] =
+      directParents.find(_.ref == ref)
+    def exactTransition(edge: MoveTransitionEdge): Boolean =
+      parent(edge.evidence).exists(edge.matches)
+    def endpointBound(line: CandidateLineNode, comparison: EvidenceRecord): Boolean =
+      val evaluations = comparison.parents
+        .flatMap(parent => byId.get(parent.id).filter(_.ref == parent))
+        .collect {
+          case EvidenceRecord(_, CandidateLineEvaluationEvidence(ref, evaluation), _) if ref == line.ref =>
+            evaluation
+        }
+      comparison.parents.contains(line.lineEvidence) && evaluations == List(line.evaluation)
+    def comparisonBound(source: EvidenceRecord, fact: CandidateComparisonFact): Boolean =
+      val referenceBound =
+        assessment.reference.role == LineNodeRole.BestReference &&
+          fact.referenceLine == assessment.reference.ref &&
+          fact.referenceSelection == SemanticLineKey.from(assessment.reference) &&
+          endpointBound(assessment.reference, source)
+      val playedBound =
+        assessment.played.role == TransitionEdgeRole.Played &&
+          assessment.played.from == record.ref.position &&
+          EvidenceRef.sameMove(assessment.played.moveUci, assessment.candidate.ref.rootMove)
+      referenceBound && playedBound && fact.hasDistinctRootMoves && (fact.kind match
+        case CandidateComparisonKind.PlayedVsBest =>
+          assessment.candidate.role == LineNodeRole.Played &&
+            fact.candidateLine == assessment.candidate.ref &&
+            fact.candidateSelection == SemanticLineKey.from(assessment.candidate) &&
+            endpointBound(assessment.candidate, source) &&
+            assessment.referenceTransition.exists(edge =>
+              edge.role == TransitionEdgeRole.Reference &&
+                edge.from == assessment.played.from &&
+                EvidenceRef.sameMove(edge.moveUci, assessment.reference.ref.rootMove)
+            )
+        case CandidateComparisonKind.BestVsSecond =>
+          assessment.candidate == assessment.reference &&
+            assessment.referenceTransition.isEmpty &&
+            EvidenceRef.sameMove(assessment.played.moveUci, assessment.reference.ref.rootMove) &&
+            fact.candidateSelection.role == LineNodeRole.Alternative &&
+            fact.candidateSelection.rank == 2)
+    val comparison = parent(assessment.primaryComparisonEvidence).collect {
+      case source @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _) => source -> fact
+    }
+    exactAuthority(record, EvidenceProducer.RelativeMoveProducer, EvidenceLayer.RelativeAssessment) &&
+      record.ref == assessment.evidence &&
+      record.ref.position == assessment.played.from &&
+      record.ref.line.contains(assessment.candidate.ref) &&
+      record.ref.scope == EvidenceScope.Counterfactual &&
+      assessment.canonicalParents.contains(record.parents) &&
+      directParents.size == record.parents.size &&
+      exactTransition(assessment.played) &&
+      assessment.referenceTransition.forall(exactTransition) &&
+      comparison.exists { case (source, fact) =>
+        record.ref.confidence == source.ref.confidence &&
+          comparisonBound(source, fact)
+      }
 
   private def relationOccurrenceAncestryVerified(
       record: EvidenceRecord,

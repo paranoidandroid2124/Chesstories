@@ -105,6 +105,14 @@ player job의 현재 흐름은 다음과 같다.
 5. Assessment 결과를 public-v6 `primary` commentary로 투영한다.
 6. schema와 Python boundary는 공개 JSON shape를 검증한다.
 
+`executePreparedReview`는 이 과정에서 완성된 `JudgmentAssemblyContext`를
+`ReviewExecution.assembly`에 항상 보존하고, public `primary`는
+`ReviewExecution.judgment`의 optional projection으로만 만든다. 선택된
+Assessment/comparison chain의 검증 실패는 그 projection만 비우며 assembly나
+형제 lower record를 소멸시키지 않는다. 다만 현재 public runtime schema는
+primary-only이므로 `judgment`가 없으면 player job은 기존
+`ReviewConstructionFailed` stop을 유지한다.
+
 현재 이 흐름에는 relation 생산·packet·serializer·public schema lane이 없다.
 그 부재는 이미 성립한 하부 명제를 삭제하거나 의미 부재로 판정하는 gate가
 아니다.

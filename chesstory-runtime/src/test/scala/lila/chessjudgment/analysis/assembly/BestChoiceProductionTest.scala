@@ -8,8 +8,8 @@ class BestChoiceProductionTest extends munit.FunSuite:
 
   private val ranking = List("e2e4", "d2d4", "g1f3")
 
-  private def producedPacket(playedMove: String): EvidenceBackedJudgmentPacket =
-    val admitted = MoveReviewInputAdmission
+  private def admittedReview(playedMove: String): AdmittedMoveReviewInput =
+    MoveReviewInputAdmission
       .admit(
         RawMoveReviewInput(
           fen = Standard.initialFen.value,
@@ -22,6 +22,9 @@ class BestChoiceProductionTest extends munit.FunSuite:
         )
       )
       .getOrElse(fail("expected exact input admission"))
+
+  private def producedPacket(playedMove: String): EvidenceBackedJudgmentPacket =
+    val admitted = admittedReview(playedMove)
     val rankingPair = AdmittedRootRankingPair
       .fromAdmittedRanking(ranking)
       .getOrElse(fail("expected the admitted root ranking"))
@@ -31,7 +34,18 @@ class BestChoiceProductionTest extends munit.FunSuite:
     MoveReviewJudgmentOrchestrator
       .executePreparedReview(prepared)
       .getOrElse(fail("expected the sole production pipeline to close BestChoice"))
-      .packet
+      .judgment
+      .getOrElse(fail("expected the lower assembly to project BestChoice"))
+
+  test("review execution preserves per-ply lower assembly without a player judgment"):
+    val execution = MoveReviewJudgmentOrchestrator
+      .executePreparedReview(admittedReview(ranking.head))
+      .getOrElse(fail("expected an execution for the admitted lower review"))
+    val assembly = execution.assembly
+
+    assertEquals(execution.judgment, None)
+    assert(assembly.lineReplays.valuesIterator.exists(_.replaySteps.nonEmpty))
+    assert(assembly.positions.exists(_.role == PositionNodeRole.LineOccurrence))
 
   private def soleAssessmentRecord(
       packet: EvidenceBackedJudgmentPacket
@@ -95,29 +109,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
       assert(packet.evidenceGraph.proofEligible(destination))
     }
 
-  test("a continuation transition cannot lose its certified line parent"):
-    val packet = producedPacket(ranking.head)
-    val continuationEdge = packet.assembly.transitions
-      .find(_.role == TransitionEdgeRole.LineContinuation)
-      .getOrElse(fail("expected one line-continuation transition"))
-    val continuation = packet.evidenceGraph.record(continuationEdge.evidence)
-      .getOrElse(fail("expected its transition record"))
-    val forged = continuation.copy(parents = Nil)
-    val forgedGraph = TypedEvidenceGraph.empty.addAll(
-      packet.evidenceGraph.records.map(record =>
-        if record.ref == forged.ref then forged else record
-      )
-    )
-
-    assert(!forgedGraph.proofEligible(forged))
-    assertEquals(
-      EvidenceBackedJudgmentPacket.fromAssembly(
-        packet.assembly.copy(evidenceGraph = forgedGraph)
-      ),
-      None
-    )
-
-  test("a suffix position cannot borrow another continuation from the same line"):
+  test("an unrelated malformed suffix occurrence is only locally proof-ineligible"):
     val packet = producedPacket(ranking.head)
     val line = packet.assembly.legalLines.head
     val continuations = packet.assembly.transitions
@@ -138,30 +130,99 @@ class BestChoiceProductionTest extends munit.FunSuite:
     )
 
     assert(!graph.proofEligible(forged))
-    assertEquals(
-      EvidenceBackedJudgmentPacket.fromAssembly(
-        packet.assembly.copy(evidenceGraph = graph)
-      ),
-      None
-    )
-
-  test("an independent lower transition cannot suppress an otherwise closed packet"):
-    val packet = producedPacket(ranking.head)
-    val continuationEdge = packet.assembly.transitions
-      .find(_.role == TransitionEdgeRole.LineContinuation)
-      .getOrElse(fail("expected one line-continuation transition"))
-    val continuation = packet.evidenceGraph.record(continuationEdge.evidence)
-      .getOrElse(fail("expected its transition record"))
-    val duplicate = continuation.copy(
-      ref = continuation.ref.copy(id = s"${continuation.ref.id}:orphan-duplicate")
-    )
-    val graph = packet.evidenceGraph.add(duplicate)
-
-    assert(graph.proofEligible(duplicate))
     val rebuilt = EvidenceBackedJudgmentPacket
       .fromAssembly(packet.assembly.copy(evidenceGraph = graph))
-      .getOrElse(fail("expected the independent lower transition to survive beside the packet"))
+      .getOrElse(fail("expected the selected assessment chain to remain projectable"))
     assertEquals(rebuilt.primary, packet.primary)
+
+  test("assessment siblings stay local and the selected transition remains exact"):
+    val packet = producedPacket(ranking.head)
+    val (assessmentRecord, assessment) = packet.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, RelativeAssessmentEvidence(value), _) => record -> value
+    } match
+      case record :: Nil => record
+      case records       => fail(s"expected one produced assessment, found ${records.size}")
+    val siblingCandidate = packet.candidateLines
+      .find(_.rank == 3)
+      .getOrElse(fail("expected an unrelated third-ranked candidate"))
+    val siblingEvidence = assessment.evidence.copy(
+      id = s"${assessment.evidence.id}:candidate-sibling",
+      line = Some(siblingCandidate.ref)
+    )
+    val siblingAssessment = assessment.copy(
+      candidate = siblingCandidate,
+      evidence = siblingEvidence
+    )
+    val sibling = assessmentRecord.copy(
+      ref = siblingEvidence,
+      payload = RelativeAssessmentEvidence(siblingAssessment),
+      parents = siblingAssessment.canonicalParents.getOrElse(fail("expected canonical sibling parents"))
+    )
+    val graph = packet.evidenceGraph.add(sibling)
+
+    assert(!graph.proofEligible(sibling))
+    val rebuilt = EvidenceBackedJudgmentPacket
+      .fromAssembly(packet.assembly.copy(evidenceGraph = graph))
+      .getOrElse(fail("expected the selected assessment to survive beside its sibling"))
+    assertEquals(rebuilt.primary, packet.primary)
+
+    val otherDestination = packet.assembly.transitions
+      .find(edge => edge.role != TransitionEdgeRole.LineContinuation && edge.to != assessment.played.to)
+      .map(_.to)
+      .getOrElse(fail("expected another root transition destination"))
+    val alteredAssessment = assessment.copy(
+      played = assessment.played.copy(to = otherDestination)
+    )
+    val alteredRecord = assessmentRecord.copy(
+      payload = RelativeAssessmentEvidence(alteredAssessment),
+      parents = alteredAssessment.canonicalParents.getOrElse(fail("expected canonical selected parents"))
+    )
+    val alteredGraph = TypedEvidenceGraph.empty.addAll(
+      packet.evidenceGraph.records.map(record =>
+        if record.ref == alteredRecord.ref then alteredRecord else record
+      )
+    )
+    val alteredAssembly = packet.assembly.copy(
+      transitions = packet.assembly.transitions.map(edge =>
+        if edge == assessment.played then alteredAssessment.played else edge
+      ),
+      evidenceGraph = alteredGraph
+    )
+    val playedRecord = alteredGraph
+      .record(alteredAssessment.played.evidence)
+      .getOrElse(fail("expected the selected transition evidence"))
+
+    assert(alteredGraph.proofEligible(playedRecord))
+    assert(!alteredAssessment.played.matches(playedRecord))
+    assert(!alteredGraph.proofEligible(alteredRecord))
+    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(alteredAssembly), None)
+
+  test("a comparison belongs to the mover at its root occurrence"):
+    val packet = producedPacket(ranking.head)
+    val comparisonRecord = packet.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, CandidateComparisonEvidence(_), _) => record
+    } match
+      case record :: Nil => record
+      case records       => fail(s"expected one comparison, found ${records.size}")
+    val fact = comparisonRecord.payload match
+      case CandidateComparisonEvidence(value) => value
+      case _                                  => fail("expected comparison evidence")
+    val reference = packet.candidateLines.find(_.ref == fact.referenceLine)
+      .getOrElse(fail("expected the reference endpoint"))
+    val candidate = packet.candidateLines.find(_.ref == fact.candidateLine)
+      .getOrElse(fail("expected the candidate endpoint"))
+    val wrongMover = if fact.comparison.mover.white then chess.Black else chess.White
+    val forgedFact = CandidateComparisonFact
+      .fromLines(fact.kind, wrongMover, reference, candidate)
+      .getOrElse(fail("expected a self-consistent opposite-mover comparison"))
+    val forged = comparisonRecord.copy(payload = CandidateComparisonEvidence(forgedFact))
+    val graph = TypedEvidenceGraph.empty.addAll(
+      packet.evidenceGraph.records.map(record =>
+        if record.ref == forged.ref then forged else record
+      )
+    )
+
+    assert(!graph.proofEligible(forged))
 
   test("a continuation structural delta cannot lose its exact line parent"):
     val packet = producedPacket(ranking.head)
@@ -189,21 +250,3 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(parents.count(_ == assessment.reference.lineEvidence), 1)
     assertEquals(parents.count(_ == assessment.candidate.lineEvidence), 1)
     assertEquals(parents.map(_.id).distinct.size, parents.size)
-
-  test("packet admission rejects an extra CandidateComparison owner"):
-    val packet = producedPacket(ranking(2))
-    val comparisonRecord = packet.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, CandidateComparisonEvidence(_), _) => record
-    } match
-      case record :: Nil => record
-      case records       => fail(s"expected one quantitative primary comparison, found ${records.size}")
-    val extra = comparisonRecord.copy(
-      ref = comparisonRecord.ref.copy(id = s"${comparisonRecord.ref.id}:unconsumed")
-    )
-
-    assertEquals(
-      EvidenceBackedJudgmentPacket.fromAssembly(
-        packet.assembly.withEvidence(extra)
-      ),
-      None
-    )

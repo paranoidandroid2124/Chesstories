@@ -13,7 +13,6 @@ import lila.chessjudgment.analysis.assembly.{
 import lila.chessjudgment.model.judgment.{
   EvidenceBackedJudgmentPacket,
   EvidenceRef,
-  AdmittedMoveReviewInput,
   PlayerFacingPositionAction
 }
 import lila.chessjudgment.model.line.{
@@ -512,7 +511,6 @@ object CommentaryJobReducer:
 
   private final case class ReviewContext(
       review: PreparedFocusedMoveReview,
-      preparedInput: AdmittedMoveReviewInput,
       rootEvaluations: List[AdmittedCandidateLine]
   )
 
@@ -690,7 +688,7 @@ object CommentaryJobReducer:
       case Some(PreparedFocusedPositionCommentary.MoveReview(review)) =>
         runReview(
           active,
-          ReviewContext(review, review.preparedInput, rootEvaluations),
+          ReviewContext(review, rootEvaluations),
           ledger
         )
 
@@ -699,13 +697,14 @@ object CommentaryJobReducer:
       context: ReviewContext,
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    MoveReviewJudgmentOrchestrator.executePreparedReview(context.preparedInput) match
+    MoveReviewJudgmentOrchestrator.executePreparedReview(context.review.preparedInput)
+      .flatMap(_.judgment) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
-      case Some(execution) =>
+      case Some(packet) =>
         completeReview(
           active,
-          context.copy(preparedInput = execution.preparedInput),
-          execution.packet,
+          context,
+          packet,
           ledger
         )
 

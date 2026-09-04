@@ -186,11 +186,6 @@ final case class JudgmentAssemblyContext(
   def referenceTransition: Option[MoveTransitionEdge] =
     transition(TransitionEdgeRole.Reference)
 
-  def relativeAssessments: List[RelativeMoveAssessment] =
-    evidenceGraph.records.collect {
-      case EvidenceRecord(_, RelativeAssessmentEvidence(assessment), _) => assessment
-    }
-
   def root: Option[PositionNodeRef] =
     position(PositionNodeRole.Before).map(_.ref)
 

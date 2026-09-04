@@ -5,6 +5,28 @@
   "cache_dependency": false,
   "cases": [
     {
+      "case_id": "modern-benoni-game-21-occurrence-identity",
+      "locators": [
+        {"document_id": "ref-35c04c3495434a6290c20ee4712660a6", "pdf_page": 177},
+        {"document_id": "ref-35c04c3495434a6290c20ee4712660a6", "pdf_page": 181},
+        {"document_id": "ref-35c04c3495434a6290c20ee4712660a6", "pdf_page": 182},
+        {"document_id": "ref-35c04c3495434a6290c20ee4712660a6", "pdf_page": 183}
+      ],
+      "source_context": "Game 21, L. Aronian-F. Caruana",
+      "occurrence_evidence": "exact",
+      "observations": [
+        "The book's edited move order and the played move order reach the same semantic position through distinct history occurrences.",
+        "The knights that play 17...Nb6 and 22...Nb6 have different starting identities even though the notation and destination square match.",
+        "In the immediate 23.fxg6 branch the second knight remains on b6 and is captured by 29.Qxb6; after the played 23.Bc1 Nxc4, the later 24.fxg6 branch has no knight on b6 to capture.",
+        "The played transitions remain exact facts while the surrounding assessment replaces 17...Nb6, 22...Nb6, and 23.Bc1 with different preferred moves."
+      ],
+      "architectural_limits": [
+        "Move notation and semantic-position equality cannot merge actor identity, history occurrence, or proof path.",
+        "A selected assessment or an unresolved upper relation cannot gate the independent before-and-after facts of either the played line or an analysis branch.",
+        "The reviewed branches certify their replayed capture presence or absence, not a universal claim that fxg6 forces Qxb6 or a closed winning verdict."
+      ]
+    },
+    {
       "case_id": "ruy-lopez-game-12",
       "locators": [
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 78},
