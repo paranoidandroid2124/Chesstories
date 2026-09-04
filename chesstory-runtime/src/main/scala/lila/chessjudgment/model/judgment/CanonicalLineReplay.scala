@@ -73,7 +73,7 @@ private final class CanonicalReplayTransitionCalculation(
 
   def structuralOccurrence(
       step: LineReplayStep,
-      resultPremiseOccurrences: List[ReplayVerticalRelationOccurrenceBinding]
+      resultPremiseOccurrences: List[ReplayVerticalRelationOccurrence]
   ): ReplayStructuralOccurrence =
     ReplayStructuralOccurrence.certified(
       step,
@@ -83,7 +83,7 @@ private final class CanonicalReplayTransitionCalculation(
     )
 
 /** Semantic time-axis address of one certified derived relation. The replay step
-  * identifies the exact transition occurrence; graph binding later adds the
+  * identifies the exact transition occurrence; a graph record later adds the
   * concrete line occurrence without changing this relation meaning.
   */
 private[chessjudgment] final case class ReplayVerticalRelationOccurrence private[judgment] (
@@ -104,6 +104,9 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
     "a replay vertical occurrence must retain its exact certified transition"
   )
 
+  private[chessjudgment] lazy val resultKey: DerivedRelationResultKey =
+    DerivedRelationResultKey.from(relation)
+
   /** Exact occurrence identity issued by the canonical replay inventory. A
     * graph evidence id later binds this occurrence to one admitted line.
     */
@@ -113,7 +116,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
         "replay-vertical-relation-occurrence:v1",
         EvidenceIdentity.stepKey(step),
         RelationFactKind.id(relation.kind),
-        DerivedRelationResultKey.from(relation).stableKey,
+        resultKey.stableKey,
         certifiedSourcePremiseIds.mkString("[", ",", "]")
       )
     )
@@ -122,65 +125,29 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
   private[chessjudgment] lazy val certifiedSourcePremiseIds: List[String] =
     ReplayVerticalRelationOccurrence.certifiedSourcePremiseIds(relation)
 
+  private[chessjudgment] lazy val stableKey: String =
+    EvidenceIdentity.digest(List(
+      "replay-vertical-relation-occurrence-binding:v1",
+      EvidenceIdentity.stepKey(step),
+      RelationFactKind.id(resultKey.kind),
+      resultKey.stableKey,
+      occurrenceId,
+      certifiedSourcePremiseIds.mkString("[", ",", "]")
+    ))
+
 private[chessjudgment] object ReplayVerticalRelationOccurrence:
   private[chessjudgment] def certifiedSourcePremiseIds(
       relation: RelationFactEvidence
   ): List[String] =
-    val premiseIds = proof(relation).sourcePremises.map(_.stableKey).sorted
+    val proof = VerticalRelationContracts.proofOf(relation.detail).getOrElse(
+      throw IllegalStateException("a replay vertical occurrence lost its vertical derivation proof")
+    )
+    val premiseIds = proof.sourcePremises.map(_.stableKey).sorted
     require(
       premiseIds.nonEmpty && premiseIds.distinct.size == premiseIds.size,
       "a replay vertical occurrence needs exact role-distinct lower premises"
     )
     premiseIds
-
-  private def proof(relation: RelationFactEvidence): VerticalRelationDerivationProof =
-    relation.detail match
-      case detail: RelationWitnessDetail.CaptureRecaptureInventory => detail.proof
-      case detail: RelationWitnessDetail.CreatedCheckResponseInventory => detail.proof
-      case detail: RelationWitnessDetail.RootCheckResponse => detail.proof
-      case detail: RelationWitnessDetail.SliderReachDelta => detail.proof
-      case detail: RelationWitnessDetail.PawnTopologyTransition => detail.proof
-      case detail: RelationWitnessDetail.StalemateTransition => detail.proof
-      case _ =>
-        throw IllegalStateException("a replay vertical occurrence lost its vertical derivation proof")
-
-/** Minimal transport form for one replay-owned L1 occurrence. It retains the
-  * exact time-axis address and certified lower owners without exposing the
-  * closed inventory capability carried by the source occurrence.
-  */
-private[chessjudgment] final case class ReplayVerticalRelationOccurrenceBinding private (
-    step: LineReplayStep,
-    result: DerivedRelationResultKey,
-    occurrenceId: String,
-    certifiedSourcePremiseIds: List[String]
-):
-  require(occurrenceId.matches("[0-9a-f]{64}"), "a derived-relation occurrence binding needs its canonical id")
-  require(
-    certifiedSourcePremiseIds.nonEmpty &&
-      certifiedSourcePremiseIds == certifiedSourcePremiseIds.distinct.sorted,
-    "a derived-relation occurrence binding needs exact canonical lower premise owners"
-  )
-
-  private[chessjudgment] def stableKey: String =
-    EvidenceIdentity.digest(List(
-      "replay-vertical-relation-occurrence-binding:v1",
-      EvidenceIdentity.stepKey(step),
-      RelationFactKind.id(result.kind),
-      result.stableKey,
-      occurrenceId,
-      certifiedSourcePremiseIds.mkString("[", ",", "]")
-    ))
-
-private[chessjudgment] object ReplayVerticalRelationOccurrenceBinding:
-  private[chessjudgment] def from(
-      occurrence: ReplayVerticalRelationOccurrence
-  ): ReplayVerticalRelationOccurrenceBinding =
-    ReplayVerticalRelationOccurrenceBinding(
-      occurrence.step,
-      DerivedRelationResultKey.from(occurrence.relation),
-      occurrence.occurrenceId,
-      occurrence.certifiedSourcePremiseIds
-    )
 
 /** Replay-owned exact consequence inventory for one admitted transition occurrence.
   * Graph records project this calculation without invoking the structural
@@ -190,7 +157,7 @@ private[chessjudgment] final case class ReplayStructuralOccurrence private[judgm
     step: LineReplayStep,
     occurrenceId: String,
     consequences: List[TransitionConsequence],
-    resultPremiseOccurrences: List[ReplayVerticalRelationOccurrenceBinding],
+    resultPremiseOccurrences: List[ReplayVerticalRelationOccurrence],
     sourcePremiseKeys: List[String]
 ):
   require(occurrenceId.matches("[0-9a-f]{64}"), "a replay structural occurrence needs a canonical id")
@@ -204,11 +171,11 @@ private[chessjudgment] object ReplayStructuralOccurrence:
       step: LineReplayStep,
       movement: CanonicalRootLegalMove,
       consequences: List[TransitionConsequence],
-      resultPremiseOccurrences: List[ReplayVerticalRelationOccurrenceBinding]
+      resultPremiseOccurrences: List[ReplayVerticalRelationOccurrence]
   ): ReplayStructuralOccurrence =
     val expectedResultKeys = consequences.flatMap(_.resultPremiseKeys).distinct.sortBy(_.stableKey)
     require(
-      resultPremiseOccurrences.map(_.result) == expectedResultKeys &&
+      resultPremiseOccurrences.map(_.resultKey) == expectedResultKeys &&
         resultPremiseOccurrences.map(_.occurrenceId).distinct.size == resultPremiseOccurrences.size &&
         resultPremiseOccurrences.forall(_.step == step),
       "a structural occurrence must retain every consumed derived relation at this exact replay occurrence"
@@ -218,11 +185,11 @@ private[chessjudgment] object ReplayStructuralOccurrence:
         binding.relationKeys.map(key => s"relation:${key.stableKey}")
       )
     )
-    val resultPremises = resultPremiseOccurrences.flatMap(binding =>
+    val resultPremises = resultPremiseOccurrences.flatMap(occurrence =>
       List(
-        s"result:${binding.result.stableKey}",
-        s"result-occurrence:${binding.occurrenceId}"
-      ) ++ binding.certifiedSourcePremiseIds
+        s"result:${occurrence.resultKey.stableKey}",
+        s"result-occurrence:${occurrence.occurrenceId}"
+      ) ++ occurrence.certifiedSourcePremiseIds
     )
     val premiseKeys = (
       s"legal-move:${movement.fact.semanticId}" :: (resultPremises ++ relationPremises)
@@ -285,17 +252,13 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     val expectedKinds = expectedKeys.iterator.map(_.kind).toSet.toList.sortBy(RelationFactKind.id)
     val occurrences = expectedKinds.flatMap { kind =>
       verticalRelationsFor(kind).flatMap { relation =>
-        val key = DerivedRelationResultKey.from(relation)
-        Option.when(expectedKeys(key))(
-          ReplayVerticalRelationOccurrenceBinding.from(
-            ReplayVerticalRelationOccurrence(declared, relation)
-          )
-        )
+        val occurrence = ReplayVerticalRelationOccurrence(declared, relation)
+        Option.when(expectedKeys(occurrence.resultKey))(occurrence)
       }
-    }.sortBy(_.result.stableKey)
+    }.sortBy(_.resultKey.stableKey)
     require(
-      occurrences.map(_.result).distinct.size == occurrences.size &&
-        occurrences.map(_.result).toSet == expectedKeys,
+      occurrences.map(_.resultKey).distinct.size == occurrences.size &&
+        occurrences.map(_.resultKey).toSet == expectedKeys,
       "a structural occurrence must resolve every consumed derived relation exactly once"
     )
     calculation.structuralOccurrence(declared, occurrences)
@@ -457,7 +420,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
     exactRecaptureResolution(captureStep, recaptureReplay, recaptureStep).map { resolution =>
       resolution.resource match
         case Some(_) => LineMaterialRecaptureStatus.Proven(
-            DerivedRelationResultKey.from(resolution.occurrence.relation)
+            resolution.occurrence.resultKey
           )
         case None    => LineMaterialRecaptureStatus.Excluded
     }

@@ -2152,7 +2152,7 @@ final case class StructuralDeltaEvidence(
         PrincipalVariationEvidence.sameBoardState(occurrence.step.fenBefore, transition.from.fen) &&
         PrincipalVariationEvidence.sameBoardState(occurrence.step.fenAfter, transition.to.fen) &&
         occurrence.consequences == consequences &&
-        occurrence.resultPremiseOccurrences.map(_.result) == resultPremiseSources.map(_.key)
+        occurrence.resultPremiseOccurrences.map(_.resultKey) == resultPremiseSources.map(_.key)
     )
 
   def moveUci: String = transition.moveUci
