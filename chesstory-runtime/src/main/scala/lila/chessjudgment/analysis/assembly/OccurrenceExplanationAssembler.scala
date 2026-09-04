@@ -12,10 +12,10 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
       allocator: JudgmentProvenanceAllocator,
       demand: OccurrenceExplanationDemand
   ): JudgmentAssemblyContext =
-    val relationRecords = RelationCausalProofAssembler.fromDemand(allocator, demand)
     context.withEvidence(
       captureExclusionRecords(allocator, demand) ++
-        relocationEnablesRecaptureRecords(allocator, demand) ++ relationRecords
+        relocationEnablesRecaptureRecords(allocator, demand) ++
+        squareReleaseRouteRecords(allocator, demand)
     )
 
   private def captureExclusionRecords(
@@ -82,7 +82,39 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
         )
     )
 
-  private[assembly] def occurrenceProofRecords[A](
+  private def squareReleaseRouteRecords(
+      allocator: JudgmentProvenanceAllocator,
+      demand: OccurrenceExplanationDemand
+  ): List[EvidenceRecord] =
+    val certified = SquareReleaseRouteProofDemand.from(demand).flatMap { exactDemand =>
+      SquareReleaseRouteProof.certifyDemanded(
+        exactDemand.subject,
+        exactDemand.releasedSquareBranch,
+        exactDemand.retainedSquareBranch,
+        exactDemand.lowers
+      )
+    }
+    occurrenceProofRecords(
+      family = BoundedCausalContractKind.SquareReleaseRoute,
+      allocator = allocator,
+      subject = demand.subject
+    )(certified)(
+      semanticId = _.semantic.semanticId,
+      occurrenceId = _.occurrence.occurrenceId,
+      dependencyId = _.dependency.value,
+      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
+      parentSources = _.parentSources,
+      payload = exact =>
+        SquareReleaseRouteEvidence(
+          exact.semantic,
+          exact.occurrence,
+          demand.subject.publicOccurrence,
+          exact.dependency.value,
+          exact
+        )
+    )
+
+  private def occurrenceProofRecords[A](
       family: BoundedCausalContractKind,
       allocator: JudgmentProvenanceAllocator,
       subject: CertifiedRootOccurrence

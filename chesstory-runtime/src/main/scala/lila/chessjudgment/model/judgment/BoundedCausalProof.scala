@@ -7,15 +7,12 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum BoundedCausalContractKind:
-  case VacatedGateEnablesUnrecapturableSliderCapture
   case SquareReleaseRoute
   case CaptureExclusionMoveOrder
   case RelocationEnablesRecapture
 
   def semanticNamespace: String =
     this match
-      case VacatedGateEnablesUnrecapturableSliderCapture =>
-        "causal-proposition:vacated-gate-enables-unrecapturable-slider-capture:v1"
       case SquareReleaseRoute =>
         "causal-proposition:square-release-route:v1"
       case CaptureExclusionMoveOrder =>
@@ -1564,24 +1561,6 @@ private[chessjudgment] object BoundedCausalPublicProjection:
       binding.afterStepIndex,
       binding.position,
       binding.scope
-    )
-
-  def verticalRelationPaths(
-      paths: List[CausalProofPathOccurrence]
-  ): List[BoundedCausalPublicProofPath] =
-    require(
-      paths.forall(path =>
-        path.manifest.supplementalPremiseUses.isEmpty && path.supplementalClosureUses.isEmpty
-      ),
-      "the common public causal projection cannot omit family-specific supplemental proof uses"
-    )
-    paths.map(path =>
-      BoundedCausalPublicProofPath(
-        path.pathOccurrenceId,
-        path.premiseUses.map(verticalRelationUse),
-        path.closedAbsenceUses.map(closedAbsenceUse),
-        path.closedStateUses.map(closedStateUse)
-      )
     )
 
   def legalMovePaths(

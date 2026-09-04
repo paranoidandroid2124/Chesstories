@@ -141,35 +141,6 @@ private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
       inventory.bindState(certificate, position, scope)
     )
 
-  /** Selects one exact reach already owned by this position inventory, then
-    * binds that full state to this replay occurrence. No ray or control is
-    * regenerated from the FEN.
-    */
-  private[chessjudgment] def existingSliderReachState(
-      side: Color,
-      slider: RelationPieceWitness,
-      direction: RelationRayDirection,
-      scope: EvidenceScope
-  ): Option[PositionRelationExtractor.ClosedPositionStateProof] =
-    inventory
-      .sliderReachesFrom(slider.square)
-      .filter(reach => reach.side == side && reach.slider == slider && reach.direction == direction) match
-      case exact :: Nil =>
-        closedState(
-          PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-            side,
-            slider,
-            direction,
-            Some(exact.witness)
-          ),
-          scope
-        )
-      case Nil => None
-      case other =>
-        throw IllegalStateException(
-          s"one replay position produced ${other.size} slider reaches for one side/piece/direction"
-        )
-
   /** Binds one already-owned occupant fact to this exact replay occurrence.
     * The query is answered by the position inventory; callers never infer
     * persistence from an unchanged-square shortcut.
@@ -535,11 +506,6 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
   ): List[RelationFactEvidence] =
     calculation.certifiedVertical.resultsFor(contract)
 
-  private[chessjudgment] def activatesVerticalRelation(
-      contract: VerticalRelationContractKind
-  ): Boolean =
-    calculation.certifiedVertical.activates(contract)
-
   private[chessjudgment] def closedRelationInventory: ClosedRelationTransitionInventory =
     closedRelationOutput
 
@@ -800,16 +766,6 @@ private[chessjudgment] final class CanonicalLineReplay private (
         )
       )
     }
-
-  /** Read-only L1 demand key for one exact transition occurrence. The
-    * underlying vertical contract remains lazy until a selected consumer asks
-    * for its closed result.
-    */
-  private[chessjudgment] def activatesVerticalRelation(
-      step: LineReplayStep,
-      contract: VerticalRelationContractKind
-  ): Boolean =
-    transition(step).exists(_.activatesVerticalRelation(contract))
 
   /** Exact L1 membership owned by the capture transition occurrence. Missing
     * or duplicate inventories/resources fail closed instead of creating a

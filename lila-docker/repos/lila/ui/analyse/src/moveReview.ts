@@ -91,7 +91,6 @@ export interface MoveReviewCandidate {
 }
 
 export type MoveReviewRelationKind =
-  | 'vacated_gate_enables_unrecapturable_slider_capture'
   | 'square_release_route'
   | 'capture_exclusion_move_order'
   | 'relocation_enables_recapture';
@@ -131,8 +130,6 @@ export type MoveReviewOccurrenceBranchRole =
   | 'immediate_capture_with_defender'
   | 'removal_then_target_capture'
   | 'immediate_target_capture'
-  | 'gate_vacated_then_capture'
-  | 'gate_retained'
   | 'released_square_route'
   | 'retained_blocker'
   | 'vacating_then_deferred'
@@ -295,32 +292,6 @@ interface MoveReviewOccurrenceProofBase {
   dependencyFingerprint: string;
 }
 
-type MoveReviewVacatedGatePremise =
-  | MoveReviewRelationPremiseUse<
-      'gate_vacating_slider_reach',
-      'slider_reach_delta',
-      'gate_vacated_then_capture'
-    >
-  | MoveReviewRelationPremiseUse<
-      'later_slider_capture',
-      'capture_recapture_inventory',
-      'gate_vacated_then_capture'
-    >;
-
-export interface MoveReviewVacatedGateProof extends MoveReviewOccurrenceProofBase {
-  vacatedGateBranch: MoveReviewOccurrenceBranch<'gate_vacated_then_capture'>;
-  retainedGateBranch: MoveReviewOccurrenceBranch<'gate_retained'>;
-  proofPaths: [MoveReviewBoundedProofPath<MoveReviewVacatedGatePremise>];
-  participants: {
-    enabler: MoveReviewMovementWitness;
-    slider: MoveReviewColoredPieceWitness;
-    gateBlocker: MoveReviewColoredPieceWitness;
-    exploit: MoveReviewMovementWitness;
-    capturedTarget: MoveReviewColoredPieceWitness;
-  };
-  exploitMove: Uci;
-}
-
 export interface MoveReviewRouteResource extends MoveReviewLegalResourceWitness {
   capture?: MoveReviewColoredPieceWitness;
 }
@@ -447,7 +418,6 @@ interface MoveReviewRelocationEnablesRecaptureProof extends MoveReviewOccurrence
 }
 
 export type MoveReviewOccurrenceProof =
-  | MoveReviewVacatedGateProof
   | MoveReviewSquareReleaseProof
   | MoveReviewCaptureExclusionProof
   | MoveReviewRelocationEnablesRecaptureProof;
@@ -459,10 +429,6 @@ interface MoveReviewOccurrenceRelationBase {
 
 export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase &
   (
-    | {
-        relationKind: 'vacated_gate_enables_unrecapturable_slider_capture';
-        proof: MoveReviewVacatedGateProof;
-      }
     | { relationKind: 'square_release_route'; proof: MoveReviewSquareReleaseProof }
     | { relationKind: 'capture_exclusion_move_order'; proof: MoveReviewCaptureExclusionProof }
     | {
@@ -744,7 +710,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: '분석 대안',
     analysisContinuation: '분석 후속',
     familyLabels: {
-      vacated_gate_enables_unrecapturable_slider_capture: '관문 비움 후 재포획 불가 장거리 포획',
       square_release_route: '칸 해방 후 기물 경로',
       capture_exclusion_move_order: '포획 응수를 배제한 수순',
       relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
@@ -798,10 +763,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         removalRecapture: '제거 후 재포획',
         postRemovalTargetCapture: '후속 포획',
         immediateSoleRecapture: '즉시 재포획',
-        enabler: '경로를 연 기물',
-        slider: '장거리 기물',
-        gateBlocker: '관문 차단 기물',
-        exploit: '후속 기물',
         releaser: '칸을 비운 기물',
         releasedBlocker: '이동한 차단 기물',
         routePiece: '경로 기물',
@@ -823,8 +784,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         defender_removal: '수비 기물 제거',
         post_removal_target_capture_inventory: '제거 후 목표 포획',
         immediate_target_capture_inventory: '즉시 목표 포획',
-        gate_vacating_slider_reach: '장거리 경로 개방',
-        later_slider_capture: '후속 장거리 포획',
         terminal_resource: '종단 자원',
         release_move: '칸 해방 수',
         terminal_reply: '종단 응수',
@@ -851,9 +810,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         result: '결과 근거',
         delayed_capture_recapture_absent: '후속 재포획 부재',
         post_removal_replacement_recapture_absent: '대체 재포획 부재',
-        later_capture_immediate_recapture_absent: '즉시 재포획 부재',
-        retained_gate_exploit_move_absent: '관문 유지 시 후속 수 부재',
-        retained_gate_replacement_capture_absent: '관문 유지 시 대체 포획 부재',
         retained_blocker_first_route_leg_absent: '차단 유지 시 첫 경로 수 부재',
         capture_reply_absent: '포획 응수 부재',
         retained_seed_recapture_absent: '유지선 출발칸 재포획 부재',
@@ -861,12 +817,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         delayed_target_present: '목표 기물 유지',
         post_removal_exploit_actor_present: '후속 기물 유지',
         post_removal_target_present: '목표 기물 유지',
-        vacated_gate_intervening_slider_reach: '관문 해방 경로',
-        vacated_gate_target_persistence: '관문 해방 목표 유지',
-        retained_gate_slider_persistence: '관문 유지 장거리 기물',
-        retained_gate_target_persistence: '관문 유지 목표',
-        retained_gate_blocker_persistence: '관문 차단 기물 유지',
-        retained_gate_blocked_slider_reach: '관문 유지 차단 경로',
         released_square_vacancy: '해방된 칸 비움',
         retained_blocker_persistence: '차단 기물 유지',
         retained_route_origin_persistence: '경로 출발점 유지',
@@ -947,8 +897,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: 'Analyzed alternative',
     analysisContinuation: 'Analysis continuation',
     familyLabels: {
-      vacated_gate_enables_unrecapturable_slider_capture:
-        'Unrecapturable slider capture through a vacated gate',
       square_release_route: 'Route through a released square',
       capture_exclusion_move_order: 'Move order excluding the capture reply',
       relocation_enables_recapture: 'Recapture enabled by relocation',
@@ -1002,10 +950,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         removalRecapture: 'Removal recapture',
         postRemovalTargetCapture: 'Later capture',
         immediateSoleRecapture: 'Immediate recapture',
-        enabler: 'Enabling piece',
-        slider: 'Slider',
-        gateBlocker: 'Gate blocker',
-        exploit: 'Later piece',
         releaser: 'Releasing piece',
         releasedBlocker: 'Displaced blocker',
         routePiece: 'Route piece',
@@ -1027,8 +971,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         defender_removal: 'Defender removal',
         post_removal_target_capture_inventory: 'Later target capture',
         immediate_target_capture_inventory: 'Immediate target capture',
-        gate_vacating_slider_reach: 'Opened slider route',
-        later_slider_capture: 'Later slider capture',
         terminal_resource: 'Terminal resource',
         release_move: 'Release move',
         terminal_reply: 'Terminal reply',
@@ -1055,9 +997,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         result: 'Result',
         delayed_capture_recapture_absent: 'Later recapture unavailable',
         post_removal_replacement_recapture_absent: 'Replacement recapture unavailable',
-        later_capture_immediate_recapture_absent: 'Immediate recapture unavailable',
-        retained_gate_exploit_move_absent: 'Later move unavailable with gate retained',
-        retained_gate_replacement_capture_absent: 'Replacement capture unavailable with gate retained',
         retained_blocker_first_route_leg_absent: 'First route move unavailable with blocker retained',
         capture_reply_absent: 'Capture reply unavailable',
         retained_seed_recapture_absent: 'Retained seed-square recapture unavailable',
@@ -1065,12 +1004,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         delayed_target_present: 'Target remains',
         post_removal_exploit_actor_present: 'Later piece remains',
         post_removal_target_present: 'Target remains',
-        vacated_gate_intervening_slider_reach: 'Opened slider route',
-        vacated_gate_target_persistence: 'Target remains after gate opens',
-        retained_gate_slider_persistence: 'Slider remains with gate retained',
-        retained_gate_target_persistence: 'Target remains with gate retained',
-        retained_gate_blocker_persistence: 'Gate blocker remains',
-        retained_gate_blocked_slider_reach: 'Slider route remains blocked',
         released_square_vacancy: 'Released square remains empty',
         retained_blocker_persistence: 'Blocker remains',
         retained_route_origin_persistence: 'Route origin remains',
@@ -1870,18 +1803,6 @@ function projectOccurrenceRelation(
   if (!relationKind || !subjectOccurrence) return;
 
   switch (relationKind) {
-    case 'vacated_gate_enables_unrecapturable_slider_capture': {
-      const proof = projectVacatedGateProof(value.proof);
-      const relation = proof
-        ? {
-            id: occurrenceRelationId(proof.sourceEvidenceId),
-            subjectOccurrence,
-            relationKind,
-            proof,
-          }
-        : undefined;
-      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
-    }
     case 'square_release_route': {
       const proof = projectSquareReleaseProof(value.proof);
       const relation = proof
@@ -1926,8 +1847,7 @@ function occurrenceRelationId(sourceEvidenceId: string): string {
 }
 
 function occurrenceRelationKind(value: unknown): MoveReviewRelationKind | undefined {
-  return value === 'vacated_gate_enables_unrecapturable_slider_capture' ||
-    value === 'square_release_route' ||
+  return value === 'square_release_route' ||
     value === 'capture_exclusion_move_order' ||
     value === 'relocation_enables_recapture'
     ? value
@@ -2007,133 +1927,6 @@ function projectOccurrenceProofBase(
   return sourceEvidenceId && semanticId && occurrenceId && dependencyFingerprint
     ? { sourceEvidenceId, semanticId, occurrenceId, dependencyFingerprint }
     : undefined;
-}
-
-function projectVacatedGateProof(value: unknown): MoveReviewVacatedGateProof | undefined {
-  const keys = [
-    'source_evidence_id',
-    'semantic_id',
-    'occurrence_id',
-    'dependency_fingerprint',
-    'vacated_gate_branch',
-    'retained_gate_branch',
-    'proof_paths',
-    'participants',
-    'exploit_move',
-  ];
-  if (!isObject(value) || !hasExactKeys(value, keys)) return;
-  const base = projectOccurrenceProofBase(value);
-  const vacatedGateBranch = projectOccurrenceBranch(
-    value.vacated_gate_branch,
-    'gate_vacated_then_capture',
-    3,
-  );
-  const retainedGateBranch = projectOccurrenceBranch(value.retained_gate_branch, 'gate_retained', 2);
-  const paths = projectArray(value.proof_paths, 1, 1, projectVacatedGatePath);
-  const participants = projectVacatedGateParticipants(value.participants);
-  const exploitMove = uci(value.exploit_move);
-  if (
-    !base ||
-    !vacatedGateBranch ||
-    !retainedGateBranch ||
-    !paths ||
-    !participants ||
-    !exploitMove ||
-    vacatedGateBranch.branchId === retainedGateBranch.branchId ||
-    !boundedPathsFitBranches(paths, [vacatedGateBranch, retainedGateBranch])
-  )
-    return;
-  return {
-    ...base,
-    vacatedGateBranch,
-    retainedGateBranch,
-    proofPaths: paths as [MoveReviewBoundedProofPath<MoveReviewVacatedGatePremise>],
-    participants,
-    exploitMove,
-  };
-}
-
-function projectVacatedGateParticipants(
-  value: unknown,
-): MoveReviewVacatedGateProof['participants'] | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ['enabler', 'slider', 'gate_blocker', 'exploit', 'captured_target'])
-  )
-    return;
-  const enabler = projectMovementWitness(value.enabler);
-  const slider = projectColoredPieceWitness(value.slider);
-  const gateBlocker = projectColoredPieceWitness(value.gate_blocker);
-  const exploit = projectMovementWitness(value.exploit);
-  const capturedTarget = projectColoredPieceWitness(value.captured_target);
-  return enabler && slider && gateBlocker && exploit && capturedTarget
-    ? { enabler, slider, gateBlocker, exploit, capturedTarget }
-    : undefined;
-}
-
-function projectVacatedGatePath(
-  value: unknown,
-): MoveReviewBoundedProofPath<MoveReviewVacatedGatePremise> | undefined {
-  const shell = projectBoundedPathShell(value, 2, 3, 10, undefined, 2);
-  if (!shell) return;
-  const first = projectRelationPremise(
-    shell.premises[0],
-    'gate_vacating_slider_reach',
-    'slider_reach_delta',
-    'gate_vacated_then_capture',
-    step => step === 0,
-  );
-  const second = projectRelationPremise(
-    shell.premises[1],
-    'later_slider_capture',
-    'capture_recapture_inventory',
-    'gate_vacated_then_capture',
-    step => step >= 2,
-  );
-  const absenceSpecs = [
-    ['later_capture_immediate_recapture_absent', 'gate_vacated_then_capture'],
-    ['retained_gate_exploit_move_absent', 'gate_retained'],
-    ['retained_gate_replacement_capture_absent', 'gate_retained'],
-  ] as const;
-  const absences = shell.closedAbsenceUses.map((item, index) => {
-    const spec = absenceSpecs[index]!;
-    return projectClosureUse(item, {
-      role: spec[0],
-      issuer: 'position_relation_extractor.closed_relation_inventory',
-      branchRoles: [spec[1]],
-      query: legalCaptureOrMoveQuery,
-      afterStep: step => step >= 1,
-    });
-  });
-  const states = shell.closedStateUses.map(item =>
-    projectClosureUse(item, {
-      role: [
-        'vacated_gate_intervening_slider_reach',
-        'vacated_gate_target_persistence',
-        'retained_gate_slider_persistence',
-        'retained_gate_target_persistence',
-        'retained_gate_blocker_persistence',
-        'retained_gate_blocked_slider_reach',
-      ],
-      issuer: 'position_relation_extractor.closed_position_state_inventory',
-      branchRoles: ['gate_vacated_then_capture', 'gate_retained'],
-      query: /^(occupied-by|slider-reach):.+$/,
-    }),
-  );
-  if (
-    !first ||
-    !second ||
-    !absences.every((item): item is MoveReviewClosureUse => !!item) ||
-    !states.every((item): item is MoveReviewClosureUse => !!item) ||
-    !unique([...absences, ...states].map(item => item.useId))
-  )
-    return;
-  return {
-    pathOccurrenceId: shell.pathOccurrenceId,
-    premises: [first, second],
-    closedAbsenceUses: absences,
-    closedStateUses: states,
-  };
 }
 
 function projectSquareReleaseProof(value: unknown): MoveReviewSquareReleaseProof | undefined {
@@ -3583,8 +3376,6 @@ function occurrenceRelationOwnsSubject(relation: MoveReviewOccurrenceRelation): 
 
 export function moveReviewOccurrenceBranches(relation: MoveReviewOccurrenceRelation): MoveReviewOccurrenceBranch[] {
   switch (relation.relationKind) {
-    case 'vacated_gate_enables_unrecapturable_slider_capture':
-      return [relation.proof.vacatedGateBranch, relation.proof.retainedGateBranch];
     case 'square_release_route':
       return [relation.proof.releasedRouteBranch, relation.proof.retainedBlockerBranch];
     case 'capture_exclusion_move_order':
@@ -3736,8 +3527,6 @@ function resultIdMatchesContract(value: string, contract: string): boolean {
 }
 
 const legalMoveQuery = /^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$/;
-const legalCaptureOrMoveQuery =
-  /^(legal-capture:(white|black):[a-h][1-8]|legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8])$/;
 const occupiedByQuery = /^occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8]$/;
 const vacantOrOccupiedQuery =
   /^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$/;

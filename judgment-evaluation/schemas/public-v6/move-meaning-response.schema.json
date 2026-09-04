@@ -323,27 +323,10 @@
     },
     "occurrenceRelation": {
       "oneOf": [
-        {"$ref": "#/$defs/vacatedGateOccurrenceRelation"},
         {"$ref": "#/$defs/squareReleaseRouteOccurrenceRelation"},
         {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
         {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"}
       ]
-    },
-    "vacatedGateOccurrenceRelation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "subject_occurrence",
-        "relation_kind",
-        "proof"
-      ],
-      "properties": {
-        "subject_occurrence": {"$ref": "#/$defs/relationSubjectOccurrence"},
-        "relation_kind": {"const": "vacated_gate_enables_unrecapturable_slider_capture"},
-        "proof": {
-          "$ref": "#/$defs/occurrenceVacatedGateProof"
-        }
-      }
     },
     "squareReleaseRouteOccurrenceRelation": {
       "type": "object",
@@ -390,159 +373,6 @@
           "$ref": "#/$defs/occurrenceRelocationEnablesRecaptureProof"
         }
       }
-    },
-    "occurrenceVacatedGateProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id", "semantic_id", "occurrence_id", "dependency_fingerprint",
-        "vacated_gate_branch", "retained_gate_branch", "proof_paths",
-        "participants", "exploit_move"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "vacated_gate_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/occurrenceRelationBranch"},
-            {"properties": {
-              "branch_role": {"const": "gate_vacated_then_capture"},
-              "steps": {"minItems": 3}
-            }}
-          ]
-        },
-        "retained_gate_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/occurrenceRelationBranch"},
-            {"properties": {
-              "branch_role": {"const": "gate_retained"},
-              "steps": {"minItems": 2}
-            }}
-          ]
-        },
-        "proof_paths": {
-          "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/occurrenceVacatedGateProofPath"}
-        },
-        "participants": {"$ref": "#/$defs/vacatedGateEnablesUnrecapturableSliderCaptureParticipants"},
-        "exploit_move": {"$ref": "#/$defs/uciMove"}
-      }
-    },
-    "occurrenceVacatedGateProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array", "minItems": 2, "maxItems": 2,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceVacatedGatePremiseUse"},
-                {"properties": {
-                  "role": {"const": "gate_vacating_slider_reach"},
-                  "contract": {"const": "slider_reach_delta"},
-                  "result_id": {"pattern": "^slider_reach_delta:[0-9a-f]{64}$"},
-                  "step_index": {"const": 0}
-                }}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceVacatedGatePremiseUse"},
-                {"properties": {
-                  "role": {"const": "later_slider_capture"},
-                  "contract": {"const": "capture_recapture_inventory"},
-                  "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
-                  "step_index": {"type": "integer", "minimum": 2}
-                }}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array", "minItems": 3, "maxItems": 3,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceVacatedGateAbsenceUse"},
-                {"properties": {
-                  "role": {"const": "later_capture_immediate_recapture_absent"},
-                  "branch_role": {"const": "gate_vacated_then_capture"}
-                }}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceVacatedGateAbsenceUse"},
-                {"properties": {
-                  "role": {"const": "retained_gate_exploit_move_absent"},
-                  "branch_role": {"const": "gate_retained"}
-                }}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceVacatedGateAbsenceUse"},
-                {"properties": {
-                  "role": {"const": "retained_gate_replacement_capture_absent"},
-                  "branch_role": {"const": "gate_retained"}
-                }}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_state_uses": {
-          "type": "array", "minItems": 10, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/occurrenceVacatedGateStateUse"}
-        }
-      }
-    },
-    "occurrenceVacatedGatePremiseUse": {
-      "allOf": [
-        {"$ref": "#/$defs/occurrenceRelationPremiseUse"},
-        {"properties": {
-          "role": {"enum": ["gate_vacating_slider_reach", "later_slider_capture"]},
-          "contract": {"enum": ["slider_reach_delta", "capture_recapture_inventory"]},
-          "result_id": {"pattern": "^(slider_reach_delta|capture_recapture_inventory):[0-9a-f]{64}$"},
-          "branch_role": {"const": "gate_vacated_then_capture"}
-        }}
-      ]
-    },
-    "occurrenceVacatedGateAbsenceUse": {
-      "allOf": [
-        {"$ref": "#/$defs/occurrenceRelationClosureUse"},
-        {"properties": {
-          "role": {"enum": [
-            "later_capture_immediate_recapture_absent",
-            "retained_gate_exploit_move_absent",
-            "retained_gate_replacement_capture_absent"
-          ]},
-          "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-          "query": {"type": "string", "pattern": "^(legal-capture:(white|black):[a-h][1-8]|legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8])$"},
-          "after_step_index": {"type": "integer", "minimum": 1}
-        }}
-      ]
-    },
-    "occurrenceVacatedGateStateUse": {
-      "allOf": [
-        {"$ref": "#/$defs/occurrenceRelationClosureUse"},
-        {"properties": {
-          "role": {"enum": [
-            "vacated_gate_intervening_slider_reach", "vacated_gate_target_persistence",
-            "retained_gate_slider_persistence", "retained_gate_target_persistence",
-            "retained_gate_blocker_persistence", "retained_gate_blocked_slider_reach"
-          ]},
-          "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
-          "query": {"type": "string", "pattern": "^(occupied-by|slider-reach):.+$"},
-          "branch_role": {"enum": ["gate_vacated_then_capture", "gate_retained"]}
-        }}
-      ]
     },
     "occurrenceSquareReleaseRouteProof": {
       "type": "object",
@@ -1470,18 +1300,6 @@
           "type": "array", "minItems": 1, "uniqueItems": true,
           "items": {"$ref": "#/$defs/boundedCausalUncoloredPiece"}
         }
-      }
-    },
-    "vacatedGateEnablesUnrecapturableSliderCaptureParticipants": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["enabler", "slider", "gate_blocker", "exploit", "captured_target"],
-      "properties": {
-        "enabler": {"$ref": "#/$defs/boundedCausalMovement"},
-        "slider": {"$ref": "#/$defs/boundedCausalPiece"},
-        "gate_blocker": {"$ref": "#/$defs/boundedCausalPiece"},
-        "exploit": {"$ref": "#/$defs/boundedCausalMovement"},
-        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"}
       }
     },
     "boundedCausalStep": {

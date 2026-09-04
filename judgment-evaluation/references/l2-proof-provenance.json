@@ -64,106 +64,11 @@
   ],
   "contracts": [
     {
-      "contract_kind": "VacatedGateEnablesUnrecapturableSliderCapture",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler",
-        "method": "vacatedGateCapture"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureEvidence"
-      },
-      "wire": {
-        "relation_kind": "vacated_gate_enables_unrecapturable_slider_capture",
-        "variant_definition": "vacatedGateOccurrenceRelation",
-        "proof_field": "proof",
-        "proof_definition": "occurrenceVacatedGateProof"
-      },
-      "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.vacatedGateCapture",
-        "coordinate_piece_identity_proposition": {
-          "statement": "The identified enabler vacates the identified gate, changing the identified slider's exact reach so that its later capture of the same target has no immediate recapture; the retained-gate sibling lacks that exploit.",
-          "wire_fields": ["participants", "enabler", "slider", "gate_blocker", "exploit", "captured_target"]
-        },
-        "lower_premises": {
-          "contracts": ["slider_reach_delta", "capture_recapture_inventory"],
-          "dynamic_id_fields": ["result_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
-          "issuer_source_kinds": ["relation result owner", "canonical source premise IDs"]
-        },
-        "closed_inventory": {
-          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
-          "fields": ["semantic_proof_id", "query", "position"],
-          "certified_absence_or_state": ["later_capture_immediate_recapture_absent", "retained_gate_exploit_move_absent", "retained_gate_replacement_capture_absent", "vacated_gate_intervening_slider_reach", "retained_gate_blocker_persistence"]
-        },
-        "branch_occurrence": {
-          "roles": ["gate_vacated_then_capture", "gate_retained"],
-          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
-          "provenance_fields": ["root_provenance", "provenance"]
-        },
-        "proof_paths_transposition": {
-          "cardinality": "exactly_one_current_contract",
-          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
-          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
-        },
-        "dependency_cache": {
-          "changed_dependencies": ["subject occurrence", "both branch owners and replays", "all lower result and source IDs", "closed absence and state IDs", "proof path occurrence IDs"],
-          "fingerprint_field": "dependency_fingerprint",
-          "cache_owner": "sole producer deterministic graph record; no separate public cache"
-        },
-        "consumers": {
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
-          "runtime_field": "occurrence_relations",
-          "schema_variant": "vacatedGateOccurrenceRelation",
-          "runtime_producer_tests": {
-            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
-            "cases": [
-              {
-                "name": "v6 commentary keeps direct line-access proof in its exact typed channel"
-              }
-            ]
-          },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, and typed lila analyse decode/render coverage",
-          "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
-          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
-        },
-        "no_recomputation_owner": "The L2 producer joins graph-owned LegalLine replay and lower record IDs; PositionRelationExtractor remains the owner of slider reach, capture resources, and position state."
-      },
-      "implementation_status": "current_exact_proof",
-      "reference_support": "motif_only",
-      "references": [
-        {
-          "support": "motif_only",
-          "locator": {
-            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
-            "pdf_page": 146
-          }
-        },
-        {
-          "support": "motif_only",
-          "locator": {
-            "document_id": "ref-4f1abd0745b24746b58928d162f837f6",
-            "pdf_page": 156
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "general_preparation",
-        "maneuver",
-        "plan"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/VacatedGateEnablesUnrecapturableSliderCaptureTest.scala",
-        "symbol": "VacatedGateEnablesUnrecapturableSliderCaptureTest"
-      }
-    },
-    {
       "contract_kind": "SquareReleaseRoute",
       "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala",
-        "symbol": "RelationCausalProofAssembler",
-        "method": "squareReleaseRoute"
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
+        "symbol": "OccurrenceExplanationAssembler",
+        "method": "squareReleaseRouteRecords"
       },
       "proof_type": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
@@ -176,7 +81,7 @@
         "proof_definition": "occurrenceSquareReleaseRouteProof"
       },
       "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelationCausalProofAssembler.scala#RelationCausalProofAssembler.squareReleaseRoute",
+        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala#OccurrenceExplanationAssembler.squareReleaseRouteRecords",
         "coordinate_piece_identity_proposition": {
           "statement": "The identified releaser vacates the identified square and the same identified route piece consumes it through ordered exact route squares to a certified occupation, capture, or check terminal; the retained-blocker sibling lacks the first leg.",
           "wire_fields": ["participants", "releaser", "released_blocker", "route_piece", "route", "terminal"]

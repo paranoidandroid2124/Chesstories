@@ -2,65 +2,6 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Family-private occurrence demands. They share only the graph-certified root
-  * inventory and requested subject. Each family orients branches from its own
-  * exact lower occurrences; selection role, rank, verdict, and comparison
-  * identity never participate.
-  */
-private[assembly] final case class VacatedGateCaptureProofDemand private (
-    subject: CertifiedRootOccurrence,
-    vacatedGateBranch: CertifiedRootOccurrence,
-    retainedGateBranch: CertifiedRootOccurrence,
-    lowers: List[VacatedGateEnablesUnrecapturableSliderCaptureDemand]
-):
-  require(subject == vacatedGateBranch || subject == retainedGateBranch)
-  require(lowers.nonEmpty)
-
-  def stableKey: String = List(
-    subject.transitionOwner.ref.id,
-    vacatedGateBranch.lineOwner.ref.id,
-    vacatedGateBranch.transitionOwner.ref.id,
-    retainedGateBranch.lineOwner.ref.id,
-    retainedGateBranch.transitionOwner.ref.id,
-    lowers.map(_.stableKey).mkString("[", ",", "]")
-  ).mkString("|")
-
-private[assembly] object VacatedGateCaptureProofDemand:
-  def from(demand: OccurrenceExplanationDemand): List[VacatedGateCaptureProofDemand] =
-    val exact = for
-      (vacated, retained) <- demand.subjectSiblingOrientations
-      lowers = lowerDemands(vacated.replay, retained.replay)
-      if lowers.nonEmpty
-    yield VacatedGateCaptureProofDemand(demand.subject, vacated, retained, lowers)
-    canonical(exact, _.stableKey, "vacated-gate-capture")
-
-  private def lowerDemands(
-      vacated: CanonicalLineReplay,
-      retained: CanonicalLineReplay
-  ): List[VacatedGateEnablesUnrecapturableSliderCaptureDemand] =
-    val vacatedSteps = vacated.replaySteps
-    val retainedSteps = retained.replaySteps
-    if !activates(vacated, 0, VerticalRelationContractKind.SliderReachDelta) then Nil
-    else
-      val reachOccurrences = vacatedSteps.headOption.toList.flatMap(step =>
-        vacated.verticalRelationOccurrences(step, List(VerticalRelationContractKind.SliderReachDelta))
-      )
-      val exploitIndices = vacatedSteps.indices.drop(2).filter(index =>
-        retainedSteps.size >= index &&
-          activates(vacated, index, VerticalRelationContractKind.CaptureRecaptureInventory)
-      ).toList
-      val exact = for
-        exploitIndex <- exploitIndices
-        exploitStep <- vacatedSteps.lift(exploitIndex).toList
-        exploit <- exactVerticalOccurrence(
-          vacated,
-          exploitStep,
-          VerticalRelationContractKind.CaptureRecaptureInventory
-        ).toList
-        reach <- reachOccurrences
-      yield VacatedGateEnablesUnrecapturableSliderCaptureDemand(reach, exploit, exploitIndex)
-      canonical(exact, _.stableKey, "vacated-gate lower")
-
 private[assembly] final case class SquareReleaseRouteProofDemand private (
     subject: CertifiedRootOccurrence,
     releasedSquareBranch: CertifiedRootOccurrence,
@@ -181,26 +122,10 @@ private[assembly] object SquareReleaseRouteProofDemand:
         yield Some(reply)
       case _ => None
 
-private def activates(
-    replay: CanonicalLineReplay,
-    stepIndex: Int,
-    contract: VerticalRelationContractKind
-): Boolean =
-  replay.replaySteps.lift(stepIndex).exists(replay.activatesVerticalRelation(_, contract))
-
-private def exactVerticalOccurrence(
-    replay: CanonicalLineReplay,
-    step: LineReplayStep,
-    contract: VerticalRelationContractKind
-): Option[ReplayVerticalRelationOccurrence] =
-  replay.verticalRelationOccurrences(step, List(contract)) match
-    case exact :: Nil => Some(exact)
-    case _            => None
-
-private def canonical[A](values: List[A], key: A => String, label: String): List[A] =
-  val sorted = values.sortBy(key)
-  require(
-    sorted.map(key).distinct.size == sorted.size,
-    s"one exact $label occurrence demand may be dispatched only once"
-  )
-  sorted
+  private def canonical[A](values: List[A], key: A => String, label: String): List[A] =
+    val sorted = values.sortBy(key)
+    require(
+      sorted.map(key).distinct.size == sorted.size,
+      s"one exact $label occurrence demand may be dispatched only once"
+    )
+    sorted

@@ -778,8 +778,6 @@ function renderClosures(
 function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
   switch (relation.relationKind) {
-    case 'vacated_gate_enables_unrecapturable_slider_capture':
-      return renderConsumer(relation.proof.exploitMove, relation.proof.participants.exploit, copy);
     case 'square_release_route':
       return hl('section.move-review__later-consumer.move-review__typed-section', [
         hl('h4', labels.laterConsumer),
@@ -810,14 +808,6 @@ function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveR
         renderWitness(relation.proof.relocatedResponderRecapture.movement, copy),
       ]);
   }
-}
-
-function renderConsumer(move: Uci, participant: MoveReviewMovementWitness, copy: MoveReviewCopy): VNode {
-  return hl('section.move-review__later-consumer.move-review__typed-section', [
-    hl('h4', copy.structureLabels.laterConsumer),
-    renderFact(copy.structureLabels.move, move, 'move'),
-    renderWitness(participant, copy),
-  ]);
 }
 
 function renderOccurrenceProvenance(

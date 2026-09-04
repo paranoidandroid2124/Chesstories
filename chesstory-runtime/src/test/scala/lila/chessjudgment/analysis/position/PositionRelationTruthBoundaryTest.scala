@@ -416,6 +416,20 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     assert(first.boardRelations != second.boardRelations)
     assert(!(first.boardRelations.asInstanceOf[AnyRef] eq second.boardRelations.asInstanceOf[AnyRef]))
 
+    val vacantA1 = first.relationInventory
+      .certifyState(PositionRelationExtractor.ClosedPositionStateQuery.Vacant(EvidenceSquare("a1")))
+      .getOrElse(fail("expected the first occurrence's vacancy certificate"))
+    assert(
+      closedSnapshot(first, PositionNodeRef(firstFen, 1, Some(Color.White)))
+        .bindState(vacantA1)
+        .nonEmpty
+    )
+    assertEquals(
+      closedSnapshot(second, PositionNodeRef(secondFen, 183, Some(Color.White)))
+        .bindState(vacantA1),
+      None
+    )
+
   test("canonical relation producers are unique without defensive deduplication"):
     val current = relations("4k3/3p1p2/2n1b3/1q1P4/2B1P3/2N2N2/3Q1P2/4K3 w - - 0 1")
     assertEquals(current.map(_.semanticId).distinct.size, current.size)

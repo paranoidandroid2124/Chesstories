@@ -132,12 +132,10 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 
 | typed 증명군 | 유일 graph/proof 생산자 |
 | --- | --- |
-| `VacatedGateEnablesUnrecapturableSliderCapture` | `RelationCausalProofAssembler.vacatedGateCapture` |
-| `SquareReleaseRoute` | `RelationCausalProofAssembler.squareReleaseRoute` |
+| `SquareReleaseRoute` | `OccurrenceExplanationAssembler.squareReleaseRouteRecords`, backed directly by `SquareReleaseRouteProof.certifyDemanded` |
 | `CaptureExclusionMoveOrder` | `OccurrenceExplanationAssembler.captureExclusionRecords`, backed directly by `CaptureExclusionMoveOrderProof.certifyDemanded` |
 | `RelocationEnablesRecapture` | `OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords`, backed directly by `RelocationEnablesRecaptureProof.certifyDemanded` |
 
-`RelationCausalProofAssembler`가 공유하는 것은 deterministic graph ownership뿐이다.
 각 가족의 private demand가 available root occurrences를 자기 lower facts로
 orientation하며 공통 평가 pair나 범용 branch graph는 없다. 상세 명제와
 레퍼런스 지지 수준은 canonical provenance 인벤토리에서만 유지한다.

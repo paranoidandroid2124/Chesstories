@@ -206,68 +206,6 @@ function schemaRelation(relationKind: MoveReviewRelationKind, multiplePaths = fa
     proof,
   });
 
-  if (relationKind === 'vacated_gate_enables_unrecapturable_slider_capture') {
-    const vacated = copyBranch(counterfactualSource, 'gate_vacated_then_capture');
-    const retained = copyBranch(observedSource, 'gate_retained');
-    const absenceSpecs = [
-      ['later_capture_immediate_recapture_absent', vacated],
-      ['retained_gate_exploit_move_absent', retained],
-      ['retained_gate_replacement_capture_absent', retained],
-    ] as const;
-    const stateRoles = [
-      'vacated_gate_intervening_slider_reach',
-      'vacated_gate_target_persistence',
-      'vacated_gate_target_persistence',
-      'retained_gate_slider_persistence',
-      'retained_gate_target_persistence',
-      'retained_gate_blocker_persistence',
-      'retained_gate_slider_persistence',
-      'retained_gate_target_persistence',
-      'retained_gate_blocker_persistence',
-      'retained_gate_blocked_slider_reach',
-    ];
-    const path = {
-      path_occurrence_id: nextHash(),
-      premises: [
-        relationPremise('gate_vacating_slider_reach', 'slider_reach_delta', vacated, 0),
-        relationPremise('later_slider_capture', 'capture_recapture_inventory', vacated, 2),
-      ],
-      closed_absence_uses: absenceSpecs.map(([role, branch]) =>
-        closureUse(
-          role,
-          'position_relation_extractor.closed_relation_inventory',
-          'legal-capture:black:d4',
-          branch,
-          branch === vacated ? 2 : 1,
-        ),
-      ),
-      closed_state_uses: stateRoles.map((role, index) => {
-        const branch = index < 3 ? vacated : retained;
-        return closureUse(
-          role,
-          'position_relation_extractor.closed_position_state_inventory',
-          'occupied-by:white:pawn@b2',
-          branch,
-          Math.min(index % 3, objects(branch.steps).length - 1),
-        );
-      }),
-    };
-    return outer({
-      ...proofBase(),
-      vacated_gate_branch: vacated,
-      retained_gate_branch: retained,
-      proof_paths: [path],
-      participants: {
-        enabler: vacatingMove,
-        slider: capturedTarget,
-        gate_blocker: capturedTarget,
-        exploit: deferredMove,
-        captured_target: capturedTarget,
-      },
-      exploit_move: branchStep(vacated, 2).move_uci,
-    });
-  }
-
   if (relationKind === 'square_release_route') {
     const released = copyBranch(counterfactualSource, 'released_square_route');
     const retained = copyBranch(observedSource, 'retained_blocker');
@@ -668,7 +606,6 @@ test('drops only the relocation relation when continuity loses an occurrence, ow
 
 test('decodes every relation kind as its exact discriminated variant', () => {
   const relationKinds: MoveReviewRelationKind[] = [
-    'vacated_gate_enables_unrecapturable_slider_capture',
     'square_release_route',
     'capture_exclusion_move_order',
     'relocation_enables_recapture',

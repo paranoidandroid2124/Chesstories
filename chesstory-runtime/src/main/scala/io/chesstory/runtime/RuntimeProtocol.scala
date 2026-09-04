@@ -287,13 +287,6 @@ object RuntimeProtocol:
     ): JsObject =
       val subject = proof.subjectOccurrence
       proof match
-        case proof: OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture =>
-          Json.obj(
-            "subject_occurrence" -> relationSubjectJson(subject),
-            "relation_kind" -> "vacated_gate_enables_unrecapturable_slider_capture",
-            "proof" ->
-              vacatedGateEnablesUnrecapturableSliderCaptureProofJson(proof)
-          )
         case proof: OccurrenceRelationProof.SquareReleaseRoute =>
           Json.obj(
             "subject_occurrence" -> relationSubjectJson(subject),
@@ -466,29 +459,6 @@ object RuntimeProtocol:
           "ply" -> use.position.ply,
           "scope" -> evidenceScopeCode(use.scope)
         )
-      )
-
-    private def vacatedGateEnablesUnrecapturableSliderCaptureProofJson(
-        proof: OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture
-    ): JsObject =
-      val source = proof.source
-      val result = proof.result
-      Json.obj(
-        "source_evidence_id" -> source.id,
-        "semantic_id" -> result.semanticId,
-        "occurrence_id" -> result.occurrenceId,
-        "dependency_fingerprint" -> result.dependencyId,
-        "vacated_gate_branch" -> causalBranchJson(result.publicVacatedGateBranch),
-        "retained_gate_branch" -> causalBranchJson(result.publicRetainedGateBranch),
-        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
-        "participants" -> Json.obj(
-          "enabler" -> movementWitnessJson(result.enabler),
-          "slider" -> coloredPieceWitnessJson(result.slider),
-          "gate_blocker" -> coloredPieceWitnessJson(result.gateBlocker),
-          "exploit" -> movementWitnessJson(result.exploit),
-          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget)
-        ),
-        "exploit_move" -> EvidenceRef.normalizeMove(result.exploitMove)
       )
 
     private def squareReleaseRouteProofJson(

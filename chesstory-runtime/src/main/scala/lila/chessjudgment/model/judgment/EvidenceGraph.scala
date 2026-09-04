@@ -65,10 +65,6 @@ object EvidenceSemanticAnchor:
   * upper grouping record decides whether it may survive or be projected.
   */
 enum OccurrenceRelationProof:
-  case VacatedGateEnablesUnrecapturableSliderCapture(
-      override val source: EvidenceRef,
-      result: VacatedGateEnablesUnrecapturableSliderCaptureEvidence
-  )
   case SquareReleaseRoute(
       override val source: EvidenceRef,
       result: SquareReleaseRouteEvidence
@@ -85,8 +81,6 @@ enum OccurrenceRelationProof:
 
   final def subjectOccurrence: ExplanationSubjectOccurrence =
     this match
-      case OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result) =>
-        result.subjectOccurrence
       case OccurrenceRelationProof.SquareReleaseRoute(_, result) =>
         result.subjectOccurrence
       case OccurrenceRelationProof.CaptureExclusionMoveOrder(_, result) =>
@@ -107,8 +101,6 @@ object OccurrenceRelationProof:
       record: EvidenceRecord
   ): Option[OccurrenceRelationProof] =
     record match
-      case EvidenceRecord(ref, payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence, _) =>
-        Some(OccurrenceRelationProof.VacatedGateEnablesUnrecapturableSliderCapture(ref, payload))
       case EvidenceRecord(ref, payload: SquareReleaseRouteEvidence, _) =>
         Some(OccurrenceRelationProof.SquareReleaseRoute(ref, payload))
       case EvidenceRecord(ref, payload: CaptureExclusionMoveOrderEvidence, _) =>
@@ -1122,72 +1114,6 @@ private[chessjudgment] final case class PositionOccurrenceEvidence(
     occurrence: PositionOccurrenceState
 ) extends EvidencePayload
 
-/** Exact capture-only gate release: one root vacates a certified gate, the
-  * same slider later consumes the opened line, and the retained-gate
-  * sibling retains the exact blocker and lacks that legal capture resource.
-  */
-private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCaptureEvidence private[chessjudgment] (
-    semantic: VacatedGateEnablesUnrecapturableSliderCaptureSemanticProof,
-    occurrence: VacatedGateEnablesUnrecapturableSliderCaptureOccurrence,
-    subjectOccurrence: ExplanationSubjectOccurrence,
-    dependencyFingerprint: String,
-    private[chessjudgment] val occurrenceProof: CertifiedVacatedGateEnablesUnrecapturableSliderCapture
-) extends EvidencePayload:
-  require(
-    occurrence.semanticId == semantic.semanticId,
-    "a vacated-gate-enables-unrecapturable-slider-capture occurrence must retain its semantic proof"
-  )
-  require(occurrence.subjectOccurrence == subjectOccurrence)
-  require(
-    dependencyFingerprint.matches("[0-9a-f]{64}"),
-    "a vacated-gate-enables-unrecapturable-slider-capture result needs its complete dependency fingerprint"
-  )
-  def semanticId: String = semantic.semanticId
-  def occurrenceId: String = occurrence.occurrenceId
-  def dependencyId: String = dependencyFingerprint
-  def vacatedGateLine: LineNodeRef = occurrence.vacatedGateLine
-  def retainedGateLine: LineNodeRef = occurrence.retainedGateLine
-  def vacatedGateSteps: List[LineReplayStep] = occurrence.vacatedGateSteps
-  def retainedGateSteps: List[LineReplayStep] = occurrence.retainedGateSteps
-  def vacatedGateBranch: CausalBranchOccurrence = occurrence.vacatedGateBranch
-  def retainedGateBranch: CausalBranchOccurrence = occurrence.retainedGateBranch
-  def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicVacatedGateBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.vacatedGateBranch)
-  def publicRetainedGateBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(occurrence.retainedGateBranch)
-  def publicProofPaths: List[BoundedCausalPublicProofPath] =
-    BoundedCausalPublicProjection.verticalRelationPaths(occurrence.proofPaths)
-  def hasCompleteProofPaths: Boolean =
-    proofPaths.nonEmpty && proofPaths.forall(path =>
-      path.premiseUses.size == 2 && path.closedAbsenceUses.size == 3 &&
-        path.closedStateUses.nonEmpty
-    )
-  def enabler: RelationMoveTransitionWitness = semantic.enabler
-  def slider: RelationColoredPieceWitness = semantic.slider
-  def gateBlocker: RelationColoredPieceWitness = semantic.gateBlocker
-  def exploit: RelationMoveTransitionWitness = semantic.exploit
-  def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
-  def exploitMove: String = occurrence.exploitStep.moveUci
-
-  private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.proves(record, this)
-
-  private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.parentSources
-
-  private[chessjudgment] def lowerRecordsAreCanonical(
-      byId: Map[String, EvidenceRecord]
-  ): Boolean =
-    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
-
-  private[chessjudgment] def consumesDependencies(
-      subject: CertifiedRootOccurrence,
-      vacatedGate: CertifiedRootOccurrence,
-      retainedGate: CertifiedRootOccurrence
-  ): Boolean =
-    occurrenceProof.consumesDependencies(subject, vacatedGate, retainedGate)
-
 /** Derivation-free public detail for the exact route terminal. Lower result
   * ids and sources remain in each public proof path.
   */
@@ -1747,191 +1673,6 @@ object LineObjectTrajectory:
     }.map { case (rootPiece, steps) =>
       LineObjectContinuity(rootPiece, endpointPiece, steps)
     }
-
-/** One exact positive-state premise as used by the passed-pawn causal graph.
-  * Semantic state meaning is shared across transpositions; LegalLine and
-  * replay-position ids preserve the concrete occurrence path.
-  */
-private[chessjudgment] object LineAccessPersistenceStateAuthority:
-  def atStep(
-      step: LineReplayStep,
-      owner: EvidenceRecord,
-      side: Color,
-      slider: RelationPieceWitness,
-      direction: RelationRayDirection,
-      destination: EvidenceSquare
-  ): Option[ClosedPositionStateAuthority] =
-    ClosedPositionStateAuthority.atStep(owner, step)((occurrence, scope) =>
-      occurrence.existingSliderReachState(side, slider, direction, scope).filter { proof =>
-        proof.query match
-          case PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
-                exactSide,
-                exactSlider,
-                exactDirection,
-                Some(exactReach)
-              ) if exactSide == side && exactSlider == slider && exactDirection == direction =>
-            exactReach.segment.exists(control =>
-              control.square == destination && LineAccessTrajectory.movementAvailable(control.target)
-            )
-          case _ => false
-      }
-    )
-
-final case class LineAccessTrajectory private (
-    enablingStep: LineReplayStep,
-    enabledStep: LineReplayStep,
-    interveningSteps: List[LineReplayStep],
-    enabledPieceRole: EvidencePieceRole,
-    color: Color,
-    vacatedSquares: List[EvidenceSquare],
-    enabledFrom: EvidenceSquare,
-    enabledTo: EvidenceSquare,
-    plyOffset: Int,
-    private[chessjudgment] val relationOccurrenceAuthority: RecordBoundVerticalRelationOccurrence,
-    private[chessjudgment] val persistenceStates: List[ClosedPositionStateAuthority]
-):
-  require(vacatedSquares.nonEmpty, "a line-access trajectory needs an exact vacated gate")
-  require(
-    relationOccurrenceAuthority.step == enablingStep &&
-      relationOccurrenceAuthority.contract == VerticalRelationContractKind.SliderReachDelta &&
-      relationOccurrenceAuthority.result.kind == RelationFactKind.SliderReachDelta,
-    "a line-access trajectory needs its exact L1 slider-reach occurrence"
-  )
-  require(
-    persistenceStates.map(_.step) == interveningSteps,
-    "a line-access trajectory must retain one exact positive-state proof for every intervening occurrence"
-  )
-  def vacatedSquare: EvidenceSquare = vacatedSquares.head
-  private[chessjudgment] def accessRelationKey: DerivedRelationResultKey =
-    relationOccurrenceAuthority.result
-
-object LineAccessTrajectory:
-  /** Exact root-to-effect access used by causal episodes. Merely placing a
-    * slider behind a blocker does not cause the blocker's later move or capture.
-    */
-  private[chessjudgment] def findAllRootClearancesBeforeUse(
-      enablingStep: LineReplayStep,
-      enabledStep: LineReplayStep,
-      interveningSteps: List[LineReplayStep],
-      replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[EvidenceRecord]
-  ): List[LineAccessTrajectory] =
-    val candidates = replay
-      .verticalRelationOccurrences(
-        enablingStep,
-        List(VerticalRelationContractKind.SliderReachDelta)
-      )
-      .flatMap(occurrence =>
-        fromChangedRootClearanceOccurrence(
-          enablingStep,
-          enabledStep,
-          interveningSteps,
-          replay,
-          ownerAt,
-          occurrence
-        ).toList
-      )
-
-    require(
-      candidates.size <= 1,
-      "one enabled slider move cannot have multiple exact L1 clearance producers"
-    )
-    candidates
-
-  /** Seed-specific trajectory closure for L2 demand dispatch. The caller owns
-    * selection of the changed L1 occurrence, so this path never scans all root
-    * reach results and never collapses independent occurrences to one.
-    */
-  private[chessjudgment] def fromChangedRootClearanceOccurrence(
-      enablingStep: LineReplayStep,
-      enabledStep: LineReplayStep,
-      interveningSteps: List[LineReplayStep],
-      replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[EvidenceRecord],
-      occurrence: ReplayVerticalRelationOccurrence
-  ): Option[LineAccessTrajectory] =
-    for
-      enablingIndex <- Some(replay.replaySteps.indexOf(enablingStep))
-      enabledIndex <- Some(replay.replaySteps.indexOf(enabledStep))
-      if enablingIndex >= 0 && enabledIndex > enablingIndex
-      if replay.replaySteps.slice(enablingIndex + 1, enabledIndex) == interveningSteps
-      if occurrence.step == enablingStep &&
-        occurrence.contract == VerticalRelationContractKind.SliderReachDelta
-      enablingTransition <- replay.transition(enablingStep)
-      enabledLegal <- replay.legalStep(enabledStep)
-      enabledPiece = RelationPieceWitness(
-        EvidenceSquare(enabledLegal.move.orig.key),
-        EvidencePieceRole(enabledLegal.move.piece.role.name)
-      )
-      relationAuthority <- ownerAt(enablingStep)
-        .flatMap(RecordBoundVerticalRelationOccurrence.certified(_, occurrence))
-      detail <- occurrence.relation.detail match
-        case exact: RelationWitnessDetail.SliderReachDelta => Some(exact)
-        case _                                             => None
-      if detail.side == enabledLegal.move.piece.color && detail.mover.side == detail.side
-      if detail.sliderBefore.contains(enabledPiece) && detail.sliderAfter.contains(enabledPiece)
-      afterReach <- detail.after
-      destination = EvidenceSquare(enabledLegal.move.dest.key)
-      destinationIndex = afterReach.segment.indexWhere(_.square == destination)
-      if destinationIndex >= 0 && movementAvailable(afterReach.segment(destinationIndex).target)
-      if !detail.before.exists(_.segment.exists(reach =>
-        reach.square == destination && movementAvailable(reach.target)
-      ))
-      openedSegment = afterReach.segment.take(destinationIndex + 1).map(_.square)
-      vacatedSet = enablingTransition.boardFootprint.cellChanges.collect {
-        case change
-            if change.before.nonEmpty && change.after.isEmpty &&
-              openedSegment.contains(EvidenceSquare(change.square.key)) =>
-          EvidenceSquare(change.square.key)
-      }.toSet
-      vacated = openedSegment.filter(vacatedSet)
-      if vacated.nonEmpty
-      persistenceStates = interveningSteps.flatMap(step =>
-        ownerAt(step).flatMap(owner =>
-          LineAccessPersistenceStateAuthority.atStep(
-            step,
-            owner,
-            detail.side,
-            enabledPiece,
-            detail.direction,
-            destination
-          )
-        )
-      )
-      if persistenceStates.size == interveningSteps.size
-    yield LineAccessTrajectory(
-      enablingStep = enablingStep,
-      enabledStep = enabledStep,
-      interveningSteps = interveningSteps,
-      enabledPieceRole = enabledPiece.role,
-      color = detail.side,
-      vacatedSquares = vacated,
-      enabledFrom = enabledPiece.square,
-      enabledTo = destination,
-      plyOffset = enabledIndex - enablingIndex,
-      relationOccurrenceAuthority = relationAuthority,
-      persistenceStates = persistenceStates
-    )
-
-  private[chessjudgment] def findRootClearanceBeforeUse(
-      enablingStep: LineReplayStep,
-      enabledStep: LineReplayStep,
-      interveningSteps: List[LineReplayStep],
-      replay: CanonicalLineReplay,
-      ownerAt: LineReplayStep => Option[EvidenceRecord]
-  ): Option[LineAccessTrajectory] =
-    findAllRootClearancesBeforeUse(
-      enablingStep,
-      enabledStep,
-      interveningSteps,
-      replay,
-      ownerAt
-    ).headOption
-
-  private[judgment] def movementAvailable(target: RelationControlTarget): Boolean =
-    target match
-      case RelationControlTarget.Friendly(_) => false
-      case RelationControlTarget.Empty | RelationControlTarget.Enemy(_) => true
 
 enum LineEventKind:
   case Capture
@@ -3145,8 +2886,6 @@ final case class EvidenceRecord(
     payload match
       case lineFact: LineFactEvidence =>
         List(lineFact.line)
-      case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence =>
-        List(payload.occurrence.vacatedGateLine, payload.occurrence.retainedGateLine)
       case payload: SquareReleaseRouteEvidence =>
         List(payload.occurrence.releasedRouteLine, payload.occurrence.retainedBlockerLine)
       case payload: CaptureExclusionMoveOrderEvidence =>
@@ -3698,9 +3437,6 @@ final class TypedEvidenceGraph private (
         case payload: StructuralDeltaEvidence =>
           structuralDeltaAncestryVerified(record, payload) &&
             payload.canonicalOutputShapeCertified
-        case payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence =>
-          exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
-            payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: SquareReleaseRouteEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
