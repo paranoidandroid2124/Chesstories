@@ -31,19 +31,17 @@ class BestChoiceProductionTest extends munit.FunSuite:
     val prepared = admitted.copy(admittedRootRankingPair = Some(rankingPair))
 
     assertEquals(prepared.assessmentCandidates.flatMap(_.rootMove).toSet, ranking.toSet)
-    MoveReviewJudgmentOrchestrator
-      .executePreparedReview(prepared)
-      .getOrElse(fail("expected the sole production pipeline to close BestChoice"))
-      .assessmentPacket
+    MoveReviewAssembler
+      .assemble(prepared)
+      .flatMap(EvidenceBackedJudgmentPacket.fromAssembly)
       .getOrElse(fail("expected the lower assembly to project BestChoice"))
 
-  test("review execution preserves per-ply lower assembly without an assessment packet"):
-    val execution = MoveReviewJudgmentOrchestrator
-      .executePreparedReview(admittedReview(ranking.head))
-      .getOrElse(fail("expected an execution for the admitted lower review"))
-    val assembly = execution.assembly
+  test("review assembly preserves per-ply lower facts without an assessment packet"):
+    val assembly = MoveReviewAssembler
+      .assemble(admittedReview(ranking.head))
+      .getOrElse(fail("expected the admitted lower review to assemble"))
 
-    assertEquals(execution.assessmentPacket, None)
+    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(assembly), None)
     assert(assembly.lineReplays.valuesIterator.exists(_.replaySteps.nonEmpty))
     assert(assembly.positions.exists(_.role == PositionNodeRole.LineOccurrence))
 

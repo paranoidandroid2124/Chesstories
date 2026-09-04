@@ -158,10 +158,10 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       ) match
       case Some(PreparedFocusedPositionCommentary.MoveReview(value)) => value
       case other => fail(s"expected a focused move review, got $other")
-    val execution = MoveReviewJudgmentOrchestrator
-      .executePreparedReview(review.preparedInput)
+    val assembly = MoveReviewAssembler
+      .assemble(review.preparedInput)
       .getOrElse(fail("expected the focused production review to assemble"))
-    val lineFact = execution.assembly.evidenceGraph.records.collect {
+    val lineFact = assembly.evidenceGraph.records.collect {
       case EvidenceRecord(_, payload: LineFactEvidence, _)
           if payload.rootMove.exists(EvidenceRef.sameMove(_, "d8d5")) => payload
     } match

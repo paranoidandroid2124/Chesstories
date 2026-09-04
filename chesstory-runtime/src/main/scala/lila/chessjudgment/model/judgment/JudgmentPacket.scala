@@ -25,7 +25,7 @@ final class EvidenceBackedJudgmentPacket private (
   def evidenceGraph: TypedEvidenceGraph = assembly.evidenceGraph
 
 object EvidenceBackedJudgmentPacket:
-  private[chessjudgment] def fromAssembly(
+  def fromAssembly(
       assembly: JudgmentAssemblyContext
   ): Option[EvidenceBackedJudgmentPacket] =
     selectPrimary(assembly).map(new EvidenceBackedJudgmentPacket(assembly, _))

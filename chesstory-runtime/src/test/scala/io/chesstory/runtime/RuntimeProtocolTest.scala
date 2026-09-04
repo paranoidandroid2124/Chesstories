@@ -15,11 +15,6 @@ import lila.chessjudgment.model.line.{
   CandidateLineEvaluation,
   CanonicalPositionHistory
 }
-import lila.chessjudgment.analysis.assembly.{
-  MoveReviewInputAdmission,
-  MoveReviewJudgmentOrchestrator,
-  RawMoveReviewInput
-}
 import lila.chessjudgment.model.line.EngineLine
 import play.api.libs.json.*
 

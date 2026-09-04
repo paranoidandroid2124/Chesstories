@@ -17,8 +17,7 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
           )
         )
       )
-      .flatMap(MoveReviewJudgmentOrchestrator.executePreparedReview)
-      .map(_.assembly)
+      .flatMap(MoveReviewAssembler.assemble)
       .getOrElse(fail("expected the passed-pawn line to assemble"))
     val line = assembly.legalLines
       .find(line => EvidenceRef.sameMove(line.ref.rootMove, "g6g7"))

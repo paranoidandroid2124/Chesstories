@@ -3,8 +3,8 @@ package io.chesstory.runtime
 import scala.util.Try
 
 import lila.chessjudgment.analysis.assembly.{
+  MoveReviewAssembler,
   MoveReviewInputAdmission,
-  MoveReviewJudgmentOrchestrator,
   RawMoveReviewInput
 }
 import lila.chessjudgment.model.judgment.*
@@ -85,8 +85,8 @@ object RuntimeProtocol:
     else
       MoveReviewInputAdmission
         .admit(raw)
-        .flatMap(MoveReviewJudgmentOrchestrator.executePreparedReview)
-        .flatMap(_.assessmentPacket)
+        .flatMap(MoveReviewAssembler.assemble)
+        .flatMap(EvidenceBackedJudgmentPacket.fromAssembly)
         .fold(
           failure(requestId, 422, "move_review_not_buildable")
         )(packet => encodeMoveMeaningResult(requestId, packet))

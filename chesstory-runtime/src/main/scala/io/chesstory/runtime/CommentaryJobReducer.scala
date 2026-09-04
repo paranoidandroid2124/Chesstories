@@ -5,8 +5,8 @@ import java.security.MessageDigest
 import java.util.Locale
 
 import lila.chessjudgment.analysis.assembly.{
+  MoveReviewAssembler,
   MoveReviewInputAdmission,
-  MoveReviewJudgmentOrchestrator,
   PreparedFocusedMoveReview,
   PreparedFocusedPositionCommentary
 }
@@ -697,8 +697,8 @@ object CommentaryJobReducer:
       context: ReviewContext,
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    MoveReviewJudgmentOrchestrator.executePreparedReview(context.review.preparedInput)
-      .flatMap(_.assessmentPacket) match
+    MoveReviewAssembler.assemble(context.review.preparedInput)
+      .flatMap(EvidenceBackedJudgmentPacket.fromAssembly) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
       case Some(packet) =>
         completeReview(
