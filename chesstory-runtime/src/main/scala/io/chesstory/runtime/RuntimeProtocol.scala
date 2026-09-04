@@ -3,6 +3,7 @@ package io.chesstory.runtime
 import scala.util.Try
 
 import lila.chessjudgment.analysis.assembly.{
+  MoveReviewInputAdmission,
   MoveReviewJudgmentOrchestrator,
   RawMoveReviewInput
 }
@@ -82,9 +83,13 @@ object RuntimeProtocol:
     else if !InputLimits.accepts(raw) then
       failure(requestId, 400, "input_limits_exceeded")
     else
-      MoveReviewJudgmentOrchestrator.execute(raw).fold(
-        failure(requestId, 422, "move_review_not_buildable")
-      )(packet => encodeMoveMeaningResult(requestId, packet))
+      MoveReviewInputAdmission
+        .admit(raw)
+        .flatMap(MoveReviewJudgmentOrchestrator.executePreparedReview)
+        .flatMap(_.assessmentPacket)
+        .fold(
+          failure(requestId, 422, "move_review_not_buildable")
+        )(packet => encodeMoveMeaningResult(requestId, packet))
 
   private[runtime] def encodeMoveMeaningResult(
       requestId: Option[String],

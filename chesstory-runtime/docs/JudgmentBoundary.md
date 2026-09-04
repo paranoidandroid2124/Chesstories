@@ -107,10 +107,10 @@ player job의 현재 흐름은 다음과 같다.
 
 `executePreparedReview`는 이 과정에서 완성된 `JudgmentAssemblyContext`를
 `ReviewExecution.assembly`에 항상 보존하고, public `primary`는
-`ReviewExecution.judgment`의 optional projection으로만 만든다. 선택된
+`ReviewExecution.assessmentPacket`의 optional projection으로만 만든다. 선택된
 Assessment/comparison chain의 검증 실패는 그 projection만 비우며 assembly나
 형제 lower record를 소멸시키지 않는다. 다만 현재 public runtime schema는
-primary-only이므로 `judgment`가 없으면 player job은 기존
+primary-only이므로 `assessmentPacket`이 없으면 player job은 기존
 `ReviewConstructionFailed` stop을 유지한다.
 
 현재 이 흐름에는 relation 생산·packet·serializer·public schema lane이 없다.

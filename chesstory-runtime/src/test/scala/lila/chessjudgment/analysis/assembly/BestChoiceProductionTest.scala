@@ -34,16 +34,16 @@ class BestChoiceProductionTest extends munit.FunSuite:
     MoveReviewJudgmentOrchestrator
       .executePreparedReview(prepared)
       .getOrElse(fail("expected the sole production pipeline to close BestChoice"))
-      .judgment
+      .assessmentPacket
       .getOrElse(fail("expected the lower assembly to project BestChoice"))
 
-  test("review execution preserves per-ply lower assembly without a player judgment"):
+  test("review execution preserves per-ply lower assembly without an assessment packet"):
     val execution = MoveReviewJudgmentOrchestrator
       .executePreparedReview(admittedReview(ranking.head))
       .getOrElse(fail("expected an execution for the admitted lower review"))
     val assembly = execution.assembly
 
-    assertEquals(execution.judgment, None)
+    assertEquals(execution.assessmentPacket, None)
     assert(assembly.lineReplays.valuesIterator.exists(_.replaySteps.nonEmpty))
     assert(assembly.positions.exists(_.role == PositionNodeRole.LineOccurrence))
 

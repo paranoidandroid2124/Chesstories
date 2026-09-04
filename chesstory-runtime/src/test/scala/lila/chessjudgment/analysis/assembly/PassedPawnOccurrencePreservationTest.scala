@@ -6,8 +6,8 @@ import lila.chessjudgment.model.line.EngineLine
 class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
 
   test("move occurrences and passed-pawn facts survive independently"):
-    val packet = MoveReviewJudgmentOrchestrator
-      .execute(
+    val assembly = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = "7k/5K2/6P1/8/8/8/8/8 w - - 0 1",
           playedMoveUci = "g6g7",
@@ -17,18 +17,20 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
           )
         )
       )
+      .flatMap(MoveReviewJudgmentOrchestrator.executePreparedReview)
+      .map(_.assembly)
       .getOrElse(fail("expected the passed-pawn line to assemble"))
-    val line = packet.assembly.legalLines
+    val line = assembly.legalLines
       .find(line => EvidenceRef.sameMove(line.ref.rootMove, "g6g7"))
       .getOrElse(fail("expected the observed LegalLine"))
-    val root = packet.assembly.lineRootOccurrence(line.ref)
+    val root = assembly.lineRootOccurrence(line.ref)
       .getOrElse(fail("expected the observed root occurrence"))
-    val withoutMiddleStructural = packet.evidenceGraph.records.filterNot {
+    val withoutMiddleStructural = assembly.evidenceGraph.records.filterNot {
       case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
         ref.line.contains(line.ref) && EvidenceRef.sameMove(payload.moveUci, "h8h7")
       case _ => false
     }
-    assertEquals(packet.evidenceGraph.records.size - withoutMiddleStructural.size, 1)
+    assertEquals(assembly.evidenceGraph.records.size - withoutMiddleStructural.size, 1)
     val graph = TypedEvidenceGraph.empty.addAll(withoutMiddleStructural)
     val moveRecords = graph.records.collect {
       case record @ EvidenceRecord(ref, payload: MoveTransitionEvidence, _)

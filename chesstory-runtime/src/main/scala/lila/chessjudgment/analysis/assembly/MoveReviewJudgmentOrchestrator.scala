@@ -7,16 +7,10 @@ object MoveReviewJudgmentOrchestrator:
   final class ReviewExecution private[assembly] (
       val assembly: JudgmentAssemblyContext
   ):
-    val judgment: Option[EvidenceBackedJudgmentPacket] =
+    lazy val assessmentPacket: Option[EvidenceBackedJudgmentPacket] =
       EvidenceBackedJudgmentPacket.fromAssembly(assembly)
 
-  /** Development-only direct v6 entrypoint; player jobs enter through executePreparedReview. */
-  def execute(raw: RawMoveReviewInput): Option[EvidenceBackedJudgmentPacket] =
-    MoveReviewInputAdmission.admit(raw).flatMap { prepared =>
-      executePreparedReview(prepared)
-    }.flatMap(_.judgment)
-
-  /** Preserves the admitted lower assembly whether or not it projects a player judgment. */
+  /** Preserves the admitted lower assembly whether or not a public assessment can be projected. */
   def executePreparedReview(
       preparedInput: AdmittedMoveReviewInput
   ): Option[ReviewExecution] =

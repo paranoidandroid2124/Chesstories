@@ -698,7 +698,7 @@ object CommentaryJobReducer:
       ledger: EngineWorkLedger
   ): CommentaryJobState =
     MoveReviewJudgmentOrchestrator.executePreparedReview(context.review.preparedInput)
-      .flatMap(_.judgment) match
+      .flatMap(_.assessmentPacket) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
       case Some(packet) =>
         completeReview(
