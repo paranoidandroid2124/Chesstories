@@ -7,13 +7,10 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum BoundedCausalContractKind:
-  case CaptureExclusionMoveOrder
   case RelocationEnablesRecapture
 
   def semanticNamespace: String =
     this match
-      case CaptureExclusionMoveOrder =>
-        "causal-proposition:capture-exclusion-move-order:v1"
       case RelocationEnablesRecapture =>
         "causal-proposition:relocation-enables-recapture:v1"
 

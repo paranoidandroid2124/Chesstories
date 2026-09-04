@@ -90,7 +90,7 @@ export interface MoveReviewCandidate {
   review: MoveReviewCandidateReview;
 }
 
-export type MoveReviewRelationKind = 'capture_exclusion_move_order' | 'relocation_enables_recapture';
+export type MoveReviewRelationKind = 'relocation_enables_recapture';
 
 export type MoveReviewRootProvenance = 'counterfactual_analyzed_root' | 'observed_game_root';
 export type MoveReviewStepProvenance = 'observed_game_move' | 'certified_analysis_move';
@@ -127,8 +127,6 @@ export type MoveReviewOccurrenceBranchRole =
   | 'immediate_capture_with_defender'
   | 'removal_then_target_capture'
   | 'immediate_target_capture'
-  | 'vacating_then_deferred'
-  | 'immediate_deferred_capture'
   | 'relocated_responder'
   | 'retained_responder';
 
@@ -283,24 +281,6 @@ interface MoveReviewOccurrenceProofBase {
   dependencyFingerprint: string;
 }
 
-type MoveReviewCaptureExclusionPremise = MoveReviewLegalMovePremiseUse<
-  'vacating_move' | 'immediate_deferred_move' | 'immediate_capture_reply' | 'later_deferred_move',
-  'vacating_then_deferred' | 'immediate_deferred_capture'
->;
-
-export interface MoveReviewCaptureExclusionProof extends MoveReviewOccurrenceProofBase {
-  vacatingBranch: MoveReviewOccurrenceBranch<'vacating_then_deferred'>;
-  immediateCaptureBranch: MoveReviewOccurrenceBranch<'immediate_deferred_capture'>;
-  proofPaths: [MoveReviewBoundedProofPath<MoveReviewCaptureExclusionPremise>];
-  participants: {
-    vacatingMove: MoveReviewMovementWitness;
-    deferredMove: MoveReviewMovementWitness;
-    captureReply: MoveReviewMovementWitness;
-    capturedTarget: MoveReviewColoredPieceWitness;
-  };
-  laterDeferredStepIndex: number;
-}
-
 type MoveReviewRelocationRecapturePremise =
   | MoveReviewRelationPremiseUse<
       'relocated_recapture_inventory',
@@ -347,23 +327,17 @@ interface MoveReviewRelocationEnablesRecaptureProof extends MoveReviewOccurrence
   retainedOtherRecapture: { movement: MoveReviewMovementWitness; moveUci: Uci; stepIndex: number };
 }
 
-export type MoveReviewOccurrenceProof =
-  | MoveReviewCaptureExclusionProof
-  | MoveReviewRelocationEnablesRecaptureProof;
+export type MoveReviewOccurrenceProof = MoveReviewRelocationEnablesRecaptureProof;
 
 interface MoveReviewOccurrenceRelationBase {
   id: string;
   subjectOccurrence: MoveReviewSubjectOccurrence;
 }
 
-export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase &
-  (
-    | { relationKind: 'capture_exclusion_move_order'; proof: MoveReviewCaptureExclusionProof }
-    | {
-        relationKind: 'relocation_enables_recapture';
-        proof: MoveReviewRelocationEnablesRecaptureProof;
-      }
-  );
+export type MoveReviewOccurrenceRelation = MoveReviewOccurrenceRelationBase & {
+  relationKind: 'relocation_enables_recapture';
+  proof: MoveReviewRelocationEnablesRecaptureProof;
+};
 
 export type MoveReviewCandidateReview =
   | {
@@ -637,7 +611,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: '분석 대안',
     analysisContinuation: '분석 후속',
     familyLabels: {
-      capture_exclusion_move_order: '포획 응수를 배제한 수순',
       relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
     },
     structureLabels: {
@@ -688,9 +661,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         removalRecapture: '제거 후 재포획',
         postRemovalTargetCapture: '후속 포획',
         immediateSoleRecapture: '즉시 재포획',
-        vacatingMove: '칸을 비운 기물',
-        deferredMove: '후속 기물',
-        captureReply: '포획 응수',
         attackerAtCommonRoot: '공통 시작의 포획 기물',
         attackerAtCapture: '포획 시점의 기물',
         targetAtCommonRoot: '공통 시작의 포획 대상',
@@ -706,10 +676,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         defender_removal: '수비 기물 제거',
         post_removal_target_capture_inventory: '제거 후 목표 포획',
         immediate_target_capture_inventory: '즉시 목표 포획',
-        vacating_move: '칸 비움',
-        immediate_deferred_move: '즉시 후속 수',
-        immediate_capture_reply: '즉시 포획 응수',
-        later_deferred_move: '나중 후속 수',
         relocated_recapture_inventory: '이동 기물 재포획 관계',
         retained_recapture_inventory: '유지선 재포획 관계',
         relocated_target_capture: '이동선 목표 포획',
@@ -729,15 +695,11 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         result: '결과 근거',
         delayed_capture_recapture_absent: '후속 재포획 부재',
         post_removal_replacement_recapture_absent: '대체 재포획 부재',
-        capture_reply_absent: '포획 응수 부재',
         retained_seed_recapture_absent: '유지선 출발칸 재포획 부재',
         delayed_capture_actor_present: '후속 기물 유지',
         delayed_target_present: '목표 기물 유지',
         post_removal_exploit_actor_present: '후속 기물 유지',
         post_removal_target_present: '목표 기물 유지',
-        vacated_target: '비워진 목표 칸',
-        reply_actor: '응수 기물 유지',
-        deferred_actor: '후속 기물 유지',
       },
       contractLabels: {
         created_check_response_inventory: '체크 응수',
@@ -812,7 +774,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
     analyzedAlternative: 'Analyzed alternative',
     analysisContinuation: 'Analysis continuation',
     familyLabels: {
-      capture_exclusion_move_order: 'Move order excluding the capture reply',
       relocation_enables_recapture: 'Recapture enabled by relocation',
     },
     structureLabels: {
@@ -863,9 +824,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         removalRecapture: 'Removal recapture',
         postRemovalTargetCapture: 'Later capture',
         immediateSoleRecapture: 'Immediate recapture',
-        vacatingMove: 'Vacating piece',
-        deferredMove: 'Deferred piece',
-        captureReply: 'Capture reply',
         attackerAtCommonRoot: 'Capturing piece at common root',
         attackerAtCapture: 'Capturing piece at capture',
         targetAtCommonRoot: 'Target at common root',
@@ -881,10 +839,6 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         defender_removal: 'Defender removal',
         post_removal_target_capture_inventory: 'Later target capture',
         immediate_target_capture_inventory: 'Immediate target capture',
-        vacating_move: 'Vacating move',
-        immediate_deferred_move: 'Immediate deferred move',
-        immediate_capture_reply: 'Immediate capture reply',
-        later_deferred_move: 'Later deferred move',
         relocated_recapture_inventory: 'Relocated-piece recapture',
         retained_recapture_inventory: 'Retained-line recapture',
         relocated_target_capture: 'Relocated-line target capture',
@@ -904,15 +858,11 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
         result: 'Result',
         delayed_capture_recapture_absent: 'Later recapture unavailable',
         post_removal_replacement_recapture_absent: 'Replacement recapture unavailable',
-        capture_reply_absent: 'Capture reply unavailable',
         retained_seed_recapture_absent: 'Retained seed-square recapture unavailable',
         delayed_capture_actor_present: 'Later piece remains',
         delayed_target_present: 'Target remains',
         post_removal_exploit_actor_present: 'Later piece remains',
         post_removal_target_present: 'Target remains',
-        vacated_target: 'Vacated target square',
-        reply_actor: 'Reply piece remains',
-        deferred_actor: 'Deferred piece remains',
       },
       contractLabels: {
         created_check_response_inventory: 'Check replies',
@@ -1705,32 +1655,16 @@ function projectOccurrenceRelation(
   const subjectOccurrence = projectSubjectOccurrence(value.subject_occurrence, candidateMove, subject);
   if (!relationKind || !subjectOccurrence) return;
 
-  switch (relationKind) {
-    case 'capture_exclusion_move_order': {
-      const proof = projectCaptureExclusionProof(value.proof);
-      const relation = proof
-        ? {
-            id: occurrenceRelationId(proof.sourceEvidenceId),
-            subjectOccurrence,
-            relationKind,
-            proof,
-          }
-        : undefined;
-      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
-    }
-    case 'relocation_enables_recapture': {
-      const proof = projectRelocationEnablesRecaptureProof(value.proof);
-      const relation = proof
-        ? {
-            id: occurrenceRelationId(proof.sourceEvidenceId),
-            subjectOccurrence,
-            relationKind,
-            proof,
-          }
-        : undefined;
-      return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
-    }
-  }
+  const proof = projectRelocationEnablesRecaptureProof(value.proof);
+  const relation = proof
+    ? {
+        id: occurrenceRelationId(proof.sourceEvidenceId),
+        subjectOccurrence,
+        relationKind,
+        proof,
+      }
+    : undefined;
+  return relation && occurrenceRelationOwnsSubject(relation) ? relation : undefined;
 }
 
 function occurrenceRelationId(sourceEvidenceId: string): string {
@@ -1738,9 +1672,7 @@ function occurrenceRelationId(sourceEvidenceId: string): string {
 }
 
 function occurrenceRelationKind(value: unknown): MoveReviewRelationKind | undefined {
-  return value === 'capture_exclusion_move_order' || value === 'relocation_enables_recapture'
-    ? value
-    : undefined;
+  return value === 'relocation_enables_recapture' ? value : undefined;
 }
 
 function projectSubjectOccurrence(
@@ -1816,121 +1748,6 @@ function projectOccurrenceProofBase(
   return sourceEvidenceId && semanticId && occurrenceId && dependencyFingerprint
     ? { sourceEvidenceId, semanticId, occurrenceId, dependencyFingerprint }
     : undefined;
-}
-
-function projectCaptureExclusionProof(value: unknown): MoveReviewCaptureExclusionProof | undefined {
-  const keys = [
-    'source_evidence_id',
-    'semantic_id',
-    'occurrence_id',
-    'dependency_fingerprint',
-    'vacating_branch',
-    'immediate_capture_branch',
-    'proof_paths',
-    'participants',
-    'later_deferred_step_index',
-  ];
-  if (!isObject(value) || !hasExactKeys(value, keys)) return;
-  const base = projectOccurrenceProofBase(value);
-  const vacatingBranch = projectOccurrenceBranch(value.vacating_branch, 'vacating_then_deferred', 3);
-  const immediateCaptureBranch = projectOccurrenceBranch(
-    value.immediate_capture_branch,
-    'immediate_deferred_capture',
-    2,
-    2,
-  );
-  const paths = projectArray(value.proof_paths, 1, 1, projectCaptureExclusionPath);
-  const participants = projectCaptureExclusionParticipants(value.participants);
-  const laterDeferredStepIndex = nonNegativeInteger(value.later_deferred_step_index);
-  if (
-    !base ||
-    !vacatingBranch ||
-    !immediateCaptureBranch ||
-    !paths ||
-    !participants ||
-    laterDeferredStepIndex === undefined ||
-    laterDeferredStepIndex < 2 ||
-    vacatingBranch.branchId === immediateCaptureBranch.branchId ||
-    !boundedPathsFitBranches(paths, [vacatingBranch, immediateCaptureBranch])
-  )
-    return;
-  return {
-    ...base,
-    vacatingBranch,
-    immediateCaptureBranch,
-    proofPaths: paths as [MoveReviewBoundedProofPath<MoveReviewCaptureExclusionPremise>],
-    participants,
-    laterDeferredStepIndex,
-  };
-}
-
-function projectCaptureExclusionParticipants(
-  value: unknown,
-): MoveReviewCaptureExclusionProof['participants'] | undefined {
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ['vacating_move', 'deferred_move', 'capture_reply', 'captured_target'])
-  )
-    return;
-  const vacatingMove = projectMovementWitness(value.vacating_move);
-  const deferredMove = projectMovementWitness(value.deferred_move);
-  const captureReply = projectMovementWitness(value.capture_reply);
-  const capturedTarget = projectColoredPieceWitness(value.captured_target);
-  return vacatingMove && deferredMove && captureReply && capturedTarget
-    ? { vacatingMove, deferredMove, captureReply, capturedTarget }
-    : undefined;
-}
-
-function projectCaptureExclusionPath(
-  value: unknown,
-): MoveReviewBoundedProofPath<MoveReviewCaptureExclusionPremise> | undefined {
-  const shell = projectBoundedPathShell(value, 4, 2, 8, undefined, 4);
-  if (!shell) return;
-  const specs = [
-    ['vacating_move', 'vacating_then_deferred', 0, false],
-    ['immediate_deferred_move', 'immediate_deferred_capture', 0, false],
-    ['immediate_capture_reply', 'immediate_deferred_capture', 1, true],
-    ['later_deferred_move', 'vacating_then_deferred', 2, false],
-  ] as const;
-  const premises = shell.premises.map((item, index) => {
-    const spec = specs[index]!;
-    return projectLegalMovePremise(
-      item,
-      role => role === spec[0],
-      [spec[1]],
-      step => (index === 3 ? step >= spec[2] : step === spec[2]),
-      spec[3],
-    );
-  });
-  const absences = shell.closedAbsenceUses.map(item =>
-    projectClosureUse(item, {
-      role: 'capture_reply_absent',
-      issuer: 'position_relation_extractor.closed_relation_inventory',
-      branchRoles: ['vacating_then_deferred'],
-      query: legalMoveQuery,
-    }),
-  );
-  const states = shell.closedStateUses.map(item =>
-    projectClosureUse(item, {
-      role: ['vacated_target', 'reply_actor', 'deferred_actor'],
-      issuer: 'position_relation_extractor.closed_position_state_inventory',
-      branchRoles: ['vacating_then_deferred'],
-      query: vacantOrOccupiedQuery,
-    }),
-  );
-  if (
-    !premises.every((item): item is MoveReviewCaptureExclusionPremise => !!item) ||
-    !absences.every((item): item is MoveReviewClosureUse => !!item) ||
-    !states.every((item): item is MoveReviewClosureUse => !!item) ||
-    !unique([...absences, ...states].map(item => item.useId))
-  )
-    return;
-  return {
-    pathOccurrenceId: shell.pathOccurrenceId,
-    premises,
-    closedAbsenceUses: absences,
-    closedStateUses: states,
-  };
 }
 
 function projectRelocationEnablesRecaptureProof(
@@ -2958,12 +2775,7 @@ function occurrenceRelationOwnsSubject(relation: MoveReviewOccurrenceRelation): 
 }
 
 export function moveReviewOccurrenceBranches(relation: MoveReviewOccurrenceRelation): MoveReviewOccurrenceBranch[] {
-  switch (relation.relationKind) {
-    case 'capture_exclusion_move_order':
-      return [relation.proof.vacatingBranch, relation.proof.immediateCaptureBranch];
-    case 'relocation_enables_recapture':
-      return [relation.proof.relocatedResponderBranch, relation.proof.retainedResponderBranch];
-  }
+  return [relation.proof.relocatedResponderBranch, relation.proof.retainedResponderBranch];
 }
 
 export function moveReviewOccurrenceProofPaths(
@@ -3109,8 +2921,6 @@ function resultIdMatchesContract(value: string, contract: string): boolean {
 
 const legalMoveQuery = /^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$/;
 const occupiedByQuery = /^occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8]$/;
-const vacantOrOccupiedQuery =
-  /^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$/;
 function buildProof(
   id: string,
   startFen: FEN,

@@ -132,7 +132,6 @@ closed inventory 또는 path가 바뀌면 같은 proof occurrence가 아니다.
 
 | typed 증명군 | 유일 graph/proof 생산자 |
 | --- | --- |
-| `CaptureExclusionMoveOrder` | `OccurrenceExplanationAssembler.captureExclusionRecords`, backed directly by `CaptureExclusionMoveOrderProof.certifyDemanded` |
 | `RelocationEnablesRecapture` | `OccurrenceExplanationAssembler.relocationEnablesRecaptureRecords`, backed directly by `RelocationEnablesRecaptureProof.certifyDemanded` |
 
 각 가족의 private demand가 available root occurrences를 자기 lower facts로
@@ -151,7 +150,7 @@ player job의 현재 흐름은 다음과 같다.
    생산한다.
 4. 그 inventory를 참조하는 Assessment projection을 별도로 만든다.
 5. 상위 `ExplanationRequest`가 있으면 exact observed subject를 resolve한다.
-6. 두 가족의 유일 producer가 등록된 branch와 하부 inventory만 소비하여
+6. typed relation producer가 등록된 branch와 하부 inventory만 소비하여
    proof를 fail-closed로 생산한다.
 7. `OccurrenceRelationProof.fromRecord`가 각 typed graph record의 eligibility와
    exact subject ownership을 직접 확인한다. 별도 wrapper나 evidence owner를

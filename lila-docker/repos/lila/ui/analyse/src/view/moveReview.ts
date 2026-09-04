@@ -777,24 +777,15 @@ function renderClosures(
 
 function renderLaterConsumer(relation: MoveReviewOccurrenceRelation, copy: MoveReviewCopy): VNode {
   const labels = copy.structureLabels;
-  switch (relation.relationKind) {
-    case 'capture_exclusion_move_order':
-      return hl('section.move-review__later-consumer.move-review__typed-section', [
-        hl('h4', labels.laterConsumer),
-        renderFact(labels.afterStep, relation.proof.laterDeferredStepIndex + 1),
-        renderWitness(relation.proof.participants.deferredMove, copy),
-      ]);
-    case 'relocation_enables_recapture':
-      return hl('section.move-review__later-consumer.move-review__typed-section', [
-        hl('h4', labels.laterConsumer),
-        hl('h5', structureRoleLabel('relocated_target_capture', copy, labels.capture)),
-        renderFact(labels.move, relation.proof.targetCapture.moveUci, 'move'),
-        renderWitness(relation.proof.targetCapture.movement, copy),
-        hl('h5', structureRoleLabel('relocated_responder_recapture', copy, labels.reply)),
-        renderFact(labels.move, relation.proof.relocatedResponderRecapture.moveUci, 'move'),
-        renderWitness(relation.proof.relocatedResponderRecapture.movement, copy),
-      ]);
-  }
+  return hl('section.move-review__later-consumer.move-review__typed-section', [
+    hl('h4', labels.laterConsumer),
+    hl('h5', structureRoleLabel('relocated_target_capture', copy, labels.capture)),
+    renderFact(labels.move, relation.proof.targetCapture.moveUci, 'move'),
+    renderWitness(relation.proof.targetCapture.movement, copy),
+    hl('h5', structureRoleLabel('relocated_responder_recapture', copy, labels.reply)),
+    renderFact(labels.move, relation.proof.relocatedResponderRecapture.moveUci, 'move'),
+    renderWitness(relation.proof.relocatedResponderRecapture.movement, copy),
+  ]);
 }
 
 function renderOccurrenceProvenance(

@@ -56,120 +56,12 @@
         "BoundedCausalDependencyFingerprint"
       ],
       "producer_fixtures": [
-        "judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json",
         "judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json"
       ],
       "invariant": "Every path, dependency, closed-use, and typed relation identity consumes the canonical branch-role and contract keys; semantic proposition, occurrence, branch, move sequence, and lower-premise contents remain unchanged."
     }
   ],
   "contracts": [
-    {
-      "contract_kind": "CaptureExclusionMoveOrder",
-      "producer": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala",
-        "symbol": "OccurrenceExplanationAssembler",
-        "method": "captureExclusionRecords"
-      },
-      "proof_type": {
-        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
-        "symbol": "CaptureExclusionMoveOrderEvidence"
-      },
-      "wire": {
-        "relation_kind": "capture_exclusion_move_order",
-        "variant_definition": "captureExclusionOccurrenceRelation",
-        "proof_field": "proof",
-        "proof_definition": "occurrenceCaptureExclusionMoveOrderProof"
-      },
-      "audit_mapping": {
-        "sole_producer": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceExplanationAssembler.scala#OccurrenceExplanationAssembler.captureExclusionRecords",
-        "coordinate_piece_identity_proposition": {
-          "statement": "The identified vacating move removes the identified capture target before the identified deferred move; the immediate sibling plays that deferred move first and permits the identified reply actor to capture that same target.",
-          "wire_fields": ["participants", "vacating_move", "deferred_move", "capture_reply", "captured_target", "later_deferred_step_index"]
-        },
-        "lower_premises": {
-          "contracts": ["legal_move"],
-          "dynamic_id_fields": ["legal_move_semantic_id", "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids"],
-          "issuer_source_kinds": ["canonical LegalMove owner", "canonical source premise IDs"]
-        },
-        "closed_inventory": {
-          "issuers": ["position_relation_extractor.closed_relation_inventory", "position_relation_extractor.closed_position_state_inventory"],
-          "fields": ["semantic_proof_id", "query", "position"],
-          "certified_absence_or_state": ["capture_reply_absent", "vacated_target", "reply_actor", "deferred_actor"]
-        },
-        "branch_occurrence": {
-          "roles": ["vacating_then_deferred", "immediate_deferred_capture"],
-          "identity_fields": ["branch_id", "line_owner_evidence_id", "root_transition_evidence_id", "steps"],
-          "provenance_fields": ["root_provenance", "provenance"]
-        },
-        "proof_paths_transposition": {
-          "cardinality": "exactly_one_current_contract",
-          "identity_fields": ["semantic_id", "occurrence_id", "path_occurrence_id"],
-          "rule": "semantic_id may coincide after transposition; occurrence_id, branch owners, ordered steps, and path_occurrence_id do not merge"
-        },
-        "dependency_cache": {
-          "changed_dependencies": ["subject occurrence", "vacating and immediate branch owners and replays", "all LegalMove semantic and source IDs", "all target, actor, and absence IDs", "proof path occurrence IDs"],
-          "fingerprint_field": "dependency_fingerprint",
-          "cache_owner": "sole producer deterministic graph record; no separate public cache"
-        },
-        "consumers": {
-          "packet": "EvidenceBackedJudgmentPacket.occurrenceRelations",
-          "runtime_field": "occurrence_relations",
-          "schema_variant": "captureExclusionOccurrenceRelation",
-          "runtime_producer_tests": {
-            "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RuntimeProtocolTest.scala",
-            "cases": [
-              {
-                "name": "Scala producer matches the immutable occurrence-relation public-v6 fixture"
-              },
-              {
-                "name": "v6 commentary serializes the capture-exclusion occurrence relation"
-              }
-            ]
-          },
-          "direct_fixture": {
-            "file": "judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json",
-            "relation_kind": "capture_exclusion_move_order",
-            "producer_test_name": "Scala producer matches the immutable occurrence-relation public-v6 fixture"
-          },
-          "completed_through": "public schema, producer-based RuntimeProtocol test coverage, immutable Scala-produced fixture, and typed lila analyse decode/render coverage",
-          "ui_status": "completed",
-          "ui_owner": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts#projectOccurrenceRelations -> lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts#renderOccurrenceRelation",
-          "ui_required_fields": ["subject", "branches", "steps", "pieces", "closures", "proof_paths"]
-        },
-        "no_recomputation_owner": "The L2 producer joins canonical LegalMove occurrences and closed state/absence record IDs; it does not recalculate legal moves, capture maps, rays, or piece state."
-      },
-      "implementation_status": "current_exact_proof",
-      "reference_support": "exact_proposition_anchor",
-      "references": [
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
-            "pdf_page": 78
-          }
-        },
-        {
-          "support": "exact_proposition_anchor",
-          "locator": {
-            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
-            "pdf_page": 83
-          }
-        }
-      ],
-      "unsupported_claims": [
-        "best_plan",
-        "counterplay_value",
-        "general_prevention",
-        "generic_resource_exclusion",
-        "plan",
-        "preparation",
-        "sole_cause"
-      ],
-      "formal_test": {
-        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/CaptureExclusionMoveOrderTest.scala",
-        "symbol": "CaptureExclusionMoveOrderTest"
-      }
-    },
     {
       "contract_kind": "RelocationEnablesRecapture",
       "producer": {
@@ -348,8 +240,8 @@
       "transposition_occurrence": [
         "No transposition is needed for this bounded sibling proof."
       ],
-      "mapped_contracts": ["CaptureExclusionMoveOrder"],
-      "current_coverage_categories": ["current_exact_proof"]
+      "mapped_contracts": [],
+      "current_coverage_categories": ["l2_join_or_demand_gap"]
     },
     {
       "case_id": "najdorf-game-15",

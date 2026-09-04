@@ -25,7 +25,7 @@ FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 
 def _produced_occurrence_commentary(
-    fixture_name: str = "occurrence-relation-produced.json",
+    fixture_name: str = "relocation-enables-recapture-produced.json",
 ) -> dict[str, object]:
     produced = json.loads(
         (
@@ -47,7 +47,7 @@ def _produced_occurrence_commentary(
 
 
 def _produced_occurrence_relation(
-    fixture_name: str = "occurrence-relation-produced.json",
+    fixture_name: str = "relocation-enables-recapture-produced.json",
 ) -> dict[str, object]:
     commentary = _produced_occurrence_commentary(fixture_name)
     relations = commentary["occurrence_relations"]
@@ -107,17 +107,13 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            definitions["occurrenceRelation"]["oneOf"],
-            [
-                {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
-                {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"},
-            ],
+            definitions["occurrenceRelation"],
+            {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"},
         )
         serialized = json.dumps(definitions, sort_keys=True)
         self.assertNotIn("cause_evidence_id", serialized)
         for retired_definition in (
             "occurrenceExplanation",
-            "captureExclusionOccurrenceExplanation",
             "relocationEnablesRecaptureOccurrenceExplanation",
             "explanationSubjectOccurrence",
             "explanationSubjectPosition",
@@ -149,52 +145,37 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             with self.subTest(retired_field=retired_field), self.assertRaises(ContractError):
                 registry.validate_document(retired, move_path, label="retired explanation lane")
 
-    def test_occurrence_relation_contracts_are_closed_and_distinct(self) -> None:
+    def test_occurrence_relation_contract_is_closed(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
         definitions = registry.load(move_path)["$defs"]
-        contracts = {
-            "captureExclusionOccurrenceRelation": (
-                "capture_exclusion_move_order",
-                "occurrenceCaptureExclusionMoveOrderProof",
-            ),
-            "relocationEnablesRecaptureOccurrenceRelation": (
-                "relocation_enables_recapture",
-                "occurrenceRelocationEnablesRecaptureProof",
-            ),
-        }
-
-        for outer_name, (relation_kind, proof_definition) in contracts.items():
-            with self.subTest(contract=outer_name):
-                outer = definitions[outer_name]
-                self.assertFalse(outer["additionalProperties"])
-                self.assertEqual(
-                    set(outer["required"]),
-                    {
-                        "subject_occurrence",
-                        "relation_kind",
-                        "proof",
-                    },
-                )
-                self.assertEqual(
-                    outer["properties"]["relation_kind"], {"const": relation_kind}
-                )
-                self.assertEqual(
-                    outer["properties"]["proof"],
-                    {"$ref": f"#/$defs/{proof_definition}"},
-                )
-                proof = definitions[proof_definition]
-                self.assertFalse(proof["additionalProperties"])
-                self.assertTrue(
-                    {
-                        "source_evidence_id",
-                        "semantic_id",
-                        "occurrence_id",
-                        "dependency_fingerprint",
-                        "proof_paths",
-                    }.issubset(proof["required"])
-                )
-                self.assertNotIn("subject_occurrence", proof["properties"])
+        outer = definitions["relocationEnablesRecaptureOccurrenceRelation"]
+        self.assertFalse(outer["additionalProperties"])
+        self.assertEqual(
+            set(outer["required"]),
+            {"subject_occurrence", "relation_kind", "proof"},
+        )
+        self.assertEqual(
+            outer["properties"]["relation_kind"],
+            {"const": "relocation_enables_recapture"},
+        )
+        proof_definition = "occurrenceRelocationEnablesRecaptureProof"
+        self.assertEqual(
+            outer["properties"]["proof"],
+            {"$ref": f"#/$defs/{proof_definition}"},
+        )
+        proof = definitions[proof_definition]
+        self.assertFalse(proof["additionalProperties"])
+        self.assertTrue(
+            {
+                "source_evidence_id",
+                "semantic_id",
+                "occurrence_id",
+                "dependency_fingerprint",
+                "proof_paths",
+            }.issubset(proof["required"])
+        )
+        self.assertNotIn("subject_occurrence", proof["properties"])
 
     def test_relocation_producer_fixture_retains_complete_object_continuity(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
@@ -445,7 +426,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             lambda candidate: candidate["subject_occurrence"].update(
                 line_id="detached.line"
             ),
-            lambda candidate: candidate[proof_key]["vacating_branch"]["steps"][1].update(
+            lambda candidate: candidate[proof_key]["relocated_responder_branch"]["steps"][1].update(
                 fen_before=FEN
             ),
             lambda candidate: candidate[proof_key]["proof_paths"][0]["premises"][0].update(

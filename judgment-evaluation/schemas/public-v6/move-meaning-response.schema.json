@@ -322,26 +322,7 @@
       }
     },
     "occurrenceRelation": {
-      "oneOf": [
-        {"$ref": "#/$defs/captureExclusionOccurrenceRelation"},
-        {"$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"}
-      ]
-    },
-    "captureExclusionOccurrenceRelation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "subject_occurrence",
-        "relation_kind",
-        "proof"
-      ],
-      "properties": {
-        "subject_occurrence": {"$ref": "#/$defs/relationSubjectOccurrence"},
-        "relation_kind": {"const": "capture_exclusion_move_order"},
-        "proof": {
-          "$ref": "#/$defs/occurrenceCaptureExclusionMoveOrderProof"
-        }
-      }
+      "$ref": "#/$defs/relocationEnablesRecaptureOccurrenceRelation"
     },
     "relocationEnablesRecaptureOccurrenceRelation": {
       "type": "object",
@@ -390,58 +371,6 @@
       "properties": {
         "fen": {"$ref": "#/$defs/nonEmptyString"},
         "ply": {"type": "integer", "minimum": 0}
-      }
-    },
-    "occurrenceCaptureExclusionMoveOrderProof": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "source_evidence_id",
-        "semantic_id",
-        "occurrence_id",
-        "dependency_fingerprint",
-        "vacating_branch",
-        "immediate_capture_branch",
-        "proof_paths",
-        "participants",
-        "later_deferred_step_index"
-      ],
-      "properties": {
-        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "vacating_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/occurrenceRelationBranch"},
-            {
-              "properties": {
-                "branch_role": {"const": "vacating_then_deferred"},
-                "steps": {"minItems": 3}
-              }
-            }
-          ]
-        },
-        "immediate_capture_branch": {
-          "allOf": [
-            {"$ref": "#/$defs/occurrenceRelationBranch"},
-            {
-              "properties": {
-                "branch_role": {"const": "immediate_deferred_capture"},
-                "steps": {"minItems": 2, "maxItems": 2}
-              }
-            }
-          ]
-        },
-        "proof_paths": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/occurrenceCaptureExclusionProofPath"}
-        },
-        "participants": {"$ref": "#/$defs/occurrenceCaptureExclusionParticipants"},
-        "later_deferred_step_index": {"type": "integer", "minimum": 2}
       }
     },
     "occurrenceRelocationEnablesRecaptureProof": {
@@ -821,114 +750,6 @@
         "step_index": {"type": "integer", "minimum": 0}
       }
     },
-    "occurrenceCaptureExclusionProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses", "closed_state_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "vacating_move"}, "branch_role": {"const": "vacating_then_deferred"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "immediate_deferred_move"}, "branch_role": {"const": "immediate_deferred_capture"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
-                {"required": ["capture"], "properties": {"role": {"const": "immediate_capture_reply"}, "branch_role": {"const": "immediate_deferred_capture"}, "step_index": {"const": 1}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/occurrenceCaptureExclusionLegalMovePremiseUse"},
-                {"properties": {"role": {"const": "later_deferred_move"}, "branch_role": {"const": "vacating_then_deferred"}, "step_index": {"type": "integer", "minimum": 2}}}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "uniqueItems": true,
-          "items": {
-            "allOf": [
-              {"$ref": "#/$defs/occurrenceRelationClosureUse"},
-              {"properties": {
-                "role": {"const": "capture_reply_absent"},
-                "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
-                "query": {"type": "string", "pattern": "^legal-move-from-to:(white|black):[a-h][1-8]:[a-h][1-8]$"},
-                "branch_role": {"const": "vacating_then_deferred"}
-              }}
-            ]
-          }
-        },
-        "closed_state_uses": {
-          "type": "array",
-          "minItems": 8,
-          "uniqueItems": true,
-          "items": {
-            "allOf": [
-              {"$ref": "#/$defs/occurrenceRelationClosureUse"},
-              {"properties": {
-                "role": {"enum": ["vacated_target", "reply_actor", "deferred_actor"]},
-                "issuer": {"const": "position_relation_extractor.closed_position_state_inventory"},
-                "query": {"type": "string", "pattern": "^(vacant:[a-h][1-8]|occupied-by:(white|black):(pawn|knight|bishop|rook|queen|king)@[a-h][1-8])$"},
-                "branch_role": {"const": "vacating_then_deferred"}
-              }}
-            ]
-          }
-        }
-      }
-    },
-    "occurrenceCaptureExclusionLegalMovePremiseUse": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "role", "contract", "move_uci", "movement", "movement_mode", "legal_move_semantic_id",
-        "issuer_evidence_id", "issuer_occurrence_id", "source_premise_ids", "branch_id", "branch_role", "step_index"
-      ],
-      "properties": {
-        "role": {"enum": ["vacating_move", "immediate_deferred_move", "immediate_capture_reply", "later_deferred_move"]},
-        "contract": {"const": "legal_move"},
-        "move_uci": {"$ref": "#/$defs/uciMove"},
-        "movement": {"$ref": "#/$defs/boundedCausalMovement"},
-        "movement_mode": {"enum": ["controlled_destination", "pawn_advance", "pawn_double_advance", "castling"]},
-        "legal_move_semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
-        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "source_premise_ids": {
-          "type": "array", "minItems": 3, "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "branch_role": {"enum": ["vacating_then_deferred", "immediate_deferred_capture"]},
-        "step_index": {"type": "integer", "minimum": 0},
-        "capture": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["square", "piece", "side"],
-          "properties": {
-            "square": {"$ref": "#/$defs/square"},
-            "piece": {"$ref": "#/$defs/pieceRole"},
-            "side": {"$ref": "#/$defs/side"}
-          }
-        }
-      }
-    },
     "occurrenceRelationClosureUse": {
       "type": "object",
       "additionalProperties": false,
@@ -958,17 +779,6 @@
         "fen": {"$ref": "#/$defs/nonEmptyString"},
         "ply": {"type": "integer", "minimum": 1},
         "scope": {"const": "legal_line"}
-      }
-    },
-    "occurrenceCaptureExclusionParticipants": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["vacating_move", "deferred_move", "capture_reply", "captured_target"],
-      "properties": {
-        "vacating_move": {"$ref": "#/$defs/boundedCausalMovement"},
-        "deferred_move": {"$ref": "#/$defs/boundedCausalMovement"},
-        "capture_reply": {"$ref": "#/$defs/boundedCausalMovement"},
-        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"}
       }
     },
     "boundedCausalStep": {

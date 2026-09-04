@@ -66,10 +66,6 @@ object EvidenceSemanticAnchor:
   * upper grouping record decides whether it may survive or be projected.
   */
 enum OccurrenceRelationProof:
-  case CaptureExclusionMoveOrder(
-      override val source: EvidenceRef,
-      result: CaptureExclusionMoveOrderEvidence
-  )
   case RelocationEnablesRecapture(
       override val source: EvidenceRef,
       result: RelocationEnablesRecaptureEvidence
@@ -78,8 +74,6 @@ enum OccurrenceRelationProof:
 
   final def subjectOccurrence: ExplanationSubjectOccurrence =
     this match
-      case OccurrenceRelationProof.CaptureExclusionMoveOrder(_, result) =>
-        result.subjectOccurrence
       case OccurrenceRelationProof.RelocationEnablesRecapture(_, result) =>
         result.subjectOccurrence
 
@@ -96,8 +90,6 @@ object OccurrenceRelationProof:
       record: EvidenceRecord
   ): Option[OccurrenceRelationProof] =
     record match
-      case EvidenceRecord(ref, payload: CaptureExclusionMoveOrderEvidence, _) =>
-        Some(OccurrenceRelationProof.CaptureExclusionMoveOrder(ref, payload))
       case EvidenceRecord(ref, payload: RelocationEnablesRecaptureEvidence, _) =>
         Some(OccurrenceRelationProof.RelocationEnablesRecapture(ref, payload))
       case _ => None
@@ -1106,67 +1098,6 @@ sealed trait EvidencePayload
 private[chessjudgment] final case class PositionOccurrenceEvidence(
     occurrence: PositionOccurrenceState
 ) extends EvidencePayload
-
-/** Exact move-order occurrence where vacating an ordinary capture target
-  * excludes the immediate branch's capture reply before the same move
-  * is realized later. It does not assert prevention, bestness, or a plan.
-  */
-private[chessjudgment] final case class CaptureExclusionMoveOrderEvidence private[chessjudgment] (
-    semantic: CaptureExclusionMoveOrderSemanticProof,
-    occurrence: CaptureExclusionMoveOrderOccurrence,
-    subjectOccurrence: ExplanationSubjectOccurrence,
-    dependencyFingerprint: String,
-    private[chessjudgment] val occurrenceProof: CertifiedCaptureExclusionMoveOrder
-) extends EvidencePayload:
-  require(occurrence.semanticId == semantic.semanticId)
-  require(
-    dependencyFingerprint.matches("[0-9a-f]{64}"),
-    "capture-exclusion move order needs its complete dependency fingerprint"
-  )
-  def semanticId: String = semantic.semanticId
-  def occurrenceId: String = occurrence.occurrenceId
-  def dependencyId: String = dependencyFingerprint
-  def vacatingLine: LineNodeRef = occurrence.vacatingLine
-  def immediateLine: LineNodeRef = occurrence.immediateLine
-  def vacatingBranch: CausalBranchOccurrence = occurrence.vacatingBranch
-  def immediateBranch: CausalBranchOccurrence = occurrence.immediateBranch
-  def publicVacatingBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(vacatingBranch)
-  def publicImmediateBranch: BoundedCausalPublicBranch =
-    BoundedCausalPublicProjection.branch(immediateBranch)
-  def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
-  def publicProofPaths: List[BoundedCausalPublicProofPath] =
-    BoundedCausalPublicProjection.legalMovePaths(proofPaths)
-  def hasCompleteProofPaths: Boolean =
-    val deferredIndex = occurrence.laterDeferredStepIndex
-    proofPaths.size == 1 && proofPaths.forall(path =>
-        path.premiseUses.isEmpty && path.manifest.supplementalPremiseUses.size == 4 &&
-        path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse]) &&
-        path.closedAbsenceUses.size == 2 && path.closedStateUses.size == 3 * deferredIndex + 2
-    )
-  def vacatingMove: RelationMoveTransitionWitness = semantic.vacatingMove
-  def deferredMove: RelationMoveTransitionWitness = semantic.deferredMove
-  def captureReply: RelationMoveTransitionWitness = semantic.captureReply
-  def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
-  def laterDeferredStepIndex: Int = occurrence.laterDeferredStepIndex
-
-  private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
-    occurrenceProof.proves(record, this)
-
-  private[chessjudgment] def proofParentSources: List[EvidenceRef] =
-    occurrenceProof.parentSources
-
-  private[chessjudgment] def lowerRecordsAreCanonical(
-      byId: Map[String, EvidenceRecord]
-  ): Boolean =
-    occurrenceProof.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record))
-
-  private[chessjudgment] def consumesDependencies(
-      subject: CertifiedRootOccurrence,
-      vacating: CertifiedRootOccurrence,
-      immediate: CertifiedRootOccurrence
-  ): Boolean =
-    occurrenceProof.consumesDependencies(subject, vacating, immediate)
 
 /** Exact responder relocation that enables one exact immediate recapture
   * path. It does not assert uniqueness, force, preparation, overload, or a
@@ -2580,8 +2511,6 @@ final case class EvidenceRecord(
     payload match
       case lineFact: LineFactEvidence =>
         List(lineFact.line)
-      case payload: CaptureExclusionMoveOrderEvidence =>
-        List(payload.occurrence.vacatingLine, payload.occurrence.immediateLine)
       case payload: RelocationEnablesRecaptureEvidence =>
         List(payload.occurrence.relocatedLine, payload.occurrence.retainedLine)
       case CandidateLineEvaluationEvidence(payloadLine, _) =>
@@ -3009,9 +2938,6 @@ final class TypedEvidenceGraph private (
         case payload: StructuralDeltaEvidence =>
           structuralDeltaAncestryVerified(record, payload) &&
             payload.canonicalOutputShapeCertified
-        case payload: CaptureExclusionMoveOrderEvidence =>
-          exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
-            payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: RelocationEnablesRecaptureEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)

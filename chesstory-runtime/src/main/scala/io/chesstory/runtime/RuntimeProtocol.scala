@@ -287,12 +287,6 @@ object RuntimeProtocol:
     ): JsObject =
       val subject = proof.subjectOccurrence
       proof match
-        case proof: OccurrenceRelationProof.CaptureExclusionMoveOrder =>
-          Json.obj(
-            "subject_occurrence" -> relationSubjectJson(subject),
-            "relation_kind" -> "capture_exclusion_move_order",
-            "proof" -> captureExclusionMoveOrderProofJson(proof)
-          )
         case proof: OccurrenceRelationProof.RelocationEnablesRecapture =>
           Json.obj(
             "subject_occurrence" -> relationSubjectJson(subject),
@@ -453,28 +447,6 @@ object RuntimeProtocol:
           "ply" -> use.position.ply,
           "scope" -> evidenceScopeCode(use.scope)
         )
-      )
-
-    private def captureExclusionMoveOrderProofJson(
-        proof: OccurrenceRelationProof.CaptureExclusionMoveOrder
-    ): JsObject =
-      val source = proof.source
-      val result = proof.result
-      Json.obj(
-        "source_evidence_id" -> source.id,
-        "semantic_id" -> result.semanticId,
-        "occurrence_id" -> result.occurrenceId,
-        "dependency_fingerprint" -> result.dependencyId,
-        "vacating_branch" -> causalBranchJson(result.publicVacatingBranch),
-        "immediate_capture_branch" -> causalBranchJson(result.publicImmediateBranch),
-        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson),
-        "participants" -> Json.obj(
-          "vacating_move" -> movementWitnessJson(result.vacatingMove),
-          "deferred_move" -> movementWitnessJson(result.deferredMove),
-          "capture_reply" -> movementWitnessJson(result.captureReply),
-          "captured_target" -> coloredPieceWitnessJson(result.capturedTarget)
-        ),
-        "later_deferred_step_index" -> result.laterDeferredStepIndex
       )
 
     private def relocationEnablesRecaptureProofJson(

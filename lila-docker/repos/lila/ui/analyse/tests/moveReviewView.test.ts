@@ -28,10 +28,6 @@ const object = (value: unknown): JsonObject => value as JsonObject;
 const objects = (value: unknown): JsonObject[] => value as JsonObject[];
 
 const occurrenceFixtureUrl = new URL(
-  '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/occurrence-relation-produced.json',
-  import.meta.url,
-);
-const relocationFixtureUrl = new URL(
   '../../../../../../judgment-evaluation/fixtures/public-commentary-v6/relocation-enables-recapture-produced.json',
   import.meta.url,
 );
@@ -220,7 +216,7 @@ test('renders only the four v6 verdict symbols and their tones', () => {
   ];
   for (const [symbol, tone] of cases) {
     const panel = renderMoveReview(props({ job: completedWith(symbol) }));
-    assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /b2b4/);
+    assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /d7d5/);
     const notation = renderMoveReviewNotationBadge(symbol, symbol);
     if (!tone) assert.equal(notation, undefined);
     else {
@@ -235,13 +231,11 @@ test('keeps played, best, verdict, and metrics in the Assessment surface', () =>
   const copy = moveReviewCopy('en-US');
   const candidates = findNodes(panel, 'button.move-review__candidate');
   assert.equal(candidates.length, 2);
-  assert.ok(candidates.some(candidate => renderedText(candidate).includes(`${copy.best} d4d5`)));
-  assert.ok(candidates.some(candidate => renderedText(candidate).includes(`${copy.played} b2b4`)));
-  assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /Blunder/);
-  assert.match(renderedText(findNode(panel, 'dl.move-review__metrics')), /90\.1% → 50\.0%/);
-  assert.match(renderedText(panel), /-40\.1%p/);
-  const headlines = findNodes(panel, 'button.move-review__proof-entry-button').map(renderedText).join(' ');
-  assert.doesNotMatch(headlines, /capture_exclusion_move_order/);
+  assert.ok(candidates.some(candidate => renderedText(candidate).includes(`${copy.best} a8b8`)));
+  assert.ok(candidates.some(candidate => renderedText(candidate).includes(`${copy.played} d7d5`)));
+  assert.match(renderedText(findNode(panel, 'section.move-review__summary')), /Mistake/);
+  assert.match(renderedText(findNode(panel, 'dl.move-review__metrics')), /67\.6% → 50\.0%/);
+  assert.match(renderedText(panel), /-17\.6%p/);
 });
 
 test('renders the immutable BestChoice producer fixture with its runner-up', () => {
@@ -251,64 +245,8 @@ test('renders the immutable BestChoice producer fixture with its runner-up', () 
   assert.equal(findNodes(summary, 'span.move-review__verdict-badge').length, 0);
 });
 
-test('renders the producer occurrence relation as ordered typed paths and provenance-owned branches', () => {
-  const panel = renderMoveReview(
-    props({
-      view: { evidenceExpanded: true, expandedProofId: producerRelationId },
-    }),
-  );
-  const text = renderedText(panel);
-  assert.match(text, /Proof path 1/);
-  assert.match(text, /Premises/);
-  assert.match(text, /Closed absence/);
-  assert.match(text, /Closed state/);
-  assert.match(text, /Captured target/);
-  assert.match(text, /d4/);
-  assert.match(text, /b2b4/);
-  assert.match(text, /e5d4/);
-
-  assert.deepEqual(findNodes(panel, 'header.move-review__branch-header').map(renderedText), [
-    'Analyzed alternative d4d5',
-    'Actual move · Analysis continuation b2b4',
-  ]);
-  assert.deepEqual(findNodes(panel, 'span.move-review__proof-stage').map(renderedText), [
-    'Analyzed alternative',
-    'Analyzed alternative',
-    'Analyzed alternative',
-    'Analyzed alternative',
-    'Analyzed alternative',
-    'Actual move',
-    'Analysis continuation',
-  ]);
-  assert.deepEqual(
-    findNodes(panel, 'button.move-review__proof-entry-button').map(button =>
-      renderedText(findNode(button, 'strong')),
-    ),
-    ['Verified candidate line', moveReviewCopy('en-US').familyLabels.capture_exclusion_move_order],
-  );
-  assert.equal(findNodes(panel, 'section.move-review__participants.move-review__typed-section').length, 1);
-  assert.equal(findNodes(panel, 'section.move-review__participant').length, 4);
-  assert.equal(findNodes(panel, 'section.move-review__proof-path.move-review__typed-section').length, 1);
-  assert.equal(findNodes(panel, 'section.move-review__premise').length, 4);
-  assert.equal(findNodes(panel, 'section.move-review__closed-absence').length, 1);
-  assert.equal(findNodes(panel, 'section.move-review__closed-state').length, 1);
-  assert.equal(findNodes(panel, 'section.move-review__later-consumer.move-review__typed-section').length, 1);
-  const provenance = findNode(panel, 'details.move-review__provenance');
-  assert.equal(provenance.data?.attrs?.open, undefined);
-  const decodedRelation = verdictReview(completedJob).relations[0]!;
-  const visible = renderedTextWithout(panel, 'details.move-review__provenance');
-  assert.doesNotMatch(visible, /capture_exclusion_move_order|relationKind|sourceEvidenceId|capturedTarget/);
-  assert.doesNotMatch(visible, new RegExp(decodedRelation.proof.occurrenceId));
-  const provenanceText = renderedText(provenance);
-  assert.match(provenanceText, new RegExp(decodedRelation.proof.occurrenceId));
-  assert.match(provenanceText, /Relation source evidence ID/);
-  assert.match(provenanceText, new RegExp(decodedRelation.proof.sourceEvidenceId));
-  assert.doesNotMatch(provenanceText, /Cause evidence ID/);
-  assert.equal(findNodes(panel, 'div.cg-wrap.is2d').length, 2);
-});
-
 test('renders the Scala-produced relocation relation as continuity, branches, and board arrows', () => {
-  const job = completedFrom(fixture(relocationFixtureUrl));
+  const job = completedFrom(fixture());
   const review = verdictReview(job);
   const relation = review.relations[0]!;
   assert.equal(relation.relationKind, 'relocation_enables_recapture');
@@ -362,9 +300,7 @@ test('renders the Scala-produced relocation relation as continuity, branches, an
 test('omits a move stage when the transmitted step provenance is absent', () => {
   const job = structuredClone(completedJob);
   const relation = verdictReview(job).relations[0]!;
-  assert.equal(relation.relationKind, 'capture_exclusion_move_order');
-  if (relation.relationKind !== 'capture_exclusion_move_order') return;
-  delete (relation.proof.immediateCaptureBranch.steps[0] as { provenance?: unknown }).provenance;
+  delete (relation.proof.retainedResponderBranch.steps[0] as { provenance?: unknown }).provenance;
 
   const panel = renderMoveReview(
     props({ job, view: { evidenceExpanded: true, expandedProofId: relation.id } }),
@@ -372,7 +308,7 @@ test('omits a move stage when the transmitted step provenance is absent', () => 
   const stages = findNodes(panel, 'span.move-review__proof-stage').map(renderedText);
   assert.equal(stages.filter(stage => stage === 'Actual move').length, 0);
   assert.equal(stages.filter(stage => stage === 'Analyzed alternative').length, 5);
-  assert.equal(stages.filter(stage => stage === 'Analysis continuation').length, 1);
+  assert.equal(stages.filter(stage => stage === 'Analysis continuation').length, 2);
 });
 
 test('preserves multiple independent occurrence relations in wire order', () => {
@@ -392,8 +328,8 @@ test('preserves multiple independent occurrence relations in wire order', () => 
     ),
     [
       'Verified candidate line',
-      moveReviewCopy('en-US').familyLabels.capture_exclusion_move_order,
-      moveReviewCopy('en-US').familyLabels.capture_exclusion_move_order,
+      moveReviewCopy('en-US').familyLabels.relocation_enables_recapture,
+      moveReviewCopy('en-US').familyLabels.relocation_enables_recapture,
     ],
   );
   assert.deepEqual(
@@ -434,8 +370,8 @@ test('keeps proof navigation, mini-board frames, and Study actions intact', () =
     }),
   );
   const moves = findNodes(panel, 'button.move-review__proof-san');
-  assert.equal(renderedText(moves[0]!), 'd4d5');
-  assert.equal(renderedText(moves[1]!), 'c7c6');
+  assert.equal(renderedText(moves[0]!), 'e8c8');
+  assert.equal(renderedText(moves[1]!), 'a2a3');
   (moves[0]!.data?.on?.mouseenter as () => void)();
   (moves[1]!.data?.on?.click as () => void)();
   const add = findNodes(panel, 'button.button.button-thin.move-review__add');
@@ -446,7 +382,7 @@ test('keeps proof navigation, mini-board frames, and Study actions intact', () =
     `pin:${producerFirstBranchProofId}:2`,
     `add:${producerFirstBranchProofId}`,
   ]);
-  assert.deepEqual(renderedBoardConfig(panel).lastMove, ['d4', 'd5']);
+  assert.deepEqual(renderedBoardConfig(panel).lastMove, ['e8', 'c8']);
 
   const pinned = renderMoveReview(
     props({
@@ -457,8 +393,8 @@ test('keeps proof navigation, mini-board frames, and Study actions intact', () =
       },
     }),
   );
-  assert.match(renderedText(findNode(pinned, 'figcaption')), /Step 2: c7c6/);
-  assert.deepEqual(renderedBoardConfig(pinned).lastMove, ['c7', 'c6']);
+  assert.match(renderedText(findNode(pinned, 'figcaption')), /Step 2: a2a3/);
+  assert.deepEqual(renderedBoardConfig(pinned).lastMove, ['a2', 'a3']);
 });
 
 test('preserves certified proof annotations on candidate mini-boards', () => {
@@ -503,17 +439,15 @@ test('limits Korean relation copy to finite structural labels', () => {
   );
   const text = renderedText(panel);
   assert.match(text, /근거 경로 1/);
-  assert.match(text, /분석 대안 d4d5/);
-  assert.match(text, /실제 수 · 분석 후속 b2b4/);
+  assert.match(text, /분석 대안 e8c8/);
+  assert.match(text, /실제 수 · 분석 후속 d7d5/);
   assert.match(text, /전제/);
   assert.match(text, /폐쇄 부재/);
   assert.match(text, /폐쇄 상태/);
   assert.deepEqual(moveReviewCopy('ko-KR').familyLabels, {
-    capture_exclusion_move_order: '포획 응수를 배제한 수순',
     relocation_enables_recapture: '기물 이동으로 가능해진 재포획',
   });
   assert.deepEqual(moveReviewCopy('en-US').familyLabels, {
-    capture_exclusion_move_order: 'Move order excluding the capture reply',
     relocation_enables_recapture: 'Recapture enabled by relocation',
   });
   assert.equal('dependency' in moveReviewCopy('ko-KR').structureLabels, false);
@@ -560,8 +494,8 @@ test('falls back to the first certified frame when a pinned frame is stale', () 
       },
     }),
   );
-  assert.match(renderedText(findNode(panel, 'figcaption')), /Step 1: b2b4/);
-  assert.deepEqual(renderedBoardConfig(panel).lastMove, ['b2', 'b4']);
+  assert.match(renderedText(findNode(panel, 'figcaption')), /Step 1: d7d5/);
+  assert.deepEqual(renderedBoardConfig(panel).lastMove, ['d7', 'd5']);
 });
 
 test('offers the added Study line without duplicating its add action', () => {
@@ -587,7 +521,7 @@ test('keeps forced and position-action outcomes separate from occurrence relatio
   const candidate = forced.snapshot.evidence.candidates.find(item => item.roles.includes('played'))!;
   candidate.review = {
     kind: 'forced-single-move',
-    lineUcis: [playedUci, 'e5d4' as Uci],
+    lineUcis: [playedUci, 'e5d6' as Uci],
     terminal: { kind: 'checkmate', winner: 'black' },
   };
   const forcedPanel = renderMoveReview(props({ job: forced, view: { evidenceExpanded: true } }));

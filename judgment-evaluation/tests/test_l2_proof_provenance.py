@@ -294,9 +294,10 @@ class L2ProofProvenanceTest(unittest.TestCase):
 
         definitions = self.schema["$defs"]
         union_name = self.manifest["host"]["schema"]["union_definition"]
+        union = definitions[union_name]
         union_targets = {
             item["$ref"].removeprefix("#/$defs/")
-            for item in definitions[union_name]["oneOf"]
+            for item in union.get("oneOf", [union])
         }
         self.assertEqual(
             union_targets,
@@ -359,14 +360,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
     def test_every_contract_answers_the_nine_authority_questions(self) -> None:
         definitions = self.schema["$defs"]
         host = self.manifest["host"]
-        self.assertEqual(
-            [
-                contract["contract_kind"]
-                for contract in self.contracts
-                if "direct_fixture" in contract["audit_mapping"]["consumers"]
-            ],
-            ["CaptureExclusionMoveOrder", "RelocationEnablesRecapture"],
-        )
         for contract in self.contracts:
             audit = contract["audit_mapping"]
             producer = contract["producer"]
@@ -727,6 +720,12 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertEqual(passed_pawn["mapped_contracts"], [])
         self.assertEqual(passed_pawn["current_coverage_categories"], ["lower_fact_gap"])
 
+        l_ami = ledger_by_id["ruy-lopez-game-12"]
+        self.assertEqual(l_ami["mapped_contracts"], [])
+        self.assertEqual(
+            l_ami["current_coverage_categories"], ["l2_join_or_demand_gap"]
+        )
+
         ruy_game_15 = ledger_by_id["ruy-lopez-game-15"]
         self.assertEqual(ruy_game_15["occurrence_evidence"], "exact")
         self.assertEqual(ruy_game_15["causal_proposition_support"], "exact")
@@ -812,7 +811,6 @@ class L2ProofProvenanceTest(unittest.TestCase):
         self.assertEqual(
             exact_cases,
             {
-                "ruy-lopez-game-12",
                 "najdorf-game-16",
                 "ai-revolution-recapture-relocation",
                 "beating-najdorf-qe2-recapture-relocation",

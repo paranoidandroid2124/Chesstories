@@ -13,40 +13,7 @@ private[chessjudgment] object OccurrenceExplanationAssembler:
       demand: OccurrenceExplanationDemand
   ): JudgmentAssemblyContext =
     context.withEvidence(
-      captureExclusionRecords(allocator, demand) ++
-        relocationEnablesRecaptureRecords(allocator, demand)
-    )
-
-  private def captureExclusionRecords(
-      allocator: JudgmentProvenanceAllocator,
-      demand: OccurrenceExplanationDemand
-  ): List[EvidenceRecord] =
-    val certified = CaptureExclusionProofDemand.from(demand).flatMap { exactDemand =>
-      CaptureExclusionMoveOrderProof.certifyDemanded(
-        exactDemand.subject,
-        exactDemand.vacatingBranch,
-        exactDemand.immediateBranch,
-        exactDemand.occurrences
-      )
-    }
-    occurrenceProofRecords(
-      family = BoundedCausalContractKind.CaptureExclusionMoveOrder,
-      allocator = allocator,
-      subject = demand.subject
-    )(certified)(
-      semanticId = _.semantic.semanticId,
-      occurrenceId = _.occurrence.occurrenceId,
-      dependencyId = _.dependency.value,
-      proofPathIds = _.occurrence.proofPaths.map(_.pathOccurrenceId),
-      parentSources = _.parentSources,
-      payload = exact =>
-        CaptureExclusionMoveOrderEvidence(
-          exact.semantic,
-          exact.occurrence,
-          demand.subject.publicOccurrence,
-          exact.dependency.value,
-          exact
-        )
+      relocationEnablesRecaptureRecords(allocator, demand)
     )
 
   private def relocationEnablesRecaptureRecords(
