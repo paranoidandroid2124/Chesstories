@@ -195,6 +195,36 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assert(responseInventories.nonEmpty)
     assert(responseInventories.forall(assembled.evidenceGraph.proofEligible))
 
+    val removed = freshChecks.head
+    val carrierRecord = removed.parents.flatMap(assembled.evidenceGraph.record).collect {
+      case record @ EvidenceRecord(_, _: ClosedRelationOccurrenceEvidence, _) => record
+    } match
+      case carrier :: Nil => carrier
+      case carriers       => fail(s"expected one closed relation occurrence, found ${carriers.size}")
+    val carrierOutputs = assembled.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, relation: RelationFactEvidence, parents)
+          if parents.contains(carrierRecord.ref) => record -> relation
+    }
+    val lower = carrierOutputs.collectFirst {
+      case (record, relation) if relation.proofStage == RelationProofStage.TransitionFact => record
+    }.getOrElse(fail("expected a transition fact on the double-check occurrence"))
+    assert(!assembled.evidenceGraph.parentClosure(lower).exists(_.ref == removed.ref))
+
+    val withoutDerived = TypedEvidenceGraph.empty.addAll(
+      assembled.evidenceGraph.records.filterNot(_.ref == removed.ref)
+    )
+    val independentSiblings = carrierOutputs
+      .map(_._1)
+      .filterNot(_.ref == removed.ref)
+      .flatMap(record => withoutDerived.record(record.ref))
+      .filterNot(_.parents.contains(removed.ref))
+
+    assert(independentSiblings.exists(_.ref == lower.ref))
+    assert(withoutDerived.proofEligible(withoutDerived.record(carrierRecord.ref).getOrElse(
+      fail("expected the transition occurrence to survive removal of one output")
+    )))
+    assert(independentSiblings.forall(withoutDerived.proofEligible))
+
   test("a root check response binds the transition carrier and chosen legal response once"):
     val assembled = EvidenceFactAssembler
       .assemble(

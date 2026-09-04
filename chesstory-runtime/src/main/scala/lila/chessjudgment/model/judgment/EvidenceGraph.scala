@@ -1715,9 +1715,6 @@ final class ClosedRelationOccurrenceEvidence private (
   private[chessjudgment] def outputFor(result: EvidenceRef): Option[ClosedRelationOutputBinding] =
     outputsByEvidenceId.get(result.id).filter(_.result == result)
 
-  private[chessjudgment] def outputs: List[ClosedRelationOutputBinding] =
-    outputsByEvidenceId.values.toList.sortBy(_.result.id)
-
 private[judgment] object ClosedRelationOccurrenceEvidence:
   def certified(
       edge: MoveTransitionEdge,
@@ -2846,15 +2843,6 @@ final class TypedEvidenceGraph private (
               EvidenceRef.sameMove(payload.lineOwner.rootMove, payload.edge.moveUci) &&
               occurrenceIndex.contains(0)
       }
-    val exactOutputs = payload.outputs.forall(binding =>
-      byId.get(binding.result.id).exists {
-        case EvidenceRecord(ref, relation: RelationFactEvidence, parents) =>
-          ref == binding.result && relation == binding.relation &&
-            parents.size == binding.sources.size + 1 &&
-            parents.toSet == (record.ref :: binding.sources).toSet
-        case _ => false
-      }
-    )
     record.ref.producer == EvidenceProducer.RelationProducer &&
       record.ref.layer == EvidenceLayer.Relation &&
       record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
@@ -2863,7 +2851,7 @@ final class TypedEvidenceGraph private (
       record.ref.scope == payload.scope &&
       record.parents.size == expectedParents.size &&
       record.parents.toSet == expectedParents.toSet &&
-      exactTransition && exactLine && exactOutputs
+      exactTransition && exactLine
 
   private def exactCanonicalRelationSource(source: EvidenceRef): Boolean =
     byId.get(source.id).exists(sourceRecord =>
