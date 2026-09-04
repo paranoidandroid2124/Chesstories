@@ -178,13 +178,15 @@ object LegalLineAssembler:
       root: PositionNodeRef,
       rootAnalysis: lila.chessjudgment.analysis.position.PositionAnalysis,
       positionHistory: CanonicalPositionHistory,
+      predecessorReplay: Option[CanonicalLineReplay],
       allocator: JudgmentProvenanceAllocator
   ): Option[LegalLineAssembly] =
     val scope = EvidenceScope.LegalLine
     val occurrenceKey = allocator.lineOccurrenceKey(line, root)
     val ref = allocator.lineRef(line, occurrenceKey)
-    line.replay.rootedAt(rootAnalysis).map(line -> _)
-      .flatMap { case (line, replay) => replayFacts(line, replay, root, positionHistory) }
+    line.replay
+      .rootedAt(rootAnalysis)
+      .flatMap(replay => replayFacts(replay, root, positionHistory, predecessorReplay))
       .map { replayed =>
       val facts = replayed.facts
       val lineEvidence =
@@ -206,17 +208,16 @@ object LegalLineAssembler:
           replay = replayed.replay,
           position = root,
           scope = scope,
-          materialSummary = replayed.materialSummary,
-          predecessorReplay = line.predecessorReplay
+          materialSummary = replayed.materialSummary
         )
       LegalLineAssembly(node, List(lineRecord), replayed.replay)
     }
 
   private def replayFacts(
-      line: AdmittedLegalLine,
       replay: CanonicalLineReplay,
       root: PositionNodeRef,
-      positionHistory: CanonicalPositionHistory
+      positionHistory: CanonicalPositionHistory,
+      predecessorReplay: Option[CanonicalLineReplay]
   ): Option[ReplayedLineFacts] =
     val replaySteps = replay.replaySteps
     Option.when(
@@ -239,7 +240,7 @@ object LegalLineAssembler:
           continuationTail = moves.drop(3)
         ),
         replay = replay,
-        materialSummary = lineMaterialSummary(positionHistory, replay, line.predecessorReplay)
+        materialSummary = lineMaterialSummary(positionHistory, replay, predecessorReplay)
       )
     }
 
@@ -544,6 +545,7 @@ object NodeLineTransitionAssembler:
   /** The sole node/line/transition assembly implementation for admitted review input. */
   def assemble(input: AdmittedMoveReviewInput): Option[JudgmentAssemblyContext] =
     val allocator = JudgmentProvenanceAllocator.forInput(input)
+    val predecessorReplay = CanonicalLineReplay.fromHistory(input.positionHistory.segmentReplaySteps)
     for
       playedLine <- input.playedRootLineOwner
       playedReplayStep <- playedLine.replay.replaySteps.headOption
@@ -574,6 +576,7 @@ object NodeLineTransitionAssembler:
             before.node.ref,
             beforeAnalysis,
             input.positionHistory,
+            predecessorReplay,
             allocator
           )
         )

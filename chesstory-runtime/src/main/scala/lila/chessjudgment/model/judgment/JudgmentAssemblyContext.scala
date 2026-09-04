@@ -6,8 +6,7 @@ import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositio
 
 final case class AdmittedLegalLine(
     rootMove: String,
-    replay: CanonicalLineReplay,
-    predecessorReplay: Option[CanonicalLineReplay] = None
+    replay: CanonicalLineReplay
 ):
   require(rootMove.nonEmpty, "an admitted LegalLine needs its canonical root move")
   require(

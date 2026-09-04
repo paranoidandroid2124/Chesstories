@@ -6,9 +6,16 @@ import lila.chessjudgment.model.line.{
   AutomaticTerminal,
   CandidateLineEvaluation,
   CanonicalPositionHistory,
+  PositionRuleAssessment,
   PreInitialHistoryKnowledge
 }
 import lila.chessjudgment.model.line.EngineLine
+import lila.chessjudgment.model.judgment.{
+  EvidenceRecord,
+  EvidenceRef,
+  LineFactEvidence,
+  LineMaterialRecaptureStatus
+}
 
 class HistoryTerminalContinuityTest extends munit.FunSuite:
 
@@ -117,3 +124,51 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
 
     assertEquals(knownPredecessor.preInitialHistoryKnowledge, PreInitialHistoryKnowledge.KnownEmpty)
     assert(immediateSummary.captures.headOption.exists(_.recapture))
+
+  test("focused production preserves an immediate recapture from nonempty history"):
+    val currentFen = "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2"
+    val history = CanonicalPositionHistory
+      .from(Standard.initialFen.value, List("e2e4", "d7d5", "e4d5"), currentFen)
+      .toOption
+      .getOrElse(fail("expected the exact played occurrence history"))
+    val rootEvaluations = List(
+      EngineLine(List("d8d5", "b1c3"), -30, None, 16),
+      EngineLine(List("g8f6", "b1c3"), 20, None, 16)
+    ).map { line =>
+      val evaluation = CandidateLineEvaluation.EngineSearch(line)
+      history
+        .admitToFirstAutomaticTerminal(line.moves)
+        .toOption
+        .flatMap(_.bind(evaluation))
+        .getOrElse(fail(s"expected focused admission for ${line.moves.head}"))
+    }
+    val resultingFen = history
+      .extend(List("d8d5"))
+      .toOption
+      .map(_.currentFen)
+      .getOrElse(fail("expected the played recapture position"))
+    val review = MoveReviewInputAdmission
+      .prepareFocusedMoveReview(
+        history,
+        "d8d5",
+        resultingFen,
+        PositionRuleAssessment.assess(history),
+        rootEvaluations,
+        Nil
+      ) match
+      case Some(PreparedFocusedPositionCommentary.MoveReview(value)) => value
+      case other => fail(s"expected a focused move review, got $other")
+    val execution = MoveReviewJudgmentOrchestrator
+      .executePreparedReview(review.preparedInput)
+      .getOrElse(fail("expected the focused production review to assemble"))
+    val lineFact = execution.assembly.evidenceGraph.records.collect {
+      case EvidenceRecord(_, payload: LineFactEvidence, _)
+          if payload.rootMove.exists(EvidenceRef.sameMove(_, "d8d5")) => payload
+    } match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one recapture line fact, got ${other.size}")
+    val recapture = lineFact.materialCaptures
+      .find(capture => capture.plyOffset == 0 && EvidenceRef.sameMove(capture.moveUci, "d8d5"))
+      .getOrElse(fail("expected the root capture material fact"))
+
+    assert(recapture.recaptureStatus.isInstanceOf[LineMaterialRecaptureStatus.Proven])

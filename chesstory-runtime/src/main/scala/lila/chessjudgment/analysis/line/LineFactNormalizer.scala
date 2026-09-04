@@ -16,7 +16,6 @@ object LineFactNormalizer:
       position: PositionNodeRef,
       scope: EvidenceScope,
       materialSummary: Option[LineMaterialSummary] = None,
-      predecessorReplay: Option[CanonicalLineReplay] = None,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val events = lineEvents(facts, replay, materialSummary)
@@ -36,8 +35,7 @@ object LineFactNormalizer:
       material = materialSummary,
       replay = replay,
       events = events,
-      consequences = consequences,
-      predecessorReplay = predecessorReplay
+      consequences = consequences
     )
     EvidenceRecord(
       ref = ref,

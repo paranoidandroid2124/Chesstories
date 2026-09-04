@@ -27,6 +27,31 @@
       ]
     },
     {
+      "case_id": "karpov-nunn-occurrence-role-succession",
+      "locators": [
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 165},
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 166},
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 167},
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 168},
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 169},
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 170},
+        {"document_id": "ref-03c77bd9c6c6ae987e07067822fd63b", "pdf_page": 171}
+      ],
+      "source_context": "Karpov-Nunn, Amsterdam 1985",
+      "occurrence_evidence": "exact",
+      "observations": [
+        "White's d5 control is tested across a long knight reroute, forced exchanges, and a later rook occupation; the role persists while its carrier changes.",
+        "After 13...Rfd8 the rook stands on d8 and the immediate ...Ng4 chase loses material; the note contrasts this with an analogous line in which 13...Rfe8 leaves a different current board state.",
+        "The bishop returns to e3 after a triangulation, but intervening rook and bishop moves make the later position and exchange offer a different occurrence.",
+        "The g2 bishop receives a new job after the exchange sequence and later joins the queen on the light squares."
+      ],
+      "architectural_limits": [
+        "Repeated piece-square notation does not by itself establish position repetition, semantic equality, or one shared history occurrence.",
+        "This game does not support assigning the d5 role exclusively to one piece or one forward episode because its carrier changes.",
+        "The ...Ng4 comparison supports checking the exact current board facts; it does not establish a hidden history-dependent tactic."
+      ]
+    },
+    {
       "case_id": "ruy-lopez-game-12",
       "locators": [
         {"document_id": "ref-b6054fc614ae9d9c17933ce856013081", "pdf_page": 78},

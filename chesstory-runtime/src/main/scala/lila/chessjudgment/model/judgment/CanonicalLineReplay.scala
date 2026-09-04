@@ -734,64 +734,6 @@ private[chessjudgment] object CanonicalLineReplay:
       new CanonicalLineReplay(replay, legal)
     }
 
-  def continueFromHistory(
-      prefix: CanonicalLineReplay,
-      steps: List[CanonicalPositionHistoryStep]
-  ): Option[CanonicalLineReplay] =
-    val declared = steps.map { step =>
-      LineReplayStep(
-        ply = step.ply,
-        moveUci = PrincipalVariationEvidence.normalizeUci(step.uci),
-        fenBefore = step.beforeFen,
-        fenAfter = step.afterFen
-      )
-    }
-    val legal = steps.map { step =>
-      LegalReplayStep(
-        ply = step.ply,
-        uci = PrincipalVariationEvidence.normalizeUci(step.uci),
-        before = step.before,
-        move = step.move,
-        after = step.after,
-        capturedRole = step.capturedRole
-      )
-    }
-    Option.when(steps.nonEmpty)(()).flatMap { _ =>
-      declared.zip(legal).foldLeft(Option(prefix)) {
-        case (Some(replay), (nextDeclared, nextLegal)) => append(replay, nextDeclared, nextLegal)
-        case (None, _)                                 => None
-      }.flatMap(_.subset(declared))
-    }
-
-  private def append(
-      prefix: CanonicalLineReplay,
-      step: LineReplayStep,
-      legal: LegalReplayStep
-  ): Option[CanonicalLineReplay] =
-    for
-      previousReplayStep <- prefix.replaySteps.lastOption
-      previousLegalStep <- prefix.legalSteps.lastOption
-      previousAnalysis <- prefix.analysisAfter(previousReplayStep)
-      if step.ply == previousReplayStep.ply + 1
-      if legal.ply == step.ply
-      if EvidenceRef.sameMove(step.moveUci, legal.uci)
-      if previousLegalStep.after == legal.before
-      if PrincipalVariationEvidence.sameBoardState(step.fenBefore, Fen.write(previousLegalStep.after).value)
-      if PrincipalVariationEvidence.sameBoardState(step.fenBefore, Fen.write(legal.before).value)
-      if PrincipalVariationEvidence.sameBoardState(step.fenAfter, Fen.write(legal.after).value)
-    yield
-      lazy val afterAnalysis = PositionAnalyzer.analyzeAfter(previousAnalysis, legal, step.fenAfter)
-      val appendedAnalysis = LazyList(afterAnalysis)
-      val appendedTransition = LazyList(
-        CanonicalReplayTransition.fresh(step, legal, previousAnalysis, afterAnalysis)
-      )
-      new CanonicalLineReplay(
-        prefix.replaySteps :+ step,
-        prefix.legalSteps :+ legal,
-        Some(prefix.occurrenceAnalyses ++ appendedAnalysis),
-        Some(prefix.transitionOccurrences ++ appendedTransition)
-      )
-
 /** One admitted legal move bound to one structural transition occurrence.
   * Consumers compare this certificate with the declared transition instead
   * of replaying the same move again.

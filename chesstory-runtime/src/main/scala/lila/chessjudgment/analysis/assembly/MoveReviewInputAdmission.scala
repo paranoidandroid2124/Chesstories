@@ -373,8 +373,7 @@ object MoveReviewInputAdmission:
 
   private def admitEvaluation(
       history: CanonicalPositionHistory,
-      rawEvaluation: CandidateLineEvaluation,
-      predecessorReplay: Option[CanonicalLineReplay] = None
+      rawEvaluation: CandidateLineEvaluation
   ): Option[AdmittedEvaluation] =
     val normalized = normalizedEvaluation(rawEvaluation)
     for
@@ -393,19 +392,16 @@ object MoveReviewInputAdmission:
               continuation.automaticTerminal.contains(terminal)
           )(exact)
       admission <- continuation.bind(evaluation)
-      materialized <- materializeAdmission(history, admission, predecessorReplay)
+      materialized <- materializeAdmission(history, admission)
     yield materialized
 
   private def materializeAdmission(
       history: CanonicalPositionHistory,
-      admission: AdmittedCandidateLine,
-      predecessorReplay: Option[CanonicalLineReplay] = None
+      admission: AdmittedCandidateLine
   ): Option[AdmittedEvaluation] =
     for
       steps <- admission.continuationAfter(history)
-      replay <- predecessorReplay match
-        case Some(predecessor) => CanonicalLineReplay.continueFromHistory(predecessor, steps)
-        case None              => CanonicalLineReplay.fromHistory(steps)
+      replay <- CanonicalLineReplay.fromHistory(steps)
     yield AdmittedEvaluation(admission.evaluation, replay, admission.automaticTerminal)
 
   private def focusedDrawClaims(

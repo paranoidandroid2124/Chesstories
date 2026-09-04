@@ -1320,8 +1320,7 @@ final case class LineFactEvidence private[chessjudgment] (
     private val replay: List[LineReplayStep] = Nil,
     private val events: List[LineMoveEvent] = Nil,
     private val consequences: List[LineConsequence] = Nil,
-    private[chessjudgment] val canonicalReplay: Option[CanonicalLineReplay] = None,
-    private[chessjudgment] val canonicalPredecessorReplay: Option[CanonicalLineReplay] = None
+    private[chessjudgment] val canonicalReplay: Option[CanonicalLineReplay] = None
 ) extends EvidencePayload:
   def rootMove: Option[String] =
     replay.headOption.map(_.moveUci)
@@ -1379,8 +1378,7 @@ object LineFactEvidence:
       replay: CanonicalLineReplay,
       material: Option[LineMaterialSummary] = None,
       events: List[LineMoveEvent] = Nil,
-      consequences: List[LineConsequence] = Nil,
-      predecessorReplay: Option[CanonicalLineReplay] = None
+      consequences: List[LineConsequence] = Nil
   ): LineFactEvidence =
     require(
       replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, line.rootMove)),
@@ -1403,8 +1401,7 @@ object LineFactEvidence:
       replay = replay.replaySteps,
       events = events,
       consequences = consequences,
-      canonicalReplay = Some(replay),
-      canonicalPredecessorReplay = predecessorReplay
+      canonicalReplay = Some(replay)
     )
 
 final case class CandidateLineEvaluationEvidence(
