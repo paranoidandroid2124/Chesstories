@@ -9,6 +9,7 @@ import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath
 import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
 import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionRelationExtractor }
 import lila.chessjudgment.model.position.{
+  BoardMoveEffect,
   BoardPieceTransition,
   BoardTransitionFootprint,
   PositionOccurrenceState
@@ -1791,7 +1792,12 @@ final case class MoveTransitionEvidence private[chessjudgment] (
     from: PositionNodeRef,
     to: PositionNodeRef,
     private[chessjudgment] val canonicalTransitionProof: Option[CanonicalTransitionProof]
-) extends EvidencePayload
+) extends EvidencePayload:
+  private[chessjudgment] def movement: Option[RelationMoveTransitionWitness] =
+    canonicalTransitionProof.map(_.rootMovement.witness)
+
+  private[chessjudgment] def moveEffect: Option[BoardMoveEffect] =
+    canonicalTransitionProof.map(_.moveEffect)
 
 /** Typed chess objects carried by structural consequences.
   * `label` is a one-way presentation projection; no proof code may recover
@@ -1800,7 +1806,6 @@ final case class MoveTransitionEvidence private[chessjudgment] (
 enum StructuralSubject:
   case OpenFile(file: EvidenceFile)
   case SemiOpenFile(side: Color, file: EvidenceFile)
-  case PieceAt(side: Color, role: EvidencePieceRole, square: EvidenceSquare)
   case PawnTensionCreated(side: Color, from: EvidenceSquare, to: EvidenceSquare)
   case PawnTensionResolved(side: Color, from: EvidenceSquare, to: EvidenceSquare)
   case PassedPawnCreated(side: Color, square: EvidenceSquare)
@@ -1815,8 +1820,6 @@ enum StructuralSubject:
     this match
       case OpenFile(file) => s"open-file:${file.key.toLowerCase}"
       case SemiOpenFile(side, file) => s"semi-open-file:${side.toString.toLowerCase}:${file.key.toLowerCase}"
-      case PieceAt(side, role, square) =>
-        s"piece-at:${side.toString.toLowerCase}:${role.name.toLowerCase}:${square.key.toLowerCase}"
       case PawnTensionCreated(side, from, to) =>
         s"created-tension:${side.toString.toLowerCase}:${from.key.toLowerCase}-${to.key.toLowerCase}"
       case PawnTensionResolved(side, from, to) =>
@@ -1835,7 +1838,6 @@ enum StructuralSubject:
   def semanticSquares: List[EvidenceSquare] =
     this match
       case OpenFile(_) | SemiOpenFile(_, _) => Nil
-      case PieceAt(_, _, square) => List(square)
       case PawnTensionCreated(_, from, to) => List(from, to)
       case PawnTensionResolved(_, from, to) => List(from, to)
       case PassedPawnCreated(_, square) => List(square)
@@ -1847,7 +1849,6 @@ enum StructuralSubject:
   def targetSquares: List[EvidenceSquare] =
     this match
       case OpenFile(_) | SemiOpenFile(_, _) => Nil
-      case PieceAt(_, _, square) => List(square)
       case PawnTensionCreated(_, from, to) => List(from, to)
       case PawnTensionResolved(_, from, to) => List(from, to)
       case PassedPawnCreated(_, square) => List(square)
@@ -1868,7 +1869,6 @@ object StructuralSubject:
     subject match
       case OpenFile(file) => key("open-file", file.key)
       case SemiOpenFile(side, file) => key("semi-open-file", side.toString, file.key)
-      case PieceAt(side, role, square) => key("piece-at", side.toString, role.name, square.key)
       case PawnTensionCreated(side, from, to) => key("pawn-tension-created", side.toString, from.key, to.key)
       case PawnTensionResolved(side, from, to) => key("pawn-tension-resolved", side.toString, from.key, to.key)
       case PassedPawnCreated(side, square) => key("passed-pawn-created", side.toString, square.key)
@@ -2546,12 +2546,6 @@ final case class StructuralDeltaEvidence(
     consequences.exists(consequence => StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, category))
   private[chessjudgment] def transitionIsCertified: Boolean =
     certifiedTransitionProof.nonEmpty
-  private[chessjudgment] def certifiedRootStep: Option[LegalReplayStep] =
-    certifiedTransitionProof.map(_.rootStep)
-  private[chessjudgment] def certifiedRootMovement: Option[CanonicalRootLegalMove] =
-    certifiedTransitionProof.map(_.rootMovement)
-  private[chessjudgment] def certifiedRootResponseMoves: Option[List[String]] =
-    certifiedTransitionProof.map(_.legalResponseMoves)
 object StructuralDeltaEvidence:
   import TransitionConsequenceKind.*
   import TransitionConsequenceCategory.*
@@ -2623,42 +2617,6 @@ object EvidenceRecord:
 
   def hasRootCaptureEvent(records: List[EvidenceRecord], rootMove: String): Boolean =
     rootCaptureRecords(records, rootMove).nonEmpty
-
-/** Exact graph carriers for one admitted LegalLine transition occurrence.
-  * This is a read-only binding over existing records, not a second evidence
-  * authority. Only a TypedEvidenceGraph that contains and verifies all three
-  * records may construct it.
-  */
-private[chessjudgment] final case class GraphOwnedLineTransitionOccurrence private[judgment] (
-    val lineOccurrenceRecord: EvidenceRecord,
-    val transitionOccurrenceRecord: EvidenceRecord,
-    val structuralOccurrenceRecord: EvidenceRecord,
-    val canonicalTransition: CanonicalReplayTransition
-):
-  val structural: StructuralDeltaEvidence = structuralOccurrenceRecord.payload match
-    case payload: StructuralDeltaEvidence => payload
-    case _ => throw IllegalArgumentException("a graph-owned line transition needs structural-delta evidence")
-  val structuralOccurrence: ReplayStructuralOccurrence = structural.replayStructuralOccurrence.getOrElse(
-    throw IllegalArgumentException("a graph-owned line transition needs one replay structural occurrence")
-  )
-  val movement: CanonicalRootLegalMove = structural.certifiedRootMovement.getOrElse(
-    throw IllegalArgumentException("a graph-owned line transition needs one certified movement")
-  )
-  def step: LineReplayStep = canonicalTransition.declared
-  def transition: StructuralTransitionBinding = structural.transition
-  def consequences: List[TransitionConsequence] = structural.consequences
-  def lineOccurrenceOwner: EvidenceRef = lineOccurrenceRecord.ref
-  def transitionOccurrenceOwner: EvidenceRef = transitionOccurrenceRecord.ref
-  def structuralOccurrenceOwner: EvidenceRef = structuralOccurrenceRecord.ref
-  def records: List[EvidenceRecord] =
-    List(lineOccurrenceRecord, transitionOccurrenceRecord, structuralOccurrenceRecord)
-
-  require(
-    structural.replayStructuralOccurrence.contains(structuralOccurrence) &&
-      canonicalTransition.structuralOccurrence == structuralOccurrence &&
-      canonicalTransition.relationDelta.rootMove == movement,
-    "a graph-owned line transition must retain one canonical structural occurrence"
-  )
 
 final case class CanonicalRelationNode private[judgment] (
     record: EvidenceRecord,
@@ -2904,15 +2862,6 @@ final class TypedEvidenceGraph private (
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
       .groupBy(_.line)
 
-  private lazy val structuralDeltasByLine: Map[LineNodeRef, List[StructuralDeltaEvidence]] =
-    records
-      .collect {
-        case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
-          payload.line.filter(ref.line.contains).map(_ -> payload)
-      }
-      .flatten
-      .groupMap(_._1)(_._2)
-
   private[chessjudgment] def uniqueProofEligibleLineFactRecordFor(
       line: LineNodeRef
   ): Option[(EvidenceRecord, LineFactEvidence)] =
@@ -2944,78 +2893,6 @@ final class TypedEvidenceGraph private (
 
   def recordsFor(line: LineNodeRef): List[EvidenceRecord] =
     recordsByLine.getOrElse(line, Nil)
-
-  /** Resolves graph-owned transition/structural occurrences for one admitted
-    * LegalLine. Each replay step is independent: a missing or ambiguous owner
-    * is unresolved, not absent or disproved, and cannot hide later occurrences.
-    * No occurrence is synthesized from replay.
-    */
-  private[chessjudgment] def lineOccurrences(
-      line: LineNodeRef,
-      rootTransitionEvidenceId: String
-  ): Option[List[GraphOwnedLineTransitionOccurrence]] =
-    for
-      (lineRecord, linePayload) <- uniqueProofEligibleLineFactRecordFor(line)
-      replay <- linePayload.certifiedReplay
-      transitionRecords = byId.get(rootTransitionEvidenceId).toList ++ recordsFor(line).collect {
-        case record @ EvidenceRecord(_, _: MoveTransitionEvidence, _) => record
-      }
-      structuralRecords = recordsFor(line).collect {
-        case record @ EvidenceRecord(_, _: StructuralDeltaEvidence, _) => record
-      }
-      transitionRecordsByStep = transitionRecords.groupBy {
-        case EvidenceRecord(_, MoveTransitionEvidence(moveUci, from, to, _), _) =>
-          BoundedCausalIdentity.stepKey(LineReplayStep(to.ply, moveUci, from.fen, to.fen))
-        case record => s"invalid:${record.ref.id}"
-      }
-      structuralRecordsByStep = structuralRecords.flatMap {
-        case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
-          payload.replayStructuralOccurrence.map(occurrence =>
-            BoundedCausalIdentity.stepKey(occurrence.step) -> record
-          )
-        case _ => None
-      }.groupMap(_._1)(_._2)
-      resolved = replay.replaySteps.zipWithIndex.map { case (step, index) =>
-        val key = BoundedCausalIdentity.stepKey(step)
-        for
-          transitionRecord <- transitionRecordsByStep.getOrElse(key, Nil) match
-            case exact :: Nil => Some(exact)
-            case _            => None
-          if proofEligible(transitionRecord)
-          structuralRecord <- structuralRecordsByStep.getOrElse(key, Nil) match
-            case exact :: Nil => Some(exact)
-            case _            => None
-          if proofEligible(structuralRecord)
-          canonical <- replay.transition(step)
-          structural <- structuralRecord.payload match
-            case payload: StructuralDeltaEvidence => Some(payload)
-            case _                                => None
-          occurrence <- structural.replayStructuralOccurrence
-          movement <- structural.certifiedRootMovement
-          if transitionRecord.payload match
-            case MoveTransitionEvidence(moveUci, from, to, _) =>
-              EvidenceRef.sameMove(moveUci, step.moveUci) && from == structural.from &&
-                to == structural.to && structural.transition.moveUci == step.moveUci
-            case _ => false
-          if structuralRecord.parents.contains(transitionRecord.ref) &&
-            structuralRecord.parents.contains(lineRecord.ref)
-          if index match
-            case 0 =>
-              transitionRecord.ref.id == rootTransitionEvidenceId &&
-                transitionRecord.ref.line.isEmpty && transitionRecord.parents.isEmpty
-            case _ =>
-              transitionRecord.ref.line.contains(line) &&
-                transitionRecord.parents == List(lineRecord.ref)
-          if canonical.declared == step && canonical.structuralOccurrence == occurrence &&
-            canonical.relationDelta.rootMove == movement
-        yield new GraphOwnedLineTransitionOccurrence(
-          lineRecord,
-          transitionRecord,
-          structuralRecord,
-          canonical
-        )
-      }
-    yield resolved.flatten
 
   def candidateComparisonRecord(ref: EvidenceRef): Option[EvidenceRecord] =
     record(ref)

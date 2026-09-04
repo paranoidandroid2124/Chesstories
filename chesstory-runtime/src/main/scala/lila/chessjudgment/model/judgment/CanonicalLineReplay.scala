@@ -10,7 +10,7 @@ import lila.chessjudgment.analysis.structure.{
   TransitionStructuralDelta
 }
 import lila.chessjudgment.model.line.{ CanonicalPositionHistoryStep, LegalReplayStep, PrincipalVariationEvidence }
-import lila.chessjudgment.model.position.BoardTransitionFootprint
+import lila.chessjudgment.model.position.{ BoardMoveEffect, BoardTransitionFootprint }
 
 private final class CanonicalReplayTransitionCalculation(
     beforeAnalysis: PositionAnalysis,
@@ -1289,14 +1289,8 @@ private[chessjudgment] object CanonicalLineReplay:
   */
 private[chessjudgment] final class CanonicalTransitionProof private (
     private[judgment] val transitionBinding: StructuralTransitionBinding,
-    legal: LegalReplayStep,
-    afterAnalysis: PositionAnalysis,
     private[chessjudgment] val relationDelta: RelationSemanticDelta
 ):
-  private lazy val legalResponses: List[Move] = afterAnalysis.actualLegalMoves
-  private lazy val legalResponsesByUci: Map[String, Move] =
-    legalResponses.map(move => EvidenceRef.normalizeMove(move.toUci.uci) -> move).toMap
-
   def proves(transition: StructuralTransitionBinding): Boolean =
     transition == transitionBinding
 
@@ -1312,31 +1306,11 @@ private[chessjudgment] final class CanonicalTransitionProof private (
       transitionBinding.from == from && transitionBinding.to == to &&
       proves(transitionBinding)
 
-  private[chessjudgment] def rootStep: LegalReplayStep = legal
-
   private[chessjudgment] def rootMovement: CanonicalRootLegalMove =
     relationDelta.rootMove
 
-  private[chessjudgment] def legalResponseCount: Int =
-    legalResponses.size
-
-  private[chessjudgment] def legalResponseMoves: List[String] =
-    legalResponsesByUci.keys.toList.sorted
-
-  private[chessjudgment] def certifiesCompleteLegalResponseSet(
-      responses: List[LineReplayStep]
-  ): Boolean =
-    responses.size == legalResponseCount &&
-      responses.forall(response =>
-        response.ply == transitionBinding.to.ply + 1 &&
-          legalResponsesByUci
-            .get(EvidenceRef.normalizeMove(response.moveUci))
-            .exists(move =>
-              PrincipalVariationEvidence.sameBoardState(response.fenBefore, Fen.write(move.before).value) &&
-                PrincipalVariationEvidence.sameBoardState(response.fenAfter, Fen.write(move.after).value)
-            )
-      ) &&
-      responses.map(response => EvidenceRef.normalizeMove(response.moveUci)).toSet == legalResponsesByUci.keySet
+  private[chessjudgment] def moveEffect: BoardMoveEffect =
+    relationDelta.transitionFootprint.moveEffect
 
 private[chessjudgment] object CanonicalTransitionProof:
   def from(
@@ -1348,8 +1322,6 @@ private[chessjudgment] object CanonicalTransitionProof:
       .map(owner =>
         new CanonicalTransitionProof(
           transition,
-          owner.legal,
-          owner.afterAnalysis,
           owner.relationDelta
         )
       )

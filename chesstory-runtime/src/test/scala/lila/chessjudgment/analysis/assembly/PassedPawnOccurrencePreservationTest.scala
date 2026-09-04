@@ -5,7 +5,7 @@ import lila.chessjudgment.model.line.EngineLine
 
 class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
 
-  test("passed-pawn facts survive per occurrence without a combined causal contract"):
+  test("move occurrences and passed-pawn facts survive independently"):
     val packet = MoveReviewJudgmentOrchestrator
       .execute(
         RawMoveReviewInput(
@@ -23,37 +23,36 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
       .getOrElse(fail("expected the observed LegalLine"))
     val root = packet.assembly.lineRootOccurrence(line.ref)
       .getOrElse(fail("expected the observed root occurrence"))
-    val occurrences = packet.evidenceGraph
-      .lineOccurrences(line.ref, root.transitionEvidenceId)
-      .getOrElse(fail("expected graph-owned line occurrences"))
-
-    assertEquals(occurrences.map(_.step.moveUci), List("g6g7", "h8h7", "g7g8q"))
-    assertEquals(occurrences.map(_.structuralOccurrenceOwner.id).distinct.size, 3)
-    assertEquals(occurrences.head.structural.certifiedRootResponseMoves, Some(List("h8h7")))
-
-    val passedPawnFacts = occurrences.map(occurrence =>
-      occurrence.step.moveUci -> occurrence.consequences
-        .filter(_.kind == TransitionConsequenceKind.PassedPawnProgress)
-        .flatMap(_.resultSubjectFacts.map(_.label))
-    ).toMap
-    assert(passedPawnFacts("g6g7").contains("passed-pawn-advanced:white:g6-g7:rank-7"))
-    assert(passedPawnFacts("g7g8q").contains("passed-pawn-promoted:white:g7-g8"))
-
     val withoutMiddleStructural = packet.evidenceGraph.records.filterNot {
       case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
         ref.line.contains(line.ref) && EvidenceRef.sameMove(payload.moveUci, "h8h7")
       case _ => false
     }
     assertEquals(packet.evidenceGraph.records.size - withoutMiddleStructural.size, 1)
-    val surviving = TypedEvidenceGraph.empty
-      .addAll(withoutMiddleStructural)
-      .lineOccurrences(line.ref, root.transitionEvidenceId)
-      .getOrElse(fail("expected the certified line after one unresolved occurrence"))
+    val graph = TypedEvidenceGraph.empty.addAll(withoutMiddleStructural)
+    val moveRecords = graph.records.collect {
+      case record @ EvidenceRecord(ref, payload: MoveTransitionEvidence, _)
+          if ref.id == root.transitionEvidenceId || ref.line.contains(line.ref) =>
+        record -> payload
+    }.sortBy(_._2.to.ply)
 
-    assertEquals(surviving.map(_.step.moveUci), List("g6g7", "g7g8q"))
-    assertEquals(surviving.map(_.structuralOccurrenceOwner.id).distinct.size, 2)
+    assertEquals(moveRecords.map(_._2.moveUci), List("g6g7", "h8h7", "g7g8q"))
+    assertEquals(moveRecords.map(_._1.ref.id).distinct.size, 3)
+    assert(moveRecords.forall { case (record, payload) =>
+      graph.proofEligible(record) && payload.movement.nonEmpty && payload.moveEffect.nonEmpty
+    })
+
+    val promotion = graph.records.collect {
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+          if payload.line.contains(line.ref) && EvidenceRef.sameMove(payload.moveUci, "g7g8q") =>
+        record -> payload
+    } match
+      case exact :: Nil => exact
+      case records      => fail(s"expected one promotion structural occurrence, found ${records.size}")
+
+    assert(graph.proofEligible(promotion._1))
     assert(
-      surviving.last.consequences
+      promotion._2.consequences
         .filter(_.kind == TransitionConsequenceKind.PassedPawnProgress)
         .flatMap(_.resultSubjectFacts.map(_.label))
         .contains("passed-pawn-promoted:white:g7-g8")
