@@ -1220,12 +1220,12 @@ private[chessjudgment] object VerticalRelationDerivationProof:
   * producers; every result survives independently of sibling output.
   */
 private[chessjudgment] final class ClosedVerticalRelationResults private (
-    engine: ClosedVerticalRelationEngine,
+    input: VerticalRelationInput,
     private val lowerOwner: ControlSetDeltaResults,
     private val deltaOwner: RelationSemanticDelta,
     certify: RelationFactEvidence => RelationFactEvidence
 ):
-  private val certifiedByKind = scala.collection.mutable.Map.empty[
+  private lazy val certifiedByKind = scala.collection.mutable.Map.empty[
     RelationFactKind,
     List[RelationFactEvidence]
   ]
@@ -1234,55 +1234,6 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
       kind: RelationFactKind
   ): List[RelationFactEvidence] = synchronized {
     certifiedByKind.getOrElseUpdate(
-      kind,
-      engine.resultsFor(kind).map(certify)
-    )
-  }
-
-  private[judgment] lazy val allResults: List[RelationFactEvidence] =
-    engine.activeKinds.flatMap(resultsFor)
-
-  private[judgment] def owns(
-      lowerResults: ControlSetDeltaResults,
-      delta: RelationSemanticDelta
-  ): Boolean =
-    lowerOwner.asInstanceOf[AnyRef].eq(lowerResults.asInstanceOf[AnyRef]) &&
-      deltaOwner.asInstanceOf[AnyRef].eq(delta.asInstanceOf[AnyRef])
-
-  private[judgment] def absenceCertificate(
-      premise: ClosedRelationAbsencePremise
-  ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] =
-    engine.absenceCertificate(premise)
-
-  private[judgment] def stateCertificate(
-      premise: ClosedPositionStatePremise
-  ): Option[PositionRelationExtractor.ClosedPositionStateCertificate] =
-    engine.stateCertificate(premise)
-
-  private[judgment] def certifiedBy(
-      certification: RelationFactEvidence => RelationFactEvidence
-  ): ClosedVerticalRelationResults =
-    new ClosedVerticalRelationResults(
-      engine,
-      lowerOwner,
-      deltaOwner,
-      certification
-    )
-
-private final class ClosedVerticalRelationEngine(
-    controlSetDeltas: ControlSetDeltaResults,
-    delta: RelationSemanticDelta
-):
-  private val input = VerticalRelationInput(delta, controlSetDeltas)
-  private val rawByKind = scala.collection.mutable.Map.empty[
-    RelationFactKind,
-    List[RelationFactEvidence]
-  ]
-
-  def activeKinds: List[RelationFactKind] = input.activeKinds
-
-  def resultsFor(kind: RelationFactKind): List[RelationFactEvidence] = synchronized {
-    rawByKind.getOrElseUpdate(
       kind,
       {
         val results = VerticalRelationContracts.derive(kind, input).sortBy(_.semanticId)
@@ -1312,22 +1263,40 @@ private final class ClosedVerticalRelationEngine(
           results.map(_.semanticId).distinct.size == results.size,
           "one vertical relation producer cannot repeat a derivation path"
         )
-        results
+        results.map(certify)
       }
     )
   }
 
-  def absenceCertificate(
-      premise: ClosedRelationAbsencePremise
-  ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] = synchronized {
-    input.absenceCertificate(premise)
-  }
+  private[judgment] lazy val allResults: List[RelationFactEvidence] =
+    input.activeKinds.flatMap(resultsFor)
 
-  def stateCertificate(
+  private[judgment] def owns(
+      lowerResults: ControlSetDeltaResults,
+      delta: RelationSemanticDelta
+  ): Boolean =
+    lowerOwner.asInstanceOf[AnyRef].eq(lowerResults.asInstanceOf[AnyRef]) &&
+      deltaOwner.asInstanceOf[AnyRef].eq(delta.asInstanceOf[AnyRef])
+
+  private[judgment] def absenceCertificate(
+      premise: ClosedRelationAbsencePremise
+  ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] =
+    input.absenceCertificate(premise)
+
+  private[judgment] def stateCertificate(
       premise: ClosedPositionStatePremise
-  ): Option[PositionRelationExtractor.ClosedPositionStateCertificate] = synchronized {
+  ): Option[PositionRelationExtractor.ClosedPositionStateCertificate] =
     input.stateCertificate(premise)
-  }
+
+  private[judgment] def certifiedBy(
+      certification: RelationFactEvidence => RelationFactEvidence
+  ): ClosedVerticalRelationResults =
+    new ClosedVerticalRelationResults(
+      input,
+      lowerOwner,
+      deltaOwner,
+      certification
+    )
 
 private[chessjudgment] object ClosedVerticalRelationResults:
   def derive(
@@ -1335,7 +1304,7 @@ private[chessjudgment] object ClosedVerticalRelationResults:
       delta: RelationSemanticDelta
   ): ClosedVerticalRelationResults =
     new ClosedVerticalRelationResults(
-      new ClosedVerticalRelationEngine(controlSetDeltas, delta),
+      VerticalRelationInput(delta, controlSetDeltas),
       controlSetDeltas,
       delta,
       identity
