@@ -11,22 +11,20 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 private[chessjudgment] enum RelationProofStage:
   case PositionFact
   case TransitionFact
-  case Vertical(level: Int)
+  case DerivedFact
 
 private[chessjudgment] object RelationProofStage:
   def rank(stage: RelationProofStage): Int =
     stage match
       case RelationProofStage.PositionFact   => 0
       case RelationProofStage.TransitionFact => 1
-      case RelationProofStage.Vertical(level) =>
-        require(level > 0, "a vertical proof level must be positive")
-        level + 1
+      case RelationProofStage.DerivedFact    => 2
 
   def id(stage: RelationProofStage): String =
     stage match
       case RelationProofStage.PositionFact   => "position_fact"
       case RelationProofStage.TransitionFact => "transition_fact"
-      case RelationProofStage.Vertical(level) => s"vertical_l$level"
+      case RelationProofStage.DerivedFact    => "derived_fact"
 
 private[chessjudgment] enum VerticalRelationContractKind:
   case CaptureRecaptureInventory
@@ -51,19 +49,6 @@ private[chessjudgment] object VerticalRelationContractKind:
         "pawn_topology_transition"
       case VerticalRelationContractKind.StalemateTransition =>
         "stalemate_transition"
-
-  def outputStage(kind: VerticalRelationContractKind): RelationProofStage =
-    kind match
-      case VerticalRelationContractKind.CaptureRecaptureInventory |
-          VerticalRelationContractKind.CreatedCheckResponseInventory |
-          VerticalRelationContractKind.RootCheckResponse |
-          VerticalRelationContractKind.SliderReachDelta |
-          VerticalRelationContractKind.PawnTopologyTransition |
-          VerticalRelationContractKind.StalemateTransition =>
-        RelationProofStage.Vertical(1)
-
-  def rank(kind: VerticalRelationContractKind): Int =
-    RelationProofStage.rank(outputStage(kind))
 
   def forDetail(detail: RelationWitnessDetail): Option[VerticalRelationContractKind] =
     detail match
@@ -838,7 +823,8 @@ final case class VerticalRelationDerivationProof private[chessjudgment] (
   require(states == states.sortBy(_.stableKey), "vertical state premises must use canonical order")
   require(
     obligations.forall(premise =>
-      RelationProofStage.rank(premise.stage) < VerticalRelationContractKind.rank(contract)
+      RelationProofStage.rank(premise.stage) <
+        RelationProofStage.rank(RelationProofStage.DerivedFact)
     ),
     "a vertical relation derivation may consume only a strictly lower proof stratum"
   )
@@ -1333,7 +1319,7 @@ private[chessjudgment] final class ClosedVerticalRelationResults private (
     List[RelationFactEvidence]
   ] =
     engine.activeContracts
-      .sortBy(contract => VerticalRelationContractKind.rank(contract) -> VerticalRelationContractKind.id(contract))
+      .sortBy(VerticalRelationContractKind.id)
       .foldLeft(VectorMap.empty[VerticalRelationContractKind, List[RelationFactEvidence]]) {
         case (closed, contract) => closed.updated(contract, resultsFor(contract))
       }
@@ -1402,7 +1388,7 @@ private final class ClosedVerticalRelationEngine(
               exact.states.filterNot(input.resolves).map(_.stableKey)
           )
           val valid =
-            relation.proofStage == VerticalRelationContractKind.outputStage(contract) &&
+            relation.proofStage == RelationProofStage.DerivedFact &&
               input.ownsOutput(relation.detail) &&
               proof.exists(exact =>
                 exact.contract == contract && exact.proves(relation.detail) && unresolved.isEmpty

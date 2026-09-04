@@ -698,7 +698,7 @@ object RelationWitnessDetail:
         RelationProofStage.TransitionFact
       case vertical =>
         VerticalRelationContractKind.forDetail(vertical)
-          .map(VerticalRelationContractKind.outputStage)
+          .map(_ => RelationProofStage.DerivedFact)
           .getOrElse(
             throw IllegalArgumentException(
               s"relation '${vertical.detailName}' has no registered proof stage"
@@ -1543,8 +1543,8 @@ private[chessjudgment] object DerivedRelationResultKey:
   def from(relation: RelationFactEvidence): DerivedRelationResultKey =
     require(
       relation.proofStage match
-        case RelationProofStage.TransitionFact | RelationProofStage.Vertical(_) => true
-        case _                                                                 => false,
+        case RelationProofStage.TransitionFact | RelationProofStage.DerivedFact => true
+        case _                                                                  => false,
       "a derived result key must identify a certified transition or vertical result"
     )
     DerivedRelationResultKey(relation.kind, relation.semanticId)
@@ -3011,7 +3011,7 @@ final class TypedEvidenceGraph private (
               )
             )
         }
-      case RelationProofStage.Vertical(_) =>
+      case RelationProofStage.DerivedFact =>
         VerticalRelationContracts.proofOf(binding.relation.detail).exists { proof =>
           val rootPremises = proof.sourcePremises.filter(
             _.source == VerticalRelationPremiseSource.RootTransition
