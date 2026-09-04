@@ -1384,8 +1384,9 @@ object LineFactEvidence:
       replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, line.rootMove)),
       "certified line evidence must begin with its declared root move"
     )
+    val replayByOffset = replay.replaySteps.toVector
     def ownsOccurrence(occurrence: LineMoveOccurrence): Boolean =
-      replay.replaySteps
+      replayByOffset
         .lift(occurrence.plyOffset)
         .exists(step => occurrence.sameOccurrence(occurrence.plyOffset, step.moveUci))
     require(

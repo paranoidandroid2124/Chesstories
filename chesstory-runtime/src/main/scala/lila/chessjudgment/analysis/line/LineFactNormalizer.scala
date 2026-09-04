@@ -48,20 +48,19 @@ object LineFactNormalizer:
       replay: CanonicalLineReplay,
       materialSummary: Option[LineMaterialSummary]
   ): List[LineMoveEvent] =
+    val singleStepReplays = replay.singleStepReplays.getOrElse(Nil)
     val replayEvents =
-      facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
+      facts.line.moves.zip(singleStepReplays).zipWithIndex.flatMap { case ((move, (transition, transitionReplay)), index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        val moverRole = replay.legalSteps.lift(index).map(step => EvidencePieceRole(step.move.piece.role.name))
-        val relationDetails = replay.replaySteps.lift(index).toList.flatMap(step =>
-          replay.verticalRelationOccurrences(
-            step,
-            List(
-              VerticalRelationContractKind.RootCheckResponse,
-              VerticalRelationContractKind.CreatedCheckResponseInventory,
-              VerticalRelationContractKind.StalemateTransition
-            )
-          ).map(_.relation.detail)
-        )
+        val moverRole = Some(EvidencePieceRole(transition.legal.move.piece.role.name))
+        val relationDetails = transitionReplay.verticalRelationOccurrences(
+          transition.declared,
+          List(
+            VerticalRelationContractKind.RootCheckResponse,
+            VerticalRelationContractKind.CreatedCheckResponseInventory,
+            VerticalRelationContractKind.StalemateTransition
+          )
+        ).map(_.relation.detail)
         val checkDefense = relationDetails.collect {
           case RelationWitnessDetail.RootCheckResponse(_, respondingSide, kingSquare, _, _, _) =>
               LineMoveEvent(
@@ -118,18 +117,16 @@ object LineFactNormalizer:
             ))
           case _ => Nil
         }
-        val castling = replay.replaySteps.lift(index).flatMap(replay.transition).flatMap { transition =>
-          Option.when(transition.relationDelta.rootMove.isCastling)(
-            LineMoveEvent(
-              kind = LineEventKind.Castling,
-              moveUci = normalized,
-              plyOffset = index,
-              side = Some(transition.relationDelta.rootMove.side),
-              pieceRole = Some(EvidencePieceRole(King.name)),
-              square = Some(transition.relationDelta.rootMove.to)
-            )
+        val castling = Option.when(transition.relationDelta.rootMove.isCastling)(
+          LineMoveEvent(
+            kind = LineEventKind.Castling,
+            moveUci = normalized,
+            plyOffset = index,
+            side = Some(transition.relationDelta.rootMove.side),
+            pieceRole = Some(EvidencePieceRole(King.name)),
+            square = Some(transition.relationDelta.rootMove.to)
           )
-        }
+        )
         castling.toList ++ checkDefense ++ stateEvents
       }
     val captureEvents =
@@ -167,33 +164,33 @@ object LineFactNormalizer:
       events: List[LineMoveEvent],
       materialSummary: Option[LineMaterialSummary]
   ): List[LineConsequence] =
+    val singleStepReplays = replay.singleStepReplays.getOrElse(Nil)
     val rootMove = facts.line.moves.headOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
-    val rootSide = replay.legalSteps.headOption.map(_.move.piece.color)
+    val rootSide = singleStepReplays.headOption.map(_._1.legal.move.piece.color)
     val outcome =
-      facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
+      facts.line.moves.zip(singleStepReplays).zipWithIndex.flatMap { case ((move, (transition, transitionReplay)), index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        val prefix = facts.line.moves.take(index + 1).zipWithIndex.map { case (proofMove, plyOffset) =>
+        lazy val prefix = facts.line.moves.take(index + 1).zipWithIndex.map { case (proofMove, plyOffset) =>
           LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(proofMove.uci), plyOffset)
         }
-        replay.replaySteps.lift(index).toList.flatMap { step =>
-          replay.verticalRelationOccurrences(
-            step,
-            List(
-              VerticalRelationContractKind.CreatedCheckResponseInventory,
-              VerticalRelationContractKind.StalemateTransition
-            )
-          ).flatMap(_.relation.detail match
-            case RelationWitnessDetail.CreatedCheckResponseInventory(
-                  mover,
-                  _,
-                  _,
-                  _,
-                  _,
-                  _,
-                  RelationCheckTerminalState.Checkmate,
-                  _
-                ) =>
-              Some(
+        transitionReplay.verticalRelationOccurrences(
+          transition.declared,
+          List(
+            VerticalRelationContractKind.CreatedCheckResponseInventory,
+            VerticalRelationContractKind.StalemateTransition
+          )
+        ).flatMap(_.relation.detail match
+          case RelationWitnessDetail.CreatedCheckResponseInventory(
+                mover,
+                _,
+                _,
+                _,
+                _,
+                _,
+                RelationCheckTerminalState.Checkmate,
+                _
+              ) =>
+            Some(
               LineConsequence(
                 LineConsequenceKind.Mate,
                 prefix,
@@ -202,9 +199,9 @@ object LineFactNormalizer:
                 rootSide = rootSide,
                 beneficiary = Some(mover.side)
               )
-              )
-            case RelationWitnessDetail.StalemateTransition(_, _, _, _) =>
-              Some(
+            )
+          case RelationWitnessDetail.StalemateTransition(_, _, _, _) =>
+            Some(
               LineConsequence(
                 LineConsequenceKind.DrawResource,
                 prefix,
@@ -212,17 +209,16 @@ object LineFactNormalizer:
                 rootMove = rootMove,
                 rootSide = rootSide
               )
-              )
-            case _ => None
-          )
-        }
+            )
+          case _ => None
+        )
       }
     val immediateReplyChecks =
       for
         normalizedRoot <- rootMove.toList
         replyCheck <- events.filter(event => event.kind == LineEventKind.Check && event.plyOffset == 1)
-        rootStep <- replay.replaySteps.headOption.toList
-        replyStep <- replay.replaySteps.lift(1).toList
+        rootStep <- singleStepReplays.headOption.map(_._1.declared).toList
+        replyStep <- singleStepReplays.lift(1).map(_._1.declared).toList
         if EvidenceRef.sameMove(rootStep.moveUci, normalizedRoot)
         if EvidenceRef.sameMove(replyStep.moveUci, replyCheck.moveUci)
         checker <- replyCheck.side.toList

@@ -263,9 +263,13 @@ object LegalLineAssembler:
       replay: CanonicalLineReplay,
       predecessorReplay: Option[CanonicalLineReplay] = None
   ): Option[LineMaterialSummary] =
-
-    val events = replay.replaySteps.zipWithIndex.flatMap { case (declared, plyOffset) =>
-      replay.transition(declared).flatMap { transition =>
+    val projection = replay.singleStepReplays
+    val singleStepReplays = projection.getOrElse(Nil)
+    val events = singleStepReplays
+      .zip(None :: singleStepReplays.map(Option(_)))
+      .zipWithIndex
+      .flatMap { case (((transition, transitionReplay), priorOccurrence), plyOffset) =>
+        val declared = transition.declared
         val root = transition.relationDelta.rootMove
         val primaryMovements = transition.boardFootprint.pieceTransitions.filter(movement =>
           movement.side == root.side &&
@@ -302,7 +306,8 @@ object LegalLineAssembler:
             recaptureStatus = recaptureStatus(
               positionHistory,
               predecessorReplay,
-              replay,
+              priorOccurrence,
+              transitionReplay,
               declared,
               plyOffset
             )
@@ -319,57 +324,60 @@ object LegalLineAssembler:
           )
         )
       }
-    }
     val hasClosedRecaptureKnowledge =
       events.forall(_.capture.forall(
         _.recaptureStatus != LineMaterialRecaptureStatus.Unknown
       ))
-    Option.when(events.nonEmpty && hasClosedRecaptureKnowledge)(
-      LineMaterialSummary(
-        sideToMove = replay.legalSteps.head.move.piece.color,
-        events = events,
-        closedOutcome = closedMaterialOutcome(replay)
+    projection.flatMap { _ =>
+      Option.when(events.nonEmpty && hasClosedRecaptureKnowledge)(
+        LineMaterialSummary(
+          sideToMove = replay.legalSteps.head.move.piece.color,
+          events = events,
+          closedOutcome = singleStepReplays.lastOption.flatMap { case (_, terminalReplay) =>
+            closedMaterialOutcome(terminalReplay, singleStepReplays.size - 1)
+          }
+        )
       )
-    )
+    }
 
   private def recaptureStatus(
       positionHistory: CanonicalPositionHistory,
       predecessorReplay: Option[CanonicalLineReplay],
+      priorOccurrence: Option[(CanonicalReplayTransition, CanonicalLineReplay)],
       replay: CanonicalLineReplay,
       declared: LineReplayStep,
       plyOffset: Int
   ): LineMaterialRecaptureStatus =
-    val priorOccurrence =
-      if plyOffset > 0 then
-        replay.replaySteps.lift(plyOffset - 1).map(replay -> _)
+    val predecessorOccurrence =
+      if plyOffset == 0 then
+        predecessorReplay
+          .flatMap(_.singleStepReplays)
+          .flatMap(_.lastOption)
+          .filter { case (previousTransition, _) =>
+            val previousStep = previousTransition.declared
+            previousStep.ply + 1 == declared.ply &&
+              PrincipalVariationEvidence.sameBoardState(previousStep.fenAfter, declared.fenBefore)
+          }
       else
-        predecessorReplay.flatMap(previous =>
-          for
-            previousStep <- previous.replaySteps.lastOption
-            if previousStep.ply + 1 == declared.ply
-            if PrincipalVariationEvidence.sameBoardState(previousStep.fenAfter, declared.fenBefore)
-          yield previous -> previousStep
-        )
-    priorOccurrence match
+        None
+    priorOccurrence.orElse(predecessorOccurrence) match
       case None =>
         if plyOffset == 0 &&
             positionHistory.segmentReplaySteps.isEmpty &&
             positionHistory.preInitialHistoryKnowledge == PreInitialHistoryKnowledge.KnownEmpty
         then LineMaterialRecaptureStatus.Excluded
         else LineMaterialRecaptureStatus.Unknown
-      case Some((priorReplay, priorStep)) =>
-        val priorTransition = priorReplay.transition(priorStep).getOrElse(
-          throw IllegalArgumentException("a predecessor replay step lost its canonical transition")
-        )
+      case Some((priorTransition, priorReplay)) =>
         if priorTransition.relationDelta.rootMove.capture.isEmpty then
           LineMaterialRecaptureStatus.Excluded
         else
           priorReplay
-            .exactRecaptureStatus(priorStep, replay, declared)
+            .exactRecaptureStatus(priorTransition.declared, replay, declared)
             .getOrElse(LineMaterialRecaptureStatus.Unknown)
 
   private def closedMaterialOutcome(
-      replay: CanonicalLineReplay
+      replay: CanonicalLineReplay,
+      terminalPlyOffset: Int
   ): Option[ClosedLineMaterialOutcome] =
     replay.replaySteps.lastOption.flatMap { terminalStep =>
       val terminals = replay.verticalRelationOccurrences(
@@ -398,7 +406,7 @@ object LegalLineAssembler:
       ).distinct
       terminals match
         case terminal :: Nil =>
-          Some(ClosedLineMaterialOutcome(terminal, replay.replaySteps.size - 1))
+          Some(ClosedLineMaterialOutcome(terminal, terminalPlyOffset))
         case Nil =>
           None
         case _ =>

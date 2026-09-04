@@ -411,7 +411,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
     * one-step replays owned by transition edges. The lazy transition stream is
     * traversed once, regardless of line length.
     */
-  private[chessjudgment] def singleStepReplays
+  private[chessjudgment] lazy val singleStepReplays
       : Option[List[(CanonicalReplayTransition, CanonicalLineReplay)]] =
     val projected = replaySteps
       .zip(legalSteps)
