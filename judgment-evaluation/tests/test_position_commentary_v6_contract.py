@@ -111,7 +111,7 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
                 **self.progress("stopped", issued=0, accepted=0),
                 "legal_move_count": 0,
             },
-            "stop_condition": "engine_execution_failed",
+            "stop_condition": "search_budget_exhausted",
         }
         self.validate("position-commentary-job-status.schema.json", stopped)
 
@@ -143,6 +143,17 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
             },
         }
         self.validate("position-commentary-engine-work-report.schema.json", report)
+        failed_report = {
+            **{key: value for key, value in report.items() if key != "outcome"},
+            "outcome": {
+                "kind": "executor_failed",
+                "failure_code": "search_budget_exhausted",
+            },
+        }
+        self.validate("position-commentary-engine-work-report.schema.json", failed_report)
+        failed_report["outcome"]["failure_code"] = "unknown_failure"
+        with self.assertRaises(ContractError):
+            self.validate("position-commentary-engine-work-report.schema.json", failed_report)
         self.validate(
             "position-commentary-job-error.schema.json",
             {

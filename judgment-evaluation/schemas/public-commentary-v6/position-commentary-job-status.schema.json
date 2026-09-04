@@ -104,6 +104,7 @@
           "enum": [
             "deadline_exceeded",
             "cancelled",
+            "search_budget_exhausted",
             "engine_execution_failed",
             "invalid_engine_work_report",
             "review_construction_failed",

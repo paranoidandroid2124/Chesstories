@@ -59,6 +59,7 @@ import {
   type MoveReviewVerdictSymbol,
   type MoveReviewViewState,
   type IssuedMoveReviewEngineWork,
+  type MoveReviewEngineFailure,
   type MoveReviewEngineOutcome,
 } from './moveReview';
 import {
@@ -689,7 +690,10 @@ export default class AnalyseCtrl implements CevalHandler {
           const startedAt = receivedAtMs;
           const elapsed = (): number => Math.max(0, Math.floor(performance.now() - startedAt));
           let leaseTimer: number | undefined = undefined;
-          const failure = (failureCode: string, diagnostic: string): MoveReviewEngineOutcome => ({
+          const failure = (
+            failureCode: MoveReviewEngineFailure,
+            diagnostic: string,
+          ): MoveReviewEngineOutcome => ({
             kind: 'executor_failed',
             executorElapsedMs: elapsed(),
             observedNodes: latestNodes,
@@ -754,7 +758,14 @@ export default class AnalyseCtrl implements CevalHandler {
                   elapsed(),
                 );
                 if (outcome) finish(outcome, true);
-                else if (evaluation.bestmove !== undefined) fail();
+                else if (evaluation.bestmove !== undefined)
+                  finish(
+                    failure(
+                      'search_budget_exhausted',
+                      'The browser engine exhausted its search budget before producing the exact requested result.',
+                    ),
+                    true,
+                  );
               },
             });
             if (!started) fail();

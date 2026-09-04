@@ -12,7 +12,6 @@ object PositionCommentaryJobProtocol:
   val Variant = "standard"
 
   private val MaximumFenLength = 128
-  private val MaximumFailureCodeLength = 64
   private val IssuedWorkId = "^work:[0-9]+$".r
   private val Sha256 = "^[a-f0-9]{64}$".r
 
@@ -169,11 +168,14 @@ object PositionCommentaryJobProtocol:
   ): Option[EngineWorkReport] = value match
     case outcome: JsObject
         if hasExactKeys(outcome, Set("kind", "failure_code")) &&
-          (outcome \ "kind").asOpt[String].contains("executor_failed") &&
-          (outcome \ "failure_code").asOpt[String].exists(code =>
-            code.nonEmpty && code.length <= MaximumFailureCodeLength
-          ) =>
-      Some(EngineWorkReport.ExecutorFailed(engineProfile, workId, executionKey))
+          (outcome \ "kind").asOpt[String].contains("executor_failed") =>
+      (outcome \ "failure_code").asOpt[String].flatMap {
+        case "cancelled"               => Some(EngineWorkFailure.Cancelled)
+        case "lease_expired"           => Some(EngineWorkFailure.BudgetExhausted)
+        case "search_budget_exhausted" => Some(EngineWorkFailure.BudgetExhausted)
+        case "engine_failure"          => Some(EngineWorkFailure.ExecutionFailed)
+        case _                         => None
+      }.map(EngineWorkReport.ExecutorFailed(engineProfile, workId, executionKey, _))
     case outcome: JsObject
         if hasExactKeys(outcome, Set("kind", "line_suffixes")) &&
           (outcome \ "kind").asOpt[String].contains("completed") =>
@@ -287,6 +289,7 @@ object PositionCommentaryJobProtocol:
   private def stopConditionCode(condition: CommentaryJobStopCondition): String = condition match
     case CommentaryJobStopCondition.DeadlineExceeded              => "deadline_exceeded"
     case CommentaryJobStopCondition.Cancelled                     => "cancelled"
+    case CommentaryJobStopCondition.SearchBudgetExhausted         => "search_budget_exhausted"
     case CommentaryJobStopCondition.EngineExecutionFailed         => "engine_execution_failed"
     case CommentaryJobStopCondition.InvalidEngineWorkReport       => "invalid_engine_work_report"
     case CommentaryJobStopCondition.ReviewConstructionFailed      => "review_construction_failed"

@@ -72,6 +72,7 @@ test('decodes the root and focused comparison work', () => {
   });
 
   const stopped = rawSnapshot('stopped');
+  stopped.stop_condition = 'search_budget_exhausted';
   object(stopped.progress).legal_move_count = 0;
   assert.equal(decodeMoveReviewSnapshot(stopped, decodeContext())?.kind, 'abstained');
 
@@ -302,8 +303,8 @@ test('executor failure report does not echo metrics or diagnostics to the server
     executorElapsedMs: 10,
     observedNodes: 1,
     engineTimeMs: 5,
-    failureCode: 'engine_failure',
+    failureCode: 'search_budget_exhausted',
     diagnostic: 'local detail',
   });
-  assert.deepEqual(report.outcome, { kind: 'executor_failed', failure_code: 'engine_failure' });
+  assert.deepEqual(report.outcome, { kind: 'executor_failed', failure_code: 'search_budget_exhausted' });
 });

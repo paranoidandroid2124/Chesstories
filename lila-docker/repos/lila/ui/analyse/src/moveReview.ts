@@ -134,6 +134,12 @@ interface MoveReviewLineSuffix {
   whiteScore: MoveReviewWhiteScore;
 }
 
+export type MoveReviewEngineFailure =
+  | 'cancelled'
+  | 'lease_expired'
+  | 'search_budget_exhausted'
+  | 'engine_failure';
+
 export type MoveReviewEngineOutcome =
   | {
       kind: 'completed';
@@ -150,7 +156,7 @@ export type MoveReviewEngineOutcome =
       executorElapsedMs: number;
       observedNodes: number;
       engineTimeMs: number;
-      failureCode: string;
+      failureCode: MoveReviewEngineFailure;
       diagnostic: string;
     };
 
@@ -717,6 +723,7 @@ function isMoveReviewStopCondition(value: unknown): boolean {
   return (
     value === 'deadline_exceeded' ||
     value === 'cancelled' ||
+    value === 'search_budget_exhausted' ||
     value === 'engine_execution_failed' ||
     value === 'invalid_engine_work_report' ||
     value === 'review_construction_failed' ||

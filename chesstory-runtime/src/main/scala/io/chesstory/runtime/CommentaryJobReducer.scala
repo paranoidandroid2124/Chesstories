@@ -43,6 +43,7 @@ enum CommentaryJobStartRejection:
 enum CommentaryJobStopCondition:
   case DeadlineExceeded
   case Cancelled
+  case SearchBudgetExhausted
   case EngineExecutionFailed
   case InvalidEngineWorkReport
   case ReviewConstructionFailed
@@ -61,6 +62,12 @@ enum EngineWorkReportRejection:
 enum EngineWorkPurpose(val wireId: String):
   case RootSearch extends EngineWorkPurpose("root_search")
   case FocusComparison extends EngineWorkPurpose("focus_comparison")
+
+/** Why issued work yielded no admissible result; never a chess proposition state. */
+enum EngineWorkFailure:
+  case Cancelled
+  case BudgetExhausted
+  case ExecutionFailed
 
 enum EngineRootRestriction:
   case Unrestricted
@@ -99,22 +106,23 @@ enum EngineWorkReport:
   case ExecutorFailed(
       engineProfile: CommentaryEngineProfile,
       workId: String,
-      executionKeySha256: String
+      executionKeySha256: String,
+      failure: EngineWorkFailure
   )
 
   def reportedWorkId: String = this match
     case EngineWorkReport.Completed(_, value, _, _)    => value
-    case EngineWorkReport.ExecutorFailed(_, value, _) => value
+    case EngineWorkReport.ExecutorFailed(_, value, _, _) => value
 
   def reportedEngineProfile: CommentaryEngineProfile = this match
     case EngineWorkReport.Completed(value, _, _, _)    => value
-    case EngineWorkReport.ExecutorFailed(value, _, _) => value
+    case EngineWorkReport.ExecutorFailed(value, _, _, _) => value
 
   def reportedExecutionKeySha256: String = this match
     case EngineWorkReport.Completed(_, _, value, _)    => value
-    case EngineWorkReport.ExecutorFailed(_, _, value) => value
+    case EngineWorkReport.ExecutorFailed(_, _, value, _) => value
 
-/** Exact work searched by the browser. No server-side engine implementation exists. */
+/** Exact work requested from the browser. No server-side engine implementation exists. */
 final case class IssuedEngineWork(
     engineProfile: CommentaryEngineProfile,
     workId: String,
@@ -462,11 +470,14 @@ object CommentaryJobReducer:
         case stopped: StoppedCommentaryJob => Right(stopped)
         case live: ActiveCommentaryJob =>
           report match
-            case EngineWorkReport.ExecutorFailed(_, _, _) =>
+            case EngineWorkReport.ExecutorFailed(_, _, _, failure) =>
               Right(
                 stop(
                   live.copy(ledger = live.ledger.afterAcceptedReport),
-                  CommentaryJobStopCondition.EngineExecutionFailed
+                  failure match
+                    case EngineWorkFailure.Cancelled       => CommentaryJobStopCondition.Cancelled
+                    case EngineWorkFailure.BudgetExhausted => CommentaryJobStopCondition.SearchBudgetExhausted
+                    case EngineWorkFailure.ExecutionFailed => CommentaryJobStopCondition.EngineExecutionFailed
                 )
               )
             case EngineWorkReport.Completed(_, _, _, suffixes) =>

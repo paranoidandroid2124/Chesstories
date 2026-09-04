@@ -330,6 +330,57 @@ class RuntimeProtocolTest extends munit.FunSuite:
       Left(EngineWorkReportRejection.WorkNotOutstanding)
     )
 
+  test("engine work failure reports preserve cancellation, budget, and execution categories"):
+    val root = CommentaryJobReducer
+      .startJob(
+        initialFen,
+        Nil,
+        initialFen,
+        "d2d4",
+        resultingFen("d2d4"),
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .get
+
+    def parseFailure(code: String) =
+      PositionCommentaryJobProtocol.parseEngineWorkReport(
+        Json.stringify(
+          Json.obj(
+            "schema_version" -> PositionCommentaryJobProtocol.EngineWorkReportSchema,
+            "engine_profile" -> engineProfile.wireId,
+            "work_id" -> root.issuedWork.workId,
+            "execution_key_sha256" -> root.issuedWork.executionKeySha256,
+            "outcome" -> Json.obj("kind" -> "executor_failed", "failure_code" -> code)
+          )
+        ).getBytes(StandardCharsets.UTF_8)
+      )
+
+    List(
+      ("cancelled", EngineWorkFailure.Cancelled, CommentaryJobStopCondition.Cancelled),
+      ("lease_expired", EngineWorkFailure.BudgetExhausted, CommentaryJobStopCondition.SearchBudgetExhausted),
+      ("search_budget_exhausted", EngineWorkFailure.BudgetExhausted, CommentaryJobStopCondition.SearchBudgetExhausted),
+      ("engine_failure", EngineWorkFailure.ExecutionFailed, CommentaryJobStopCondition.EngineExecutionFailed)
+    ).foreach { case (code, expectedFailure, expectedStop) =>
+      val report = parseFailure(code).toOption.get
+      report match
+        case EngineWorkReport.ExecutorFailed(_, _, _, failure) => assertEquals(failure, expectedFailure)
+        case _ => fail(s"expected executor failure for $code")
+      val stopped = CommentaryJobReducer
+        .submitIssuedWorkReport(root, report, nowEpochMs = 1L)
+        .toOption
+        .collect { case value: StoppedCommentaryJob => value }
+        .get
+      assertEquals(stopped.stopCondition, expectedStop)
+    }
+
+    assertEquals(
+      parseFailure("unknown_failure"),
+      Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.InvalidEngineWorkReport)
+    )
+
   test("admission replays browser lines and truncates only at an automatic terminal"):
     val drawFen = "7k/8/8/8/K7/1p6/8/8 w - - 0 1"
     val drawHistory = CanonicalPositionHistory.from(drawFen, Nil, drawFen).toOption.get

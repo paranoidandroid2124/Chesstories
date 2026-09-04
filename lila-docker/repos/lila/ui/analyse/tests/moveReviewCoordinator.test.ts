@@ -323,7 +323,7 @@ test('runtime source rejects a repeated work id before spending browser CPU and 
       executorElapsedMs: 1,
       observedNodes: 0,
       engineTimeMs: 0,
-      failureCode: 'fixture',
+      failureCode: 'engine_failure',
       diagnostic: work.workId,
     };
   });
