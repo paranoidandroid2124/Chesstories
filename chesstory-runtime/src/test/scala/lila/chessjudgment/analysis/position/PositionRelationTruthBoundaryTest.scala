@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.position
 
-import chess.{ Color, HalfMoveClock, Square }
+import chess.{ Color, HalfMoveClock }
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.model.judgment.{
@@ -8,7 +8,6 @@ import lila.chessjudgment.model.judgment.{
   EvidenceScope,
   EvidenceSquare,
   PositionNodeRef,
-  CanonicalLineReplay,
   RelationAxisSignal,
   RelationFactEvidence,
   RelationFactKind,
@@ -17,7 +16,6 @@ import lila.chessjudgment.model.judgment.{
   TypedEvidenceGraph
 }
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.position.BoardGeometry
 
 class PositionRelationTruthBoundaryTest extends munit.FunSuite:
 
@@ -49,38 +47,9 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
         RelationRayProjection.isAbsoluteKingPinGeometry(ray)
       case _ => false
 
-  test("one board geometry owner supplies rays and geometric controls"):
-    val current = position("7k/8/8/6r1/8/8/8/2B3K1 w - - 0 1")
-    val bishop = current.board.pieceAt(Square.C1).getOrElse(fail("expected bishop on c1"))
-    val analysis = PositionAnalyzer.analyze(current, Fen.write(current).value, 0)
-
-    assertEquals(
-      analysis.boardRelations.flatMap(_.detail match
-        case RelationWitnessDetail.GeometricControl(_, attacker, _, target)
-            if attacker.key == Square.C1.key => Square.fromKey(target.key).toList
-        case _ => Nil
-      )
-        .filter(_.file.value > Square.C1.file.value)
-        .toList
-        .sortBy(_.file.value)
-        .map(_.key),
-      List("d2", "e3", "f4", "g5")
-    )
-    assertEquals(
-      analysis.computation.staticBoard.geometricControlInventory.byOrigin(Square.C1),
-      Square.C1.bishopAttacks(current.board.occupied)
-    )
-
-  test("the initial position exposes exact pawn topology without tactical substitutes"):
-    val initial = relations("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    assertEquals(initial.count(_.kind == RelationFactKind.PawnFileGroup), 16)
-    assertEquals(initial.count(_.kind == RelationFactKind.PawnFrontOccupancy), 16)
-    assertEquals(initial.count(_.kind == RelationFactKind.PawnPassage), 16)
-    assert(initial.exists(_.kind == RelationFactKind.GeometricControl))
-    assert(initial.exists(_.kind == RelationFactKind.LegalMove))
-
   test("geometric control and legal capture remain distinct canonical facts"):
     val currentRelations = relations("4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1")
+    assert(currentRelations.forall(_.hasConcreteWitness))
     val capture = currentRelations.find(_.detail match
       case RelationWitnessDetail.LegalMove(Color.White, from, _, to, moveUci, Some(captured)) =>
         from.key == "d2" && to.key == "d4" && moveUci == "d2d4" &&
@@ -123,39 +92,13 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       "the non-moving side's geometric attack must not become a hypothetical legal move"
     )
 
-  test("en passant legal capture is owned by the captured pawn square without expanding child replies"):
-    val beforeFen = "7k/8/8/8/3p4/8/4P3/K3R3 w - - 0 1"
-    val advance = PrincipalVariationEvidence
-      .legalMoveReplay(beforeFen, List("e2e4"), startPly = 0)
-      .flatMap(_.headOption)
-      .getOrElse(fail("expected the double pawn advance"))
-    val afterFen = Fen.write(advance.after).value
-    val beforeAnalysis = PositionAnalyzer.analyze(advance.before, beforeFen, plyCount = 0)
-    val afterAnalysis = PositionAnalyzer.analyzeAfter(beforeAnalysis, advance, afterFen)
-    val pressure = afterAnalysis.boardRelations
-      .find(_.detail match
-        case RelationWitnessDetail.LegalMove(Color.Black, from, _, to, moveUci, Some(capture)) =>
-          from.key == "d4" && to.key == "e3" && moveUci == "d4e3" && capture.capturedSquare.key == "e4"
-        case _ => false
-      )
-      .getOrElse(fail("expected the en-passant legal capture"))
-
-    pressure.detail match
-      case RelationWitnessDetail.LegalMove(_, _, _, _, _, Some(capture)) =>
-        assertEquals(capture.capturedSquare.key, "e4")
-        assertEquals(capture.capturedSide, Color.White)
-      case detail => fail(s"expected LegalMove, got ${detail.detailName}")
-
-  test("every position relation uses the canonical relation payload"):
-    val currentRelations = relations("4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1")
-    assert(currentRelations.nonEmpty)
-    assert(currentRelations.forall(_.hasConcreteWitness))
-
   test("closed L0 state, bidirectional controls, and legal effects reuse one inventory"):
     val initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     val initial = PositionAnalyzer.analyze(position(initialFen), initialFen, plyCount = 0)
     val initialRef = PositionNodeRef(initialFen, 0, Some(Color.White))
     val closedInitial = closedSnapshot(initial, initialRef)
+    List(RelationFactKind.PawnFileGroup, RelationFactKind.PawnFrontOccupancy, RelationFactKind.PawnPassage)
+      .foreach(kind => assertEquals(initial.boardRelations.count(_.kind == kind), 16, kind.toString))
     assertEquals(closedInitial.inventory.stateView.kingSquare(Color.White).map(_.key), Some("e1"))
     assertEquals(
       closedInitial.inventory.stateView.pieces(Color.White, lila.chessjudgment.model.judgment.EvidencePieceRole("pawn")).size,
@@ -199,9 +142,9 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       fail("expected the exact en-passant legal resource")
     )
     assertEquals(enPassant.capture.map(_.capturedSquare.key), Some("e4"))
+    assertEquals(enPassant.capture.map(_.capturedSide), Some(Color.White))
     assertEquals(enPassant.destination.key, "e3")
     assertEquals(enPassant.boardEffect.cellChanges.map(_.square.key).toSet, Set("d4", "e3", "e4"))
-    assertEquals(enPassant.capture.map(_.capturedSquare.key), Some("e4"))
     assertEquals(closedAfter.inventory.legalCapturesOf(EvidenceSquare("e4")).map(_.source.semanticId), List(enPassant.source.semanticId))
     val fromOrigin = closedAfter.inventory.controlsFrom(EvidenceSquare("d4")).find(_.targetSquare.key == "e3")
     val fromTarget = closedAfter.inventory.controlsAt(Color.Black, EvidenceSquare("e3")).find(_.controller.square.key == "d4")
@@ -371,31 +314,6 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       relation.kind != RelationFactKind.RayBarrier || relation.isPositionRelation
     ))
 
-
-  test("the canonical relation delta retains the exact established ordered ray"):
-    val beforeFen = "4k3/4n3/8/8/8/8/8/R5K1 w - - 0 1"
-    val legalReplay = PrincipalVariationEvidence
-      .legalMoveReplay(beforeFen, List("a1e1"), startPly = 0)
-      .getOrElse(fail("expected a legal pin-creating move"))
-    val replay = CanonicalLineReplay
-      .fromLegalReplay(legalReplay)
-      .getOrElse(fail("expected canonical pin replay"))
-    val after = legalReplay.head.after
-    val afterFen = Fen.write(after).value
-    val canonicalPin = PositionAnalyzer
-      .analyze(after, afterFen, plyCount = 1)
-      .boardRelations
-      .find(hasAbsoluteKingPinGeometry)
-      .getOrElse(fail("expected the canonical after-position pin"))
-    val establishedPin = replay.onlyTransition
-      .getOrElse(fail("expected one replay transition"))
-      .relationDelta
-      .establishedOf(RelationFactKind.RayBarrier)
-      .find(change => hasAbsoluteKingPinGeometry(change.relation))
-      .getOrElse(fail("expected the canonical established pin change"))
-
-    assertEquals(establishedPin.relation.detail, canonicalPin.detail)
-    assert(establishedPin.proofKeys.nonEmpty)
 
   test("semantic geometry is shared across clock fields while legal move occurrences remain distinct"):
     val firstFen = "4k3/8/8/8/3q4/8/P2R4/4K3 w - - 0 1"

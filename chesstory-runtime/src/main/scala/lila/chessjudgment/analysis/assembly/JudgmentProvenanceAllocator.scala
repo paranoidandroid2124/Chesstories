@@ -1,9 +1,5 @@
 package lila.chessjudgment.analysis.assembly
 
-import java.nio.charset.StandardCharsets
-import java.util.Base64
-import java.util.Locale
-
 import chess.Color
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.judgment.{
@@ -24,48 +20,19 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       fen = fen,
       ply = ply,
       sideToMove = sideToMove,
-      id = Some(s"$prefix:position:${positionKey(role, fen, ply)}")
-    )
-
-  def lineRootPositionRef(
-      role: PositionNodeRole,
-      fen: String,
-      ply: Int,
-      sideToMove: Option[Color],
-      line: LineNodeRef
-  ): PositionNodeRef =
-    PositionNodeRef(
-      fen = fen,
-      ply = ply,
-      sideToMove = sideToMove,
-      id = Some(s"$prefix:position:${lineRootPositionKey(role, fen, ply, line)}")
-    )
-
-  def lineOccurrencePositionRef(
-      line: LineNodeRef,
-      plyOffset: Int,
-      predecessor: PositionNodeRef,
-      fen: String,
-      ply: Int,
-      sideToMove: Option[Color]
-  ): PositionNodeRef =
-    PositionNodeRef(
-      fen = fen,
-      ply = ply,
-      sideToMove = sideToMove,
-      id = Some(s"$prefix:position:${lineOccurrencePositionKey(line, plyOffset, predecessor, fen, ply)}")
+      id = Some(EvidenceIdentity.digest(List(prefix, "position", role.toString, ply.toString, occurrenceFen(fen))))
     )
 
   def lineOccurrenceKey(
       line: AdmittedLegalLine,
       root: PositionNodeRef
   ): String =
-    exactKey(List(
+    EvidenceIdentity.digest(List(
       root.id.getOrElse(""),
       root.ply.toString,
       root.sideToMove.map(_.toString).getOrElse(""),
       occurrenceFen(root.fen),
-      line.rootMove
+      line.moves.mkString(" ")
     ))
 
   def lineRef(
@@ -82,24 +49,7 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       moveUci: String,
       to: PositionNodeRef
   ): String =
-    exactKey(List(
-      from.ply.toString,
-      occurrenceFen(from.fen),
-      EvidenceRef.normalizeMove(moveUci),
-      to.ply.toString,
-      occurrenceFen(to.fen)
-    ))
-
-  def lineTransitionOccurrenceKey(
-      line: LineNodeRef,
-      plyOffset: Int,
-      from: PositionNodeRef,
-      moveUci: String,
-      to: PositionNodeRef
-  ): String =
-    exactKey(List(
-      line.id,
-      plyOffset.toString,
+    EvidenceIdentity.digest(List(
       from.id.getOrElse(""),
       from.ply.toString,
       occurrenceFen(from.fen),
@@ -112,32 +62,16 @@ final case class JudgmentProvenanceAllocator(prefix: String):
   def evidenceId(suffix: String): String =
     s"$prefix:evidence:$suffix"
 
-  def positionKey(role: PositionNodeRole, fen: String, ply: Int): String =
-    exactKey(List(key(role), ply.toString, occurrenceFen(fen)))
-
-  def lineRootPositionKey(
-      role: PositionNodeRole,
-      fen: String,
-      ply: Int,
-      line: LineNodeRef
-  ): String =
-    exactKey(List(key(role), ply.toString, occurrenceFen(fen), line.id))
-
-  def lineOccurrencePositionKey(
-      line: LineNodeRef,
-      plyOffset: Int,
-      predecessor: PositionNodeRef,
-      fen: String,
-      ply: Int
-  ): String =
-    exactKey(List(
-      key(PositionNodeRole.LineOccurrence),
-      line.id,
-      plyOffset.toString,
+  def successorPositionRef(predecessor: PositionNodeRef, step: LineReplayStep, side: Color): PositionNodeRef =
+    val occurrence = EvidenceIdentity.digest(List(
+      prefix,
       predecessor.id.getOrElse(""),
-      ply.toString,
-      occurrenceFen(fen)
+      step.ply.toString,
+      EvidenceRef.normalizeMove(step.moveUci),
+      occurrenceFen(step.fenBefore),
+      occurrenceFen(step.fenAfter)
     ))
+    PositionNodeRef(step.fenAfter, step.ply, Some(side), Some(occurrence))
 
   def evidenceRef(
       suffix: String,
@@ -158,17 +92,8 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       confidence = confidence
     )
 
-  def key(value: Any): String =
-    Option(value)
-      .map(_.toString.replaceAll("([a-z])([A-Z])", "$1-$2").toLowerCase(Locale.ROOT))
-      .getOrElse("none")
-
   private def occurrenceFen(fen: String): String =
     PrincipalVariationEvidence.normalizeFen(fen)
-
-  private[assembly] def exactKey(parts: Iterable[String]): String =
-    val raw = parts.iterator.map(value => s"${value.length}:$value").mkString("|")
-    Base64.getUrlEncoder.withoutPadding.encodeToString(raw.getBytes(StandardCharsets.UTF_8))
 
 object JudgmentProvenanceAllocator:
 

@@ -1,14 +1,9 @@
 import type { AnalyseData } from './interfaces';
+import { standardUci } from './util';
 import { makeFen } from 'chessops/fen';
 import { makeSanAndPlay, parseSan } from 'chessops/san';
 import { makeUci } from 'chessops';
-import {
-  parsePgn,
-  parseVariant,
-  startingPosition,
-  type ChildNode,
-  type PgnNodeData,
-} from 'chessops/pgn';
+import { parsePgn, parseVariant, startingPosition, type ChildNode, type PgnNodeData } from 'chessops/pgn';
 import { IllegalSetup, type Position } from 'chessops/chess';
 import { scalachessCharPair } from 'chessops/compat';
 import { makeSquare } from 'chessops/util';
@@ -87,10 +82,12 @@ export default function (pgn: string): Partial<AnalyseData> {
       fen,
       initialFen: fen,
       id: 'synthetic',
-      opening: openingName ? {
-        name: openingName,
-        eco: eco || '?',
-      } : undefined,
+      opening: openingName
+        ? {
+            name: openingName,
+            eco: eco || '?',
+          }
+        : undefined,
       status: { id: 20, name: 'started' },
       turns: treeParts.length,
       variant,
@@ -98,6 +95,10 @@ export default function (pgn: string): Partial<AnalyseData> {
     player: { color: 'white' },
     opponent: { color: 'black' },
     treeParts,
+    recordedMoves:
+      variant.key === 'standard'
+        ? treeParts.slice(1).map((node, index) => standardUci(treeParts[index].fen, node.uci!))
+        : undefined,
     sidelines,
     userAnalysis: true,
   };

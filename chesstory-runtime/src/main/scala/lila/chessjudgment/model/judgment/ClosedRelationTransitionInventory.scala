@@ -122,8 +122,6 @@ private[chessjudgment] final class CanonicalRelationTransitionInventory private 
   private[chessjudgment] def materializeOccurrence(
       occurrenceId: String,
       edge: MoveTransitionEdge,
-      lineOwner: LineNodeRef,
-      lineEvidence: EvidenceRef,
       outputRecords: List[EvidenceRecord]
   ): List[EvidenceRecord] =
     require(
@@ -186,8 +184,6 @@ private[chessjudgment] final class CanonicalRelationTransitionInventory private 
     }
     val occurrence = ClosedRelationOccurrenceEvidence.certified(
       edge,
-      lineOwner,
-      lineEvidence,
       bindings
     )
     val carrier = ClosedRelationOccurrenceEvidence.record(occurrenceId, occurrence)

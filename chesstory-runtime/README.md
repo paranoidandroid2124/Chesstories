@@ -1,63 +1,80 @@
 # Chesstory Runtime
 
-Private standalone runtime for Chesstory's causal graph judgment.
-
-Player use is the position-commentary job path: the server issues exact
-browser engine work and the browser returns only the issued work report.
-Direct FEN/UCI/PV inputs are development-only. The runtime must not
-depend on the lila application, controllers, database, or internal graph
-transport types.
+Private standalone runtime for deterministic chess commentary.
+[JudgmentBoundary](docs/JudgmentBoundary.md) defines current meaning, ownership,
+investigation policy, and budgets. [Progress](C:/Codes/Chesstories/research/role-use-next/progress.md)
+is the single entry point for current status and the next work.
+Executable types, admission checks, and public schemas are the contract authority.
 
 ## Run
+
+From this directory:
 
 ```text
 sbt run
 ```
 
-The process listens on `127.0.0.1:8091` by default. `CHESSTORY_HOST` and
-`CHESSTORY_PORT` override the address. Set `CHESSTORY_TOKEN` to require a
-Bearer token; a token is mandatory when binding outside loopback.
-`CHESSTORY_WORKERS` bounds concurrent CPU work (default: 1–8 based on available processors).
+The default address is `127.0.0.1:8091`.
+
+- `CHESSTORY_HOST` / `CHESSTORY_PORT`: address overrides.
+- `CHESSTORY_TOKEN`: Bearer authentication, required outside loopback.
+- `CHESSTORY_WORKERS`: concurrent CPU work, default 1–8 based on processors.
+
+On the Windows/JDK 21.0.9 research host, an `Invalid argument: connect` failure
+in `sun.nio.ch.UnixDomainSockets.connect` was resolved by setting the server/test
+JVM option below to an existing ASCII-only absolute directory:
+
+```text
+-Djdk.net.unixdomain.tmpdir=C:/Codes/Chesstories/chesstory-runtime/target/socket-temp
+```
 
 ## Player API
 
-Player use is the position-commentary job path only:
+| Method | Route |
+|---|---|
+| POST | /v1/position-commentary-jobs |
+| GET | /v1/position-commentary-jobs/{jobId} |
+| POST | /v1/position-commentary-jobs/{jobId}/engine-work-reports |
+| DELETE | /v1/position-commentary-jobs/{jobId} |
 
-- `POST /v1/position-commentary-jobs`
-- `GET /v1/position-commentary-jobs/{jobId}`
-- `POST /v1/position-commentary-jobs/{jobId}/engine-work-reports`
-- `DELETE /v1/position-commentary-jobs/{jobId}`
+Requests, reports, statuses, errors, and responses use the atomic
+`public-commentary-v6` cohort. Supply complete `initial_fen + move_prefix_uci`
+history and exact `current_fen`. Optional unscored `input_lines` retain nested
+continuations with `pgn_record`, `analysis`, or `study` provenance.
+Optional `proposals` preserve separately attributed questions, candidates,
+priority sources, and evidence references. They request an exact legal move
+observation or a same-work root/child comparison; uninterpreted claims remain
+explicit and do not become evidence.
 
-The server creates one root-candidate search and an optional played-vs-best
-comparison. L2 consumes those admitted PV/MultiPV lines and never issues a
-separate causal search.
-It owns work identity, legal replay, evidence admission, and the completed
-commentary response. The browser only executes issued engine work and returns
-its line suffixes. Active and stopped job responses use the atomic
-`public-commentary-v6` cohort (`request`, `report`, `error`, `status`,
-`response`). A request supplies the complete
-`initial_fen` + `move_prefix_uci` history and its exact `current_fen`; the
-server legally replays and binds that history before issuing work. Browser
-`white_score` values use the White perspective of the existing ceval contract.
+The server owns work identity, legal replay, evidence admission, and commentary.
+The browser executes only issued work and reports suffixes with `white_score`
+in the existing ceval White perspective. Independently admitted observations
+survive progress, completion, and interruption even without an assessment.
+Single-move and chronological PGN review share the coordinator and result cache.
 
-The sole server-admitted binding is `sf18-smallnet-t2-h16-v1`: before a job
-POST, the browser preflights that exact dedicated SF18 smallnet worker. Generic
-or user-selected ceval, threads/hash selection, downgrade, retry, and fallback
-are not player-use. Issued work, reports, status, and responses carry required
-profile equality; missing or unsupported profiles are rejected before semantic
-use. This equality proves configured contract binding, not remote attestation.
+## Browser engine binding
 
-`GET /health` is a process-liveness check. It returns the health schema version
-and does not certify semantic resources, engine availability, or player-job
-readiness.
+The sole admitted binding is `sf18-smallnet-t2-h16-v1`. After initial observations,
+the browser prepares its dedicated SF18 smallnet worker before `work:0` and reuses
+it for the job. Preparation is cancellable within the issued elapsed-time limit.
+Boot failure, unsupported browser, exhausted budget, cancellation, and search
+failure remain distinct. Missing/unsupported profiles are rejected before use.
 
-The runtime meaning and authority boundary is documented in
-[`docs/JudgmentBoundary.md`](docs/JudgmentBoundary.md). That document is a
-boundary map; executable types, admission checks, and public schemas remain the
-contract authority.
+Profile equality is configured binding, not remote attestation. Generic ceval,
+user-selected threads/hash, automatic fallback, and downgrade are outside this
+preparation path. The review boundary converts legal king-to-rook castling to
+king-destination UCI using the board and sets `UCI_Chess960=false`; ordinary live
+analysis retains king-to-rook notation.
 
-## Development-only direct API
+## Development interfaces and scope
 
-`RuntimeProtocol.evaluate` and `RuntimePublicResponseCli` remain development
-interfaces for the v6 direct request/response contract. They are not a player
-HTTP API.
+`RuntimeProtocol.evaluate` and `RuntimePublicResponseCli` are development-only
+FEN/UCI/PV interfaces. See the [evaluation adapter](../judgment-evaluation/README.md).
+`GET /health` reports process liveness and health schema version, not engine or
+semantic readiness.
+
+The implemented path supports bounded question discovery, submitted legal
+hypotheses and scoped comparisons, shared follow-up investigation, and finite
+material/support comparisons. General quiet-plan
+discovery, sufficient strategic compensation, and whole-game moment selection
+remain incomplete. Read the boundary map for exact state meanings and limits.

@@ -1,10 +1,8 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.{ Black, White }
-import lila.chessjudgment.analysis.position.PositionRelationExtractor
-import lila.chessjudgment.analysis.relation.ClosedRelationEvidence
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
+import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
 import lila.chessjudgment.model.line.EngineLine
 
 class EvidenceAssemblyIdentityTest extends munit.FunSuite:
@@ -18,6 +16,83 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       case RelationWitnessDetail.CreatedCheckResponseInventory(_, _, _, checkers, _, _, _, _) =>
         checkers.size >= 2
       case _ => false
+
+  test("nested capture-order branches share their prefix but retain distinct transposed proof paths"):
+    // Doknjas, Najdorf Game 18, PDF page 157: after 13.Nf3.
+    val rootFen = "rn2nrk1/2qbbppp/p2pp2B/1p6/4P3/1BN2NQ1/PPP2PPP/3R1RK1 b - - 11 13"
+    val prefix = List("b8c6", "h6f4", "b5b4", "e4e5")
+    val movesA = prefix ++ List("c6e5", "f3e5", "d6e5", "f4e5", "c7b7")
+    val movesB = prefix ++ List("d6e5", "f3e5", "c6e5", "f4e5", "c7b7")
+    def assemble(moves: List[List[String]]) =
+      MoveReviewInputAdmission.admit(RawMoveReviewInput(
+        rootFen, prefix.head, moves.map(line => EngineLine(line, scoreCp = 0, depth = 20))
+      )).map(MoveReviewAssembler.assemble).getOrElse(fail("expected both legal nested branches"))
+    val assembled = assemble(List(movesA, movesB))
+    def path(moves: List[String]): List[MoveTransitionEdge] =
+      val line = assembled.lineReplays.find(_._2.replaySteps.map(_.moveUci) == moves).get._1
+      assembled.lineTransitionIds(line).map(id => assembled.transitions.find(_.evidence.id == id).get)
+    val a = path(movesA)
+    val b = path(movesB)
+    assertEquals(a.take(prefix.size), b.take(prefix.size))
+    assertEquals(assembled.transitions.size, movesA.size + movesB.size - prefix.size)
+    assertEquals(assembled.positions.size, assembled.transitions.size + 1)
+    assertEquals(a.last.to.fen, b.last.to.fen)
+    assertNotEquals(a.last.to, b.last.to)
+    assertNotEquals(a.last.evidence.id, b.last.evidence.id)
+    def capturedByBishop(edges: List[MoveTransitionEdge]): String =
+      val bishop = edges.find(_.moveUci == "f4e5").get
+      assembled.evidenceGraph.record(bishop.evidence).get.payload match
+        case move: MoveTransitionEvidence => move.canonicalTransitionProof.get.rootMovement.capture.get.capturedRole.name
+        case _ => fail("expected the bishop capture")
+    assertEquals(capturedByBishop(a), "pawn")
+    assertEquals(capturedByBishop(b), "knight")
+    a.zip(b).take(prefix.size).foreach { (left, right) =>
+      assert(assembled.transitionReplay(left).get eq assembled.transitionReplay(right).get)
+    }
+    val reversed = assemble(List(movesB, movesA))
+    assertEquals(assembled.transitions.map(_.evidence.id).toSet, reversed.transitions.map(_.evidence.id).toSet)
+    // The observations and complete lines may disappear without invalidating
+    // independently certified occurrences or their lower facts.
+    val independent = assembled.evidenceGraph.records.filterNot(record =>
+      Set(EvidenceLayer.Line, EvidenceLayer.Eval, EvidenceLayer.CandidateComparison, EvidenceLayer.RelativeAssessment)(record.ref.layer)
+    )
+    val withoutLines = TypedEvidenceGraph.empty.addAll(independent)
+    assert(independent.nonEmpty)
+    assert(independent.forall(withoutLines.proofEligible))
+
+  test("long legal lines keep bounded identifiers without dropping predecessor ownership"):
+    val moves = List(
+      "e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6", "b5a4", "g8f6",
+      "e1g1", "f8e7", "f1e1", "b7b5", "a4b3", "d7d6", "c2c3", "e8g8",
+      "h2h3", "c6b8", "d2d4", "b8d7", "b1d2", "c7c5"
+    )
+    val admitted = MoveReviewInputAdmission.admit(
+      RawMoveReviewInput(fen, moves.head, List(EngineLine(moves, scoreCp = 0, depth = 20)))
+    ).getOrElse(fail("expected a legal long line"))
+    val allocator = JudgmentProvenanceAllocator.forInput(admitted)
+    val root = allocator.positionRef(PositionNodeRole.Before, fen, 0, Some(White))
+    val legalLine = admitted.legalLines.head
+    val owner = allocator.lineRef(legalLine, allocator.lineOccurrenceKey(legalLine, root))
+    assert(owner.id.length <= 512)
+    var predecessor = root
+    val positions = legalLine.replay.replaySteps.zipWithIndex.map { (step, offset) =>
+      val side = if step.ply % 2 == 0 then White else Black
+      val next = allocator.successorPositionRef(predecessor, step, side)
+      // Check before building another generation so a regression cannot exhaust memory.
+      assert(next.id.exists(_.length <= 512))
+      val transitionKey = allocator.transitionOccurrenceKey(predecessor, step.moveUci, next)
+      assert(allocator.evidenceId(s"transition:$transitionKey").length <= 512)
+      if offset > 0 then
+        val otherPath = predecessor.copy(id = Some("other-predecessor"))
+        assertNotEquals(
+          next,
+          allocator.successorPositionRef(otherPath, step, side)
+        )
+      predecessor = next
+      next
+    }
+    assertEquals(positions.size, moves.size)
+    assertEquals(positions.distinct.size, moves.size)
 
   test("line and transition identities include their exact board occurrence"):
     val afterE4 = PrincipalVariationEvidence
@@ -185,6 +260,14 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
 
     assert(freshChecks.nonEmpty)
     freshChecks.foreach { record =>
+      record.payload match
+        case relation: RelationFactEvidence => relation.detail match
+          case RelationWitnessDetail.CreatedCheckResponseInventory(_, Black, kingSquare, checkers, _, _, _, _) =>
+            assertEquals(kingSquare.key, "e8")
+            assertEquals(checkers.map(checker => checker.square.key -> checker.role.name.toLowerCase).toSet,
+              Set("b5" -> "bishop", "e1" -> "rook"))
+          case _ => fail("expected both exact checkers on the black king")
+        case _ => fail("expected the selected double-check relation")
       val carriers = record.parents.flatMap(assembled.evidenceGraph.record).collect {
         case EvidenceRecord(_, occurrence: ClosedRelationOccurrenceEvidence, _) => occurrence
       }
@@ -276,58 +359,6 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assertEquals(parents.count(_.payload.isInstanceOf[ClosedRelationOccurrenceEvidence]), 1)
     assertEquals(parents.count(_.payload.isInstanceOf[RelationFactEvidence]), 0)
     assert(assembled.evidenceGraph.proofEligible(stalemate))
-
-  test("transposed boards share double-check control semantics but retain both exact occurrences"):
-    val rootFen = "4k3/6pp/8/8/8/8/PP2B3/4R1K1 w - - 0 1"
-    def endFen(moves: List[String]): String =
-      PrincipalVariationEvidence
-        .legalMoveReplay(rootFen, moves, startPly = 0)
-        .flatMap(CanonicalLineReplay.fromLegalReplay)
-        .flatMap(_.replaySteps.lastOption.map(_.fenAfter))
-        .getOrElse(fail(s"expected legal transposition path: ${moves.mkString(" ")}"))
-    val transposedA = endFen(List("a2a3", "h7h6", "b2b3", "g7g6"))
-    val transposedB = endFen(List("b2b3", "g7g6", "a2a3", "h7h6"))
-    assert(PrincipalVariationEvidence.sameBoardState(transposedA, transposedB))
-
-    val replay = PrincipalVariationEvidence
-      .legalMoveReplay(transposedA, List("e2b5"), startPly = 4)
-      .flatMap(CanonicalLineReplay.fromLegalReplay)
-      .getOrElse(fail("expected the transposed double-check transition"))
-    val transition = replay.onlyTransition.getOrElse(fail("expected one transition"))
-    val production = ClosedRelationEvidence.relationProduction(replay, "e2b5")
-    def bind(path: String): CanonicalRelationTransitionInventory =
-      val beforeRef = PositionNodeRef(transposedA, 4, Some(White), Some(s"$path-before"))
-      val afterFen = chess.format.Fen.write(transition.legal.after).value
-      val afterRef = PositionNodeRef(afterFen, 5, Some(Black), Some(s"$path-after"))
-      def snapshot(
-          analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
-          position: PositionNodeRef
-      ): CanonicalPositionRelationSnapshot =
-        TypedEvidenceGraph.empty
-          .addAll(PositionRelationExtractor.records(
-            analysis.boardRelations,
-            position,
-            EvidenceScope.CurrentPosition,
-            relation => s"$path:${position.ply}:${relation.semanticId}"
-          ))
-          .relationGraph
-          .closedPositionRelationSnapshot(position, EvidenceScope.CurrentPosition, analysis.relationInventory)
-      val before = snapshot(transition.beforeAnalysis, beforeRef)
-      val after = snapshot(transition.afterAnalysis, afterRef)
-      val delta = CanonicalRelationDelta.bind(transition.declared, transition.relationDelta, before, after)
-      production.bindClosedOutput(before, after, delta)
-    val boundA = bind("transposition-a")
-    val boundB = bind("transposition-b")
-    val doubleA = boundA.relations.filter(hasCreatedDoubleCheck)
-    val doubleB = boundB.relations.filter(hasCreatedDoubleCheck)
-
-    assertEquals(doubleA.size, 1)
-    assertEquals(doubleB.size, 1)
-    assertEquals(doubleA.head.assertionId, doubleB.head.assertionId)
-    assertEquals(doubleA.head.semanticId, doubleB.head.semanticId)
-    assertNotEquals(boundA.before.position, boundB.before.position)
-    assert(PrincipalVariationEvidence.sameBoardState(boundA.before.position.fen, boundB.before.position.fen))
-    assertNotEquals(boundA.after.position, boundB.after.position)
 
   private def input: AdmittedMoveReviewInput =
     MoveReviewInputAdmission

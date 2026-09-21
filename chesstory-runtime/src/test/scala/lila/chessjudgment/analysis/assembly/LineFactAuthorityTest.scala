@@ -1,243 +1,104 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.{ Black, White }
+import chess.Black
 
 import lila.chessjudgment.analysis.line.LineFactNormalizer
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
+import lila.chessjudgment.model.line.CanonicalPositionHistory
 
 class LineFactAuthorityTest extends munit.FunSuite:
+  test("repeated promotion UCI retains both exact observed occurrences"):
+    val fen = "8/P7/P6k/8/8/8/8/7K w - - 0 1"
+    val payload = normalizedLine(fen, Nil, fen,
+      List("a7a8q", "h6h5", "a8b8", "h5h4", "a6a7", "h4h3", "a7a8q"))
+    assertEquals(payload.lineEventsOf(LineEventKind.Promotion).map(e => e.plyOffset -> e.moveUci),
+      List(0 -> "a7a8q", 6 -> "a7a8q"))
+    assertEquals(payload.material.get.events.map(_.promotionGainCp), List(800, 800))
+    assertEquals(payload.material.get.runningBalancesForMover, List(800, 1600))
 
-  test("an immediate recapture stays an exact lower line fact"):
-    val initialFen = "r1b2rk1/5ppp/1qp2n2/p2p4/1b6/N3P1P1/PPQB1PBP/R1R3K1 w - - 0 13"
-    val rootFen = "r1b2rk1/5ppp/1qp2n2/p2p4/1b6/4P1P1/PPQB1PBP/RNR3K1 b - - 1 13"
-    val moves = List("b4d2", "b1d2")
-    val history = CanonicalPositionHistory
-      .from(initialFen, List("a3b1"), rootFen)
-      .toOption
-      .getOrElse(fail("expected the exact predecessor history"))
-    val lineHistory = history
-      .extend(moves)
-      .toOption
-      .getOrElse(fail("expected the exact recapture line"))
-    val replay = CanonicalLineReplay
-      .fromHistory(lineHistory.segmentReplaySteps.drop(history.segmentReplaySteps.size))
-      .getOrElse(fail("expected one canonical replay"))
-    val moveRefs = replay.replaySteps.map(step =>
-      PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
-    )
-    val first = moveRefs.head
-    val line = LineNodeRef("exact-recapture", first.uci)
-    val facts = PrincipalVariationEvidence.LineFacts(
-      line = PrincipalVariationEvidence.LineVariationRef(moveRefs),
-      first = first,
-      reply = moveRefs.lift(1),
-      continuation = None,
-      continuationTail = Nil
-    )
-    val material = LegalLineAssembler
-      .lineMaterialSummary(history, lineHistory)
-      .getOrElse(fail("expected the canonical material ledger"))
-    val payload = LineFactNormalizer
-      .fromValidatedLine(
-        id = "exact-recapture-evidence",
-        lineRef = line,
-        facts = facts,
-        replay = replay,
-        position = PositionNodeRef(rootFen, 0, Some(Black)),
-        scope = EvidenceScope.LegalLine,
-        materialSummary = Some(material)
-      )
-      .payload match
-      case value: LineFactEvidence => value
-      case _                       => fail("expected normalized line evidence")
+  test("repeated capture UCI retains both material events without a lasting-gain projection"):
+    val payload = normalizedLine("7k/8/5KQ1/8/1r6/8/r7/R7 b - - 0 1", List("b4b3"),
+      "7k/8/5KQ1/8/8/1r6/r7/R7 w - - 1 2",
+      List("a1a2", "b3b2", "a2a1", "b2a2", "a1a2"))
+    assertEquals(payload.materialCaptures.map(c => c.plyOffset -> c.moveUci),
+      List(0 -> "a1a2", 4 -> "a1a2"))
+    assertEquals(payload.material.get.runningBalancesForMover, List(500, 1000))
 
-    val recapture = payload.materialCaptures
-      .find(capture => EvidenceRef.sameMove(capture.moveUci, "b1d2"))
-      .getOrElse(fail("expected the canonical recapture occurrence"))
-    assert(recapture.recaptureStatus.isInstanceOf[LineMaterialRecaptureStatus.Proven])
+  test("observed recovery includes zero and a promotion-only recovery without requiring game termination"):
+    val zeroFen = "7k/2p2Kp1/3P3P/8/1Q6/8/8/8 w - - 0 1"
+    val zero = normalizedLine(zeroFen, Nil, zeroFen,
+      List("b4c5", "c7d6", "c5d6", "g7h6", "d6h6")).material.get
+    assertEquals(zero.runningBalancesForMover, List(-100, 0, -100, 0))
+    assert(zero.hasObservedRecovery)
+    val promotionFen = "7k/Pp3Kp1/7P/8/5Q2/8/8/8 w - - 0 1"
+    val promotion = normalizedLine(promotionFen, Nil, promotionFen,
+      List("f4g5", "g7h6", "a7a8n", "b7b6", "g5h6")).material.get
+    assertEquals(promotion.runningBalancesForMover, List(-100, 100, 200))
+    assertEquals(promotion.events.find(_.plyOffset == 2).get.capture, None)
+    assert(promotion.hasObservedRecovery)
 
-    assertEquals(
-      payload.lineConsequences
-        .filter(_.kind == LineConsequenceKind.RecaptureSequence)
-        .flatMap(_.eventOccurrence)
-        .map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
-      List(1 -> "b1d2")
-    )
+  test("queen-for-pawn loss remains an observed capture and recapture sequence"):
+    val payload = normalizedLine("3r4/3p3k/8/8/8/8/8/3Q3K b - - 0 1", List("h7h8"),
+      "3r3k/3p4/8/8/8/8/8/3Q3K w - - 1 2", List("d1d7", "d8d7"))
+    assertEquals(payload.materialCaptures.map(c =>
+      (c.moveUci, c.plyOffset, c.attackerRole.name, c.capturedRole.name, c.recapture)),
+      List(("d1d7", 0, "queen", "pawn", false), ("d8d7", 1, "rook", "queen", true)))
+    assertEquals(payload.material.get.runningBalancesForMover, List(100, -800))
+    assertEquals(payload.lineEventsOf(LineEventKind.Recapture).map(e => e.plyOffset -> e.moveUci),
+      List(1 -> "d8d7"))
 
-  test("repeated promotion UCI retains two exact consequence occurrences"):
-    val rootFen = "8/P7/P6k/8/8/8/8/7K w - - 0 1"
-    val moves = List("a7a8q", "h6h5", "a8b8", "h5h4", "a6a7", "h4h3", "a7a8q")
-    val (payload, line) = normalizedLine(
-      id = "repeated-promotion",
-      initialFen = rootFen,
-      historyMoves = Nil,
-      rootFen = rootFen,
-      moves = moves
-    )
+  test("an immediate reply check uses the canonical event while a completed quiet material scan is zero"):
+    val fen = "1r5k/8/8/8/8/8/8/K6N w - - 0 1"
+    val payload = normalizedLine(fen, Nil, fen, List("h1f2", "b8b1"))
+    val event = payload.lineEventsOf(LineEventKind.Check).head
+    assertEquals((event.moveUci, event.plyOffset, event.side), ("b8b1", 1, Some(Black)))
+    assertEquals(payload.material.get.events, Nil)
+    assertEquals(payload.material.get.observedNetCpForMover, 0)
 
-    val promotions = payload.lineConsequences.filter(_.kind == LineConsequenceKind.Promotion)
-    assertEquals(promotions.flatMap(_.eventOccurrence.map(_.plyOffset)), List(0, 6))
-    assertEquals(
-      promotions.map(_.proofOccurrences.map(occurrence => occurrence.plyOffset -> occurrence.moveUci)),
-      List(
-        List(0 -> "a7a8q"),
-        List(0 -> "a7a8q", 6 -> "a7a8q")
-      )
-    )
-  test("lasting material gain does not absorb a later repeated UCI capture"):
-    val initialFen = "7k/8/5KQ1/8/1r6/8/r7/R7 b - - 0 1"
-    val rootFen = "7k/8/5KQ1/8/8/1r6/r7/R7 w - - 1 2"
-    val (payload, _) = normalizedLine(
-      id = "repeated-material-capture",
-      initialFen = initialFen,
-      historyMoves = List("b4b3"),
-      rootFen = rootFen,
-      moves = List("a1a2", "b3b2", "a2a1", "b2a2", "a1a2")
-    )
+  test("a different replay's ledger fails the existing graph boundary while None remains uncomputed"):
+    val initial = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    val history = CanonicalPositionHistory.from(initial, Nil, initial).toOption.get
+    val a = List("e2e4", "d7d5", "e4d5")
+    val b = List("d2d4", "e7e5", "d4e5")
+    val ctx = MoveReviewAssembler.assembleOccurrences(MoveReviewInputAdmission.admitIndependent(history,
+      a.head, suppliedLines = List(a, b).map(SuppliedCommentaryLine(CommentaryLineSource.Analysis, _))).get)
+    def factFor(moves: List[String]) = ctx.legalLines.iterator.flatMap(line =>
+      ctx.evidenceGraph.uniqueProofEligibleLineFactRecordFor(line.ref)).find(_._2.lineReplayMoves == moves).get
+    val (record, fact) = factFor(a)
+    val other = factFor(b)._2.material
+    val detached = record.copy(payload = fact.copy(material = other))
+    val wrongGraph = TypedEvidenceGraph.empty.addAll(ctx.evidenceGraph.records.map(value =>
+      if value.ref == record.ref then detached else value))
+    assert(!wrongGraph.proofEligible(detached))
+    assertEquals(wrongGraph.uniqueProofEligibleLineFactRecordFor(fact.line), None)
+    intercept[IllegalArgumentException] {
+      LineFactEvidence.fromCertifiedReplay(fact.line, fact.certifiedReplay.get, other)
+    }
+    val uncomputed = record.copy(payload = fact.copy(material = None))
+    val uncomputedGraph = TypedEvidenceGraph.empty.addAll(ctx.evidenceGraph.records.map(value =>
+      if value.ref == record.ref then uncomputed else value))
+    assert(uncomputedGraph.proofEligible(uncomputed))
+    assertEquals(uncomputed.payload.asInstanceOf[LineFactEvidence].material, None)
+    assert(fact.material.get.events eq fact.material.get.events)
+    assert(fact.lineEvents eq fact.lineEvents)
 
-    assertEquals(
-      payload.lineConsequences
-        .filter(_.kind == LineConsequenceKind.MaterialGain)
-        .flatMap(_.eventOccurrence)
-        .map(_.plyOffset),
-      List(0)
-    )
+  test("a ledger rejects a mismatched root history and unrelated predecessor without replaying a board"):
+    val initial = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    val root = CanonicalPositionHistory.from(initial, Nil, initial).toOption.get
+    val afterE4 = root.extend(List("e2e4")).toOption.get
+    val black = CanonicalLineReplay.fromHistory(afterE4.extend(List("d7d5")).toOption.get.segmentReplaySteps.drop(1)).get
+    intercept[IllegalArgumentException] { LineMaterialSummary(black, root, None) }
+    val unrelated = CanonicalLineReplay.fromHistory(root.extend(List("d2d4")).toOption.get.segmentReplaySteps).get
+    intercept[IllegalArgumentException] { LineMaterialSummary(black, afterE4, Some(unrelated)) }
+    assertEquals(LegalLineAssembler.lineMaterialSummary(afterE4, root.extend(List("d2d4", "d7d5")).toOption.get), None)
 
-  test("material recovery accepts zero after the last loss and skips a promotion-only event"):
-    val (zeroRecovery, _) = normalizedLine(
-      id = "zero-material-recovery",
-      initialFen = "7k/2p2Kp1/3P3P/8/1Q6/8/8/8 w - - 0 1",
-      historyMoves = Nil,
-      rootFen = "7k/2p2Kp1/3P3P/8/1Q6/8/8/8 w - - 0 1",
-      moves = List("b4c5", "c7d6", "c5d6", "g7h6", "d6h6")
-    )
-    assertEquals(
-      zeroRecovery.lineConsequences
-        .filter(_.kind == LineConsequenceKind.RecoveryWindow)
-        .flatMap(_.eventOccurrence)
-        .map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
-      List(4 -> "d6h6")
-    )
-
-    val (promotionRecovery, _) = normalizedLine(
-      id = "promotion-material-recovery",
-      initialFen = "7k/Pp3Kp1/7P/8/5Q2/8/8/8 w - - 0 1",
-      historyMoves = Nil,
-      rootFen = "7k/Pp3Kp1/7P/8/5Q2/8/8/8 w - - 0 1",
-      moves = List("f4g5", "g7h6", "a7a8n", "b7b6", "g5h6")
-    )
-    assertEquals(
-      promotionRecovery.lineConsequences
-        .find(_.kind == LineConsequenceKind.MaterialGain)
-        .flatMap(_.eventOccurrence)
-        .map(_.plyOffset),
-      Some(2)
-    )
-    assertEquals(
-      promotionRecovery.lineConsequences
-        .filter(_.kind == LineConsequenceKind.RecoveryWindow)
-        .flatMap(_.eventOccurrence)
-        .map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
-      List(4 -> "g5h6")
-    )
-
-  test("a queen-for-pawn blunder remains an exact capture sequence without an upper idea label"):
-    val initialFen = "3r4/3p3k/8/8/8/8/8/3Q3K b - - 0 1"
-    val rootFen = "3r3k/3p4/8/8/8/8/8/3Q3K w - - 1 2"
-    val (payload, _) = normalizedLine(
-      id = "queen-for-pawn-blunder",
-      initialFen = initialFen,
-      historyMoves = List("h7h8"),
-      rootFen = rootFen,
-      moves = List("d1d7", "d8d7")
-    )
-
-    assertEquals(
-      payload.materialCaptures.map(capture =>
-        (capture.moveUci, capture.plyOffset, capture.attackerRole.name, capture.capturedRole.name, capture.recapture)
-      ),
-      List(
-        ("d1d7", 0, "queen", "pawn", false),
-        ("d8d7", 1, "rook", "queen", true)
-      )
-    )
-    assertEquals(payload.lineConsequences.map(_.kind), List(LineConsequenceKind.RecaptureSequence))
-
-  test("an immediate reply check is projected from its exact L1 event but is not causal without a link"):
-    val rootFen = "1r5k/8/8/8/8/8/8/K6N w - - 0 1"
-    val (payload, line) = normalizedLine(
-      id = "unlinked-immediate-reply-check",
-      initialFen = rootFen,
-      historyMoves = Nil,
-      rootFen = rootFen,
-      moves = List("h1f2", "b8b1"),
-      requireMaterial = false
-    )
-
-    val checkEvent = payload.lineEvents.filter(_.kind == LineEventKind.Check) match
-      case exact :: Nil => exact
-      case other        => fail(s"expected one exact reply check event, got $other")
-    assertEquals(checkEvent.moveUci, "b8b1")
-    assertEquals(checkEvent.plyOffset, 1)
-    assertEquals(checkEvent.side, Some(Black))
-
-    val liability = payload.lineConsequences.filter(_.kind == LineConsequenceKind.ImmediateReplyCheck) match
-      case exact :: Nil => exact
-      case other        => fail(s"expected one exact immediate-reply-check projection, got $other")
-    assertEquals(
-      liability.proofOccurrences.map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
-      List(0 -> "h1f2", 1 -> "b8b1")
-    )
-    assertEquals(liability.eventOccurrence.map(_.plyOffset), Some(1))
-    assertEquals(liability.beneficiary, Some(Black))
-    assertEquals(liability.rootMove, Some(line.rootMove))
-
-  private def normalizedLine(
-      id: String,
-      initialFen: String,
-      historyMoves: List[String],
-      rootFen: String,
-      moves: List[String],
-      requireMaterial: Boolean = true
-  ): (LineFactEvidence, LineNodeRef) =
-    val history = CanonicalPositionHistory
-      .from(initialFen, historyMoves, rootFen)
-      .toOption
-      .getOrElse(fail(s"expected canonical history for $id"))
-    val lineHistory = history
-      .extend(moves)
-      .toOption
-      .getOrElse(fail(s"expected canonical line for $id"))
-    val replay = CanonicalLineReplay
-      .fromHistory(lineHistory.segmentReplaySteps.drop(history.segmentReplaySteps.size))
-      .getOrElse(fail(s"expected canonical replay for $id"))
-    val moveRefs = replay.replaySteps.map(step =>
-      PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
-    )
-    val first = moveRefs.headOption.getOrElse(fail(s"expected a root move for $id"))
-    val line = LineNodeRef(id, first.uci)
-    val facts = PrincipalVariationEvidence.LineFacts(
-      line = PrincipalVariationEvidence.LineVariationRef(moveRefs),
-      first = first,
-      reply = moveRefs.lift(1),
-      continuation = moveRefs.lift(2),
-      continuationTail = moveRefs.drop(3)
-    )
-    val material = LegalLineAssembler
-      .lineMaterialSummary(history, lineHistory)
-    if requireMaterial && material.isEmpty then fail(s"expected a canonical material ledger for $id")
-    val payload = LineFactNormalizer
-      .fromValidatedLine(
-        id = s"$id-evidence",
-        lineRef = line,
-        facts = facts,
-        replay = replay,
-        position = PositionNodeRef(rootFen, 0, replay.legalSteps.headOption.map(_.move.piece.color)),
-        scope = EvidenceScope.LegalLine,
-        materialSummary = material
-      )
-      .payload match
-      case value: LineFactEvidence => value
-      case _                       => fail(s"expected normalized line evidence for $id")
-    payload -> line
+  private def normalizedLine(initialFen: String, historyMoves: List[String], rootFen: String,
+      moves: List[String]): LineFactEvidence =
+    val history = CanonicalPositionHistory.from(initialFen, historyMoves, rootFen).toOption.get
+    val end = history.extend(moves).toOption.get
+    val replay = CanonicalLineReplay.fromHistory(end.segmentReplaySteps.drop(history.segmentReplaySteps.size)).get
+    val predecessor = CanonicalLineReplay.fromHistory(history.segmentReplaySteps.takeRight(1))
+    val material = LineMaterialSummary(replay, history, predecessor)
+    LineFactNormalizer.fromValidatedLine("line-test-evidence", LineNodeRef("line-test", moves.head), replay,
+      PositionNodeRef(rootFen, history.currentPly, Some(material.sideToMove)), EvidenceScope.LegalLine,
+      Some(material)).payload.asInstanceOf[LineFactEvidence]

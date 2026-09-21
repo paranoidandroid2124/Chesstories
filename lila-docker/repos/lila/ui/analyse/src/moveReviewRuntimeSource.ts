@@ -3,6 +3,7 @@ import {
   buildMoveReviewEngineWorkReport,
   buildMoveReviewJobRequest,
   decodeMoveReviewSnapshot,
+  moveReviewBudgets,
   type IssuedMoveReviewEngineWork,
   type MoveReviewEngineOutcome,
   type MoveReviewSource,
@@ -14,6 +15,7 @@ type MoveReviewEngineExecutor = (
   work: IssuedMoveReviewEngineWork,
   receivedAtMs: number,
   signal: AbortSignal,
+  deadlineAtMs?: number,
 ) => Promise<MoveReviewEngineOutcome>;
 
 interface ReceivedJson {
@@ -23,7 +25,12 @@ interface ReceivedJson {
 
 export class MoveReviewRuntimeError extends Error {
   constructor(
-    readonly code: 'offline' | 'rate-limit' | 'malformed-response' | 'runtime-unavailable',
+    readonly code:
+      | 'offline'
+      | 'rate-limit'
+      | 'malformed-response'
+      | 'runtime-unavailable'
+      | 'deadline-exceeded',
     readonly retryable: boolean,
   ) {
     super(code);
@@ -34,32 +41,52 @@ export class MoveReviewRuntimeError extends Error {
 export function createMoveReviewRuntimeSource(execute: MoveReviewEngineExecutor): MoveReviewSource {
   return {
     async run(request, emit, signal): Promise<void> {
+      const deadlineAtMs = request.deadlineAtMs ?? performance.now() + moveReviewBudgets.singleMs;
+      const abort = new AbortController();
+      const forwardAbort = () => abort.abort();
+      signal.addEventListener('abort', forwardAbort, { once: true });
+      if (signal.aborted) forwardAbort();
+      const remaining = () => Math.max(0, Math.ceil(deadlineAtMs - performance.now()));
+      const checkDeadline = () => {
+        if (remaining() <= 0) {
+          abort.abort();
+          throw new MoveReviewRuntimeError('deadline-exceeded', true);
+        }
+      };
+      const deadlineTimer = setTimeout(() => abort.abort(), remaining());
+      const activeSignal = abort.signal;
       let jobId: string | undefined;
-      let cancelled = false;
-      let completed = false;
-      const cancel = (): void => {
-        if (jobId && !cancelled) {
-          cancelled = true;
+      let released = false;
+      const release = (): void => {
+        if (jobId && !released) {
+          released = true;
           void fetch(`${positionCommentaryJobsPath}/${jobId}`, {
             ...defaultInit,
             cache: 'no-store',
             method: 'delete',
             keepalive: true,
-            headers: { ...jsonHeader, ...xhrHeader },
+            headers: { ...jsonHeader, ...xhrHeader, Prefer: 'return=minimal' },
           }).catch(() => {});
         }
       };
-      signal.addEventListener('abort', cancel, { once: true });
+      activeSignal.addEventListener('abort', release, { once: true });
       try {
+        if (signal.aborted) return;
+        checkDeadline();
         const created = await requestJson(
           positionCommentaryJobsPath,
           {
             method: 'post',
             body: JSON.stringify(
-              buildMoveReviewJobRequest(request.requestId, request.subject, request.engineProfile),
+              buildMoveReviewJobRequest(
+                request.requestId,
+                request.subject,
+                request.engineProfile,
+                remaining(),
+              ),
             ),
           },
-          signal,
+          activeSignal,
           [201],
         );
         let snapshot = decodeMoveReviewSnapshot(created.body, {
@@ -67,31 +94,37 @@ export function createMoveReviewRuntimeSource(execute: MoveReviewEngineExecutor)
           subject: request.subject,
           engineProfile: request.engineProfile,
         });
+        created.body = undefined;
         if (!snapshot) throw new MoveReviewRuntimeError('malformed-response', false);
         jobId = snapshot.jobId;
+        checkDeadline();
         const seenWorkIds = new Set<string>();
         const seenExecutionKeys = new Set<string>();
         let expectedWorkNumber = 0;
         let receivedAtMs = created.receivedAtMs;
-        if (signal.aborted) {
-          cancel();
+        if (activeSignal.aborted) {
+          release();
           return;
         }
 
-        while (!signal.aborted) {
-          emit(snapshot);
+        while (!activeSignal.aborted) {
+          checkDeadline();
           if (
             snapshot.kind === 'completed' ||
             snapshot.kind === 'position-action' ||
             snapshot.kind === 'abstained'
           ) {
-            completed = true;
+            emit(snapshot);
+            checkDeadline();
             return;
           }
-          if (signal.aborted) return;
+          checkDeadline();
+          if (activeSignal.aborted) return;
 
           const workNumber = Number(snapshot.issuedEngineWork.workId.slice('work:'.length));
           if (
+            // The producer owns the exploration/repair allowance. Transport keeps the
+            // original deadline and exact work identity, not a second copy of that policy.
             workNumber !== expectedWorkNumber ||
             seenWorkIds.has(snapshot.issuedEngineWork.workId) ||
             seenExecutionKeys.has(snapshot.issuedEngineWork.executionKeySha256)
@@ -101,16 +134,24 @@ export function createMoveReviewRuntimeSource(execute: MoveReviewEngineExecutor)
           seenExecutionKeys.add(snapshot.issuedEngineWork.executionKeySha256);
           expectedWorkNumber++;
 
-          const outcome = await execute(snapshot.issuedEngineWork, receivedAtMs, signal);
-          if (signal.aborted) return;
-          const reportBody = JSON.stringify(buildMoveReviewEngineWorkReport(snapshot.issuedEngineWork, outcome));
+          emit(snapshot);
+          checkDeadline();
+          if (activeSignal.aborted) return;
+
+          const outcome = await execute(snapshot.issuedEngineWork, receivedAtMs, activeSignal, deadlineAtMs);
+          checkDeadline();
+          if (activeSignal.aborted) return;
+          const reportBody = JSON.stringify(
+            buildMoveReviewEngineWorkReport(snapshot.issuedEngineWork, outcome),
+          );
+          checkDeadline();
           const reported = await requestJson(
             `${positionCommentaryJobsPath}/${snapshot.jobId}/engine-work-reports`,
             {
               method: 'post',
               body: reportBody,
             },
-            signal,
+            activeSignal,
             [200],
           );
           const next = decodeMoveReviewSnapshot(reported.body, {
@@ -119,13 +160,22 @@ export function createMoveReviewRuntimeSource(execute: MoveReviewEngineExecutor)
             engineProfile: request.engineProfile,
             jobId: snapshot.jobId,
           });
+          reported.body = undefined;
           if (!next) throw new MoveReviewRuntimeError('malformed-response', false);
+          checkDeadline();
           snapshot = next;
           receivedAtMs = reported.receivedAtMs;
         }
+      } catch (error) {
+        if (!signal.aborted) checkDeadline();
+        throw error;
       } finally {
-        signal.removeEventListener('abort', cancel);
-        if (!completed) cancel();
+        clearTimeout(deadlineTimer);
+        signal.removeEventListener('abort', forwardAbort);
+        activeSignal.removeEventListener('abort', release);
+        // Both a consumed terminal result and an abandoned job have no server-side
+        // reader left. The coordinator owns the last usable assessment and evidence.
+        release();
       }
     },
   };

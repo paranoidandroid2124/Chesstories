@@ -27,7 +27,8 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
       data: JsObject,
       pov: Pov,
       chess960PositionNum: Option[Int] = None,
-      inlinePgn: Option[String] = None
+      inlinePgn: Option[String] = None,
+      moveReview: JsObject = Json.obj("mode" -> "off")
   )(using ctx: Context): Page =
     Page("Review")
       .css("analyse.workspace")
@@ -37,7 +38,8 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
           "userAnalysis",
           Json
             .obj(
-              "data" -> data
+              "data" -> data,
+              "moveReview" -> moveReview
             )
             .add("inlinePgn", inlinePgn) ++
             explorerAndCevalConfig

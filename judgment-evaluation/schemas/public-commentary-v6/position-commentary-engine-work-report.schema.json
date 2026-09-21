@@ -41,7 +41,7 @@
       "properties": {
         "kind": {"const": "executor_failed"},
         "failure_code": {
-          "enum": ["cancelled", "lease_expired", "search_budget_exhausted", "engine_failure"]
+          "enum": ["cancelled", "lease_expired", "search_budget_exhausted", "engine_failure", "engine_unavailable", "browser_unsupported"]
         }
       }
     },

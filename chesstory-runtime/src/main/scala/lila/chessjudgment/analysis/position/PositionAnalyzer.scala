@@ -248,27 +248,6 @@ private[position] final class PositionRelationTransitionCalculation(
       afterInventory = after
     )
 
-private[position] final class StaticRelationTransitionKey(
-    val before: PositionRelationExtractor.BoardRelationSnapshot,
-    val after: PositionRelationExtractor.BoardRelationSnapshot,
-    val refresh: PositionRelationExtractor.BoardRelationRefreshFootprint
-):
-  private val cachedHash =
-    var hash = 17
-    hash = 31 * hash + System.identityHashCode(before)
-    hash = 31 * hash + System.identityHashCode(after)
-    31 * hash + refresh.##
-
-  override def hashCode(): Int = cachedHash
-
-  override def equals(other: Any): Boolean =
-    other match
-      case that: StaticRelationTransitionKey =>
-        (before.asInstanceOf[AnyRef] eq that.before.asInstanceOf[AnyRef]) &&
-          (after.asInstanceOf[AnyRef] eq that.after.asInstanceOf[AnyRef]) &&
-          refresh == that.refresh
-      case _ => false
-
 private[chessjudgment] final class PositionAnalysis private[position] (
     val occurrence: PositionOccurrenceState,
     val position: Position,
@@ -400,17 +379,10 @@ object PositionAnalyzer:
     val beforeStaticRelations = previousComputation.staticBoard.relationSnapshot
     val afterStaticRelations = destinationStaticBoard.relationSnapshot
     val staticRefresh = PositionRelationExtractor.staticRelationRefreshFootprint(footprint)
-    val staticTransitionKey = new StaticRelationTransitionKey(
-      beforeStaticRelations,
-      afterStaticRelations,
-      staticRefresh
-    )
     val transitionCalculation = new PositionRelationTransitionCalculation(
-      detailTransition = () => staticRelationTransitionCache.getOrCompute(staticTransitionKey) {
-        builtStaticTransition.getOrElse(
-          beforeStaticRelations.transitionTo(afterStaticRelations, staticRefresh)
-        )
-      },
+      detailTransition = () => builtStaticTransition.getOrElse(
+        beforeStaticRelations.transitionTo(afterStaticRelations, staticRefresh)
+      ),
       beforeInventory = () => previousComputation.relationInventory,
       afterInventory = () => computation.relationInventory
     )
@@ -423,14 +395,12 @@ object PositionAnalyzer:
     )
 
   private val CacheMaxEntries = 4096
+  // Analyses retain their exact computation and static geometry. The global
+  // memo must not keep those large inventories alive after their owners leave.
   private val staticBoardGeometryCache =
-    new StripedLruCache[Board, StaticBoardGeometryComputation](CacheMaxEntries)
+    new StripedLruCache[Board, StaticBoardGeometryComputation](CacheMaxEntries, weakValues = true)
   private val positionComputationCache =
-    new StripedLruCache[PositionOccurrenceKey, PositionComputation](CacheMaxEntries)
-  private val staticRelationTransitionCache =
-    new StripedLruCache[StaticRelationTransitionKey, PositionRelationExtractor.BoardRelationDetailTransition](
-      CacheMaxEntries
-    )
+    new StripedLruCache[PositionOccurrenceKey, PositionComputation](CacheMaxEntries, weakValues = true)
 
   private[position] def computeOccurrence(
       position: Position,

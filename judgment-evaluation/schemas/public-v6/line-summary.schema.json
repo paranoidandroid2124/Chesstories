@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-v6/line-summary.schema.json",
+  "title": "Observed events and material changes in one exact finite path",
+  "description": "Material changes are relative to the path's start and perspective. They are not engine scores, forced gains, or initial material balance. Omitted material means no material summary was produced; it does not assert a zero balance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scope", "perspective", "premise_ids", "events", "ending"],
+  "properties": {
+    "scope": {"const": "observed_line"},
+    "perspective": {"$ref": "#/$defs/side"},
+    "premise_ids": {
+      "type": "array", "minItems": 1, "maxItems": 1,
+      "items": {"$ref": "#/$defs/id"}
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["kind", "ply_offset", "occurrence_id", "move_uci"],
+        "properties": {
+          "kind": {"enum": ["capture", "recapture", "check_evasion", "castling", "check", "mate", "stalemate", "promotion"]},
+          "ply_offset": {"$ref": "#/$defs/offset"},
+          "occurrence_id": {"$ref": "#/$defs/id"},
+          "move_uci": {"$ref": "#/$defs/move"},
+          "side": {"$ref": "#/$defs/side"},
+          "piece_role": {"$ref": "#/$defs/role"},
+          "target_role": {"$ref": "#/$defs/role"},
+          "square": {"$ref": "#/$defs/square"}
+        }
+      }
+    },
+    "material": {
+      "type": "object", "additionalProperties": false,
+      "required": ["events", "net_cp", "max_gain_cp", "max_loss_cp", "recovered_after_loss"],
+      "if": {"properties": {"events": {"maxItems": 0}}},
+      "then": {
+        "properties": {
+          "net_cp": {"const": 0},
+          "max_gain_cp": {"const": 0},
+          "max_loss_cp": {"const": 0},
+          "recovered_after_loss": {"const": false}
+        }
+      },
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["ply_offset", "occurrence_id", "move_uci", "side", "from", "to", "before_role", "after_role", "promotion_gain_cp", "delta_cp", "balance_cp"],
+            "properties": {
+              "ply_offset": {"$ref": "#/$defs/offset"},
+              "occurrence_id": {"$ref": "#/$defs/id"},
+              "move_uci": {"$ref": "#/$defs/move"},
+              "side": {"$ref": "#/$defs/side"},
+              "from": {"$ref": "#/$defs/square"},
+              "to": {"$ref": "#/$defs/square"},
+              "before_role": {"$ref": "#/$defs/role"},
+              "after_role": {"$ref": "#/$defs/role"},
+              "capture": {
+                "type": "object", "additionalProperties": false,
+                "required": ["role", "square", "value_cp", "recapture"],
+                "properties": {
+                  "role": {"$ref": "#/$defs/role"},
+                  "square": {"$ref": "#/$defs/square"},
+                  "value_cp": {"type": "integer", "minimum": 1},
+                  "recapture": {"enum": ["proven", "excluded", "unknown"]}
+                }
+              },
+              "promotion_gain_cp": {"type": "integer", "minimum": 0},
+              "delta_cp": {"type": "integer"},
+              "balance_cp": {"type": "integer"}
+            }
+          }
+        },
+        "net_cp": {"type": "integer"},
+        "max_gain_cp": {"type": "integer", "minimum": 0},
+        "max_loss_cp": {"type": "integer", "maximum": 0},
+        "recovered_after_loss": {"type": "boolean"}
+      }
+    },
+    "ending": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "ply_offset", "occurrence_id"],
+      "properties": {
+        "kind": {"enum": ["line_end", "checkmate", "stalemate"]},
+        "ply_offset": {"$ref": "#/$defs/offset"},
+        "occurrence_id": {"$ref": "#/$defs/id"}
+      }
+    }
+  },
+  "$defs": {
+    "side": {"enum": ["white", "black"]},
+    "role": {"enum": ["pawn", "knight", "bishop", "rook", "queen", "king"]},
+    "square": {"type": "string", "pattern": "^[a-h][1-8]$"},
+    "move": {"type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"},
+    "offset": {"type": "integer", "minimum": 0, "maximum": 599},
+    "id": {"type": "string", "minLength": 1}
+  }
+}

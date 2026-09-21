@@ -82,12 +82,13 @@ object ChesstoryRuntime:
               PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "runtime_busy")
             )
           else
+            val requestReceivedEpochMs = System.currentTimeMillis()
             var workerAcquired = false
             try
               workers.acquire()
               workerAcquired = true
               if !stopping.get() then
-                routePositionCommentaryJobRequest(exchange, commentaryJobs)
+                routePositionCommentaryJobRequest(exchange, commentaryJobs, requestReceivedEpochMs)
             catch
               case _: InterruptedException => Thread.currentThread.interrupt()
             finally
@@ -122,11 +123,12 @@ object ChesstoryRuntime:
   /** The one HTTP prefix router for the browser-executed position-commentary job contract. */
   private def routePositionCommentaryJobRequest(
       exchange: HttpExchange,
-      commentaryJobs: CommentaryJobRegistry
+      commentaryJobs: CommentaryJobRegistry,
+      requestReceivedEpochMs: Long
   ): Unit =
     val rawPath = exchange.getRequestURI.getRawPath
     if rawPath == PositionCommentaryJobsPath then
-      createPositionCommentaryJob(exchange, commentaryJobs)
+      createPositionCommentaryJob(exchange, commentaryJobs, requestReceivedEpochMs)
     else if rawPath.startsWith(s"$PositionCommentaryJobsPath/") then
       rawPath.drop(PositionCommentaryJobsPath.length + 1).split("/", -1).toList match
         case List(jobId) =>
@@ -143,7 +145,8 @@ object ChesstoryRuntime:
 
   private def createPositionCommentaryJob(
       exchange: HttpExchange,
-      commentaryJobs: CommentaryJobRegistry
+      commentaryJobs: CommentaryJobRegistry,
+      requestReceivedEpochMs: Long
   ): Unit =
     if exchange.getRequestMethod != "POST" then methodNotAllowedForJob(exchange, "POST", None)
     else
@@ -157,8 +160,11 @@ object ChesstoryRuntime:
               val nowEpochMs = System.currentTimeMillis()
               val policy = CommentaryJobPolicy(
                 RootSearchDepth,
-                nowEpochMs + JobDeadlineMillis,
-                jobRequest.engineProfile
+                requestReceivedEpochMs + math.min(JobDeadlineMillis, jobRequest.remainingBudgetMs.fold(JobDeadlineMillis)(_.toLong)),
+                jobRequest.engineProfile,
+                investigateChoices = true,
+                // Eight is the existing CP-assessment admission floor, not a latency or accuracy promise.
+                previewDepth = Some(8)
               )
               commentaryJobs.createJob(
                 jobRequest.requestId,
@@ -168,7 +174,9 @@ object ChesstoryRuntime:
                 jobRequest.playedMoveUci,
                 jobRequest.resultingFen,
                 policy,
-                nowEpochMs
+                nowEpochMs,
+                jobRequest.inputLines,
+                jobRequest.proposals
               ) match
                 case Left(CommentaryJobCreationRejection.RegistryCapacityReached) =>
                   respond(
@@ -197,7 +205,7 @@ object ChesstoryRuntime:
                     "Location",
                     s"$PositionCommentaryJobsPath/${snapshot.jobId}"
                   )
-                  respond(exchange, 201, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+                  respond(exchange, 201, snapshot)
 
   private def readPositionCommentaryJob(
       exchange: HttpExchange,
@@ -209,7 +217,7 @@ object ChesstoryRuntime:
     else
       commentaryJobs.expireAndReadJobAt(jobId, System.currentTimeMillis()) match
         case None => respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, "job_not_found"))
-        case Some(snapshot) => respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+        case Some(snapshot) => respond(exchange, 200, snapshot)
 
   private def submitEngineWorkReport(
       exchange: HttpExchange,
@@ -234,7 +242,7 @@ object ChesstoryRuntime:
                 case Left(EngineWorkReportSubmissionRejection.WorkNotOutstanding) =>
                   respond(exchange, 409, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), Some(engineWorkReport.reportedEngineProfile), "engine_work_not_outstanding"))
                 case Right(snapshot) =>
-                  respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+                  respond(exchange, 200, snapshot)
 
   private def cancelPositionCommentaryJob(
       exchange: HttpExchange,
@@ -243,10 +251,17 @@ object ChesstoryRuntime:
   ): Unit =
     if !validJobId(jobId) then
       respond(exchange, 400, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "invalid_job_id"))
+    else if Option(exchange.getRequestHeaders.getFirst("Prefer")).exists(_.split(",").exists(_.trim == "return=minimal")) then
+      // Explicit disposal: the browser already owns its last decoded result. A
+      // legacy DELETE without this preference still returns the cancelled snapshot.
+      commentaryJobs.releaseJob(jobId)
+      exchange.getResponseHeaders.set("Cache-Control", "no-store")
+      exchange.getResponseHeaders.set("Preference-Applied", "return=minimal")
+      exchange.sendResponseHeaders(204, -1)
     else
       commentaryJobs.cancelJobAt(jobId, System.currentTimeMillis()) match
         case None => respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, "job_not_found"))
-        case Some(snapshot) => respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+        case Some(snapshot) => respond(exchange, 200, snapshot)
 
   private def readPositionCommentaryJsonBody(exchange: HttpExchange): Either[PositionCommentaryJsonBodyFailure, Array[Byte]] =
     if !isJson(exchange) then Left(PositionCommentaryJsonBodyFailure(415, "content_type_must_be_json"))
@@ -272,6 +287,8 @@ object ChesstoryRuntime:
         "invalid_position_history"
     case CommentaryJobStartRejection.FocusedMoveInvalid => "invalid_focus"
     case CommentaryJobStartRejection.RootSearchDepthInvalid => "invalid_commentary_job_policy"
+    case CommentaryJobStartRejection.InvalidProposals => "invalid_proposals"
+    case CommentaryJobStartRejection.LocalExpansionLimitInvalid => "invalid_commentary_job_policy"
 
   private final case class PositionCommentaryJsonBodyFailure(httpStatus: Int, error: String)
 
@@ -314,11 +331,36 @@ object ChesstoryRuntime:
   private def validJobId(jobId: String): Boolean = JobId.matches(jobId)
 
   private def respond(exchange: HttpExchange, status: Int, body: JsObject): Unit =
-    val bytes = Json.stringify(body).getBytes(StandardCharsets.UTF_8)
+    respond(exchange, status, Json.toBytes(body))
+
+  private def respond(exchange: HttpExchange, status: Int, delivery: CommentaryJobDelivery): Unit = delivery match
+    case retained: RetainedCommentaryJobResult if acceptsGzip(exchange) =>
+      responseHeaders(exchange, gzip = true)
+      exchange.sendResponseHeaders(status, retained.compressedLength)
+      retained.writeCompressed(exchange.getResponseBody)
+    case retained: RetainedCommentaryJobResult => respond(exchange, status, retained.jsonBytes)
+    case snapshot: CommentaryJobSnapshot =>
+      respond(exchange, status, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+
+  private def respond(exchange: HttpExchange, status: Int, bytes: Array[Byte]): Unit =
+    val gzip = bytes.length >= 1024 && acceptsGzip(exchange)
+    val delivered = if gzip then RetainedCommentaryJobResult.compress(bytes) else bytes
+    responseHeaders(exchange, gzip)
+    exchange.sendResponseHeaders(status, delivered.length)
+    exchange.getResponseBody.write(delivered)
+
+  private def acceptsGzip(exchange: HttpExchange): Boolean =
+    Option(exchange.getRequestHeaders.getFirst("Accept-Encoding")).exists(_.split(",").exists { coding =>
+      val parts = coding.toLowerCase(java.util.Locale.ROOT).split(";").map(_.trim)
+      parts.headOption.contains("gzip") && parts.tail.find(_.startsWith("q=")).forall(quality =>
+        quality.drop(2).toDoubleOption.exists(value => value > 0 && value <= 1))
+    })
+
+  private def responseHeaders(exchange: HttpExchange, gzip: Boolean): Unit =
     exchange.getResponseHeaders.set("Content-Type", "application/json; charset=utf-8")
     exchange.getResponseHeaders.set("Cache-Control", "no-store")
-    exchange.sendResponseHeaders(status, bytes.length)
-    exchange.getResponseBody.write(bytes)
+    exchange.getResponseHeaders.set("Vary", "Accept-Encoding")
+    if gzip then exchange.getResponseHeaders.set("Content-Encoding", "gzip")
 
   private def parsePort(raw: String): Int =
     raw.toIntOption.filter(port => port > 0 && port <= 65535)

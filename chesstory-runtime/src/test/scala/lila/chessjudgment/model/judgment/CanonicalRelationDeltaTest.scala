@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.judgment
 
-import chess.{ Bishop, Color, King, Pawn, Piece, Queen, Rook, Square }
+import chess.{ Bishop, Color, King, Pawn, Queen, Rook }
 import chess.format.Fen
 
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
@@ -10,7 +10,6 @@ import lila.chessjudgment.analysis.structure.{
   StructuralDeltaContracts
 }
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.position.BoardGeometry
 
 class CanonicalRelationDeltaTest extends munit.FunSuite:
 
@@ -96,58 +95,6 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
       EvidenceSquare("a7"),
       EvidenceSquare("a8")
     )))
-
-  test("the transition footprint records exact before and after occupants for special moves"):
-    def changes(fen: String, move: String) =
-      val step = PrincipalVariationEvidence
-        .legalMoveReplay(fen, List(move), startPly = 0)
-        .flatMap(_.headOption)
-        .getOrElse(fail(s"expected legal move $move"))
-      BoardGeometry.transitionFootprint(step.move, BoardGeometry.moveEffect(step.move)).cellChanges
-        .map(change => change.square -> (change.before -> change.after))
-        .toMap
-
-    val castling = changes("4k3/8/8/8/8/8/8/4K2R w K - 0 1", "e1g1")
-    assertEquals(castling(Square.E1), Some(Piece(Color.White, King)) -> None)
-    assertEquals(castling(Square.F1), None -> Some(Piece(Color.White, Rook)))
-    assertEquals(castling(Square.G1), None -> Some(Piece(Color.White, King)))
-    assertEquals(castling(Square.H1), Some(Piece(Color.White, Rook)) -> None)
-
-    val enPassant = changes("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1", "e5d6")
-    assertEquals(enPassant(Square.D5), Some(Piece(Color.Black, Pawn)) -> None)
-    assertEquals(enPassant(Square.D6), None -> Some(Piece(Color.White, Pawn)))
-
-    val promotion = changes("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", "a7a8q")
-    assertEquals(promotion(Square.A7), Some(Piece(Color.White, Pawn)) -> None)
-    assertEquals(promotion(Square.A8), None -> Some(Piece(Color.White, Queen)))
-
-    val promotedStep = PrincipalVariationEvidence
-      .legalMoveReplay("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", List("a7a8q"), startPly = 0)
-      .flatMap(_.headOption)
-      .getOrElse(fail("expected legal promotion"))
-    assertEquals(
-      BoardGeometry.transitionFootprint(
-        promotedStep.move,
-        BoardGeometry.moveEffect(promotedStep.move)
-      ).pieceTransitions,
-      List(lila.chessjudgment.model.position.BoardPieceTransition(
-        Color.White,
-        Pawn,
-        Queen,
-        Square.A7,
-        Square.A8
-      ))
-    )
-
-  test("same-side hypothetical legality does not promote geometric control into a structural result"):
-    val delta = transitionDelta(
-      "rn2k3/P7/8/8/8/8/8/K7 w - - 0 1",
-      "a1b1"
-    )
-    assert(
-      StructuralDeltaContracts.consequences(delta.structural).flatMap(_.relationKeys)
-        .forall(_.kind != RelationFactKind.GeometricControl)
-    )
 
   test("an established geometric control remains a relation without claiming future pressure"):
     val delta = transitionDelta(

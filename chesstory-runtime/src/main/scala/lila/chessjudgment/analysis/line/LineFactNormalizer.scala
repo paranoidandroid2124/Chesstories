@@ -1,57 +1,142 @@
 package lila.chessjudgment.analysis.line
 
-import chess.{ Color, King, Pawn }
+import chess.{ King, Pawn }
 
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PreInitialHistoryKnowledge, PrincipalVariationEvidence }
 
 object LineFactNormalizer:
-
   def fromValidatedLine(
       id: String,
       lineRef: LineNodeRef,
-      facts: PrincipalVariationEvidence.LineFacts,
       replay: CanonicalLineReplay,
       position: PositionNodeRef,
       scope: EvidenceScope,
       materialSummary: Option[LineMaterialSummary] = None,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
-    val events = lineEvents(facts, replay, materialSummary)
-    val consequences = lineConsequences(facts, replay, events, materialSummary)
-    val ref =
-      EvidenceRef(
-        id = id,
-        producer = EvidenceProducer.LegalLineProducer,
-        layer = EvidenceLayer.Line,
-        position = position,
-        line = Some(lineRef),
-        scope = scope,
-        confidence = EvidenceConfidence.LegalReplayVerified
-      )
-    val payload = LineFactEvidence.fromCertifiedReplay(
-      line = lineRef,
-      material = materialSummary,
-      replay = replay,
-      events = events,
-      consequences = consequences
+    val ref = EvidenceRef(
+      id = id,
+      producer = EvidenceProducer.LegalLineProducer,
+      layer = EvidenceLayer.Line,
+      position = position,
+      line = Some(lineRef),
+      scope = scope,
+      confidence = EvidenceConfidence.LegalReplayVerified
     )
-    EvidenceRecord(
-      ref = ref,
-      payload = payload,
-      parents = parents
-    )
+    EvidenceRecord(ref, LineFactEvidence.fromCertifiedReplay(lineRef, replay, materialSummary), parents)
 
-  private def lineEvents(
-      facts: PrincipalVariationEvidence.LineFacts,
+  /** One projection of the already admitted canonical transitions and their exact predecessor. */
+  private[chessjudgment] def materialEvents(
+      positionHistory: CanonicalPositionHistory,
+      replay: CanonicalLineReplay,
+      predecessorReplay: Option[CanonicalLineReplay]
+  ): List[ObservedLineMaterialEvent] =
+    val singleStepReplays = replay.singleStepReplays
+    singleStepReplays
+      .zip(None :: singleStepReplays.map(Option(_)))
+      .zipWithIndex
+      .flatMap { case (((transition, transitionReplay), priorOccurrence), plyOffset) =>
+        val declared = transition.declared
+        val root = transition.relationDelta.rootMove
+        val primaryMovements = transition.boardFootprint.pieceTransitions.filter(movement =>
+          movement.side == root.side &&
+            EvidenceSquare(movement.from.key) == root.from &&
+            EvidenceSquare(movement.to.key) == root.to &&
+            EvidencePieceRole(movement.beforeRole.name) == root.beforeRole &&
+            EvidencePieceRole(movement.afterRole.name) == root.afterRole
+        )
+        require(
+          primaryMovements.size == 1,
+          s"'${declared.moveUci}' needs one canonical primary movement in its material ledger"
+        )
+        val primary = primaryMovements.head
+        val promotionGain =
+          if primary.beforeRole == Pawn && primary.afterRole != Pawn then
+            MaterialValue.materialValueCp(primary.afterRole) - MaterialValue.materialValueCp(Pawn)
+          else 0
+        val capture = root.capture.map { captured =>
+          val capturedRole = transition.legal.capturedRole.getOrElse(
+            throw IllegalArgumentException(s"'${declared.moveUci}' lost its canonical captured role")
+          )
+          require(
+            capturedRole.name.equalsIgnoreCase(captured.capturedRole.name),
+            s"'${declared.moveUci}' capture disagrees with its closed legal-move relation"
+          )
+          LineMaterialCapture(
+            moveUci = EvidenceRef.normalizeMove(declared.moveUci),
+            plyOffset = plyOffset,
+            side = root.side,
+            attackerRole = root.beforeRole,
+            capturedRole = captured.capturedRole,
+            square = captured.capturedSquare,
+            valueCp = MaterialValue.materialValueCp(capturedRole),
+            recaptureStatus = recaptureStatus(
+              positionHistory,
+              predecessorReplay,
+              priorOccurrence,
+              transitionReplay,
+              declared,
+              plyOffset
+            )
+          )
+        }
+        Option.when(capture.nonEmpty || promotionGain > 0)(
+          ObservedLineMaterialEvent(
+            moveUci = EvidenceRef.normalizeMove(declared.moveUci),
+            plyOffset = plyOffset,
+            movement = root.witness,
+            legalMoveSemanticId = root.fact.semanticId,
+            capture = capture,
+            promotionGainCp = promotionGain
+          )
+        )
+      }
+
+  private[chessjudgment] def recaptureStatus(
+      positionHistory: CanonicalPositionHistory,
+      predecessorReplay: Option[CanonicalLineReplay],
+      priorOccurrence: Option[(CanonicalReplayTransition, CanonicalLineReplay)],
+      replay: CanonicalLineReplay,
+      declared: LineReplayStep,
+      plyOffset: Int
+  ): LineMaterialRecaptureStatus =
+    val predecessorOccurrence =
+      if plyOffset == 0 then
+        predecessorReplay
+          .map(_.singleStepReplays)
+          .flatMap(_.lastOption)
+          .filter { case (previousTransition, _) =>
+            val previousStep = previousTransition.declared
+            previousStep.ply + 1 == declared.ply &&
+              PrincipalVariationEvidence.sameBoardState(previousStep.fenAfter, declared.fenBefore)
+          }
+      else
+        None
+    priorOccurrence.orElse(predecessorOccurrence) match
+      case None =>
+        if plyOffset == 0 &&
+            positionHistory.segmentReplaySteps.isEmpty &&
+            positionHistory.preInitialHistoryKnowledge == PreInitialHistoryKnowledge.KnownEmpty
+        then LineMaterialRecaptureStatus.Excluded
+        else LineMaterialRecaptureStatus.Unknown
+      case Some((priorTransition, priorReplay)) =>
+        if priorTransition.relationDelta.rootMove.capture.isEmpty then
+          LineMaterialRecaptureStatus.Excluded
+        else
+          priorReplay
+            .exactRecaptureStatus(priorTransition.declared, replay, declared)
+            .getOrElse(LineMaterialRecaptureStatus.Unknown)
+
+  private[chessjudgment] def lineEvents(
       replay: CanonicalLineReplay,
       materialSummary: Option[LineMaterialSummary]
   ): List[LineMoveEvent] =
     val singleStepReplays = replay.singleStepReplays
     val replayEvents =
-      facts.line.moves.zip(singleStepReplays).zipWithIndex.flatMap { case ((move, (transition, transitionReplay)), index) =>
-        val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
+      singleStepReplays.zipWithIndex.flatMap { case ((transition, transitionReplay), index) =>
+        val normalized = EvidenceRef.normalizeMove(transition.declared.moveUci)
         val moverRole = Some(EvidencePieceRole(transition.legal.move.piece.role.name))
         val relationDetails = transitionReplay.verticalRelationOccurrences(
           transition.declared,
@@ -157,222 +242,3 @@ object LineFactNormalizer:
       }
     val materialEvents = captureEvents ++ promotionEvents
     (replayEvents ++ materialEvents).distinct
-
-  private def lineConsequences(
-      facts: PrincipalVariationEvidence.LineFacts,
-      replay: CanonicalLineReplay,
-      events: List[LineMoveEvent],
-      materialSummary: Option[LineMaterialSummary]
-  ): List[LineConsequence] =
-    val singleStepReplays = replay.singleStepReplays
-    val rootMove = facts.line.moves.headOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
-    val rootSide = singleStepReplays.headOption.map(_._1.legal.move.piece.color)
-    val outcome =
-      facts.line.moves.zip(singleStepReplays).zipWithIndex.flatMap { case ((move, (transition, transitionReplay)), index) =>
-        val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        lazy val prefix = facts.line.moves.take(index + 1).zipWithIndex.map { case (proofMove, plyOffset) =>
-          LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(proofMove.uci), plyOffset)
-        }
-        transitionReplay.verticalRelationOccurrences(
-          transition.declared,
-          List(
-            RelationFactKind.CreatedCheckResponseInventory,
-            RelationFactKind.StalemateTransition
-          )
-        ).flatMap(_.relation.detail match
-          case RelationWitnessDetail.CreatedCheckResponseInventory(
-                mover,
-                _,
-                _,
-                _,
-                _,
-                _,
-                RelationCheckTerminalState.Checkmate,
-                _
-              ) =>
-            Some(
-              LineConsequence(
-                LineConsequenceKind.Mate,
-                prefix,
-                eventOccurrence = Some(LineMoveOccurrence(normalized, index)),
-                rootMove = rootMove,
-                rootSide = rootSide,
-                beneficiary = Some(mover.side)
-              )
-            )
-          case RelationWitnessDetail.StalemateTransition(_, _, _, _) =>
-            Some(
-              LineConsequence(
-                LineConsequenceKind.DrawResource,
-                prefix,
-                eventOccurrence = Some(LineMoveOccurrence(normalized, index)),
-                rootMove = rootMove,
-                rootSide = rootSide
-              )
-            )
-          case _ => None
-        )
-      }
-    val immediateReplyChecks =
-      for
-        normalizedRoot <- rootMove.toList
-        replyCheck <- events.filter(event => event.kind == LineEventKind.Check && event.plyOffset == 1)
-        rootStep <- singleStepReplays.headOption.map(_._1.declared).toList
-        replyStep <- singleStepReplays.lift(1).map(_._1.declared).toList
-        if EvidenceRef.sameMove(rootStep.moveUci, normalizedRoot)
-        if EvidenceRef.sameMove(replyStep.moveUci, replyCheck.moveUci)
-        checker <- replyCheck.side.toList
-        if rootSide.exists(_ != checker)
-      yield LineConsequence(
-        kind = LineConsequenceKind.ImmediateReplyCheck,
-        proofOccurrences = List(
-          LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
-          LineMoveOccurrence(EvidenceRef.normalizeMove(replyStep.moveUci), 1)
-        ),
-        eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(replyStep.moveUci), 1)),
-        rootMove = Some(normalizedRoot),
-        rootSide = rootSide,
-        beneficiary = Some(checker)
-      )
-    val material =
-      materialSummary.toList.flatMap { summary =>
-        val indexedProofOccurrences = summary.events
-          .filter(event => event.capture.nonEmpty || event.promotionGainCp > 0)
-          .map(event =>
-            LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
-          )
-        val materialEvents = materialOutcomeEvents(summary)
-        val materialOutcomeEvent = lastingMaterialOutcomeFor(materialEvents, summary)
-        val materialGainEvent = materialOutcomeEvent.filter(_.side == summary.sideToMove)
-        val materialLossEvent = materialOutcomeEvent.filter(_.side != summary.sideToMove)
-        val materialGainEventOccurrence = materialGainEvent.map(event =>
-          LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
-        )
-        val materialLossEventOccurrence = materialLossEvent.map(event =>
-          LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
-        )
-        val materialGainRootMove =
-          rootMove.filter(_ => materialGainEvent.exists(_.plyOffset == 0))
-        val materialLossRootMove =
-          rootMove.filter(_ => materialLossEvent.exists(_.plyOffset == 0))
-        def proofOccurrencesThrough(plyOffset: Int): List[LineMoveOccurrence] =
-          indexedProofOccurrences.takeWhile(_.plyOffset <= plyOffset)
-        def proofOccurrencesFrom(event: Option[MaterialOutcomeEvent]): List[LineMoveOccurrence] =
-          event
-            .map(materialEvent => proofOccurrencesThrough(materialEvent.plyOffset))
-            .getOrElse(Nil)
-        val materialGainProofOccurrences = proofOccurrencesFrom(materialGainEvent)
-        val materialLossProofOccurrences = proofOccurrencesFrom(materialLossEvent)
-        val materialResultConsequences = List(
-          materialGainEvent.map(_ =>
-            LineConsequence(
-              LineConsequenceKind.MaterialGain,
-              materialGainProofOccurrences,
-              eventOccurrence = materialGainEventOccurrence,
-              rootMove = materialGainRootMove,
-              rootSide = Some(summary.sideToMove),
-              beneficiary = Some(summary.sideToMove)
-            )
-          ),
-          materialLossEvent.map(_ =>
-            LineConsequence(
-              LineConsequenceKind.MaterialLoss,
-              materialLossProofOccurrences,
-              eventOccurrence = materialLossEventOccurrence,
-              rootMove = materialLossRootMove,
-              rootSide = Some(summary.sideToMove),
-              beneficiary = Some(!summary.sideToMove)
-            )
-          )
-        ).flatten
-        val recaptureConsequences =
-          summary.captures.filter(_.recapture).map(capture =>
-              LineConsequence(
-                LineConsequenceKind.RecaptureSequence,
-                proofOccurrencesThrough(capture.plyOffset),
-                eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(capture.moveUci), capture.plyOffset)),
-                rootMove = rootMove,
-                rootSide = Some(summary.sideToMove),
-                beneficiary = Some(capture.side)
-              )
-          )
-        val recoveryConsequences = summary.durableRecoveryCaptureForMover.toList.map(capture =>
-            LineConsequence(
-              LineConsequenceKind.RecoveryWindow,
-              proofOccurrencesThrough(capture.plyOffset),
-              eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(capture.moveUci), capture.plyOffset)),
-              rootMove = rootMove,
-              rootSide = Some(summary.sideToMove),
-              beneficiary = Some(summary.sideToMove)
-            )
-        )
-        val promotionEvents = materialEvents.filter(_.promotion)
-        val promotionConsequences = promotionEvents.map(event =>
-            LineConsequence(
-              LineConsequenceKind.Promotion,
-              proofOccurrencesThrough(event.plyOffset),
-              eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)),
-              rootMove = rootMove.filter(_ => event.plyOffset == 0),
-              rootSide = Some(summary.sideToMove),
-              beneficiary = Some(event.side)
-            )
-          )
-        materialResultConsequences ++ recaptureConsequences ++
-          recoveryConsequences ++ promotionConsequences
-      }
-    (outcome ++ immediateReplyChecks ++ material).distinct
-
-
-  private final case class MaterialOutcomeEvent(
-      moveUci: String,
-      plyOffset: Int,
-      side: Color,
-      balanceAfterForMover: Int,
-      promotion: Boolean,
-      recapture: Boolean,
-      capture: Option[LineMaterialCapture]
-  )
-
-  private def materialOutcomeEvents(
-      summary: LineMaterialSummary
-  ): List[MaterialOutcomeEvent] =
-    summary.events.foldLeft((0, List.empty[MaterialOutcomeEvent])) {
-      case ((runningBalance, events), observed) =>
-        val captureDelta = observed.capture.map(_.valueCp).getOrElse(0)
-        val unsignedDelta = captureDelta + observed.promotionGainCp
-        val signedDelta =
-          if observed.movement.side == summary.sideToMove then unsignedDelta else -unsignedDelta
-        val afterBalance = runningBalance + signedDelta
-        val event = Option.when(signedDelta != 0)(
-          MaterialOutcomeEvent(
-            moveUci = observed.moveUci,
-            plyOffset = observed.plyOffset,
-            side = observed.movement.side,
-            balanceAfterForMover = afterBalance,
-            promotion = observed.promotionGainCp > 0,
-            recapture = observed.capture.exists(_.recapture),
-            capture = observed.capture
-          )
-        )
-        afterBalance -> event.fold(events)(_ :: events)
-    }._2.reverse
-
-  private def lastingMaterialOutcomeFor(
-      events: List[MaterialOutcomeEvent],
-      summary: LineMaterialSummary
-  ): Option[MaterialOutcomeEvent] =
-    summary.closedNetCpForMover.flatMap { closedNet =>
-      val finalSign = Integer.signum(closedNet)
-      val observedNet = events.lastOption.map(_.balanceAfterForMover).getOrElse(0)
-      Option.when(finalSign != 0 && observedNet == closedNet) {
-        val beneficiary = if finalSign > 0 then summary.sideToMove else !summary.sideToMove
-        def keepsFinalSign(balance: Int): Boolean = finalSign * balance > 0
-        val lastingEvents = events.drop(
-          events.lastIndexWhere(event => !keepsFinalSign(event.balanceAfterForMover)) + 1
-        )
-        lastingEvents.find(event =>
-          event.side == beneficiary &&
-            !(event.plyOffset == 0 && event.recapture && !event.promotion)
-        )
-      }.flatten
-    }

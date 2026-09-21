@@ -349,6 +349,10 @@ private[chessjudgment] final class CanonicalLineReplay private (
       CanonicalLineReplay.freshTransitions(replaySteps, legalSteps, occurrenceAnalyses)
     )
 
+  private[judgment] def hasSuppliedRoot(root: PositionAnalysis): Boolean =
+    suppliedOccurrenceAnalyses.flatMap(_.headOption).exists(analysis =>
+      analysis.occurrence == root.occurrence && analysis.relationInventory.sameOwner(root.relationInventory))
+
   def analysisBefore(step: LineReplayStep): Option[PositionAnalysis] =
     indexByReplayStep.get(step).flatMap(occurrenceAnalyses.lift)
 
@@ -582,6 +586,58 @@ private[chessjudgment] final class CanonicalLineReplay private (
         )
 
 private[chessjudgment] object CanonicalLineReplay:
+
+  /** Shares calculations only for an identical move prefix at this reviewed
+    * history. Transpositions after different prefixes remain distinct owners.
+    */
+  def sharePrefixes(
+      replays: List[CanonicalLineReplay],
+      root: PositionAnalysis,
+      retained: List[CanonicalLineReplay] = Nil
+  ): List[CanonicalLineReplay] =
+    val prefixes = scala.collection.mutable.Map.empty[(Int, String), (Int, CanonicalReplayTransition)]
+    def retain(replay: CanonicalLineReplay): Unit =
+      var predecessor = 0
+      replay.singleStepReplays.foreach { case (canonical, _) =>
+        val key = predecessor -> EvidenceRef.normalizeMove(canonical.declared.moveUci)
+        val (index, _) = prefixes.getOrElseUpdate(key, (prefixes.size + 1) -> canonical)
+        predecessor = index
+      }
+    retained.foreach(retain)
+    // A promoted probe already owns the registered root and its exact transition calculations.
+    // Cold replays still enter through the existing construction below.
+    replays.filter(_.hasSuppliedRoot(root)).foreach(retain)
+    replays.map { replay =>
+      var predecessor = 0
+      var before = root
+      val transitions = replay.replaySteps.map { step =>
+        val key = predecessor -> EvidenceRef.normalizeMove(step.moveUci)
+        val (index, transition) = prefixes.getOrElseUpdate(key, {
+          val move = before.actualLegalMoves.find(move => EvidenceRef.sameMove(move.toUci.uci, step.moveUci))
+            .getOrElse(throw IllegalArgumentException("an admitted prefix lost its legal move"))
+          val legal = LegalReplayStep.fromMove(step.ply, before.position, move)
+          val after = PositionAnalyzer.analyzeAfter(before, legal, step.fenAfter)
+          (prefixes.size + 1) -> CanonicalReplayTransition.fresh(step, legal, before, after)
+        })
+        require(
+          transition.declared == step &&
+            transition.beforeAnalysis.occurrence == before.occurrence &&
+            before.occurrence.plyCount + 1 == step.ply &&
+            before.occurrence.fen == step.fenBefore &&
+            PrincipalVariationEvidence.sameBoardState(Fen.write(transition.legal.after).value, step.fenAfter),
+          s"a shared prefix must retain its exact historical transition at ${step.ply}:${step.moveUci}"
+        )
+        predecessor = index
+        before = transition.afterAnalysis
+        transition
+      }
+      new CanonicalLineReplay(
+        replay.replaySteps,
+        transitions.map(_.legal),
+        Some((root :: transitions.map(_.afterAnalysis)).to(LazyList)),
+        Some(transitions.to(LazyList))
+      )
+    }
 
   private def transitionKey(
       ply: Int,

@@ -5,6 +5,27 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class StripedLruCacheTest extends munit.FunSuite:
 
+  test("occurrence keys keep exact identity while live and remain removable after collection"):
+    val first = chess.format.Fen.read(chess.variant.Standard, chess.variant.Standard.initialFen).get
+    val same = PositionOccurrenceKey.from(first)
+    val key = PositionOccurrenceKey.from(first)
+    val other = PositionOccurrenceKey.from(
+      chess.format.Fen.read(chess.variant.Standard, chess.variant.Standard.initialFen).get
+    )
+    assertEquals(key, same)
+    assertNotEquals(key, other)
+    val retained = new java.util.HashMap[PositionOccurrenceKey, String]()
+    retained.put(key, "retained")
+    val hash = key.hashCode
+    // Deterministically model cleared weak references; no timing-dependent GC assertion.
+    key.clear()
+    other.clear()
+    assertEquals(key.hashCode, hash)
+    assertNotEquals(key, same)
+    assertNotEquals(key, other)
+    assertEquals(key, key)
+    assertEquals(retained.remove(key), "retained")
+
   test("a concurrent cache miss has one calculation owner"):
     val cache = new StripedLruCache[String, String](maxEntries = 8, requestedStripes = 4)
     val calculations = new AtomicInteger(0)

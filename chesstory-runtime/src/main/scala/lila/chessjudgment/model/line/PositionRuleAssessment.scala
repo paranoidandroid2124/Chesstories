@@ -145,5 +145,25 @@ enum CandidateLineEvaluation:
   def comparisonReady: Boolean = this match
     case EngineSearch(line) =>
       JudgmentThresholds.engineBackedByDepth(line.depth, line.mate)
-    case ExactAutomaticTerminal(_, _) =>
-      true
+    case ExactAutomaticTerminal(moves, _) =>
+      moves.size == 1
+
+object CandidateLineEvaluation:
+  /** A terminal endpoint certifies the root move's outcome only when that
+    * move itself ends the game. Longer PVs retain their engine provenance.
+    * The caller supplies the admitted prefix through the first terminal.
+    */
+  def fromEngineLine(
+      line: EngineLine,
+      terminal: Option[AutomaticTerminal]
+  ): Option[CandidateLineEvaluation] =
+    val scoreConsistent = !line.mate.contains(0) && (terminal match
+      case Some(AutomaticTerminal.Checkmate(winner)) =>
+        line.mate.exists(mate => (mate > 0) == winner.white)
+      case Some(_) => line.mate.isEmpty && line.scoreCp.toLong.abs <= 1
+      case None    => true)
+    Option.when(line.moves.nonEmpty && scoreConsistent) {
+      terminal.filter(_ => line.moves.size == 1)
+        .map(ExactAutomaticTerminal(line.moves, _))
+        .getOrElse(EngineSearch(line))
+    }

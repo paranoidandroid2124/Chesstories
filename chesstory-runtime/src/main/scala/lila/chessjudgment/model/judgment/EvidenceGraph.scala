@@ -4,6 +4,7 @@ import chess.*
 import chess.format.Fen
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.HexFormat
 import scala.collection.immutable.VectorMap
 import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath }
 import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
@@ -116,15 +117,28 @@ final case class RelationPieceWitness(
     role: EvidencePieceRole
 )
 
-/** One exact geometric-control edge onto an occupied enemy square. The side
-  * is owned by the enclosing relation so a bundle cannot silently mix both
-  * players' controls.
-  */
+/** A piece at one occurrence; identity across a move follows the certified board effect. */
 final case class RelationColoredPieceWitness(
     square: EvidenceSquare,
     role: EvidencePieceRole,
     side: Color
-)
+):
+  private[chessjudgment] def after(footprint: BoardTransitionFootprint): Option[RelationColoredPieceWitness] =
+    through(footprint, forward = true)
+
+  private[chessjudgment] def before(footprint: BoardTransitionFootprint): Option[RelationColoredPieceWitness] =
+    through(footprint, forward = false)
+
+  private def through(footprint: BoardTransitionFootprint, forward: Boolean): Option[RelationColoredPieceWitness] =
+    footprint.pieceTransitions.find { movement =>
+      val at = if forward then movement.from else movement.to
+      val as = if forward then movement.beforeRole else movement.afterRole
+      movement.side == side && at.key.equalsIgnoreCase(square.key) && as.name.equalsIgnoreCase(role.name)
+    }.map { movement =>
+      RelationColoredPieceWitness(
+        EvidenceSquare((if forward then movement.to else movement.from).key),
+        EvidencePieceRole((if forward then movement.afterRole else movement.beforeRole).name), side)
+    }.orElse(Option.unless(footprint.changedSquares.exists(_.key.equalsIgnoreCase(square.key)))(this))
 
 /** Exact before/after identity of a piece changed by the admitted root move.
   * This is a projection of `BoardPieceTransition`, not a second move parser.
@@ -621,9 +635,12 @@ object RelationWitnessDetail:
     encodedKey(detail, includeDerivation = false)
 
   def stableOccurrenceKey(detail: RelationWitnessDetail, lineMoves: List[String]): String =
+    occurrenceKeyFromDetailKey(stableKey(detail), lineMoves)
+
+  private[chessjudgment] def occurrenceKeyFromDetailKey(detailKey: String, lineMoves: List[String]): String =
     tuple(
       "relation-occurrence",
-      List(stableKey(detail), sequence(lineMoves.map(move)))
+      List(detailKey, sequence(lineMoves.map(move)))
     )
 
   def factKind(detail: RelationWitnessDetail): RelationFactKind =
@@ -1005,6 +1022,7 @@ enum LineEventKind:
   case Stalemate
   case Promotion
 
+/** pieceRole is the mover's pre-move role; check/mate events do not identify the actual checking pieces. */
 final case class LineMoveEvent(
     kind: LineEventKind,
     moveUci: String,
@@ -1014,72 +1032,6 @@ final case class LineMoveEvent(
     targetRole: Option[EvidencePieceRole] = None,
     square: Option[EvidenceSquare] = None
 )
-
-enum LineConsequenceKind:
-  case ImmediateReplyCheck
-  case Mate
-  case DrawResource
-  case MaterialGain
-  case MaterialLoss
-  case RecaptureSequence
-  case RecoveryWindow
-  case Promotion
-
-object LineConsequenceKind:
-
-
-  def tacticalDriver(kind: LineConsequenceKind): Boolean =
-    kind match
-      case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
-          LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
-          LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
-          LineConsequenceKind.DrawResource | LineConsequenceKind.Promotion =>
-        true
-
-final case class LineMoveOccurrence(
-    moveUci: String,
-    plyOffset: Int
-):
-  require(
-    moveUci.matches("^[a-h][1-8][a-h][1-8][qrbn]?$") &&
-      moveUci == EvidenceRef.normalizeMove(moveUci),
-    "a line move occurrence needs one canonical UCI move"
-  )
-  require(plyOffset >= 0, "a line move occurrence needs a root-relative ply")
-
-  def stableKey: String = s"$plyOffset:$moveUci"
-
-  def sameOccurrence(otherPlyOffset: Int, otherMoveUci: String): Boolean =
-    plyOffset == otherPlyOffset && EvidenceRef.sameMove(moveUci, otherMoveUci)
-
-final case class LineConsequence(
-    kind: LineConsequenceKind,
-    proofOccurrences: List[LineMoveOccurrence],
-    eventOccurrence: Option[LineMoveOccurrence] = None,
-    rootMove: Option[String] = None,
-    rootSide: Option[Color] = None,
-    beneficiary: Option[Color] = None
-):
-  require(
-    proofOccurrences.map(_.stableKey).distinct.size == proofOccurrences.size &&
-      proofOccurrences.map(_.plyOffset).distinct.size == proofOccurrences.size &&
-      proofOccurrences.map(_.plyOffset) == proofOccurrences.map(_.plyOffset).sorted,
-    "line consequence proof occurrences must be exact, unique, and ordered"
-  )
-  require(
-    eventOccurrence.forall(event =>
-      proofOccurrences.exists(_.sameOccurrence(event.plyOffset, event.moveUci))
-    ),
-    "a line consequence event must belong to its exact proof occurrence path"
-  )
-  def hasProofOccurrence(plyOffset: Int, moveUci: String): Boolean =
-    proofOccurrences.exists(_.sameOccurrence(plyOffset, moveUci))
-
-  def eventMatches(plyOffset: Int, moveUci: String): Boolean =
-    eventOccurrence.exists(_.sameOccurrence(plyOffset, moveUci))
-
-  def rootMoveMatched(rootMove: String): Boolean =
-    this.rootMove.exists(move => EvidenceRef.sameMove(move, rootMove))
 
 enum LineMaterialRecaptureStatus:
   case Proven(inventory: DerivedRelationResultKey)
@@ -1098,7 +1050,7 @@ final case class LineMaterialCapture private[chessjudgment] (
 ):
   def recapture: Boolean = recaptureStatus.isInstanceOf[LineMaterialRecaptureStatus.Proven]
 
-private[chessjudgment] final case class ObservedLineMaterialEvent(
+final case class ObservedLineMaterialEvent private[chessjudgment] (
     moveUci: String,
     plyOffset: Int,
     movement: RelationMoveTransitionWitness,
@@ -1124,131 +1076,48 @@ private[chessjudgment] final case class ObservedLineMaterialEvent(
   )
   require(promotionGainCp >= 0, "a promotion material delta cannot be negative")
 
-enum ClosedLineMaterialTerminal:
-  case Checkmate
-  case Stalemate
-
-final case class ClosedLineMaterialOutcome(
-    terminal: ClosedLineMaterialTerminal,
-    terminalPlyOffset: Int
-):
-  require(terminalPlyOffset >= 0, "a closed material outcome needs an exact terminal ply")
-
+/** Material rows can only be projected from this exact admitted replay and history.
+  * Keeping the source as constructor data prevents detached value-only copies.
+  */
 final case class LineMaterialSummary private[chessjudgment] (
-    sideToMove: Color,
-    events: List[ObservedLineMaterialEvent],
-    closedOutcome: Option[ClosedLineMaterialOutcome]
+    private[chessjudgment] val sourceReplay: CanonicalLineReplay,
+    private val positionHistory: lila.chessjudgment.model.line.CanonicalPositionHistory,
+    private val predecessorReplay: Option[CanonicalLineReplay]
 ):
-  require(events.nonEmpty, "a material summary needs at least one observed material event")
   require(
-    events.map(_.plyOffset) == events.map(_.plyOffset).distinct.sorted,
-    "material events must be unique and ordered by replay ply"
+    sourceReplay.replaySteps.head.fenBefore == positionHistory.currentFen &&
+      sourceReplay.replaySteps.head.ply == positionHistory.currentPly + 1,
+    "a material ledger must begin at its actual history occurrence"
   )
   require(
-    closedOutcome.forall(_.terminalPlyOffset >= events.last.plyOffset),
-    "a closed material terminal cannot precede an observed material event"
-  )
-  require(
-    events.forall(_.capture.forall(
-      _.recaptureStatus != LineMaterialRecaptureStatus.Unknown
+    predecessorReplay.forall(previous => positionHistory.segmentReplaySteps.lastOption.exists(step =>
+      previous.replaySteps == List(LineReplayStep(step.ply, step.uci, step.beforeFen, step.afterFen))
     )),
-    "a material summary cannot publish an unresolved recapture occurrence"
+    "a material predecessor must be the exact last step of its retained history"
   )
 
-  val captures: List[LineMaterialCapture] = events.flatMap(_.capture)
+  val sideToMove: Color = sourceReplay.legalSteps.head.move.piece.color
+  lazy val events: List[ObservedLineMaterialEvent] =
+    lila.chessjudgment.analysis.line.LineFactNormalizer.materialEvents(positionHistory, sourceReplay, predecessorReplay)
+  lazy val captures: List[LineMaterialCapture] = events.flatMap(_.capture)
 
-  private lazy val exactCaptureInventory: Option[List[LineMaterialCapture]] =
-    LineMaterialSummary.exactCaptureInventory(captures)
-
-  private lazy val signedDeltasForMover: List[Int] =
+  lazy val signedDeltasForMover: List[Int] =
     events.map { event =>
-      val captureDelta = event.capture.map(_.valueCp).getOrElse(0)
-      val materialDelta = captureDelta + event.promotionGainCp
+      val materialDelta = event.capture.map(_.valueCp).getOrElse(0) + event.promotionGainCp
       if event.movement.side == sideToMove then materialDelta else -materialDelta
     }
 
-  private lazy val runningBalancesForMover: List[Int] =
-    signedDeltasForMover.scanLeft(0)(_ + _).tail
-
-  private[chessjudgment] def exactCaptures: Option[List[LineMaterialCapture]] =
-    exactCaptureInventory
-
+  lazy val runningBalancesForMover: List[Int] = signedDeltasForMover.scanLeft(0)(_ + _).tail
   def observedNetCpForMover: Int = runningBalancesForMover.lastOption.getOrElse(0)
   def observedMaxGainCpForMover: Int = (0 :: runningBalancesForMover).max
   def observedMaxLossCpForMover: Int = (0 :: runningBalancesForMover).min
-  def closedNetCpForMover: Option[Int] = closedOutcome.map(_ => observedNetCpForMover)
-  def isClosed: Boolean = closedOutcome.nonEmpty
-
-  def capturesByMover: List[LineMaterialCapture] =
-    captures.filter(_.side == sideToMove)
-
-  def capturesByOpponent: List[LineMaterialCapture] =
-    captures.filter(_.side != sideToMove)
-
-  def promotionGainCpForMover: Int =
-    events.map(event =>
-      if event.movement.side == sideToMove then event.promotionGainCp else -event.promotionGainCp
-    ).sum
-
-  def hasPromotionGainForMover: Boolean = promotionGainCpForMover > 0
-  def hasPromotionLossForMover: Boolean = promotionGainCpForMover < 0
-  def hasRecaptureChain: Boolean = captures.exists(_.recapture)
-
   def hasObservedRecovery: Boolean =
     runningBalancesForMover.dropWhile(_ >= 0).drop(1).exists(_ >= 0)
 
-  def hasClosedRecovery: Boolean =
-    isClosed && hasObservedRecovery && observedNetCpForMover >= 0
-
-  def hasResolvedMaterialSequence: Boolean =
-    hasRecaptureChain || hasObservedRecovery
-
-  private[chessjudgment] def durableRecoveryCaptureForMover: Option[LineMaterialCapture] =
-    Option.when(hasClosedRecovery)(
-      events
-        .drop(runningBalancesForMover.lastIndexWhere(_ < 0) + 1)
-        .collectFirst {
-          case event
-              if event.movement.side == sideToMove && event.capture.nonEmpty =>
-            event.capture.get
-        }
-    ).flatten
-
-object LineMaterialSummary:
-  private[chessjudgment] def normalizedCapture(capture: LineMaterialCapture): LineMaterialCapture =
-    capture.copy(moveUci = EvidenceRef.normalizeMove(capture.moveUci))
-
-  private[chessjudgment] def captureOccurrenceKey(
-      capture: LineMaterialCapture
-  ): (Int, String) =
-    capture.plyOffset -> EvidenceRef.normalizeMove(capture.moveUci)
-
-  /** Exact duplicate rows collapse to one occurrence. Two different payloads
-    * claiming the same replay ply and move invalidate the inventory.
-    */
-  private[chessjudgment] def exactCaptureInventory(
-      captures: List[LineMaterialCapture]
-  ): Option[List[LineMaterialCapture]] =
-    val groups = captures.map(normalizedCapture).groupBy(captureOccurrenceKey)
-    val resolved = groups.toList.map { case (_, sameOccurrence) =>
-      sameOccurrence.distinct match
-        case capture :: Nil => Some(capture)
-        case _              => None
-    }
-    Option.when(resolved.forall(_.nonEmpty))(
-      resolved.flatten.sortBy(capture => (
-        capture.plyOffset,
-        EvidenceRef.normalizeMove(capture.moveUci),
-        capture.square.key.toLowerCase
-      ))
-    )
-
 final case class LineFactEvidence private[chessjudgment] (
     line: LineNodeRef,
-    private val material: Option[LineMaterialSummary] = None,
+    material: Option[LineMaterialSummary] = None,
     private val replay: List[LineReplayStep] = Nil,
-    private val events: List[LineMoveEvent] = Nil,
-    private val consequences: List[LineConsequence] = Nil,
     private[chessjudgment] val canonicalReplay: Option[CanonicalLineReplay] = None
 ) extends EvidencePayload:
   def rootMove: Option[String] =
@@ -1264,75 +1133,44 @@ final case class LineFactEvidence private[chessjudgment] (
   def lineReplayContinuationMoves: List[String] =
     lineReplayMoves.drop(1)
   private lazy val verifiedCanonicalReplay: Option[CanonicalLineReplay] =
-    canonicalReplay.filter(_.matches(replay))
+    canonicalReplay.filter(source => source.matches(replay) && material.forall(_.sourceReplay eq source))
   private[chessjudgment] def certifiedReplay: Option[CanonicalLineReplay] =
     verifiedCanonicalReplay
   private[chessjudgment] def replayIsCertified: Boolean = certifiedReplay.nonEmpty
   def materialCaptures: List[LineMaterialCapture] =
-    material.flatMap(_.exactCaptures).getOrElse(Nil)
-  def lineEvents: List[LineMoveEvent] =
-    events
-  def lineConsequences: List[LineConsequence] =
-    consequences
+    material.toList.flatMap(_.captures)
+  lazy val lineEvents: List[LineMoveEvent] =
+    certifiedReplay.toList.flatMap(source =>
+      lila.chessjudgment.analysis.line.LineFactNormalizer.lineEvents(source, material))
   def lineReplayCount: Int =
     replay.size
 
   def lineEventsOf(kind: LineEventKind): List[LineMoveEvent] =
-    events.filter(_.kind == kind)
+    lineEvents.filter(_.kind == kind)
   def hasLineEvent(kind: LineEventKind): Boolean =
     lineEventsOf(kind).nonEmpty
   def eventsForRootMove(rootMoveUci: String): List[LineMoveEvent] =
     val normalizedRoot = EvidenceRef.normalizeMove(rootMoveUci)
-    events.filter(event =>
+    lineEvents.filter(event =>
       event.plyOffset == 0 && EvidenceRef.normalizeMove(event.moveUci) == normalizedRoot
     )
   def hasRootCaptureEvent(rootMoveUci: String): Boolean =
     eventsForRootMove(rootMoveUci).exists(event =>
       event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture
     )
-  def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
-    Option
-      .when(hasLineEvent(LineEventKind.Castling))(
-        EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.LineEvent, LineEventKind.Castling.toString)
-      )
-      .toList ++
-      consequences.map(_.kind).distinct.map(kind =>
-        EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.LineConsequence, kind.toString)
-      )
-
 
 object LineFactEvidence:
   private[chessjudgment] def fromCertifiedReplay(
       line: LineNodeRef,
       replay: CanonicalLineReplay,
-      material: Option[LineMaterialSummary] = None,
-      events: List[LineMoveEvent] = Nil,
-      consequences: List[LineConsequence] = Nil
+      material: Option[LineMaterialSummary] = None
   ): LineFactEvidence =
     require(
       replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, line.rootMove)),
       "certified line evidence must begin with its declared root move"
     )
-    val replayByOffset = replay.replaySteps.toVector
-    def ownsOccurrence(occurrence: LineMoveOccurrence): Boolean =
-      replayByOffset
-        .lift(occurrence.plyOffset)
-        .exists(step => occurrence.sameOccurrence(occurrence.plyOffset, step.moveUci))
-    require(
-      consequences.forall(consequence =>
-        consequence.proofOccurrences.forall(ownsOccurrence) &&
-          consequence.eventOccurrence.forall(ownsOccurrence)
-      ),
-      "a certified line consequence must retain only occurrences from its canonical replay"
-    )
-    LineFactEvidence(
-      line = line,
-      material = material,
-      replay = replay.replaySteps,
-      events = events,
-      consequences = consequences,
-      canonicalReplay = Some(replay)
-    )
+    require(material.forall(_.sourceReplay eq replay), "a line cannot consume another replay's material ledger")
+    LineFactEvidence(line, material, replay.replaySteps, Some(replay))
 
 final case class CandidateLineEvaluationEvidence(
     line: LineNodeRef,
@@ -1642,11 +1480,9 @@ private[judgment] object ClosedRelationOutputBinding:
   */
 final class ClosedRelationOccurrenceEvidence private (
     val edge: MoveTransitionEdge,
-    val lineOwner: LineNodeRef,
-    val lineEvidence: EvidenceRef,
     private val outputsByEvidenceId: Map[String, ClosedRelationOutputBinding]
 ) extends EvidencePayload:
-  val scope: EvidenceScope = EvidenceScope.LegalLine
+  val scope: EvidenceScope = edge.role.scope
 
   private[chessjudgment] def outputFor(result: EvidenceRef): Option[ClosedRelationOutputBinding] =
     outputsByEvidenceId.get(result.id).filter(_.result == result)
@@ -1654,46 +1490,30 @@ final class ClosedRelationOccurrenceEvidence private (
 private[judgment] object ClosedRelationOccurrenceEvidence:
   def certified(
       edge: MoveTransitionEdge,
-      lineOwner: LineNodeRef,
-      lineEvidence: EvidenceRef,
       outputs: List[ClosedRelationOutputBinding]
   ): ClosedRelationOccurrenceEvidence =
-    val edgeLineOwnership = edge.role match
-      case TransitionEdgeRole.LineContinuation =>
-        edge.evidence.line.contains(lineOwner)
-      case _ => edge.evidence.line.isEmpty
     require(
       edge.evidence.producer == EvidenceProducer.MoveTransitionProducer &&
         edge.evidence.layer == EvidenceLayer.MoveTransition &&
         edge.evidence.position == edge.from &&
-        edgeLineOwnership &&
+        edge.evidence.line.isEmpty &&
         edge.evidence.scope == edge.role.scope &&
         edge.evidence.confidence == EvidenceConfidence.LegalReplayVerified,
       "a closed relation occurrence must be owned by its exact admitted transition authority"
-    )
-    require(
-      lineEvidence.producer == EvidenceProducer.LegalLineProducer &&
-        lineEvidence.layer == EvidenceLayer.Line &&
-        lineEvidence.line.contains(lineOwner) &&
-        lineEvidence.scope == EvidenceScope.LegalLine &&
-        lineEvidence.confidence == EvidenceConfidence.LegalReplayVerified,
-      "a closed relation occurrence must be owned by its exact line evidence"
     )
     require(
       outputs.forall(output =>
         output.result.producer == EvidenceProducer.RelationProducer &&
           output.result.layer == EvidenceLayer.Relation &&
           output.result.position == edge.from &&
-          output.result.line.contains(lineOwner) &&
-          output.result.scope == EvidenceScope.LegalLine &&
+          output.result.line.isEmpty &&
+          output.result.scope == edge.role.scope &&
           output.result.confidence == EvidenceConfidence.LegalReplayVerified
       ),
       "every relation output must belong to the exact transition occurrence"
     )
     new ClosedRelationOccurrenceEvidence(
       edge,
-      lineOwner,
-      lineEvidence,
       outputs.map(output => output.result.id -> output).toMap
     )
 
@@ -1704,12 +1524,12 @@ private[judgment] object ClosedRelationOccurrenceEvidence:
         producer = EvidenceProducer.RelationProducer,
         layer = EvidenceLayer.Relation,
         position = payload.edge.from,
-        line = Some(payload.lineOwner),
+        line = None,
         scope = payload.scope,
         confidence = EvidenceConfidence.LegalReplayVerified
       ),
       payload = payload,
-      parents = List(payload.edge.evidence, payload.lineEvidence)
+      parents = List(payload.edge.evidence)
     )
 
 private[chessjudgment] enum RelationDependencyKey:
@@ -1769,18 +1589,14 @@ private[chessjudgment] object CanonicalRelationFact:
       dependencyFootprint: Option[RelationDependencyFootprint]
   ): CanonicalRelationFact =
     val normalizedLineMoves = normalizeMoves(lineMoves)
-    val raw = RelationWitnessDetail.stableOccurrenceKey(detail, normalizedLineMoves)
-    val assertionRaw = RelationWitnessDetail.assertionStableKey(detail)
+    val detailKey = RelationWitnessDetail.stableKey(detail)
+    val raw = RelationWitnessDetail.occurrenceKeyFromDetailKey(detailKey, normalizedLineMoves)
+    val assertionRaw =
+      if RelationWitnessDetail.proofStage(detail) == RelationProofStage.PositionFact then detailKey
+      else RelationWitnessDetail.assertionStableKey(detail)
     val digest = MessageDigest.getInstance("SHA-256")
-    val assertionId = digest
-      .digest(assertionRaw.getBytes(StandardCharsets.UTF_8))
-      .map(byte => f"${byte & 0xff}%02x")
-      .mkString
-    val semanticId = MessageDigest
-      .getInstance("SHA-256")
-      .digest(raw.getBytes(StandardCharsets.UTF_8))
-      .map(byte => f"${byte & 0xff}%02x")
-      .mkString
+    val assertionId = HexFormat.of().formatHex(digest.digest(assertionRaw.getBytes(StandardCharsets.UTF_8)))
+    val semanticId = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8)))
     new CanonicalRelationFact(
       kind = RelationWitnessDetail.factKind(detail),
       detail = detail,
@@ -2319,19 +2135,15 @@ object CanonicalRelationGraph:
       graph: CanonicalRelationGraph,
       incoming: Vector[EvidenceRecord]
   ): CanonicalRelationGraph =
-    val relationLayerRecords = incoming.filter(relationShaped)
-    val invalid = relationLayerRecords.filter(record => canonicalNode(record).isEmpty)
-    require(invalid.isEmpty, "Relation layer accepts only canonical RelationProducer records")
-
     var nodeInventory = graph.nodeInventory
     var evidenceIndex = graph.evidenceIndex
     var semanticIndex = graph.semanticIndex
     var positionRelationIndex = graph.positionRelationIndex
     var added = 0
 
-    relationLayerRecords.foreach { record =>
+    incoming.iterator.filter(relationShaped).foreach { record =>
       val node = canonicalNode(record).getOrElse(
-        throw IllegalArgumentException("canonical relation validation changed during graph insertion")
+        throw IllegalArgumentException("Relation layer accepts only canonical RelationProducer records")
       )
       require(
         RelationFactEvidence.verified(node.ref, node.relation),
@@ -2344,15 +2156,16 @@ object CanonicalRelationGraph:
             s"canonical relation evidence id collision: ${node.ref.id}"
           )
         case None =>
-          semanticIndex.get(node.semanticKey) match
+          val semanticKey = node.semanticKey
+          semanticIndex.get(semanticKey) match
             case Some(_) =>
               throw IllegalArgumentException(
-                s"duplicate canonical relation identity: ${node.semanticKey}"
+                s"duplicate canonical relation identity: $semanticKey"
               )
             case None =>
               nodeInventory = nodeInventory :+ node
               evidenceIndex = evidenceIndex.updated(node.ref.id, node)
-              semanticIndex = semanticIndex.updated(node.semanticKey, node)
+              semanticIndex = semanticIndex.updated(semanticKey, node)
               val nodeOccurrenceKey = occurrenceKey(node.ref.position)
               if ownsClosedPositionSnapshot(node) && node.relation.isPositionRelation then
                 val positionKey = nodeOccurrenceKey -> node.ref.scope
@@ -2390,7 +2203,7 @@ final class TypedEvidenceGraph private (
   private lazy val recordsByLine: Map[LineNodeRef, List[EvidenceRecord]] =
     records.flatMap(record => record.ref.line.map(_ -> record)).groupMap(_._1)(_._2)
 
-  private[chessjudgment] def uniqueProofEligibleLineFactRecordFor(
+  def uniqueProofEligibleLineFactRecordFor(
       line: LineNodeRef
   ): Option[(EvidenceRecord, LineFactEvidence)] =
     recordsFor(line).collect {
@@ -2522,19 +2335,16 @@ final class TypedEvidenceGraph private (
       )
 
   private def exactPositionOccurrenceOwner(record: EvidenceRecord): Boolean =
-    record.ref.line match
-      case None => record.ref.scope != EvidenceScope.LegalLine && record.parents.isEmpty
-      case Some(line) =>
-        record.ref.scope == EvidenceScope.LegalLine && (record.parents match
-          case parent :: Nil =>
-            byId.get(parent.id).exists {
-              case EvidenceRecord(ref, MoveTransitionEvidence(_, _, to, _), _) =>
-                ref == parent && ref.producer == EvidenceProducer.MoveTransitionProducer &&
-                  ref.layer == EvidenceLayer.MoveTransition && ref.line.contains(line) &&
-                  ref.scope == EvidenceScope.LegalLine && to == record.ref.position
-              case _ => false
-            }
-          case _ => false)
+    record.ref.line.isEmpty && (record.parents match
+      case Nil => record.ref.scope == EvidenceScope.BeforePosition
+      case parent :: Nil =>
+        byId.get(parent.id).exists {
+          case EvidenceRecord(ref, MoveTransitionEvidence(_, _, to, _), _) =>
+            ref == parent && ref.producer == EvidenceProducer.MoveTransitionProducer &&
+              ref.layer == EvidenceLayer.MoveTransition && ref.line.isEmpty && to == record.ref.position
+          case _ => false
+        }
+      case _ => false)
 
   private def exactMoveTransitionOwner(
       record: EvidenceRecord,
@@ -2542,26 +2352,15 @@ final class TypedEvidenceGraph private (
       from: PositionNodeRef,
       to: PositionNodeRef
   ): Boolean =
-    record.ref.line match
-      case None => record.ref.scope != EvidenceScope.LegalLine && record.parents.isEmpty
-      case Some(line) =>
-        record.ref.scope == EvidenceScope.LegalLine &&
-          certifiedLineParent(record, line).exists(replay =>
-            replay.transitionIndex(moveUci, from, to).exists(_ > 0)
-          )
-
-  private def certifiedLineParent(
-      record: EvidenceRecord,
-      line: LineNodeRef
-  ): Option[CanonicalLineReplay] =
-    record.parents match
-      case parent :: Nil =>
-        byId
-          .get(parent.id)
-          .filter(_.ref == parent)
-          .flatMap(certifiedLineReplay)
-          .collect { case (`line`, replay) => replay }
-      case _ => None
+    record.ref.line.isEmpty && (record.parents match
+      case parent :: Nil => byId.get(parent.id).exists {
+        case EvidenceRecord(ref, _: PositionOccurrenceEvidence, _) =>
+          ref == parent && ref.position == from &&
+            ref.producer == EvidenceProducer.PositionOccurrenceProducer &&
+            ref.layer == EvidenceLayer.PositionOccurrence && to.ply == from.ply + 1
+        case _ => false
+      }
+      case _ => false)
 
   private def certifiedLineReplay(
       record: EvidenceRecord
@@ -2735,7 +2534,7 @@ final class TypedEvidenceGraph private (
               val expectedParents = carrierRecord.ref :: binding.sources
               binding.relation == payload &&
                 record.ref.position == occurrence.edge.from &&
-                record.ref.line.contains(occurrence.lineOwner) &&
+                record.ref.line.isEmpty &&
                 record.ref.scope == occurrence.scope &&
                 record.parents.size == expectedParents.size &&
                 record.parents.toSet == expectedParents.toSet &&
@@ -2748,44 +2547,23 @@ final class TypedEvidenceGraph private (
       record: EvidenceRecord,
       payload: ClosedRelationOccurrenceEvidence
   ): Boolean =
-    val expectedParents = List(payload.edge.evidence, payload.lineEvidence)
+    val expectedParents = List(payload.edge.evidence)
     val exactTransition = byId.get(payload.edge.evidence.id).exists {
       case exact @ EvidenceRecord(ref, MoveTransitionEvidence(moveUci, from, to, _), parents) =>
         ref == payload.edge.evidence && intrinsicallyProofEligible(exact) &&
-          parents == payload.edge.evidence.line.map(_ => payload.lineEvidence).toList &&
           from == payload.edge.from && to == payload.edge.to &&
           EvidenceRef.sameMove(moveUci, payload.edge.moveUci)
       case _ => false
     }
-    val exactLine = byId
-      .get(payload.lineEvidence.id)
-      .filter(_.ref == payload.lineEvidence)
-      .flatMap(certifiedLineReplay)
-      .filter(_._1 == payload.lineOwner)
-      .exists { case (_, replay) =>
-        val occurrenceIndex = replay.transitionIndex(
-          payload.edge.moveUci,
-          payload.edge.from,
-          payload.edge.to
-        )
-        payload.edge.role match
-          case TransitionEdgeRole.LineContinuation =>
-            payload.edge.evidence.line.contains(payload.lineOwner) &&
-              occurrenceIndex.exists(_ > 0)
-          case _ =>
-            payload.edge.evidence.line.isEmpty && payload.lineEvidence.position == payload.edge.from &&
-              EvidenceRef.sameMove(payload.lineOwner.rootMove, payload.edge.moveUci) &&
-              occurrenceIndex.contains(0)
-      }
     record.ref.producer == EvidenceProducer.RelationProducer &&
       record.ref.layer == EvidenceLayer.Relation &&
       record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
       record.ref.position == payload.edge.from &&
-      record.ref.line.contains(payload.lineOwner) &&
+      record.ref.line.isEmpty &&
       record.ref.scope == payload.scope &&
       record.parents.size == expectedParents.size &&
       record.parents.toSet == expectedParents.toSet &&
-      exactTransition && exactLine
+      exactTransition
 
   private def exactCanonicalRelationSource(source: EvidenceRef): Boolean =
     byId.get(source.id).exists(sourceRecord =>
@@ -2983,26 +2761,8 @@ final class TypedEvidenceGraph private (
     val transitionParent = transitionParents match
       case exact :: Nil => Some(exact)
       case _            => None
-    val lineParents = directParents.flatMap(certifiedLineReplay)
-    val exactLineOwner = payload.line match
-      case Some(line) =>
-        lineParents match
-          case (`line`, replay) :: Nil =>
-            val occurrenceIndex = replay.transitionIndex(
-              payload.moveUci,
-              payload.from,
-              payload.to
-            )
-            payload.role match
-              case TransitionEdgeRole.LineContinuation =>
-                transitionParent.exists(_.ref.line.contains(line)) &&
-                  occurrenceIndex.exists(_ > 0)
-              case _ =>
-                transitionParent.exists(_.ref.line.isEmpty) &&
-                  EvidenceRef.sameMove(line.rootMove, payload.moveUci) &&
-                  occurrenceIndex.contains(0)
-          case _ => false
-      case None => lineParents.isEmpty && transitionParent.exists(_.ref.line.isEmpty)
+    val occurrenceOwned = payload.line.isEmpty &&
+      !directParents.exists(_.ref.layer == EvidenceLayer.Line) && transitionParent.exists(_.ref.line.isEmpty)
     def positionParent(position: PositionNodeRef): Boolean =
       directParents.exists {
         case EvidenceRecord(ref, PositionOccurrenceEvidence(occurrence), _) =>
@@ -3033,7 +2793,6 @@ final class TypedEvidenceGraph private (
                 parents.exists(parent => byId.get(parent.id).exists {
                   case EvidenceRecord(occurrenceRef, occurrence: ClosedRelationOccurrenceEvidence, _) =>
                     occurrenceRef == parent && occurrenceRef.line == payload.line &&
-                      payload.line.contains(occurrence.lineOwner) &&
                       transitionParent.exists(exact => occurrence.edge.evidence == exact.ref) &&
                     occurrence.edge.from == payload.from && occurrence.edge.to == payload.to &&
                       EvidenceRef.sameMove(occurrence.edge.moveUci, payload.moveUci) &&
@@ -3050,7 +2809,7 @@ final class TypedEvidenceGraph private (
       record.ref.line == payload.line &&
       record.ref.scope == payload.role.scope &&
       transitionParent.nonEmpty &&
-      exactLineOwner &&
+      occurrenceOwned &&
       positionParent(payload.from) &&
       positionParent(payload.to) &&
       exactResultPremiseSources &&
@@ -3062,19 +2821,28 @@ final class TypedEvidenceGraph private (
   def add(record: EvidenceRecord): TypedEvidenceGraph =
     addAll(List(record))
 
+  /** Re-ranking unchanged replays retains their physical evidence and relation indexes.
+    * Eligibility is checked afresh: a missing parent must never inherit an old proof result.
+    */
+  private[chessjudgment] def withoutAssessment: TypedEvidenceGraph =
+    val layers = Set(EvidenceLayer.Eval, EvidenceLayer.CandidateComparison, EvidenceLayer.RelativeAssessment)
+    val removed = recordIndex.iterator.collect { case (id, record) if layers(record.ref.layer) => id }.toList
+    if removed.isEmpty then this
+    else new TypedEvidenceGraph(recordIndex.removedAll(removed), relationGraph)
+
   def addAll(incoming: IterableOnce[EvidenceRecord]): TypedEvidenceGraph =
     val additions = incoming.iterator.toList
     if additions.isEmpty then this
     else
       var merged = recordIndex
       var changed = false
-      var relationsChanged = false
+      val freshRelations = List.newBuilder[EvidenceRecord]
       additions.foreach { record =>
         merged.get(record.ref.id) match
           case None =>
             merged = merged.updated(record.ref.id, record)
             changed = true
-            relationsChanged ||= CanonicalRelationGraph.relationShaped(record)
+            if CanonicalRelationGraph.relationShaped(record) then freshRelations += record
           case Some(existing) if existing == record => ()
           case Some(_) =>
             throw IllegalArgumentException(
@@ -3083,8 +2851,9 @@ final class TypedEvidenceGraph private (
       }
       if !changed then this
       else
+        val relationAdditions = freshRelations.result()
         val updatedRelationGraph =
-          if relationsChanged then relationGraph.addAll(additions)
+          if relationAdditions.nonEmpty then relationGraph.addAll(relationAdditions)
           else relationGraph
         new TypedEvidenceGraph(merged, updatedRelationGraph)
 

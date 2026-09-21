@@ -50,6 +50,10 @@ final class CanonicalHistoryContinuation private[line] (
   ): Option[AdmittedCandidateLine] =
     AdmittedCandidateLine.certified(this, evaluation)
 
+  /** Reuses admitted steps after an exact ancestor without moving this suffix's evaluation. */
+  def stepsAfter(prefix: CanonicalPositionHistory): Option[List[CanonicalPositionHistoryStep]] =
+    resultingHistory.admittedStepsAfter(prefix)
+
   /** Binds a logical line only when its origin and prefix are the exact
     * occurrence immediately preceding this already admitted suffix. The
     * physical history remains the owner; no move is generated or rebased.
@@ -114,9 +118,10 @@ private[line] object AdmittedCandidateLine:
         normalizedContinuationMoves.nonEmpty &&
         normalizedEvaluationMoves.endsWith(normalizedContinuationMoves)
     val terminalBound = (evaluation, continuation.automaticTerminal) match
-      case (CandidateLineEvaluation.EngineSearch(_), None) => true
-      case (CandidateLineEvaluation.ExactAutomaticTerminal(_, declared), Some(certified)) =>
-        declared == certified
+      case (CandidateLineEvaluation.EngineSearch(line), terminal) =>
+        CandidateLineEvaluation.fromEngineLine(line, terminal).nonEmpty
+      case (CandidateLineEvaluation.ExactAutomaticTerminal(moves, declared), Some(certified)) =>
+        moves.size == 1 && declared == certified
       case _ => false
     Option.when(occurrenceBound && terminalBound)(
       new AdmittedCandidateLine(evaluation, continuation)
@@ -277,6 +282,10 @@ final class CanonicalPositionHistory private (
     )(
       segmentReplaySteps.drop(prefixSize)
     )
+
+  /** An exact descendant exposes its already admitted steps without another legal replay. */
+  def stepsAfter(prefix: CanonicalPositionHistory): Option[List[CanonicalPositionHistoryStep]] =
+    admittedStepsAfter(prefix)
 
 object CanonicalPositionHistory:
   def normalizeFen(fen: String): String =

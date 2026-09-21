@@ -15,6 +15,8 @@ export interface AnalyseData {
   userAnalysis: boolean;
   sidelines?: Tree.Node[][];
   treeParts: Tree.NodeOptionalChildren[];
+  /** Original PGN mainline, captured before the editable analysis tree exists. */
+  recordedMoves?: readonly Uci[];
   pref: AnalysePref;
 }
 

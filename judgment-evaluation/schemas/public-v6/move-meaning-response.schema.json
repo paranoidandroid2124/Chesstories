@@ -45,9 +45,10 @@
     "moveCommentary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["primary"],
+      "anyOf": [{"required": ["primary"]}, {"required": ["observations"]}],
       "properties": {
-        "primary": {"$ref": "#/$defs/primary"}
+        "primary": {"$ref": "#/$defs/primary"},
+        "observations": {"$ref": "move-observations.schema.json"}
       }
     },
     "primary": {

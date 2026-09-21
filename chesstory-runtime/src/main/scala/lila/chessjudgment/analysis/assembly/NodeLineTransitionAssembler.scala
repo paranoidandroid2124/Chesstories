@@ -1,15 +1,12 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.Pawn
 import lila.chessjudgment.analysis.evaluation.EvalFactNormalizer
 import lila.chessjudgment.analysis.line.LineFactNormalizer
-import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.line.{
   CanonicalPositionHistory,
   CandidateLineEvaluation,
-  PreInitialHistoryKnowledge,
   PrincipalVariationEvidence
 }
 import lila.chessjudgment.model.judgment.*
@@ -38,140 +35,43 @@ private[assembly] final case class TransitionEdgeAssembly(
 )
 
 private[assembly] object PositionNodeAssembler:
-  private[assembly] def fromAnalysis(
-      role: PositionNodeRole,
-      fen: String,
-      ply: Int,
+  def fromOccurrence(
+      node: PositionNode,
       analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
       allocator: JudgmentProvenanceAllocator,
-      scope: EvidenceScope,
-      lineRootOwner: Option[LineNodeRef] = None
+      incomingTransition: Option[EvidenceRef]
   ): PositionNodeAssembly =
-    val position = analysis.position
+    val ref = node.ref
     require(
-      analysis.occurrence.fen == fen && analysis.occurrence.plyCount == ply,
+      analysis.occurrence.fen == ref.fen && analysis.occurrence.plyCount == ref.ply &&
+        ref.sideToMove.contains(analysis.position.color),
       "a position node must use the analysis of its exact occurrence"
     )
-    val ref = lineRootOwner
-      .map(allocator.lineRootPositionRef(role, fen, ply, Some(position.color), _))
-      .getOrElse(allocator.positionRef(role, fen, ply, Some(position.color)))
-    val nodeKey = lineRootOwner
-      .map(allocator.lineRootPositionKey(role, fen, ply, _))
-      .getOrElse(allocator.positionKey(role, fen, ply))
-    assemble(
-      role,
-      ref,
-      nodeKey,
-      analysis,
-      allocator,
-      scope,
-      line = None,
-      parents = Nil
+    val nodeKey = ref.id.getOrElse(throw IllegalArgumentException("an occurrence needs its historical id"))
+    val occurrenceRecord = EvidenceRecord(
+      ref = EvidenceRef(
+        id = allocator.evidenceId(s"position-occurrence:$nodeKey"),
+        producer = EvidenceProducer.PositionOccurrenceProducer,
+        layer = EvidenceLayer.PositionOccurrence,
+        position = ref,
+        line = None,
+        scope = node.role.scope,
+        confidence = EvidenceConfidence.BoardDerived
+      ),
+      payload = PositionOccurrenceEvidence(analysis.occurrence),
+      parents = incomingTransition.toList
     )
-
-  private[assembly] def fromLineOccurrence(
-      node: PositionNode,
-      lineOwner: LegalLineNode,
-      plyOffset: Int,
-      predecessor: PositionNodeRef,
-      step: LineReplayStep,
-      analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
-      allocator: JudgmentProvenanceAllocator,
-      incomingTransition: EvidenceRef
-  ): PositionNodeAssembly =
-    require(
-      incomingTransition.producer == EvidenceProducer.MoveTransitionProducer &&
-        incomingTransition.layer == EvidenceLayer.MoveTransition &&
-        incomingTransition.position == predecessor && incomingTransition.line.contains(lineOwner.ref) &&
-        incomingTransition.scope == EvidenceScope.LegalLine &&
-        incomingTransition.confidence == EvidenceConfidence.LegalReplayVerified,
-      "a line position occurrence needs its exact incoming continuation authority"
-    )
-    require(
-      node.role == PositionNodeRole.LineOccurrence && node.ref.fen == step.fenAfter && node.ref.ply == step.ply,
-      "a line position assembly must use its preallocated occurrence node"
-    )
-    val nodeKey = allocator.lineOccurrencePositionKey(
-      lineOwner.ref,
-      plyOffset,
-      predecessor,
-      step.fenAfter,
-      step.ply
-    )
-    assemble(
-      PositionNodeRole.LineOccurrence,
-      node.ref,
-      nodeKey,
-      analysis,
-      allocator,
-      EvidenceScope.LegalLine,
-      line = Some(lineOwner.ref),
-      parents = List(incomingTransition)
-    )
-
-  private[assembly] def lineOccurrenceNode(
-      line: LineNodeRef,
-      plyOffset: Int,
-      predecessor: PositionNodeRef,
-      step: LineReplayStep,
-      analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
-      allocator: JudgmentProvenanceAllocator
-  ): PositionNode =
-    PositionNode(
-      PositionNodeRole.LineOccurrence,
-      allocator.lineOccurrencePositionRef(
-        line,
-        plyOffset,
-        predecessor,
-        step.fenAfter,
-        step.ply,
-        Some(analysis.position.color)
-      )
-    )
-
-  private def assemble(
-      role: PositionNodeRole,
-      ref: PositionNodeRef,
-      nodeKey: String,
-      analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
-      allocator: JudgmentProvenanceAllocator,
-      scope: EvidenceScope,
-      line: Option[LineNodeRef],
-      parents: List[EvidenceRef]
-  ): PositionNodeAssembly =
-    val occurrenceRecord =
-      EvidenceRecord(
-        ref = EvidenceRef(
-          id = allocator.evidenceId(s"position-occurrence:$nodeKey"),
-          producer = EvidenceProducer.PositionOccurrenceProducer,
-          layer = EvidenceLayer.PositionOccurrence,
-          position = ref,
-          line = line,
-          scope = scope,
-          confidence = EvidenceConfidence.BoardDerived
-        ),
-        payload = PositionOccurrenceEvidence(analysis.occurrence),
-        parents = parents
-      )
-    val relationRecords = PositionRelationExtractor.records(
+    val relations = PositionRelationExtractor.records(
       analysis.boardRelations,
       ref,
-      scope,
-      relation =>
-        allocator.evidenceId(
-          s"relation:position:$nodeKey:${RelationFactKind.id(relation.kind)}:${relation.semanticId}"
-        )
+      node.role.scope,
+      relation => allocator.evidenceId(
+        s"relation:position:$nodeKey:${RelationFactKind.id(relation.kind)}:${relation.semanticId}"
+      )
     )
-    val node = PositionNode(role = role, ref = ref)
-    PositionNodeAssembly(node, occurrenceRecord :: relationRecords, analysis)
+    PositionNodeAssembly(node, occurrenceRecord :: relations, analysis)
 
 private[assembly] object LegalLineAssembler:
-
-  private final case class ReplayedLineFacts(
-      facts: PrincipalVariationEvidence.LineFacts,
-      replay: CanonicalLineReplay,
-      materialSummary: Option[LineMaterialSummary]
-  )
 
   def fromLine(
       line: AdmittedLegalLine,
@@ -184,12 +84,7 @@ private[assembly] object LegalLineAssembler:
     val scope = EvidenceScope.LegalLine
     val occurrenceKey = allocator.lineOccurrenceKey(line, root)
     val ref = allocator.lineRef(line, occurrenceKey)
-    val replayed = replayFacts(
-      line.replay.rootedAt(rootAnalysis),
-      positionHistory,
-      predecessorReplay
-    )
-    val facts = replayed.facts
+    val replay = line.replay.rootedAt(rootAnalysis)
     val lineEvidence =
       allocator.evidenceRef(
         suffix = s"line:$occurrenceKey",
@@ -205,35 +100,12 @@ private[assembly] object LegalLineAssembler:
       LineFactNormalizer.fromValidatedLine(
         id = lineEvidence.id,
         lineRef = ref,
-        facts = facts,
-        replay = replayed.replay,
+        replay = replay,
         position = root,
         scope = scope,
-        materialSummary = replayed.materialSummary
+        materialSummary = Some(LineMaterialSummary(replay, positionHistory, predecessorReplay))
       )
-    LegalLineAssembly(node, List(lineRecord), replayed.replay)
-
-  private def replayFacts(
-      replay: CanonicalLineReplay,
-      positionHistory: CanonicalPositionHistory,
-      predecessorReplay: Option[CanonicalLineReplay]
-  ): ReplayedLineFacts =
-    val replaySteps = replay.replaySteps
-    val moves = replaySteps.map(step =>
-      PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
-    )
-    val first = moves.head
-    ReplayedLineFacts(
-      facts = PrincipalVariationEvidence.LineFacts(
-        line = PrincipalVariationEvidence.LineVariationRef(moves),
-        first = first,
-        reply = moves.lift(1),
-        continuation = moves.lift(2),
-        continuationTail = moves.drop(3)
-      ),
-      replay = replay,
-      materialSummary = lineMaterialSummary(positionHistory, replay, predecessorReplay)
-    )
+    LegalLineAssembly(node, List(lineRecord), replay)
 
   private[assembly] def lineMaterialSummary(
       positionHistory: CanonicalPositionHistory,
@@ -244,162 +116,10 @@ private[assembly] object LegalLineAssembler:
     val belongsToPositionHistory =
       lineHistory.segmentReplaySteps.take(prefixSize) == positionHistory.segmentReplaySteps
     val predecessorReplay =
-      CanonicalLineReplay.fromHistory(positionHistory.segmentReplaySteps)
+      CanonicalLineReplay.fromHistory(positionHistory.segmentReplaySteps.takeRight(1))
     Option.when(belongsToPositionHistory)(replaySteps)
       .flatMap(CanonicalLineReplay.fromHistory)
-      .flatMap(lineMaterialSummary(positionHistory, _, predecessorReplay))
-
-  private[assembly] def lineMaterialSummary(
-      positionHistory: CanonicalPositionHistory,
-      replay: CanonicalLineReplay,
-      predecessorReplay: Option[CanonicalLineReplay] = None
-  ): Option[LineMaterialSummary] =
-    val singleStepReplays = replay.singleStepReplays
-    val events = singleStepReplays
-      .zip(None :: singleStepReplays.map(Option(_)))
-      .zipWithIndex
-      .flatMap { case (((transition, transitionReplay), priorOccurrence), plyOffset) =>
-        val declared = transition.declared
-        val root = transition.relationDelta.rootMove
-        val primaryMovements = transition.boardFootprint.pieceTransitions.filter(movement =>
-          movement.side == root.side &&
-            EvidenceSquare(movement.from.key) == root.from &&
-            EvidenceSquare(movement.to.key) == root.to &&
-            EvidencePieceRole(movement.beforeRole.name) == root.beforeRole &&
-            EvidencePieceRole(movement.afterRole.name) == root.afterRole
-        )
-        require(
-          primaryMovements.size == 1,
-          s"'${declared.moveUci}' needs one canonical primary movement in its material ledger"
-        )
-        val primary = primaryMovements.head
-        val promotionGain =
-          if primary.beforeRole == Pawn && primary.afterRole != Pawn then
-            MaterialValue.materialValueCp(primary.afterRole) - MaterialValue.materialValueCp(Pawn)
-          else 0
-        val capture = root.capture.map { captured =>
-          val capturedRole = transition.legal.capturedRole.getOrElse(
-            throw IllegalArgumentException(s"'${declared.moveUci}' lost its canonical captured role")
-          )
-          require(
-            capturedRole.name.equalsIgnoreCase(captured.capturedRole.name),
-            s"'${declared.moveUci}' capture disagrees with its closed legal-move relation"
-          )
-          LineMaterialCapture(
-            moveUci = EvidenceRef.normalizeMove(declared.moveUci),
-            plyOffset = plyOffset,
-            side = root.side,
-            attackerRole = root.beforeRole,
-            capturedRole = captured.capturedRole,
-            square = captured.capturedSquare,
-            valueCp = MaterialValue.materialValueCp(capturedRole),
-            recaptureStatus = recaptureStatus(
-              positionHistory,
-              predecessorReplay,
-              priorOccurrence,
-              transitionReplay,
-              declared,
-              plyOffset
-            )
-          )
-        }
-        Option.when(capture.nonEmpty || promotionGain > 0)(
-          ObservedLineMaterialEvent(
-            moveUci = EvidenceRef.normalizeMove(declared.moveUci),
-            plyOffset = plyOffset,
-            movement = root.witness,
-            legalMoveSemanticId = root.fact.semanticId,
-            capture = capture,
-            promotionGainCp = promotionGain
-          )
-        )
-      }
-    val hasClosedRecaptureKnowledge =
-      events.forall(_.capture.forall(
-        _.recaptureStatus != LineMaterialRecaptureStatus.Unknown
-      ))
-    Option.when(events.nonEmpty && hasClosedRecaptureKnowledge)(
-      LineMaterialSummary(
-        sideToMove = replay.legalSteps.head.move.piece.color,
-        events = events,
-        closedOutcome = singleStepReplays.lastOption.flatMap { case (_, terminalReplay) =>
-          closedMaterialOutcome(terminalReplay, singleStepReplays.size - 1)
-        }
-      )
-    )
-
-  private def recaptureStatus(
-      positionHistory: CanonicalPositionHistory,
-      predecessorReplay: Option[CanonicalLineReplay],
-      priorOccurrence: Option[(CanonicalReplayTransition, CanonicalLineReplay)],
-      replay: CanonicalLineReplay,
-      declared: LineReplayStep,
-      plyOffset: Int
-  ): LineMaterialRecaptureStatus =
-    val predecessorOccurrence =
-      if plyOffset == 0 then
-        predecessorReplay
-          .map(_.singleStepReplays)
-          .flatMap(_.lastOption)
-          .filter { case (previousTransition, _) =>
-            val previousStep = previousTransition.declared
-            previousStep.ply + 1 == declared.ply &&
-              PrincipalVariationEvidence.sameBoardState(previousStep.fenAfter, declared.fenBefore)
-          }
-      else
-        None
-    priorOccurrence.orElse(predecessorOccurrence) match
-      case None =>
-        if plyOffset == 0 &&
-            positionHistory.segmentReplaySteps.isEmpty &&
-            positionHistory.preInitialHistoryKnowledge == PreInitialHistoryKnowledge.KnownEmpty
-        then LineMaterialRecaptureStatus.Excluded
-        else LineMaterialRecaptureStatus.Unknown
-      case Some((priorTransition, priorReplay)) =>
-        if priorTransition.relationDelta.rootMove.capture.isEmpty then
-          LineMaterialRecaptureStatus.Excluded
-        else
-          priorReplay
-            .exactRecaptureStatus(priorTransition.declared, replay, declared)
-            .getOrElse(LineMaterialRecaptureStatus.Unknown)
-
-  private def closedMaterialOutcome(
-      replay: CanonicalLineReplay,
-      terminalPlyOffset: Int
-  ): Option[ClosedLineMaterialOutcome] =
-    replay.replaySteps.lastOption.flatMap { terminalStep =>
-      val terminals = replay.verticalRelationOccurrences(
-        terminalStep,
-        List(
-          RelationFactKind.CreatedCheckResponseInventory,
-          RelationFactKind.StalemateTransition
-        )
-      ).flatMap(occurrence =>
-        occurrence.relation.detail match
-          case RelationWitnessDetail.CreatedCheckResponseInventory(
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                RelationCheckTerminalState.Checkmate,
-                _
-              ) =>
-            Some(ClosedLineMaterialTerminal.Checkmate)
-          case RelationWitnessDetail.StalemateTransition(_, _, _, _) =>
-            Some(ClosedLineMaterialTerminal.Stalemate)
-          case _ =>
-            None
-      ).distinct
-      terminals match
-        case terminal :: Nil =>
-          Some(ClosedLineMaterialOutcome(terminal, terminalPlyOffset))
-        case Nil =>
-          None
-        case _ =>
-          throw IllegalArgumentException("one canonical line cannot terminate as both mate and stalemate")
-    }
+      .map(replay => LineMaterialSummary(replay, positionHistory, predecessorReplay))
 
 private[assembly] object CandidateLineAssembler:
   def fromProjection(
@@ -412,7 +132,6 @@ private[assembly] object CandidateLineAssembler:
     val evaluationMoves = candidate.evaluation.moves.map(EvidenceRef.normalizeMove)
     Option.when(
       candidate.evaluation.comparisonReady &&
-        EvidenceRef.sameMove(candidate.lineRootMove, legalLine.node.ref.rootMove) &&
         replayMoves == evaluationMoves
     ) {
       val node = CandidateLineNode(
@@ -422,7 +141,7 @@ private[assembly] object CandidateLineAssembler:
         evaluation = candidate.evaluation,
         lineEvidence = legalLine.node.evidence
       )
-      val evaluationKey = allocator.exactKey(List(
+      val evaluationKey = EvidenceIdentity.digest(List(
         legalLine.node.ref.id,
         candidate.role.toString,
         candidate.rank.toString,
@@ -456,217 +175,126 @@ private[assembly] object CandidateLineAssembler:
         ).mkString("|")
 
 private[assembly] object TransitionEdgeAssembler:
-
   def fromMove(
       role: TransitionEdgeRole,
-      from: PositionNode,
-      moveUci: String,
+      from: PositionNodeAssembly,
       to: PositionNode,
       replay: CanonicalLineReplay,
       allocator: JudgmentProvenanceAllocator
   ): TransitionEdgeAssembly =
-    require(
-      role != TransitionEdgeRole.LineContinuation,
-      "a root move cannot use the line-continuation role"
+    val moveUci = replay.replaySteps.head.moveUci
+    val occurrenceKey = allocator.transitionOccurrenceKey(from.node.ref, moveUci, to.ref)
+    val evidence = allocator.evidenceRef(
+      suffix = s"transition:$occurrenceKey",
+      producer = EvidenceProducer.MoveTransitionProducer,
+      layer = EvidenceLayer.MoveTransition,
+      position = from.node.ref,
+      line = None,
+      scope = role.scope,
+      confidence = EvidenceConfidence.LegalReplayVerified
     )
-    assemble(role, from, moveUci, to, replay, allocator, None)
-
-  def fromLineContinuation(
-      from: PositionNode,
-      moveUci: String,
-      to: PositionNode,
-      replay: CanonicalLineReplay,
-      allocator: JudgmentProvenanceAllocator,
-      lineOwner: LegalLineNode,
-      linePlyOffset: Int
-  ): TransitionEdgeAssembly =
-    assemble(
-      TransitionEdgeRole.LineContinuation,
-      from,
-      moveUci,
-      to,
-      replay,
-      allocator,
-      Some(lineOwner -> linePlyOffset)
-    )
-
-  private def assemble(
-      role: TransitionEdgeRole,
-      from: PositionNode,
-      moveUci: String,
-      to: PositionNode,
-      replay: CanonicalLineReplay,
-      allocator: JudgmentProvenanceAllocator,
-      lineOwnership: Option[(LegalLineNode, Int)]
-  ): TransitionEdgeAssembly =
-    val scope = role.scope
-    val occurrenceKey = lineOwnership match
-      case Some((line, plyOffset)) =>
-        allocator.lineTransitionOccurrenceKey(line.ref, plyOffset, from.ref, moveUci, to.ref)
-      case None => allocator.transitionOccurrenceKey(from.ref, moveUci, to.ref)
-    val lineOwner = lineOwnership.map(_._1)
-    val transitionEvidence =
-      allocator.evidenceRef(
-        suffix = s"transition:$occurrenceKey",
-        producer = EvidenceProducer.MoveTransitionProducer,
-        layer = EvidenceLayer.MoveTransition,
-        position = from.ref,
-        line = lineOwner.map(_.ref),
-        scope = scope,
-        confidence = EvidenceConfidence.LegalReplayVerified
-      )
-    val edge =
-      MoveTransitionEdge(
-        role = role,
-        from = from.ref,
-        moveUci = EvidenceRef.normalizeMove(moveUci),
-        to = to.ref,
-        evidence = transitionEvidence
-      )
+    val edge = MoveTransitionEdge(role, from.node.ref, moveUci, to.ref, evidence)
     TransitionEdgeAssembly(
       edge,
-      List(
-        lineOwner match
-          case Some(line) => TransitionFactNormalizer.fromLineContinuation(edge, replay, line.evidence)
-          case None       => TransitionFactNormalizer.fromMoveTransition(edge, replay)
-      ),
+      List(TransitionFactNormalizer.fromMoveTransition(edge, replay, from.evidence.head.ref)),
       replay
     )
 
 private[assembly] object NodeLineTransitionAssembler:
-
-  /** The sole node/line/transition assembly implementation for admitted review input. */
-  def assemble(input: AdmittedMoveReviewInput): JudgmentAssemblyContext =
+  def assemble(input: AdmittedMoveReviewInput, retained: Option[JudgmentAssemblyContext] = None): JudgmentAssemblyContext =
+    require(retained.forall(ctx => ctx.input.positionHistory == input.positionHistory && ctx.input.playedMoveUci == input.playedMoveUci),
+      "retained calculations must belong to the same reviewed history and move")
     val allocator = JudgmentProvenanceAllocator.forInput(input)
-    val predecessorReplay = CanonicalLineReplay.fromHistory(input.positionHistory.segmentReplaySteps)
-    val admittedPlayedLine = input.playedRootLineOwner
-    val beforeAnalysis = admittedPlayedLine.replay.singleStepReplays.head._1.beforeAnalysis
-    val before = PositionNodeAssembler.fromAnalysis(
-      role = PositionNodeRole.Before,
-      fen = input.positionHistory.currentFen,
-      ply = input.positionHistory.currentPly,
-      analysis = beforeAnalysis,
-      allocator = allocator,
-      scope = EvidenceScope.BeforePosition
+    val history = input.positionHistory
+    val beforeAnalysis = retained.flatMap(ctx => ctx.root.flatMap(ctx.positionAnalysis)).getOrElse(lila.chessjudgment.analysis.position.PositionAnalyzer.analyze(
+      history.currentPosition, history.currentFen, history.currentPly
+    ))
+    val beforeNode = PositionNode(
+      PositionNodeRole.Before,
+      allocator.positionRef(PositionNodeRole.Before, history.currentFen, history.currentPly, Some(beforeAnalysis.position.color))
     )
-    val rootLines = input.legalLines.map(
+    val before = PositionNodeAssembler.fromOccurrence(beforeNode, beforeAnalysis, allocator, None)
+    val predecessorReplay = retained.map(_.predecessorReplay).getOrElse(CanonicalLineReplay.fromHistory(history.segmentReplaySteps.takeRight(1)))
+    val replays = CanonicalLineReplay.sharePrefixes(input.legalLines.map(_.replay), beforeAnalysis,
+      retained.toList.flatMap(_.lineReplays.values))
+    val knownLines = retained.toList.flatMap(ctx => ctx.legalLines.map { node =>
+      val replay = ctx.lineReplay(node.ref).get
+      replay.replaySteps.map(_.moveUci) -> LegalLineAssembly(node, Nil, replay)
+    }).toMap
+    val rootLines = replays.map(replay => knownLines.getOrElse(replay.replaySteps.map(_.moveUci),
       LegalLineAssembler.fromLine(
-        _,
-        before.node.ref,
-        beforeAnalysis,
-        input.positionHistory,
-        predecessorReplay,
-        allocator
-      )
-    )
-    val candidateLines = input.assessmentCandidates.flatMap { candidate =>
-      rootLines
-        .find(line => EvidenceRef.sameMove(line.node.ref.rootMove, candidate.lineRootMove))
-        .flatMap(CandidateLineAssembler.fromProjection(candidate, _, before.node.ref, allocator))
-    }
-    val rootOccurrences = rootLines.map { line =>
-      val (canonical, transitionReplay) = line.replay.singleStepReplays.head
-      val played = EvidenceRef.sameMove(line.node.ref.rootMove, input.playedMoveUci)
-      val position = PositionNodeAssembler.fromAnalysis(
-        role = if played then PositionNodeRole.AfterPlayed else PositionNodeRole.AfterAlternative,
-        fen = canonical.declared.fenAfter,
-        ply = canonical.declared.ply,
-        analysis = canonical.afterAnalysis,
-        allocator = allocator,
-        scope = if played then EvidenceScope.AfterPlayedPosition else EvidenceScope.AlternativeTransition,
-        lineRootOwner = Option.when(!played)(line.node.ref)
-      )
-      val transition = TransitionEdgeAssembler.fromMove(
-        role = if played then TransitionEdgeRole.Played else TransitionEdgeRole.Alternative,
-        from = before.node,
-        moveUci = line.node.ref.rootMove,
-        to = position.node,
-        replay = transitionReplay,
-        allocator = allocator
-      )
-      (line, position, transition)
-    }
-    val (playedOccurrences, alternativeOccurrences) = rootOccurrences.partition { case (_, _, transition) =>
-      transition.edge.role == TransitionEdgeRole.Played
-    }
-    val orderedRootOccurrences = playedOccurrences.head :: alternativeOccurrences
-    val rootPositions = before :: orderedRootOccurrences.map(_._2)
-    val context = JudgmentAssemblyContext
-      .empty(input)
-      .withNewPositions(rootPositions.map(assembly => assembly.node -> assembly.analysis))
-      .withEvidence(rootPositions.flatMap(_.evidence))
-    val withLegalLines =
-      rootLines.foldLeft(context) { (ctx, assembly) =>
-        ctx.withLegalLine(assembly.node, assembly.replay).withEvidence(assembly.evidence)
+        AdmittedLegalLine(replay), beforeNode.ref, beforeAnalysis, history, predecessorReplay, allocator
+      )))
+    val occurrences = scala.collection.mutable.LinkedHashMap.empty[
+      CanonicalReplayTransition, (PositionNodeAssembly, TransitionEdgeAssembly)
+    ]
+    retained.foreach { ctx =>
+      require(ctx.root.contains(beforeNode.ref), "retained evidence needs the same historical root")
+      val positions = ctx.positions.map(node => node.ref -> node).toMap
+      ctx.transitions.foreach { edge =>
+        val replay = ctx.transitionReplay(edge).get
+        val node = positions(edge.to)
+        val occurrence = ctx.evidenceGraph.byId(allocator.evidenceId(s"position-occurrence:${node.ref.id.get}"))
+        occurrences.update(replay.onlyTransition.get,
+          PositionNodeAssembly(node, List(occurrence), ctx.positionAnalysis(node.ref).get) ->
+            TransitionEdgeAssembly(edge, Nil, replay))
       }
-    val withCandidates =
-      candidateLines.foldLeft(withLegalLines) { (ctx, assembly) =>
-        ctx.withCandidateLine(assembly.node).withEvidence(assembly.evidence)
+    }
+    val existing = occurrences.keySet.toSet
+    val paths = rootLines.map { line =>
+      var predecessor = before
+      val edges = line.replay.singleStepReplays.zipWithIndex.map { case ((canonical, replay), offset) =>
+        val (position, transition) = occurrences.getOrElseUpdate(canonical, {
+          val played = offset == 0 && EvidenceRef.sameMove(canonical.declared.moveUci, input.playedMoveUci)
+          val positionRole =
+            if offset > 0 then PositionNodeRole.LineOccurrence
+            else if played then PositionNodeRole.AfterPlayed
+            else PositionNodeRole.AfterAlternative
+          val transitionRole =
+            if offset > 0 then TransitionEdgeRole.LineContinuation
+            else if played then TransitionEdgeRole.Played
+            else TransitionEdgeRole.Alternative
+          val destination = PositionNode(
+            positionRole,
+            allocator.successorPositionRef(predecessor.node.ref, canonical.declared, canonical.afterAnalysis.position.color)
+          )
+          val transition = TransitionEdgeAssembler.fromMove(transitionRole, predecessor, destination, replay, allocator)
+          val position = PositionNodeAssembler.fromOccurrence(
+            destination, canonical.afterAnalysis, allocator, Some(transition.edge.evidence)
+          )
+          position -> transition
+        })
+        require(transition.edge.from == predecessor.node.ref, "a shared transition must have the same historical predecessor")
+        predecessor = position
+        transition.edge
       }
-    val rootTransitions = orderedRootOccurrences.map(_._3)
-    val withTransitions = withCandidates
-      .withNewTransitions(rootTransitions.map(assembly => assembly.edge -> assembly.replay))
-      .withEvidence(rootTransitions.flatMap(_.evidence))
-    val rootContext = orderedRootOccurrences.foldLeft(withTransitions) {
-      case (ctx, (line, _, transition)) =>
-        ctx.withLineRootOccurrence(line.node.ref, transition.edge)
+      line.node.ref -> edges
     }
-    materializeLineContinuations(
-      rootContext,
-      rootOccurrences.map { case (line, position, _) => line -> position.node },
-      allocator
-    )
+    val produced = occurrences.iterator.filterNot((canonical, _) => existing(canonical)).map(_._2).toList
+    val positions = Option.when(retained.isEmpty)(before).toList ++ produced.map(_._1)
+    val base = retained.fold(JudgmentAssemblyContext.empty(input))(ctx =>
+      ctx.copy(input = input, lines = Nil, evidenceGraph = ctx.evidenceGraph.withoutAssessment))
+    val context = base
+      .copy(predecessorReplay = predecessorReplay)
+      .withNewPositions(positions.map(position => position.node -> position.analysis))
+      .withNewTransitions(produced.map { case (_, transition) => transition.edge -> transition.replay })
+      .withEvidence(positions.flatMap(_.evidence) ++ produced.flatMap(_._2.evidence))
+    val withLines = context
+      .withNewLegalLines(rootLines.map(line => line.node -> line.replay))
+      .withEvidence(rootLines.flatMap(_.evidence))
+    withCandidates(withLines.withLinePaths(paths))
 
-  private def materializeLineContinuations(
-      context: JudgmentAssemblyContext,
-      roots: List[(LegalLineAssembly, PositionNode)],
-      allocator: JudgmentProvenanceAllocator
-  ): JudgmentAssemblyContext =
-    val assemblies = roots.flatMap { case (line, root) =>
-      lineContinuationAssemblies(root, line, allocator)
+  def withCandidates(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    val allocator = JudgmentProvenanceAllocator.forInput(context.input)
+    val root = context.root.getOrElse(throw IllegalArgumentException("assessment needs its reviewed root"))
+    val linesByMoves = context.legalLines.map { node =>
+      val replay = context.lineReplay(node.ref).getOrElse(
+        throw IllegalArgumentException("assessment needs its registered replay"))
+      replay.replaySteps.map(_.moveUci) -> LegalLineAssembly(node, Nil, replay)
+    }.toMap
+    context.input.assessmentCandidates.foldLeft(context) { (ctx, candidate) =>
+      linesByMoves.get(candidate.evaluation.moves)
+        .flatMap(CandidateLineAssembler.fromProjection(candidate, _, root, allocator))
+        .map(produced => ctx.withCandidateLine(produced.node).withEvidence(produced.evidence))
+        .getOrElse(ctx)
     }
-    val withOccurrences = context
-      .withNewPositions(assemblies.map { case (position, _) => position.node -> position.analysis })
-      .withNewTransitions(assemblies.map { case (_, transition) => transition.edge -> transition.replay })
-    withOccurrences.withEvidence(
-      assemblies.flatMap { case (position, transition) => transition.evidence ++ position.evidence }
-    )
-
-  private def lineContinuationAssemblies(
-      root: PositionNode,
-      line: LegalLineAssembly,
-      allocator: JudgmentProvenanceAllocator
-  ): List[(PositionNodeAssembly, TransitionEdgeAssembly)] =
-    line.replay.singleStepReplays.zipWithIndex.drop(1).foldLeft(
-      root -> List.empty[(PositionNodeAssembly, TransitionEdgeAssembly)]
-    ) { case ((predecessor, reversed), ((canonical, transitionReplay), plyOffset)) =>
-      val step = canonical.declared
-      val destination = PositionNodeAssembler.lineOccurrenceNode(
-        line.node.ref,
-        plyOffset,
-        predecessor.ref,
-        step,
-        canonical.afterAnalysis,
-        allocator
-      )
-      val transition = TransitionEdgeAssembler.fromLineContinuation(
-        from = predecessor,
-        moveUci = step.moveUci,
-        to = destination,
-        replay = transitionReplay,
-        allocator = allocator,
-        lineOwner = line.node,
-        linePlyOffset = plyOffset
-      )
-      val position = PositionNodeAssembler.fromLineOccurrence(
-        destination,
-        line.node,
-        plyOffset,
-        predecessor.ref,
-        step,
-        canonical.afterAnalysis,
-        allocator,
-        transition.edge.evidence
-      )
-      destination -> ((position -> transition) :: reversed)
-    }._2.reverse

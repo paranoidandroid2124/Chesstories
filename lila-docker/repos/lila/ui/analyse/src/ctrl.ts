@@ -9,7 +9,7 @@ import { makeTree, treePath, treeOps, type TreeWrapper } from 'lib/tree';
 import { compute as computeAutoShapes } from './autoShape';
 import type { Config as ChessgroundConfig } from '@lichess-org/chessground/config';
 import type { CevalHandler, EvalMeta, CevalOpts } from 'lib/ceval';
-import { CevalCtrl, isEvalBetter } from 'lib/ceval';
+import { CevalCtrl, isEvalBetter, moveReviewEngineProfile } from 'lib/ceval';
 import { TreeView } from './treeView/treeView';
 import type { Prop, Toggle } from 'lib';
 import {
@@ -46,7 +46,9 @@ import {
   moveReviewCopy,
   moveReviewEngineOutcomeAtRequiredDepth,
   moveReviewProofById,
+  moveReviewObservations,
   moveReviewSubjectFromNodeList,
+  moveReviewRecordFromTree,
   moveReviewSubjectKey,
   moveReviewVerdictLabel,
   normalizeMoveReviewLocale,
@@ -62,11 +64,7 @@ import {
   type MoveReviewEngineFailure,
   type MoveReviewEngineOutcome,
 } from './moveReview';
-import {
-  MoveReviewCoordinator,
-  type MoveReviewCoordinatorHost,
-  type MoveReviewPreparation,
-} from './moveReviewCoordinator';
+import { MoveReviewCoordinator, type MoveReviewCoordinatorHost } from './moveReviewCoordinator';
 import { createMoveReviewRuntimeSource } from './moveReviewRuntimeSource';
 import { mergeMoveReviewProofIntoStudy } from './moveReviewStudy';
 import type { MoveReviewPanelProps } from './view/moveReview';
@@ -178,7 +176,9 @@ export default class AnalyseCtrl implements CevalHandler {
   private moveReviewLocale?: MoveReviewLocale;
   private moveReviewCopyValue?: MoveReviewCopy;
   private moveReviewSubjectIdentity?: string;
+  private moveReviewRecordKey?: string;
   private moveReviewEngineFailure?: () => void;
+  private moveReviewAccounting?: Promise<void>;
   private moveReviewAdded?: { subjectKey: string; proofId: string; path: Tree.Path };
   private moveReviewAnnotations = new Map<Tree.Path, { symbol: MoveReviewVerdictSymbol; label: string }>();
   // other paths
@@ -252,7 +252,7 @@ export default class AnalyseCtrl implements CevalHandler {
     pubsub.on('ply.trigger', () =>
       pubsub.emit('ply', this.node.ply, this.tree.lastMainlineNode(this.path).ply === this.node.ply),
     );
-    this.initMoveReview();
+    this.scheduleMoveReviewForCurrentEdge();
     this.mergeIdbThenShowTreeView();
   }
 
@@ -575,7 +575,7 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   moveReviewAvailable(): boolean {
-    return !!this.moveReviewCoordinator;
+    return !!this.moveReviewCoordinator && !this.ongoing && this.data.game.variant.key === 'standard';
   }
 
   moveReviewPanelProps(): MoveReviewPanelProps {
@@ -592,6 +592,7 @@ export default class AnalyseCtrl implements CevalHandler {
           ? this.moveReviewAdded?.proofId
           : undefined,
       actions: {
+        jumpToScene: path => this.userJump(path),
         selectCandidate: this.selectMoveReviewCandidate,
         toggleEvidence: this.toggleMoveReviewEvidence,
         toggleProof: this.toggleMoveReviewProof,
@@ -613,67 +614,107 @@ export default class AnalyseCtrl implements CevalHandler {
   private initMoveReview(): void {
     const mode = this.opts.moveReview?.mode;
     const variant = this.data.game.variant.key;
-    if (!this.isStudy() || variant !== 'standard' || mode !== 'runtime') return;
+    if (this.moveReviewCoordinator || this.isEmbed || this.ongoing || variant !== 'standard' || mode !== 'runtime')
+      return;
 
     this.moveReviewLocale = normalizeMoveReviewLocale();
     this.moveReviewCopyValue = moveReviewCopy(this.moveReviewLocale);
     const host: MoveReviewCoordinatorHost = {
-      prepare: (subject, signal) => this.prepareMoveReview(subject, signal),
+      engineProfile: moveReviewEngineProfile,
+      source: createMoveReviewRuntimeSource(this.executeMoveReviewEngineWork.bind(this)),
       suspendLiveEngine: this.suspendLiveEngineForMoveReview,
-      resumeLiveEngine: this.resumeLiveEngineAfterMoveReview,
-      stateChanged: this.setMoveReviewState,
+      resumeLiveEngine: this.resumeLiveEngineAfterMoveReview.bind(this),
+      stateChanged: this.setMoveReviewState.bind(this),
     };
     this.moveReviewCoordinator = new MoveReviewCoordinator(this.moveReviewLocale, host);
-    const updateActivity = (): void => {
-      if (document.visibilityState === 'hidden' || !document.hasFocus())
-        this.moveReviewCoordinator?.deactivate();
-      else this.moveReviewCoordinator?.activate();
-    };
-    document.addEventListener('visibilitychange', updateActivity);
-    window.addEventListener('focus', updateActivity);
-    window.addEventListener('blur', updateActivity);
+    // A submitted game continues while the user changes tabs; leaving the page still releases its work.
     window.addEventListener('pagehide', () => this.moveReviewCoordinator?.deactivate());
-    window.addEventListener('pageshow', updateActivity);
-    updateActivity();
-    this.scheduleMoveReviewForCurrentEdge();
+    window.addEventListener('pageshow', () => this.moveReviewCoordinator?.activate());
+    this.moveReviewCoordinator.activate();
   }
 
   private scheduleMoveReviewForCurrentEdge(): void {
+    this.initMoveReview();
+    if (!this.moveReviewAvailable()) {
+      this.moveReviewCoordinator?.settle(undefined);
+      return;
+    }
+    const record = moveReviewRecordFromTree(
+      this.data.game.variant.key,
+      this.tree.root,
+      this.data.recordedMoves,
+      JSON.stringify([this.opts.study?.id, this.opts.study?.chapterId]),
+      this.opts.study ? 'study' : 'analysis',
+    );
+    if (record?.key !== this.moveReviewRecordKey) {
+      this.moveReviewRecordKey = record?.key;
+      this.moveReviewAnnotations.clear();
+      this.moveReviewView = { evidenceExpanded: false };
+    }
     this.moveReviewCoordinator?.settle(
-      moveReviewSubjectFromNodeList(this.data.game.variant.key, this.path, this.nodeList),
+      moveReviewSubjectFromNodeList(
+        this.data.game.variant.key,
+        this.path,
+        this.nodeList,
+        this.data.recordedMoves,
+        this.opts.study ? 'study' : 'analysis',
+      ),
+      record,
     );
   }
 
-  private prepareMoveReview = async (
-    subject: MoveReviewSubject,
-    signal: AbortSignal,
-  ): Promise<MoveReviewPreparation> => {
-    const result = await this.ceval.preflightMoveReviewSelection({ variant: subject.variant, signal }, () =>
-      this.moveReviewEngineFailure?.(),
-    );
-    if (!result.ok) {
-      const engineUnavailable = result.failures.some(failure => failure.reason === 'preflight-failed');
-      return {
-        ok: false,
-        reason: engineUnavailable ? 'engine-unavailable' : 'browser-unsupported',
-        message: engineUnavailable
-          ? this.moveReviewCopyValue!.engineUnavailable
-          : this.moveReviewCopyValue!.browserUnsupported,
-      };
-    }
-    return {
-      ok: true,
-      engineProfile: result.profile,
-      source: createMoveReviewRuntimeSource(this.executeMoveReviewEngineWork),
-    };
-  };
-
-  private executeMoveReviewEngineWork = (
+  private async executeMoveReviewEngineWork(
     work: IssuedMoveReviewEngineWork,
     receivedAtMs: number,
     signal: AbortSignal,
-  ): Promise<MoveReviewEngineOutcome> =>
-    signal.aborted
+    deadlineAtMs?: number,
+  ): Promise<MoveReviewEngineOutcome> {
+    if (this.moveReviewAccounting && !signal.aborted) await this.moveReviewAccounting;
+    const ceval = this.ceval;
+    // The source has already delivered independent observations before the first issued work.
+    // One dedicated worker serves this job's root and subsequent comparison searches.
+    if (!signal.aborted && work.workId === 'work:0') {
+      const preparation = new AbortController();
+      const cancelPreparation = () => preparation.abort();
+      signal.addEventListener('abort', cancelPreparation, { once: true });
+      const limit = window.setTimeout(
+        cancelPreparation,
+        Math.max(
+          0,
+          Math.min(
+            work.maxSearchElapsedMs - (performance.now() - receivedAtMs),
+            (deadlineAtMs ?? Infinity) - performance.now(),
+          ),
+        ),
+      );
+      let prepared: Awaited<ReturnType<CevalCtrl['preflightMoveReviewSelection']>>;
+      try {
+        prepared = await ceval.preflightMoveReviewSelection(
+          { variant: work.variant, signal: preparation.signal },
+          () => this.moveReviewEngineFailure?.(),
+        );
+      } catch (_) {
+        ceval.stopMoveReview();
+        prepared = { ok: false, failures: [{ profile: work.engineProfile, reason: 'preflight-failed' }] };
+      } finally {
+        window.clearTimeout(limit);
+        signal.removeEventListener('abort', cancelPreparation);
+      }
+      if (!signal.aborted && (preparation.signal.aborted || !prepared.ok))
+        return {
+          kind: 'executor_failed',
+          executorElapsedMs: Math.max(0, Math.floor(performance.now() - receivedAtMs)),
+          observedNodes: 0,
+          engineTimeMs: 0,
+          failureCode: preparation.signal.aborted
+            ? 'lease_expired'
+            : !prepared.ok && prepared.failures.some(failure => failure.reason === 'preflight-failed')
+              ? 'engine_unavailable'
+              : 'browser_unsupported',
+          diagnostic: 'The dedicated move-review engine could not be prepared.',
+        };
+    }
+    return signal.aborted
       ? Promise.resolve({
           kind: 'executor_failed',
           executorElapsedMs: 0,
@@ -690,6 +731,10 @@ export default class AnalyseCtrl implements CevalHandler {
           const startedAt = receivedAtMs;
           const elapsed = (): number => Math.max(0, Math.floor(performance.now() - startedAt));
           let leaseTimer: number | undefined = undefined;
+          let stopTimer: number | undefined;
+          let stopping: { code: MoveReviewEngineFailure; diagnostic: string } | undefined;
+          let accounting: Promise<void> | undefined;
+          let releaseAccounting: (() => void) | undefined;
           const failure = (
             failureCode: MoveReviewEngineFailure,
             diagnostic: string,
@@ -701,35 +746,72 @@ export default class AnalyseCtrl implements CevalHandler {
             failureCode,
             diagnostic,
           });
-          const finish = (outcome: MoveReviewEngineOutcome, stopWork = false): void => {
+          const finish = (outcome: MoveReviewEngineOutcome, disposeWorker = false): void => {
             if (done) return;
             done = true;
             if (leaseTimer !== undefined) window.clearTimeout(leaseTimer);
+            if (stopTimer !== undefined) window.clearTimeout(stopTimer);
             signal.removeEventListener('abort', cancel);
             if (this.moveReviewEngineFailure === fail) this.moveReviewEngineFailure = undefined;
-            if (stopWork) this.ceval.stopMoveReviewWork();
+            if (disposeWorker) {
+              try {
+                ceval.stopMoveReview();
+              } catch {
+                // Disposal is best effort, but accounting must still close within its bound.
+              }
+            }
+            if (this.moveReviewAccounting === accounting) this.moveReviewAccounting = undefined;
+            releaseAccounting?.();
             resolve(outcome);
           };
-          const cancel = (): void => finish(failure('cancelled', 'The move review was cancelled.'), true);
-          const fail = (): void =>
+          const closeStopped = (acknowledged: boolean): void => {
+            if (done || !stopping) return;
             finish(
-              failure('engine_failure', 'The browser engine stopped before producing an exact result.'),
+              failure(
+                stopping.code,
+                stopping.diagnostic +
+                  (acknowledged
+                    ? ''
+                    : ' Final engine usage is incomplete: stop was not acknowledged; counters are lower bounds.'),
+              ),
               true,
             );
+          };
+          const requestStop = (code: MoveReviewEngineFailure, diagnostic: string): void => {
+            if (done || stopping) return;
+            stopping = { code, diagnostic };
+            if (leaseTimer !== undefined) window.clearTimeout(leaseTimer);
+            accounting = new Promise(resolve => (releaseAccounting = resolve));
+            this.moveReviewAccounting = accounting;
+            // Keep only accounting open; cancellation UI and live ceval can resume immediately.
+            stopTimer = window.setTimeout(() => closeStopped(false), 250);
+            try {
+              ceval.stopMoveReviewWork();
+            } catch {
+              closeStopped(false);
+            }
+          };
+          const cancel = (): void => requestStop('cancelled', 'The move review was cancelled.');
+          const fail = (): void => {
+            requestStop('engine_failure', 'The browser engine stopped before producing an exact result.');
+            closeStopped(false);
+          };
           this.moveReviewEngineFailure = fail;
           signal.addEventListener('abort', cancel, { once: true });
-          const remainingLeaseMs = work.maxSearchElapsedMs - elapsed();
+          const remainingLeaseMs = Math.min(
+            work.maxSearchElapsedMs - elapsed(),
+            (deadlineAtMs ?? Infinity) - performance.now(),
+          );
           if (remainingLeaseMs <= 0) {
             finish(failure('lease_expired', 'The browser engine exceeded its issued work lease.'), true);
             return;
           }
           leaseTimer = window.setTimeout(
-            () =>
-              finish(failure('lease_expired', 'The browser engine exceeded its issued work lease.'), true),
+            () => requestStop('lease_expired', 'The browser engine exceeded its issued work lease.'),
             remainingLeaseMs,
           );
           try {
-            const started = this.ceval.startMoveReview(work.engineProfile, {
+            const started = ceval.startMoveReview(work.engineProfile, {
               variant: work.variant,
               initialFen: work.enginePositionInitialFen,
               currentFen: work.searchFen,
@@ -740,12 +822,18 @@ export default class AnalyseCtrl implements CevalHandler {
               searchLimits: work.searchLimits,
               rootMoves: work.rootRestriction.kind === 'restricted' ? work.rootRestriction.movesUci : [],
               observe: (nodes, engineTimeMs) => {
+                if (done) return;
                 latestNodes = Math.max(latestNodes, nodes);
                 latestEngineTimeMs = Math.max(latestEngineTimeMs, engineTimeMs);
               },
               emit: evaluation => {
+                if (done) return;
                 latestNodes = Math.max(latestNodes, evaluation.nodes);
                 latestEngineTimeMs = Math.max(latestEngineTimeMs, evaluation.millis);
+                if (stopping) {
+                  if (evaluation.bestmove !== undefined) closeStopped(true);
+                  return;
+                }
                 if (evaluation.depth === work.searchLimits.depth - 1 && evaluation.bestmove === undefined)
                   previousEvaluation = {
                     ...evaluation,
@@ -753,18 +841,17 @@ export default class AnalyseCtrl implements CevalHandler {
                   };
                 const outcome = moveReviewEngineOutcomeAtRequiredDepth(
                   work,
-                  evaluation,
+                  { ...evaluation, nodes: latestNodes, millis: latestEngineTimeMs },
                   previousEvaluation,
                   elapsed(),
                 );
-                if (outcome) finish(outcome, true);
+                if (outcome) finish(outcome);
                 else if (evaluation.bestmove !== undefined)
                   finish(
                     failure(
                       'search_budget_exhausted',
                       'The browser engine exhausted its search budget before producing the exact requested result.',
                     ),
-                    true,
                   );
               },
             });
@@ -773,20 +860,23 @@ export default class AnalyseCtrl implements CevalHandler {
             fail();
           }
         });
+  }
 
   private suspendLiveEngineForMoveReview = (): void => {
     if (this.cevalEnabled()) this.ceval.stop();
     this.redraw();
   };
 
-  private resumeLiveEngineAfterMoveReview = (): void => {
-    this.ceval.stopMoveReview();
-    this.moveReviewEngineFailure = undefined;
+  private resumeLiveEngineAfterMoveReview(): void {
+    if (!this.moveReviewAccounting) {
+      this.ceval.stopMoveReview();
+      this.moveReviewEngineFailure = undefined;
+    }
     if (this.cevalEnabled()) this.startCeval();
     this.redraw();
-  };
+  }
 
-  private setMoveReviewState = (state: MoveReviewJobState): void => {
+  private setMoveReviewState(state: MoveReviewJobState): void {
     this.moveReviewJob = state;
     const subject =
       state.kind === 'completed' || state.kind === 'position-action'
@@ -794,26 +884,27 @@ export default class AnalyseCtrl implements CevalHandler {
         : state.kind === 'loading' ||
             state.kind === 'abstained' ||
             state.kind === 'fault' ||
-            state.kind === 'unsupported'
+            state.kind === 'unsearched'
           ? state.subject
           : undefined;
     const subjectKey = subject ? moveReviewSubjectKey(subject) : undefined;
-    if (subjectKey !== this.moveReviewSubjectIdentity || state.kind === 'loading') {
+    if (subjectKey !== this.moveReviewSubjectIdentity) {
       this.moveReviewSubjectIdentity = subjectKey;
       this.moveReviewView = {
         selectedCandidateUci: subject?.played.uci,
         evidenceExpanded: false,
       };
     }
-    if (state.kind === 'completed') {
-      const played = state.snapshot.evidence.candidates.find(candidate =>
-        candidate.roles.includes('played'),
-      )!;
-      this.moveReviewView.selectedCandidateUci ??= played.uci;
-      const review = played.review;
-      if (review.kind === 'move-verdict' && !this.moveReviewView.expandedProofId && review.comparisonProof)
-        this.moveReviewView.expandedProofId = review.comparisonProof.id;
-      if (review.kind !== 'move-verdict' || review.core.verdictSymbol === 'none')
+    if (subject && (state.assessmentState === 'needs_refresh' ||
+        (state.kind === 'completed' && state.snapshot.assessmentState === 'needs_refresh'))) {
+      this.moveReviewAnnotations.delete(subject.after.path);
+    } else if (state.kind === 'completed') {
+      const played = state.snapshot.evidence.candidates.find(candidate => candidate.roles.includes('played'));
+      this.moveReviewView.selectedCandidateUci ??= played?.uci;
+      const review = played?.review;
+      if (review?.kind === 'move-verdict' && !this.moveReviewView.expandedProofId)
+        this.moveReviewView.expandedProofId = review.comparisonProofs[0]?.id;
+      if (review?.kind !== 'move-verdict' || review.core.verdictSymbol === 'none')
         this.moveReviewAnnotations.delete(subject!.after.path);
       else
         this.moveReviewAnnotations.set(subject!.after.path, {
@@ -824,7 +915,7 @@ export default class AnalyseCtrl implements CevalHandler {
       this.moveReviewAnnotations.delete(subject!.after.path);
     }
     this.redraw();
-  };
+  }
 
   private selectMoveReviewCandidate = (uci: Uci): void => {
     this.moveReviewView = {
@@ -872,8 +963,17 @@ export default class AnalyseCtrl implements CevalHandler {
   private currentMoveReviewProof(
     proofId: string,
   ): { subject: MoveReviewSubject; proof: MoveReviewProof } | undefined {
-    if (this.moveReviewJob.kind !== 'completed') return;
-    const { subject, evidence } = this.moveReviewJob.snapshot;
+    const job = this.moveReviewJob;
+    const independent = moveReviewObservations(job)?.paths.find(path => path.id === proofId);
+    if (independent && job.kind !== 'idle') {
+      const subject =
+        job.kind === 'completed' || job.kind === 'position-action' ? job.snapshot.subject : job.subject;
+      return { subject, proof: independent };
+    }
+    if (job.kind === 'idle') return;
+    const subject = job.kind === 'completed' || job.kind === 'position-action' ? job.snapshot.subject : job.subject;
+    const evidence = job.kind === 'completed' ? job.snapshot.evidence : job.assessment?.kind === 'completed' ? job.assessment.evidence : undefined;
+    if (!evidence) return;
     for (const candidate of evidence.candidates) {
       const proof = moveReviewProofById(candidate.review, proofId);
       if (proof) return { subject, proof };
@@ -883,11 +983,12 @@ export default class AnalyseCtrl implements CevalHandler {
 
   private addMoveReviewProof = (proofId: string): void => {
     const selected = this.currentMoveReviewProof(proofId);
-    if (!selected || !this.canWriteStudy()) return;
+    if (!selected || !this.canWriteStudy() || selected.proof.startFen !== selected.subject.before.fen) return;
     const subjectKey = moveReviewSubjectKey(selected.subject);
     this.enqueueStudyWrite(async ref => {
       const path = await mergeMoveReviewProofIntoStudy(this.tree, ref, selected.subject, selected.proof);
       this.moveReviewAdded = { subjectKey, proofId, path };
+      this.scheduleMoveReviewForCurrentEdge();
       this.redraw();
     });
   };
@@ -1040,9 +1141,10 @@ export default class AnalyseCtrl implements CevalHandler {
       this.threatMode(false);
       this.ceval?.stop();
       this.startCeval();
-      this.scheduleMoveReviewForCurrentEdge();
       site.sound.saySan(this.node.san, true);
     }
+    // Same-path edits (for example deleting a sibling) also revise supplied input.
+    this.scheduleMoveReviewForCurrentEdge();
     this.justPlayed = this.justCaptured = undefined;
     this.explorer.setNode();
     this.syncHref(historyMode);

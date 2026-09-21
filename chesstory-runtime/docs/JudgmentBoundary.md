@@ -1,154 +1,156 @@
 # 체스토리 판단 경계
 
-이 문서는 현재 런타임의 의미 소유권만 기록한다. 레퍼런스 관찰과 현재
-커버리지 결손은
-[`commentary-reference-ledger.json`](../../judgment-evaluation/references/commentary-reference-ledger.json)이
-소유한다. 이 문서에 그 원장을 복제하지 않는다. JSON 원장은 CI용 provenance
-인벤토리이며 런타임 보드 사실이나 증명 premise는 아니다.
+현재 구현의 의미·소유권·조사 규칙을 설명한다. 실행은 [README](../README.md), 현재 상태·향후 계획은 [진행 기록](C:/Codes/Chesstories/research/role-use-next/progress.md)을 참조한다.
+실행 코드·admission 검사·[공개 schema](../../judgment-evaluation/schemas)가 계약의 최종 권위다.
+[레퍼런스 원장](../../judgment-evaluation/references/commentary-reference-ledger.json)은 관찰 출처이며 런타임의 체스 사실이나 증명 전제가 아니다.
 
-## 세 경계
+## 1. 소유권과 정확 이력
 
-### Assessment
+| 담당 | 판정하는 것 | 판정하지 않는 것 |
+|---|---|---|
+| L0/L0.5/L1 producer | 정확 보드 사실·폐쇄된 부재, 합법 수 전후 변화·자원 | 좋은 수·의도·장기 계획 |
+| Assessment | 해당 검색 범위의 평가·순위·착수 등급 | 점수 차이의 체스적 원인 |
+| 질문 발견·기능 판독 | 아래 유한 후보·조건 응수·인증 관측 비교 | 모든 유용한 질문·모든 응수의 강제성 |
+| CommentaryJobReducer | 근거 재사용·분석 발급/수락·상태·예산 | 자체 엔진 실행 |
+| Presentation | 확인된 사실·비교·미확정·정확 보드 이동 | 자연어에서 의미 복원·별도 체스 판단 |
 
-Assessment는 후보 수의 평가와 선택을 소유한다. `CandidateLineNode`,
-`CandidateComparison`, `BestChoice`, `MoveVerdict`, engine rank와 score는 이
-경계에만 속한다. 현재 유일한 comparison transport는 실전수와 최선수를
-정량 비교하는 `PlayedVsBest`, 그리고 실전수가 최선일 때 public
-`best_choice`가 표시할 runner-up을 정량 비교하는 `BestVsSecond`뿐이다.
-`BestVsSecond`는 최선수의 causal idea가 아니다. 이 값들은 어떤 L2 증명이
-존재하는지, 어느 branch가 인과 기준인지, proof ID나 dependency fingerprint가
-무엇인지 결정하지 않는다.
+- 입력의 `initial_fen + move_prefix_uci + current_fen`과 실제 수를 합법 재생한다. 같은 FEN이어도 다른 이력·분기를 합치지 않는다. 정확 접두사는 공유하며 미래 suffix·평가가 앞선 occurrence ID를 바꾸지 않는다.
+- `LegalLineNode`는 root occurrence와 전체 UCI 경로를, `CandidateLineNode`는 그 경로의 평가 projection을 소유한다. 다른 suffix·출처·깊이·평가는 보존하고, 평가 없는 합법 경로도 남긴다.
+- 현재 실제 대국 occurrence는 평가하는 root 착수다. 뒤의 PV·`input_lines`는 분석 경로이며 실제 대국·강제 수순으로 승격하지 않는다. `pgn_record`는 제출 원문 출처이지 외부 대국 인증이 아니다. Study 저장·재개까지의 원문 출처 보존은 미구현이다.
+- 무효한 root graph binding은 packet을 만들지 않는다. 이후 평가·조립·검색 실패는 마지막 유효 packet과 독립 수락된 합법 사실을 지우지 않는다. 합법 단계 수락과 점수 수락은 별개다.
+- 제공 `input_lines`의 잘못된 suffix·자동 종료·600개 새 occurrence 접수 한도는 유효 prefix·다른 가지를 남기고 `input_issues`로 보고한다. 중복 입력의 원래 순서·문제 인덱스는 유지하며 계산만 공유한다.
+- 합법 수 목록과 수락된 증거 경로 목록은 다르다. 미반환/미관측은 불법·반증·엔진 내부 미검색을 뜻하지 않는다. 의미 producer가 가짜 경로나 별도 analyzer를 만들지 않는다.
+- `CommentaryProposal`은 합법 이동 관측·지정한 두 수의 평가 관계·기존 사실의 유한 명제·미해석 가설을 기존 조사에 접수한다. 사실/시점/결합 판독은 아래 범위로 한정하며 범용 의미 producer와 카탈로그 전체 판독은 아직 없다.
 
-### Occurrence relation
+## 2. 독립 관측과 비교
 
-현재 등록된 typed L2 relation producer와 relation demand 경로는 없다. 삭제된
-계약의 특수한 조건을 일반 관계로 이름만 바꾸어 남기지 않았으며, 새 관계 모델은
-아직 결정하지 않았다. 이 상태는 L0~L1 사실의 부재나 반증을 뜻하지 않는다.
-관계 생산 실패가 이미 성립한 하부 사실을 제거할 권한도 없다.
+`observations`는 진행·완료·중단 모두에 남고 선택적 평가·primary와 독립이다.
+양성 사실 / 폐쇄 인벤토리로 확인한 부재 / 미확인 / 기물 제거를 구별한다.
+부분 인벤토리는 양성 사실을 남기지만 누락을 부재로 만들지 않는다.
 
-### Structured Presentation
+| 관측 | 보존하는 의미 |
+|---|---|
+| 포획·전개·캐슬링·승격·구조 변화 | 인증 사건과 정확 기물/칸. 확인된 빈 변화와 인벤토리 누락을 구별 |
+| 통제·지원·폰 속성·파일 | 기하 통제와 합법 포획은 별개. 폰 속성별 근거, 파일의 양측 폰 근거가 필요 |
+| `legal_moves` | 현재 차례의 완전한 목록에서만 부재가 illegal. 다른 차례/불완전 자료는 not_turn/unknown |
+| `gives_check` | 기존 합법 수의 canonical 결과 위치에서 읽는 선택 필드. 생략은 false가 아님 |
+| 위치/수순 자원 | `paths.position_ids`와 정확 단계 연결. source hash는 position ID와 semantic ID에서 해석 |
+| `line_summary` | 해당 시작점 이후 유한 사건·물질 원장. 물질0은 보상·안정·국면 동등의 증명이 아님 |
 
-현재 public-v6 move commentary는 Assessment의 `primary`만 운반한다. 삭제된
-relation payload를 빈 배열, 범용 wrapper, legacy alias로 유지하지 않는다.
-Presentation은 체스 의미를 다시 판정하거나 자유 문장을 별도 진실 원천으로
-만들 수 없다.
+앙파상 피해 칸과 도착 칸, 승격 선택, 실제 기물 정체성을 보존한다. UI가 포획·핀·안전을 다시 계산하지 않는다.
+폰 속성·열린 파일·기하 지원은 안전한 진입·합법 재포획·왕 안전을 뜻하지 않는다.
 
-## Line 소유권과 occurrence provenance
+평가 답은 해당 범위의 동일 작업·충분한 동일 깊이·정확 인증 경로가 있어야 한다.
+한 수 뒤의 정확 자동 종료는 깊이 없는 확정 결과를 허용한다.
+후속 평가와 종료는 정확 search anchor/prefix의 위치에 속하며 root 등급·강제 결과로 옮기지 않는다.
+점수는 White 관점, 후보 우열은 해당 위치의 차례 기준이다. 다른 작업의 점수를 섞지 않는다.
+제출된 임의 원위치 비교는 요청한 두 수의 관계만 답하며 기존 primary·기준수·원위치 순위를 바꾸지 않는다.
+자식 비교는 검증된 실제 차례와 정확 접두의 ply offset에 속한다.
 
-`LegalLineNode`는 합법 재생된 한 root move의 role-neutral owner다. 한 root
-move에는 정확히 하나의 `LegalLine` owner만 존재하며, replay와 line evidence를
-소유한다. `LineNodeRef`에는 평가 role이나 rank가 없다.
+## 3. 질문이 생기는 관측
 
-`CandidateLineNode`는 기존 `LegalLine`을 참조하는 Assessment projection이다.
-role, rank와 evaluation은 이 projection에만 있다. projection의 선택이나 값이
-바뀌어도 같은 replay의 `LegalLine` owner와 root transition identity는 바뀌지
-않는다. 반대로 assessment candidate가 없는 line을 평가 사실로 가장하지 않는다.
+| 판독기/입구 | 현재 생성·비교 범위 |
+|---|---|
+| CommentaryInvestigation | 같은 작업의 다른 PV head, 합법 포획, 다른 동일역할 기물의 같은 목적지, actual/reference 비폰 기물의 다른 비포획, 양성 공격 대상의 이동·공격자 포획·새 지원 |
+| PrincipalVariationComparison | 기준/실제 및 기준/나머지 PV의 물질 역할별 개수, 사건 순서, 원 착수 기물의 전개·통제 차이. 양성 관측 부족은 같음이 아닌 unavailable |
+| TargetResponseInvestigation | actual/reference 뒤 동일 원 대상을 추적하여 전체 합법 응수를 대상 포획/나머지로 분류. 자동 종료·빈 부류는 제외 |
+| 물리 회수·보상 | 원 포획자 제거·지연 회수·후속 재손실은 정확 기물 정체성으로, 다른 대상 획득은 음수 원장 구간에 연결. 손실 뒤와 회수 직전 선택, 짧은 peer 끝의 미관측을 질문화 |
+| 지원 대체·사용 | 재포획자의 전후 지원, 원 지원자의 후속 왕 포획 기회, 직접 지원 재포획. 같은 기물·대상도 시점·왕복 이후 변화를 구별 |
+| 포획 노출 | 정지 slider와 정지 대상 사이의 방해물이 사라져 현재 합법 포획이 생김. 실제 같은 포획이 열린 손실을 남기면 앞 선택도 조사 |
+| 합법 후속 자원·체크 말단 | 열린 손실 뒤 합법 포획/체크, 공격받는 원 포획자 측 선택. 현재 실제 체크의 미응답 말단은 원장/profile과 독립적으로 생성 |
 
-현재 입력이 실제 대국 occurrence로 확정하는 범위는 observed root 한 수뿐이다.
-그 결합은 다음 기존 소유자로 보존된다.
+같은 대안의 생성 이유는 합치며 actual/reference 주비교를 중복 생성하지 않는다.
+같은 기물·목적지라는 이유는 질문 입구일 뿐 같은 목적·좋은 수의 증명이 아니다.
+현재 생성 조건이나 PV에 없는 조용한 다른 기물·폰 수는 질문이 안 생길 수 있다.
+한 입구의 질문 억제를 전체 발견 실패로 단정하지 않고 다른 입구의 동일 위치 커버리지를 함께 본다.
 
-- canonical game history와 정확히 일치하는 root move 및 before/after position
-- 그 root의 exact `MoveTransitionEdge` owner
-- 그 transition을 시작하는 exact `LegalLine` owner와 canonical replay
+- 포획 사슬 밖의 열린 물질 손실도 보존한다. `recovery_losses`는 회복 수행자의 재손실을, `open_loss_event_ids`는 현재 열린 구간을 나타낸다. 단순 생존·왕복·모든 끝점만으로 계속 조사하지 않는다.
+- `support_applications`는 상대 왕의 실제 차례에 대상과 접촉하지만 완전한 합법 목록상 잡지 못하는 관측이다.
+- `direct_support_recaptures`는 제자리에 있던 지원자가 같은 칸에서 원 포획자를 실제 되잡는 별도 사실이다. 지연은 가능하나 중간 이동·앙파상 피해칸 차이는 이 연결에서 제외한다.
+- `recapturer_support`는 같은 원 재포획자의 전후 역할을 고정해 얻은 지원과 잃은 지원을 함께 읽는다. `shared_attackers`는 공통 위치의 같은 공격자와 두 실제 포획을 잇되 중간 이동을 섞지 않는다. 두 기능 모두 강제 전술·인과·최선성의 증명이 아니다.
+- `LineContinuationComparison`은 기존 PV/대상 비교와 같은 검색의 반환 선두–다른 후보, 명시한 route 대표–부류 쌍을 사용한다. 미관측 회수는 불가능이 아니며 모든 경로 조합을 만들지 않는다.
 
-따라서 observed 수가 engine best인 경우에도 그 단일 `LegalLine` owner를
-별도 played owner로 복제하지 않는다. 다른 root와 모든 PV suffix는 합법 재생된
-분석 occurrence일 뿐 실제 대국 수순으로 승격되지 않는다. 현재 이 차이를 별도
-provenance ADT나 이름뿐인 wrapper로 다시 복제하지 않는다.
+## 4. 하나의 조사 흐름과 예산
 
-그러나 admission된 PV suffix의 각 ply도 독립 graph occurrence로 실체화된다.
-각 suffix position은 정확한 incoming `LineContinuation` transition을 부모로
-가지며, 그 transition은 해당 `LegalLine` replay를 부모로 가진다. 따라서 같은
-`LegalLine` 안의 cycle이나 서로 다른 admitted `LegalLine`들이 같은 semantic
-position으로 합쳐지는 transposition에서도 history occurrence와 evidence ID는
-합쳐지지 않는다. 한 `LegalLine` 안의 새 branch나 nested transposition까지
-지원한다는 뜻은 아니다. 이 소유권은 분석 occurrence를 observed game history로
-승격시키지 않는다.
+```text
+정확 이력·착수·공급 수순 수락 → 독립 관측
+가벼운 root MPV 수락 → 실제 수가 없으면 같은 깊이의 actual/reference focus
+첫 평가와 검증 대기 work를 즉시 반환 → 의심 신호 없이 원점 검증
+검증된 평가·PV/보드 판독 → 구체 질문 생성·기존 근거 재사용
+필요한 조사 선택 → 보고 수락 → 평가/질문/미확정 갱신 → 남은 예산에서 반복
+평가·조건부 비교·확인된 사실·미확정·정확 경로 전달
+```
 
-현재 공개 relation subject는 없다. 상대 응수나 뒤 occurrence를 별도 subject로
-요청하는 생산 경로도 지원한다고 주장하거나 빈 API로 예약하지 않는다.
+**공통 선택 정책은 여기에서만 정의한다.** 현재 선택 경로 → 짧은 끝의 미확인 연장 → 갈라진 조건부 가지 순으로 구분한다.
+각 영역 안에서는 회수 경로의 구체 도전/누락 부류 → 실제 미응답 체크 → 관측 회수·지원 선택과 peer 미관측 → 노출·대상 첫 조사 → 단순 노출 보완·일반 물질/포획자 자원·대상 부류 보완 → 나머지 후속 질문 순이다.
+관측된 단일 즉시 다른 대상 획득만 다시 묻는 후보는 일반 순위에 남긴다. 같은 band/rank/정확 전체 검색의 동률은 그 작업의 기존 반환 순서를 사용한다.
+자동 후속 작업 다음에는 미해결 제출 비교를 child → root 순으로 선택하고, 그 뒤 자동 원위치 가설 묶음을 조사한다. 같은 종류의 제출 비교는 입력 순서를 동률 해소에 쓴다. 원위치 확장은 제출/자동 합계 최대 한 번이다. 이는 구체 반례 우선의 현재 배분 정책이며 기대 효용 최적화가 아니다.
 
-## L0~L2 권한
+- 같은 exact child/prefix의 대상·누락 부류는 검색을 공유한다. 전체 합법 범위 조사와 미반환 부류의 제한 조사 범위를 구별하며, 후보풀을 MPV 개수로 잘라내지 않는다.
+- 현재 대표는 부류 전체를 포함한 child 검색 → 부분 검색 표본 → root PV 힌트 → 기존 경로 → 법적 seed 순으로 선택한다. 같은 범위에서는 깊이가 높은 작업을 먼저, 같은 깊이면 최신 작업을 읽는다. seed는 위치 표시이며 미리 찍은 두 수의 우월성 근거가 아니다.
+- 생산의 자동 발견은 현재 검증 깊이 이상인 root PV와 반환 child/공급 수순의 관측을 주로 읽는다. 전 합법 후보 목록은 남기지만, 그 목록의 모든 가지를 자동 재생하지 않으며 `pv_scope`로 미조사 범위를 남긴다. 첫 PV에 탐색을 고정하지 않는다. 이후 원점 탐색은 전체 합법 범위이며 새 보고가 계획·질문을 다시 만든다.
+- 원위치 대안의 목록과 추가 조사 배분은 구분한다. 양성 공격 대상의 이동/공격자 포획/지원, 그다음 동일 물질·기존 close 판정·양성 원 기능 차이에 연결된 대안을 택한다. 단순 동일 기물·포획 가능성만 있는 미답은 자동 확장하지 않는다. 같은 후보 목록에 이 순서를 적용한 비교와, PV 밖 후보 재생을 줄인 비교는 별개의 검사다. close에 새 CP 경계·확률 신뢰도를 붙이지 않는다. 미반환은 미답이다.
+- 대상 수락/거절은 착수 전의 공격뿐 아니라 착수로 새롭게 노출된 기물도 찾는다. 후자의 공격 근거는 정확 child에, 기물 신원은 원점에 속한다. 수락과 거절은 서로 다른 합법 부류이며 PV의 수락 한 줄은 거절까지의 강제성을 증명하지 않는다.
+- 회수 수행자 제거·정지 victim 이동은 그 관측 회수 경로의 도전 부류이며 대체 회복 전체의 반증이 아니다. `route_challenge`는 부류 표본과 동일 작업의 대표 비교를 구별한다. 노출-only 보완이 다른 주요 경로의 첫 관찰을 선점하지 않으며, 현재 정책은 무조건 양팔 최초 조사 보장이 아니다.
+- 정확 최신 전체 검색과 제한 표본의 경계를 보존한다. 조건부 가지를 조사해도 앞선 미확인 선택을 검증한 것으로 승격하지 않는다.
+- 원점의 자동 조사와 제출 비교는 같은 평가 갱신 경로를 사용한다. 기준수 이름이 같아도 실제·기준의 새 점수/깊이/경로로 평가와 설명을 재조립한다. 실제가 빠진 조사에서 기준의 근거가 그대로이고 새 후보도 더 낫지 않으면 기존 평가를 유지한다.
+- 비교에 실제·기존 기준이 없거나 기존 평가보다 얕으면 actual/기존 기준/수신 최상위 후보를 같은 새 작업에서 검증한다. 동점은 기존 기준 유지, 갱신 미완·관련 보고 접수 뒤 조립/비교 실패는 needs_refresh. 제한 비교는 investigation_pair 범위이며 전역 순위·전역 무승부 행동을 만들지 않는다.
+- 현재 평가 수순의 정확 접두에서 상대 차례의 새 보고가 원점 측에 더 불리한 점수를 보이면 원점 재검증을 요청한다. child 깊이+접두 ply 수는 요청 깊이의 하한이며 체스적 동등성·증명 깊이는 아니다. 같은 부호의 메이트 거리 감소는 이 신호로 쓰지 않는다. 임의의 off-PV 가지는 이 조건을 만족하지 않으며 조건부 관측으로 남는다. child 점수를 원점 점수로 복사하지 않는다.
 
-- **L0**는 한 position occurrence의 폐쇄된 보드 사실과 부재다.
-- **L0.5**는 같은 합법 수의 before/after에서 직접 인증되는 정확한 변화다.
-- **L1**은 한 transition 직후의 자원·제약과 폐쇄 인벤토리다.
-- **L2** typed relation producer는 현재 없다.
+| 작업 | 횟수·범위 | 초기 제한 |
+|---|---|---|
+| 첫 root | 전체 합법 범위 MPV 최대3 | D8 / 2M nodes / 검색2.5초 / lease3.5초 |
+| 원점 검증 | 첫 평가 뒤 신호 없이, 전체 합법 범위 MPV 최대3 | D16 / 5M nodes / 검색5초 / lease6초 |
+| focus | 각 root 보고에 actual이 없을 때, actual/reference MPV2 | 해당 root와 같은 깊이 / 2M nodes / 검색2.5초 / lease3.5초 |
+| 설명의 원위치·후속 조사 | 기존 합계 최대2회, 지정 범위 MPV 최대3 | 현재 검증·평가 깊이 이상, 나머지는 focus와 동일 |
+| 제한 비교의 평가 갱신 | 기존 필요 시 최대1회, 명시한2~3수 | 기본/기존 평가/조사 보고 깊이의 최댓값(최대100), 나머지는 focus와 동일 |
+| child 반례의 원점 재검증 | 최대1회, 전체 합법 범위, 필요 시 focus | 기존 요구 깊이와 child 깊이+접두 길이의 최댓값(최대100), root 제한 사용 |
 
-L0/L0.5/L1 record는 root뿐 아니라 admission된 replay의 모든 ply occurrence에
-demand와 무관하게 생성된다. L2 관계의 생산·인증·공개 실패는 이미 성립한 이
-하부 record나 다른 관계를 제거하지 않는다.
+이는 측정으로 최적화한 단계 수나 예산이 아니다. D8은 기존 CP 평가 수락 하한, D16은 기존 생산 기준이며 MPV3은 기존 3~5 제안 중 현재 수신 계약 안의 값이다. 4~5PV의 발견 이득·비용은 검증하지 않았다. 합법수가 하나인 위치 행동에는 심화가 필요 없지만 점수에 의존한 무승부 권고에는 검증이 필요하다. 다시 발견된 반례나 깊이 상한 초과는 `verification: stopped`와 `needs_refresh`로 남긴다.
+단일 요청/명시 재시도10초·전체 PGN180초 원 마감에 준비·전송·큐·발급 작업이 포함된다.
+`remaining_budget_ms`와 동일 worker/ledger/cache를 사용하며 질문 추가·화면 이동이 예산을 새로 만들지 않는다.
+공통 엔진·환경·통신 장애는 자동 큐를 멈춘다. 동기 의미 조립을 선점하지 못하므로 이 수치는 실제 PC 지연·취소 상한 보장이 아니다.
 
-평가 변화나 책의 `best`, `only`, `prevents`, `plan`, `counterplay`를 하부 사실로
-가장하지 않는다. 필요한 하부 사실이 없으면 미관찰·미검색·반증을 섞지 않고
-coverage 결손으로 남긴다. 같은 semantic position의 transposition도 history
-occurrence와 proof path를 합치는 근거가 아니다.
+`verification`은 검증 요청의 pending/complete/stopped/not_required 상태와 요구 깊이·완료 깊이·유발 work를 전달한다. `assessment_state`는 근거 갱신 여부다. 첫 점수가 current여도 검증은 pending일 수 있다. 기존 클라이언트는 snapshot을 emit한 뒤 다음 work를 실행하므로 첫 평가가 조사 완료를 기다리지 않는다. 완료/실패/취소에도 평가와 검증 미완료를 함께 보존한다. 근거의 깊이와 소유권을 넘겨 얕은 설명을 깊은 평가의 이유로 쓰지 않는다. 관측→명제→대안 행동→구별할 사실/응수→요청의 연결은 기존 Fact/CompareMoves/target-response/continuation Need에 표현하고, 해석되지 않는 준비·보상 가설은 미확인으로 남긴다.
 
-## 현재 관계 상태
+새 가설 및 강제 후속의 지역 재생은 같은 원점 job의 최대600개 신규 edge 한도를 공유한다. 정확한 기존 접두·edge는 재사용하며 질문 이름·child 위치·보고 수신이 회계를 초기화하지 않는다. 이 한도는 제공 수순 접수 한도·엔진 작업 수와 별개다. 중복 요구는 같은 재생/검색을 공유하지만 각 요구의 판정은 보존한다. 한도 때문에 보류했어도 이후 반환 경로에서 필요한 접두가 생기면 무료로 재준비해 다시 조사할 수 있다. 동기 준비의 실제 처리시간은 별도 측정 대상이다.
 
-현재 typed relation family, 전용 proof type, occurrence demand assembler,
-packet relation lane, public serializer와 public schema relation variant는 없다.
-따라서 관계별 producer·봉인 조건·dependency fingerprint도 현재 권위로 문서화할
-대상이 아니다. 레퍼런스 원장의 사례는 관찰과 미해결 근거만 보존한다.
+## 5. 완료 의미·전달·재사용
 
-## 생산부터 공개까지
+| 상태/출력 | 뜻과 한계 |
+|---|---|
+| answered | 해당 범위의 동일 작업 평가쌍 확보. 기능 설명 완료와 별개 |
+| observed | 대상 질문은 현재 대표 쌍의 명시한 기능 관측, 후속 질문은 그 질문이 요구한 정확 후속 관측 확보. 최선성·안전의 증명 아님 |
+| surveyed | 그 위치의 전체 선택 범위를 검색함. 모든 합법 응수의 반환·필요한 기능 관측 완료가 아님 |
+| forced | 정확 위치의 유일 합법 수. 기존 이력으로 무점수 재생하고 자동 종료·80 ply·공통 지역 재생 한도를 지킴 |
+| ready / partial / unknown | 해당 유한 관측의 완료/일부/미확인. 물질이 같다고 계획·기능이 같아지지 않음 |
+| deferred / stopped | 미배정·예산 종료 / 취소·실패와 사유. 중요하지 않음·반증이 아님 |
+| unresolved_source_line_ids / followup_question_ids | 아직 열린 물질·peer·지원·체크 등의 정확 경로와 후속 질문. surveyed와 함께 남을 수 있음 |
 
-player job의 현재 흐름은 다음과 같다.
+- `comparison_sources`는 질문을 낳은 비교를, 반환 donor와 긴 `observation_line_id`는 서로 다른 근거를 참조한다. peer에 다른 경로를 붙여 답을 만들지 않는다.
+- 새 짧은 대표는 옛 사실을 지우지 않고 옛 긴 경로는 새 대표를 완료시키지 않는다. 갈리는 최대 후손은 각각 보존한다. 한 가지가 partial이어도 다른 가지의 알려진 사실을 숨기지 않는다.
+- 같은 재포획 가지의 첫 미관측 끝점을 유지하며 짧은 보고마다 질문 위치를 끝없이 이동시키지 않는다. 체크 회피 한 수 관측은 수순 전체 강제성·왕 안전의 완료가 아니다.
+- 후속 질문의 `premises`는 발견 당시의 종류·촉발·원 경로를 한 관계로 보존한다. 동일 위치 병합과 재발견은 이 관계를 유지하며, 나중에 추가한 witness를 원 출처로 바꾸지 않는다. 종류/촉발의 질문 단위 목록은 이 관계의 합집합이다.
+- 각 전제는 `witness_line_ids`와 자기 `unresolved_source_line_ids`를 갖는다. `observation_state`의 `observed`는 명시한 후속 사실의 관측, `unobserved`는 재구성 가능한 전제의 관측 부족, `unavailable`은 근거 부족으로 전제 재구성 불가다. `not_applicable`인 선택 비교는 질문의 검색/route 상태로 판단하며 완료를 뜻하지 않는다. 일부 witness 확보와 다른 가지의 미확정은 함께 남을 수 있다.
+- 비교 관계 전체는 `comparison_sources` 한 곳에 전달하고 전제는 `comparison_source_indices`로 참조한다. 같은 비교 안의 여러 회수·지원 요구는 별도 `requirement_id`로 보존한다. 지원 사실의 같은 ID는 기존 실제 대상·기물·접촉/포획 관계에서 생성하며 별도 추적기를 사용하지 않는다.
+- `root_searches`는 발급된 root/focus/원위치 비교의 원 작업·수락 기록을 공유해 완료·중단 뒤에도 범위와 반환 수를 남긴다. 추가 비교에 미선택인 수, 범위에 포함됐지만 MPV에 미반환인 수, 반환됐지만 중단으로 인증 경로를 연결하지 못한 수를 구분한다. 마지막 경우 수는 보존하고 경로 참조는 null이다. 이 기록은 평가쌍 성립·기능 관측 완료를 대신하지 않는다.
+- `MoveWorkProjection`은 동일 typed 후보에서 highlight와 selection을 만든다. 국소 세 문장 제한으로 primary를 지우지 않는다. 사실 후보 보존과 표시 대표 선택은 별개다.
+- `explanation_candidate_ids`는 정확 경로/작업에, `next_evidence`는 필요한 기존 독해/평가 비교/설명 미해결에 묶인다. 후자는 실행 약속이 아니다. 소비자가 잘못된 선택층을 버려도 유효한 독립 관측은 남긴다.
+- 법적 목록·기물 추적·점수 해석·인증 경로는 기존 owner를 공유한다. 정확 prefix, 판독/선택 쌍, 결과 없음도 재사용한다. 좌우 반전 비교를 공유해도 각 근거와 원 평가 순서는 보존한다.
+- `selection.proposals`는 질문·후보·배분·근거 각각의 제출 출처와 requirement별 결과를 전달한다. 클라이언트 출처 표시는 서버 인증이 아니며 `admission=submitted`다. `observe_move`의 observed는 지정 조건부 경로의 합법 이동 관측이며 엔진 선택·목적 달성이 아니다. `compare_moves`의 supported/refuted는 명시한 기대 평가 관계만 판정한다. 평가 동일은 전략/기능 동일의 증명이 아니다. 미해석 의미는 unsupported_reading으로 남고 다른 요구의 관측·답변은 함께 보존한다. 강제 한 수/무승부 행동의 조기 완료에서도 이미 관측한 요구를 읽고, 실행하지 않는 비교는 position_action 사유를 남긴다. 전달은 기존 API와 브라우저 엔진 요청 경로를 사용하며 자연어 생성/새 UI는 포함하지 않는다.
+- `fact`는 원기물의 존재/위치/역할, 기하 통제/지원, 현재 차례의 합법 이동/포획, 체크, 폰 속성/파일 상태, 실제 직접 지원 재포획의 11종 원자를 기존 자원/추적/사건 판독기로 읽는다. 제거된 원기물, 다른 재포획자, 승격, not_turn, 자료 부족을 구분한다. 지원의 기하 관계는 합법 포획이나 직접 사용과 다르며 원자에 전략적 가치 점수를 붙이지 않는다.
+- 시점은 root-relative `ply_count` 또는 유한 구간의 n번째 move/capture/promotion/check/castling 사건 전후다. actor/target은 원점의 물리적 기물이고 check 사건의 actor는 체크를 만들어낸 착수자다. `through`는 양끝 포함 모든 위치의 유지 요구이며, 양끝의 값만 같다고 유지로 판정하지 않는다. 사건을 고르는 데 필요한 자료가 없거나 경로가 짧으면 partial이고, 완전한 지정 구간에 사건이 없으면 not_applicable이다.
+- 경로는 선언 수순, 같은 proposal의 선행 compare_moves가 실제 반환한 reference/alternative, 또는 현재 inquiry ID와 premise ID가 함께 지정한 witness다. premise의 observed 상태는 명제 지지가 아니다. `extend=false`는 지정 수순의 끝에서 닫고, `extend=true`는 명시 접두에서 이미 인증한 조건부 연장을 읽는다. 표본 실패로 미관측 응수 전체를 반박하거나 강제 성공을 주장하지 않는다. 미관측 선언 조건이 있으면 현재 사실을 알더라도 그 조건부 명제는 열어 둔다.
+- `fact_comparison`은 선행하는 두 단일 시점 Fact의 값 동일/상이 또는 before/after/same_time을 읽는다. 값 비교는 같은 predicate 종류, 시간 비교는 같은 binding을 요구한다. `fact_group` All/Any는 명시한 실행 binding의 전체 선언 조건과 관측 접두가 양립하는 proof만 결합한다. 독립 binding으로 선언한 서로 다른 대안은 함께 설명할 수 있다. 순환/앞 참조/미해석 주장 결합은 입력에서 거절한다. 원 Fact만 samples를 소유하고 합성 결과는 sample ID와 requirement ID로 참조한다.
+- Fact당 최대600 원자 샘플, 합성 단계당 최대600 증거/후보쌍을 읽는다. 이는 의미·중요도 순위가 아니라 유한 처리 계약이며 잘린 증거는 witness_limit로 남겨 상위 결합의 잘못된 반박을 막는다. 반복 참조의 open 여부, 위치 원자, 기존 지원/기물 추적을 공유한다. direct_support_use는 line별 material 가용성에 의존하므로 그 캐시는 line 소유권을 보존한다.
+- 부족한 근거는 input/comparison/continuation Need다. 기존 비교는 같은 작업을 재사용하고, 정확 frontier의 강제 응수는 공통 LocalReplayBatch 회계로 재생한다. 다른 후속 응수는 기존 추가조사2회/원마감/엔진 ledger 안에서 ResponseComparison을 공유한다. Fact는 child 점수로 원평가를 바꾸지 않는다. 논리 Result와 실제 대기·중단 사유는 별도이고, Any 지지가 다른 개별 미확인을 지우지 않는다.
 
-1. 실제 engine report에서 합법 replay를 admission하여 role-neutral
-   `LegalLine` inventory를 만든다.
-2. 각 line의 root와 모든 suffix ply를 독립 position/transition occurrence로
-   실체화한다.
-3. 모든 transition occurrence에 대해 exact relation delta와 structural record를
-   생산한다.
-4. 그 inventory를 참조하는 Assessment projection을 별도로 만든다.
-5. Assessment 결과를 public-v6 `primary` commentary로 투영한다.
-6. schema와 Python boundary는 공개 JSON shape를 검증한다.
+결손 진단은 위 기록에서 읽는다. 질문 부재는 생성 목록 밖이라는 뜻이며, 실제수/기준수의 의도적 제외·조사 활성화 여부를 확인하기 전에는 발견 실패라 부르지 않는다. 생성된 질문은 `root_searches`/`response_searches`의 정확 범위와 대조해 추가 조사 미선택, 발급 중단, 범위 내 미반환을 구분한다. 반환 경로가 있으나 필요한 사건이 없으면 전제의 `unobserved`, 필요한 원 관측 자체를 복원하지 못하면 `unavailable`이다. 별도 점수나 진단 상태 저장소를 만들지 않는다.
 
-`MoveReviewAssembler.assemble`은 완성된 `JudgmentAssemblyContext`를 직접
-반환한다. 두 public runtime consumer만
-`EvidenceBackedJudgmentPacket.fromAssembly`를 호출해 optional `primary`를
-투영한다. 선택된 Assessment/comparison chain의 검증 실패는 그 projection만
-비우며 assembly나 형제 lower record를 소멸시키지 않는다. 다만 현재 public
-runtime schema는 primary-only이므로 packet projection이 실패하면 player job은 기존
-`ReviewConstructionFailed` stop을 유지한다.
+## 6. 현재 한계
 
-현재 이 흐름에는 relation 생산·packet·serializer·public schema lane이 없다.
-그 부재는 이미 성립한 하부 명제를 삭제하거나 의미 부재로 판정하는 gate가
-아니다.
-
-## 계산 범위와 P2 line availability
-
-`AdmittedMoveReviewInput`의 생성자 검증은 board에서 생성한 완전한 합법 root
-move 집합과 실제 producer가 제공하고 합법 replay로 admission된 `legalLines`의
-root/focus line 집합을 구분한다. 합법 root move에 대응하는 admitted line이 없는
-상태는 의미 조립에 사용할 line이 없다는 뜻이지, 그 수가 존재하지 않거나
-반증되었거나 engine 내부에서 전혀 검색되지 않았다는 뜻이 아니다.
-
-현재 engine work 정책의 MultiPV 상한과 report 수 검사는 runtime의 계산 비용
-경계에만 남는다. 의미 admission은 그 상한과 같은 개수의 root line을 요구하지
-않으며, MultiPV나 Assessment 후보 선택을 L2 계약으로 승격하지 않는다.
-focused report가 서로 다른 best/played line을 직접 제공하면 `PlayedVsBest`는 그
-두 line만으로 닫힌다. root ranking의 두 번째 수는 played가 best일 때
-`BestVsSecond`를 만드는 경우에만 요구한다.
-
-필요한 sibling이 inventory에 없으면 새 Stockfish 실행, 별도 analyzer,
-추론 replay 또는 테스트 전용 line source를 만들지 않는다. proof는 생산되지
-않고 `line unavailable`인 P2 coverage 결손으로 남는다. demand 없는 미계산도
-권한 결함이 아니다. 반대로 실제 inventory에 있는 line을 평가 projection에서
-제외하기 위해 임의 top-N, score threshold, horizon을 만들 수 없다.
-
-누락된 lower premise나 closed absence도 동일하게 fail-closed다. 테스트 수,
-손제작 wire fixture, wrapper·adapter·dedup으로 생산 계약의 결손을 감추지
-않는다. L0~L1은 실제 하부 사실 오류가 증명될 때만 다시 연다.
-
-## 소비 경계
-
-Assessment는 무엇이 좋은 수인지 말할 수 있지만 occurrence 사이의 관계를
-대신 만들 수 없다. Presentation도 공개 payload에 없는 의미를 새로 만들지
-않는다. 일반 준비·예방·반격·기동, 장기 계획, 의도와 가치 판단을 현재의
-Assessment나 삭제된 계약 이름으로 승인하지 않는다.
-
-레퍼런스 관찰이나 locator가 변경되면 반드시
-[`commentary-reference-ledger.json`](../../judgment-evaluation/references/commentary-reference-ledger.json)을
-같이 갱신한다. 빈 계약이나 미래 구조 청사진을 추가하지 않는다.
+현재 흐름은 유한 포획·회수·지원·선택 경로의 관측과 조건부 비교를 제공한다.
+폭넓은 조용한 준비·폰 돌파·예방·왕 활동, 전략적 보상의 충분성, 일반 인과/강제성, 국면별 전문 질문은 미완이다.
+PGN은 본선 순서로 실제 착수에 장면을 붙이고 조건 응수는 상세 경로에서 보여 준다. 핵심 장면 자동 선정·인접 장면 통합·판 전체 반복 편집은 미구현이다.
+합성 점수·기존 노출 보드의 계약 검사는 실제 엔진 발견률·해설 효용·PC 비용 검증을 대신하지 않는다.
+구조 판정과 다음 작업은 [진행 기록](C:/Codes/Chesstories/research/role-use-next/progress.md)에만 갱신한다. 이 문서에 미채택 정책이나 시간순 연구 로그를 누적하지 않는다.

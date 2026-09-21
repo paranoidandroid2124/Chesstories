@@ -34,13 +34,8 @@ export class Protocol {
     this.moveReviewPreparing = undefined;
     this.initialReady = false;
 
-    // Get engine name, version and options.
-    this.options = new Map([
-      ['Threads', '1'],
-      ['Hash', '16'],
-      ['MultiPV', '1'],
-      ['UCI_Variant', 'chess'],
-    ]);
+    // Cache only options sent on this connection, not assumed engine defaults.
+    this.options.clear();
     this.send('uci');
   }
 
@@ -93,7 +88,7 @@ export class Protocol {
       }
       this.swapWork();
       return;
-    } else if (this.work && !this.work.stopRequested && parts[0] === 'info') {
+    } else if (this.work && parts[0] === 'info') {
       let depth = 0,
         seldepth,
         nodes,
@@ -135,6 +130,10 @@ export class Protocol {
 
       if (isMoveReviewWork(this.work) && (defined(nodes) || defined(millis)))
         this.work.observe?.(nodes ?? 0, millis ?? 0);
+
+      // Stop can be followed by final usage info before bestmove releases this work.
+      // Preserve accounting, but do not admit another PV or evaluation after cancellation.
+      if (this.work.stopRequested) return;
 
       // Sometimes we get #0. Let's just skip it.
       if (isMate && !povEv) return;
@@ -218,6 +217,7 @@ export class Protocol {
       this.expectedPvs = 1;
 
       this.setOption('UCI_Variant', this.work.variant);
+      this.setOption('UCI_Chess960', 'true');
       this.setOption('Threads', this.work.threads);
       this.setOption('Hash', this.work.hashSize || 16);
       this.setOption('MultiPV', Math.max(1, this.work.multiPv));
@@ -245,6 +245,9 @@ export class Protocol {
     this.moveReviewEmittedDepth = 0;
 
     this.setOption('UCI_Variant', work.variant);
+    // The dedicated standard review protocol uses king-destination castling
+    // for its issued history, searchmoves restriction and reported PVs.
+    this.setOption('UCI_Chess960', 'false');
     this.setOption('Threads', work.threads);
     this.setOption('Hash', work.hashSize || 16);
     this.setOption('MultiPV', Math.max(1, work.multiPv));

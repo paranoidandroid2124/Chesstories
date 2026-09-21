@@ -13,6 +13,31 @@ import lila.chessjudgment.model.position.BoardGeometry
 
 class PositionCalculationOwnershipTest extends munit.FunSuite:
 
+  test("FEN normalization preserves trim and ASCII regex boundaries"):
+    val fen = Standard.initialFen.value
+    val separators = (0 to 32).map(_.toChar) ++ List('\u0085', '\u00a0', '\u2003', '\u2028', '\u2029', '\u3000', '\ufeff')
+    val cases = List(null, "", " \t\r\n", "a", "a b c", "a b c d", "a b c d e f", fen) ++
+      separators.flatMap(c => List(s"$c$fen$c", fen.replace(" ", s"$c"), fen.replace(" ", s" $c ")))
+    cases.zipWithIndex.foreach { (input, index) =>
+      // The former library expression is the boundary oracle, not another fast-path implementation.
+      val expected = Option(input).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")
+      val fields = expected.split("\\s+").filter(_.nonEmpty).toList
+      assertEquals(PrincipalVariationEvidence.normalizeFen(input), expected, s"case $index")
+      assertEquals(PrincipalVariationEvidence.semanticBoardStateFen(input),
+        Option.when(fields.size >= 4)(fields.take(4).mkString(" ")), s"case $index")
+    }
+    assertEquals(PrincipalVariationEvidence.normalizeFen("\u001ca\u001cb\u001c"), "a\u001cb")
+    assertEquals(PrincipalVariationEvidence.normalizeFen("a\u00a0b"), "a\u00a0b")
+
+  test("semantic board comparison excludes clocks without changing complete FEN identity"):
+    val first = "4k3/8/8/8/8/8/8/4K2R w K - 0 1"
+    val later = "4k3/8/8/8/8/8/8/4K2R w K - 37 19"
+    assert(PrincipalVariationEvidence.sameBoardState(first, later))
+    assertNotEquals(PrincipalVariationEvidence.normalizeFen(first), PrincipalVariationEvidence.normalizeFen(later))
+    assert(!PrincipalVariationEvidence.sameBoardState(first, first.replace(" w K ", " w - ")))
+    assert(!PrincipalVariationEvidence.sameBoardState(first, first.replace(" - 0 ", " e3 0 ")))
+    assert(!PrincipalVariationEvidence.sameBoardState(first, first.replace(" w K ", " b K ")))
+
   test("an analyzed replay accepts only the exact legal-move occurrence it owns"):
     val ownedFen = "4k3/8/8/8/8/8/8/4K2R w - - 0 1"
     val foreignFen = "4k3/8/8/8/8/8/8/4K2R w - - 37 19"
@@ -69,7 +94,9 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" -> "e2e4",
       "4k3/8/8/8/8/8/8/4K2R w K - 0 1" -> "e1g1",
       "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1" -> "e5d6",
-      "4k3/P7/8/8/8/8/8/4K3 w - - 0 1" -> "a7a8q"
+      "4k3/P7/8/8/8/8/8/4K3 w - - 0 1" -> "a7a8q",
+      // Capturing a pawn with another piece must also refresh a pawn behind the vacated square.
+      "7k/8/8/8/3p4/5N2/5P2/7K w - - 0 1" -> "f3d4"
     )
 
     cases.foreach { case (fen, moveUci) =>
@@ -122,14 +149,11 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       )
     }
 
-  test("bishop rook and queen controls are exact first-barrier ray projections"):
+  test("bishop rook and queen inventories and relation facts preserve exact first-barrier controls"):
     val fen = "4k3/8/2b5/8/3qP3/8/2R5/4K3 w - - 0 1"
     val current = PrincipalVariationEvidence.readPosition(fen).getOrElse(fail("expected legal FEN"))
-    val inventory = PositionAnalyzer
-      .analyze(current, fen, 0)
-      .computation
-      .staticBoard
-      .geometricControlInventory
+    val analysis = PositionAnalyzer.analyze(current, fen, 0)
+    val inventory = analysis.computation.staticBoard.geometricControlInventory
 
     (current.board.bishops | current.board.rooks | current.board.queens).squares.foreach { origin =>
       val piece = current.board.pieceAt(origin).getOrElse(fail(s"expected slider on ${origin.key}"))
@@ -139,6 +163,12 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
         case chess.Queen  => origin.queenAttacks(current.board.occupied)
         case role         => fail(s"unexpected slider role: $role")
       assertEquals(inventory.byOrigin(origin), expected, origin.key)
+      val relationTargets = analysis.boardRelations.flatMap(_.detail match
+        case RelationWitnessDetail.GeometricControl(_, attacker, _, target) if attacker.key == origin.key =>
+          List(target.key)
+        case _ => Nil
+      ).toSet
+      assertEquals(relationTargets, expected.squares.map(_.key).toSet, origin.key)
     }
 
   test("an unrelated non-pawn move reuses the immutable pawn topology"):

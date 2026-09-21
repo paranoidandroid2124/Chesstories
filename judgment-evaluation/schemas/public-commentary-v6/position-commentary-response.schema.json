@@ -26,8 +26,19 @@
     "current_fen": {"$ref": "#/$defs/fen"},
     "focus": {"$ref": "#/$defs/focus"},
     "progress": {"$ref": "#/$defs/completedProgress"},
-    "result": {"$ref": "#/$defs/positionResult"}
+    "result": {"$ref": "#/$defs/positionResult"},
+    "assessment_state": {"enum": ["current", "needs_refresh"]},
+    "assessment_scope": {"enum": ["root_search", "investigation_pair"]},
+    "verification": {"allOf": [{"$ref": "position-commentary-job-status.schema.json#/$defs/verification"},
+      {"properties": {"state": {"enum": ["complete", "stopped", "not_required"]}}}]},
+    "observations": {"$ref": "../public-v6/move-observations.schema.json"}
   },
+  "dependentRequired": {
+    "assessment_state": ["assessment_scope"],
+    "assessment_scope": ["assessment_state"]
+  },
+  "if": {"not": {"required": ["assessment_scope"], "properties": {"assessment_scope": {"const": "investigation_pair"}}}},
+  "then": {"properties": {"result": {"$ref": "#/$defs/rootRankedResult"}}},
   "$defs": {
     "requestId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
     "jobId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{32}$"},
@@ -68,8 +79,19 @@
         {"$ref": "#/$defs/automaticTerminalResult"},
         {"$ref": "#/$defs/forcedSingleMoveResult"},
         {"$ref": "#/$defs/drawClaimActionResult"},
-        {"$ref": "#/$defs/selectedMoveChoicesResult"}
+        {"$ref": "#/$defs/selectedMoveChoicesResult"},
+        {"$ref": "#/$defs/moveObservationsResult"}
       ]
+    },
+    "rootRankedResult": {
+      "$comment": "A refreshed pair retains original ranks when known; only a root-search assessment guarantees rank one for its first best choice.",
+      "properties": {"selected_move_reviews": {"prefixItems": [{"properties": {"selection": {
+        "required": ["root_rank"], "properties": {"root_rank": {"const": 1}}
+      }}}]}}
+    },
+    "moveObservationsResult": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": {"kind": {"const": "move_observations"}, "draw_claims": {"$ref": "#/$defs/drawClaims"}}
     },
     "automaticTerminalResult": {
       "type": "object",
@@ -140,10 +162,10 @@
         "selection": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["roles", "root_rank"],
+          "required": ["roles"],
           "properties": {
             "roles": {"const": ["best"]},
-            "root_rank": {"const": 1}
+            "root_rank": {"type": "integer", "minimum": 1, "maximum": 3}
           }
         },
         "line_insight": {
@@ -196,10 +218,10 @@
     "bestAndPlayedSelection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["roles", "root_rank"],
+      "required": ["roles"],
       "properties": {
         "roles": {"const": ["best", "played"]},
-        "root_rank": {"const": 1}
+        "root_rank": {"type": "integer", "minimum": 1, "maximum": 3}
       }
     },
     "drawClaims": {

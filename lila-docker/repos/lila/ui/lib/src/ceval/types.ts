@@ -42,7 +42,7 @@ export type MoveReviewWorkInput = Omit<
   'variant' | 'threads' | 'hashSize' | 'gameId' | 'stopRequested' | 'search' | 'threatMode' | 'emit'
 > & {
   variant: MoveReviewVariant;
-  searchLimits: { depth: 16; nodes: 5_000_000 | 2_000_000; movetimeMs: 5_000 | 2_500 };
+  searchLimits: { depth: number; nodes: 5_000_000 | 2_000_000; movetimeMs: 5_000 | 2_500 };
   rootMoves: Uci[];
   observe?: (nodes: number, engineTimeMs: number) => void;
   emit: (evaluation: Tree.LocalEval) => void;

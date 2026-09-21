@@ -9,8 +9,62 @@
 
 .move-review__header,
 .move-review__body,
+.move-review__selection,
+.move-review__observations,
 .move-review__state {
   padding-inline: 0.8rem;
+}
+
+.move-review__observations,
+.move-review__selection {
+  padding-block: 0.8rem;
+  border-top: $border;
+
+  h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1rem;
+  }
+
+  p {
+    margin-block: 0.6rem;
+    line-height: 1.5;
+  }
+}
+
+.move-review__review-progress nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.move-review__scene {
+  padding-block: 0.6rem;
+
+  button {
+    min-block-size: 44px;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+.move-review__observation-paths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+
+  button {
+    max-inline-size: 100%;
+    padding: 0.4rem 0.6rem;
+    border: $border;
+    border-radius: 3px;
+    background: $c-bg-box;
+    color: $c-font;
+    overflow-wrap: anywhere;
+    text-align: start;
+
+    &[aria-pressed='true'] {
+      border-color: $c-primary;
+    }
+  }
 }
 
 .move-review__header {
@@ -28,6 +82,71 @@
     font-size: 1rem;
     line-height: 1.25;
   }
+}
+
+.move-review__observation-frames,
+.move-review__resource-frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.move-review__controller,
+.move-review__line-summary,
+.move-review__observation-details,
+details.move-review__observation {
+  min-width: 0;
+
+  > summary {
+    min-block-size: 44px;
+    padding-block: 0.6rem;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+
+    &:focus-visible {
+      outline: 2px solid $c-primary;
+    }
+  }
+}
+
+.move-review__position-resources,
+.move-review__line-summary {
+  min-width: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+
+  ul,
+  ol {
+    padding-inline-start: 1.3rem;
+  }
+
+  button,
+  select {
+    min-block-size: 44px;
+    padding: 0.4rem 0.6rem;
+    white-space: normal;
+
+    &:focus-visible {
+      outline: 2px solid $c-primary;
+    }
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.move-review__resource-unknown {
+  color: $c-font-dim;
+}
+
+.move-review__proof > .move-review__position-resources {
+  grid-column: 1 / -1;
 }
 
 .move-review__status,
@@ -494,7 +613,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.move-review__proof-san {
+.move-review__proof-san,
+.move-review__observation-frame,
+.move-review__line-event,
+.move-review__resource-frames button {
   @extend %button-none;
 
   min-inline-size: 44px;

@@ -3,6 +3,7 @@ package io.chesstory.runtime
 import scala.util.Try
 
 import play.api.libs.json.*
+import lila.chessjudgment.model.judgment.{ CommentaryLineSource, SuppliedCommentaryLine }
 
 object PositionCommentaryJobProtocol:
   val JobRequestSchema = "chesstory.position-commentary.job-request.v6"
@@ -22,7 +23,10 @@ object PositionCommentaryJobProtocol:
       currentFen: String,
       playedMoveUci: String,
       resultingFen: String,
-      engineProfile: CommentaryEngineProfile
+      engineProfile: CommentaryEngineProfile,
+      inputLines: List[SuppliedCommentaryLine] = Nil,
+      remainingBudgetMs: Option[Int] = None,
+      proposals: List[CommentaryProposal.Request] = Nil
   )
 
   enum PositionCommentaryJobWireFailure(val errorCode: String):
@@ -50,11 +54,13 @@ object PositionCommentaryJobProtocol:
       .left.map(_ => PositionCommentaryJobWireFailure.InvalidJson)
       .flatMap(parseEngineWorkReportJson)
 
-  def projectJobSnapshot(snapshot: CommentaryJobSnapshot): JsObject = snapshot.state match
-    case completed: CompletedCommentaryJob =>
-      RuntimeProtocol.encodePositionCommentaryResponse(snapshot, completed)
-    case awaiting: AwaitingEngineWork => activeJobStatus(snapshot, awaiting)
-    case stopped: StoppedCommentaryJob => stoppedJobStatus(snapshot, stopped)
+  def projectJobSnapshot(delivery: CommentaryJobDelivery): JsObject = delivery match
+    case retained: RetainedCommentaryJobResult => Json.parse(retained.jsonBytes).as[JsObject]
+    case snapshot: CommentaryJobSnapshot => snapshot.state match
+      case completed: CompletedCommentaryJob =>
+        RuntimeProtocol.encodePositionCommentaryResponse(snapshot, completed)
+      case awaiting: AwaitingEngineWork => activeJobStatus(snapshot, awaiting)
+      case stopped: StoppedCommentaryJob => stoppedJobStatus(snapshot, stopped)
 
   def jobErrorJson(
       requestId: Option[String],
@@ -76,7 +82,7 @@ object PositionCommentaryJobProtocol:
       Left(PositionCommentaryJobWireFailure.UnsupportedJobRequestSchema)
     case request: JsObject
         if !hasExactKeys(
-          request,
+          request - "input_lines" - "remaining_budget_ms" - "proposals",
           Set(
             "schema_version",
             "request_id",
@@ -109,6 +115,13 @@ object PositionCommentaryJobProtocol:
         focus <- request.value.get("focus")
           .flatMap(parseFocus)
           .toRight(PositionCommentaryJobWireFailure.InvalidFocus)
+        inputLines <- request.value.get("input_lines").fold(Option(List.empty[SuppliedCommentaryLine]))(parseInputLines)
+          .toRight(PositionCommentaryJobWireFailure.InvalidJobRequest)
+        remainingBudgetMs <- request.value.get("remaining_budget_ms")
+          .fold(Option(Option.empty[Int]))(_.asOpt[Int].filter(ms => ms >= 1 && ms <= 180000).map(Some(_)))
+          .toRight(PositionCommentaryJobWireFailure.InvalidJobRequest)
+        proposals <- request.value.get("proposals").fold(Option(List.empty[CommentaryProposal.Request]))(parseProposals)
+          .toRight(PositionCommentaryJobWireFailure.InvalidJobRequest)
       yield PositionCommentaryJobRequest(
         requestId,
         initialFen,
@@ -116,9 +129,187 @@ object PositionCommentaryJobProtocol:
         currentFen,
         focus._1,
         focus._2,
-        engineProfile
+        engineProfile,
+        inputLines,
+        remainingBudgetMs,
+        proposals
       )
     case _ => Left(PositionCommentaryJobWireFailure.InvalidJobRequest)
+
+  private def parseProposals(value: JsValue): Option[List[CommentaryProposal.Request]] = value match
+    case JsArray(values) if values.size <= 600 =>
+      val parsed = values.toList.map {
+        case obj: JsObject if hasExactKeys(obj, Set("id", "origin", "requirements")) =>
+          for
+            id <- (obj \ "id").asOpt[String]
+            origin <- obj.value.get("origin").flatMap(parseProposalOrigin)
+            requirements <- obj.value.get("requirements").flatMap {
+              case JsArray(rows) if rows.nonEmpty && rows.size <= 600 =>
+                val parsedRows = rows.toList.map(parseProposalRequirement)
+                Option.when(parsedRows.forall(_.nonEmpty))(parsedRows.flatten)
+              case _ => None
+            }
+          yield CommentaryProposal.Request(id, origin, requirements)
+        case _ => None
+      }
+      Option.when(parsed.forall(_.nonEmpty))(parsed.flatten).filter(CommentaryProposal.validRequests)
+    case _ => None
+
+  private def parseProposalOrigin(value: JsValue): Option[CommentaryProposal.Origin] = value match
+    case obj: JsObject if hasExactKeys(obj, Set("question", "candidates", "priority", "evidence")) =>
+      for
+        question <- obj.value.get("question").flatMap(parseProposalSource)
+        candidates <- obj.value.get("candidates").flatMap(parseProposalSource)
+        priority <- obj.value.get("priority").flatMap(parseProposalSource)
+        evidence <- obj.value.get("evidence").flatMap(parseProposalSource)
+      yield CommentaryProposal.Origin(question, candidates, priority, evidence)
+    case _ => None
+
+  private def parseProposalSource(value: JsValue): Option[CommentaryProposal.Source] = value match
+    case obj: JsObject if hasExactKeys(obj - "version" - "source_refs", Set("kind", "producer")) =>
+      for
+        kind <- (obj \ "kind").asOpt[String]
+        producer <- (obj \ "producer").asOpt[String]
+        version <- obj.value.get("version").fold(Option(Option.empty[String]))(
+          _.asOpt[String].map(Some(_)))
+        refs <- obj.value.get("source_refs").fold(Option(List.empty[String]))(_.asOpt[List[String]])
+      yield CommentaryProposal.Source(kind, producer, version, refs)
+    case _ => None
+
+  private def parseProposalRequirement(value: JsValue): Option[CommentaryProposal.Requirement] = value match
+    case obj: JsObject =>
+      def id = (obj \ "id").asOpt[String]
+      def prefix = (obj \ "prefix_moves_uci").asOpt[List[String]]
+      def move(field: String) = (obj \ field).asOpt[String]
+      (obj \ "kind").asOpt[String] match
+        case Some("observe_move") if hasExactKeys(obj, Set("id", "kind", "prefix_moves_uci", "move_uci")) =>
+          for
+            requirementId <- id
+            moves <- prefix
+            candidate <- move("move_uci")
+          yield CommentaryProposal.ObserveMove(requirementId, moves, candidate)
+        case Some("compare_moves") if hasExactKeys(obj - "expected_relation",
+            Set("id", "kind", "prefix_moves_uci", "reference_move", "alternative_move")) =>
+          for
+            requirementId <- id
+            moves <- prefix
+            reference <- move("reference_move")
+            alternative <- move("alternative_move")
+            expected <- obj.value.get("expected_relation").fold(Option(Option.empty[String]))(
+              _.asOpt[String].map(Some(_)))
+          yield CommentaryProposal.CompareMoves(requirementId, moves, reference, alternative, expected)
+        case Some("uninterpreted") if hasExactKeys(obj, Set("id", "kind", "text")) =>
+          for
+            requirementId <- id
+            text <- (obj \ "text").asOpt[String]
+          yield CommentaryProposal.Uninterpreted(requirementId, text)
+        case Some("fact") if hasExactKeys(obj - "through" - "expected", Set("id", "kind", "path", "predicate", "at")) =>
+          for
+            requirementId <- id
+            path <- obj.value.get("path").flatMap(parseFactPath)
+            predicate <- obj.value.get("predicate").flatMap(parseFactPredicate)
+            at <- obj.value.get("at").flatMap(parseFactPoint)
+            through <- obj.value.get("through").fold(Option(Option.empty[CommentaryFact.Point]))(value =>
+              parseFactPoint(value).map(Some(_)))
+            expected <- obj.value.get("expected").fold(Option(Option.empty[String]))(_.asOpt[String].map(Some(_)))
+          yield CommentaryProposal.Fact(requirementId, path, predicate, at, through, expected)
+        case Some("fact_comparison") if hasExactKeys(obj,
+            Set("id", "kind", "left_requirement_id", "right_requirement_id", "relation")) =>
+          for
+            requirementId <- id
+            left <- (obj \ "left_requirement_id").asOpt[String]
+            right <- (obj \ "right_requirement_id").asOpt[String]
+            relation <- (obj \ "relation").asOpt[String]
+          yield CommentaryProposal.FactComparison(requirementId, left, right, relation)
+        case Some("fact_group") if hasExactKeys(obj, Set("id", "kind", "mode", "members")) =>
+          for
+            requirementId <- id
+            mode <- (obj \ "mode").asOpt[String]
+            members <- (obj \ "members").asOpt[List[String]]
+          yield CommentaryProposal.FactGroup(requirementId, mode, members)
+        case _ => None
+    case _ => None
+
+  private def parseFactPiece(value: JsValue): Option[CommentaryFact.Piece] = value match
+    case obj: JsObject if hasExactKeys(obj, Set("side", "role", "square")) =>
+      for
+        side <- (obj \ "side").asOpt[String]
+        role <- (obj \ "role").asOpt[String]
+        square <- (obj \ "square").asOpt[String]
+      yield CommentaryFact.Piece(side, role, square)
+    case _ => None
+
+  private def parseFactPath(value: JsValue): Option[CommentaryFact.Path] = value match
+    case obj: JsObject if hasExactKeys(obj - "extend", Set("binding", "source")) =>
+      for
+        binding <- (obj \ "binding").asOpt[String]
+        extend <- obj.value.get("extend").fold(Option(false))(_.asOpt[Boolean])
+        source <- obj.value.get("source").flatMap {
+          case source: JsObject if hasExactKeys(source, Set("kind", "moves_uci")) &&
+              (source \ "kind").asOpt[String].contains("declared") =>
+            (source \ "moves_uci").asOpt[List[String]].map(CommentaryFact.Declared.apply)
+          case source: JsObject if hasExactKeys(source, Set("kind", "requirement_id", "arm")) &&
+              (source \ "kind").asOpt[String].contains("comparison") =>
+            for
+              id <- (source \ "requirement_id").asOpt[String]
+              arm <- (source \ "arm").asOpt[String]
+            yield CommentaryFact.Comparison(id, arm)
+          case source: JsObject if hasExactKeys(source, Set("kind", "inquiry_id", "premise_id")) &&
+              (source \ "kind").asOpt[String].contains("premise") =>
+            for
+              inquiry <- (source \ "inquiry_id").asOpt[String]
+              premise <- (source \ "premise_id").asOpt[String]
+            yield CommentaryFact.Premise(inquiry, premise)
+          case _ => None
+        }
+      yield CommentaryFact.Path(binding, source, extend)
+    case _ => None
+
+  private def parseFactPoint(value: JsValue): Option[CommentaryFact.Point] = value match
+    case obj: JsObject if hasExactKeys(obj, Set("kind", "ply_count")) &&
+        (obj \ "kind").asOpt[String].contains("ply") =>
+      (obj \ "ply_count").asOpt[Int].map(CommentaryFact.Ply.apply)
+    case obj: JsObject if hasExactKeys(obj - "actor" - "target" - "square",
+        Set("kind", "event", "ordinal", "phase", "from_ply", "through_ply")) &&
+        (obj \ "kind").asOpt[String].contains("event") =>
+      for
+        kind <- (obj \ "event").asOpt[String]
+        ordinal <- (obj \ "ordinal").asOpt[Int]
+        phase <- (obj \ "phase").asOpt[String]
+        from <- (obj \ "from_ply").asOpt[Int]
+        through <- (obj \ "through_ply").asOpt[Int]
+        actor <- obj.value.get("actor").fold(Option(Option.empty[CommentaryFact.Piece]))(parseFactPiece(_).map(Some(_)))
+        target <- obj.value.get("target").fold(Option(Option.empty[CommentaryFact.Piece]))(parseFactPiece(_).map(Some(_)))
+        square <- obj.value.get("square").fold(Option(Option.empty[String]))(_.asOpt[String].map(Some(_)))
+      yield CommentaryFact.Event(kind, ordinal, phase, from, through, actor, target, square)
+    case _ => None
+
+  private def parseFactPredicate(value: JsValue): Option[CommentaryFact.Predicate] = value match
+    case obj: JsObject if hasExactKeys(obj - "subject" - "target" - "square" - "side" - "property", Set("kind")) =>
+      def text(key: String) = obj.value.get(key).fold(Option(Option.empty[String]))(_.asOpt[String].map(Some(_)))
+      for
+        kind <- (obj \ "kind").asOpt[String]
+        subject <- obj.value.get("subject").fold(Option(Option.empty[CommentaryFact.Piece]))(parseFactPiece(_).map(Some(_)))
+        target <- obj.value.get("target").fold(Option(Option.empty[CommentaryFact.Piece]))(parseFactPiece(_).map(Some(_)))
+        square <- text("square")
+        side <- text("side")
+        property <- text("property")
+      yield CommentaryFact.Predicate(kind, subject, target, square, side, property)
+    case _ => None
+
+  private def parseInputLines(value: JsValue): Option[List[SuppliedCommentaryLine]] = value match
+    case JsArray(values) if values.size <= 600 =>
+      val lines = values.toList.map {
+        case obj: JsObject if hasExactKeys(obj, Set("source", "moves")) =>
+          for
+            source <- (obj \ "source").asOpt[String].flatMap(id => CommentaryLineSource.values.find(_.wireId == id))
+            moves <- (obj \ "moves").asOpt[List[String]].filter(moves =>
+              moves.nonEmpty && moves.size <= 600 && moves.forall(EngineLineAdmission.acceptsCanonicalLowercaseUci))
+          yield SuppliedCommentaryLine(source, moves)
+        case _ => None
+      }
+      Option.when(lines.forall(_.nonEmpty))(lines.flatten)
+    case _ => None
 
   private def parseFocus(value: JsValue): Option[(String, String)] = value match
     case focus: JsObject
@@ -174,6 +365,8 @@ object PositionCommentaryJobProtocol:
         case "lease_expired"           => Some(EngineWorkFailure.BudgetExhausted)
         case "search_budget_exhausted" => Some(EngineWorkFailure.BudgetExhausted)
         case "engine_failure"          => Some(EngineWorkFailure.ExecutionFailed)
+        case "engine_unavailable"      => Some(EngineWorkFailure.EngineUnavailable)
+        case "browser_unsupported"     => Some(EngineWorkFailure.BrowserUnsupported)
         case _                         => None
       }.map(EngineWorkReport.ExecutorFailed(engineProfile, workId, executionKey, _))
     case outcome: JsObject
@@ -215,7 +408,10 @@ object PositionCommentaryJobProtocol:
       "state" -> "awaiting_engine_work",
       "progress" -> commentaryJobProgressJson(awaiting.progress),
       "issued_engine_work" -> issuedEngineWorkJson(awaiting.issuedWork)
-    )
+    ) ++ awaiting.assessment.map(completed => Json.obj(
+      "assessment" -> RuntimeProtocol.completedResultJson(completed),
+      "assessment_state" -> (if awaiting.assessmentNeedsRefresh then "needs_refresh" else "current"),
+      "assessment_scope" -> awaiting.assessmentScope)).getOrElse(Json.obj())
 
   private def stoppedJobStatus(
       snapshot: CommentaryJobSnapshot,
@@ -239,7 +435,18 @@ object PositionCommentaryJobProtocol:
       "variant" -> Variant,
       "deadline_epoch_ms" -> snapshot.deadlineEpochMs,
       "focus" -> focusJson(state.playedMoveUci, state.resultingFen)
-    )
+    ) ++ verificationJson(state.verification) ++ state.observationsPacket.map(packet => Json.obj("observations" ->
+      RuntimeProtocol.observationsJson(packet, state.inquiries, state.pvComparisons,
+        state.responseInquiries, state.preparedPaths, state.responseSearches,
+        state.continuationReadings, state.continuationInquiries, state.rootSearches,
+        state.proposalEntries, state.localExpansionsUsed, state.discoveryState)))
+      .getOrElse(Json.obj())
+
+  private[runtime] def verificationJson(value: Option[CommentaryVerification]): JsObject =
+    value.map(value => Json.obj("verification" -> Json.obj(
+      "state" -> value.state, "target_depth" -> value.targetDepth, "reason" -> value.reason,
+      "trigger_work_ids" -> value.triggerWorkIds, "completed_depth" -> value.completedDepth,
+      "stop_reason" -> value.stopReason))).getOrElse(Json.obj())
 
   private def issuedEngineWorkJson(work: IssuedEngineWork): JsObject =
     Json.obj(
@@ -259,7 +466,9 @@ object PositionCommentaryJobProtocol:
         "multi_pv" -> work.searchLimits.multiPv
       ),
       "max_search_elapsed_ms" -> work.maxSearchElapsedMs
-    )
+    ) ++ work.searchAnchor.map(anchor => Json.obj("search_anchor" -> Json.obj(
+      "root_move" -> anchor.rootMove, "root_occurrence_id" -> anchor.rootOccurrenceId,
+      "position_id" -> anchor.positionId, "prefix_moves_uci" -> anchor.prefixMoves))).getOrElse(Json.obj())
 
   private def rootRestrictionJson(value: EngineRootRestriction): JsObject = value match
     case EngineRootRestriction.Unrestricted => Json.obj("kind" -> "unrestricted")
@@ -286,7 +495,9 @@ object PositionCommentaryJobProtocol:
   private[runtime] def completedProgressJson(progress: CommentaryJobProgress): JsObject =
     commentaryJobProgressJson(progress)
 
-  private def stopConditionCode(condition: CommentaryJobStopCondition): String = condition match
+  private[runtime] def stopConditionCode(condition: CommentaryJobStopCondition): String = condition match
+    case CommentaryJobStopCondition.EngineUnavailable            => "engine_unavailable"
+    case CommentaryJobStopCondition.BrowserUnsupported           => "browser_unsupported"
     case CommentaryJobStopCondition.DeadlineExceeded              => "deadline_exceeded"
     case CommentaryJobStopCondition.Cancelled                     => "cancelled"
     case CommentaryJobStopCondition.SearchBudgetExhausted         => "search_budget_exhausted"

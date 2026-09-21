@@ -77,9 +77,6 @@ object RelativeAssessmentAssembler:
         else
           context
             .lineRootOccurrence(reference.ref)
-            .flatMap(occurrence =>
-              context.transitions.find(_.evidence.id == occurrence.transitionEvidenceId)
-            )
             .map(Some(_))
       root <- context.position(PositionNodeRole.Before).map(_.ref)
       mover <- root.sideToMove
@@ -144,7 +141,7 @@ object RelativeAssessmentAssembler:
         val semanticKey = CandidateComparisonSemanticKey.from(comparison)
         TransitionFactNormalizer.fromCandidateComparison(
           id = allocator.evidenceId(
-            s"candidate-comparison:${allocator.exactKey(List(semanticKey.stableKey))}"
+            s"candidate-comparison:${EvidenceIdentity.digest(List(semanticKey.stableKey))}"
           ),
           comparison = comparison,
           position = root,

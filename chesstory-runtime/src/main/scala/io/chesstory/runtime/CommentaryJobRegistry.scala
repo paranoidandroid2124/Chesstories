@@ -2,9 +2,12 @@ package io.chesstory.runtime
 
 import java.security.SecureRandom
 import java.util.Base64
+import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
+import java.util.zip.{ GZIPInputStream, GZIPOutputStream }
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
+import play.api.libs.json.Json
 
 enum CommentaryJobCreationRejection:
   case RegistryCapacityReached
@@ -14,12 +17,41 @@ enum EngineWorkReportSubmissionRejection:
   case JobNotFound
   case WorkNotOutstanding
 
+sealed trait CommentaryJobDelivery:
+  def jobId: String
+
 final case class CommentaryJobSnapshot(
     jobId: String,
     requestId: String,
     deadlineEpochMs: Long,
     state: CommentaryJobState
-)
+) extends CommentaryJobDelivery
+
+/** Terminal jobs cannot consume more reports. Keep their complete public result,
+  * compressed until delivery, without retaining the calculation graph or a second
+  * uncompressed copy. Reads still return the exact original JSON bytes.
+  */
+private[runtime] final class RetainedCommentaryJobResult(
+    val jobId: String,
+    source: Array[Byte]
+) extends CommentaryJobDelivery:
+  private val compressedJsonBytes = RetainedCommentaryJobResult.compress(source)
+
+  private[runtime] def writeCompressed(output: java.io.OutputStream): Unit = output.write(compressedJsonBytes)
+  private[runtime] def compressedLength: Int = compressedJsonBytes.length
+
+  private[runtime] def jsonBytes: Array[Byte] =
+    val gzip = new GZIPInputStream(new ByteArrayInputStream(compressedJsonBytes))
+    try gzip.readAllBytes()
+    finally gzip.close()
+
+private[runtime] object RetainedCommentaryJobResult:
+  def compress(source: Array[Byte]): Array[Byte] =
+    val buffer = new ByteArrayOutputStream()
+    val gzip = new GZIPOutputStream(buffer)
+    try gzip.write(source)
+    finally gzip.close()
+    buffer.toByteArray
 
 final class CommentaryJobRegistry(
     maximumRetainedJobs: Int,
@@ -30,7 +62,7 @@ final class CommentaryJobRegistry(
 
   private final class RetainedCommentaryJob(
       val requestId: String,
-      var state: CommentaryJobState,
+      var state: CommentaryJobState | RetainedCommentaryJobResult,
       val deadlineEpochMs: Long,
       @volatile var forgetAfterEpochMs: Long
   )
@@ -48,8 +80,10 @@ final class CommentaryJobRegistry(
       playedMoveUci: String,
       resultingFen: String,
       policy: CommentaryJobPolicy,
-      nowEpochMs: Long
-  ): Either[CommentaryJobCreationRejection, CommentaryJobSnapshot] =
+      nowEpochMs: Long,
+      inputLines: List[lila.chessjudgment.model.judgment.SuppliedCommentaryLine] = Nil,
+      proposals: List[CommentaryProposal.Request] = Nil
+  ): Either[CommentaryJobCreationRejection, CommentaryJobDelivery] =
     removeForgottenJobsAt(nowEpochMs)
     if !reserveCreationSlot() then Left(CommentaryJobCreationRejection.RegistryCapacityReached)
     else
@@ -61,7 +95,9 @@ final class CommentaryJobRegistry(
           playedMoveUci,
           resultingFen,
           policy,
-          nowEpochMs
+          nowEpochMs,
+          inputLines,
+          proposals
         )
         catch
           case NonFatal(error) =>
@@ -72,7 +108,7 @@ final class CommentaryJobRegistry(
           releaseCreationSlot()
           Left(CommentaryJobCreationRejection.JobStartRejected(reason))
         case Right(state) =>
-          membershipLock.synchronized:
+          val (jobId, retained) = membershipLock.synchronized:
             require(reservedCreations > 0, "commentary job creation reservation was lost")
             reservedCreations -= 1
             val jobId = nextUnusedJobId()
@@ -83,9 +119,11 @@ final class CommentaryJobRegistry(
               nowEpochMs
             )
             retainedJobs.update(jobId, retained)
-            Right(snapshotOf(jobId, retained))
+            (jobId, retained)
+          // Projection may be expensive; never hold the registry membership lock for it.
+          retained.synchronized { Right(snapshotOf(jobId, retained)) }
 
-  def expireAndReadJobAt(jobId: String, nowEpochMs: Long): Option[CommentaryJobSnapshot] =
+  def expireAndReadJobAt(jobId: String, nowEpochMs: Long): Option[CommentaryJobDelivery] =
     removeForgottenJobsAt(nowEpochMs)
     retainedJobFor(jobId) match
       case None => None
@@ -93,19 +131,17 @@ final class CommentaryJobRegistry(
         retained.synchronized:
           if !isCurrentRetainedJob(jobId, retained) then None
           else
-            transitionRetainedJobAt(
-              jobId,
-              retained,
-              CommentaryJobReducer.expireJob(retained.state, nowEpochMs),
-              nowEpochMs
-            )
+            retained.state match
+              case state: CommentaryJobState =>
+                transitionRetainedJobAt(jobId, retained, CommentaryJobReducer.expireJob(state, nowEpochMs), nowEpochMs)
+              case _: RetainedCommentaryJobResult => ()
             Some(snapshotOf(jobId, retained))
 
   def submitEngineWorkReportAt(
       jobId: String,
       report: EngineWorkReport,
       nowEpochMs: Long
-  ): Either[EngineWorkReportSubmissionRejection, CommentaryJobSnapshot] =
+  ): Either[EngineWorkReportSubmissionRejection, CommentaryJobDelivery] =
     removeForgottenJobsAt(nowEpochMs)
     retainedJobFor(jobId) match
       case None => Left(EngineWorkReportSubmissionRejection.JobNotFound)
@@ -114,14 +150,18 @@ final class CommentaryJobRegistry(
           if !isCurrentRetainedJob(jobId, retained) then
             Left(EngineWorkReportSubmissionRejection.JobNotFound)
           else
-            CommentaryJobReducer.submitIssuedWorkReport(retained.state, report, nowEpochMs) match
-              case Left(EngineWorkReportRejection.WorkNotOutstanding) =>
+            retained.state match
+              case _: RetainedCommentaryJobResult =>
                 Left(EngineWorkReportSubmissionRejection.WorkNotOutstanding)
-              case Right(nextState) =>
-                transitionRetainedJobAt(jobId, retained, nextState, nowEpochMs)
-                Right(snapshotOf(jobId, retained))
+              case state: CommentaryJobState =>
+                CommentaryJobReducer.submitIssuedWorkReport(state, report, nowEpochMs) match
+                  case Left(EngineWorkReportRejection.WorkNotOutstanding) =>
+                    Left(EngineWorkReportSubmissionRejection.WorkNotOutstanding)
+                  case Right(nextState) =>
+                    transitionRetainedJobAt(jobId, retained, nextState, nowEpochMs)
+                    Right(snapshotOf(jobId, retained))
 
-  def cancelJobAt(jobId: String, nowEpochMs: Long): Option[CommentaryJobSnapshot] =
+  def cancelJobAt(jobId: String, nowEpochMs: Long): Option[CommentaryJobDelivery] =
     removeForgottenJobsAt(nowEpochMs)
     retainedJobFor(jobId) match
       case None => None
@@ -129,19 +169,28 @@ final class CommentaryJobRegistry(
         retained.synchronized:
           if !isCurrentRetainedJob(jobId, retained) then None
           else
-            transitionRetainedJobAt(
-              jobId,
-              retained,
-              CommentaryJobReducer.expireJob(retained.state, nowEpochMs),
-              nowEpochMs
-            )
-            transitionRetainedJobAt(
-              jobId,
-              retained,
-              CommentaryJobReducer.cancelJob(retained.state),
-              nowEpochMs
-            )
+            retained.state match
+              case state: CommentaryJobState =>
+                val expired = CommentaryJobReducer.expireJob(state, nowEpochMs)
+                transitionRetainedJobAt(jobId, retained, expired, nowEpochMs)
+                transitionRetainedJobAt(jobId, retained, CommentaryJobReducer.cancelJob(expired), nowEpochMs)
+              case _: RetainedCommentaryJobResult => ()
             Some(snapshotOf(jobId, retained))
+
+  /** The caller has consumed or abandoned the result. No consumer remains for a
+    * stopped projection: release the graph/result without constructing another one.
+    * Serialize with reports on this job; membership locks never cover projection.
+    */
+  def releaseJob(jobId: String): Boolean = retainedJobFor(jobId).exists { retained =>
+    retained.synchronized {
+      membershipLock.synchronized {
+        if retainedJobs.get(jobId).contains(retained) then
+          retainedJobs.remove(jobId)
+          true
+        else false
+      }
+    }
+  }
 
   private def retainNewJobAt(
       requestId: String,
@@ -192,9 +241,9 @@ final class CommentaryJobRegistry(
     if epochMs > Long.MaxValue - terminalJobRetentionMillis then Long.MaxValue
     else epochMs + terminalJobRetentionMillis
 
-  private def isTerminalJobState(state: CommentaryJobState): Boolean = state match
+  private def isTerminalJobState(state: CommentaryJobState | RetainedCommentaryJobResult): Boolean = state match
     case _: AwaitingEngineWork => false
-    case _: CompletedCommentaryJob | _: StoppedCommentaryJob => true
+    case _: CompletedCommentaryJob | _: StoppedCommentaryJob | _: RetainedCommentaryJobResult => true
 
   private def removeForgottenJobsAt(nowEpochMs: Long): Unit =
     val candidates = membershipLock.synchronized:
@@ -246,10 +295,14 @@ final class CommentaryJobRegistry(
       jobId = Base64.getUrlEncoder.withoutPadding.encodeToString(randomBytes)
     jobId
 
-  private def snapshotOf(jobId: String, retained: RetainedCommentaryJob): CommentaryJobSnapshot =
-    CommentaryJobSnapshot(
-      jobId,
-      retained.requestId,
-      retained.deadlineEpochMs,
-      retained.state
-    )
+  private def snapshotOf(jobId: String, retained: RetainedCommentaryJob): CommentaryJobDelivery =
+    retained.state match
+      case result: RetainedCommentaryJobResult => result
+      case state: CommentaryJobState =>
+        val snapshot = CommentaryJobSnapshot(jobId, retained.requestId, retained.deadlineEpochMs, state)
+        if !isTerminalJobState(state) then snapshot
+        else
+          val bytes = Json.toBytes(PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+          val result = RetainedCommentaryJobResult(jobId, bytes)
+          retained.state = result
+          result

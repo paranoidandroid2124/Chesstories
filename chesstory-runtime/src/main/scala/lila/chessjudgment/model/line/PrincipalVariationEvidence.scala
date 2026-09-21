@@ -32,30 +32,59 @@ private[chessjudgment] object LegalReplayStep:
       capturedRole = capturedRole
     )
 
-private[chessjudgment] final class StripedLruCache[K, V](
+private[chessjudgment] final class StripedLruCache[K, V <: AnyRef](
     maxEntries: Int,
-    requestedStripes: Int = 64
+    requestedStripes: Int = 64,
+    weakValues: Boolean = false
 ):
   require(maxEntries > 0)
   require(requestedStripes > 0)
+
+  private sealed trait RetainedValue:
+    def get: V
+  private final class StrongValue(val get: V) extends RetainedValue
+  private val collected = new java.lang.ref.ReferenceQueue[V]()
+  private final class WeakValue(val key: K, value: V)
+      extends java.lang.ref.WeakReference[V](value, collected) with RetainedValue
 
   private val stripeCount = math.min(maxEntries, requestedStripes)
   private val caches = Vector.tabulate(stripeCount) { index =>
     val stripeMaxEntries =
       maxEntries / stripeCount + Option.when(index < maxEntries % stripeCount)(1).getOrElse(0)
-    new java.util.LinkedHashMap[K, V](stripeMaxEntries, 0.75f, true):
-      override def removeEldestEntry(eldest: java.util.Map.Entry[K, V]): Boolean =
+    new java.util.LinkedHashMap[K, RetainedValue](stripeMaxEntries, 0.75f, true):
+      override def removeEldestEntry(eldest: java.util.Map.Entry[K, RetainedValue]): Boolean =
         size() > stripeMaxEntries
   }
   private val inFlight =
     new java.util.concurrent.ConcurrentHashMap[K, java.util.concurrent.CompletableFuture[V]]()
 
-  private def cached(cache: java.util.LinkedHashMap[K, V], key: K): Option[V] =
+  /** Only directly owned payloads may use weak retention; an Option/List wrapper
+    * can die while the caller still owns its contents. Remove the matching key
+    * too, without removing a newer value inserted for that same key.
+    */
+  private def removeCollected(): Unit =
+    var reference = collected.poll()
+    while reference != null do
+      val expired = reference.asInstanceOf[WeakValue]
+      val cache = caches(Math.floorMod(expired.key.##, stripeCount))
+      cache.synchronized {
+        if cache.get(expired.key).asInstanceOf[AnyRef] eq expired then cache.remove(expired.key)
+      }
+      reference = collected.poll()
+
+  private def cached(cache: java.util.LinkedHashMap[K, RetainedValue], key: K): Option[V] =
     cache.synchronized {
-      if cache.containsKey(key) then Some(cache.get(key)) else None
+      cache.get(key) match
+        case null => None
+        case retained: WeakValue =>
+          val value = Option(retained.get)
+          if value.isEmpty then cache.remove(key)
+          value
+        case retained => Some(retained.get)
     }
 
   def getOrCompute(key: K)(compute: => V): V =
+    if weakValues then removeCollected()
     val cache = caches(Math.floorMod(key.##, stripeCount))
     cached(cache, key).getOrElse {
       val promise = new java.util.concurrent.CompletableFuture[V]()
@@ -69,7 +98,8 @@ private[chessjudgment] final class StripedLruCache[K, V](
         try
           val value = cached(cache, key).getOrElse {
             val calculated = compute
-            cache.synchronized(cache.put(key, calculated))
+            val retained = if weakValues then new WeakValue(key, calculated) else new StrongValue(calculated)
+            cache.synchronized(cache.put(key, retained))
             calculated
           }
           promise.complete(value)
@@ -85,11 +115,12 @@ private[chessjudgment] final class StripedLruCache[K, V](
   * `Move.before`/`Move.after` objects. Board- or history-equivalent positions
   * cannot share those objects: each move remains owned by the Position
   * instance that generated it. Semantic board geometry uses its separate
-  * cache upstream.
+  * cache upstream. The key must not keep that position alive after the weakly
+  * cached computation is collected but before its reference queue is drained.
   */
 private[chessjudgment] final class PositionOccurrenceKey private (
-    private val position: Position
-):
+    position: Position
+) extends java.lang.ref.WeakReference[Position](position):
   private val cachedHash = System.identityHashCode(position)
 
   override def hashCode: Int = cachedHash
@@ -97,7 +128,8 @@ private[chessjudgment] final class PositionOccurrenceKey private (
   override def equals(other: Any): Boolean =
     other match
       case that: PositionOccurrenceKey =>
-        position.asInstanceOf[AnyRef] eq that.position.asInstanceOf[AnyRef]
+        val owner = get()
+        (this eq that) || (owner != null && (owner eq that.get()))
       case _ => false
 
 private[chessjudgment] object PositionOccurrenceKey:
@@ -109,8 +141,6 @@ private[chessjudgment] object PrincipalVariationEvidence:
   private val PositionCacheMaxEntries = 4096
   private val positionCache =
     new StripedLruCache[String, Option[Position]](PositionCacheMaxEntries)
-  private val legalMoveCache =
-    new StripedLruCache[PositionOccurrenceKey, List[Move]](PositionCacheMaxEntries)
 
   def readPosition(fen: String): Option[Position] =
     val key = normalizeFen(fen)
@@ -120,9 +150,9 @@ private[chessjudgment] object PrincipalVariationEvidence:
         .map(withFenHalfMoveClock(_, key))
     }
 
-  /** The sole legal-move generator for commentary analysis. The complete
-    * Position key retains clocks and repetition history, so Move.after values
-    * are never shared across merely board-equivalent occurrences.
+  /** scalachess already memoizes legalMoves on the exact Position, preserving
+    * clocks and repetition history. A second global cache would keep finished
+    * positions and their generated descendants alive after their owners leave.
     *
     * scalachess exposes both standard-UCI king-destination castling and the
     * UCI_Chess960 king-to-rook alias even in a Standard position. Chesstory's
@@ -131,11 +161,9 @@ private[chessjudgment] object PrincipalVariationEvidence:
     * canonicalization, not result deduplication.
     */
   private[chessjudgment] def actualLegalMoves(position: Position): List[Move] =
-    legalMoveCache.getOrCompute(PositionOccurrenceKey.from(position))(
-      position.legalMoves.toList.filter(move =>
-        move.castle.forall(castle => move.dest == castle.kingTo)
-      ).sortBy(_.toUci.uci)
-    )
+    position.legalMoves.toList.filter(move =>
+      move.castle.forall(castle => move.dest == castle.kingTo)
+    ).sortBy(_.toUci.uci)
 
   final case class LineMoveRef(
       ply: Int,
@@ -216,8 +244,14 @@ private[chessjudgment] object PrincipalVariationEvidence:
     }
 
   def semanticBoardStateFen(fen: String): Option[String] =
-    val fields = normalizeFen(fen).split("\\s+").filter(_.nonEmpty).toList
-    Option.when(fields.size >= 4)(fields.take(4).mkString(" "))
+    val value = normalizeFen(fen)
+    val first = value.indexOf(' ')
+    val second = if first < 0 then -1 else value.indexOf(' ', first + 1)
+    val third = if second < 0 then -1 else value.indexOf(' ', second + 1)
+    if third < 0 then None
+    else
+      val fourth = value.indexOf(' ', third + 1)
+      Some(if fourth < 0 then value else value.substring(0, fourth))
 
   private def legalMove(position: Position, uci: String): Option[Move] =
     val normalized = normalizeUci(uci)
@@ -228,4 +262,12 @@ private[chessjudgment] object PrincipalVariationEvidence:
       )
 
   def normalizeFen(fen: String): String =
-    Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")
+    val value = if fen == null then "" else fen.trim
+    var i = 0
+    var needsWork = false
+    while i < value.length && !needsWork do
+      val c = value.charAt(i)
+      needsWork = c <= ' ' && (c != ' ' || (i > 0 && value.charAt(i - 1) == ' '))
+      i += 1
+    // Preserve Java trim/regex semantics for unusual input; ordinary FENs need no split.
+    if needsWork then value.split("\\s+").mkString(" ") else value

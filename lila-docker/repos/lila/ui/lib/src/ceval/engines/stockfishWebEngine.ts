@@ -16,6 +16,8 @@ export class StockfishWebEngine implements CevalEngine {
   module?: StockfishWeb;
   readonly ready: Promise<boolean>;
   private blobUrl?: string;
+  private bootingModule?: StockfishWeb;
+  private cancelBoot?: () => void;
   private destroyed = false;
   private readonly abortController = new AbortController();
   private readonly abortListener = (): void => this.destroy();
@@ -26,9 +28,13 @@ export class StockfishWebEngine implements CevalEngine {
     readonly signal?: AbortSignal | undefined,
   ) {
     this.protocol = new Protocol();
+    const cancelled = new Promise<false>(resolve => (this.cancelBoot = () => resolve(false)));
     if (signal?.aborted) this.destroyed = true;
     else signal?.addEventListener('abort', this.abortListener, { once: true });
-    this.ready = (this.destroyed ? Promise.resolve(false) : this.boot()).then(
+    this.ready = Promise.race([
+      this.destroyed ? Promise.resolve(false) : this.boot(cancelled),
+      cancelled,
+    ]).then(
       ready => ready,
       error => {
         if (this.destroyed) return false;
@@ -43,9 +49,8 @@ export class StockfishWebEngine implements CevalEngine {
     return this.info;
   }
 
-  private async boot(): Promise<boolean> {
+  private async boot(cancelled: Promise<false>): Promise<boolean> {
     let blobUrl: string | undefined;
-    let module: StockfishWeb | undefined;
     let booting = true;
     const [root, js] = [this.info.assets.root, this.info.assets.js];
     const scriptUrl = site.asset.url(`${root}/${js}`, { documentOrigin: true });
@@ -73,7 +78,7 @@ export class StockfishWebEngine implements CevalEngine {
         },
         mainScriptUrlOrBlob: blobUrl,
       });
-      module = loadedModule;
+      this.bootingModule = loadedModule;
       if (this.destroyed) return false;
 
       if (this.info.tech === 'NNUE') {
@@ -99,24 +104,27 @@ export class StockfishWebEngine implements CevalEngine {
         );
         if (this.destroyed) return false;
       }
-      loadedModule.listen = (data: string) => this.protocol.received(data);
+      loadedModule.listen = (data: string) => {
+        if (!this.destroyed) this.protocol.received(data);
+      };
       if (this.destroyed) return false;
       this.protocol.connected(cmd => loadedModule.uci(cmd));
-      await this.protocol.ready;
+      await Promise.race([this.protocol.ready, cancelled]);
       if (this.destroyed) return false;
       this.module = loadedModule;
-      module = undefined;
+      this.bootingModule = undefined;
       blobUrl = undefined;
       return true;
     } finally {
       booting = false;
-      this.cleanup(module, blobUrl);
+      this.cleanup(this.bootingModule, blobUrl);
     }
   }
 
   private cleanup(module: StockfishWeb | undefined, blobUrl: string | undefined): void {
     const ownedBlobUrl = this.blobUrl === blobUrl ? blobUrl : undefined;
     if (module && this.module === module) this.module = undefined;
+    if (module && this.bootingModule === module) this.bootingModule = undefined;
     if (ownedBlobUrl) this.blobUrl = undefined;
     if (module) {
       try {
@@ -164,8 +172,10 @@ export class StockfishWebEngine implements CevalEngine {
   engineName = (): string | undefined => this.protocol.engineName;
   destroy = (): void => {
     this.destroyed = true;
+    this.cancelBoot?.();
+    this.cancelBoot = undefined;
     this.signal?.removeEventListener('abort', this.abortListener);
     this.abortController.abort();
-    this.cleanup(this.module, this.blobUrl);
+    this.cleanup(this.bootingModule ?? this.module, this.blobUrl);
   };
 }

@@ -113,7 +113,8 @@ final class Analyse(
       limit.moveReviewJobAccess(ctx.ip, rateLimitedJson.noCache.toFuccess):
         ws.url(s"$moveReviewJobsPath/$jobId")
           .withRequestTimeout(moveReviewTransportTimeout)
-          .withHttpHeaders(runtimeHeaders*)
+          .withHttpHeaders((runtimeHeaders ++ ctx.req.headers.get("Prefer")
+            .filter(_ == "return=minimal").map("Prefer" -> _).toList)*)
           .delete()
           .map: upstream =>
             Status(upstream.status)(upstream.body[Array[Byte]])

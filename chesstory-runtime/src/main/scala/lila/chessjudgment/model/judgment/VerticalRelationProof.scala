@@ -222,8 +222,8 @@ enum RelationPawnTopologyFacet:
 
   private[chessjudgment] def stableKey: String = toString.toLowerCase
 
-private[chessjudgment] object RelationPawnTopologyFacet:
-  def changed(
+object RelationPawnTopologyFacet:
+  private[chessjudgment] def changed(
       before: Option[RelationPawnTopologyStateWitness],
       after: Option[RelationPawnTopologyStateWitness]
   ): List[RelationPawnTopologyFacet] =

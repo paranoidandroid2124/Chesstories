@@ -10,6 +10,14 @@ object analyse:
 
   lazy val analyseUi = AnalyseUi(UiEnv)(UiEnv.analyseEndpoints)
 
+  def moveReviewConfig =
+    val mode = UiEnv.env.config
+      .getOptional[String]("chesstory.moveReview.mode")
+      .map(_.trim.toLowerCase)
+      .filter(Set("off", "runtime"))
+      .getOrElse("off")
+    Json.obj("mode" -> mode)
+
   object ui:
     private def shortcutRow(keys: Frag, description: String) =
       tr(td(keys), td(description))
@@ -26,7 +34,8 @@ object analyse:
         data,
         pov,
         chess960PositionNum = chess960PositionNum,
-        inlinePgn = inlinePgn
+        inlinePgn = inlinePgn,
+        moveReview = moveReviewConfig
       )
 
     def keyboardHelp =

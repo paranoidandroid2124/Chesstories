@@ -15,32 +15,249 @@
     "engine_profile"
   ],
   "properties": {
-    "schema_version": {"const": "chesstory.position-commentary.job-request.v6"},
-    "request_id": {"$ref": "#/$defs/requestId"},
-    "variant": {"const": "standard"},
-    "initial_fen": {"$ref": "#/$defs/fen"},
+    "schema_version": {
+      "const": "chesstory.position-commentary.job-request.v6"
+    },
+    "request_id": {
+      "$ref": "#/$defs/requestId"
+    },
+    "variant": {
+      "const": "standard"
+    },
+    "initial_fen": {
+      "$ref": "#/$defs/fen"
+    },
     "move_prefix_uci": {
       "type": "array",
       "maxItems": 600,
-      "items": {"$ref": "#/$defs/uciMove"}
+      "items": {
+        "$ref": "#/$defs/uciMove"
+      }
     },
-    "current_fen": {"$ref": "#/$defs/fen"},
-    "focus": {"$ref": "#/$defs/focus"},
-    "engine_profile": {"$ref": "#/$defs/engineProfile"}
+    "current_fen": {
+      "$ref": "#/$defs/fen"
+    },
+    "focus": {
+      "$ref": "#/$defs/focus"
+    },
+    "engine_profile": {
+      "$ref": "#/$defs/engineProfile"
+    },
+    "remaining_budget_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 180000
+    },
+    "proposals": {
+      "$comment": "Proposal IDs are unique in a request; requirement IDs are unique within their proposal. The server also limits the sum of all requirements to 600. Origin is submitted attribution, never proof of automatic discovery or admitted evidence.",
+      "type": "array",
+      "maxItems": 600,
+      "items": { "$ref": "#/$defs/proposal" }
+    },
+    "input_lines": {
+      "type": "array",
+      "maxItems": 600,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "moves"
+        ],
+        "properties": {
+          "source": {
+            "enum": [
+              "pgn_record",
+              "analysis",
+              "study"
+            ]
+          },
+          "moves": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 600,
+            "items": {
+              "$ref": "#/$defs/uciMove"
+            }
+          }
+        }
+      }
+    }
   },
   "$defs": {
-    "requestId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
-    "fen": {"type": "string", "minLength": 1, "maxLength": 128},
-    "uciMove": {"type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"},
-    "engineProfile": {"const": "sf18-smallnet-t2-h16-v1"},
+    "proposal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "origin", "requirements"],
+      "properties": {
+        "id": { "$ref": "#/$defs/requestId" },
+        "origin": {
+          "type": "object", "additionalProperties": false,
+          "required": ["question", "candidates", "priority", "evidence"],
+          "properties": {
+            "question": { "$ref": "#/$defs/proposalSource" },
+            "candidates": { "$ref": "#/$defs/proposalSource" },
+            "priority": { "$ref": "#/$defs/proposalSource" },
+            "evidence": { "$ref": "#/$defs/proposalSource" }
+          }
+        },
+        "requirements": {
+          "type": "array", "minItems": 1, "maxItems": 600,
+          "items": { "$ref": "#/$defs/proposalRequirement" }
+        }
+      }
+    },
+    "proposalSource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "producer"],
+      "properties": {
+        "kind": { "enum": ["user", "author", "model", "generator", "none"] },
+        "producer": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "source_refs": {
+          "type": "array", "maxItems": 64,
+          "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+        }
+      }
+    },
+    "proposalPrefix": {
+      "type": "array", "maxItems": 79,
+      "items": { "$ref": "#/$defs/uciMove" }
+    },
+    "factPiece": {
+      "type": "object", "additionalProperties": false, "required": ["side", "role", "square"],
+      "properties": { "side": { "enum": ["white", "black"] }, "role": { "enum": ["pawn", "knight", "bishop", "rook", "queen", "king"] }, "square": { "type": "string", "pattern": "^[a-h][1-8]$" } }
+    },
+    "factMoves": { "type": "array", "maxItems": 80, "items": { "$ref": "#/$defs/uciMove" } },
+    "factPath": {
+      "type": "object", "additionalProperties": false, "required": ["binding", "source"],
+      "properties": {
+        "binding": { "$ref": "#/$defs/requestId" }, "extend": { "type": "boolean", "default": false },
+        "source": { "oneOf": [
+          { "type": "object", "additionalProperties": false, "required": ["kind", "moves_uci"], "properties": { "kind": { "const": "declared" }, "moves_uci": { "$ref": "#/$defs/factMoves" } } },
+          { "type": "object", "additionalProperties": false, "required": ["kind", "requirement_id", "arm"], "properties": { "kind": { "const": "comparison" }, "requirement_id": { "$ref": "#/$defs/requestId" }, "arm": { "enum": ["reference", "alternative"] } } },
+          { "type": "object", "additionalProperties": false, "required": ["kind", "inquiry_id", "premise_id"], "properties": { "kind": { "const": "premise" }, "inquiry_id": { "type": "string", "minLength": 1, "maxLength": 512 }, "premise_id": { "type": "string", "minLength": 1, "maxLength": 512 } } }
+        ] }
+      }
+    },
+    "factPoint": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "ply_count"], "properties": { "kind": { "const": "ply" }, "ply_count": { "type": "integer", "minimum": 0, "maximum": 80 } } },
+        { "$comment": "The server also requires through_ply > from_ply.", "type": "object", "additionalProperties": false, "required": ["kind", "event", "ordinal", "phase", "from_ply", "through_ply"],
+          "properties": { "kind": { "const": "event" }, "event": { "enum": ["move", "capture", "promotion", "check", "castling"] }, "ordinal": { "type": "integer", "minimum": 1, "maximum": 80 }, "phase": { "enum": ["before", "after"] }, "from_ply": { "type": "integer", "minimum": 0, "maximum": 79 }, "through_ply": { "type": "integer", "minimum": 1, "maximum": 80 }, "actor": { "$ref": "#/$defs/factPiece" }, "target": { "$ref": "#/$defs/factPiece" }, "square": { "type": "string", "pattern": "^[a-h][1-8]$" } },
+          "allOf": [
+            { "if": { "required": ["target"] }, "then": { "properties": { "event": { "const": "capture" } } } },
+            { "if": { "required": ["square"] }, "then": { "properties": { "event": { "const": "move" } } } }
+          ]
+        }
+      ]
+    },
+    "factPredicate": {
+      "$comment": "Subjects use original root identity. The server checks side/identity compatibility, and owns the predicate calculation.",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "subject"], "properties": { "kind": { "enum": ["presence", "location", "role"] }, "subject": { "$ref": "#/$defs/factPiece" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "subject", "square"], "properties": { "kind": { "enum": ["control", "pawn_advance"] }, "subject": { "$ref": "#/$defs/factPiece" }, "square": { "type": "string", "pattern": "^[a-h][1-8]$" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "subject", "target"], "properties": { "kind": { "enum": ["support", "legal_capture", "direct_support_use"] }, "subject": { "$ref": "#/$defs/factPiece" }, "target": { "$ref": "#/$defs/factPiece" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "subject", "square"], "properties": { "kind": { "const": "legal_move" }, "subject": { "$ref": "#/$defs/factPiece" }, "square": { "type": "string", "pattern": "^[a-h][1-8]$" }, "property": { "enum": ["queen", "rook", "bishop", "knight"] } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "side"], "properties": { "kind": { "const": "check" }, "side": { "enum": ["white", "black"] } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "subject", "property"], "properties": { "kind": { "const": "pawn_property" }, "subject": { "$ref": "#/$defs/factPiece" }, "property": { "enum": ["passed", "isolated", "doubled"] } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "property"], "properties": { "kind": { "const": "file_occupancy" }, "property": { "type": "string", "pattern": "^[a-h]$" } } }
+      ]
+    },
+    "factValue": { "type": "string", "minLength": 1, "maxLength": 32 },
+    "proposalRequirement": {
+      "allOf": [
+        { "$ref": "#/$defs/proposalRequirementFields" },
+        { "if": { "properties": { "kind": { "const": "observe_move" } } }, "then": { "propertyNames": { "enum": ["id", "kind", "prefix_moves_uci", "move_uci"] } } },
+        { "if": { "properties": { "kind": { "const": "compare_moves" } } }, "then": { "propertyNames": { "enum": ["id", "kind", "prefix_moves_uci", "reference_move", "alternative_move", "expected_relation"] } } },
+        { "if": { "properties": { "kind": { "const": "uninterpreted" } } }, "then": { "propertyNames": { "enum": ["id", "kind", "text"] } } },
+        { "if": { "properties": { "kind": { "const": "fact" } } }, "then": { "propertyNames": { "enum": ["id", "kind", "path", "predicate", "at", "through", "expected"] } } },
+        { "if": { "properties": { "kind": { "const": "fact" }, "predicate": { "required": ["kind"], "properties": { "kind": { "const": "pawn_advance" } } } }, "required": ["kind", "predicate"] }, "then": { "properties": { "expected": { "enum": ["present", "absent", "not_pawn", "actor_removed"] } } } },
+        { "if": { "properties": { "kind": { "const": "fact_comparison" } } }, "then": { "propertyNames": { "enum": ["id", "kind", "left_requirement_id", "right_requirement_id", "relation"] } } },
+        { "if": { "properties": { "kind": { "const": "fact_group" } } }, "then": { "propertyNames": { "enum": ["id", "kind", "mode", "members"] } } }
+      ]
+    },
+    "proposalRequirementFields": {
+      "$comment": "The server resolves references only to earlier requirements in the same proposal: comparison path -> compare_moves; fact_comparison -> fact; fact_group -> fact with expected or fact_comparison/fact_group. Expected values must belong to the predicate's state domain.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["id", "kind", "prefix_moves_uci", "move_uci"],
+          "properties": {
+            "id": { "$ref": "#/$defs/requestId" },
+            "kind": { "const": "observe_move" },
+            "prefix_moves_uci": { "$ref": "#/$defs/proposalPrefix" },
+            "move_uci": { "$ref": "#/$defs/uciMove" }
+          }
+        },
+        {
+          "$comment": "Reference and alternative moves must differ; the server validates this value relationship.",
+          "type": "object",
+          "required": ["id", "kind", "prefix_moves_uci", "reference_move", "alternative_move"],
+          "properties": {
+            "id": { "$ref": "#/$defs/requestId" },
+            "kind": { "const": "compare_moves" },
+            "prefix_moves_uci": { "$ref": "#/$defs/proposalPrefix" },
+            "reference_move": { "$ref": "#/$defs/uciMove" },
+            "alternative_move": { "$ref": "#/$defs/uciMove" },
+            "expected_relation": { "enum": ["better", "equal", "worse"] }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "text"],
+          "properties": {
+            "id": { "$ref": "#/$defs/requestId" },
+            "kind": { "const": "uninterpreted" },
+            "text": { "type": "string", "minLength": 1, "maxLength": 2000 }
+          }
+        },
+        { "type": "object", "required": ["id", "kind", "path", "predicate", "at"],
+          "properties": { "id": { "$ref": "#/$defs/requestId" }, "kind": { "const": "fact" }, "path": { "$ref": "#/$defs/factPath" }, "predicate": { "$ref": "#/$defs/factPredicate" }, "at": { "$ref": "#/$defs/factPoint" }, "through": { "$ref": "#/$defs/factPoint" }, "expected": { "$ref": "#/$defs/factValue" } },
+          "dependentRequired": { "through": ["expected"] },
+          "allOf": [{"if": {"properties": {"predicate": {"properties": {"kind": {"const": "presence"}}}}}, "then": {"properties": {"expected": {"enum": ["present", "removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "role"}}}}}, "then": {"properties": {"expected": {"enum": ["pawn", "knight", "bishop", "rook", "queen", "king", "removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "control"}}}}}, "then": {"properties": {"expected": {"enum": ["present", "absent", "actor_removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "support"}}}}}, "then": {"properties": {"expected": {"enum": ["present", "absent", "actor_removed", "target_removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "legal_move"}}}}}, "then": {"properties": {"expected": {"enum": ["legal", "illegal", "not_turn", "actor_removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "legal_capture"}}}}}, "then": {"properties": {"expected": {"enum": ["legal", "illegal", "not_turn", "actor_removed", "target_removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "check"}}}}}, "then": {"properties": {"expected": {"enum": ["present", "absent"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "pawn_property"}}}}}, "then": {"properties": {"expected": {"enum": ["true", "false", "not_pawn", "actor_removed"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "file_occupancy"}}}}}, "then": {"properties": {"expected": {"enum": ["open", "white_pawns_only", "black_pawns_only", "both_sides"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "direct_support_use"}}}}}, "then": {"properties": {"expected": {"enum": ["true", "false"]}}}}, {"if": {"properties": {"predicate": {"properties": {"kind": {"const": "location"}}}}}, "then": {"properties": {"expected": {"pattern": "^(removed|[a-h][1-8])$"}}}}]
+        },
+        { "type": "object", "required": ["id", "kind", "left_requirement_id", "right_requirement_id", "relation"],
+          "properties": { "id": { "$ref": "#/$defs/requestId" }, "kind": { "const": "fact_comparison" }, "left_requirement_id": { "$ref": "#/$defs/requestId" }, "right_requirement_id": { "$ref": "#/$defs/requestId" }, "relation": { "enum": ["same", "different", "before", "after", "same_time"] } }
+        },
+        { "type": "object", "required": ["id", "kind", "mode", "members"],
+          "properties": { "id": { "$ref": "#/$defs/requestId" }, "kind": { "const": "fact_group" }, "mode": { "enum": ["all", "any"] }, "members": { "type": "array", "minItems": 1, "maxItems": 600, "uniqueItems": true, "items": { "$ref": "#/$defs/requestId" } } }
+        }
+      ]
+    },
+    "requestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "fen": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "engineProfile": {
+      "const": "sf18-smallnet-t2-h16-v1"
+    },
     "focus": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "played_move_uci", "resulting_fen"],
+      "required": [
+        "kind",
+        "played_move_uci",
+        "resulting_fen"
+      ],
       "properties": {
-        "kind": {"const": "played_move"},
-        "played_move_uci": {"$ref": "#/$defs/uciMove"},
-        "resulting_fen": {"$ref": "#/$defs/fen"}
+        "kind": {
+          "const": "played_move"
+        },
+        "played_move_uci": {
+          "$ref": "#/$defs/uciMove"
+        },
+        "resulting_fen": {
+          "$ref": "#/$defs/fen"
+        }
       }
     }
   }

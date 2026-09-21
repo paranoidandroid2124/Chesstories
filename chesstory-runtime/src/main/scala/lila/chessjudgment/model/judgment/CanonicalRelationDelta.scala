@@ -226,7 +226,7 @@ private[chessjudgment] final case class RelationInventoryTransition(
       val afterByController = after.map(edge => edge.controller -> edge).toMap
       val maintainedAfterIds = before.flatMap { edge =>
         val controller = RelationColoredPieceWitness(edge.controller.square, edge.controller.role, side)
-        pieceAfter(controller, footprint).flatMap(afterController =>
+        controller.after(footprint).flatMap(afterController =>
           afterByController
             .get(RelationPieceWitness(afterController.square, afterController.role))
             .map(_.fact.semanticId)
@@ -234,7 +234,7 @@ private[chessjudgment] final case class RelationInventoryTransition(
       }.toSet
       val removedControllers = before.flatMap { edge =>
         val controller = RelationColoredPieceWitness(edge.controller.square, edge.controller.role, side)
-        val maintained = pieceAfter(controller, footprint).exists(afterController =>
+        val maintained = controller.after(footprint).exists(afterController =>
           afterByController.contains(RelationPieceWitness(afterController.square, afterController.role))
         )
         Option.when(!maintained)(edge.controller)
@@ -305,25 +305,6 @@ private[chessjudgment] final case class RelationInventoryTransition(
     Square.fromKey(square.key).getOrElse(
       throw IllegalArgumentException(s"invalid relation square '${square.key}'")
     )
-
-  private def pieceAfter(
-      before: RelationColoredPieceWitness,
-      footprint: BoardTransitionFootprint
-  ): Option[RelationColoredPieceWitness] =
-    footprint.pieceTransitions
-      .find(transition =>
-        transition.side == before.side &&
-          transition.from.key.equalsIgnoreCase(before.square.key) &&
-          transition.beforeRole.name.equalsIgnoreCase(before.role.name)
-      )
-      .map(transition =>
-        RelationColoredPieceWitness(
-          EvidenceSquare(transition.to.key),
-          EvidencePieceRole(transition.afterRole.name),
-          transition.side
-        )
-      )
-      .orElse(Option.when(!footprint.changedSquares.exists(_.key.equalsIgnoreCase(before.square.key)))(before))
 
   private def geometricControlsByKey(
       relations: List[RelationFactEvidence],

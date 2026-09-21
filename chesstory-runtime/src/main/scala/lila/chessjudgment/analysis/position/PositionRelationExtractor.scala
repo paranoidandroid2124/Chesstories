@@ -781,6 +781,7 @@ object PositionRelationExtractor:
     )
     case LegalCaptureOf(side: Color, capturedSquare: EvidenceSquare)
     case GeometricControlOf(side: Color, targetSquare: EvidenceSquare)
+    case GeometricControlFromTo(side: Color, piece: RelationPieceWitness, targetSquare: EvidenceSquare)
     case GeometricPawnSupportOf(side: Color, supportedSquare: EvidenceSquare)
     case KingCheck(side: Color, kingSquare: EvidenceSquare)
 
@@ -796,6 +797,9 @@ object PositionRelationExtractor:
           side == state.sideToMove && state.occupantAt(capturedSquare).exists(_.side != side)
         case GeometricControlOf(_, targetSquare) =>
           Square.fromKey(targetSquare.key).nonEmpty
+        case GeometricControlFromTo(side, piece, targetSquare) =>
+          state.occupantAt(piece.square).exists(occupant => occupant.side == side && occupant.role == piece.role) &&
+            Square.fromKey(targetSquare.key).nonEmpty
         case GeometricPawnSupportOf(side, supportedSquare) =>
           state.occupantAt(supportedSquare).exists(piece =>
             piece.side == side && piece.role.name.equalsIgnoreCase(Pawn.name)
@@ -812,6 +816,8 @@ object PositionRelationExtractor:
           s"legal-capture:${side.toString.toLowerCase}:${capturedSquare.key.toLowerCase}"
         case GeometricControlOf(side, targetSquare) =>
           s"geometric-control:${side.toString.toLowerCase}:${targetSquare.key.toLowerCase}"
+        case GeometricControlFromTo(side, piece, targetSquare) =>
+          s"geometric-control-from-to:${side.toString.toLowerCase}:${piece.role.name}@${piece.square.key}:${targetSquare.key}"
         case GeometricPawnSupportOf(side, supportedSquare) =>
           s"geometric-pawn-support:${side.toString.toLowerCase}:${supportedSquare.key.toLowerCase}"
         case KingCheck(side, kingSquare) =>
@@ -954,7 +960,7 @@ object PositionRelationExtractor:
     private lazy val certifiedRelations: List[RelationFactEvidence] =
       snapshot.facts.map(certified)
 
-    private def relationsOf(kind: RelationFactKind): List[RelationFactEvidence] =
+    private[chessjudgment] def relationsOf(kind: RelationFactKind): List[RelationFactEvidence] =
       snapshot.factsOf(kind).map(certified)
 
     private val closedGeometricControlCache =
@@ -1614,6 +1620,41 @@ object PositionRelationExtractor:
     private[chessjudgment] def legalCapturesOf(target: EvidenceSquare): List[ClosedLegalMove] =
       indexedLegalCapturesByTarget.getOrElse(target, Nil).map(_.closed)
 
+    /** Exact consequences of the already generated legal moves. This includes
+      * discovered checks; inspecting just the moving piece's controls would not.
+      */
+    private[chessjudgment] lazy val checkingMoveSources: List[RelationFactEvidence] =
+      indexedLegalMovesOrdered.filter(_.move.after.check.yes).map(_.source)
+
+    /** Candidate projection over the existing legal owner, not a second legality or geometry implementation.
+      * The target stays put and the mover becomes a new physical provider. This does not prove a legal recapture.
+      */
+    private lazy val legalMoverControlsAfter: List[(IndexedLegalMove, chess.Bitboard)] =
+      indexedLegalMovesOrdered.map { entry =>
+        val mover = entry.closed.movement
+        val after = entry.move.after.board
+        val square = boardSquare(mover.to)
+        val controls = after.roleAt(square).map {
+          case role @ (Pawn | Knight | King) => BoardGeometry.fixedPatternControls(role, square, mover.side)
+          case _ => BoardGeometry.controlsFromSliderRays(BoardGeometry.sliderRays(after, Set(square)))
+            .getOrElse(square, chess.Bitboard.empty)
+        }.getOrElse(chess.Bitboard.empty)
+        entry -> controls
+      }
+
+    private[chessjudgment] def supportCandidates(target: RelationColoredPieceWitness): List[RelationFactEvidence] =
+      if target.side != state.sideToMove || target.role.name == King.name || !occupantAt(target.square).contains(target) then Nil
+      else
+        val targetSquare = boardSquare(target.square)
+        val providers = controlsAt(target.side, target.square).map(_.controller.square).toSet
+        legalMoverControlsAfter.flatMap { (entry, controls) =>
+          val legal = entry.closed
+          val mover = legal.movement
+          val keepsTarget = !legal.boardEffect.pieceTransitions.exists(_.from == targetSquare) &&
+            !legal.boardEffect.cellChanges.exists(_.square == targetSquare)
+          Option.when(keepsTarget && !providers(mover.from) && controls.contains(targetSquare))(legal.source).toList
+        }
+
     /** Terminal classification closes the LegalMove key set but does not
       * materialize every legal move's board effect. Full response details are
       * opened only after a check/terminal contract is actually selected.
@@ -1698,6 +1739,8 @@ object PositionRelationExtractor:
           indexedLegalCapturesByTarget.getOrElse(capturedSquare, Nil).isEmpty
         case ClosedRelationAbsenceQuery.GeometricControlOf(side, targetSquare) =>
           controlsAt(side, targetSquare).isEmpty
+        case ClosedRelationAbsenceQuery.GeometricControlFromTo(side, piece, targetSquare) =>
+          controlsAt(side, targetSquare).forall(_.controller != piece)
         case ClosedRelationAbsenceQuery.GeometricPawnSupportOf(side, supportedSquare) =>
           controlsAt(side, supportedSquare).forall(control =>
             !control.controller.role.name.equalsIgnoreCase(Pawn.name) || (control.target match
@@ -2215,7 +2258,7 @@ object PositionRelationExtractor:
     }
 
   private def sortFacts(facts: List[CanonicalRelationFact]): List[CanonicalRelationFact] =
-    facts.sortBy(fact => RelationWitnessDetail.stableKey(fact.detail))
+    facts.map(fact => RelationWitnessDetail.stableKey(fact.detail) -> fact).sortBy(_._1).map(_._2)
 
   private[position] def staticRelationRefreshFootprint(
       footprint: BoardTransitionFootprint

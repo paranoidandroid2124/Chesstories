@@ -1,0 +1,423 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-v6/position-resources.schema.json",
+  "title": "Certified resources of one historical position",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "fen",
+    "premise_id",
+    "controls",
+    "rays",
+    "pawn_advances",
+    "legal_moves",
+    "pawn_states",
+    "pawn_files"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "fen": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "premise_id": {
+      "$ref": "#/$defs/id"
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "pieces"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "pieces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/controls"
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "rays": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "lines"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ray"
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "pawn_advances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "paths"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/advance"
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "legal_moves": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "moves"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "moves": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/legal_move"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "pawn_states": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "pawns"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "pawns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pawn_state"
+          }
+        }
+      }
+    },
+    "pawn_files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "files"
+      ],
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pawn_file"
+          },
+          "maxItems": 8
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "square": {
+      "type": "string",
+      "pattern": "^[a-h][1-8]$"
+    },
+    "piece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "role",
+        "square"
+      ],
+      "properties": {
+        "side": {
+          "enum": [
+            "white",
+            "black"
+          ]
+        },
+        "role": {
+          "enum": [
+            "pawn",
+            "knight",
+            "bishop",
+            "rook",
+            "queen",
+            "king"
+          ]
+        },
+        "square": {
+          "$ref": "#/$defs/square"
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "piece",
+        "squares",
+        "source_ids"
+      ],
+      "properties": {
+        "piece": {
+          "$ref": "#/$defs/piece"
+        },
+        "squares": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/square"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "ray": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "piece",
+        "squares",
+        "occupants",
+        "source_id"
+      ],
+      "properties": {
+        "piece": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/piece"
+            },
+            {
+              "properties": {
+                "role": {
+                  "enum": [
+                    "bishop",
+                    "rook",
+                    "queen"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "squares": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/square"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "occupants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/piece"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "source_id": {
+          "$ref": "#/$defs/source_id"
+        }
+      }
+    },
+    "advance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "piece",
+        "destination",
+        "traversed_squares",
+        "source_id"
+      ],
+      "properties": {
+        "piece": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/piece"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "pawn"
+                }
+              }
+            }
+          ]
+        },
+        "destination": {
+          "$ref": "#/$defs/square"
+        },
+        "traversed_squares": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/square"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "maxItems": 2
+        },
+        "source_id": {
+          "$ref": "#/$defs/source_id"
+        }
+      }
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Semantic identity resolved only inside this historical position catalogue."
+    },
+    "legal_move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uci",
+        "destination",
+        "source_id"
+      ],
+      "properties": {
+        "uci": {
+          "type": "string",
+          "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+        },
+        "destination": {
+          "$ref": "#/$defs/square",
+          "description": "Actual mover destination, which may differ from the UCI target for castling."
+        },
+        "source_id": {
+          "$ref": "#/$defs/source_id"
+        },
+        "captured_square": {
+          "$ref": "#/$defs/square",
+          "description": "Actual captured piece square from the certified legal-move witness. Omitted for non-capture; may differ from destination for en-passant."
+        },
+        "gives_check": {
+          "type": "boolean",
+          "description": "Whether the certified legal move gives check, read from that move's resulting board. Omitted means unknown, not false; this is not a material-recovery or forcing claim."
+        }
+      }
+    },
+    "pawn_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "square",
+        "passed",
+        "isolated",
+        "doubled",
+        "source_ids"
+      ],
+      "properties": {
+        "square": {
+          "$ref": "#/$defs/square"
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Null means the needed evidence is unavailable; it is not false."
+        },
+        "isolated": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Null means the needed evidence is unavailable; it is not false."
+        },
+        "doubled": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Null means the needed evidence is unavailable; it is not false."
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_id"
+          },
+          "uniqueItems": true,
+          "maxItems": 4
+        }
+      }
+    },
+    "pawn_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "occupancy",
+        "source_ids"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "pattern": "^[a-h]$"
+        },
+        "occupancy": {
+          "enum": [
+            "open",
+            "white_pawns_only",
+            "black_pawns_only",
+            "both_sides"
+          ]
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_id"
+          },
+          "uniqueItems": true,
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Closed white and black pawn-file group sources, in that order; scoped by position.id."
+        }
+      }
+    }
+  }
+}

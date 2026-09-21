@@ -46,7 +46,6 @@ private[chessjudgment] final case class PawnTopologySnapshot private (
   ): PawnTopologyProduction =
     val pawnChanges = footprint.pawnCellChanges
     if pawnChanges.nonEmpty then
-      val changedPawnSquares = pawnChanges.map(_.square).toSet
       val affectedPawnFileKeys = pawnChanges.flatMap(change =>
         (change.before.toList ++ change.after.toList).collect {
           case piece if piece.role == Pawn => piece.color -> change.square.file
@@ -72,7 +71,9 @@ private[chessjudgment] final case class PawnTopologySnapshot private (
       }
 
       val affectedFrontKeys = (
-        addedPawnKeys ++ PawnTopologySnapshot.frontDependentPawnKeys(changedPawnSquares)
+        // A non-pawn capturing a pawn also vacates its own square. That square
+        // may have blocked another pawn even though it is not a pawn cell change.
+        addedPawnKeys ++ PawnTopologySnapshot.frontDependentPawnKeys(footprint.changedSquareSet)
       ).intersect(afterPawnKeys)
       val updatedFront = frontOccupancy
         .filter { case (key, _) => afterPawnKeys(key) && !affectedFrontKeys(key) } ++

@@ -3,10 +3,127 @@ package lila.chessjudgment.analysis.assembly
 import chess.variant.Standard
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.EngineLine
+import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PositionRuleAssessment }
 
 class BestChoiceProductionTest extends munit.FunSuite:
 
   private val ranking = List("e2e4", "d2d4", "g1f3")
+
+  test("a one-ply nonterminal played PV retains its role and produces a comparison"):
+    val initial = Standard.initialFen.value
+    val history = CanonicalPositionHistory.from(initial, Nil, initial).toOption.get
+    val lines = List(
+      EngineLine(List("e2e4"), 30, None, 16),
+      EngineLine(List("d2d4"), 20, None, 16)
+    )
+    val direct = MoveReviewInputAdmission.admit(RawMoveReviewInput(initial, "d2d4", lines)).get
+    val roots = lines.map(line => history.admitToFirstAutomaticTerminal(line.moves).toOption.get
+      .bind(CandidateLineEvaluation.EngineSearch(line)).get)
+    val focused = MoveReviewInputAdmission.prepareFocusedMoveReview(
+      history, "d2d4", history.extend(List("d2d4")).toOption.get.currentFen,
+      PositionRuleAssessment.assess(history), roots, Nil
+    ).get match
+      case PreparedFocusedPositionCommentary.MoveReview(review) => review.preparedInput
+      case other => fail(s"expected a move review, got $other")
+
+    List(direct, focused).foreach { input =>
+      val played = input.assessmentCandidates.filter(_.rootMove.contains("d2d4"))
+      assertEquals(played.map(_.role), List(LineNodeRole.Played))
+      val assembly = MoveReviewAssembler.assemble(input)
+      assert(assembly.line(LineNodeRole.Played).nonEmpty)
+      val packet = EvidenceBackedJudgmentPacket.fromAssembly(assembly).get
+      assertEquals(soleComparison(packet).kind, CandidateComparisonKind.PlayedVsBest)
+    }
+
+  test("draw-claim preference uses accepted focused scores without discarding other root observations"):
+    val initial = Standard.initialFen.value
+    val cycle = List("g1f3", "g8f6", "f3g1", "f6g8")
+    val history = CanonicalPositionHistory.from(initial, Nil, initial).toOption.get
+      .extend(cycle ++ cycle).toOption.get
+    def admit(move: String, score: Int) =
+      history.admitToFirstAutomaticTerminal(List(move)).toOption.get
+        .bind(CandidateLineEvaluation.EngineSearch(EngineLine(List(move), score, None, 16))).get
+    // The played move can overtake the reference in Focus. Conversely, a
+    // non-repeated root move can still provide a non-losing observation.
+    List(
+      (-30, -40, 31, 10, false),
+      (-30, -40, -31, 10, false),
+      (30, 20, -31, -40, false),
+      (-30, -40, -31, -20, true)
+    ).foreach { case (rootBest, rootOther, focusedBest, focusedPlayed, expectDraw) =>
+      val result = MoveReviewInputAdmission.prepareFocusedMoveReview(
+        history, "a2a3", history.extend(List("a2a3")).toOption.get.currentFen,
+        PositionRuleAssessment.assess(history),
+        List(admit("e2e4", rootBest), admit("d2d4", rootOther)),
+        List(admit("e2e4", focusedBest), admit("a2a3", focusedPlayed))
+      ).get
+      result match
+        case PreparedFocusedPositionCommentary.PositionAction(PlayerFacingPositionAction.DominantDrawClaim(claims)) =>
+          assert(expectDraw)
+          assert(claims.nonEmpty)
+        case PreparedFocusedPositionCommentary.MoveReview(review) =>
+          assert(!expectDraw)
+          assert(review.drawClaims.nonEmpty)
+          assertEquals(review.preparedInput.evaluationObservations.size, 4)
+          assertEquals(review.preparedInput.referenceCandidate.get.evaluation.engineLine.get.scoreCp, focusedBest)
+        case other => fail(s"unexpected position action: $other")
+    }
+
+  test("focused preparation accepts reconstructed exact history but rejects a different path to the same FEN"):
+    val initial = Standard.initialFen.value
+    val prefix = List("g1f3", "g8f6", "f3g1", "f6g8")
+    val history = CanonicalPositionHistory.from(initial, Nil, initial).toOption.get.extend(prefix).toOption.get
+    val reconstructed = CanonicalPositionHistory.from(initial, prefix, history.currentFen).toOption.get
+    val roots = List(
+      EngineLine(List("e2e4", "e7e5", "g1f3"), 30, None, 16),
+      EngineLine(List("d2d4", "d7d5", "g1f3"), 20, None, 16)
+    ).map(line => reconstructed.admitToFirstAutomaticTerminal(line.moves).toOption.get
+      .bind(CandidateLineEvaluation.EngineSearch(line)).get)
+    val played = ranking.head
+    val resultingFen = history.extend(List(played)).toOption.get.currentFen
+    def prepare(owner: CanonicalPositionHistory) = MoveReviewInputAdmission.prepareFocusedMoveReview(
+      owner, played, resultingFen, PositionRuleAssessment.assess(owner), roots, Nil)
+
+    val review = prepare(history) match
+      case Some(PreparedFocusedPositionCommentary.MoveReview(value)) => value
+      case other => fail(s"expected preparation across independent exact-history owners, got $other")
+    assertEquals(review.bestMoveUci, played)
+    assertEquals(review.playedRootRank, Some(1))
+    assertEquals(review.preparedInput.positionHistory.movePrefixUci, prefix)
+    assertEquals(review.preparedInput.legalLines.map(_.moves), roots.map(_.evaluation.moves))
+
+    val otherPrefix = List("b1c3", "b8c6", "c3b1", "c6b8")
+    val otherHistory = CanonicalPositionHistory.from(initial, otherPrefix, history.currentFen).toOption.get
+    assertEquals(otherHistory.currentFen, history.currentFen)
+    assertEquals(otherHistory.extend(List(played)).toOption.get.currentFen, resultingFen)
+    assertEquals(prepare(otherHistory), None)
+
+  test("equal replay paths retain separate root and focused evaluation observations"):
+    val history = CanonicalPositionHistory.from(Standard.initialFen.value, Nil, Standard.initialFen.value).toOption.get
+    def admit(moves: List[String], score: Int) =
+      history.admitToFirstAutomaticTerminal(moves).toOption.get
+        .bind(CandidateLineEvaluation.EngineSearch(EngineLine(moves, score, None, 16))).get
+    val bestMoves = List("e2e4", "e7e5", "g1f3")
+    val roots = List(admit(bestMoves, 30), admit(List("d2d4", "d7d5", "g1f3"), 20))
+    val focus = List(admit(bestMoves, 31), admit(List("a2a3", "e7e5", "g1f3"), 40))
+    val prepared = MoveReviewInputAdmission.prepareFocusedMoveReview(
+      history, "a2a3", history.extend(List("a2a3")).toOption.get.currentFen,
+      PositionRuleAssessment.assess(history), roots, focus
+    ).get match
+      case PreparedFocusedPositionCommentary.MoveReview(review) => review.preparedInput
+      case _ => fail("expected an ordinary focused review")
+    assertEquals(prepared.legalLines.size, 3)
+    assertEquals(prepared.evaluationObservations.size, 4)
+    val repeated = prepared.evaluationObservations.filter(_.evaluation.moves == bestMoves)
+    assertEquals(repeated.map(observation => observation.source -> observation.evaluation.engineLine.get.scoreCp),
+      List(EvaluationSource.RootSearch -> 30, EvaluationSource.FocusComparison -> 31))
+    val assembled = MoveReviewAssembler.assemble(prepared)
+    val reference = assembled.line(LineNodeRole.BestReference).get
+    assertEquals(reference.ref.rootMove, "e2e4")
+    assertEquals(reference.evaluation.engineLine.get.scoreCp, 31)
+    // A focused observation can reverse the earlier ranking without erasing
+    // either report or rejecting the independent occurrence assembly.
+    assert(EvidenceBackedJudgmentPacket.fromAssembly(assembled).nonEmpty)
 
   private def admittedReview(playedMove: String): AdmittedMoveReviewInput =
     MoveReviewInputAdmission
@@ -55,7 +172,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(actual.positions, expected.positions)
     assertEquals(actual.legalLines, expected.legalLines)
     assertEquals(actual.transitions, expected.transitions)
-    assertEquals(actual.lineRootOccurrences, expected.lineRootOccurrences)
+    assertEquals(actual.lineTransitionIds, expected.lineTransitionIds)
     assertEquals(
       actual.lineReplays.view.mapValues(_.replaySteps).toMap,
       expected.lineReplays.view.mapValues(_.replaySteps).toMap
@@ -65,13 +182,6 @@ class BestChoiceProductionTest extends munit.FunSuite:
       expected.transitionReplays.view.mapValues(_.replaySteps).toMap
     )
     assertEquals(lowerEvidenceShape(actual), lowerEvidenceShape(expected))
-
-  test("review assembly preserves per-ply lower facts without an assessment packet"):
-    val assembly = MoveReviewAssembler.assemble(admittedReview(ranking.head))
-
-    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(assembly), None)
-    assert(assembly.lineReplays.valuesIterator.exists(_.replaySteps.nonEmpty))
-    assert(assembly.positions.exists(_.role == PositionNodeRole.LineOccurrence))
 
   test("an admitted line cannot be rebound from another root occurrence"):
     val input = admittedReview(ranking.head)
@@ -84,7 +194,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
         )
       )
       .getOrElse(fail("expected a second exact root occurrence"))
-      .playedRootLineOwner
+      .legalLines.head
     val rebound = input.legalLines.map(line =>
       if EvidenceRef.sameMove(line.rootMove, foreign.rootMove) then foreign else line
     )
@@ -105,7 +215,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
     )
 
     assert(EvidenceBackedJudgmentPacket.fromAssembly(complete).nonEmpty)
-    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(lowerOnly), None)
+    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(lowerOnly).map(_.primary), Some(None))
     assertSameLowerAssembly(lowerOnly, complete)
 
   test("a partial best-choice projection cannot suppress lower occurrences"):
@@ -122,7 +232,7 @@ class BestChoiceProductionTest extends munit.FunSuite:
       )
 
     assert(EvidenceBackedJudgmentPacket.fromAssembly(complete).nonEmpty)
-    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(partial), None)
+    assertEquals(EvidenceBackedJudgmentPacket.fromAssembly(partial).map(_.primary), Some(None))
     assertSameLowerAssembly(partial, complete)
 
   private def soleAssessmentRecord(
@@ -149,9 +259,9 @@ class BestChoiceProductionTest extends munit.FunSuite:
       .getOrElse(fail("expected the observed move's unique LegalLine owner"))
     val (assessment, parents) = soleAssessmentRecord(packet)
 
-    assert(packet.primary.isInstanceOf[PlayerFacingPrimary.BestChoice])
+    assert(packet.primary.exists(_.isInstanceOf[PlayerFacingPrimary.BestChoice]))
     assertEquals(assessment.referenceTransition, None)
-    assertEquals(packet.assembly.lineForRootTransition(played).map(_.ref), Some(owner.ref))
+    assertEquals(packet.assembly.lineRootOccurrence(owner.ref), Some(played))
     assertEquals(assessment.reference, assessment.candidate)
     assertEquals(soleComparison(packet).kind, CandidateComparisonKind.BestVsSecond)
     assertEquals(parents.count(_ == owner.lineEvidence), 1)
@@ -173,11 +283,11 @@ class BestChoiceProductionTest extends munit.FunSuite:
     assertEquals(continuationEdges.size, continuationPlyCount)
     assertEquals(continuationPositions.size, continuationPlyCount)
     continuationEdges.foreach { edge =>
-      val owner = assembly.legalLines.find(line => edge.evidence.line.contains(line.ref))
-        .getOrElse(fail("expected the continuation's LegalLine owner"))
       val record = packet.evidenceGraph.record(edge.evidence)
         .getOrElse(fail("expected the continuation transition evidence"))
-      assertEquals(record.parents, List(owner.evidence))
+      val predecessor = positionOccurrenceRecords.find(_.ref.position == edge.from)
+        .getOrElse(fail("expected the historical predecessor"))
+      assertEquals(record.parents, List(predecessor.ref))
       assert(packet.evidenceGraph.proofEligible(record))
       val destination = positionOccurrenceRecords.filter(_.ref.position == edge.to) match
         case exact :: Nil => exact
@@ -191,7 +301,8 @@ class BestChoiceProductionTest extends munit.FunSuite:
     val packet = producedPacket(ranking.head)
     val line = packet.assembly.legalLines.head
     val continuations = packet.assembly.transitions
-      .filter(_.evidence.line.contains(line.ref))
+      .filter(edge => packet.assembly.lineTransitionIds(line.ref).contains(edge.evidence.id) &&
+        edge.role == TransitionEdgeRole.LineContinuation)
       .sortBy(_.to.ply)
     val List(first, second) = continuations: @unchecked
     val occurrence = packet.evidenceGraph.records.collect {
@@ -302,14 +413,14 @@ class BestChoiceProductionTest extends munit.FunSuite:
 
     assert(!graph.proofEligible(forged))
 
-  test("a continuation structural delta cannot lose its exact line parent"):
+  test("a continuation structural delta cannot lose its historical position parents"):
     val packet = producedPacket(ranking.head)
     val structural = packet.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
           if payload.role == TransitionEdgeRole.LineContinuation => record
     }.getOrElse(fail("expected one line-continuation structural delta"))
     val forged = structural.copy(
-      parents = structural.parents.filterNot(_.layer == EvidenceLayer.Line)
+      parents = structural.parents.filterNot(_.layer == EvidenceLayer.PositionOccurrence)
     )
     val graph = TypedEvidenceGraph.empty.addAll(
       packet.evidenceGraph.records.map(record =>

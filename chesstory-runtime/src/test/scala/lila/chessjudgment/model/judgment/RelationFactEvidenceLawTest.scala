@@ -16,7 +16,7 @@ class RelationFactEvidenceLawTest extends munit.FunSuite:
     val replay = CanonicalLineReplay
       .fromLegalReplay(legalReplay)
       .getOrElse(throw new AssertionError(s"expected canonical mapping fixture: $fen $moveUci"))
-    ClosedRelationEvidence.relationProduction(replay, moveUci).relations
+    ClosedRelationEvidence.relationProduction(replay, moveUci).allRelations
 
   test("legal response production and witness validation use the canonical knight promotion suffix"):
     val producedCheckResponses = producedRelations(

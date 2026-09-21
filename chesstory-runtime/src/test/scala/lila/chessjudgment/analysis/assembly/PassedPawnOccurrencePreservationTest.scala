@@ -22,18 +22,19 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
     val line = assembly.legalLines
       .find(line => EvidenceRef.sameMove(line.ref.rootMove, "g6g7"))
       .getOrElse(fail("expected the observed LegalLine"))
-    val root = assembly.lineRootOccurrence(line.ref)
-      .getOrElse(fail("expected the observed root occurrence"))
+    val pathIds = assembly.lineTransitionIds(line.ref).toSet
+    val path = assembly.transitions.filter(edge => pathIds(edge.evidence.id))
     val withoutMiddleStructural = assembly.evidenceGraph.records.filterNot {
       case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
-        ref.line.contains(line.ref) && EvidenceRef.sameMove(payload.moveUci, "h8h7")
+        path.exists(edge => edge.from == payload.from && edge.to == payload.to) &&
+          EvidenceRef.sameMove(payload.moveUci, "h8h7")
       case _ => false
     }
     assertEquals(assembly.evidenceGraph.records.size - withoutMiddleStructural.size, 1)
     val graph = TypedEvidenceGraph.empty.addAll(withoutMiddleStructural)
     val moveRecords = graph.records.collect {
       case record @ EvidenceRecord(ref, payload: MoveTransitionEvidence, _)
-          if ref.id == root.transitionEvidenceId || ref.line.contains(line.ref) =>
+          if pathIds(ref.id) =>
         record -> payload
     }.sortBy(_._2.to.ply)
 
@@ -45,7 +46,8 @@ class PassedPawnOccurrencePreservationTest extends munit.FunSuite:
 
     val promotion = graph.records.collect {
       case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
-          if payload.line.contains(line.ref) && EvidenceRef.sameMove(payload.moveUci, "g7g8q") =>
+          if path.exists(edge => edge.from == payload.from && edge.to == payload.to) &&
+            EvidenceRef.sameMove(payload.moveUci, "g7g8q") =>
         record -> payload
     } match
       case exact :: Nil => exact

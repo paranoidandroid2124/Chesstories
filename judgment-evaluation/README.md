@@ -143,7 +143,9 @@ reference source identity, checksum, page count와 contamination
 explore source를 confirm/blind 근거로 재사용하지 않는다.
 
 레퍼런스 문장·후보 설명·복사 PGN을 저장소 안의 별도 의미 원장으로
-복제하지 않는다. 현재 공개 L2 명제의 page anchor와 형식적 충분조건은
-[`../chesstory-runtime/docs/JudgmentBoundary.md`](../chesstory-runtime/docs/JudgmentBoundary.md)에만
-기록하며, 실제 체스 사실은 언제나 런타임의 인증된 L0/L0.5/L1 producer가
-발급한다.
+복제하지 않는다. 관찰과 커버리지 결손은
+[`references/commentary-reference-ledger.json`](references/commentary-reference-ledger.json)에
+기록한다. 현재 typed L2 producer는 없으며, 런타임의 의미 소유권은
+[`../chesstory-runtime/docs/JudgmentBoundary.md`](../chesstory-runtime/docs/JudgmentBoundary.md)가
+설명한다. 레퍼런스 원장은 증명 전제가 아니며, 실제 체스 사실은 런타임의
+인증된 L0/L0.5/L1 producer가 발급한다.

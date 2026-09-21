@@ -8,27 +8,29 @@ import lila.chessjudgment.model.judgment.*
 object EvidenceFactAssembler:
 
   def enrich(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    enrichTransitions(context, context.transitions)
+
+  /** Retained occurrences already own these records; bind only newly admitted edges. */
+  private[assembly] def enrichTransitions(context: JudgmentAssemblyContext,
+      transitions: List[MoveTransitionEdge]): JudgmentAssemblyContext =
+    if transitions.isEmpty then return context
     val input = context.input
     val allocator = JudgmentProvenanceAllocator.forInput(input)
-    val closedRelationsByOccurrence = closedPositionRelations(context)
+    val closedRelationsByOccurrence = closedPositionRelations(context, transitions)
     val canonicalRelationDeltas = canonicalRelationDeltasFor(
       context,
-      closedRelationsByOccurrence
+      closedRelationsByOccurrence,
+      transitions
     )
-    val lineOwnersByTransitionId = exactLineOwnersByTransitionId(context)
-    val lineRecordsByLine = context.legalLines.map(line =>
-      line.ref -> requiredLineFactRecord(context, line.ref)
-    ).toMap
-    val positionRecordsByPosition = context.positions.map(position =>
-      position.ref -> requiredPositionOccurrenceRecord(context, position.ref)
+    val positionRecordsByPosition = transitions.flatMap(edge => List(edge.from, edge.to)).distinct.map(position =>
+      position -> requiredPositionOccurrenceRecord(context, position)
     ).toMap
     val closedRelationRecords = relationRecords(
       context,
       allocator,
       closedRelationsByOccurrence,
       canonicalRelationDeltas,
-      lineOwnersByTransitionId,
-      lineRecordsByLine
+      transitions
     )
     val baseRecords =
       List.concat(
@@ -38,22 +40,22 @@ object EvidenceFactAssembler:
           allocator,
           canonicalRelationDeltas,
           closedRelationRecords,
-          lineOwnersByTransitionId,
-          lineRecordsByLine,
-          positionRecordsByPosition
+          positionRecordsByPosition,
+          transitions
         )
       )
     context.withEvidence(baseRecords)
 
   private def closedPositionRelations(
-      context: JudgmentAssemblyContext
+      context: JudgmentAssemblyContext,
+      transitions: List[MoveTransitionEdge]
   ): Map[PositionNodeRef, CanonicalPositionRelationSnapshot] =
     val positionScopes = context.positions.map(node => node.ref -> node.role.scope).toMap
     require(
       positionScopes.size == context.positions.size,
       "every registered relation occurrence must own exactly one evidence scope"
     )
-    context.transitions
+    transitions
       .flatMap(edge => List(edge.from, edge.to))
       .distinct
       .map { position =>
@@ -82,9 +84,10 @@ object EvidenceFactAssembler:
     */
   private def canonicalRelationDeltasFor(
       context: JudgmentAssemblyContext,
-      closedRelations: Map[PositionNodeRef, CanonicalPositionRelationSnapshot]
+      closedRelations: Map[PositionNodeRef, CanonicalPositionRelationSnapshot],
+      transitions: List[MoveTransitionEdge]
   ): Map[String, CanonicalRelationDelta] =
-    val deltas = context.transitions.map { edge =>
+    val deltas = transitions.map { edge =>
       val transition = context
         .transitionReplay(edge)
         .flatMap(_.onlyTransition)
@@ -111,55 +114,46 @@ object EvidenceFactAssembler:
       allocator: JudgmentProvenanceAllocator,
       closedRelationsByOccurrence: Map[PositionNodeRef, CanonicalPositionRelationSnapshot],
       canonicalRelationDeltas: Map[String, CanonicalRelationDelta],
-      lineOwnersByTransitionId: Map[String, LegalLineNode],
-      lineRecordsByLine: Map[LineNodeRef, EvidenceRecord]
+      transitions: List[MoveTransitionEdge]
   ): List[EvidenceRecord] =
-    context.transitions.flatMap { edge =>
-      val lineOwner = lineOwnersByTransitionId(edge.evidence.id)
+    transitions.flatMap { edge =>
       val replay = context.transitionReplay(edge).getOrElse(
         throw IllegalArgumentException(
           s"transition '${edge.evidence.id}' has no exact canonical replay"
         )
       )
       val production = ClosedRelationEvidence.relationProduction(replay, edge.moveUci)
-      val closedRelations = production.bindClosedOutput(
+      val closedRelations = production.bind(
         closedRelationsByOccurrence(edge.from),
         closedRelationsByOccurrence(edge.to),
         canonicalRelationDeltas(edge.evidence.id)
       )
-      val lineEvidence = lineRecordsByLine(lineOwner.ref).ref
-      val provisional = production.relations.map { relation =>
+      val provisional = production.allRelations.map { relation =>
         RelationFactEvidence.record(
           id = allocator.evidenceId(
-            s"relation:transition:${exactIdentityKey(List(edge.evidence.id, RelationFactKind.id(relation.kind), relation.semanticId))}"
+            s"relation:transition:${EvidenceIdentity.digest(List(edge.evidence.id, RelationFactKind.id(relation.kind), relation.semanticId))}"
           ),
           payload = relation,
           position = edge.from,
-          line = Some(lineOwner.ref),
-          scope = EvidenceScope.LegalLine,
+          line = None,
+          scope = edge.role.scope,
           confidence = EvidenceConfidence.LegalReplayVerified
         )
       }
       closedRelations.materializeOccurrence(
         occurrenceId = allocator.evidenceId(s"closed-relation-occurrence:${edge.evidence.id}"),
         edge = edge,
-        lineOwner = lineOwner.ref,
-        lineEvidence = lineEvidence,
         outputRecords = provisional
       )
     }
-
-  private def exactIdentityKey(parts: Iterable[String]): String =
-    parts.iterator.map(value => s"${value.length}:$value").mkString("|")
 
   private def structuralDeltaRecords(
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
       canonicalRelationDeltas: Map[String, CanonicalRelationDelta],
       relationRecords: List[EvidenceRecord],
-      lineOwnersByTransitionId: Map[String, LegalLineNode],
-      lineRecordsByLine: Map[LineNodeRef, EvidenceRecord],
-      positionRecordsByPosition: Map[PositionNodeRef, EvidenceRecord]
+      positionRecordsByPosition: Map[PositionNodeRef, EvidenceRecord],
+      transitions: List[MoveTransitionEdge]
   ): List[EvidenceRecord] =
     val occurrencesById = relationRecords.collect {
       case EvidenceRecord(ref, occurrence: ClosedRelationOccurrenceEvidence, _) => ref.id -> occurrence
@@ -176,11 +170,10 @@ object EvidenceFactAssembler:
         )
       case _ => Nil
     }.groupMap(_._1)(_._2)
-    context.transitions.flatMap { edge =>
+    transitions.flatMap { edge =>
       for
         transitionReplay <- context.transitionReplay(edge)
         replayTransition <- transitionReplay.onlyTransition
-        line = lineOwnersByTransitionId(edge.evidence.id)
         consequences = replayTransition.structuralConsequences
         delta = StructuralDeltaAnalyzer.bind(
           transition = replayTransition,
@@ -213,7 +206,6 @@ object EvidenceFactAssembler:
         parentOccurrences =
           List(
             edge.evidence,
-            lineRecordsByLine(line.ref).ref,
             positionRecordsByPosition(edge.from).ref,
             positionRecordsByPosition(edge.to).ref
           ) ++
@@ -228,39 +220,12 @@ object EvidenceFactAssembler:
           delta = delta,
           transition = edge,
           replay = transitionReplay,
-          line = Some(line.ref),
+          line = None,
           resultPremiseSources = resultPremiseSources,
           parents = parentOccurrences
         )
       yield record
     }
-
-  private def exactLineOwnersByTransitionId(
-      context: JudgmentAssemblyContext
-  ): Map[String, LegalLineNode] =
-    val owners = context.transitions.map { edge =>
-      edge.evidence.id -> context.lineForTransition(edge).getOrElse(
-        throw IllegalArgumentException(
-          s"transition '${edge.evidence.id}' has no exact LegalLine owner"
-        )
-      )
-    }
-    require(
-      owners.map(_._1).distinct.size == owners.size,
-      "one transition occurrence cannot have multiple LegalLine owners"
-    )
-    owners.toMap
-
-  private def requiredLineFactRecord(
-      context: JudgmentAssemblyContext,
-      line: LineNodeRef
-  ): EvidenceRecord =
-    context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(line) match
-      case Some((record, _)) => record
-      case None =>
-        throw IllegalArgumentException(
-          s"line '${line.id}' has no unique proof-eligible line-fact carrier"
-        )
 
   private def requiredPositionOccurrenceRecord(
       context: JudgmentAssemblyContext,

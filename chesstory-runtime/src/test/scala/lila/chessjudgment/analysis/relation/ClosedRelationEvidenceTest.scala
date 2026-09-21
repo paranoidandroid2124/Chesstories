@@ -4,19 +4,17 @@ import chess.{ Black, White }
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.judgment.{
   CanonicalLineReplay,
+  ClosedRelationTransitionInventory,
   EvidencePieceRole,
   EvidenceSquare,
-  RelationCheckResponseMode,
   RelationControlTarget,
   RelationFactEvidence,
   RelationFactKind,
   RelationPawnConnectionDirection,
   RelationPawnConnectionKind,
   RelationPawnConnectionWitness,
-  RelationPawnTopologyFacet,
   RelationPieceWitness,
-  RelationWitnessDetail,
-  VerticalRelationPremiseRole
+  RelationWitnessDetail
 }
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
@@ -25,7 +23,7 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
   private def production(
       fen: String,
       moves: List[String]
-  ): ClosedRelationEvidence.RelationProduction =
+  ): ClosedRelationTransitionInventory =
     val legalReplay = PrincipalVariationEvidence
       .legalMoveReplay(fen, moves, startPly = 0)
       .getOrElse(fail(s"expected legal replay: $fen ${moves.mkString(" ")}"))
@@ -35,13 +33,15 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
     ClosedRelationEvidence.relationProduction(replay, moves.head)
 
   private def relations(fen: String, moves: List[String]): List[RelationFactEvidence] =
-    production(fen, moves).relations
+    production(fen, moves).allRelations
 
-  private def hasCreatedDoubleCheck(relation: RelationFactEvidence): Boolean =
-    relation.detail match
-      case RelationWitnessDetail.CreatedCheckResponseInventory(_, _, _, checkers, _, _, _, _) =>
-        checkers.size >= 2
-      case _ => false
+  test("production returns the existing replay inventory and rejects another root move"):
+    val replay = PrincipalVariationEvidence.legalMoveReplay(
+      chess.variant.Standard.initialFen.value, List("g1f3"), startPly = 0
+    ).flatMap(CanonicalLineReplay.fromLegalReplay).get
+    val inventory = replay.onlyTransition.get.closedRelationInventory
+    assert(ClosedRelationEvidence.relationProduction(replay, "g1f3") eq inventory)
+    intercept[IllegalArgumentException](ClosedRelationEvidence.relationProduction(replay, "b1c3"))
 
   test("control-set deltas certify the last controller of an empty square"):
     val emptySquare = relations(
@@ -68,22 +68,6 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
           ) =>
         target.key == "f6" && before.map(_.square.key) == List("f1") && after.isEmpty &&
           removed == before && established.isEmpty
-      case _ => false
-    )
-
-  test("fresh double check retains both exact checkers"):
-    val freshDoubleChecks = relations(
-      "4k3/8/r7/8/8/8/4B3/4R1K1 w - - 0 1",
-      List("e2b5")
-    ).filter(hasCreatedDoubleCheck)
-
-    assertEquals(freshDoubleChecks.size, 1)
-    assertEquals(freshDoubleChecks.head.lineMoves, List("e2b5"))
-    assert(freshDoubleChecks.head.detail match
-      case RelationWitnessDetail.CreatedCheckResponseInventory(_, Black, kingSquare, checkers, _, _, _, _) =>
-        kingSquare.key == "e8" &&
-          checkers.map(checker => checker.square.key -> checker.role.name.toLowerCase).toSet ==
-            Set("b5" -> "bishop", "e1" -> "rook")
       case _ => false
     )
 

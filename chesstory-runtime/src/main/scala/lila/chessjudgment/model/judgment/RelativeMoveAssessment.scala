@@ -102,9 +102,16 @@ object EvalComparison:
       reference: CandidateLineNode,
       candidate: CandidateLineNode
   ): Option[EvalComparison] =
-    VerdictConfidence.fromEvaluations(reference.evaluation, candidate.evaluation).map { _ =>
+    fromEvaluations(mover, reference.evaluation, candidate.evaluation)
+
+  def fromEvaluations(
+      mover: Color,
+      reference: CandidateLineEvaluation,
+      candidate: CandidateLineEvaluation
+  ): Option[EvalComparison] =
+    VerdictConfidence.fromEvaluations(reference, candidate).map { _ =>
       val (candidateWinPercentDeltaForMover, detail) =
-        (reference.evaluation, candidate.evaluation) match
+        (reference, candidate) match
           case (CandidateLineEvaluation.EngineSearch(referenceLine), CandidateLineEvaluation.EngineSearch(candidateLine)) =>
             val delta =
               PerspectiveMath.compareForMover(
@@ -118,7 +125,7 @@ object EvalComparison:
             )
           case _ =>
             (
-              candidate.evaluation.winPercentForMover(mover) - reference.evaluation.winPercentForMover(mover)
+              candidate.winPercentForMover(mover) - reference.winPercentForMover(mover)
             ) -> CandidateComparisonDeltaDetail.OutcomeOnly
       val winPercentLossForMover = (-candidateWinPercentDeltaForMover).max(0.0)
       EvalComparison(

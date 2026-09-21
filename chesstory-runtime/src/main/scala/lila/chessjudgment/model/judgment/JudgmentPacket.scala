@@ -17,9 +17,26 @@ enum PlayerFacingPrimary:
   case BestChoice(comparisonEvidence: EvidenceRef)
 
 final class EvidenceBackedJudgmentPacket private (
-    private[chessjudgment] val assembly: JudgmentAssemblyContext,
-    val primary: PlayerFacingPrimary
+    val assembly: JudgmentAssemblyContext,
+    val primary: Option[PlayerFacingPrimary]
 ):
+  private val observationsByOccurrence = scala.collection.mutable.Map.empty[
+    String, List[lila.chessjudgment.analysis.assembly.MoveObservation]]
+
+  /** Full and selected views reuse the same immutable occurrence observations. */
+  def observationsFor(occurrenceIds: Set[String]): List[lila.chessjudgment.analysis.assembly.MoveObservation] =
+    observationsByOccurrence.synchronized {
+      val selected = assembly.transitions.filter(edge => occurrenceIds(edge.evidence.id))
+      val missing = selected.iterator.map(_.evidence.id).filterNot(observationsByOccurrence.contains).toSet
+      if missing.nonEmpty then
+        val generated = lila.chessjudgment.analysis.assembly.OccurrenceCommentary.fromAssembly(assembly, missing)
+          .groupBy(_.transition.evidence.id)
+        missing.foreach(id => observationsByOccurrence.update(id, generated.getOrElse(id, Nil)))
+      selected.flatMap(edge => observationsByOccurrence(edge.evidence.id))
+    }
+
+  lazy val observations = observationsFor(assembly.transitions.iterator.map(_.evidence.id).toSet)
+  lazy val resources = lila.chessjudgment.analysis.assembly.OccurrenceResources.fromAssembly(assembly)
   def candidateLines: List[CandidateLineNode] = assembly.lines
 
   def evidenceGraph: TypedEvidenceGraph = assembly.evidenceGraph
@@ -28,7 +45,9 @@ object EvidenceBackedJudgmentPacket:
   def fromAssembly(
       assembly: JudgmentAssemblyContext
   ): Option[EvidenceBackedJudgmentPacket] =
-    selectPrimary(assembly).map(new EvidenceBackedJudgmentPacket(assembly, _))
+    assembly.playedTransition.filter(edge => assembly.evidenceGraph.record(edge.evidence).exists(record =>
+      edge.matches(record) && assembly.evidenceGraph.proofEligible(record)
+    )).map(_ => new EvidenceBackedJudgmentPacket(assembly, selectPrimary(assembly)))
 
   /** Projects only the selected Assessment chain. Unrelated occurrence records
     * retain their own graph-local proof eligibility.

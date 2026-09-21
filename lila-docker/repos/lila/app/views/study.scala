@@ -12,14 +12,6 @@ object study:
   private lazy val listUi = lila.study.ui.ListUi(UiEnv, studyBits)
   private lazy val analyseUi = lila.analyse.ui.AnalyseUi(UiEnv)(UiEnv.analyseEndpoints)
 
-  private def moveReviewConfig: JsObject =
-    val mode = UiEnv.env.config
-      .getOptional[String]("chesstory.moveReview.mode")
-      .map(_.trim.toLowerCase)
-      .filter(Set("off", "runtime"))
-      .getOrElse("off")
-    Json.obj("mode" -> mode)
-
   private def chapterCountLabel(chapters: List[Chapter.IdName]): String =
     val size = chapters.size
     s"$size ${if size == 1 then "chapter" else "chapters"}"
@@ -75,7 +67,7 @@ object study:
           .obj(
             "data" -> data,
             "study" -> studyCfgBase,
-            "moveReview" -> moveReviewConfig
+            "moveReview" -> analyse.moveReviewConfig
           ) ++ analyseUi.explorerAndCevalConfig
 
       Page(s"${study.name.value} • ${chapter.name.value}")

@@ -7,24 +7,15 @@ object TransitionFactNormalizer:
 
   def fromMoveTransition(
       edge: MoveTransitionEdge,
-      replay: CanonicalLineReplay
-  ): EvidenceRecord =
-    require(
-      edge.role != TransitionEdgeRole.LineContinuation && edge.evidence.line.isEmpty,
-      "a root transition cannot claim suffix line ownership"
-    )
-    moveTransitionRecord(edge, replay, Nil)
-
-  def fromLineContinuation(
-      edge: MoveTransitionEdge,
       replay: CanonicalLineReplay,
-      lineOwner: EvidenceRef
+      predecessor: EvidenceRef
   ): EvidenceRecord =
     require(
-      edge.role == TransitionEdgeRole.LineContinuation && edge.evidence.line == lineOwner.line,
-      "a line continuation must retain its exact LegalLine owner"
+      edge.evidence.line.isEmpty && predecessor.position == edge.from &&
+        predecessor.layer == EvidenceLayer.PositionOccurrence,
+      "a transition must retain its historical predecessor"
     )
-    moveTransitionRecord(edge, replay, List(lineOwner))
+    moveTransitionRecord(edge, replay, List(predecessor))
 
   private def moveTransitionRecord(
       edge: MoveTransitionEdge,
