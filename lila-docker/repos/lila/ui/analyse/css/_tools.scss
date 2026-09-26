@@ -4,7 +4,7 @@
   position: relative;
   background: $c-bg-box;
   border: 1px solid $c-border;
-  border-radius: 0;
+  border-radius: 12px;
   box-shadow: none;
 
   .ceval {
@@ -43,6 +43,16 @@
         color: $c-link-hover;
       }
     }
+  }
+}
+
+.analyse__live-engine {
+  flex: none;
+  > summary {
+    padding: 0.75rem 1.25rem;
+    color: $c-font-dim;
+    font-size: 0.85rem;
+    cursor: pointer;
   }
 }
 
@@ -139,6 +149,8 @@
   align-items: stretch;
   border: 1px solid $c-border;
   background: $c-bg-low;
+  border-radius: 8px;
+  align-self: start;
 
   div {
     display: flex;

@@ -6,12 +6,24 @@ import { setupPosition } from 'chessops/variant';
 import { attacks } from 'chessops/attacks';
 import { isMoveReviewEngineProfile } from 'lib/ceval/types';
 
-export type CommentaryState = 'ready' | 'partial' | 'needs_explanation';
+export interface CommentaryEffect {
+  scope: 'pair_difference' | 'line_history' | 'check_sequence' |
+    'support_handoff' | 'support_use' | 'support_retention' | 'piece_route' | 'blocker_handoff' | 'clearance_use' |
+    'pawn_option' | 'capture_choice' | 'advance_choice' | 'relative_pin' | 'capture_release';
+  line_ids: string[];
+  prefix_moves_uci: Uci[];
+  through_plies: number[];
+  attack_ply?: number;
+  actor: CommentaryInquiryPiece;
+  target: CommentaryInquiryPiece | null;
+  square: Key;
+  occurrence_ids: string[];
+  evidence_ids: string[];
+}
 
 export interface CommentaryCandidate {
   id: string;
   kind: 'local_fact' | 'conditional_line' | 'comparison';
-  state: CommentaryState;
   selection: 'selected' | 'display_cap' | 'display_representative' | 'context';
   rootOccurrenceId: string;
   occurrenceIds: string[];
@@ -25,7 +37,7 @@ export interface CommentaryCandidate {
     accepted_ply_count: number;
     stop: string | null;
   }[];
-  detail: Record<string, unknown> & { type: string };
+  detail: Record<string, unknown> & { type: string; effects?: CommentaryEffect[] };
 }
 
 export interface CommentaryScene {
@@ -34,11 +46,10 @@ export interface CommentaryScene {
   occurrenceIds: string[];
   lineIds: string[];
   candidateIds: string[];
-  state: CommentaryState;
 }
 
 export interface CommentarySelection {
-  version: 1;
+  version: 2;
   candidates: CommentaryCandidate[];
   scenes: CommentaryScene[];
   inquiries?: CommentaryInquiry[];
@@ -317,6 +328,11 @@ export interface CommentaryResponseSearch {
   child_position_id: string;
   prefix_moves_uci?: Uci[];
   ply_offset?: number;
+  proposal_ownership?: {
+    work_id: string;
+    execution_key_sha256: string;
+    question_refs: { proposal_id: string; requirement_id: string }[];
+  };
   root_restriction: { kind: 'unrestricted' } | { kind: 'restricted'; moves_uci: Uci[] };
   candidates: {
     move_uci: Uci;
@@ -868,6 +884,15 @@ export const targetResponseDetail = (
   candidate.kind === 'comparison' && candidate.detail.type === 'target_response_comparison'
     ? (candidate.detail as unknown as CommentaryTargetResponseDetail)
     : undefined;
+
+function targetResponseComplete(detail: CommentaryTargetResponseDetail): boolean {
+  return detail.branches.every(branch =>
+    branch.providers.state !== 'unknown' &&
+    branch.recaptures.state !== 'unknown' &&
+    (!branch.recaptures.moves.length || branch.observed_recapture.state === 'complete'),
+  );
+}
+
 export interface CommentaryPvComparisonDetail {
   type: 'pv_comparison';
   scope: 'observed_lines';
@@ -926,7 +951,6 @@ export interface CommentaryInquiry {
   assessment_effect?: 'unchanged' | 'refreshed' | 'needs_refresh';
   ordering_candidate_ids?: string[];
   explanation_candidate_ids?: string[];
-  next_evidence?: 'inspect_existing' | 'compare_roots' | 'unresolved';
 }
 export interface CommentaryInquiryContext {
   rootFen: FEN;
@@ -939,8 +963,6 @@ const object = (v: unknown): v is Record<string, unknown> =>
 const id = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v.length <= 1024;
 const ids = (v: unknown): v is string[] =>
   Array.isArray(v) && v.length <= 10000 && v.every(id) && new Set(v).size === v.length;
-const state = (v: unknown): v is CommentaryState =>
-  v === 'ready' || v === 'partial' || v === 'needs_explanation';
 const exactKeys = (v: Record<string, unknown>, required: string[], optional: string[] = []): boolean =>
   required.every(k => k in v) && Object.keys(v).every(k => required.includes(k) || optional.includes(k));
 const integer = (v: unknown, min: number, max: number): v is number =>
@@ -1358,7 +1380,7 @@ function decodeResponseSearches(
           'root_restriction',
           'candidates',
         ],
-        ['prefix_moves_uci', 'ply_offset'],
+        ['prefix_moves_uci', 'ply_offset', 'proposal_ownership'],
       ) ||
       typeof raw.work_id !== 'string' ||
       !/^work:[0-9]+$/.test(raw.work_id) ||
@@ -1375,6 +1397,15 @@ function decodeResponseSearches(
       raw.candidates.length !== raw.multi_pv
     )
       return;
+    const ownership = raw.proposal_ownership;
+    if (ownership !== undefined && (
+      !object(ownership) || !exactKeys(ownership, ['work_id', 'execution_key_sha256', 'question_refs']) ||
+      ownership.work_id !== raw.work_id || ownership.execution_key_sha256 !== raw.execution_key_sha256 ||
+      !Array.isArray(ownership.question_refs) || !ownership.question_refs.length || ownership.question_refs.length > 600 ||
+      !ownership.question_refs.every(ref => object(ref) && exactKeys(ref, ['proposal_id', 'requirement_id']) &&
+        proposalId(ref.proposal_id) && proposalId(ref.requirement_id)) ||
+      new Set(ownership.question_refs.map(ref => `${ref.proposal_id}/${ref.requirement_id}`)).size !== ownership.question_refs.length
+    )) return;
     const prefix = raw.prefix_moves_uci === undefined ? [raw.root_move] : raw.prefix_moves_uci;
     if (
       !Array.isArray(prefix) ||
@@ -1528,9 +1559,7 @@ function decodeResponseInquiries(
       !id(raw.reference_move) ||
       !id(raw.alternative_move) ||
       !ids(raw.related_inquiry_ids) ||
-      raw.related_inquiry_ids.length > 1 ||
       !ids(raw.pressure_source_ids) ||
-      !raw.pressure_source_ids.length ||
       !ids(raw.capture_moves) ||
       !raw.capture_moves.length ||
       !ids(raw.decline_moves) ||
@@ -1598,24 +1627,19 @@ function decodeResponseInquiries(
       samePiece(piece.original, original as unknown as CommentaryInquiryPiece),
     );
     if (!tracked || !samePiece(tracked.current, target as unknown as CommentaryInquiryPiece)) return;
-    if (
-      !raw.pressure_source_ids.every(source =>
-        position.controls.pieces.some(
-          control =>
-            control.piece.side !== original.side &&
-            control.source_ids.some(
-              (entry, index) => entry === source && control.squares[index] === original.square,
-            ),
-        ) || child.controls.pieces.some(
-          control => control.piece.side !== target.side && control.source_ids.some(
-            (entry, index) => entry === source && control.squares[index] === target.square,
-          ),
-        ),
-      )
-    )
-      return;
+    const pressureSources = [
+      ...position.controls.pieces.flatMap(control => control.piece.side === original.side ? [] :
+        control.source_ids.filter((_, index) => control.squares[index] === original.square)),
+      ...child.controls.pieces.flatMap(control => control.piece.side === target.side ? [] :
+        control.source_ids.filter((_, index) => control.squares[index] === target.square)),
+    ];
     const captures = child.legal_moves.moves.filter(move => move.captured_square === target.square);
     const declines = child.legal_moves.moves.filter(move => move.captured_square !== target.square);
+    if (
+      !sameIds(raw.pressure_source_ids, pressureSources) ||
+      (!pressureSources.length && !captures.some(move => move.captured_square !== move.destination))
+    )
+      return;
     if (
       !sameIds(
         raw.capture_moves,
@@ -2137,7 +2161,7 @@ function decodeInquiries(
           'stop_reason',
           'answer',
         ],
-        ['assessment_effect', 'ordering_candidate_ids', 'explanation_candidate_ids', 'next_evidence'],
+        ['assessment_effect', 'ordering_candidate_ids', 'explanation_candidate_ids'],
       ) ||
       !id(raw.id) ||
       raw.scope !== 'root_choice' ||
@@ -2410,7 +2434,7 @@ function decodeInquiries(
             raw.alternative_move,
           );
     if (answer === undefined) return;
-    const extras = ['ordering_candidate_ids', 'explanation_candidate_ids', 'next_evidence'];
+    const extras = ['ordering_candidate_ids', 'explanation_candidate_ids'];
     if (extras.some(key => key in raw)) {
       if (
         !extras.every(key => key in raw) ||
@@ -2462,17 +2486,6 @@ function decodeInquiries(
         )
       )
         return;
-      const expectedNext =
-        raw.assessment_effect === 'needs_refresh'
-          ? 'compare_roots'
-          : answer
-            ? matching.some(candidate => candidate.state === 'ready')
-              ? 'inspect_existing'
-              : 'unresolved'
-            : raw.state === 'awaiting_engine' || raw.state === 'deferred'
-              ? 'compare_roots'
-              : 'unresolved';
-      if (raw.next_evidence !== expectedNext) return;
     }
     inquiries.push({ ...raw, reasons, answer } as unknown as CommentaryInquiry);
   }
@@ -2618,7 +2631,7 @@ function decodePvComparison(
         'quality_band',
         'text',
       ],
-      ['continuation_candidate_ids', 'continuation_comparison_ids'],
+      ['continuation_candidate_ids', 'continuation_comparison_ids', 'effects'],
     ) ||
     detail.type !== 'pv_comparison' ||
     detail.scope !== 'observed_lines' ||
@@ -2706,9 +2719,7 @@ function decodePvComparison(
       );
     }) ||
     detail.quality_band !==
-      qualityBand(answer.reference_evaluation, answer.alternative_evaluation, root.turn) ||
-    raw.state !==
-      ([materialRelation, eventRelation, rootRelation].includes('different') ? 'ready' : 'needs_explanation')
+      qualityBand(answer.reference_evaluation, answer.alternative_evaluation, root.turn)
   )
     return;
   const sourceRefs = raw.source_refs as CommentaryCandidate['sourceRefs'];
@@ -2784,7 +2795,6 @@ function decodeTargetResponse(
       ),
     );
   const piecesAt = (path: ObservationPath, ply: number) => trackedPieces(path, ply) ?? [];
-  let complete = true;
   const used: ObservationPath[] = [];
   for (const [index, branch] of detail.branches.entries()) {
     if (
@@ -2957,15 +2967,8 @@ function decodeTargetResponse(
       )
         return;
     }
-    if (
-      providerState === 'unknown' ||
-      recaptureState === 'unknown' ||
-      (moves.length > 0 && observed.state !== 'complete')
-    )
-      complete = false;
   }
   if (
-    raw.state !== (complete ? 'ready' : 'partial') ||
     !sameIds(
       raw.line_ids as string[],
       used.map(path => path.id),
@@ -3817,16 +3820,6 @@ function decodeLineContinuation(
     )
       return;
   }
-  const partial =
-    events.some(event => event.actor_end.state === 'unknown') ||
-    detail.support_comparisons.some(comparison => {
-      const value = comparison as CommentaryLineContinuationDetail['support_comparisons'][number];
-      return (
-        value.state === 'unknown' ||
-        value.targets.some(target => target.before.state === 'unknown' || target.after.state === 'unknown')
-      );
-    });
-  if (raw.state !== (partial ? 'partial' : 'ready')) return;
   return detail as unknown as CommentaryLineContinuationDetail;
 }
 
@@ -3839,7 +3832,6 @@ function validContinuationComparison(
   if (
     !exactKeys(detail, ['type', 'scope', 'continuation_candidate_ids', 'differences', 'text']) ||
     detail.scope !== 'observed_line_pair' ||
-    candidate.state !== 'ready' ||
     candidate.selection !== 'context' ||
     candidate.lineIds.length !== 2 ||
     !ids(detail.continuation_candidate_ids) ||
@@ -5271,24 +5263,51 @@ function proposalFactSourcesValid(
   );
 }
 
-function proposalContainsResponsePool(
+export function proposalContainsResponsePool(
   proposals: CommentaryProposal[],
   search: CommentaryResponseSearch,
 ): boolean {
   if (search.root_restriction.kind !== 'restricted') return false;
   const pool = search.root_restriction.moves_uci;
   const prefix = responseSearchPrefix(search);
-  return proposals.some(proposal =>
-    proposal.requirements.some(
-      reading =>
-        reading.kind === 'compare_moves' &&
-        // A question can reopen at a deeper depth. Its old, independently validated
-        // search still belongs to this exact pool, but is not its current answer.
-        reading.prefix_moves_uci.length === prefix.length &&
+  if (search.proposal_ownership !== undefined) {
+    // Issued owners certify this retained work, not the sufficiency of today's answers.
+    const ownership = search.proposal_ownership;
+    const issued = ownership.question_refs.flatMap(ref => {
+      const reading = proposals.find(proposal => proposal.id === ref.proposal_id)?.requirements
+        .find(reading => reading.id === ref.requirement_id);
+      return reading?.kind === 'compare_moves' ? [reading] : [];
+    });
+    return ownership.work_id === search.work_id && ownership.execution_key_sha256 === search.execution_key_sha256 &&
+      issued.length > 0 && issued.length === ownership.question_refs.length &&
+      new Set(ownership.question_refs.map(ref => `${ref.proposal_id}/${ref.requirement_id}`)).size === issued.length &&
+      issued.every(reading => reading.prefix_moves_uci.length === prefix.length &&
         reading.prefix_moves_uci.every((move, index) => move === prefix[index]) &&
-        sameIds(pool, [reading.reference_move, reading.alternative_move]),
+        reading.reference_move === issued[0].reference_move) &&
+      pool.length >= 2 && pool.length <= 3 &&
+      sameIds(pool, [...new Set(issued.flatMap(reading => [reading.reference_move, reading.alternative_move]))]);
+  }
+  const pairs = proposals.flatMap(proposal =>
+    proposal.requirements.filter(
+      (reading): reading is CommentaryProposalReading & { kind: 'compare_moves' } =>
+        reading.kind === 'compare_moves' &&
+        reading.prefix_moves_uci.length === prefix.length &&
+        reading.prefix_moves_uci.every((move, index) => move === prefix[index]),
     ),
   );
+  const owned = pairs.filter(reading => reading.work_id === search.work_id);
+  if (owned.length) {
+    const moves = [...new Set(owned.flatMap(reading => [reading.reference_move, reading.alternative_move]))];
+    return (
+      owned.every(reading =>
+        ['answered', 'supported', 'refuted'].includes(reading.state) &&
+        reading.stop_reason === null && reading.answer?.work_id === search.work_id) &&
+      moves.length >= 2 && moves.length <= 3 && sameIds(pool, moves)
+    );
+  }
+  // A question can reopen at a deeper depth. Its old, independently validated
+  // search still belongs to this exact pair, but is not its current answer.
+  return pairs.some(reading => sameIds(pool, [reading.reference_move, reading.alternative_move]));
 }
 
 function decodeDiscovery(
@@ -5359,7 +5378,7 @@ export function decodeCommentarySelection(
         'discovery',
       ],
     ) ||
-    value.version !== 1 ||
+    value.version !== 2 ||
     !Array.isArray(value.candidates) ||
     value.candidates.length > 10000 ||
     !Array.isArray(value.scenes) ||
@@ -5368,7 +5387,7 @@ export function decodeCommentarySelection(
     return;
   const paths = new Map(observations.paths.map(p => [p.id, p]));
   const occurrences = new Set(observations.paths.flatMap(p => p.occurrenceIds).filter(id));
-  const positions = new Set(observations.positions?.map(p => p.id));
+  const positions = new Map(observations.positions?.map(p => [p.id, p] as const));
   let responseSearches: CommentaryResponseSearch[] | undefined;
   let rootSearches: CommentaryRootSearch[] | undefined;
   let responseInquiries: CommentaryResponseInquiry[] | undefined;
@@ -5429,6 +5448,8 @@ export function decodeCommentarySelection(
     if (!continuationInquiries) return;
   }
   if (
+    responseSearches?.some(search => search.proposal_ownership !== undefined &&
+      !proposalContainsResponsePool(proposals ?? [], search)) ||
     responseSearches?.some(
       search =>
         search.root_restriction.kind === 'restricted' &&
@@ -5478,7 +5499,6 @@ export function decodeCommentarySelection(
         [
           'id',
           'kind',
-          'state',
           'selection',
           'root_occurrence_id',
           'occurrence_ids',
@@ -5491,7 +5511,6 @@ export function decodeCommentarySelection(
         ['highlight'],
       ) ||
       !id(raw.id) ||
-      !state(raw.state) ||
       !['local_fact', 'conditional_line', 'comparison'].includes(String(raw.kind)) ||
       !['selected', 'display_cap', 'display_representative', 'context'].includes(String(raw.selection)) ||
       !id(raw.root_occurrence_id) ||
@@ -5514,6 +5533,9 @@ export function decodeCommentarySelection(
       raw.detail.text !== undefined &&
       (typeof raw.detail.text !== 'string' || !raw.detail.text.trim() || raw.detail.text.length > 4000)
     )
+      return;
+    if (raw.detail.summary !== undefined &&
+      (typeof raw.detail.summary !== 'string' || !raw.detail.summary.trim() || raw.detail.summary.length > 4000))
       return;
     const usedPaths = raw.line_ids.map(v => paths.get(v)!);
     // A missing comparison path may leave only its actual decision anchor. It
@@ -5567,7 +5589,7 @@ export function decodeCommentarySelection(
       if (
         !context || 'highlight' in raw ||
         !exactKeys(detail, ['type', 'scope', 'prefix_moves_uci', 'reference_move', 'alternative_move',
-          'perspective', 'question_refs', 'evaluation_relation', 'stop_reason', 'text']) ||
+          'perspective', 'question_refs', 'evaluation_relation', 'stop_reason', 'text'], ['effects', 'summary']) ||
         detail.scope !== 'same_position_pair' || !factMoves(prefix) || prefix.length >= 80 ||
         !factMoves([detail.reference_move, detail.alternative_move]) || detail.reference_move === detail.alternative_move ||
         !['white', 'black'].includes(String(detail.perspective)) ||
@@ -5615,10 +5637,10 @@ export function decodeCommentarySelection(
         })) return;
       } catch (_) { return; }
       if (answer) {
-        if (raw.state !== 'ready' || detail.evaluation_relation !== answer.evaluation_relation ||
+        if (detail.evaluation_relation !== answer.evaluation_relation ||
           !sameIds(raw.line_ids, [answer.reference_line_id, answer.alternative_line_id]) ||
           ![answer.reference_occurrence_id, answer.alternative_occurrence_id].every(id => occurrenceIds.includes(id))) return;
-      } else if (raw.state !== 'partial' || raw.selection !== 'context' || detail.evaluation_relation !== null) return;
+      } else if (raw.selection !== 'context' || detail.evaluation_relation !== null) return;
     } else if (raw.kind === 'comparison' && raw.detail.type === 'line_continuation_comparison') {
       // Both referenced line profiles are decoded before the pair is validated below.
     } else if (raw.kind === 'comparison' && raw.detail.type === 'target_response_comparison') {
@@ -5644,7 +5666,10 @@ export function decodeCommentarySelection(
       const available = (value: unknown): value is string | null =>
         value === null || (id(value) && (raw.line_ids as string[]).includes(value));
       if (
-        !['evaluation_comparison', 'observed_material_comparison'].includes(raw.detail.type) ||
+        raw.detail.type !== 'root_comparison' ||
+        !exactKeys(detail, ['type', 'scope', 'comparison_evidence_id', 'comparison_kind',
+          'reference_line_id', 'candidate_line_id', 'missing_line_ids', 'material_relation',
+          'material_unavailable_reason', 'text'], ['perspective', 'reference_net_cp', 'candidate_net_cp', 'effects', 'summary']) ||
         !available(reference) ||
         !available(candidate) ||
         (reference !== null && reference === candidate) ||
@@ -5657,27 +5682,22 @@ export function decodeCommentarySelection(
         detail.scope !== 'observed_lines'
       )
         return;
-      if ((reference === null || candidate === null) && raw.state !== 'partial') return;
-      const expectedRelation =
-        raw.state === 'ready' ? 'different' : raw.state === 'needs_explanation' ? 'equal' : 'unavailable';
+      const unavailable = detail.material_relation === 'unavailable';
       if (
-        detail.material_relation !== expectedRelation ||
-        (raw.state === 'ready' && detail.explanation_gap !== null) ||
-        (raw.state === 'needs_explanation' && detail.explanation_gap !== 'beyond_material_scope') ||
-        (raw.state === 'partial' &&
-          !['missing_path', 'incomplete_line', 'material_evidence_unavailable'].includes(
-            String(detail.explanation_gap),
-          )) ||
-        ((reference === null || candidate === null) && detail.explanation_gap !== 'missing_path')
+        !['different', 'equal', 'unavailable'].includes(String(detail.material_relation)) ||
+        (!unavailable && detail.material_unavailable_reason !== null) ||
+        (unavailable && !['missing_path', 'incomplete_line', 'material_evidence_unavailable'].includes(
+          String(detail.material_unavailable_reason),
+        )) ||
+        ((reference === null || candidate === null) && detail.material_unavailable_reason !== 'missing_path') ||
+        (reference !== null && candidate !== null && detail.material_unavailable_reason === 'missing_path')
       )
         return;
-      // A score-only comparison is not a completed account of its chess reason.
-      if ((detail.type === 'observed_material_comparison') !== (raw.state === 'ready')) return;
       const left = reference === null ? undefined : paths.get(reference)?.lineSummary;
       const right = candidate === null ? undefined : paths.get(candidate)?.lineSummary;
-      if (raw.state !== 'partial' && (!left?.material || !right?.material)) return;
+      if (!unavailable && (!left?.material || !right?.material)) return;
       if (
-        raw.state !== 'partial' &&
+        !unavailable &&
         left &&
         right &&
         (exchangeSignature(left) === exchangeSignature(right)) !== (detail.material_relation === 'equal')
@@ -5694,9 +5714,9 @@ export function decodeCommentarySelection(
           detail.candidate_net_cp !== right.material.net_cp)
       )
         return;
-      if (raw.state !== 'partial' && !hasMaterial) return;
+      if (unavailable ? hasMaterial : !hasMaterial) return;
       if (
-        raw.state === 'ready' &&
+        !unavailable &&
         !raw.line_ids.every(lineId =>
           sourceRefs.some(
             source =>
@@ -5723,13 +5743,10 @@ export function decodeCommentarySelection(
         raw.selection !== 'context'
       )
         return;
-    } else if (raw.state !== 'ready') {
-      return;
     }
     candidates.push({
       id: raw.id,
       kind: raw.kind as CommentaryCandidate['kind'],
-      state: raw.state,
       selection: raw.selection as CommentaryCandidate['selection'],
       rootOccurrenceId: raw.root_occurrence_id,
       occurrenceIds: raw.occurrence_ids,
@@ -5788,6 +5805,753 @@ export function decodeCommentarySelection(
     continuationPieces.set(path, snapshots);
     return snapshots.get(ply)!;
   };
+  const withEffects = candidates.filter(candidate => candidate.detail.effects !== undefined);
+  if (withEffects.length) {
+    const observationSources = new Map<string, Set<string>>();
+    const statementsAt = new Map<string, MoveReviewObservations['statements']>();
+    for (const statement of observations.statements) {
+      const statements = statementsAt.get(statement.occurrenceId) ?? [];
+      statements.push(statement);
+      statementsAt.set(statement.occurrenceId, statements);
+      const sources = observationSources.get(statement.occurrenceId) ?? new Set<string>();
+      for (const id of statement.premiseIds) sources.add(id);
+      if (statement.kind === 'piece_control')
+        for (const id of [...statement.before.premiseIds, ...statement.after.premiseIds]) sources.add(id);
+      observationSources.set(statement.occurrenceId, sources);
+    }
+    const positionSources = new Map<string, Set<string>>();
+    const sourcesAt = (id: string): Set<string> | undefined => {
+      const cached = positionSources.get(id);
+      if (cached) return cached;
+      const position = positions.get(id);
+      if (!position) return;
+      const sources = new Set([
+        position.premise_id,
+        ...position.controls.pieces.flatMap(piece => piece.source_ids),
+        ...position.rays.lines.map(ray => ray.source_id),
+        ...position.legal_moves.moves.map(move => move.source_id),
+        ...position.pawn_states.pawns.flatMap(pawn => pawn.source_ids),
+        ...position.pawn_files.files.flatMap(file => file.source_ids),
+        ...position.pawn_advances.paths.map(advance => advance.source_id),
+      ]);
+      positionSources.set(id, sources);
+      return sources;
+    };
+    const proposalById = new Map(proposals?.map(proposal => [proposal.id, proposal]));
+    const selectedContact = (candidate: CommentaryCandidate, path: ObservationPath, ply: number,
+      actor: CommentaryInquiryPiece, target: CommentaryInquiryPiece, square: Key, evidenceIds: string[]): boolean => {
+      if (candidate.detail.type !== 'question_comparison') return false;
+      const refs = candidate.detail.question_refs as { proposal_id: string; requirement_id: string }[];
+      type Fact = Extract<CommentaryProposalReading, { kind: 'fact' }>;
+      const physical = (piece: CommentaryFactPiece | undefined, original: CommentaryInquiryPiece) =>
+        !!piece && piece.side === original.side && piece.role === original.role && piece.square === original.square;
+      const sampled = (fact: Fact, value: string, line?: string) => fact.result?.samples.some(sample =>
+        sample.state === 'known' && sample.value === value && sample.from_ply === ply &&
+        sample.through_ply === ply && (line === undefined || sample.line_id === line));
+      return refs.some(ref => {
+        const proposal = proposalById.get(ref.proposal_id);
+        const comparison = proposal?.requirements.find(reading => reading.id === ref.requirement_id);
+        if (comparison?.kind !== 'compare_moves' || !comparison.answer) return false;
+        const answer = comparison.answer;
+        const facts = proposal!.requirements.filter((reading): reading is Fact =>
+          reading.kind === 'fact' && ['supported', 'observed'].includes(reading.state) &&
+          !!reading.result && !reading.result.needs.length);
+        // The selected comparison must re-confirm the same causal event on this
+        // exact returned arm. A fact from an older or longer line cannot own it.
+        return facts.some(current => {
+          const source = current.path.source;
+          if (source.kind !== 'comparison' || source.requirement_id !== ref.requirement_id ||
+            (source.arm === 'reference' ? answer.reference_line_id : answer.alternative_line_id) !== path.id ||
+            current.at.kind !== 'event' || current.at.phase !== 'after' ||
+            current.at.from_ply !== ply - 1 || current.at.through_ply !== ply ||
+            current.predicate.kind !== 'location' || current.expected === undefined ||
+            !sampled(current, current.expected, path.id)) return false;
+          return facts.some(cause => {
+            const declared = cause.path.source;
+            if (declared.kind !== 'declared' || declared.moves_uci.length !== ply ||
+              !factPrefix(declared.moves_uci, path.moves.map(move => move.uci)) ||
+              JSON.stringify(cause.at) !== JSON.stringify(current.at) ||
+              JSON.stringify(cause.through) !== JSON.stringify(current.through) ||
+              JSON.stringify(cause.predicate) !== JSON.stringify(current.predicate) ||
+              cause.expected !== current.expected || !sampled(cause, current.expected!)) return false;
+            const atContact = (fact: Fact) => fact.path.binding === cause.path.binding &&
+              fact.path.source.kind === 'declared' &&
+              JSON.stringify(fact.path.source.moves_uci) === JSON.stringify(declared.moves_uci) &&
+              fact.at.kind === 'ply' && fact.at.ply_count === ply;
+            if (facts.some(fact => atContact(fact) && fact.predicate.kind === 'location' &&
+              physical(fact.predicate.subject, target) && sampled(fact, square)) &&
+              facts.some(fact => atContact(fact) && fact.predicate.kind === 'control' &&
+                physical(fact.predicate.subject, actor) && fact.predicate.square === square &&
+                sampled(fact, 'present'))) return true;
+            // The same selected cause may also own a new attack by its actual mover.
+            // A stationary beneficiary or an attack already present cannot use this path.
+            if (!physical(cause.predicate.subject, actor) || cause.at.kind !== 'event' ||
+              (cause.at.actor !== undefined && !physical(cause.at.actor, actor))) return false;
+            const before = continuationPiecesAt(path, ply - 1), after = continuationPiecesAt(path, ply);
+            const actorBefore = before.find(piece => samePiece(piece.original, actor))?.current;
+            const actorAfter = after.find(piece => samePiece(piece.original, actor))?.current;
+            const targetBefore = before.find(piece => samePiece(piece.original, target))?.current;
+            const targetAfter = after.find(piece => samePiece(piece.original, target))?.current;
+            if (!actorBefore || !actorAfter || !targetBefore || !targetAfter || targetAfter.square !== square ||
+              path.moves[ply - 1]?.uci.slice(0, 2) !== actorBefore.square || cause.expected !== actorAfter.square) return false;
+            const beforePosition = positions.get(path.positionIds?.[ply - 1] ?? '');
+            const afterPosition = positions.get(path.positionIds?.[ply] ?? '');
+            const beforeControl = beforePosition?.controls.pieces.find(row => physical(row.piece, actorBefore));
+            const afterControl = afterPosition?.controls.pieces.find(row => physical(row.piece, actorAfter));
+            const contact = afterControl?.squares.indexOf(targetAfter.square) ?? -1;
+            return !!beforePosition?.controls.complete && !beforeControl?.squares.includes(targetBefore.square) &&
+              !!afterPosition && contact >= 0 && evidenceIds.includes(beforePosition.premise_id) &&
+              evidenceIds.includes(afterPosition.premise_id) && evidenceIds.includes(afterControl!.source_ids[contact]);
+          });
+        });
+      });
+    };
+    try {
+      for (const candidate of withEffects) {
+        const effects = candidate.detail.effects;
+        if (!context || candidate.kind !== 'comparison' ||
+          !['root_comparison', 'pv_comparison', 'question_comparison'].includes(candidate.detail.type) ||
+          !Array.isArray(effects) || !effects.length || effects.length > 600) return;
+        const functionUses: { effect: CommentaryEffect; lossOffset?: number }[] = [];
+        // Future attacks need a functional use or an exactly owned, selected contact.
+        const dependencyOrder = (effect: CommentaryEffect) => effect.attack_ply !== undefined ? 2 :
+          effect.scope === 'check_sequence' ? 1 : 0;
+        for (const effect of [...effects].sort((a, b) => dependencyOrder(a) - dependencyOrder(b))) {
+          let functionalUse = false;
+          let supportLossOffset: number | undefined;
+          if (!object(effect) || !exactKeys(effect, ['scope', 'line_ids', 'prefix_moves_uci', 'through_plies',
+            'actor', 'target', 'square', 'occurrence_ids', 'evidence_ids', ...('attack_ply' in effect ? ['attack_ply'] : [])]) ||
+            !['pair_difference', 'line_history', 'check_sequence', 'support_handoff', 'support_use', 'support_retention',
+              'piece_route', 'blocker_handoff', 'clearance_use', 'pawn_option', 'capture_choice',
+              'advance_choice', 'relative_pin', 'capture_release'].includes(effect.scope) ||
+            !ids(effect.line_ids) || !effect.line_ids.every(line => candidate.lineIds.includes(line)) ||
+            !factMoves(effect.prefix_moves_uci) || effect.prefix_moves_uci.length >= 80 ||
+            !Array.isArray(effect.through_plies) || effect.through_plies.length !== effect.line_ids.length ||
+            !object(effect.actor) || !exactKeys(effect.actor, ['position_id', 'side', 'role', 'square']) ||
+            (effect.target !== null && (!object(effect.target) ||
+              !exactKeys(effect.target, ['position_id', 'side', 'role', 'square']))) ||
+            typeof effect.square !== 'string' || parseSquare(effect.square) === undefined ||
+            !ids(effect.occurrence_ids) || !effect.occurrence_ids.length ||
+            !ids(effect.evidence_ids) || !effect.evidence_ids.length) return;
+          const prefix = effect.prefix_moves_uci, index = prefix.length;
+          if ('attack_ply' in effect && (effect.scope !== 'line_history' ||
+            !integer(effect.attack_ply, index + 2, 599))) return;
+          const expectedPrefix = candidate.detail.type === 'question_comparison'
+            ? (candidate.detail.prefix_moves_uci as Uci[]) : [];
+          const pair = effect.scope === 'pair_difference', checkSequence = effect.scope === 'check_sequence';
+          const choice = ['pawn_option', 'capture_choice', 'advance_choice'].includes(effect.scope);
+          if (JSON.stringify(prefix) !== JSON.stringify(expectedPrefix) ||
+            (pair || choice ? effect.line_ids.length !== 2 || !sameIds(effect.line_ids, candidate.lineIds)
+              : effect.line_ids.length !== 1) ||
+            (!pair && effect.scope !== 'pawn_option' && effect.target === null)) return;
+          const used = effect.line_ids.map(id => paths.get(id)!);
+          if (used.some((path, n) => path.kind === 'history' || path.startFen !== context.rootFen ||
+            !factPrefix(prefix, path.moves.map(move => move.uci)) ||
+            path.positionIds?.[index] !== used[0].positionIds?.[index] ||
+            path.occurrenceIds.slice(0, index).some((id, at) => id !== used[0].occurrenceIds[at]) ||
+            !integer(effect.through_plies[n], index + 1, path.moves.length) ||
+            (pair && ![index + 1, index + 2].includes(effect.through_plies[n])))) return;
+          if (pair && (effect.through_plies.filter(ply => ply === index + 2).length > 1 ||
+            (effect.target !== null && effect.through_plies.some(ply => ply !== index + 1)))) return;
+          const anchor = index + (pair || choice || effect.scope === 'capture_release' ? 0 : 1);
+          const pieces = continuationPiecesAt(used[0], anchor);
+          const actor = pieces.find(piece => samePiece(piece.current, effect.actor));
+          const target = effect.target === null ? undefined :
+            pieces.find(piece => samePiece(piece.current, effect.target!));
+          if (!actor || (effect.target !== null
+            ? !target || (pair && target.current.square !== effect.square) ||
+              (!checkSequence && samePiece(target.original, actor.original))
+            : pieces.some(piece => piece.current.square === effect.square))) return;
+          const controlled = (path: ObservationPath, count: number, reverse = false): boolean | undefined => {
+            const at = continuationPiecesAt(path, count);
+            const currentActor = at.find(piece => samePiece(piece.original,
+              reverse ? target!.original : actor.original))?.current;
+            const currentTarget = target && at.find(piece => samePiece(piece.original,
+              reverse ? actor.original : target.original))?.current;
+            if (!currentActor || (target ? !currentTarget : at.some(piece => piece.current.square === effect.square))) return;
+            const square = currentTarget?.square ?? effect.square;
+            const resource = positions.get(path.positionIds?.[count] ?? '');
+            const control = resource?.controls.pieces.find(row => row.piece.side === currentActor.side &&
+              row.piece.role === currentActor.role && row.piece.square === currentActor.square);
+            return control?.squares.includes(square) ? true : resource?.controls.complete ? false : undefined;
+          };
+          if (choice || effect.scope === 'relative_pin' || effect.scope === 'capture_release') {
+            // These claims own their witnesses only; they do not certify a future attack's functional parent.
+            const at = (path: ObservationPath, original: CommentaryInquiryPiece, count: number) =>
+              continuationPiecesAt(path, count).find(piece => samePiece(piece.original, original))?.current;
+            const located = (left: { side: Color; role: string; square: string } | undefined,
+              right: { side: Color; role: string; square: string } | undefined) =>
+              !!left && !!right && left.side === right.side && left.role === right.role && left.square === right.square;
+            const position = (path: ObservationPath, count: number) => positions.get(path.positionIds?.[count] ?? '');
+            const legal = (path: ObservationPath, count: number) => {
+              const resource = position(path, count);
+              return resource?.legal_moves.complete ? resource.legal_moves.moves.find(move =>
+                move.uci === path.moves[count]?.uci && effect.evidence_ids.includes(move.source_id)) : undefined;
+            };
+            const control = (path: ObservationPath, count: number, provider: CommentaryInquiryPiece, square: Key) => {
+              const piece = at(path, provider, count);
+              const row = position(path, count)?.controls.pieces.find(row => located(row.piece, piece));
+              const offset = row?.squares.indexOf(square) ?? -1;
+              return offset >= 0 && effect.evidence_ids.includes(row!.source_ids[offset]);
+            };
+            const advance = (path: ObservationPath, count: number, original: CommentaryInquiryPiece,
+              destination: Key, traversed: Key[]) => {
+              const piece = at(path, original, count);
+              return position(path, count)?.pawn_advances.paths.some(row => located(row.piece, piece) &&
+                row.destination === destination && JSON.stringify(row.traversed_squares) === JSON.stringify(traversed) &&
+                effect.evidence_ids.includes(row.source_id));
+            };
+            if (!sameIds(effect.occurrence_ids, [...new Set(used.flatMap((path, n) =>
+              path.occurrenceIds.slice(index, effect.through_plies[n]).map(id => id ?? '')))])) return;
+            for (const [n, path] of used.entries()) {
+              if (!legal(path, index)) return;
+              for (let count = index; count <= effect.through_plies[n]; count++)
+                if (!position(path, count) || !effect.evidence_ids.includes(position(path, count)!.premise_id)) return;
+            }
+            if (effect.scope === 'pawn_option') {
+              const [kept, changed] = used, through = effect.through_plies[0], last = through - 1;
+              const home = actor.current.side === 'white' ? '2' : '7';
+              const step = `${actor.current.square[0]}${actor.current.side === 'white' ? '3' : '6'}` as Key;
+              const destination = `${actor.current.square[0]}${actor.current.side === 'white' ? '4' : '5'}` as Key;
+              const changedMove = legal(changed, index)!;
+              if (actor.current.role !== 'pawn' || actor.current.square[1] !== home || effect.square !== destination ||
+                effect.through_plies[1] !== index + 1 ||
+                changedMove.uci !== actor.current.square + step || changedMove.captured_square !== undefined ||
+                !located(at(kept, actor.original, index + 1), actor.current) ||
+                !advance(kept, index, actor.original, destination, [step, destination]) ||
+                !advance(kept, index + 1, actor.original, destination, [step, destination])) return;
+              if (through === index + 1) {
+                if (target) return;
+              } else {
+                const move = legal(kept, last), finalActor = at(kept, actor.original, through);
+                if (!move || move.uci !== actor.current.square + destination || move.captured_square !== undefined ||
+                  finalActor?.role !== 'pawn' || finalActor.square !== destination ||
+                  !advance(kept, last, actor.original, destination, [step, destination])) return;
+                for (let count = index + 1; count <= last; count++)
+                  if (!located(at(kept, actor.original, count), actor.current)) return;
+                if (target) {
+                  const supported = at(kept, target.original, through);
+                  if (target.current.side !== actor.current.side || !supported ||
+                    !control(kept, through, actor.original, supported.square)) return;
+                }
+              }
+            } else if (effect.scope === 'capture_choice') {
+              const [kept, changed] = used, victim = target!;
+              const first = legal(kept, index)!, second = legal(changed, index)!;
+              const capturer = continuationPiecesAt(kept, index).find(piece => piece.current.square === first.uci.slice(0, 2));
+              const after = capturer && at(kept, capturer.original, index + 1);
+              if (effect.through_plies.some(ply => ply !== index + 1) ||
+                actor.current.side === victim.current.side || effect.square !== victim.current.square ||
+                first.captured_square !== effect.square || second.captured_square !== effect.square ||
+                first.destination !== effect.square || second.destination !== effect.square ||
+                second.uci.slice(0, 2) !== actor.current.square || !capturer ||
+                samePiece(capturer.original, actor.original) || capturer.current.side !== actor.current.side ||
+                !after || after.square !== effect.square ||
+                !located(at(kept, actor.original, index + 1), actor.current) ||
+                used.some(path => at(path, victim.original, index + 1)) ||
+                !control(kept, index + 1, actor.original, after.square)) return;
+            } else if (effect.scope === 'advance_choice') {
+              const [blocked, usedAdvance] = used, blocker = target!;
+              const destination = `${actor.current.square[0]}${Number(actor.current.square[1]) +
+                (actor.current.side === 'white' ? 1 : -1)}` as Key;
+              const blockingMove = legal(blocked, index)!, reply = legal(usedAdvance, index + 1);
+              const stopped = position(blocked, index + 1)!;
+              if (actor.current.role !== 'pawn' || blocker.current.role !== 'pawn' ||
+                actor.current.side === blocker.current.side || effect.square !== destination ||
+                effect.through_plies[0] !== index + 1 || effect.through_plies[1] !== index + 2 ||
+                blockingMove.uci.slice(0, 2) !== blocker.current.square ||
+                blockingMove.destination !== destination || blockingMove.captured_square !== undefined ||
+                at(blocked, blocker.original, index + 1)?.square !== destination ||
+                !located(at(blocked, actor.original, index + 1), actor.current) ||
+                !stopped.pawn_advances.complete || stopped.pawn_advances.paths.some(row =>
+                  located(row.piece, actor.current) && row.destination === destination) ||
+                !advance(blocked, index, actor.original, destination, [destination]) ||
+                !located(at(usedAdvance, actor.original, index + 1), actor.current) ||
+                !located(at(usedAdvance, blocker.original, index + 2), blocker.current) ||
+                !advance(usedAdvance, index + 1, actor.original, destination, [destination]) ||
+                !reply || reply.uci !== actor.current.square + destination || reply.captured_square !== undefined ||
+                at(usedAdvance, actor.original, index + 2)?.square !== destination) return;
+            } else if (effect.scope === 'relative_pin') {
+              const path = used[0], through = effect.through_plies[0], front = target!;
+              const rear = pieces.find(piece => piece.current.square === effect.square);
+              const value = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 100 };
+              if (!['bishop', 'rook', 'queen'].includes(actor.current.role) || !rear ||
+                rear.current.role === 'king' || front.current.role === 'king' || front.current.side === actor.current.side ||
+                rear.current.side !== front.current.side || value[rear.current.role] <= value[front.current.role]) return;
+              const aligned = (count: number): boolean | undefined => {
+                const resource = position(path, count);
+                if (!resource?.rays.complete) return;
+                const pinner = at(path, actor.original, count), pinned = at(path, front.original, count),
+                  behind = at(path, rear.original, count);
+                if (!pinner || !pinned || !behind || behind.role === 'king' ||
+                  value[behind.role] <= value[pinned.role]) return false;
+                const ray = resource.rays.lines.find(ray => located(ray.piece, pinner) &&
+                  located(ray.occupants[0], pinned) && located(ray.occupants[1], behind));
+                return ray ? effect.evidence_ids.includes(ray.source_id) ? true : undefined : false;
+              };
+              for (let count = anchor; count <= through; count++) {
+                const present = aligned(count);
+                if (present === undefined || (!present && (count === anchor || count !== through))) return;
+                if (count === through && present && through !== path.moves.length) return;
+              }
+              if (through > anchor && !legal(path, through - 1)) return;
+            } else {
+              const path = used[0], victim = target!, through = effect.through_plies[0];
+              const releasedAt = index + 1;
+              const move = legal(path, index)!, before = position(path, index)!, after = position(path, releasedAt)!;
+              const king = pieces.find(piece => piece.current.square === move.uci.slice(0, 2));
+              const kingAfter = king && at(path, king.original, releasedAt);
+              if (![releasedAt, releasedAt + 1].includes(through) || actor.current.role === 'king' || victim.current.role === 'king' ||
+                actor.current.side === victim.current.side || effect.square !== victim.current.square ||
+                (actor.current.role === 'pawn' && ['1', '8'].includes(effect.square[1])) ||
+                !king || king.current.role !== 'king' || king.current.side !== actor.current.side || !kingAfter ||
+                move.captured_square !== undefined ||
+                Math.max(Math.abs(king.current.square.charCodeAt(0) - kingAfter.square.charCodeAt(0)),
+                  Math.abs(Number(king.current.square[1]) - Number(kingAfter.square[1]))) !== 1 ||
+                !located(at(path, actor.original, releasedAt), actor.current) ||
+                !located(at(path, victim.original, releasedAt), victim.current) || !before.rays.complete ||
+                !control(path, index, actor.original, effect.square) ||
+                !control(path, releasedAt, actor.original, effect.square)) return;
+              if (through === releasedAt + 1) {
+                const reply = legal(path, releasedAt), movedTarget = at(path, victim.original, through);
+                if (!reply || reply.uci.slice(0, 2) !== victim.current.square || !movedTarget ||
+                  movedTarget.square !== reply.destination) return;
+              }
+              const ray = before.rays.lines.find(ray => ray.piece.side !== actor.current.side &&
+                located(ray.occupants[0], actor.current) && located(ray.occupants[1], king.current) &&
+                effect.evidence_ids.includes(ray.source_id));
+              if (!ray || ray.piece.square === effect.square || ray.squares.includes(effect.square)) return;
+              const pinner = pieces.find(piece => located(piece.current, ray.piece));
+              if (!pinner || !located(at(path, pinner.original, releasedAt), pinner.current)) return;
+              // A frozen ordinary capture tests only own-king safety. It never changes turn or creates a line.
+              const frozenCapture = (resource: NonNullable<ReturnType<typeof position>>) => {
+                const frozen = setupPosition('chess', parseFen(resource.fen).unwrap()).unwrap();
+                const from = parseSquare(actor.current.square)!, to = parseSquare(effect.square)!;
+                const piece = frozen.board.get(from), captured = frozen.board.get(to);
+                if (!piece || !captured || piece.color !== actor.current.side || piece.role !== actor.current.role ||
+                  captured.color !== victim.current.side || captured.role !== victim.current.role ||
+                  !attacks(piece, from, frozen.board.occupied).has(to)) return;
+                frozen.board.take(from);
+                frozen.board.set(to, piece);
+                const square = frozen.board.kingOf(actor.current.side);
+                return square === undefined ? undefined : frozen.kingAttackers(square,
+                  actor.current.side === 'white' ? 'black' : 'white', frozen.board.occupied);
+              };
+              const exposed = frozenCapture(before), released = frozenCapture(after);
+              if (!exposed?.has(parseSquare(pinner.current.square)!) || !released?.isEmpty()) return;
+            }
+          } else if (effect.attack_ply !== undefined) {
+            const path = used[0], attackPly = effect.attack_ply, through = effect.through_plies[0];
+            const beforeAttack = continuationPiecesAt(path, attackPly - 1);
+            const mover = beforeAttack.find(piece => piece.current.square === path.moves[attackPly - 1]?.uci.slice(0, 2));
+            const afterAttack = continuationPiecesAt(path, attackPly);
+            const attacker = afterAttack.find(piece => samePiece(piece.original, actor.original));
+            const victim = afterAttack.find(piece => samePiece(piece.original, target!.original));
+            const position = positions.get(path.positionIds?.[attackPly] ?? '');
+            const control = position?.controls.pieces.find(row => attacker && row.piece.side === attacker.current.side &&
+              row.piece.role === attacker.current.role && row.piece.square === attacker.current.square);
+            const controlIndex = victim ? control?.squares.indexOf(victim.current.square) : undefined;
+            if (!target || actor.current.side === target.current.side || effect.square !== target.current.square ||
+              through !== path.moves.length || attackPly >= through ||
+              controlled(path, attackPly) !== true || controlIndex === undefined || controlIndex < 0 ||
+              !position || !effect.evidence_ids.includes(position.premise_id) ||
+              !effect.evidence_ids.includes(control!.source_ids[controlIndex]) ||
+              !effect.occurrence_ids.includes(path.occurrenceIds[attackPly - 1]!) ||
+              (attackPly !== index + 2 && !functionUses.some(({ effect: parent }) =>
+                parent.line_ids[0] === path.id && parent.through_plies[0] === attackPly &&
+                JSON.stringify(parent.prefix_moves_uci) === JSON.stringify(prefix) &&
+                // An evading slider may regain its attack when another piece
+                // opens the line. Its validated use belongs to that same slider.
+                (parent.scope === 'line_history' && parent.target?.side !== parent.actor.side
+                  ? samePiece(parent.actor, actor.current)
+                  : !!mover && samePiece(mover.original, actor.original)) &&
+                parent.evidence_ids.every(id => effect.evidence_ids.includes(id))) &&
+                !selectedContact(candidate, path, attackPly, actor.original, target.original,
+                  victim!.current.square, effect.evidence_ids))) return;
+          } else if (pair) {
+            const relations = used.map(path => controlled(path, index + 1));
+            if (relations.some(value => value === undefined) || relations[0] === relations[1]) return;
+            for (const [n, path] of used.entries()) {
+              if (effect.through_plies[n] !== index + 2) continue;
+              const before = continuationPiecesAt(path, index + 1).find(piece =>
+                piece.current.square === path.moves[index + 1].uci.slice(0, 2));
+              if (!before || continuationPiecesAt(path, index + 2).find(piece =>
+                samePiece(piece.original, before.original))?.current.square !== effect.square) return;
+            }
+          } else if (checkSequence) {
+            const path = used[0], through = effect.through_plies[0];
+            if (!target || target.current.role !== 'king' || target.current.square !== effect.square ||
+              !(statementsAt.get(path.occurrenceIds[index]!) ?? []).some(statement =>
+                statement.side === actor.current.side && statement.to === actor.current.square &&
+                continuationPiecesAt(path, index).some(piece => samePiece(piece.original, actor.original) &&
+                  piece.current.square === statement.from))) return;
+            const eligible = new Set([index, index + 1]);
+            // The first uninterrupted capture transaction can contain a recapture
+            // check. A later transaction cannot donate a check to this move.
+            const material = path.lineSummary?.material;
+            const captures = material?.events.filter(event => event.capture) ?? [];
+            if (index === 0 && captures.length >= 2 && captures[0].ply_offset <= 1) {
+              const chain = [captures[0]];
+              for (const capture of captures.slice(1)) {
+                if (capture.ply_offset !== chain[chain.length - 1].ply_offset + 1) break;
+                chain.push(capture);
+              }
+              if (chain.length >= 2 && !material!.events.some(event => event.promotion_gain_cp > 0 &&
+                event.ply_offset <= chain[chain.length - 1].ply_offset))
+                for (const capture of chain) eligible.add(capture.ply_offset);
+            }
+            const selected = (offset: number) => statementsAt.get(path.occurrenceIds[offset]!) ?? [];
+            for (const { effect: parent, lossOffset } of functionUses)
+              if (parent.line_ids[0] === path.id && JSON.stringify(parent.prefix_moves_uci) === JSON.stringify(prefix)) {
+                if (parent.through_plies[0] <= through) eligible.add(parent.through_plies[0] - 1);
+                // The independently validated defense also owns the check at its exact target's loss.
+                if (lossOffset !== undefined && lossOffset < through) eligible.add(lossOffset);
+              }
+            for (const start of [...eligible])
+              for (let offset = start; offset < through && selected(offset).some(row => row.kind === 'check_responses'); offset += 2)
+                eligible.add(offset);
+            const checks = [...eligible].filter(offset => offset < through).flatMap(offset =>
+              selected(offset).filter(statement => statement.kind === 'check_responses').map(statement =>
+                ({ offset, statement })));
+            const responses = [...new Set([index, ...checks.map(row => row.offset + 1)])]
+              .filter(offset => offset < path.moves.length).flatMap(offset =>
+                selected(offset).filter(statement => statement.kind === 'check_response' &&
+                  statement.response.resource.move_uci === path.moves[offset].uci).map(statement =>
+                    ({ offset, statement })));
+            const rows = [...responses, ...checks].sort((a, b) => a.offset - b.offset);
+            if (!rows.length || rows.some(row => row.offset >= through) ||
+              through !== Math.max(index, ...rows.map(row => row.offset)) + 1 ||
+              !sameIds(effect.occurrence_ids, [...new Set([path.occurrenceIds[index]!,
+                ...rows.map(row => path.occurrenceIds[row.offset]!)])]) ||
+              !rows.every(row => row.statement.premiseIds.every(id => effect.evidence_ids.includes(id)))) return;
+            const first = rows[0].statement;
+            const kingSide = first.kind === 'check_responses' ? first.checked_side :
+              first.kind === 'check_response' ? first.responding_side : undefined;
+            if (target.current.side !== kingSide) return;
+          } else if (['support_handoff', 'support_use', 'support_retention', 'piece_route', 'blocker_handoff', 'clearance_use'].includes(effect.scope)) {
+            functionalUse = effect.scope !== 'support_retention';
+            const path = used[0], through = effect.through_plies[0], last = through - 1, related = target!;
+            const at = (original: CommentaryInquiryPiece, count: number) =>
+              continuationPiecesAt(path, count).find(piece => samePiece(piece.original, original))?.current;
+            const located = (left: { side: Color; role: string; square: string } | undefined,
+              right: { side: Color; role: string; square: string } | undefined) =>
+              !!left && !!right && left.side === right.side && left.role === right.role && left.square === right.square;
+            const position = (count: number) => positions.get(path.positionIds?.[count] ?? '');
+            const legal = (count: number) => {
+              const resource = position(count);
+              const move = resource?.legal_moves.complete && resource.legal_moves.moves.find(move =>
+                move.uci === path.moves[count]?.uci && effect.evidence_ids.includes(move.source_id));
+              return move || undefined;
+            };
+            const rootMove = legal(index), finalMove = legal(last), originalActor = at(actor.original, index);
+            if (through <= anchor || !rootMove || !finalMove || !originalActor ||
+              path.moves[index].uci.slice(0, 2) !== originalActor.square ||
+              rootMove.destination !== actor.current.square ||
+              !sameIds(effect.occurrence_ids, path.occurrenceIds.slice(index, through).map(id => id ?? '')) ||
+              !path.lineSummary?.premise_ids.length ||
+              !path.lineSummary.premise_ids.every(id => effect.evidence_ids.includes(id))) return;
+            for (let count = index; count <= through; count++)
+              if (!position(count) || !effect.evidence_ids.includes(position(count)!.premise_id)) return;
+            const rayAt = (count: number, original: CommentaryInquiryPiece, square: string) => {
+              const resource = position(count), piece = at(original, count);
+              return resource?.rays.complete ? resource.rays.lines.find(ray => located(ray.piece, piece) &&
+                ray.squares.includes(square as Key) && effect.evidence_ids.includes(ray.source_id)) : undefined;
+            };
+            const controlAt = (original: CommentaryInquiryPiece, count: number, square: string): boolean | undefined => {
+              const resource = position(count), piece = at(original, count);
+              if (!resource || !piece) return;
+              const control = resource.controls.pieces.find(row => located(row.piece, piece));
+              const offset = control?.squares.indexOf(square as Key) ?? -1;
+              return offset >= 0
+                ? effect.evidence_ids.includes(control!.source_ids[offset]) ? true : undefined
+                : resource.controls.complete ? false : undefined;
+            };
+            const support = (original: CommentaryInquiryPiece, count: number) => {
+              const value = continuationSupportAt(observations, path, original, related.original, count,
+                continuationPiecesAt(path, count));
+              return value.source_ids.every(id => effect.evidence_ids.includes(id)) ? value.state : 'unknown';
+            };
+            if (effect.scope === 'support_retention') {
+              if (actor.current.side !== related.current.side || effect.square !== related.current.square ||
+                support(actor.original, index) !== 'absent') return;
+              const previous = continuationPiecesAt(path, last).find(piece =>
+                piece.current.square === path.moves[last].uci.slice(0, 2));
+              const departed = previous && at(previous.original, through);
+              if (!previous || !departed || previous.current.side !== actor.current.side ||
+                samePiece(previous.original, actor.original) || samePiece(previous.original, related.original) ||
+                located(previous.current, departed) || finalMove.destination !== departed.square) return;
+              // The newly added support remains when another actual provider leaves.
+              // This relation alone makes no claim about a capture or its legality.
+              for (let count = anchor; count <= through; count++)
+                if (support(actor.original, count) !== 'present') return;
+              for (let count = index; count <= last; count++)
+                if (support(previous.original, count) !== 'present') return;
+              if (support(previous.original, through) !== 'absent') return;
+            } else if (effect.scope === 'support_handoff' || effect.scope === 'support_use') {
+              const usedSupport = effect.scope === 'support_use';
+              if (actor.current.side !== related.current.side || (!usedSupport && effect.square !== related.current.square)) return;
+              const material = path.lineSummary.material;
+              const recovery = material?.events.find(event => event.ply_offset === last && event.capture);
+              const beforeRecovery = continuationPiecesAt(path, last);
+              const provider = beforeRecovery.find(piece => piece.current.square === path.moves[last].uci.slice(0, 2));
+              const capturer = recovery?.capture && beforeRecovery.find(piece =>
+                piece.current.square === recovery.capture!.square);
+              if (!recovery || !provider || !capturer || provider.current.side !== related.current.side ||
+                capturer.current.side === related.current.side ||
+                finalMove.captured_square !== capturer.current.square ||
+                finalMove.destination !== at(provider.original, through)?.square) return;
+              const loss = material!.events.find(event => event.ply_offset >= anchor && event.ply_offset < last &&
+                event.capture && at(related.original, event.ply_offset)?.square === event.capture.square &&
+                at(capturer.original, event.ply_offset)?.square === event.from);
+              if (!loss || at(related.original, loss.ply_offset + 1)) return;
+              supportLossOffset = loss.ply_offset;
+              const lossMove = legal(loss.ply_offset), capturedAt = loss.ply_offset + 1;
+              const providerAfterLoss = at(provider.original, capturedAt), enemyAfterLoss = at(capturer.original, capturedAt);
+              const immediate = position(capturedAt);
+              // A later unpin cannot certify that this defense already worked at the loss.
+              const immediateRecapture = immediate?.legal_moves.complete && immediate.legal_moves.moves.find(move =>
+                move.uci.slice(0, 2) === providerAfterLoss?.square && move.captured_square === enemyAfterLoss?.square &&
+                move.destination === enemyAfterLoss?.square && effect.evidence_ids.includes(move.source_id));
+              if (!lossMove || lossMove.captured_square !== loss.capture!.square || !immediateRecapture) return;
+              for (let count = capturedAt; count <= last; count++)
+                if (!located(at(provider.original, count), providerAfterLoss) ||
+                  !located(at(capturer.original, count), enemyAfterLoss)) return;
+              if (usedSupport) {
+                if (!samePiece(provider.original, actor.original) || loss.capture!.square !== effect.square ||
+                  lossMove.destination !== effect.square || finalMove.destination !== effect.square) return;
+                for (let count = anchor; count <= loss.ply_offset; count++)
+                  if (!located(at(provider.original, count), actor.current)) return;
+                const oldTarget = at(related.original, index);
+                // A moving friendly target may keep using the same stationary provider.
+                const gainedSupport = oldTarget && controlAt(provider.original, index, oldTarget.square) === false &&
+                  controlAt(provider.original, anchor, related.current.square) === true;
+                if (gainedSupport) {
+                  for (let count = anchor; count <= loss.ply_offset; count++)
+                    if (support(provider.original, count) !== 'present') return;
+                } else {
+                  // A future target cannot borrow control of a square occupied by a different piece.
+                  if (related.current.square === effect.square ||
+                    controlAt(provider.original, index, effect.square) !== false) return;
+                  let arrived = false;
+                  for (let count = anchor; count <= loss.ply_offset; count++) {
+                    const victim = at(related.original, count);
+                    if (!victim || controlAt(provider.original, count, effect.square) !== true) return;
+                    if (victim.square === effect.square) arrived = true;
+                    if (arrived ? victim.square !== effect.square || support(provider.original, count) !== 'present'
+                      : continuationPiecesAt(path, count).some(piece => piece.current.square === effect.square)) return;
+                  }
+                  if (!arrived) return;
+                }
+              } else {
+                for (let count = anchor; count <= loss.ply_offset; count++)
+                  if (support(provider.original, count) !== 'present') return;
+                const previous = continuationPiecesAt(path, index).filter(piece =>
+                  piece.current.side === related.current.side && !samePiece(piece.original, provider.original) &&
+                  !samePiece(piece.original, related.original) && support(piece.original, index) === 'present');
+                const handedOff = previous.some(old => {
+                  let departure: number | undefined;
+                  for (let count = anchor; count <= loss.ply_offset; count++) {
+                    const state = support(old.original, count);
+                    const absent = state === 'absent' || state === 'actor_removed';
+                    if (departure !== undefined && !absent) return false;
+                    const before = at(old.original, count - 1);
+                    if (departure === undefined && absent && before &&
+                      support(old.original, count - 1) === 'present' && !located(before, at(old.original, count)))
+                      departure = count;
+                  }
+                  return departure !== undefined && (samePiece(provider.original, actor.original) ||
+                    (samePiece(old.original, actor.original) && departure === anchor));
+                });
+                if (!handedOff) return;
+              }
+            } else if (effect.scope === 'piece_route') {
+              const finalActor = at(actor.original, through), finalTarget = at(related.original, through);
+              if (!finalActor || !finalTarget || finalActor.role !== actor.current.role ||
+                finalActor.side !== actor.current.side || finalActor.square !== effect.square ||
+                finalMove.destination !== effect.square || path.moves[last].uci.slice(0, 2) !== actor.current.square) return;
+              // This is the current piece's next move, not a later journey through several moves.
+              for (let count = anchor; count <= last; count++)
+                if (!located(at(actor.original, count), actor.current)) return;
+              const controlChange = (reverse: boolean, before: 'present' | 'absent', after: 'present' | 'absent') =>
+                (statementsAt.get(path.occurrenceIds[last]!) ?? []).some(statement => {
+                  if (statement.kind !== 'piece_control' || statement.before.state !== before || statement.after.state !== after)
+                    return false;
+                  const controller = reverse ? related.original : actor.original;
+                  const victim = reverse ? actor.original : related.original;
+                  if (!located(statement.before.controller ?? undefined, at(controller, last)) ||
+                    !located(statement.before.target ?? undefined, at(victim, last)) ||
+                    !located(statement.after.controller ?? undefined, at(controller, through)) ||
+                    !located(statement.after.target ?? undefined, at(victim, through))) return false;
+                  // Effect references use public relation IDs; typed observations retain packet refs.
+                  // Resolve only the exact owned position and the same controller/target relation.
+                  const aliases = [last, through].flatMap(count => {
+                    const resource = position(count)!, piece = at(controller, count), target = at(victim, count);
+                    const control = resource.controls.pieces.find(row => located(row.piece, piece));
+                    const offset = target ? control?.squares.indexOf(target.square) ?? -1 : -1;
+                    const suffix = `:position-occurrence:${resource.id}`;
+                    if (offset < 0 || !resource.premise_id.endsWith(suffix)) return [];
+                    const source = control!.source_ids[offset];
+                    return effect.evidence_ids.includes(source)
+                      ? [`${resource.premise_id.slice(0, -suffix.length)}:relation:position:${resource.id}:geometric_control:${source}`]
+                      : [];
+                  });
+                  return [...statement.premiseIds, ...statement.before.premiseIds, ...statement.after.premiseIds]
+                    .every(id => effect.evidence_ids.includes(id) || aliases.includes(id));
+                });
+              const beforeTarget = at(related.original, last)!;
+              const gained = controlAt(actor.original, last, beforeTarget.square) === false &&
+                controlAt(actor.original, through, finalTarget.square) === true;
+              const friendly = actor.current.side === related.current.side;
+              const defended = !friendly || position(through)!.controls.pieces.some(control => {
+                const offset = control.squares.indexOf(finalTarget.square);
+                return control.piece.side !== finalTarget.side && offset >= 0 &&
+                  effect.evidence_ids.includes(control.source_ids[offset]);
+              });
+              const evaded = !friendly && controlAt(related.original, last, actor.current.square) === true &&
+                controlAt(related.original, through, finalActor.square) === false && controlChange(true, 'present', 'absent');
+              const newRole = finalTarget.role !== 'king' && controlChange(false, 'absent', 'present');
+              if (!(gained && defended && newRole) && !evaded) return;
+            } else if (effect.scope === 'blocker_handoff') {
+              if (!['bishop', 'rook', 'queen'].includes(related.current.role)) return;
+              const beforeRay = rayAt(index, related.original, effect.square);
+              const beforeSquares = beforeRay?.squares.slice(0, beforeRay.squares.indexOf(effect.square));
+              if (!beforeRay || !beforeSquares || beforeSquares.includes(originalActor.square) ||
+                !beforeSquares.includes(actor.current.square)) return;
+              const oldBlockers = continuationPiecesAt(path, index).filter(piece => beforeSquares.includes(piece.current.square));
+              const arriving = continuationPiecesAt(path, last).find(piece => piece.current.square === path.moves[last].uci.slice(0, 2));
+              if (!oldBlockers.length || !arriving || samePiece(arriving.original, actor.original) ||
+                arriving.current.side === related.current.side || finalMove.destination !== effect.square ||
+                at(arriving.original, through)?.square !== effect.square) return;
+              for (let count = anchor; count <= through; count++)
+                if (!located(at(actor.original, count), actor.current) ||
+                  !located(at(related.original, count), related.current)) return;
+              if (!rayAt(through, related.original, effect.square)) return;
+              let departure: number | undefined;
+              for (let count = anchor; count <= through; count++) {
+                const occupants = continuationPiecesAt(path, count).filter(piece => beforeSquares.includes(piece.current.square));
+                const sole = occupants.length === 1 && samePiece(occupants[0].original, actor.original);
+                if (departure === undefined && count < through && sole) departure = count;
+                if (departure !== undefined) {
+                  const resource = position(count)!;
+                  const control = resource.controls.pieces.find(row => located(row.piece, related.current));
+                  if (!sole || !resource.controls.complete || control?.squares.includes(effect.square)) return;
+                }
+              }
+              if (departure === undefined) return;
+            } else {
+              if (actor.current.side !== related.current.side || !['bishop', 'rook', 'queen'].includes(related.current.role) ||
+                originalActor.square !== effect.square || actor.current.square === effect.square ||
+                path.moves[last].uci.slice(0, 2) !== at(related.original, last)?.square ||
+                finalMove.destination !== at(related.original, through)?.square) return;
+              for (let count = anchor; count <= through; count++)
+                if (continuationPiecesAt(path, count).some(piece => piece.current.square === effect.square)) return;
+              const clearThroughout = (squares: Key[]) => {
+                for (let count = anchor; count < through; count++)
+                  if (continuationPiecesAt(path, count).some(piece => squares.includes(piece.current.square) &&
+                    !samePiece(piece.original, related.original))) return false;
+                return true;
+              };
+              const ray = rayAt(last, related.original, finalMove.destination);
+              const traversed = ray?.squares.slice(0, ray.squares.indexOf(finalMove.destination));
+              const crossed = traversed?.includes(effect.square) && clearThroughout(traversed);
+              const resource = position(through)!;
+              const controller = resource.controls.pieces.find(control => located(control.piece, at(related.original, through)));
+              const usedAfter = !crossed && resource.controls.complete && controller?.squares.some((square, offset) => {
+                if (!effect.evidence_ids.includes(controller.source_ids[offset]) ||
+                  !continuationPiecesAt(path, through).some(piece => piece.current.square === square)) return false;
+                const afterRay = rayAt(through, related.original, square);
+                const opened = afterRay?.squares.slice(0, afterRay.squares.indexOf(square));
+                return !!opened?.includes(effect.square) && clearThroughout(opened) &&
+                  !continuationPiecesAt(path, through).some(piece => opened.includes(piece.current.square));
+              });
+              if (!crossed && !usedAfter) return;
+            }
+          } else {
+            const path = used[0], through = effect.through_plies[0], victim = target!;
+            const at = (original: CommentaryInquiryPiece, count: number) =>
+              continuationPiecesAt(path, count).find(piece => samePiece(piece.original, original))?.current;
+            const moved = (original: CommentaryInquiryPiece, offset: number) => {
+              const before = at(original, offset), after = at(original, offset + 1);
+              return !!before && !!after && (before.square !== after.square || before.role !== after.role);
+            };
+            const located = (piece: { side: Color; role: string; square: string } | null,
+              expected: CommentaryInquiryPiece | undefined) => !!piece && !!expected &&
+              piece.side === expected.side && piece.role === expected.role && piece.square === expected.square;
+            const controlFact = (offset: number, controller: CommentaryInquiryPiece,
+              receiving: CommentaryInquiryPiece, afterState: 'present' | 'absent') =>
+              statementsAt.get(path.occurrenceIds[offset]!)?.find(statement =>
+                statement.kind === 'piece_control' && statement.after.state === afterState &&
+                ['present', 'absent'].includes(statement.before.state) &&
+                located(statement.before.controller, at(controller, offset)) &&
+                located(statement.before.target, at(receiving, offset)) &&
+                located(statement.after.controller, at(controller, offset + 1)) &&
+                located(statement.after.target, at(receiving, offset + 1)));
+            const validHistory = (): boolean => {
+              const friendly = actor.current.side === victim.current.side;
+              const targetSquare = victim.current.square === effect.square;
+              // Existing attack histories still own the entire supplied line.
+              if (!friendly && targetSquare && controlled(path, anchor) === true && through === path.moves.length)
+                return true;
+              functionalUse = true;
+              if (friendly && targetSquare) {
+                const fact = controlFact(index, actor.original, victim.original, 'present');
+                return through === anchor && controlled(path, anchor) === true && fact?.kind === 'piece_control' &&
+                  (fact.before.state === 'absent' || moved(actor.original, index) || moved(victim.original, index)) &&
+                  sameIds(effect.occurrence_ids, [path.occurrenceIds[index]!]);
+              }
+              if (!friendly && targetSquare) {
+                const fact = controlFact(index, victim.original, actor.original, 'absent');
+                if (!moved(actor.original, index) || controlled(path, index, true) !== true ||
+                  controlled(path, anchor, true) !== false || fact?.kind !== 'piece_control' ||
+                  fact.before.state !== 'present') return false;
+                const offsets = [index];
+                if (through > anchor) {
+                  const last = controlFact(through - 1, actor.original, victim.original, 'present');
+                  if (controlled(path, through) !== true || last?.kind !== 'piece_control' ||
+                    (last.before.state !== 'absent' && !moved(actor.original, through - 1))) return false;
+                  for (let offset = anchor; offset < through; offset++)
+                    if (moved(actor.original, offset)) offsets.push(offset);
+                  offsets.push(through - 1);
+                }
+                return sameIds(effect.occurrence_ids, [...new Set(offsets.map(offset => path.occurrenceIds[offset]!))]);
+              }
+              if (!friendly || targetSquare || through <= anchor ||
+                at(actor.original, index)?.square !== effect.square || actor.current.square === effect.square ||
+                path.moves[index].uci.slice(0, 2) !== effect.square) return false;
+              for (let count = anchor; count < through; count++) {
+                const position = positions.get(path.positionIds?.[count] ?? '');
+                if (!position || !effect.evidence_ids.includes(position.premise_id) ||
+                  continuationPiecesAt(path, count).some(piece => piece.current.square === effect.square)) return false;
+              }
+              return at(victim.original, through)?.square === effect.square &&
+                path.moves[through - 1].uci.slice(0, 2) === at(victim.original, through - 1)?.square &&
+                sameIds(effect.occurrence_ids, [path.occurrenceIds[index]!, path.occurrenceIds[through - 1]!]);
+            };
+            if (!validHistory()) return;
+          }
+          const occurrences = new Set(used.flatMap((path, n) => path.occurrenceIds.slice(index, effect.through_plies[n])));
+          if (!effect.occurrence_ids.every(id => occurrences.has(id) && effect.evidence_ids.includes(id)) ||
+            !used.every(path => effect.occurrence_ids.includes(path.occurrenceIds[index]!))) return;
+          const unresolved = new Set(effect.evidence_ids);
+          for (const [n, path] of used.entries()) {
+            for (const id of path.lineSummary?.premise_ids ?? []) unresolved.delete(id);
+            for (const occurrence of path.occurrenceIds.slice(0, effect.through_plies[n])) {
+              if (!occurrence) return;
+              unresolved.delete(occurrence);
+              for (const id of observationSources.get(occurrence) ?? []) unresolved.delete(id);
+            }
+            for (const id of path.positionIds?.slice(0, effect.through_plies[n] + 1) ?? []) {
+              if (!unresolved.size) break;
+              const sources = id ? sourcesAt(id) : undefined;
+              if (sources) for (const ref of unresolved) if (sources.has(ref)) unresolved.delete(ref);
+            }
+          }
+          if (unresolved.size) return;
+          if (functionalUse) functionUses.push({ effect: effect as unknown as CommentaryEffect, lossOffset: supportLossOffset });
+        }
+      }
+    } catch (_) { return; }
+  }
   const followupWitnesses = (
     peer: ObservationPath,
     loss: CommentaryLineContinuationDetail['events'][number],
@@ -6700,11 +7464,10 @@ export function decodeCommentarySelection(
   for (const raw of value.scenes) {
     if (
       !object(raw) ||
-      !exactKeys(raw, ['id', 'root_occurrence_id', 'occurrence_ids', 'line_ids', 'candidate_ids', 'state']) ||
+      !exactKeys(raw, ['id', 'root_occurrence_id', 'occurrence_ids', 'line_ids', 'candidate_ids']) ||
       !id(raw.id) ||
       !id(raw.root_occurrence_id) ||
       !occurrences.has(raw.root_occurrence_id) ||
-      !state(raw.state) ||
       !ids(raw.occurrence_ids) ||
       !raw.occurrence_ids.includes(raw.root_occurrence_id) ||
       !raw.occurrence_ids.every(v => occurrences.has(v)) ||
@@ -6726,7 +7489,6 @@ export function decodeCommentarySelection(
       ) ||
       comparisons.length !== 1 ||
       comparisons[0].rootOccurrenceId !== raw.root_occurrence_id ||
-      comparisons[0].state !== raw.state ||
       (comparisons[0].detail.type === 'question_comparison' && comparisons[0].selection !== 'selected')
     )
       return;
@@ -6736,7 +7498,6 @@ export function decodeCommentarySelection(
       occurrenceIds: raw.occurrence_ids,
       lineIds: raw.line_ids,
       candidateIds: raw.candidate_ids,
-      state: raw.state,
     });
   }
   if (new Set(scenes.map(s => s.id)).size !== scenes.length) return;
@@ -6759,7 +7520,7 @@ export function decodeCommentarySelection(
         !candidates.some(candidate => {
           const detail = targetResponseDetail(candidate);
           return (
-            candidate.state === 'ready' &&
+            detail && targetResponseComplete(detail) &&
             detail?.response_inquiry_id === inquiry.id &&
             detail.branches[0]?.reply_move === inquiry.reference_move &&
             detail.branches[1]?.reply_move === inquiry.alternative_move
@@ -6769,10 +7530,10 @@ export function decodeCommentarySelection(
   )
     return;
   if (!proposalFactSourcesValid(proposals ?? [], observations, continuationInquiries ?? [])) return;
-  if (value.inquiries === undefined) return { version: 1, candidates, scenes, ...responseFields };
+  if (value.inquiries === undefined) return { version: 2, candidates, scenes, ...responseFields };
   try {
     const inquiries = decodeInquiries(value.inquiries, observations, context, candidates);
-    return inquiries ? { version: 1, candidates, scenes, inquiries, ...responseFields } : undefined;
+    return inquiries ? { version: 2, candidates, scenes, inquiries, ...responseFields } : undefined;
   } catch (_) {
     return;
   }

@@ -3,6 +3,7 @@ import { hl, type VNode } from 'lib/view/snabbdom';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import { parseFen } from 'chessops/fen';
 import { parseSquare } from 'chessops/util';
+import { commentaryMoveTokens } from '../moveReviewText';
 import {
   commentarySceneFrame,
   questionComparisonDetail,
@@ -11,6 +12,7 @@ import {
   lineContinuationDetail,
   continuationComparisonDetail,
   type CommentaryCandidate,
+  type CommentaryEffect,
   type CommentaryEvaluation,
   type CommentaryInquiryAnswer,
   type CommentaryPvComparisonDetail,
@@ -25,6 +27,9 @@ import {
   formatMoveReviewPercent,
   formatMoveReviewPercentagePointChange,
   moveReviewVerdictCodeLabel,
+  moveReviewSan,
+  moveReviewSans,
+  moveReviewCopy,
   moveReviewObservations,
   moveReviewFrameForSubject,
   selectedMoveReviewCandidate,
@@ -63,9 +68,20 @@ interface MoveReviewPanelActions {
   clearPreview(): void;
   pinFrame(frame: MoveReviewFrameSelection): void;
   clearPin(): void;
+  inspectFrame?(frame: MoveReviewFrameSelection): void;
+  clearInspection?(): void;
   retry(): void;
+  cancel?(): void;
   addProof(proofId: string): void;
   viewAddedLine(proofId: string): void;
+}
+
+function revealReading(target: HTMLElement | null, block: ScrollLogicalPosition = 'nearest'): void {
+  if (!target) return;
+  for (let parent: HTMLElement | null = target; parent; parent = parent.parentElement)
+    if (parent instanceof HTMLDetailsElement) parent.open = true;
+  target.scrollIntoView({ block });
+  target.focus({ preventScroll: true });
 }
 
 export interface MoveReviewPanelProps {
@@ -110,6 +126,14 @@ export function renderMoveReview(props: MoveReviewPanelProps): VNode {
           : 'Played the reference within the compared moves',
       },
     };
+  const observations = moveReviewObservations(props.job);
+  const subject = props.job.kind === 'completed' || props.job.kind === 'position-action'
+    ? props.job.snapshot.subject : props.job.kind === 'idle' ? undefined : props.job.subject;
+  const current = props.job.observationFrame !== undefined ? props.job.observationFrame : (observations && subject
+    ? moveReviewFrameForSubject(observations, subject, subject) : undefined);
+  const occurrence = current && observations?.paths.find(path => path.id === current.proofId)
+    ?.occurrenceIds[current.ply - 1];
+  const readings = observations ? pvReadings(observations, occurrence || undefined) : [];
   const titleId = 'analyse-move-review-title';
   return hl(
     'section.analyse__move-review',
@@ -154,39 +178,124 @@ export function renderMoveReview(props: MoveReviewPanelProps): VNode {
             ? renderReviewBody(props, props.job.assessment.evidence)
             : renderPositionAction(props.job.assessment.action, props),
         ]),
-      renderCommentarySelection(props),
-      renderInvestigations(props),
+      renderCommentarySelection(props, readings),
+      renderInvestigations(props, readings),
       renderObservations(props),
     ],
   );
 }
 
 function pvReadings(observations: MoveReviewObservations, root: string | undefined) {
-  return (
-    observations.selection?.candidates.flatMap(candidate => {
-      const detail = pvComparisonDetail(candidate);
-      return detail && candidate.rootOccurrenceId === root ? [{ candidate, detail }] : [];
-    }) ?? []
-  );
+  const readings: { candidate: CommentaryCandidate; detail: CommentaryPvComparisonDetail; candidateIds: string[] }[] = [];
+  for (const candidate of observations.selection?.candidates ?? []) {
+    const detail = pvComparisonDetail(candidate);
+    if (!detail || candidate.rootOccurrenceId !== root) continue;
+    const answer = detail.answer;
+    const covered = readings.find(previous => {
+      const other = previous.detail.answer;
+      if (
+        answer.reference_line_id !== other.alternative_line_id ||
+        answer.alternative_line_id !== other.reference_line_id ||
+        answer.reference_occurrence_id !== other.alternative_occurrence_id ||
+        answer.alternative_occurrence_id !== other.reference_occurrence_id ||
+        answer.work_id !== other.work_id ||
+        answer.execution_key_sha256 !== other.execution_key_sha256 ||
+        answer.engine_profile !== other.engine_profile || answer.required_depth !== other.required_depth ||
+        answer.reference_depth !== other.alternative_depth || answer.alternative_depth !== other.reference_depth ||
+        JSON.stringify(answer.reference_evaluation) !== JSON.stringify(other.alternative_evaluation) ||
+        JSON.stringify(answer.alternative_evaluation) !== JSON.stringify(other.reference_evaluation) ||
+        answer.evaluation_relation !== ({ better: 'worse', worse: 'better', equal: 'equal' } as const)[other.evaluation_relation] ||
+        detail.material_relation !== previous.detail.material_relation ||
+        detail.event_sequence_relation !== previous.detail.event_sequence_relation ||
+        detail.root_observation_relation !== previous.detail.root_observation_relation ||
+        detail.quality_band !== previous.detail.quality_band ||
+        !detail.root_difference_occurrence_ids.every(id => previous.detail.root_difference_occurrence_ids.includes(id)) ||
+        !detail.root_participants.every(piece => previous.detail.root_participants.some(other =>
+          JSON.stringify(piece) === JSON.stringify(other)))
+      ) return false;
+      if (!['continuation_candidate_ids', 'continuation_comparison_ids'].every(field =>
+        ((candidate.detail[field] as string[] | undefined) ?? []).every(id =>
+          ((previous.candidate.detail[field] as string[] | undefined) ?? []).includes(id)),
+      )) return false;
+      const included = pvExplanations(observations, previous.candidate, previous.detail);
+      return pvExplanations(observations, candidate, detail).every(explanation =>
+        included.some(prior => prior.id === explanation.id),
+      );
+    });
+    // Keep the first direction only when it already carries every explanation and link.
+    if (covered) covered.candidateIds.push(candidate.id);
+    else readings.push({ candidate, detail, candidateIds: [candidate.id] });
+  }
+  return readings;
 }
 
-function matchingPrimary(
+function matchingPrimaries(
   observations: MoveReviewObservations,
   candidate: CommentaryCandidate,
   detail: CommentaryPvComparisonDetail,
 ) {
-  return observations.selection?.candidates.find(
-    primary =>
-      primary.kind === 'comparison' &&
-      primary.detail.type !== 'pv_comparison' &&
-      primary.rootOccurrenceId === candidate.rootOccurrenceId &&
-      primary.detail.reference_line_id === detail.answer.reference_line_id &&
-      primary.detail.candidate_line_id === detail.answer.alternative_line_id,
+  return (
+    observations.selection?.candidates.filter(primary => {
+      if (
+        primary.kind !== 'comparison' || primary.detail.type === 'pv_comparison' ||
+        primary.rootOccurrenceId !== candidate.rootOccurrenceId
+      ) return false;
+      if (
+        primary.detail.reference_line_id === detail.answer.reference_line_id &&
+        primary.detail.candidate_line_id === detail.answer.alternative_line_id
+      ) return true;
+      const question = questionComparisonDetail(primary);
+      return (
+        primary.selection === 'selected' && question?.prefix_moves_uci.length === 0 &&
+        question.evaluation_relation !== null &&
+        primary.lineIds.length === 2 &&
+        primary.lineIds.includes(detail.answer.reference_line_id) &&
+        primary.lineIds.includes(detail.answer.alternative_line_id) &&
+        [question.reference_move, question.alternative_move].every(move =>
+          primary.lineIds.some(id => observations.paths.find(path => path.id === id)?.moves[0]?.uci === move),
+        )
+      );
+    }) ?? []
   );
+}
+
+function pvExplanations(
+  observations: MoveReviewObservations,
+  candidate: CommentaryCandidate,
+  detail: CommentaryPvComparisonDetail,
+) {
+  const primaries = matchingPrimaries(observations, candidate, detail).filter(
+    primary => typeof primary.detail.text === 'string',
+  );
+  const explanations = primaries.length ? primaries : [candidate];
+  const effects = candidate.detail.effects as CommentaryEffect[] | undefined;
+  const primaryEffects = explanations.flatMap(
+    primary => (primary.detail.effects as CommentaryEffect[] | undefined) ?? [],
+  );
+  // Effect references distinguish histories without guessing boundaries in their prose.
+  if (primaries.length && effects?.some(effect =>
+    !primaryEffects.some(included => JSON.stringify(included) === JSON.stringify(effect)),
+  )) explanations.push(candidate);
+  return explanations;
 }
 
 function pvReadingId(candidate: CommentaryCandidate): string {
   return `move-review-pv-${candidate.id}`;
+}
+
+function moveLabelAt(path: MoveReviewProof | undefined, prefixLength: number, move: Uci): string {
+  const fen = prefixLength === 0 ? path?.startFen : path?.moves[prefixLength - 1]?.fenAfter;
+  return fen ? moveReviewSan(fen, move) : '?';
+}
+
+function rootFen(props: MoveReviewPanelProps): FEN | undefined {
+  return props.job.kind === 'completed' || props.job.kind === 'position-action'
+    ? props.job.snapshot.subject.before.fen : props.job.kind === 'idle' ? undefined : props.job.subject.before.fen;
+}
+
+function rootMoveLabel(props: MoveReviewPanelProps, move: Uci): string {
+  const fen = rootFen(props);
+  return fen ? moveReviewSan(fen, move) : '?';
 }
 
 function comparisonEvaluation(value: CommentaryEvaluation, props: MoveReviewPanelProps): string {
@@ -224,12 +333,15 @@ function renderComparisonPaths(
       .slice(0, ply)
       .map(move => move.label)
       .join(' ');
-    return hl('div', [
-      hl('p', `${label} · ${comparisonEvaluation(value, props)}`),
+    return hl('div.move-review__comparison-line', { key: lineId }, [
+      hl('div.move-review__comparison-line-heading', [
+        hl('strong', label),
+        hl('span', comparisonEvaluation(value, props)),
+      ]),
       hl(
         'button.button.button-thin',
         {
-          attrs: { type: 'button' },
+          attrs: { type: 'button', 'data-line': lineId, 'data-ply': ply },
           on: { click: () => showObservationFrame(props, { proofId: lineId, ply, phase: 'after' }) },
         },
         `${props.locale === 'ko-KR' ? '비교 수순 보기' : 'Inspect the comparison line'} · ${label}`,
@@ -251,8 +363,11 @@ function renderPvReading(
 ): VNode {
   const ko = props.locale === 'ko-KR';
   const answer = detail.answer;
+  const ordinaryScores = [answer.reference_evaluation, answer.alternative_evaluation].every(
+    value => value.kind === 'engine_search' && value.white_score.kind === 'cp',
+  );
   const label = (id: string) => observations.paths.find(path => path.id === id)!.moves[0].label;
-  const primary = matchingPrimary(observations, candidate, detail);
+  const explanations = pvExplanations(observations, candidate, detail);
   const material = {
     equal: ko
       ? '잡히거나 승격한 기물의 종류별 수는 같습니다.'
@@ -277,45 +392,46 @@ function renderPvReading(
   };
   const root = {
     same: ko
-      ? '첫 수에 기록된 전개·통제 변화는 같습니다. 같은 계획이라는 뜻은 아닙니다.'
-      : 'The recorded development and control changes at the first moves match. This does not establish the same plan.',
+      ? '움직인 말과 직접 관련된 전개·통제 항목은 같습니다. 다른 말에 미치는 효과나 이후 경과까지 같다는 뜻은 아닙니다.'
+      : 'The recorded development and control features directly involving the moved pieces match. Effects on other pieces and later play can still differ.',
     different: ko
-      ? '첫 수에 기록된 전개·통제 변화가 다릅니다. 아래에서 해당 관측을 펼쳐 볼 수 있습니다.'
-      : 'The first moves have different recorded development or control changes. Their observations can be expanded below.',
+      ? '움직인 말과 직접 관련된 전개·통제 항목이 다릅니다. 아래에서 해당 관측을 펼쳐 볼 수 있습니다.'
+      : 'The first moves differ in recorded development or control features directly involving the moved pieces. Their observations can be expanded below.',
     unavailable: ko
-      ? '첫 수의 전개·통제 변화를 대조할 관측이 부족합니다.'
-      : 'There are not enough observations to compare development and control at the first moves.',
+      ? '움직인 말과 직접 관련된 전개·통제 항목을 대조할 관측이 부족합니다.'
+      : 'There are not enough observations to compare development and control directly involving the moved pieces.',
   };
   return hl(
     'article.move-review__pv-reading',
-    { key: candidate.id, attrs: { id: pvReadingId(candidate), tabindex: -1 } },
+    { key: candidate.id, attrs: { id: pvReadingId(candidate), tabindex: -1 }, on: comparisonPreviewExit(props) },
     [
       hl('h4', `${label(answer.reference_line_id)} ↔ ${label(answer.alternative_line_id)}`),
       continuationLinks(candidate.detail.continuation_candidate_ids, props),
       continuationLinks(candidate.detail.continuation_comparison_ids, props),
+      ...renderComparisonExplanations(explanations, observations, props),
       hl(
         'p.move-review__pv-quality',
-        detail.quality_band === 'close'
+        !ordinaryScores
           ? ko
-            ? '현재 평가 기준에서 가까운 두 수입니다. 작은 검색값 차이만으로 체스적 우열을 확정하지 않습니다.'
-            : 'The moves are close under the current assessment policy. A small search-score difference does not establish chess superiority.'
+            ? '메이트나 종료 판정은 일반 점수 차이와 구분해 아래에 표시합니다.'
+            : 'Mate evaluations and terminal results are shown below separately from ordinary score differences.'
+          : detail.quality_band === 'close'
+          ? ko
+            ? '두 수의 엔진 평가는 비슷합니다. 작은 점수 차이만으로 어느 수가 더 강하다고 단정하지 않습니다.'
+            : 'The engine evaluations are close. A small score difference does not establish a clearly stronger move.'
           : ko
-            ? '현재 평가 기준에서 두 수의 평가가 나뉩니다. 아래는 차이와 함께 관측된 사실입니다.'
-            : 'The moves are separated under the current assessment policy. The observations below accompany that difference.',
+            ? '엔진 평가는 한쪽 수를 더 높게 봅니다. 아래는 그 차이와 함께 관측된 사실입니다.'
+            : 'The engine evaluations favor one move over the other. The observations below accompany that difference.',
       ),
-      hl('ul', [
-        hl('li', material[detail.material_relation]),
-        hl('li', events[detail.event_sequence_relation]),
-        hl('li', root[detail.root_observation_relation]),
+      hl('details.move-review__comparison-records', [
+        hl('summary', ko ? '비교에서 확인한 항목' : 'Comparison records'),
+        hl('ul', [
+          hl('li', material[detail.material_relation]),
+          hl('li', events[detail.event_sequence_relation]),
+          hl('li', root[detail.root_observation_relation]),
+        ]),
       ]),
-      primary?.state === 'ready' && typeof primary.detail.text === 'string' && hl('p', primary.detail.text),
-      candidate.state !== 'ready' &&
-        hl(
-          'p',
-          ko
-            ? '등록한 관측 항목에서는 차이를 아직 찾지 못했습니다. 두 수가 완전히 동등하다는 뜻은 아닙니다.'
-            : 'No difference has been established in the recorded facets. This does not establish complete equivalence.',
-        ),
+      hl('h5.move-review__section-label', ko ? '두 수순 살펴보기' : 'Explore the two lines'),
       ...renderComparisonPaths(answer, observations, props),
       current &&
         detail.root_participants.length > 0 &&
@@ -339,7 +455,10 @@ function renderPvReading(
   );
 }
 
-function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
+function renderInvestigations(
+  props: MoveReviewPanelProps,
+  readings: ReturnType<typeof pvReadings>,
+): VNode | undefined {
   const observations = moveReviewObservations(props.job);
   if (!observations?.selection || props.job.kind === 'idle') return;
   const subject =
@@ -356,7 +475,6 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
     observations.selection.inquiries?.filter(inquiry => inquiry.root_occurrence_id === root) ?? [];
   const responses =
     observations.selection.response_inquiries?.filter(inquiry => inquiry.root_occurrence_id === root) ?? [];
-  const readings = pvReadings(observations, root || undefined);
   const continuations =
     observations.selection.continuation_inquiries?.filter(inquiry => inquiry.root_occurrence_id === root) ??
     [];
@@ -369,13 +487,12 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
   // Only current candidates expose retained questions; an old outcome alone cannot revive one.
   const pendingComparisons = observations.selection.candidates.flatMap(candidate => {
     const detail = questionComparisonDetail(candidate);
-    return detail && candidate.rootOccurrenceId === root && candidate.state === 'partial'
+    return detail && candidate.rootOccurrenceId === root && detail.evaluation_relation === null
       ? [{ candidate, detail }]
       : [];
   });
   if (
     !selected.length &&
-    !readings.length &&
     !responses.length &&
     !continuations.length &&
     !profiles.length &&
@@ -386,9 +503,9 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
   const ko = props.locale === 'ko-KR';
   const label = (move: Uci) =>
     observations.paths.find(path => path.startFen === subject.before.fen && path.moves[0]?.uci === move)
-      ?.moves[0]?.label ?? move;
+      ?.moves[0]?.label ?? moveReviewSan(subject.before.fen, move);
   const links = (ids: string[] | undefined, title: string): VNode | undefined => {
-    const linked = readings.filter(reading => ids?.includes(reading.candidate.id));
+    const linked = readings.filter(reading => reading.candidateIds.some(id => ids?.includes(id)));
     return linked.length
       ? hl('div.move-review__inquiry-reading-links', [
           hl('span', title),
@@ -400,8 +517,7 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
                 on: {
                   click: () => {
                     const target = document.getElementById(pvReadingId(candidate));
-                    target?.scrollIntoView({ block: 'nearest' });
-                    target?.focus({ preventScroll: true });
+                    revealReading(target);
                   },
                 },
               },
@@ -456,21 +572,11 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
     ]),
   ];
   const pendingQuestionTexts = new Set<string>();
-  return hl('section.move-review__investigations', [
-    hl('h3', ko ? '읽은 비교와 남은 질문' : 'Read comparisons and remaining questions'),
-    ...readings.map(({ candidate, detail }) =>
-      renderPvReading(candidate, detail, observations, current, props),
-    ),
-    readings.length > 0 &&
-      hl(
-        'p.move-review__pv-limit',
-        ko
-          ? '확인한 범위는 이 유한 수순의 기록된 항목입니다. 강제 결과나 평가 차이의 원인까지 입증한 것은 아닙니다.'
-          : 'These findings cover the recorded facets of these finite lines. They do not establish a forced result or the cause of the evaluation difference.',
-      ),
+  return hl('details.move-review__investigations', [
+    hl('summary', ko ? '추가 조사와 남은 질문' : 'Additional investigation and remaining questions'),
     ...selected.map(inquiry => {
       const hasReading = readings.some(reading =>
-        inquiry.explanation_candidate_ids?.includes(reading.candidate.id),
+        reading.candidateIds.some(id => inquiry.explanation_candidate_ids?.includes(id)),
       );
       return hl('article.move-review__inquiry', { key: inquiry.id }, [
         hl('h4', `${label(inquiry.reference_move)} ↔ ${label(inquiry.alternative_move)}`),
@@ -491,21 +597,6 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
           inquiry.explanation_candidate_ids,
           ko ? '이 답에서 읽은 비교' : 'Comparison read from this answer',
         ),
-        inquiry.next_evidence &&
-          hl(
-            'p.move-review__next-evidence',
-            inquiry.next_evidence === 'compare_roots'
-              ? ko
-                ? '두 수의 평가 비교가 더 필요합니다. 이것은 새 계산이 예약되었다는 뜻은 아닙니다.'
-                : 'A further evaluation comparison is needed. This does not mean another search is scheduled.'
-              : inquiry.next_evidence === 'inspect_existing'
-                ? ko
-                  ? '기존 수순에서 확인한 관측 차이를 위 비교에서 살펴볼 수 있습니다.'
-                  : 'The observed differences in the existing lines can be inspected in the comparison above.'
-                : ko
-                  ? '이 질문의 차이를 설명할 근거는 아직 미확정입니다.'
-                  : 'Evidence explaining the difference in this question remains unresolved.',
-          ),
         hl('details.move-review__inquiry-reasons', [
           hl('summary', ko ? '질문을 만든 관측' : 'Observations behind the question'),
           ...inquiry.reasons.map(reason =>
@@ -639,10 +730,11 @@ function renderInvestigations(props: MoveReviewPanelProps): VNode | undefined {
       const moveLabel = (move: Uci) => candidate.lineIds.flatMap(id => {
         const path = observations.paths.find(path => path.id === id);
         return path?.moves[ply]?.uci === move ? [path.moves[ply].label] : [];
-      })[0] ?? move;
+      })[0] ?? moveLabelAt(observations.paths.find(path => candidate.lineIds.includes(path.id) &&
+        detail.prefix_moves_uci.every((uci, index) => path.moves[index]?.uci === uci)), ply, move);
       return hl('article.move-review__inquiry', { key: candidate.id }, [
         hl('h4', `${moveLabel(detail.reference_move)} ↔ ${moveLabel(detail.alternative_move)}`),
-        ...texts.map(text => hl('p', text)),
+        ...texts.map(text => hl('p', { attrs: { lang: 'en' } }, text)),
         hl(
           'p.move-review__inquiry-state',
           props.job.kind === 'loading' && linked.some(({ condition }) => condition.state === 'awaiting_engine')
@@ -775,7 +867,7 @@ function renderContinuationComparison(
               'support' in point
                 ? `${pieceText(point.original_provider, props.copy)} (${ko ? '원래 기물' : 'original piece'}): ${continuationSupportLabel(point.support.state, ko)}`
                 : 'loss_event_id' in point
-                  ? `${point.observed_followup_plies}${ko ? '수의 후속 기록' : ' follow-up plies'} · ${ko ? '포획자 제거' : 'Capturer removal'}: ${point.capturer_removal_state === 'observed' ? (ko ? '관측됨' : 'observed') : ko ? '수순 끝까지 미관측' : 'not observed through line end'} · ${ko ? '이 손실에 연결된 다른 대상 포획' : 'Other-target gains linked to this loss'}: ${point.other_target_gain_state === 'observed' ? (ko ? '관측됨' : 'observed') : ko ? '수순 끝까지 연결된 관측 없음' : 'no linked observation through line end'}`
+                  ? `${point.observed_followup_plies}${ko ? '수의 후속 기록' : ' recorded moves'} · ${ko ? '포획자 제거' : 'Capturer removal'}: ${point.capturer_removal_state === 'observed' ? (ko ? '관측됨' : 'observed') : ko ? '수순 끝까지 미관측' : 'not observed through line end'} · ${ko ? '이 손실에 연결된 다른 대상 포획' : 'Other-target gains linked to this loss'}: ${point.other_target_gain_state === 'observed' ? (ko ? '관측됨' : 'observed') : ko ? '수순 끝까지 연결된 관측 없음' : 'no linked observation through line end'}`
                   : undefined;
             return hl('div', [
               detail && hl('p', detail),
@@ -838,9 +930,8 @@ function continuationLinks(ids: unknown, props: MoveReviewPanelProps): VNode | u
           attrs: { type: 'button' },
           on: {
             click: () => {
-              const target = document.getElementById(`continuation-${id}`);
-              target?.scrollIntoView({ block: 'nearest' });
-              target?.focus({ preventScroll: true });
+                const target = document.getElementById(`continuation-${id}`);
+                revealReading(target);
             },
           },
         },
@@ -952,7 +1043,7 @@ function renderContinuationInquiry(
       ),
       hl(
         'p',
-        `${ko ? '관측한 다음 수' : 'Observed next moves'}: ${inquiry.observed_moves.join(', ') || (ko ? '없음' : 'none')}`,
+        `${ko ? '관측한 다음 수' : 'Observed next moves'}: ${inquiry.observed_moves.map(move => moveLabelAt(path, ply, move)).join(', ') || (ko ? '없음' : 'none')}`,
       ),
       continuationLinks(inquiry.explanation_candidate_ids, props),
       inquiry.route_challenge &&
@@ -979,7 +1070,7 @@ function renderContinuationInquiry(
             hl('div', [
               hl(
                 'p',
-                `${group.kind === 'replacement_recapture' ? (ko ? '재포획 후보' : 'Recapture candidate') : ko ? '지정 응수' : 'Specified replies'}: ${group.moves_uci.join(', ')} · ${group.sampled_work_ids.length ? (ko ? '표본 반환됨' : 'sample returned') : group.kind === 'replacement_recapture' ? (ko ? '재포획 대안 미관측' : 'recapture alternative not observed') : ko ? '표본 없음' : 'no sample'} · ${group.comparison ? (ko ? '같은 검색의 대조 있음' : 'same-search comparison available') : group.moves_uci.includes(inquiry.route_challenge!.reference_move) ? (ko ? '기준 응수 자체가 포함됨' : 'includes the reference itself') : ko ? '같은 검색의 대조 미확정' : 'same-search comparison unresolved'}`,
+                `${group.kind === 'replacement_recapture' ? (ko ? '재포획 후보' : 'Recapture candidate') : ko ? '지정 응수' : 'Specified replies'}: ${group.moves_uci.map(move => moveLabelAt(path, ply, move)).join(', ')} · ${group.sampled_work_ids.length ? (ko ? '표본 반환됨' : 'sample returned') : group.kind === 'replacement_recapture' ? (ko ? '재포획 대안 미관측' : 'recapture alternative not observed') : ko ? '표본 없음' : 'no sample'} · ${group.comparison ? (ko ? '같은 검색의 대조 있음' : 'same-search comparison available') : group.moves_uci.includes(inquiry.route_challenge!.reference_move) ? (ko ? '기준 응수 자체가 포함됨' : 'includes the reference itself') : ko ? '같은 검색의 대조 미확정' : 'same-search comparison unresolved'}`,
               ),
               ...(group.comparison
                 ? [group.comparison.reference_line_id, group.comparison.challenge_line_id]
@@ -1052,9 +1143,8 @@ function renderContinuationInquiry(
                 attrs: { type: 'button' },
                 on: {
                   click: () => {
-                    const target = document.getElementById(`continuation-question-${id}`);
-                    target?.scrollIntoView({ block: 'nearest' });
-                    target?.focus({ preventScroll: true });
+                      const target = document.getElementById(`continuation-question-${id}`);
+                      revealReading(target);
                   },
                 },
               },
@@ -1119,16 +1209,6 @@ function renderContinuationProfile(
     { key: candidate.id, attrs: { id: `continuation-${candidate.id}`, tabindex: -1 } },
     [
       hl('h4', `${ko ? '수순에서 이어진 변화' : 'Changes along the line'} · ${path.moves[0].label}`),
-      hl(
-        'p',
-        candidate.state === 'partial'
-          ? ko
-            ? '일부 정체성 또는 지원 근거 미확정'
-            : 'Some identities or support evidence remain unresolved'
-          : ko
-            ? '기록된 범위의 기물과 지원 관계를 연결함'
-            : 'Pieces and support relations are linked within the recorded line',
-      ),
       loneEvent &&
         hl('p', [
           button(loneEvent.id),
@@ -1158,7 +1238,7 @@ function renderContinuationProfile(
             'span',
             ko
               ? `의 포획자가 ${link.elapsed_plies}수 뒤 `
-              : `'s capturer is removed ${link.elapsed_plies} plies later by `,
+              : `'s capturer is removed later by `,
           ),
           button(link.capture_event_id),
         ]),
@@ -1389,7 +1469,9 @@ function renderRelatedResponses(
         `${ko ? '원래 대상' : 'Original target'} · ${pieceText(inquiries[0].original_target, props.copy)}`,
         { ...original, inspectSquare: inquiries[0].original_target.square },
       ),
-      hl('table', [
+      hl('div.move-review__response-table', {
+        attrs: { tabindex: 0, role: 'region', 'aria-label': ko ? '같은 대상의 응수 비교' : 'Replies concerning the same target' },
+      }, [hl('table', [
         hl('thead', [
           hl(
             'tr',
@@ -1502,7 +1584,7 @@ function renderRelatedResponses(
                               ]
                             : []),
                         ]
-                      : `${inquiry.reference_move} · ${ko ? '수순 미확보' : 'Line unavailable'}`,
+                      : `${moveLabelAt(observations.paths.find(path => path.id === child.proofId), child.ply, inquiry.reference_move)} · ${ko ? '수순 미확보' : 'Line unavailable'}`,
                   ),
                   hl('td', targetState),
                   hl(
@@ -1528,7 +1610,7 @@ function renderRelatedResponses(
             });
           }),
         ),
-      ]),
+      ])]),
       hl(
         'p',
         ko
@@ -1549,9 +1631,7 @@ function renderResponseInquiry(
   const child = occurrenceFrame(observations, inquiry.root_move_occurrence_id, 'after')!;
   const rootPath = observations.paths.find(path => path.id === child.proofId)!;
   const rootLabel = rootPath.moves[child.ply - 1].label;
-  const label = (move: Uci) =>
-    observations.paths.find(path => path.moves[0]?.uci === inquiry.root_move && path.moves[1]?.uci === move)
-      ?.moves[1]?.label ?? move;
+  const label = (move: Uci) => moveLabelAt(rootPath, child.ply, move);
   const readings = responseReadings(inquiry, observations);
   const hasAnswerReading = readings.some(({ detail }) => targetResponseAnswer(detail, inquiry));
   const selections = [inquiry.reference_selection, inquiry.alternative_selection];
@@ -1805,7 +1885,7 @@ function renderTargetResponse(
                 ? '즉시 재포획할 합법수를 확인하지 못했습니다.'
                 : 'Legal immediate recaptures are not established.'
               : branch.recaptures.moves.length
-                ? `${ko ? '합법적인 즉시 재포획' : 'Legal immediate recaptures'}: ${branch.recaptures.moves.map(move => `${pieceText(move.actor, props.copy)} (${move.move_uci})`).join('; ')}.`
+                ? `${ko ? '합법적인 즉시 재포획' : 'Legal immediate recaptures'}: ${branch.recaptures.moves.map(move => `${pieceText(move.actor, props.copy)} (${moveLabelAt(path, frame.ply, move.move_uci)})`).join('; ')}.`
                 : ko
                   ? '이 위치에서 그 포획 기물을 즉시 재포획할 합법수는 없습니다.'
                   : 'There is no legal immediate recapture of that capturing piece in this position.',
@@ -1893,7 +1973,7 @@ function renderInquiryObservations(
           'summary',
           `${path.moves[index].label} · ${ko ? '이 수에서 관측한 변화' : 'Observations for this move'}`,
         ),
-        ...statements.map(statement => hl('p', observationText(statement, props.copy))),
+        ...statements.map(statement => hl('p', observationText(statement, props.copy, observationFen(path!, statement)))),
         !statements.length &&
           hl(
             'p',
@@ -1922,13 +2002,348 @@ function renderInquiryObservations(
 function showObservationFrame(props: MoveReviewPanelProps, frame: MoveReviewFrameSelection): void {
   if (props.view.expandedProofId !== frame.proofId) props.actions.toggleProof(frame.proofId);
   props.actions.pinFrame(frame);
+  requestAnimationFrame(() => revealReading(
+    document.querySelector<HTMLElement>('.analyse__move-review .move-review__observations'), 'start'));
 }
 
-function renderCommentarySelection(props: MoveReviewPanelProps): VNode | undefined {
+function observedTerminal(path: MoveReviewObservations['paths'][number] | undefined) {
+  const ending = path?.lineSummary?.ending;
+  if (!path || !ending || ending.kind === 'line_end' || ending.ply_offset !== path.moves.length - 1 ||
+    path.occurrenceIds[ending.ply_offset] !== ending.occurrence_id) return;
+  return { path, ply: ending.ply_offset + 1, kind: ending.kind };
+}
+
+function comparisonTerminals(
+  explanations: CommentaryCandidate[],
+  observations: MoveReviewObservations,
+) {
+  const terminals = new Map<string, {
+    path: MoveReviewObservations['paths'][number]; ply: number;
+    kind: Exclude<ObservedLineSummary['ending']['kind'], 'line_end'>;
+  }>();
+  // Only paths owned by the explanations actually shown can supply an ending.
+  for (const id of explanations.flatMap(explanation => explanation.lineIds)) {
+    const terminal = observedTerminal(observations.paths.find(path => path.id === id));
+    if (terminal) terminals.set(id, terminal);
+  }
+  return terminals;
+}
+
+function explanationFrameButton(
+  path: MoveReviewObservations['paths'][number],
+  ply: number,
+  props: MoveReviewPanelProps,
+  terminal?: string,
+): VNode {
+  const frame = { proofId: path.id, ply, phase: 'after' as const };
+  const pinned = props.view.pinnedFrame;
+  const selected = pinned?.proofId === path.id && pinned.ply === ply && pinned.phase !== 'before' &&
+    !pinned.observationKey && !pinned.highlightKey && !pinned.inspectSquare;
+  const label = props.locale === 'ko-KR' ? '설명에 연결된 위치' : 'Position used in this explanation';
+  return hl('button.move-review__explanation-position', {
+    key: `${path.id}:${ply}`,
+    attrs: { type: 'button', 'aria-pressed': selected ? 'true' : 'false', 'data-line': path.id, 'data-ply': ply },
+    on: {
+      mouseenter: () => props.actions.previewFrame(frame),
+      focus: () => props.actions.previewFrame(frame),
+      click: () => props.actions.pinFrame(frame),
+      keydown: event => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        props.actions.clearPreview();
+        props.actions.clearPin();
+      },
+    },
+  }, [
+    hl('strong', numberedProofMove(path, ply)),
+    hl('span', `${path.moves[0].label} ${props.locale === 'ko-KR' ? '수순' : 'line'}${terminal ? ` · ${terminal}` : ''}`),
+    hl('span.move-review__position-purpose', label),
+  ]);
+}
+
+function comparisonPreviewExit(props: MoveReviewPanelProps) {
+  return {
+    mouseleave: (event: MouseEvent) => {
+      const card = event.currentTarget as HTMLElement | null;
+      if (!card?.contains(event.relatedTarget as Node | null) &&
+        !card?.contains(card.ownerDocument.activeElement)) props.actions.clearPreview();
+    },
+    focusout: (event: FocusEvent) => {
+      const card = event.currentTarget as HTMLElement;
+      // Removing a focused choice during a patch also blurs it. Never redraw inside that patch.
+      queueMicrotask(() => {
+        if (card.isConnected && !card.contains(card.ownerDocument.activeElement)) props.actions.clearPreview();
+      });
+    },
+  };
+}
+
+function positionTextPreview(element: HTMLElement): void {
+  const anchor = document.getElementById(element.dataset.anchor!);
+  if (!anchor) return;
+  if (!element.matches(':popover-open')) element.showPopover();
+  const rect = anchor.getBoundingClientRect();
+  const width = element.offsetWidth, height = element.offsetHeight;
+  element.style.left = `${Math.max(8, Math.min(innerWidth - width - 8, rect.left + rect.width / 2 - width / 2))}px`;
+  const below = rect.bottom + 8;
+  element.style.top = `${Math.max(8, Math.min(innerHeight - height - 8,
+    below + height <= innerHeight - 8 ? below : rect.top - height - 8))}px`;
+}
+
+function numberedProofMove(proof: MoveReviewProof, ply: number): string {
+  const fen = ply === 1 ? proof.startFen : proof.moves[ply - 2].fenAfter;
+  const setup = parseFen(fen).unwrap();
+  return `${setup.fullmoves}${setup.turn === 'white' ? '.' : '…'}${proof.moves[ply - 1].label}`;
+}
+
+function renderComparisonPreview(
+  lineIds: string[],
+  observations: MoveReviewObservations,
+  props: MoveReviewPanelProps,
+  mentions?: Map<string, MoveReviewFrameSelection[]>,
+): VNode | undefined {
+  const owned = new Set(lineIds);
+  // Only plain position selections belong here; relation/highlight controls keep their full proof view.
+  const frame = [props.view.hoveredFrame, props.view.pinnedFrame].find(frame =>
+    frame && owned.has(frame.proofId) && !frame.observationKey && !frame.highlightKey && !frame.inspectSquare &&
+    (!frame.textAnchor || mentions?.has(frame.textAnchor)) &&
+    Number.isInteger(frame.ply) && frame.ply > 0 &&
+    !!observations.paths.find(path => path.id === frame.proofId)?.moves[frame.ply - 1],
+  );
+  if (!frame) return;
+  const path = observations.paths.find(path => path.id === frame.proofId)!;
+  const ko = props.locale === 'ko-KR';
+  const choices = frame.textAnchor && frame.choosePosition ? mentions?.get(frame.textAnchor) : undefined;
+  const inline = !!frame.textAnchor;
+  const close = (event: Event) => {
+    const card = (event.currentTarget as HTMLElement | null)?.closest('article');
+    const links = card?.querySelectorAll<HTMLButtonElement>('button[data-line]');
+    const origin = (frame.textAnchor && document.getElementById(frame.textAnchor)) || (links && ([...links].find(link => link.dataset.line === frame.proofId &&
+      link.dataset.ply === String(frame.ply)) ?? [...links].find(link => link.dataset.line === frame.proofId) ?? links[0]));
+    origin?.focus({ preventScroll: true });
+    props.actions.clearPreview();
+    props.actions.clearPin();
+  };
+  return hl('section.move-review__comparison-preview', {
+    class: { 'move-review__text-preview': inline },
+    attrs: {
+      'aria-label': ko ? '해설 속 수 살펴보기' : 'Explore this move', 'aria-keyshortcuts': 'Escape',
+      ...(inline ? { popover: 'auto', role: 'dialog', 'data-anchor': frame.textAnchor } : {}),
+    },
+    hook: inline ? {
+      insert: vnode => {
+        const element = vnode.elm as HTMLElement;
+        const position = () => positionTextPreview(element);
+        position();
+        window.addEventListener('resize', position);
+        window.addEventListener('scroll', position, true);
+        (element as HTMLElement & { cleanup?: () => void }).cleanup = () => {
+          window.removeEventListener('resize', position);
+          window.removeEventListener('scroll', position, true);
+        };
+      },
+      postpatch: (_, vnode) => positionTextPreview(vnode.elm as HTMLElement),
+      destroy: vnode => (vnode.elm as HTMLElement & { cleanup?: () => void }).cleanup?.(),
+    } : undefined,
+    on: { keydown: event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      close(event);
+    }, toggle: event => {
+      if (inline && (event.currentTarget as HTMLElement).isConnected && (event as ToggleEvent).newState === 'closed') {
+        props.actions.clearPreview();
+        props.actions.clearPin();
+      }
+    } },
+  }, [
+    hl('div.move-review__preview-heading', [
+      hl('strong', choices ? (ko ? '같은 표기의 수 · 위치 선택' : 'Choose the move occurrence') :
+        `${path.moves[0].label} ${ko ? '수순' : 'line'} · ${numberedProofMove(path, frame.ply)}`),
+      hl('button.move-review__preview-close', {
+        attrs: { type: 'button' }, on: { click: close },
+      }, ko ? '닫기' : 'Close'),
+    ]),
+    choices ? hl('div.move-review__position-choices', choices.map(choice => {
+      const owner = observations.paths.find(path => path.id === choice.proofId)!;
+      return hl('button.move-review__observation-frame', {
+        attrs: { type: 'button', 'data-line': owner.id, 'data-ply': choice.ply },
+        on: { click: () => {
+          props.actions.pinFrame({ ...choice, textAnchor: frame.textAnchor });
+          requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(
+            '.move-review__text-preview:popover-open .move-review__preview-position button')?.focus());
+        } },
+      }, `${numberedProofMove(owner, choice.ply)} · ${owner.moves.slice(0, choice.ply).map(move => move.label).join(' ')}`);
+    })) : hl('div.move-review__preview-position', [
+      renderBoardPreview(proofBoard(path, frame), props.orientation, 'div.move-review__proof-board'),
+      hl('div.move-review__preview-controls', [
+        hl('span', props.copy.frameLabels[frame.phase ?? 'after']),
+        hl('div.move-review__observation-frames', (['before', 'after'] as const).map(phase =>
+          hl('button.move-review__observation-frame', {
+            key: phase,
+            attrs: { type: 'button', 'aria-pressed': (frame.phase ?? 'after') === phase ? 'true' : 'false' },
+            on: { click: () => {
+              props.actions.clearPreview();
+              props.actions.pinFrame({ proofId: path.id, ply: frame.ply, phase, textAnchor: frame.textAnchor });
+            } },
+          }, props.copy.frameLabels[phase]),
+        )),
+        hl('div.move-review__observation-frames', ([-1, 1] as const).map(direction => {
+          const ply = frame.ply + direction;
+          return hl('button.move-review__observation-frame', {
+            key: direction,
+            attrs: { type: 'button', disabled: ply < 1 || ply > path.moves.length },
+            on: { click: () => {
+              props.actions.clearPreview();
+              props.actions.pinFrame({ proofId: path.id, ply, phase: 'after', textAnchor: frame.textAnchor });
+            } },
+          }, direction === -1 ? (ko ? '이전 수' : 'Previous move') : (ko ? '다음 수' : 'Next move'));
+        })),
+        props.actions.inspectFrame && hl('button.button.button-thin.move-review__inspect', {
+          attrs: { type: 'button' }, on: { click: event => {
+            props.actions.inspectFrame!({ proofId: path.id, ply: frame.ply, phase: frame.phase });
+            close(event);
+            requestAnimationFrame(() => document.querySelector('.move-review__board-notice')
+              ?.scrollIntoView({ block: 'nearest' }));
+          } },
+        }, ko ? '메인 보드에서 보기' : 'View on main board'),
+        !inline && hl('button.move-review__observation-frame', {
+          attrs: { type: 'button' }, on: { click: () => showObservationFrame(props, frame) },
+        }, ko ? '상세 근거' : 'Position details'),
+      ]),
+    ]),
+    !inline && hl('details.move-review__line-summary', { key: path.id }, [
+      hl('summary', ko ? '전체 수순' : 'Full continuation'),
+      hl('div.move-review__proof-moves', { on: { mouseleave: props.actions.clearPreview } },
+        renderProofMoves(path, frame, props.view.pinnedFrame, props)),
+    ]),
+  ]);
+}
+
+function renderTerminalExplanation(
+  { path, ply, kind }: NonNullable<ReturnType<typeof observedTerminal>>,
+  props: MoveReviewPanelProps,
+): VNode[] {
+  const label = props.copy.terminalLabels[kind];
+  const ending = moveReviewCopy('en-US').terminalLabels[kind].toLowerCase();
+  const first = path.moves[0].label, last = path.moves[ply - 1].label;
+  const sentence = ply === 1
+    ? `${first} ends the game: ${ending}.`
+    : `The supplied line after ${first} ends at ${last}: ${ending}.`;
+  return [hl('p', { attrs: { lang: 'en' } }, sentence),
+    hl('div.move-review__observation-frames', [explanationFrameButton(path, ply, props, label)])];
+}
+
+function renderComparisonExplanations(
+  explanations: CommentaryCandidate[],
+  observations: MoveReviewObservations,
+  props: MoveReviewPanelProps,
+): VNode[] {
+  const terminals = comparisonTerminals(explanations, observations);
+  const effects = explanations.flatMap(explanation => (explanation.detail.effects as CommentaryEffect[] | undefined) ?? []);
+  const seen = new Set([...terminals.values()].map(({ path, ply }) => `${path.id}:${ply}`));
+  const buttons: VNode[] = [];
+  for (const effect of effects)
+    effect.line_ids.forEach((id, index) => {
+      const ply = effect.through_plies[index];
+      const path = observations.paths.find(path => path.id === id);
+      const key = `${id}:${ply}`;
+      // The first-move links are already displayed with the comparison.
+      if (ply <= effect.prefix_moves_uci.length + 1 || !path?.moves[ply - 1] || seen.has(key)) return;
+      seen.add(key);
+      buttons.push(explanationFrameButton(path, ply, props));
+    });
+  const mentions = new Map<string, MoveReviewFrameSelection[]>();
+  const paragraphs = (explanation: CommentaryCandidate, text: string, brief = false) => text.split('\n\n').filter(Boolean).map((text, paragraphIndex) => {
+    const line = brief && /^(\S+ → \S+)\. (.+)$/s.exec(text);
+    const pair = line && line[1].split(' → ');
+    const prefix = (explanation.detail.prefix_moves_uci as Uci[] | undefined)?.length ?? 0;
+    const paths = observations.paths.filter(path => explanation.lineIds.includes(path.id) &&
+      (!pair || (path.moves[prefix]?.label === pair[0] && path.moves[prefix + 1]?.label === pair[1])));
+    let segment = 0;
+    const linked = (text: string): (string | VNode)[] => {
+      const part = segment++;
+      return commentaryMoveTokens(text, paths, prefix + 1).map((token, index) => {
+        if (!token.frames.length) return token.text;
+        const id = `review-text-${explanation.id}-${brief ? 'brief' : 'detail'}-${paragraphIndex}-${part}-${index}`;
+        mentions.set(id, token.frames);
+        const frame = { ...token.frames[0], textAnchor: id, choosePosition: token.frames.length > 1 };
+        const active = props.view.hoveredFrame ?? props.view.pinnedFrame;
+        return hl('button.move-review__inline-san', {
+          key: id,
+          attrs: { id, type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': active?.textAnchor === id ? 'true' : 'false',
+            'aria-label': `${token.text} · ${props.locale === 'ko-KR' ? '위치 살펴보기' : 'Explore position'}` },
+          on: {
+            mouseenter: () => props.actions.previewFrame(frame),
+            focus: () => props.actions.previewFrame(frame),
+            click: event => {
+              props.actions.pinFrame(frame);
+              if (event.detail === 0) requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(
+                '.move-review__text-preview:popover-open button')?.focus());
+            },
+            keydown: event => {
+              if (event.key !== 'Escape') return;
+              event.preventDefault();
+              event.stopPropagation();
+              props.actions.clearPreview();
+              props.actions.clearPin();
+            },
+          },
+        }, token.text);
+      });
+    };
+    const attrs = { lang: 'en' };
+    const opening = brief && !line && text.length > 450 ? text.indexOf('. ', text.indexOf('. ') + 2) : -1;
+    if (opening >= 0) return hl('div', [
+      hl('p.move-review__commentary', { attrs }, linked(text.slice(0, opening + 1))),
+      hl('details.move-review__more-effects', [
+        hl('summary', props.locale === 'ko-KR' ? '이 수의 다른 변화' : 'More changes from this move'),
+        hl('p.move-review__commentary', { attrs }, linked(text.slice(opening + 2))),
+      ]),
+    ]);
+    if (!line) return hl('p.move-review__commentary', { attrs }, linked(text));
+    const result = line[2].lastIndexOf(' In this line, ');
+    const body = result < 0 ? line[2] : line[2].slice(0, result);
+    const split = body.indexOf('. ');
+    return hl('section.move-review__line-brief', { attrs }, [
+      hl('h4', linked(line[1])),
+      hl('p.move-review__commentary', linked(split < 0 ? body : body.slice(0, split + 1))),
+      result >= 0 && hl('p.move-review__line-result', linked(line[2].slice(result + 1))),
+      split >= 0 && hl('details.move-review__line-events', [
+        hl('summary', props.locale === 'ko-KR' ? '응수와 교환 과정' : 'Replies and exchanges'),
+        hl('p.move-review__commentary', linked(body.slice(split + 2))),
+      ]),
+    ]);
+  });
+  const primary = explanations.find(explanation => explanation.detail.type === 'root_comparison') ?? explanations[0];
+  const detailed = explanations.filter(explanation => explanation !== primary ||
+    typeof explanation.detail.summary === 'string');
+  const content = [
+    ...[...terminals.values()].flatMap(terminal => renderTerminalExplanation(terminal, props)),
+    ...[primary].filter(explanation => typeof explanation?.detail.text === 'string')
+      .flatMap(explanation => paragraphs(explanation, (explanation.detail.summary ?? explanation.detail.text) as string, true)),
+    ...(detailed.length ? [hl('details.move-review__comparison-records', [
+      hl('summary', props.locale === 'ko-KR' ? '수순별 상세 해설' : 'Detailed line commentary'),
+      ...detailed.flatMap(explanation => paragraphs(explanation, explanation.detail.text as string)),
+    ])] : []),
+    ...(buttons.length ? [hl('details.move-review__explanation-positions', [
+      hl('summary', props.locale === 'ko-KR' ? '설명에 연결된 위치' : 'Positions in this explanation'),
+      hl('div.move-review__observation-frames', buttons),
+    ])] : []),
+  ];
+  const preview = renderComparisonPreview(explanations.flatMap(explanation => explanation.lineIds), observations, props, mentions);
+  return [...content, ...(preview ? [preview] : [])];
+}
+
+function renderCommentarySelection(
+  props: MoveReviewPanelProps,
+  readings: ReturnType<typeof pvReadings>,
+): VNode | undefined {
   const observations = moveReviewObservations(props.job);
   const selection = observations?.selection;
   const record = props.job.recordReview;
-  if (!selection?.scenes.length && !record) return;
+  if (!observations && !record) return;
   const ko = props.locale === 'ko-KR';
   const subject =
     props.job.kind === 'completed' || props.job.kind === 'position-action'
@@ -1936,7 +2351,7 @@ function renderCommentarySelection(props: MoveReviewPanelProps): VNode | undefin
       : props.job.kind === 'idle'
         ? undefined
         : props.job.subject;
-  const ready = record?.scenes.filter(scene => scene.state === 'ready') ?? [];
+  const moments = record?.scenes ?? [];
   const selectedPly = subject?.after.path.length ?? 0;
   const anchor =
     props.job.observationFrame !== undefined
@@ -1949,8 +2364,8 @@ function renderCommentarySelection(props: MoveReviewPanelProps): VNode | undefin
   const sceneButtons = (direction: -1 | 1): VNode => {
     const candidate =
       direction > 0
-        ? ready.find(scene => scene.path.length > selectedPly)
-        : [...ready].reverse().find(scene => scene.path.length < selectedPly);
+        ? moments.find(scene => scene.path.length > selectedPly)
+        : [...moments].reverse().find(scene => scene.path.length < selectedPly);
     return hl(
       'button.button.button-thin',
       {
@@ -1960,8 +2375,72 @@ function renderCommentarySelection(props: MoveReviewPanelProps): VNode | undefin
       direction < 0 ? (ko ? '이전 장면' : 'Previous moment') : ko ? '다음 장면' : 'Next moment',
     );
   };
+  const cards: { child: boolean; terminal: boolean; primary: boolean; node: VNode }[] = [];
+  if (observations && selection) {
+    const merged = new Set(readings.flatMap(({ candidate, detail }) =>
+      matchingPrimaries(observations, candidate, detail).map(primary => primary.id)));
+    for (const scene of selection.scenes.filter(scene => scene.rootOccurrenceId === occurrence)) {
+      const main = selection.candidates.find(
+        candidate => scene.candidateIds.includes(candidate.id) && candidate.kind === 'comparison',
+      );
+      if (!main || merged.has(main.id)) continue;
+      const frame = commentarySceneFrame(observations, scene);
+      const question = questionComparisonDetail(main);
+      const ply = question ? question.prefix_moves_uci.length + 1 : 1;
+      cards.push({
+        child: ply > 1,
+        terminal: comparisonTerminals([main], observations).size > 0,
+        primary: main.detail.type === 'root_comparison',
+        node: hl('article.move-review__scene', {
+          key: `${observations.owner?.jobId ?? ''}:${scene.id}`, on: comparisonPreviewExit(props),
+        }, [
+          hl('h3', ko ? '두 선택의 비교' : 'Comparison of the two choices'),
+          ...renderComparisonExplanations([main], observations, props),
+          hl('div.move-review__observation-frames', [
+            frame && hl('button.move-review__observation-frame',
+              { attrs: { type: 'button' }, on: { click: () => showObservationFrame(props, frame) } },
+              ko ? '선택한 위치 보기' : 'Inspect this position'),
+            ...main.lineIds.map(lineId => {
+              const path = observations.paths.find(path => path.id === lineId);
+              if (!path?.moves[ply - 1]) return undefined;
+              return hl('button.move-review__observation-frame', {
+                key: lineId,
+                attrs: { type: 'button', 'data-line': lineId, 'data-ply': ply },
+                on: { click: () => showObservationFrame(props, { proofId: lineId, ply, phase: 'after' }) },
+              }, `${path.moves[ply - 1].label} · ${ko ? '수순 보기' : 'Inspect line'}`);
+            }),
+          ]),
+        ]),
+      });
+    }
+    for (const { candidate, detail } of readings) {
+      const explanations = pvExplanations(observations, candidate, detail);
+      cards.push({
+        child: false,
+        terminal: comparisonTerminals(explanations, observations).size > 0,
+        primary: explanations.some(explanation => explanation.detail.type === 'root_comparison'),
+        node: renderPvReading(candidate, detail, observations, anchor, props),
+      });
+    }
+  }
+  // Scope orders the displayed cards; it does not select candidates or change their evidence.
+  const currentCards = cards.filter(card => !card.child);
+  const ordered = [...currentCards.filter(card => card.terminal),
+    ...currentCards.filter(card => !card.terminal && card.primary),
+    ...currentCards.filter(card => !card.terminal && !card.primary),
+    ...cards.filter(card => card.child)];
+  const primary = ordered.find(card => card.primary) ?? ordered[0];
+  const additional = ordered.filter(card => card !== primary);
+  // A rejected score report can still retain the current move's admitted automatic ending.
+  const immediate = !cards.length && observations && subject && occurrence && anchor?.ply === 1
+    ? observations.paths.map(observedTerminal).find(terminal => terminal?.ply === 1 &&
+      terminal.path.kind === 'played' && terminal.path.startFen === subject.before.fen &&
+      terminal.path.moves[0].uci === subject.played.uci && terminal.path.moves[0].fenAfter === subject.after.fen &&
+      terminal.path.occurrenceIds[0] === occurrence)
+    : undefined;
+  if (!cards.length && !immediate && !record) return;
   return hl('section.move-review__selection', [
-    record &&
+    record && record.total > 1 &&
       hl('div.move-review__review-progress', [
         hl(
           'p',
@@ -1969,8 +2448,6 @@ function renderCommentarySelection(props: MoveReviewPanelProps): VNode | undefin
             ? `${record.total}수 중 ${record.assessed}수 평가 도착 · ${record.completed}수 분석 완료${record.stopped ? ` · ${record.stopped}수 중단` : ''}`
             : `${record.assessed} of ${record.total} moves assessed · ${record.completed} analyses completed${record.stopped ? ` · ${record.stopped} stopped` : ''}`,
         ),
-        record.status === 'finished' &&
-          hl('p.move-review__notice', ko ? '기보 처리가 종료되었습니다.' : 'Game processing has finished.'),
         record.status === 'paused' &&
           hl('p.move-review__notice', ko ? '기보 검토를 멈췄습니다.' : 'Game review is paused.'),
         record.status === 'blocked' &&
@@ -1980,97 +2457,25 @@ function renderCommentarySelection(props: MoveReviewPanelProps): VNode | undefin
               ? '분석을 계속할 수 없어 기보 검토를 멈췄습니다. 수를 선택해 다시 시도할 수 있습니다.'
               : 'Game review stopped because analysis could not continue. Select a move to retry.',
           ),
-        ready.length > 0 &&
+        moments.length > 1 &&
           hl('nav', { attrs: { 'aria-label': ko ? '설명할 장면' : 'Commentary moments' } }, [
             sceneButtons(-1),
             sceneButtons(1),
           ]),
-        record.scenes.some(scene => scene.state !== 'ready') &&
-          hl(
-            'p.move-review__notice',
-            ko
-              ? '설명 근거가 아직 부족한 비교도 남아 있습니다.'
-              : 'Some comparisons still need explanatory evidence.',
-          ),
       ]),
-    ...(!observations || !selection
-      ? []
-      : selection.scenes
-          .filter(scene => scene.rootOccurrenceId === occurrence)
-          .map(scene => {
-            const main = selection.candidates.find(
-              candidate => scene.candidateIds.includes(candidate.id) && candidate.kind === 'comparison',
-            );
-            if (!main) return undefined;
-            if (
-              pvReadings(observations, occurrence || undefined).some(
-                ({ candidate, detail }) => matchingPrimary(observations, candidate, detail)?.id === main.id,
-              )
-            )
-              return undefined;
-            const frame = commentarySceneFrame(observations, scene);
-            const question = questionComparisonDetail(main);
-            const ply = question ? question.prefix_moves_uci.length + 1 : 1;
-            return hl(
-              'article.move-review__scene',
-              {
-                key: `${observations.owner?.jobId ?? ''}:${scene.id}`,
-                attrs: { 'data-evidence-state': scene.state },
-              },
-              [
-                hl(
-                  'h3',
-                  scene.state === 'ready'
-                    ? question
-                      ? ko
-                        ? '두 선택의 비교'
-                        : 'Comparison of the two choices'
-                      : ko
-                        ? '수순별 교환 결과'
-                        : 'Exchanges in these lines'
-                    : ko
-                      ? '더 살펴볼 비교'
-                      : 'A comparison to examine',
-                ),
-                scene.state === 'ready' && typeof main.detail.text === 'string'
-                  ? hl('p', main.detail.text)
-                  : hl(
-                      'p.move-review__notice',
-                      ko
-                        ? main.detail.material_relation === 'equal'
-                          ? '두 수순에서 잃는 기물의 종류별 수와 승격 수는 같습니다. 배치와 수순 순서까지 같은 뜻은 아니며, 평가 차이의 설명은 더 필요합니다.'
-                          : '평가 비교는 있지만, 이어지는 수순의 설명 근거가 아직 부족합니다.'
-                        : main.detail.material_relation === 'equal'
-                          ? 'Both lines lose the same numbers of each piece type and have the same promotion counts. Their positions and move order may differ; the evaluation still needs explanation.'
-                          : 'The evaluation comparison is available, but its continuation evidence is incomplete.',
-                    ),
-                hl('div.move-review__observation-frames', [
-                  frame &&
-                    hl(
-                      'button',
-                      { attrs: { type: 'button' }, on: { click: () => showObservationFrame(props, frame) } },
-                      ko ? '선택한 위치 보기' : 'Inspect this position',
-                    ),
-                  ...main.lineIds.map(lineId => {
-                    const path = observations.paths.find(path => path.id === lineId);
-                    if (!path?.moves[ply - 1]) return undefined;
-                    return hl(
-                      'button',
-                      {
-                        key: lineId,
-                        attrs: { type: 'button' },
-                        on: {
-                          click: () =>
-                            showObservationFrame(props, { proofId: lineId, ply, phase: 'after' }),
-                        },
-                      },
-                      `${path.moves[ply - 1].label} · ${ko ? '수순 보기' : 'Inspect line'}`,
-                    );
-                  }),
-                ]),
-              ],
-            );
-          })),
+    primary?.node,
+    additional.length > 0 && hl('details.move-review__additional-comparisons', [
+      hl('summary', ko ? `다른 비교와 후속 질문 (${additional.length})` : `Other comparisons and follow-up questions (${additional.length})`),
+      ...additional.map(card => card.node),
+    ]),
+    immediate && hl('article.move-review__scene', { key: `terminal-${occurrence}`, on: comparisonPreviewExit(props) }, [
+      hl('h3', ko ? '현재 착수' : 'Current move'),
+      ...renderTerminalExplanation(immediate, props),
+      renderComparisonPreview([immediate.path.id], observations!, props),
+    ]),
+    readings.length > 0 && hl('p.move-review__pv-limit', ko
+      ? '확인한 범위는 이 유한 수순의 기록된 항목입니다. 강제 결과나 평가 차이의 원인까지 입증한 것은 아닙니다.'
+      : 'These findings cover the recorded facets of these finite lines. They do not establish a forced result or the cause of the evaluation difference.'),
   ]);
 }
 
@@ -2129,7 +2534,16 @@ function renderPanelContent(props: MoveReviewPanelProps): VNode {
     case 'idle':
       return renderState('idle', copy.idleTitle, copy.idleBody);
     case 'loading':
-      return renderLoadingState(copy.analysing);
+      return hl('div', [
+        renderLoadingState(job.assessment
+          ? props.locale === 'ko-KR'
+            ? (job.verification?.state === 'complete' ? '평가 확보 · 추가 수순 확인 중' : '첫 평가 확보 · 비교 검증 중')
+            : (job.verification?.state === 'complete' ? 'Assessment ready · checking follow-ups' : 'Initial assessment ready · verifying the comparison')
+          : copy.analysing),
+        props.actions.cancel && hl('button.button.button-thin', {
+          attrs: { type: 'button' }, on: { click: props.actions.cancel },
+        }, props.locale === 'ko-KR' ? '분석 중단' : 'Stop analysis'),
+      ]);
     case 'unsearched':
       return hl('div.move-review__state.move-review__state--unsearched', [
         job.observationsPending && hl('p', copy.observationsLoading),
@@ -2213,7 +2627,7 @@ function renderFailureState(
     { attrs: { role: kind === 'error' ? 'alert' : 'status', 'aria-atomic': 'true' } },
     [
       hl('h3', title),
-      hl('p', body),
+      body !== title && hl('p', body),
       retryable &&
         hl('div.move-review__state-actions', [
           hl(
@@ -2269,7 +2683,7 @@ function renderReviewBody(props: MoveReviewPanelProps, evidence: MoveReviewEvide
         hl('div.move-review__summary-copy', [
           hl('span.move-review__eyebrow', played.label),
           hl('h3', verdictLabel),
-          hl('p.move-review__core-comparison', renderCoreComparison(played, best, core, props.copy)),
+          hl('p.move-review__core-comparison', renderCoreComparison(played, best, core, props)),
           review.kind === 'abstained' ? hl('p', props.copy.candidateUnavailable) : undefined,
         ]),
       ],
@@ -2290,10 +2704,11 @@ function renderCoreComparison(
   played: MoveReviewCandidate,
   best: MoveReviewCandidate,
   core: MoveReviewCore | undefined,
-  copy: MoveReviewCopy,
+  props: MoveReviewPanelProps,
 ): string {
+  const copy = props.copy;
   if (core?.kind === 'best-choice')
-    return `${copy.best} ${played.label} · ${copy.runnerUp} ${core.bestChoice.runnerUpUci}: ${moveReviewVerdictCodeLabel(
+    return `${copy.best} ${played.label} · ${copy.runnerUp} ${rootMoveLabel(props, core.bestChoice.runnerUpUci)}: ${moveReviewVerdictCodeLabel(
       core.bestChoice.runnerUpVerdictCode,
       copy,
     )}`;
@@ -2310,7 +2725,7 @@ function renderMetrics(
   const referenceMove = core.kind === 'best-choice' ? core.bestChoice.runnerUpUci : core.bestUci;
   return hl('dl.move-review__metrics', [
     hl('div', [
-      hl('dt.move-review__metric-label', `${props.copy.winChance}: ${referenceMove} → ${core.playedUci}`),
+      hl('dt.move-review__metric-label', `${props.copy.winChance}: ${rootMoveLabel(props, referenceMove)} → ${rootMoveLabel(props, core.playedUci)}`),
       hl(
         'dd',
         `${formatMoveReviewPercent(winChance.referencePercent, props.locale)} → ${formatMoveReviewPercent(
@@ -2403,7 +2818,7 @@ function renderForcedSingleMove(
     },
     [
       hl('p.move-review__candidate-message', props.copy.forcedSingleMove),
-      hl('p', [hl('code', review.lineUcis.join(' '))]),
+      hl('p', [hl('code', rootFen(props) ? moveReviewSans(rootFen(props)!, review.lineUcis).join(' ') : '?')]),
       terminalLabel && hl('p', `${props.copy.terminalResult}: ${terminalLabel}`),
     ],
   );
@@ -2596,8 +3011,8 @@ function renderObservations(props: MoveReviewPanelProps): VNode | undefined {
     (props.job.observationFrame !== null
       ? (observations.paths.find(path => path.kind === 'played') ?? observations.paths[0])
       : undefined);
-  return hl('section.move-review__observations', [
-    hl('h3', props.copy.observationsTitle),
+  return hl('details.move-review__observations', { attrs: { tabindex: -1 } }, [
+    hl('summary', props.copy.observationsTitle),
     ...(observations.inputIssues ?? []).map(issue =>
       hl(
         'p.move-review__notice',
@@ -2644,7 +3059,13 @@ function renderObservations(props: MoveReviewPanelProps): VNode | undefined {
   ]);
 }
 
-function observationText(statement: MoveReviewObservation, copy: MoveReviewCopy): string {
+function observationFen(path: MoveReviewObservations['paths'][number], statement: MoveReviewObservation): FEN {
+  const index = path.occurrenceIds.indexOf(statement.occurrenceId);
+  const count = index + (statement.kind === 'check_response' ? 0 : 1);
+  return count === 0 ? path.startFen : path.moves[count - 1].fenAfter;
+}
+
+function observationText(statement: MoveReviewObservation, copy: MoveReviewCopy, fen: FEN): string {
   if (statement.kind === 'piece_control') {
     return (['before', 'after'] as const)
       .map(phase => {
@@ -2660,12 +3081,12 @@ function observationText(statement: MoveReviewObservation, copy: MoveReviewCopy)
   const responseText = (
     response: Extract<MoveReviewObservation, { kind: 'check_response' }>['response'],
   ): string =>
-    `${legalResourceText(response.resource, copy)} (${response.modes.map(mode => copy.checkModeLabels[mode]).join(' + ')})`;
+    `${legalResourceText(response.resource, copy, fen)} (${response.modes.map(mode => copy.checkModeLabels[mode]).join(' + ')})`;
   if (statement.kind === 'recapture_resources')
     return [
       `${fields.captured}: ${pieceText(statement.captured, copy)}`,
       `${fields.geometric}: ${pieces(statement.geometric_recapturers)}`,
-      `${fields.legal}: ${list(statement.legal_recaptures.map(resource => legalResourceText(resource, copy)))}`,
+      `${fields.legal}: ${list(statement.legal_recaptures.map(resource => legalResourceText(resource, copy, fen)))}`,
       `${fields.restricted}: ${list(
         statement.restricted_recaptures.map(
           restriction =>
@@ -2685,7 +3106,7 @@ function observationText(statement: MoveReviewObservation, copy: MoveReviewCopy)
     ].join('. ');
   if (statement.kind === 'check_responses')
     return [
-      observationSummary(statement, copy),
+      observationSummary(statement, copy, fen),
       `${fields.legal}: ${list(statement.responses.map(responseText))}`,
       `${fields.controlledDestinations}: ${list(
         statement.controlled_king_destinations.map(
@@ -2760,10 +3181,10 @@ function pieceText(
     : copy.removedPiece;
 }
 
-function legalResourceText(resource: LegalResource, copy: MoveReviewCopy): string {
+function legalResourceText(resource: LegalResource, copy: MoveReviewCopy, fen: FEN): string {
   const m = resource.movement;
   return (
-    `${copy.colorLabels[m.side]} ${copy.roleLabels[m.before_role]} ${m.from} → ${copy.roleLabels[m.after_role]} ${m.to} (${resource.move_uci})` +
+    `${copy.colorLabels[m.side]} ${copy.roleLabels[m.before_role]} ${m.from} → ${copy.roleLabels[m.after_role]} ${m.to} (${moveReviewSan(fen, resource.move_uci)})` +
     (resource.capture ? ` · ${copy.observationFields.captured}: ${pieceText(resource.capture, copy)}` : '')
   );
 }
@@ -2806,7 +3227,7 @@ function structuralSubjectText(subject: StructuralSubject, copy: MoveReviewCopy)
   );
 }
 
-function observationSummary(statement: MoveReviewObservation, copy: MoveReviewCopy): string | undefined {
+function observationSummary(statement: MoveReviewObservation, copy: MoveReviewCopy, fen: FEN): string | undefined {
   if (statement.kind === 'piece_control') {
     const before = statement.before.state;
     const after = statement.after.state;
@@ -2833,7 +3254,7 @@ function observationSummary(statement: MoveReviewObservation, copy: MoveReviewCo
   if (statement.kind === 'check_responses')
     return `${copy.colorLabels[statement.checked_side]} ${copy.observationFields.king} ${statement.king_square} · ${copy.observationFields.checkers}: ${statement.checkers.map(piece => pieceText(piece, copy)).join(', ')} · ${statement.terminal === 'checkmate' ? copy.terminalLabels.checkmate : `${copy.observationFields.ongoing} · ${copy.observationFields.legal}: ${statement.responses.length}`}`;
   if (statement.kind === 'check_response')
-    return `${copy.observationLabels[statement.kind]} · ${statement.response.resource.move_uci} · ${statement.response.modes.map(mode => copy.checkModeLabels[mode]).join(' + ')}`;
+    return `${copy.observationLabels[statement.kind]} · ${moveReviewSan(fen, statement.response.resource.move_uci)} · ${statement.response.modes.map(mode => copy.checkModeLabels[mode]).join(' + ')}`;
   return;
 }
 
@@ -2932,7 +3353,8 @@ function renderLineSummary(
         ]);
       }),
     ),
-    eventButton(summary.ending.ply_offset, labels[summary.ending.kind]),
+    eventButton(summary.ending.ply_offset, summary.ending.kind === 'line_end'
+      ? labels.line_end : props.copy.terminalLabels[summary.ending.kind]),
     hl('p', labels.limit),
   ]);
 }
@@ -3102,7 +3524,7 @@ function renderPositionResources(
                 const moves = legalMoves(entry.piece.square, entry.destination);
                 return (
                   `${pieceText(entry.piece, props.copy)} · ${labels.path}: ${entry.piece.square} – ${entry.traversed_squares.join(' – ')} · ${labels[legality(entry.piece.side, moves)]}` +
-                  (moves.length ? ` (${moves.map(move => move.uci).join(', ')})` : '')
+                  (moves.length ? ` (${moves.map(move => moveReviewSan(resources.fen, move.uci)).join(', ')})` : '')
                 );
               }),
             ),
@@ -3121,7 +3543,7 @@ function renderPositionResources(
                       selectedMoves.map(move =>
                         hl(
                           'li',
-                          `${move.destination} (${move.uci})` +
+                          `${move.destination} (${moveReviewSan(resources.fen, move.uci)})` +
                             (move.captured_square ? ` · ${labels.capturedOn}: ${move.captured_square}` : ''),
                         ),
                       ),
@@ -3203,10 +3625,10 @@ function renderProof(
   }
   const rows = (items: NonNullable<typeof statements>): VNode[] =>
     items.map(({ statement, key }) => {
-      const text = observationText(statement, props.copy);
+      const text = observationText(statement, props.copy, observationFen(path!, statement));
       const summary =
         statement.kind === 'piece_control' || !grouped(statement)
-          ? observationSummary(statement, props.copy)
+          ? observationSummary(statement, props.copy, observationFen(path!, statement))
           : undefined;
       return hl(`${summary ? 'details' : 'div'}.move-review__observation`, { key }, [
         summary && hl('summary', summary),
@@ -3275,7 +3697,7 @@ function renderProof(
                 ...squares.map(inspectSquare => ({ phase, inspectSquare })),
               ];
               return hl('div.move-review__observation', { key: item.text }, [
-                hl('p', item.text),
+                hl('p', { attrs: { lang: 'en' } }, item.text),
                 hl(
                   'div.move-review__observation-frames',
                   buttons.map(({ phase, inspectSquare }) => {
@@ -3537,10 +3959,43 @@ function proofBoard(
         shapes.push({ orig: statement.to as Key, dest: square as Key, brush: 'blue' });
     if (statement.kind === 'castling')
       shapes.push({ orig: before ? statement.rook.from : statement.rook.to, brush: 'blue' });
+  } else {
+    const from = move.uci.slice(0, 2) as Key;
+    const castle = /^O-O(?:-O)?[+#]?$/.test(move.label);
+    const queenSide = move.label.startsWith('O-O-O');
+    const to = (castle ? `${queenSide ? 'c' : 'g'}${from[1]}` : move.uci.slice(2, 4)) as Key;
+    shapes.push({ orig: from, dest: to, brush: 'blue' });
+    if (castle) shapes.push({ orig: `${queenSide ? 'a' : 'h'}${from[1]}` as Key,
+      dest: `${queenSide ? 'd' : 'f'}${from[1]}` as Key, brush: 'green' });
   }
   return before
     ? { fen: frame.ply === 1 ? proof.startFen : proof.moves[frame.ply - 2]!.fenAfter, shapes }
     : { fen: move.fenAfter, uci: move.uci, shapes };
+}
+
+export function renderMoveReviewBoard(props: MoveReviewPanelProps): { board: VNode; notice: VNode } | undefined {
+  const frame = props.view.boardFrame;
+  const path = frame && moveReviewObservations(props.job)?.paths.find(path => path.id === frame.proofId);
+  if (!frame || !path?.moves[frame.ply - 1]) return;
+  const ko = props.locale === 'ko-KR';
+  return {
+    board: hl('div.move-review__main-preview', {
+      attrs: { 'aria-label': `${numberedProofMove(path, frame.ply)} · ${props.copy.frameLabels[frame.phase ?? 'after']}` },
+    }, [renderBoardPreview(proofBoard(path, frame), props.orientation, 'div.move-review__inspection-board')]),
+    notice: hl('div.move-review__board-notice', [
+      hl('span', { attrs: { role: 'status', 'aria-live': 'polite' } },
+        `${ko ? '해설 수순' : 'Commentary line'} · ${numberedProofMove(path, frame.ply)}`),
+      hl('div', [
+        ...([-1, 1] as const).map(direction => hl('button', {
+          attrs: { type: 'button', disabled: frame.ply + direction < 1 || frame.ply + direction > path.moves.length,
+            'aria-label': direction < 0 ? (ko ? '이전 수' : 'Previous move') : (ko ? '다음 수' : 'Next move') },
+          on: { click: () => props.actions.inspectFrame?.({ ...frame, ply: frame.ply + direction, phase: 'after' }) },
+        }, direction < 0 ? '←' : '→')),
+        hl('button', { attrs: { type: 'button' }, on: { click: () => props.actions.clearInspection?.() } },
+          ko ? '기보로 돌아가기' : 'Return to game'),
+      ]),
+    ]),
+  };
 }
 
 function proofFrameLabel(proof: MoveReviewProof, ply: number, copy: MoveReviewCopy): string {

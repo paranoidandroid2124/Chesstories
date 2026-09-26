@@ -72,8 +72,8 @@ private[runtime] object CommentarySelection:
             Option.when(candidate.isEmpty)(fact.candidateLine.id).toList),
           "material_relation" -> result.relation, "material_unavailable_reason" -> result.unavailableReason,
           "text" -> (List(exchanges, if observed then material.map { (left, right, _, _) =>
-            s"In the provided ${left.moves.size}-ply line beginning ${left.sans.head}, ${left.materialDescription}; " +
-              s"in the provided ${right.moves.size}-ply line beginning ${right.sans.head}, ${right.materialDescription}. " +
+            s"In the provided line beginning ${left.sans.head}, ${left.materialDescription}; " +
+              s"in the provided line beginning ${right.sans.head}, ${right.materialDescription}. " +
               "These are observed exchanges, not a forced outcome or the sole reason for the evaluation."
           }.getOrElse("") else if result == ComparisonResult.MissingPath then
             "The comparison is available, but a referenced continuation is missing."
@@ -241,17 +241,19 @@ private[runtime] object CommentarySelection:
       .sortBy(row => (row._1, row._2, row._3))
     losses -> promotions
 
-  private def materialText(signature: MaterialSignature): String =
+  private[runtime] def materialText(signature: MaterialSignature): String =
     val (losses, promotions) = signature
     val rows = List("white", "black").flatMap { side =>
       val pieces = losses.collect { case (`side`, role, count) =>
         if count == 1 then s"one $role" else s"$count ${role}s"
       }
-      Option.when(pieces.nonEmpty)(s"${side.capitalize} loses ${pieces.mkString(" and ")}")
+      val listed = if pieces.size < 3 then pieces.mkString(" and ")
+        else pieces.init.mkString(", ") + ", and " + pieces.last
+      Option.when(pieces.nonEmpty)(s"${side.capitalize} loses $listed")
     } ++ promotions.map { (side, before, after, count) =>
       s"${side.capitalize} promotes $count ${if count == 1 then before else s"${before}s"} to ${if count == 1 then s"a $after" else s"${after}s"}"
     }
-    if rows.isEmpty then "neither side loses material or promotes" else rows.mkString(", ")
+    if rows.isEmpty then "neither side loses material or promotes" else rows.mkString("; ")
 
   private def sideName(side: chess.Color): String = if side.white then "white" else "black"
 

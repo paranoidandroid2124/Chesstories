@@ -70,7 +70,9 @@ object AnalysePgnPipeline:
       inlinePgn: Option[String] = None
   )(using ctx: Context): RenderPayload =
     val pov = Pov(lila.core.game.Game.make(variant, fen), chess.Color.White)
-    val root = fen.fold(Root.default(variant))(f => Root.default(variant).copy(fen = f))
+    val root = fen.fold(Root.default(variant)): f =>
+      val setup = Position.AndFullMoveNumber(variant, f)
+      Root.default(variant).copy(fen = Fen.write(setup), ply = setup.ply, check = setup.position.check)
     val data = CondensedJsonView(pov, root, ctx.pref)
     RenderPayload(
       data = data,

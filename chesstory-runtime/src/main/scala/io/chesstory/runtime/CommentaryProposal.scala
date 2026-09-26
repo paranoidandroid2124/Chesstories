@@ -396,36 +396,63 @@ object CommentaryProposal:
       loss.toList.map(TacticClause.Loss.apply.tupled) ++ departures.map(TacticClause.Departure.apply.tupled)
 
     def text(notation: CommentaryNotation, scope: Option[(List[String], String, Int)] = None,
-        omitted: Set[TacticClause] = Set.empty, includeQualification: Boolean = true): String =
-      def piece(value: CommentaryFact.Piece) = s"${value.side} ${value.role} originally on ${value.square}"
-      def step(event: CommentaryFact.Event) = notation.line(line)(event.fromPly) +
-        (if scope.isEmpty then "" else s" (ply ${event.fromPly + 1})")
+        omitted: Set[TacticClause] = Set.empty, includeQualification: Boolean = true,
+        locate: (CommentaryFact.Piece, Int) => Option[String] = (_, _) => None): String =
+      def piece(value: CommentaryFact.Piece, ply: Int) = locate(value, ply)
+        .getOrElse(s"${value.side} ${value.role} originally on ${value.square}")
+      def step(event: CommentaryFact.Event) = notation.line(line)(event.fromPly)
       val introduction = scope.fold(s"In the returned continuation ${notation.line(line).mkString(" ")}, ") { (prefix, move, from) =>
         val between = notation.line(line).slice(from, at.fromPly)
         s"In the returned ${notation.move(prefix, move)} line" + (if prefix.isEmpty then "" else s" after ${notation.line(prefix).mkString(" ")}") +
-          (if between.isEmpty then ": "
-           else s", after ${between.mkString(" ")} (plies ${from + 1}–${at.fromPly}): ")
+          (if between.isEmpty then ", "
+           else s", after ${between.mkString(" ")}, ")
       }
       val capture = loss.filterNot(value => omitted(TacticClause.Loss.apply.tupled(value)))
-        .map((event, victim) => s"${step(event)} removes the ${piece(victim)}").toList
+        .map((event, victim) => s"${step(event)} removes the ${piece(victim, event.fromPly)}").toList
       val remainingDepartures = departures.filterNot(value => omitted(TacticClause.Departure.apply.tupled(value)))
       // A new line-opening condition still qualifies the original contact set.
       // Removing just its already-shared slider contact could attach that condition
       // to an unrelated newly introduced direct attack instead.
       val remainingContacts = if remainingDepartures.nonEmpty then contacts
         else contacts.filterNot(value => omitted(TacticClause.Contact.apply.tupled(value)))
-      val attacks = remainingContacts.map((attacker, victim, square) =>
-        s"the ${piece(attacker)} attacks the ${piece(victim)} on $square")
-      val opened = remainingDepartures.map { (event, blocker, square, removed) =>
-        if removed then s"the ${piece(blocker)} on $square is removed by ${step(event)}"
-        else s"the ${piece(blocker)} leaves $square with ${step(event)}"
+      val mutual = remainingContacts.collect {
+        case (first, second, _) if locate(first, at.throughPly).nonEmpty && locate(second, at.throughPly).nonEmpty &&
+            remainingContacts.exists((actor, target, _) => actor == second && target == first) => first -> second
+      }.distinctBy((first, second) => Set(first, second))
+      val paired = mutual.flatMap((first, second) => List(first -> second, second -> first)).toSet
+      val separate = remainingContacts.filterNot((actor, target, _) => paired(actor -> target))
+      val attacks = (mutual.map { (first, second) =>
+        remainingContacts.indexWhere(row => row._1 == first && row._2 == second) ->
+          s"the ${piece(first, at.throughPly)} and the ${piece(second, at.throughPly)} attack each other"
+      } ++ separate.map(_._1).distinct.map { attacker =>
+        val targets = separate.collect { case (`attacker`, victim, square) =>
+          "the " + locate(victim, at.throughPly).getOrElse(s"${piece(victim, at.throughPly)} on $square")
+        }
+        remainingContacts.indexWhere(_._1 == attacker) ->
+          s"the ${piece(attacker, at.throughPly)} attacks ${targets.mkString(" and ")}"
+      }).sortBy(_._1).map(_._2)
+      val opened = remainingDepartures.map(_._3).distinct.flatMap { square =>
+        val changes = remainingDepartures.filter(_._3 == square).sortBy(_._1.fromPly)
+        val (last, _, _, removed) = changes.last
+        // Only already-described captures can be referred to by their moves.
+        // Otherwise this explanation still has to name every captured blocker.
+        if changes.size > 1 && !removed && changes.init.forall { (event, blocker, _, captured) =>
+            captured && omitted(TacticClause.Loss(event, blocker))
+          } then List(s"${step(last)} clears $square after the captures ${changes.init.map(row => step(row._1)).mkString(", ")}")
+        else changes.map { (event, blocker, _, removed) =>
+          if removed then "the " + locate(blocker, event.fromPly).getOrElse(s"${piece(blocker, event.fromPly)} on $square") +
+            s" is removed by ${step(event)}"
+          else s"the ${piece(blocker, event.fromPly)} leaves $square with ${step(event)}"
+        }
       }
       if capture.isEmpty && attacks.isEmpty && opened.isEmpty then ""
       else introduction + (if attacks.nonEmpty then
-        (capture :+ s"${step(at)} by the ${piece(actor)} creates these new attacks: ${attacks.mkString("; ")}").mkString("; ") + "."
-        else s"For the attacks created by ${step(at)} with the ${piece(actor)}" +
+        val action = if locate(actor, at.fromPly).nonEmpty then s"${step(at)}: ${attacks.mkString("; ")}"
+          else s"${step(at)} by the ${piece(actor, at.fromPly)} creates these new attacks: ${attacks.mkString("; ")}"
+        (capture :+ action).mkString("; ") + "."
+        else s"For the attacks created by ${step(at)} with the ${piece(actor, at.fromPly)}" +
           (if capture.isEmpty then "." else s", ${capture.mkString("; ")}.")) +
-        (if opened.isEmpty then "" else s" The opened line depends on these departures: ${opened.mkString("; ")}.") +
+        (if opened.isEmpty then "" else s" The line opens after ${opened.mkString(" and ")}.") +
         (if scope.nonEmpty || !includeQualification then "" else " " + TacticCaveat)
 
   private def compactTactics(parts: List[ComparisonPart], answer: Option[CommentaryInvestigation.Answer],
@@ -703,8 +730,7 @@ object CommentaryProposal:
             }.map(offset => prepared.notation.line(line.path.moves)(offset)).toList
             val observed = (targets ++ losses ++ promotions ++ exchanges.take(2) ++
               Option.when(checks.nonEmpty)("check occurs with " + checks.mkString(", "))).mkString("; ")
-            val length = line.path.moves.size - value.prefixMovesUci.size
-            s"In the returned $length-ply continuation (${prepared.notation.line(line.path.moves).drop(value.prefixMovesUci.size).mkString(" ")}) beginning ${prepared.notation.move(value.prefixMovesUci, move)}, " +
+            s"In the returned continuation (${prepared.notation.line(line.path.moves).drop(value.prefixMovesUci.size).mkString(" ")}) beginning ${prepared.notation.move(value.prefixMovesUci, move)}, " +
               (if observed.isEmpty then "no capture, promotion or check is observed" else observed) +
               "."
         }
@@ -761,6 +787,10 @@ object CommentaryProposal:
     val requirements = entry.request.requirements.map(value => value.id -> value).toMap
     val readings = entry.readings.map(value => value.requirementId -> value).toMap
     def piece(value: CommentaryFact.Piece): String = s"${value.side} ${value.role} originally on ${value.square}"
+    def position(fact: Fact, ply: Int): String = fact.path.source match
+      case CommentaryFact.Declared(moves) if ply > 0 && ply <= moves.size => s"After ${renderLine(moves)(ply - 1)}"
+      case _ if ply == 0 => "At the starting position"
+      case _ => "In the recorded position"
     def predicate(value: CommentaryFact.Predicate): String =
       List(value.kind, value.subject.map(piece).getOrElse(""), value.target.map(piece).getOrElse(""),
         value.square.getOrElse("")).filter(_.nonEmpty).mkString(" ")
@@ -776,7 +806,7 @@ object CommentaryProposal:
         val context = (left.path.source, right.path.source, left.at, right.at) match
           case (CommentaryFact.Declared(moves), CommentaryFact.Declared(other),
               CommentaryFact.Ply(before), CommentaryFact.Ply(after)) if moves == other && after == before + 1 =>
-            s"Move ${before + 1} (${renderLine(moves)(before)}) changes"
+            s"${renderLine(moves)(before)} changes"
           case _ => "The named paths compare"
         s"$context ${predicate(left.predicate)}: $a / $b."
     }.distinct
@@ -784,9 +814,9 @@ object CommentaryProposal:
       Set("reference_action", "alternative_action", "opponent_reference", "opponent_alternative")
         .exists(name => fact.id == name || fact.id.startsWith(name + "_")) => fact }.flatMap(fact => sampled(fact.id).map { result =>
         val at = fact.at match
-          case CommentaryFact.Ply(count) => s"at ply $count"
-          case _ => "at the named event"
-        s"${predicate(fact.predicate)} $at is $result."
+          case CommentaryFact.Ply(count) => position(fact, count)
+          case _ => "At the named event"
+        s"$at, ${predicate(fact.predicate)} is $result."
       })
     val comparisons = entry.request.requirements.collect { case value: CompareMoves =>
       val reading = readings(value.id)
@@ -805,7 +835,7 @@ object CommentaryProposal:
     val material = sacrificeFacts.flatMap { fact => sampled(fact.id).map { result =>
       fact.at match
         case event: CommentaryFact.Event =>
-          val where = s"At ply ${event.fromPly + 1}"
+          val where = position(fact, event.throughPly)
           if event.kind == "capture" then
             val kind = if fact.id.startsWith("sacrifice_loss_") then "loss" else "material gain"
             val target = event.target.map(piece).getOrElse("the target")
@@ -815,7 +845,7 @@ object CommentaryProposal:
             s"$where, check against ${fact.predicate.side.getOrElse("the opposing side")} is $result."
           else s"$where, promotion of ${event.actor.map(piece).getOrElse("the actor")} reaches role $result."
         case CommentaryFact.Ply(count) =>
-          s"At ply $count, file ${fact.predicate.property.getOrElse("unknown")} is $result."
+          s"${position(fact, count)}, file ${fact.predicate.property.getOrElse("unknown")} is $result."
     }}
     val currentSacrifice = entry.request.requirements.collect {
       case fact: Fact if fact.id.startsWith("current_sacrifice_") => readings(fact.id)
@@ -846,7 +876,7 @@ object CommentaryProposal:
             else "the position after " + renderLine(comparison.prefixMovesUci).mkString(" ")
           s" (${label(comparison, move)} from $where)"
         }.getOrElse("")
-        s"The returned $arm line$context $observation $action within plies ${event.fromPly + 1}–${event.throughPly}."
+        s"The returned $arm line$context $observation $action in its recorded continuation."
     }.distinct
     val unresolved = entry.generatedArms.flatMap(_.headRequirementIds).distinct.filter(id => !isResolved(readings(id)))
     val limitation = if entry.request.origin.question.producer == "C-comparison-conflict" then

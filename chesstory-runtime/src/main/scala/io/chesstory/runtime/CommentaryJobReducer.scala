@@ -616,7 +616,13 @@ object CommentaryJobReducer:
                 )
               )
             case EngineWorkReport.Completed(_, _, _, suffixes) =>
-              submitCompletedReport(live, suffixes)
+              // Finish the required comparison before spending the remaining time
+              // on discovery. Explicit proposals retain their existing obligations.
+              // A required root search can still use six seconds; its explanation
+              // and delivery need two more. Optional discovery must fit after that.
+              val budgeted = if live.policy.deadlineEpochMs - nowEpochMs < RootElapsedMs + 2_000 then
+                live.copy(policy = live.policy.copy(investigateChoices = false)) else live
+              submitCompletedReport(budgeted, suffixes)
         case completed: CompletedCommentaryJob => Right(completed)
     case _: ActiveCommentaryJob => Left(EngineWorkReportRejection.WorkNotOutstanding)
     case _                      => Left(EngineWorkReportRejection.WorkNotOutstanding)

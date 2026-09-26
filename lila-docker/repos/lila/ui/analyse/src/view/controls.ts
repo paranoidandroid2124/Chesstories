@@ -22,13 +22,16 @@ export function renderControls(ctrl: AnalyseCtrl) {
   return hl(
     'div.analyse__controls.analyse-controls',
     {
-      hook: onInsert(el =>
+      hook: onInsert(el => {
+        el.addEventListener('click', e => {
+          if (e.detail === 0) clickControl(ctrl, e);
+        });
         addPointerListeners(el, {
           click: e => clickControl(ctrl, e),
           hscrub: touchDevice ? dx => scrubControl(ctrl, dx) : undefined,
           hold: e => holdControl(ctrl, e),
-        }),
-      ),
+        });
+      }),
     },
     [
       ctrl.isCevalAllowed() && renderAnalysisToggle(ctrl, activeTool),
@@ -99,7 +102,7 @@ function renderAnalysisToggle(ctrl: AnalyseCtrl, activeTool: string | false): VN
 }
 
 function holdControl(ctrl: AnalyseCtrl, e: PointerEvent) {
-  if (!(e.target instanceof HTMLElement)) return;
+  if (!(e.target instanceof Element)) return;
   const target = e.target.closest<HTMLElement>('[data-act]');
   if (!target || target.matches('button:disabled,[aria-disabled="true"]')) return;
   const action = target.dataset.act as Action;
@@ -111,8 +114,8 @@ function holdControl(ctrl: AnalyseCtrl, e: PointerEvent) {
   } else clickControl(ctrl, e);
 }
 
-function clickControl(ctrl: AnalyseCtrl, e: PointerEvent) {
-  if (!(e.target instanceof HTMLElement)) return;
+function clickControl(ctrl: AnalyseCtrl, e: Event) {
+  if (!(e.target instanceof Element)) return;
   const target = e.target.closest<HTMLElement>('[data-act]');
   if (!target || target.matches('button:disabled,[aria-disabled="true"]')) return;
   const action = target.dataset.act as Action;

@@ -23,7 +23,7 @@ import { dispatchChessgroundResize } from 'lib/chessgroundResize';
 import pgnImport, { renderPgnError } from '../pgnImport';
 import { normalizeInlinePgn, pgnInputError, type PgnDraftStatus } from '../pgnPipeline';
 import { storage } from 'lib/storage';
-import { renderMoveReview } from './moveReview';
+import { renderMoveReview, renderMoveReviewBoard } from './moveReview';
 
 interface ViewContext {
   ctrl: AnalyseCtrl;
@@ -135,8 +135,11 @@ export function renderTools({ ctrl, concealOf }: ViewContext) {
   const showCeval = ctrl.isCevalAllowed() && ctrl.showCeval();
   const activeTool = explorerView(ctrl);
   return hl('div.analyse__tools', [
-    showCeval && cevalView.renderCeval(ctrl),
-    showCeval && cevalView.renderPvs(ctrl),
+    showCeval && hl('details.analyse__live-engine', { attrs: { open: !!ctrl.cevalEnabled() } }, [
+      hl('summary', ctrl.moveReviewPanelProps().locale === 'ko-KR' ? '라이브 엔진' : 'Live engine'),
+      cevalView.renderCeval(ctrl),
+      cevalView.renderPvs(ctrl),
+    ]),
     ctrl.moveReviewAvailable() && renderMoveReview(ctrl.moveReviewPanelProps()),
     renderMoveList(ctrl, concealOf),
     forkView(ctrl, concealOf),
@@ -146,11 +149,14 @@ export function renderTools({ ctrl, concealOf }: ViewContext) {
 }
 
 export function renderBoard({ ctrl, playerBars, playerStrips, gaugeOn }: ViewContext, skipInfo = false) {
+  const inspection = ctrl.moveReviewAvailable() && renderMoveReviewBoard(ctrl.moveReviewPanelProps());
   return hl('div.analyse__board-wrap', [
+    inspection && inspection.notice,
     gaugeOn && cevalView.renderHorizontalGauge(ctrl),
     hl(
       'div.analyse__board.main-board',
       {
+        class: { 'is-reviewing': !!inspection },
         hook:
           'ontouchstart' in window || !storage.boolean('scrollMoves').getOrDefault(true)
             ? undefined
@@ -179,6 +185,7 @@ export function renderBoard({ ctrl, playerBars, playerStrips, gaugeOn }: ViewCon
         !skipInfo && playerStrips,
         !skipInfo && playerBars?.[ctrl.bottomIsWhite() ? 1 : 0],
         chessground.render(ctrl),
+        inspection && inspection.board,
         !skipInfo && playerBars?.[ctrl.bottomIsWhite() ? 0 : 1],
         ctrl.promotion.view(),
       ],

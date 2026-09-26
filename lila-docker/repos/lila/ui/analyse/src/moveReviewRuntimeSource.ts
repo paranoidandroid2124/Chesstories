@@ -138,7 +138,18 @@ export function createMoveReviewRuntimeSource(execute: MoveReviewEngineExecutor)
           checkDeadline();
           if (activeSignal.aborted) return;
 
-          const outcome = await execute(snapshot.issuedEngineWork, receivedAtMs, activeSignal, deadlineAtMs);
+          // Leave time to return the report and compose the explanation. A useful
+          // assessment must not disappear while an optional follow-up uses the last second.
+          const reportReserveMs = 1_500;
+          const work = snapshot.issuedEngineWork;
+          const optional = work.purpose === 'investigation_comparison' || work.purpose === 'response_comparison';
+          const outcome: MoveReviewEngineOutcome = optional && remaining() < work.maxSearchElapsedMs + reportReserveMs
+            ? {
+                kind: 'executor_failed', executorElapsedMs: 0, observedNodes: 0, engineTimeMs: 0,
+                failureCode: 'search_budget_exhausted',
+                diagnostic: 'The remaining budget is reserved for delivering the existing comparison.',
+              }
+            : await execute(work, receivedAtMs, activeSignal, deadlineAtMs - reportReserveMs);
           checkDeadline();
           if (activeSignal.aborted) return;
           const reportBody = JSON.stringify(

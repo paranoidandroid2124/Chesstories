@@ -28,8 +28,8 @@ final class UserAnalysis(
       Redirect(routes.UserAnalysis.index).toFuccess
     ): variant =>
       val rawFen: Option[chess.format.Fen.Full] = fenStr
-        .map(_.replace("_", " "))
         .flatMap(lila.common.String.decodeUriPath)
+        .map(_.replace("_", " "))
         .filter(_.trim.nonEmpty)
         .map(chess.format.Fen.Full.clean)
       val fen = rawFen.filter(fen => chess.format.Fen.read(variant, fen).isDefined)

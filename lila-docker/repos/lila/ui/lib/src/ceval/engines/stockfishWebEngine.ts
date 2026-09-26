@@ -92,13 +92,27 @@ export class StockfishWebEngine implements CevalEngine {
           }
         await Promise.all(
           nnueFilenames.map(async (name, index) => {
-            const buffer = await bigFileStorage().get(
-              site.asset.url(`lifat/nnue/${name}`),
+            const assetUrl = site.asset.url(`lifat/nnue/${name}`);
+            let buffer = await bigFileStorage().get(
+              assetUrl,
               (bytes, total) => {
                 if (!this.destroyed && booting) this.status?.({ download: { bytes, total } });
               },
               this.abortController.signal,
             );
+            // A Git LFS pointer can load successfully but leave the engine evaluating with an invalid net.
+            const expected = /^nn-([a-f0-9]{12})\.nnue$/.exec(name)?.[1];
+            for (let attempt = 0; expected; attempt++) {
+              const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', buffer));
+              const actual = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+              if (actual.startsWith(expected)) break;
+              await bigFileStorage().delete(assetUrl);
+              if (attempt) throw new Error(`Invalid engine evaluation file: ${name}`);
+              // Discard a stale HTTP cache entry too, so fixing the asset makes retry useful.
+              const fresh = await fetch(assetUrl, { cache: 'reload', signal: this.abortController.signal });
+              if (!fresh.ok) throw new Error(`Failed to fetch engine evaluation file: ${fresh.status}`);
+              buffer = new Uint8Array(await fresh.arrayBuffer());
+            }
             if (!this.destroyed && booting) loadedModule.setNnueBuffer(buffer, index);
           }),
         );

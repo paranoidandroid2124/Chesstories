@@ -161,13 +161,15 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val lower = text.toLowerCase
     assert(text.contains("Ng4"), text)
     assert(lower.contains("white rook originally on e1 attacks the black knight originally on f6 on e4") ||
-      lower.contains("white rook on e1 attacks black knight on e4"), text)
+      lower.contains("white rook on e1 attacks black knight on e4") ||
+      lower.contains("white rook on e1 attacks the black knight on e4"), text)
     assert(lower.contains("white knight originally on e3 attacks the black rook originally on e8 on e5") ||
       lower.contains("white knight on g4 attacks black rook on e5") ||
+      lower.contains("white knight on g4 attacks the black rook on e5") ||
       lower.contains("white knight on g4 now targets black rook on e5"), text)
     assert(lower.contains("leaves e3 with ng4") || lower.contains("ng4 clears e3"), text)
     assert(text.contains("Rxd5") && text.contains("Qxe4"), text)
-    assert(lower.contains("captures the initially attacked black knight on f6") ||
+    assert(lower.contains("captures the initially attacked black knight on e4") ||
       lower.contains("captures black knight on e4"), text)
     assert(lower.contains("captures white pawn on d5") || lower.contains("captures the white pawn on d5") ||
       lower.contains("captures the pawn on d5"), text)
@@ -193,9 +195,9 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val candidates = selectedBookPair(observations, pair)
     val question = candidates.find(c => (c \ "detail" \ "type").as[String] == "question_comparison").get
     val text = (question \ "detail" \ "text").as[String]
-    assert(text.contains("Nxe5 (ply 5) by the white knight originally on f3") &&
+    assert(text.contains("Nxe5: the White knight on e5") &&
       (text.contains("Rxe5: The captured white knight on e5 was the attacker.") ||
-        text.contains("Rxe5: captures the original attacker White knight on e5.")), text)
+        text.contains("Rxe5 captures the original attacker White knight on e5.")), text)
     assert(text.contains("Black queen on d7; Black knight on g6"), text)
     assert(text.contains("Ng4") && text.contains("Rxd5") && text.contains("captures White pawn on d5") &&
       (text.contains("Qxe4: The captured black knight on e4 was the target.") ||
@@ -215,8 +217,8 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       Some(Some(Piece("white", "queen", "e4").witness)))
     assert(text.length <= 4000, text.length.toString)
     val whole = candidates.map(c => (c \ "detail" \ "text").as[String]).mkString(" ")
-    assert(whole.contains("At Qxe4, White queen on e4 now targets Black knight on g6"), whole)
-    assert(whole.contains("White queen on e4 adds support to White knight on g4, under attack from Black queen on d7"), whole)
+    assert(whole.contains("At Qxe4, White's queen on e4 now targets Black's knight on g6"), whole)
+    assert(whole.contains("White's queen on e4 adds support to White's knight on g4, which is under attack from Black's queen on d7"), whole)
 
   private def positionViews(start: String, moves: List[String]): List[PositionResourceView] =
     val owner = CanonicalPositionHistory.from(start, Nil, start).toOption.get
@@ -345,23 +347,23 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val question = candidates.find(c => (c \ "detail" \ "type").as[String] == "question_comparison").get
     val rootText = (root \ "detail" \ "text").as[String]
     val text = (question \ "detail" \ "text").as[String]
-    val priorLoss = "Bxe5 (ply 4) removes the white bishop originally on g3"
-    assert(rootText.contains("Black bishop on g7 captures the initially attacked White bishop on g3"), rootText)
+    val priorLoss = "Bxe5 removes the White bishop on e5"
+    assert(rootText.contains("Black bishop on g7 captures the initially attacked White bishop on e5"), rootText)
     assert(!text.contains(priorLoss), "the same card already identifies this exact captured bishop: " + text)
-    assert(text.contains("Nxe5 (ply 5) by the white knight originally on f3"), text)
+    assert(text.contains("Nxe5: the White knight on e5"), text)
     assert(text.contains("Black queen on d7; Black knight on g6"), text)
-    val departure = text.indexOf("Ng4 (ply 7)")
-    val reply = text.indexOf("Rxd5:", departure)
+    val departure = text.indexOf("Ng4")
+    val reply = text.indexOf("Rxd5 ", departure)
     val recovery = text.indexOf("Qxe4:", reply)
     assert(departure >= 0 && reply > departure && recovery > reply, text)
-    assert(text.contains("the white knight originally on e3 leaves e3 with Ng4 (ply 7)"), text)
+    assert(text.contains("the White knight on e3 leaves e3 with Ng4"), text)
     val consequences = text.substring(reply)
     assert(consequences.contains("moves the initially attacked Black rook on e5 out of White knight on g4's attack"), text)
     assert(consequences.contains("Black rook on e5 ends its support of Black knight on e4"), text)
     assert(consequences.contains("Black rook on e5 captures White pawn on d5"), text)
     assert(consequences.contains("This follows the end of Black rook on d5's support"), text)
     val card = rootText + " " + text
-    List("Black rook on d5 now targets White queen on d4",
+    List("Black's rook on d5 now targets White's queen on d4",
       "White queen on d4 moves out of Black rook on d5's attack").foreach { sharedResponse =>
       assertEquals(occurrencesOf(card, sharedResponse), 1, card)
     }
@@ -378,12 +380,11 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assertEquals((question \ "detail" \ "type").as[String], "question_comparison")
     val text = (question \ "detail" \ "text").as[String]
     // This checks the independent explanation, not the filler move's chess value.
-    assert(text.contains("Bxe5 (ply 4) removes the white bishop originally on g3"), text)
-    assert(text.contains("Nxe5 (ply 5) by the white knight originally on f3 creates these new attacks"), text)
-    assert(text.contains("the white knight originally on f3 attacks the black queen originally on d7 on d7"), text)
-    assert(text.contains("the white knight originally on f3 attacks the black knight originally on g6 on g6"), text)
-    assert(text.contains("Ng4 (ply 7) by the white knight originally on e3"), text)
-    assert(text.contains("the white knight originally on e3 leaves e3 with Ng4 (ply 7)"), text)
+    assert(text.contains("Bxe5 removes the White bishop on e5"), text)
+    assert(text.contains("Nxe5: the White knight on e5"), text)
+    assert(text.contains("the White knight on e5 attacks the Black queen on d7 and the Black knight on g6"), text)
+    assert(text.contains("Ng4:"), text)
+    assert(text.contains("the White knight on e3 leaves e3 with Ng4"), text)
     val refs = (question \ "detail" \ "question_refs").as[List[JsObject]]
     assertEquals(refs.map(ref => (ref \ "requirement_id").as[String]).sorted,
       List("contrast_opponent_choice", "sacrifice_decline"))
@@ -489,7 +490,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val constrained = candidate + ("detail" -> (detail + ("text" -> JsString(reserved))))
     val result = projection.withMoveEffects(constrained, context = List(current))
     val text = (result \ "detail" \ "text").as[String]
-    List("Ng4 (ply 7)", "moves the initially attacked Black rook on e5 out of White knight on g4's attack",
+    List("Ng4", "moves the initially attacked Black rook on e5 out of White knight on g4's attack",
       "Black rook on e5 captures White pawn on d5", "Black rook on e5 ends its support of Black knight on e4",
       "Qxe4:", "This follows the end of Black rook on d5's support").foreach(phrase =>
       assert(text.contains(phrase), text.drop(reserved.length)))
@@ -517,7 +518,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     invalid.foreach { context =>
       val result = projection.withMoveEffects(constrained, context = List(context))
       val text = (result \ "detail" \ "text").as[String]
-      assert(!text.contains("Ng4 (ply 7)"), "a same-line fact without this question's ownership must not displace its existing explanations: " + text.drop(reserved.length))
+      assert(!text.contains("Ng4:"), "a same-line fact without this question's ownership must not displace its existing explanations: " + text.drop(reserved.length))
       assert(text.startsWith(reserved) && text.length <= 4000)
     }
 
@@ -528,8 +529,8 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val partial = revisedContext(original, tactic.copy(contacts = tactic.contacts.take(1)))
     val result = composedContexts(List(partial, original))
     val text = (result \ "detail" \ "text").as[String]
-    List("the white knight originally on f3 attacks the black queen originally on d7 on d7",
-      "the white knight originally on f3 attacks the black knight originally on g6 on g6").foreach { contact =>
+    List("the White knight on e5 attacks the Black queen on d7",
+      "the White knight on e5 attacks the Black knight on g6").foreach { contact =>
       assertEquals(occurrencesOf(text, contact), 1, text)
     }
     val effects = (result \ "detail" \ "effects").as[List[JsObject]].filter(effect =>
@@ -541,24 +542,27 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assert(original.tactic.get.loss.nonEmpty)
     val withoutLoss = revisedContext(original, original.tactic.get.copy(loss = None))
     val lossText = (composedContexts(List(withoutLoss, original)) \ "detail" \ "text").as[String]
-    assert(lossText.contains("Bxe5 (ply 4) removes the white bishop originally on g3"), lossText)
+    assert(lossText.contains("Bxe5 removes the White bishop on e5"), lossText)
     val opened = typedBookComposition._4.find(_.tactic.exists(_.line == alternative.take(3))).get
     val tactic = opened.tactic.get
     assertEquals(tactic.contacts.size, 2)
     assert(tactic.departures.nonEmpty)
     val partial = revisedContext(opened, tactic.copy(contacts = tactic.contacts.take(1), departures = Nil))
     val text = (composedContexts(List(partial, opened)) \ "detail" \ "text").as[String]
-    val contact = "the white rook originally on e1 attacks the black rook originally on e8 on e8"
-    val reciprocal = "the black rook originally on e8 attacks the white rook originally on e1 on e1"
-    assert(text.contains(contact) && text.contains(reciprocal), text)
+    val contact = "the White rook on e1 attacks the Black rook on e8"
+    val reciprocal = "the Black rook on e8 attacks the White rook on e1"
+    val mutual = List("the White rook on e1 and the Black rook on e8 attack each other",
+      "the Black rook on e8 and the White rook on e1 attack each other").find(text.contains).getOrElse(fail(text))
     // The prior loss was already retained by the first context; the new line
     // condition must retain both contacts without repeating that separate loss.
-    val complete = tactic.copy(loss = None).text(typedBookComposition._1.notation, opened.tacticScope, includeQualification = false)
-    assert(text.contains(complete), "the new departure must stay attached to both original contacts: " + text)
-    assertEquals(occurrencesOf(text, "Nxd5 removes the white pawn originally on d5"), 1, text)
+    val complete = text.split("\n\n").find(_.contains("The line opens after")).get
+    assert(complete.contains(mutual),
+      "the new departure must stay attached to both original contacts: " + text)
+    assertEquals(occurrencesOf(text, "Nxd5 removes the White pawn on d5"), 1, text)
     val firstContact = tactic.contacts.head
     val repeated = if firstContact._1 == rook then contact else reciprocal
-    assertEquals(occurrencesOf(text, repeated), 2, text)
+    assertEquals(occurrencesOf(text, repeated), 1, text)
+    assertEquals(occurrencesOf(text, mutual), 1, text)
 
   test("a different receipt or full prefix cannot consume the same attack introduction"):
     val original = typedBookComposition._4.find(_.tactic.exists(_.line == reference.take(5))).get
@@ -569,9 +573,12 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       Some((question.copy(answer = receipt.copy(workId = receipt.workId + "-different-owner")), lineId))))
     val otherPrefix = revisedContext(original, tactic.copy(line = alternative.head :: tactic.line.tail))
     val contact = "the white knight originally on f3 attacks the black queen originally on d7 on d7"
-    List(otherReceipt, otherPrefix).foreach { different =>
+    List(otherReceipt -> 2, otherPrefix -> 1).foreach { (different, resolved) =>
       val text = (composedContexts(List(original, different)) \ "detail" \ "text").as[String]
-      assertEquals(occurrencesOf(text, contact), 2, text)
+      assertEquals(occurrencesOf(text, contact), 2 - resolved,
+        "a mismatched prefix keeps its original wording: " + text)
+      assertEquals(occurrencesOf(text, "the White knight on e5 attacks the Black queen on d7"), resolved,
+        "another receipt cannot consume the independently owned contact: " + text)
     }
 
   test("an opaque extra condition is preserved instead of being rewritten as a typed duplicate"):
@@ -582,7 +589,8 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val text = (result \ "detail" \ "text").as[String]
     assert(text.contains(opaque.text), text)
     assertEquals(occurrencesOf(text,
-      "the white knight originally on f3 attacks the black queen originally on d7 on d7"), 2, text)
+      "the white knight originally on f3 attacks the black queen originally on d7 on d7"), 1, text)
+    assertEquals(occurrencesOf(text, "the White knight on e5 attacks the Black queen on d7"), 1, text)
 
   test("a context rejected by the real text limit cannot consume the following complete context"):
     val original = typedBookComposition._4.find(_.tactic.exists(_.line == reference.take(5))).get
@@ -596,7 +604,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assert(oversized.text.length > 4000, "use the actual card's prose to exceed one field even before optional supplements")
     assertEquals(composedContexts(List(oversized)), baseline)
     val complete = composedContexts(List(original))
-    assert((complete \ "detail" \ "text").as[String].contains("Nxe5 (ply 5)"))
+    assert((complete \ "detail" \ "text").as[String].contains("Nxe5"))
     assertEquals(composedContexts(List(oversized, original)), complete,
       "the omitted predecessor must leave neither missing clauses nor orphaned effect ownership")
 
@@ -613,7 +621,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       candidate -> List(original), second -> List(original)))
     assertEquals(together.size, 3)
     val sharedText = together.map(value => (value \ "detail" \ "text").as[String]).mkString(" ")
-    val contact = "the white knight originally on f3 attacks the black queen originally on d7 on d7"
+    val contact = "the White knight on e5 attacks the Black queen on d7"
     assertEquals(occurrencesOf(sharedText, contact), 1, sharedText)
     together.tail.foreach { value =>
       assertEquals(value \ "detail" \ "question_refs", candidate \ "detail" \ "question_refs")
@@ -625,5 +633,5 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     separate.foreach { value =>
       val text = (value \ "detail" \ "text").as[String]
       assertEquals(occurrencesOf(text, contact), 1, text)
-      assert(text.contains("Bxe5 (ply 4) removes the white bishop originally on g3"), text)
+      assert(text.contains("Bxe5 removes the White bishop on e5"), text)
     }

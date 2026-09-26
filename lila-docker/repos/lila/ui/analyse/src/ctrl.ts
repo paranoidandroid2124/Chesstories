@@ -600,7 +600,16 @@ export default class AnalyseCtrl implements CevalHandler {
         clearPreview: this.clearMoveReviewPreview,
         pinFrame: this.pinMoveReviewFrame,
         clearPin: this.clearMoveReviewPin,
+        inspectFrame: frame => {
+          this.moveReviewView.boardFrame = frame;
+          this.redraw();
+        },
+        clearInspection: () => {
+          this.moveReviewView.boardFrame = undefined;
+          this.redraw();
+        },
         retry: this.retryMoveReview,
+        cancel: () => this.moveReviewCoordinator?.deactivate(),
         addProof: this.addMoveReviewProof,
         viewAddedLine: this.viewAddedMoveReviewProof,
       },
@@ -958,7 +967,10 @@ export default class AnalyseCtrl implements CevalHandler {
     this.redraw();
   };
 
-  private retryMoveReview = (): void => this.moveReviewCoordinator?.retry();
+  private retryMoveReview = (): void => {
+    this.moveReviewCoordinator?.activate();
+    this.moveReviewCoordinator?.retry();
+  };
 
   private currentMoveReviewProof(
     proofId: string,
@@ -1155,6 +1167,7 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   userJump = (path: Tree.Path): void => {
+    this.moveReviewView.boardFrame = undefined;
     this.autoplay.stop();
     this.withCg(cg => cg.selectSquare(null));
     this.jump(path, 'push');

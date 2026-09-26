@@ -1,5 +1,6 @@
 import { isMoveReviewEngineProfile, type MoveReviewEngineProfile } from 'lib/ceval/types';
 import { makeFen, parseFen } from 'chessops/fen';
+import { makeSan, makeSanAndPlay } from 'chessops/san';
 import { parseSquare, parseUci } from 'chessops/util';
 import { setupPosition } from 'chessops/variant';
 import { standardUci } from './util';
@@ -398,7 +399,7 @@ export interface ObservedLineSummary {
     max_loss_cp: number;
     recovered_after_loss: boolean;
   };
-  ending: { kind: 'line_end' | 'checkmate' | 'stalemate'; ply_offset: number; occurrence_id: string };
+  ending: { kind: 'line_end' | MoveReviewAutomaticTerminal['kind']; ply_offset: number; occurrence_id: string };
 }
 
 export interface MoveReviewCandidate {
@@ -576,7 +577,7 @@ export type MoveReviewJobState = (
     /** Ended jobs with no interrupted assessment verification; individual questions may remain unanswered. */
     completed: number;
     stopped: number;
-    scenes: { path: Tree.Path; label: string; state: 'ready' | 'partial' | 'needs_explanation' }[];
+    scenes: { path: Tree.Path; label: string }[];
   };
 };
 
@@ -594,6 +595,8 @@ export interface MoveReviewFrameSelection {
   observationKey?: string;
   highlightKey?: string;
   inspectSquare?: Key;
+  textAnchor?: string;
+  choosePosition?: boolean;
 }
 
 export interface MoveReviewViewState {
@@ -602,6 +605,7 @@ export interface MoveReviewViewState {
   expandedProofId?: string;
   hoveredFrame?: MoveReviewFrameSelection;
   pinnedFrame?: MoveReviewFrameSelection;
+  boardFrame?: MoveReviewFrameSelection;
 }
 
 export interface MoveReviewCopy {
@@ -1077,10 +1081,10 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       study: 'Study line · game origin unverified',
     },
     inputIssueText: {
-      invalid_continuation: 'Input line {line}: preserved {ply} plies. The next move could not be admitted.',
+      invalid_continuation: 'Input line {line}: retained the valid continuation. The next move could not be admitted.',
       automatic_terminal:
-        'Input line {line}: the game ended automatically at ply {ply}; later moves were excluded.',
-      input_limit: 'Input line {line}: reached the input processing limit; preserved {ply} plies.',
+        'Input line {line}: the game ended automatically; later moves were excluded.',
+      input_limit: 'Input line {line}: reached the input processing limit; retained the valid continuation.',
     },
     roleLabels: {
       pawn: 'pawn',
@@ -1313,7 +1317,8 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
 };
 
 export function normalizeMoveReviewLocale(locale?: string): MoveReviewLocale {
-  const requested = locale ?? (typeof navigator === 'undefined' ? undefined : navigator.language);
+  const requested = locale || (typeof document === 'undefined' ? undefined : document.documentElement.lang) ||
+    (typeof navigator === 'undefined' ? undefined : navigator.language);
   return requested?.toLowerCase().startsWith('ko') ? 'ko-KR' : 'en-US';
 }
 
@@ -1919,6 +1924,20 @@ function projectIssuedEngineWork(
     value.search_fen === subject.before.fen;
   const anchor = value.search_anchor;
   const anchorPrefix = isObject(anchor) ? (anchor.prefix_moves_uci ?? [anchor.root_move]) : undefined;
+  const proposalComparisonMoves = new Set(
+    value.purpose === 'response_comparison' && Array.isArray(anchorPrefix)
+      ? observations?.selection?.proposals?.flatMap(proposal =>
+          proposal.requirements.flatMap(reading =>
+            reading.kind === 'compare_moves' &&
+            reading.state === 'awaiting_engine' &&
+            reading.work_id === value.work_id &&
+            arrayEquals(reading.prefix_moves_uci, anchorPrefix)
+              ? [reading.reference_move, reading.alternative_move]
+              : [],
+          ),
+        ) ?? []
+      : [],
+  );
   const responsePosition =
     value.purpose === 'response_comparison' &&
     isObject(anchor) &&
@@ -1983,34 +2002,33 @@ function projectIssuedEngineWork(
               continuationRoutePoolMatches(inquiry, restrictedMoves, true) &&
               limits.multiPv === Math.min(3, restrictedMoves.length))),
       ) ||
+      // One bounded work can answer several pairs at this exact prefix.
+      (proposalComparisonMoves.size >= 2 &&
+        proposalComparisonMoves.size <= 3 &&
+        restrictedMoves?.length === proposalComparisonMoves.size &&
+        restrictedMoves.every(move => proposalComparisonMoves.has(move)) &&
+        limits.multiPv === Math.min(3, restrictedMoves.length)) ||
       observations.selection?.proposals?.some(proposal =>
         proposal.requirements.some(
           reading =>
+            reading.kind === 'fact' &&
             reading.state === 'awaiting_engine' &&
             reading.work_id === value.work_id &&
-            ((reading.kind === 'compare_moves' &&
-              arrayEquals(reading.prefix_moves_uci, anchorPrefix) &&
-              restrictedMoves?.length === 2 &&
-              limits.multiPv === 2 &&
-              [reading.reference_move, reading.alternative_move].every(move =>
-                restrictedMoves.includes(move),
-              )) ||
-              (reading.kind === 'fact' &&
-                unrestricted &&
-                reading.result?.needs.some(
-                  need =>
-                    need.kind === 'continuation' &&
-                    arrayEquals(need.prefix_moves_uci, anchorPrefix) &&
-                    need.horizon !== null &&
-                    need.horizon > anchorPrefix.length,
-                ) &&
-                observations.positions?.some(
-                  position =>
-                    position.id === anchor.position_id &&
-                    position.legal_moves.complete &&
-                    position.legal_moves.moves.length >= 2 &&
-                    limits.multiPv === Math.min(3, position.legal_moves.moves.length),
-                ))),
+            unrestricted &&
+            reading.result?.needs.some(
+              need =>
+                need.kind === 'continuation' &&
+                arrayEquals(need.prefix_moves_uci, anchorPrefix) &&
+                need.horizon !== null &&
+                need.horizon > anchorPrefix.length,
+            ) &&
+            observations.positions?.some(
+              position =>
+                position.id === anchor.position_id &&
+                position.legal_moves.complete &&
+                position.legal_moves.moves.length >= 2 &&
+                limits.multiPv === Math.min(3, position.legal_moves.moves.length),
+            ),
         ),
       ));
   if (value.purpose !== 'response_comparison' && anchor !== undefined) return;
@@ -2250,7 +2268,7 @@ function projectSelectedReview(value: unknown, subject: MoveReviewSubject): Move
   if (!review) return;
   return {
     uci: value.move_uci as Uci,
-    label: value.move_uci === subject.played.uci ? subject.played.san : (value.move_uci as string),
+    label: moveReviewSan(subject.before.fen, value.move_uci as Uci),
     roles,
     review,
   };
@@ -3060,7 +3078,8 @@ function projectObservations(
       !hasExactKeys(raw.ending, ['kind', 'ply_offset', 'occurrence_id']) ||
       !owns(raw.ending) ||
       raw.ending.ply_offset !== path.moves.length - 1 ||
-      !['line_end', 'checkmate', 'stalemate'].includes(raw.ending.kind as string)
+      !['line_end', 'checkmate', 'stalemate', 'insufficient_material', 'fivefold_repetition',
+        'seventy_five_move_rule'].includes(raw.ending.kind as string)
     )
       return;
     const m = raw.material;
@@ -3483,6 +3502,20 @@ function projectObservations(
   return result;
 }
 
+export function moveReviewSan(fen: FEN, uci: Uci): string {
+  try {
+    const position = setupPosition('chess', parseFen(fen).unwrap()).unwrap();
+    const move = parseUci(uci);
+    return move && position.isLegal(move) ? makeSan(position, move) : '?';
+  } catch (_) {
+    return '?';
+  }
+}
+
+export function moveReviewSans(fen: FEN, moves: readonly Uci[]): string[] {
+  return buildProof('display', fen, moves)?.moves.map(move => move.label) ?? [];
+}
+
 function buildProof(id: string, startFen: FEN, moves: readonly Uci[]): MoveReviewProof | undefined {
   if (!semanticId(id) || moves.length < 1 || moves.length > 600) return;
   try {
@@ -3491,8 +3524,8 @@ function buildProof(id: string, startFen: FEN, moves: readonly Uci[]): MoveRevie
     for (const rawMove of moves) {
       const move = parseUci(rawMove);
       if (!move || !position.isLegal(move)) return;
-      position.play(move);
-      proofMoves.push({ uci: rawMove, label: rawMove, fenAfter: makeFen(position.toSetup()) });
+      const label = makeSanAndPlay(position, move);
+      proofMoves.push({ uci: rawMove, label, fenAfter: makeFen(position.toSetup()) });
     }
     return { id, startFen, moves: proofMoves };
   } catch (_) {

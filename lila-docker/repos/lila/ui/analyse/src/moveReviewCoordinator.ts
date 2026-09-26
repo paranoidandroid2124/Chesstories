@@ -183,7 +183,7 @@ export class MoveReviewCoordinator {
     this.host.suspendLiveEngine();
     // Waiting for earlier moves or browser authority must not consume this move's execution time.
     const deadlineAtMs = this.record
-      ? performance.now() + moveReviewBudgets.jobSafetyMs
+      ? performance.now() + moveReviewBudgets.singleMs
       : this.singleDeadlineAtMs!;
 
     let completed: Extract<MoveReviewSnapshot, { kind: 'completed' }> | undefined;
@@ -392,11 +392,6 @@ export class MoveReviewCoordinator {
       recordReview.scenes.push({
         path: subject.after.path,
         label: `${fen[5]}${fen[1] === 'b' ? '...' : '.'} ${subject.played.san}`,
-        state: scenes.some(scene => scene.state === 'needs_explanation')
-          ? 'needs_explanation'
-          : scenes.some(scene => scene.state === 'partial')
-            ? 'partial'
-            : 'ready',
       });
     }
     const currentGrade = this.subject && record.grades.get(moveReviewFocusKey(this.subject));
