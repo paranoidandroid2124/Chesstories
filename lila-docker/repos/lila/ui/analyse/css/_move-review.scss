@@ -114,6 +114,29 @@
   }
 }
 
+.analyse__move-review .move-review__continuation-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-block: 0.5rem;
+  color: $c-font-dim;
+  font-size: 0.85rem;
+
+  .button {
+    background: $c-bg-zebra;
+    color: $c-link;
+    border: $border;
+    border-radius: 6px;
+    box-shadow: none;
+    font: inherit;
+    text-transform: none;
+    padding: 0.4rem 0.65rem;
+
+    &:hover { background: color-mix(in srgb, $c-primary 12%, transparent); }
+  }
+}
+
 .analyse__move-review button.move-review__inline-san {
   display: inline-block;
   min-block-size: 24px;
@@ -122,7 +145,7 @@
   padding: 0.04em 0.2em;
   border: 0;
   border-radius: 4px;
-  background: rgba($c-primary, 0.08);
+  background: color-mix(in srgb, $c-primary 8%, transparent);
   color: $c-link;
   font: inherit;
   font-weight: 650;
@@ -130,12 +153,12 @@
   vertical-align: baseline;
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: rgba($c-primary, 0.4);
+  text-decoration-color: color-mix(in srgb, $c-primary 40%, transparent);
   text-underline-offset: 3px;
 
   &:hover,
   &[aria-expanded='true'] {
-    background: rgba($c-primary, 0.18);
+    background: color-mix(in srgb, $c-primary 18%, transparent);
     color: $c-font-clear;
   }
 }
@@ -180,7 +203,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid rgba($c-primary, 0.4);
+  border: 1px solid color-mix(in srgb, $c-primary 40%, transparent);
   border-radius: 8px;
   background: $c-bg-box;
   font-size: 0.85rem;
@@ -296,7 +319,7 @@
   &:focus-visible,
   &[aria-pressed='true'] {
     border-color: $c-primary;
-    background: rgba($c-primary, 0.08);
+    background: color-mix(in srgb, $c-primary 8%, transparent);
   }
 }
 
@@ -325,7 +348,7 @@
   gap: 0.75rem;
   margin-top: 0.9rem;
   padding: 0.75rem;
-  border: 1px solid rgba($c-primary, 0.45);
+  border: 1px solid color-mix(in srgb, $c-primary 45%, transparent);
   border-radius: 6px;
   background: $c-bg-zebra;
 
@@ -501,7 +524,7 @@ details.move-review__observation {
   display: grid;
   gap: 0.55rem;
   padding-block: 0.9rem 1rem;
-  border-top: 1px solid rgba($c-border, 0.72);
+  border-top: 1px solid color-mix(in srgb, $c-border 72%, transparent);
 
   h3,
   p {
@@ -521,7 +544,7 @@ details.move-review__observation {
 
   &--error,
   &--unsupported {
-    border-top-color: rgba($c-bad, 0.42);
+    border-top-color: color-mix(in srgb, $c-bad 42%, transparent);
   }
 }
 
@@ -545,7 +568,7 @@ details.move-review__observation {
   overflow: hidden;
   block-size: 3px;
   border-radius: 2px;
-  background: rgba($c-primary, 0.14);
+  background: color-mix(in srgb, $c-primary 14%, transparent);
 
   &::after {
     content: '';
@@ -574,7 +597,7 @@ details.move-review__observation {
   align-items: center;
   gap: 0.45rem;
   padding: 0.5rem 0.8rem;
-  border-top: 1px solid rgba($c-border, 0.72);
+  border-top: 1px solid color-mix(in srgb, $c-border 72%, transparent);
   color: $c-font-dim;
   background: $c-bg-zebra;
   font-size: 0.76rem;
@@ -586,7 +609,7 @@ details.move-review__observation {
   display: grid;
   gap: 0.9rem;
   padding-block: 0.8rem 1rem;
-  border-top: 1px solid rgba($c-border, 0.72);
+  border-top: 1px solid color-mix(in srgb, $c-border 72%, transparent);
 }
 
 .move-review__summary {
@@ -605,7 +628,7 @@ details.move-review__observation {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba($c-border, 0.9);
+  border: 1px solid color-mix(in srgb, $c-border 90%, transparent);
   border-radius: 999px;
   background: $c-bg-zebra;
   color: $c-font-clear;
@@ -631,22 +654,22 @@ details.move-review__observation {
 
 .move-review__verdict-badge--brilliant,
 .move-review__notation-badge--brilliant {
-  border-color: rgba($c-secondary, 0.62);
-  background: rgba($c-secondary, 0.16);
+  border-color: color-mix(in srgb, $c-secondary 62%, transparent);
+  background: color-mix(in srgb, $c-secondary 16%, transparent);
   color: $c-secondary;
 }
 
 .move-review__verdict-badge--good,
 .move-review__notation-badge--good {
-  border-color: rgba($c-good, 0.58);
-  background: rgba($c-good, 0.13);
+  border-color: color-mix(in srgb, $c-good 58%, transparent);
+  background: color-mix(in srgb, $c-good 13%, transparent);
   color: $c-good;
 }
 
 .move-review__verdict-badge--interesting,
 .move-review__notation-badge--interesting {
-  border-color: rgba($c-primary, 0.58);
-  background: rgba($c-primary, 0.12);
+  border-color: color-mix(in srgb, $c-primary 58%, transparent);
+  background: color-mix(in srgb, $c-primary 12%, transparent);
   color: $c-primary;
 }
 
@@ -656,8 +679,8 @@ details.move-review__observation {
 .move-review__notation-badge--mistake,
 .move-review__verdict-badge--blunder,
 .move-review__notation-badge--blunder {
-  border-color: rgba($c-bad, 0.56);
-  background: rgba($c-bad, 0.12);
+  border-color: color-mix(in srgb, $c-bad 56%, transparent);
+  background: color-mix(in srgb, $c-bad 12%, transparent);
   color: $c-bad;
 }
 
@@ -703,9 +726,9 @@ details.move-review__observation {
   align-items: center;
   min-block-size: 1.5rem;
   padding-inline: 0.48rem;
-  border: 1px solid rgba($c-primary, 0.36);
+  border: 1px solid color-mix(in srgb, $c-primary 36%, transparent);
   border-radius: 999px;
-  background: rgba($c-primary, 0.09);
+  background: color-mix(in srgb, $c-primary 9%, transparent);
   color: $c-primary;
   font-size: 0.7rem;
   font-weight: 700;
@@ -716,7 +739,7 @@ details.move-review__observation {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
-  border-block: 1px solid rgba($c-border, 0.72);
+  border-block: 1px solid color-mix(in srgb, $c-border 72%, transparent);
 
   > div {
     min-width: 0;
@@ -726,7 +749,7 @@ details.move-review__observation {
 
     + div {
       padding-inline-start: 0.7rem;
-      border-inline-start: 1px solid rgba($c-border, 0.72);
+      border-inline-start: 1px solid color-mix(in srgb, $c-border 72%, transparent);
     }
   }
 
@@ -763,7 +786,7 @@ details.move-review__observation {
 .move-review__candidates {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid rgba($c-border, 0.8);
+  border: 1px solid color-mix(in srgb, $c-border 80%, transparent);
 }
 
 .move-review__candidate {
@@ -783,7 +806,7 @@ details.move-review__observation {
   grid-template-columns: minmax(0, 1fr) auto;
 
   + .move-review__candidate {
-    border-inline-start: 1px solid rgba($c-border, 0.8);
+    border-inline-start: 1px solid color-mix(in srgb, $c-border 80%, transparent);
   }
 
   &:hover,
@@ -797,7 +820,7 @@ details.move-review__observation {
   }
 
   &[aria-selected='true'] {
-    background: rgba($c-primary, 0.09);
+    background: color-mix(in srgb, $c-primary 9%, transparent);
     box-shadow: inset 0 -2px 0 $c-primary;
   }
 }
@@ -831,7 +854,7 @@ details.move-review__observation {
   min-width: 0;
 
   + .move-review__proof-entry {
-    border-top: 1px solid rgba($c-border, 0.72);
+    border-top: 1px solid color-mix(in srgb, $c-border 72%, transparent);
   }
 }
 
@@ -961,7 +984,7 @@ details.move-review__observation {
   &:hover,
   &:focus-visible,
   &.is-previewed {
-    border-color: rgba($c-primary, 0.58);
+    border-color: color-mix(in srgb, $c-primary 58%, transparent);
     color: $c-primary;
   }
 
@@ -972,7 +995,7 @@ details.move-review__observation {
 
   &[aria-pressed='true'] {
     border-color: $c-primary;
-    background: rgba($c-primary, 0.12);
+    background: color-mix(in srgb, $c-primary 12%, transparent);
     color: $c-primary;
   }
 }
@@ -989,8 +1012,8 @@ details.move-review__observation {
     }
 
     cg-board {
-      border: 1px solid rgba($c-border, 0.92);
-      box-shadow: 0 0.2rem 0.75rem rgba($c-font, 0.14);
+      border: 1px solid color-mix(in srgb, $c-border 92%, transparent);
+      box-shadow: 0 0.2rem 0.75rem color-mix(in srgb, $c-font 14%, transparent);
     }
   }
 }
@@ -1018,7 +1041,7 @@ details.move-review__observation {
   gap: 0.45rem;
   padding: 0.65rem;
   border-inline-start: 3px solid $c-good;
-  background: rgba($c-good, 0.08);
+  background: color-mix(in srgb, $c-good 8%, transparent);
   color: $c-font-dim;
   font-size: 0.78rem;
   line-height: 1.4;
@@ -1054,7 +1077,7 @@ details.move-review__observation {
 
   .move-review__candidate + .move-review__candidate {
     border-inline-start: 0;
-    border-top: 1px solid rgba($c-border, 0.8);
+    border-top: 1px solid color-mix(in srgb, $c-border 80%, transparent);
   }
 
   .move-review__candidate {
@@ -1089,7 +1112,7 @@ details.move-review__observation {
 @keyframes move-review-brilliant {
   45% {
     transform: scale(1.1);
-    box-shadow: 0 0 0 0.38rem rgba($c-secondary, 0.12);
+    box-shadow: 0 0 0 0.38rem color-mix(in srgb, $c-secondary 12%, transparent);
   }
 }
 
