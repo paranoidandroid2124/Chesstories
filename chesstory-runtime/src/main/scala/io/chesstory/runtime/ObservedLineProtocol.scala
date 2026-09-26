@@ -34,7 +34,8 @@ private[runtime] object ObservedLineProtocol:
   final case class PreparedPath private[ObservedLineProtocol] (
       line: LegalLineNode, declared: List[String], ids: List[String], moves: List[String],
       sourceMoves: List[String], positions: List[PositionNodeRef],
-      certified: Option[(EvidenceRecord, LineFactEvidence)]
+      certified: Option[(EvidenceRecord, LineFactEvidence)],
+      automaticTerminal: Option[AutomaticTerminal]
   )
 
   /** One immutable packet's response-local paths; never a cross-job or FEN cache. */
@@ -42,6 +43,7 @@ private[runtime] object ObservedLineProtocol:
       private val owner: EvidenceBackedJudgmentPacket,
       val eligible: Set[String], val resourceIds: Set[String], val paths: List[PreparedPath]
   ):
+    lazy val notation = new CommentaryNotation(owner)
     def belongsTo(packet: EvidenceBackedJudgmentPacket): Boolean = owner eq packet
     def requireOwner(packet: EvidenceBackedJudgmentPacket): Unit =
       require(belongsTo(packet), "prepared paths must belong to this exact packet")
@@ -181,20 +183,23 @@ private[runtime] object ObservedLineProtocol:
     val edges = ctx.transitions.map(edge => edge.evidence.id -> edge).toMap
     val eligible = edges.collect { case (id, edge) if graph.record(edge.evidence).exists(record =>
       edge.matches(record) && graph.proofEligible(record)) => id }.toSet
+    val terminals = ctx.input.legalLines.iterator.flatMap(line => line.automaticTerminal.map(line.moves -> _)).toMap
     val paths = ctx.legalLines.flatMap { line =>
       val declared = ctx.lineTransitionIds.getOrElse(line.ref, Nil)
       val ids = declared.takeWhile(eligible)
       Option.when(ids.nonEmpty) {
-        PreparedPath(line, declared, ids, ids.map(id => edges(id).moveUci),
+        val moves = ids.map(id => edges(id).moveUci)
+        PreparedPath(line, declared, ids, moves,
           declared.flatMap(edges.get).map(edge => EvidenceRef.normalizeMove(edge.moveUci)),
-          edges(ids.head).from :: ids.map(id => edges(id).to), certifiedFact(ctx, line))
+          edges(ids.head).from :: ids.map(id => edges(id).to), certifiedFact(ctx, line),
+          Option.when(ids == declared)(terminals.get(moves.map(EvidenceRef.normalizeMove))).flatten)
       }
     }
     new PreparedPaths(packet, eligible, packet.resources.flatMap(_.position.id).toSet, paths)
 
   def summaryJson(path: PreparedPath): Option[JsObject] =
     path.certified.map { (record, fact) =>
-      renderSummary(path.line.evidence.position.sideToMove.get, path.declared, record, fact)
+      renderSummary(path.line.evidence.position.sideToMove.get, path.declared, record, fact, path.automaticTerminal)
     }
 
   def summaryJson(ctx: JudgmentAssemblyContext, line: LegalLineNode): Option[JsObject] =
@@ -202,10 +207,11 @@ private[runtime] object ObservedLineProtocol:
       (record, fact) <- certifiedFact(ctx, line)
       perspective <- line.evidence.position.sideToMove
       ids <- ctx.lineTransitionIds.get(line.ref)
-    yield renderSummary(perspective, ids, record, fact)
+    yield renderSummary(perspective, ids, record, fact,
+      ctx.input.legalLines.find(_.moves == fact.lineReplayMoves.map(EvidenceRef.normalizeMove)).flatMap(_.automaticTerminal))
 
   private def renderSummary(perspective: chess.Color, ids: List[String],
-      record: EvidenceRecord, fact: LineFactEvidence): JsObject =
+      record: EvidenceRecord, fact: LineFactEvidence, automaticTerminal: Option[AutomaticTerminal]): JsObject =
       val occurrenceIds = ids.toVector
       def occurrence(plyOffset: Int, move: String): JsObject = Json.obj(
         "ply_offset" -> plyOffset, "occurrence_id" -> occurrenceIds(plyOffset), "move_uci" -> move)
@@ -218,11 +224,13 @@ private[runtime] object ObservedLineProtocol:
       }
       val terminal = fact.lineEvents.find(event => event.plyOffset == ids.size - 1 &&
         Set(LineEventKind.Mate, LineEventKind.Stalemate)(event.kind))
+      val endingKind = automaticTerminal.map(value => (terminalJson(value) \ "kind").as[String])
+        .getOrElse(terminal.fold("line_end")(event => if event.kind == LineEventKind.Mate then "checkmate" else "stalemate"))
       val base = Json.obj(
         "scope" -> "observed_line", "perspective" -> sideName(perspective),
         "premise_ids" -> List(record.ref.id), "events" -> events,
         "ending" -> Json.obj(
-          "kind" -> terminal.fold("line_end")(event => if event.kind == LineEventKind.Mate then "checkmate" else "stalemate"),
+          "kind" -> endingKind,
           "ply_offset" -> (ids.size - 1), "occurrence_id" -> ids.last))
       fact.material.fold(base) { summary =>
         val materialEvents = summary.events.zip(summary.signedDeltasForMover)

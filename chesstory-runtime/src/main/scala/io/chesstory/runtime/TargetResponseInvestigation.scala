@@ -42,7 +42,8 @@ private[runtime] object TargetResponseInvestigation:
         left.line.ref.id, right.line.ref.id,
         ObservedLineProtocol.evaluationJson(reference.evaluation, EvaluationSource.ResponseComparison),
         ObservedLineProtocol.evaluationJson(alternative.evaluation, EvaluationSource.ResponseComparison),
-        leftOccurrence, rightOccurrence)
+        leftOccurrence, rightOccurrence,
+        PrincipalVariationComparison.quality(mover, reference.evaluation, alternative.evaluation))
     /** The returned child-mover leader and each returned peer, never an all-pairs ranking. */
     lazy val selectedLinePairs: List[(ObservedLineProtocol.PreparedPath, ObservedLineProtocol.PreparedPath)] =
       selectedMovePairs(lines.map(_.evaluation.moves.head))
@@ -139,9 +140,11 @@ private[runtime] object TargetResponseInvestigation:
               }
               observed = prepared.investigationPaths.filter(candidate => candidate.moves.headOption.contains(move) &&
                 candidate.certified.nonEmpty && candidate.ids == candidate.declared)
-              // A sacrifice can expose a previously safe piece. Bind that new pressure to
-              // this exact child and track the victim back to its original identity.
-              exposed = child.attackedTargets(ctx.input.positionHistory.currentPosition.color).flatMap { (target, pressure) =>
+              // En passant captures an off-destination victim without geometric control of its square.
+              contacted = child.attackedTargets(ctx.input.positionHistory.currentPosition.color) ++
+                replies.flatMap(row => row.capture.filter(_.square != row.to).map(_ -> Nil))
+              // Bind newly exposed targets to this exact child and their original physical identity.
+              exposed = contacted.flatMap { (target, pressure) =>
                 prepared.identitiesAfter(packet, path, 1).collectFirst {
                   case (original, Some(Some(current))) if current == target => original -> pressure
                 }
@@ -233,7 +236,6 @@ private[runtime] object TargetResponseInvestigation:
       require(belongsTo(packet), "a target reading belongs to its exact packet")
       val paths = branches.map(_.path)
       Json.obj("id" -> id, "kind" -> "comparison", "selection" -> "context",
-        "state" -> (if complete then "ready" else "partial"),
         "root_occurrence_id" -> question.rootOccurrenceId,
         "occurrence_ids" -> (question.rootOccurrenceId :: paths.flatMap(_.ids)).distinct,
         "position_ids" -> paths.flatMap(_.positions.flatMap(_.id)).filter(prepared.resourceIds).distinct,
@@ -269,10 +271,15 @@ private[runtime] object TargetResponseInvestigation:
       if root.evidence.id == question.rootOccurrenceId && root.from.id.contains(question.rootPositionId)
       rootView <- views.get(question.rootPositionId)
       if rootView.occupantAt(question.originalTarget.square).contains(question.originalTarget)
-      pressure <- prepared.attackedRootTargets(packet).find(_._1 == question.originalTarget)
-      if pressure._2.map(_.semanticId).distinct.sorted == question.pressureSourceIds
       child <- views.get(question.childPositionId)
+      // Discovery combines the same physical target's pressure before and after the root move.
+      rootPressure = prepared.attackedRootTargets(packet).find(_._1 == question.originalTarget).toList.flatMap(_._2)
+      childPressure = child.attackedTargets(ctx.input.positionHistory.currentPosition.color)
+        .find(_._1 == question.target).toList.flatMap(_._2)
+      pressure = rootPressure ++ childPressure
       replies <- child.legalRows
+      if pressure.map(_.semanticId).distinct.sorted == question.pressureSourceIds
+      if pressure.nonEmpty || replies.exists(row => row.captures(question.target) && row.to != question.target.square)
       if replies.filter(_.captures(question.target)).map(_.move) == question.captureMoves
       if replies.filterNot(_.captures(question.target)).map(_.move) == question.declineMoves
       if replies.map(value => value.move -> value.source.semanticId).toMap == question.moveSourceIds

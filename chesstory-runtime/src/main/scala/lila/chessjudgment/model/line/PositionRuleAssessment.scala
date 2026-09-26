@@ -160,7 +160,9 @@ object CandidateLineEvaluation:
     val scoreConsistent = !line.mate.contains(0) && (terminal match
       case Some(AutomaticTerminal.Checkmate(winner)) =>
         line.mate.exists(mate => (mate > 0) == winner.white)
-      case Some(_) => line.mate.isEmpty && line.scoreCp.toLong.abs <= 1
+      // A later draw in one PV is an observed endpoint, not an exact root score.
+      // Stockfish can return a nonzero search estimate with that continuation.
+      case Some(_) => line.mate.isEmpty && (line.moves.size > 1 || line.scoreCp.toLong.abs <= 1)
       case None    => true)
     Option.when(line.moves.nonEmpty && scoreConsistent) {
       terminal.filter(_ => line.moves.size == 1)

@@ -47,6 +47,7 @@ private[runtime] object CommentaryDiscovery:
       sources: List[SourcePath], existing: List[Entry], probes: List[OccurrenceResources.ProbePath] = Nil,
       pvGuided: Boolean = false): Batch =
     prepared.requireOwner(packet)
+    val notation = prepared.notation
     // Supplied PGNs may be longer than the finite question language. Bound the
     // observation frontier before discovering events or constructing requirements;
     // the original supplied line and its evidence remain intact in the packet.
@@ -777,7 +778,7 @@ private[runtime] object CommentaryDiscovery:
                                       FactGroup("tactical_context", "all", current.map(_.id) ++ conditions.map(_.id)),
                                       CompareMoves("tactical_strength", atMoves, reply, counter.move, Some("better"))),
                                     List("tactical_context", "tactical_strength"),
-                                    question = Some(s"After ${atMoves.mkString(" ")}, what does ${counter.move} change compared with $reply, and what is gained or lost against the tested continuation? A changed defensive condition is not a successful defense; the original choice still requires root verification."),
+                                    question = Some(s"After ${notation.line(atMoves).mkString(" ")}, what does ${notation.move(atMoves, counter.move)} change compared with ${notation.move(atMoves, reply)}, and what is gained or lost against the tested continuation? A changed defensive condition is not a successful defense; the original choice still requires root verification."),
                                     additionalHeads = List(List("tactical_root")))
                         }
                       }
@@ -803,7 +804,7 @@ private[runtime] object CommentaryDiscovery:
                     CompareMoves("contrast_opponent_choice", start, anchor.referenceMove, alternativeMove))
                   emit(anchor, List(alternativeMove), "opponent-choice", Nil, canonical, requirements,
                     List("opponent_context", "contrast_opponent_choice"),
-                    question = Some(s"How do ${anchor.referenceMove} and $alternativeMove change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain."),
+                    question = Some(s"How do ${notation.move(start, anchor.referenceMove)} and ${notation.move(start, alternativeMove)} change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain."),
                     additionalHeads = kingContexts.map(bundle => List(bundle.last.id, "contrast_opponent_choice")),
                     bundles = observations.toList.sortBy(bundle => if bundle.head.id.startsWith("reply_") then 0 else 1) ++ kingContexts)
 
@@ -1135,7 +1136,7 @@ private[runtime] object CommentaryDiscovery:
                         val hasReturn = facts.exists(fact => !fact.id.startsWith("sacrifice_loss_") && (fact.at match
                           case event: Event => event.fromPly > loss.plyOffset
                           case _ => !value(beforeLoss, fact.predicate).value.contains("open")))
-                        val question = s"After $rootMove, what compensates $investorSide for the observed material loss beginning with ${loss.moveUci}? " +
+                        val question = s"After ${notation.move(Nil, rootMove)}, what compensates $investorSide for the observed material loss beginning with ${notation.line(line)(loss.plyOffset)}? " +
                           s"Does avoiding that capture or changing the response invalidate the named continuation? " +
                           s"There are ${declines.size} legal replies that do not take this target; only the named comparisons are tested."
                         emit(Anchor(Nil, rootMove), List(line.mkString(" "), investorSide, acceptedPrefix.mkString(" "),
@@ -1181,7 +1182,7 @@ private[runtime] object CommentaryDiscovery:
                                 "sacrifice-counter", origin.sourceRefs, origin,
                                 counterObservations ++ rootComparison.toList ++ counterCurrent ++ counterGroups ++ counterFacts,
                                 counterGroups.map(_.id) ++ List("contrast_context", "contrast_strength"),
-                                question = Some(s"After the observed loss to ${loss.moveUci}, does $reply stop or change the return ${line(offset)}, and is it stronger than ${actionMoves.init.last}? " +
+                                question = Some(s"After the observed loss to ${notation.line(line)(loss.plyOffset)}, does ${notation.move(actionMoves.dropRight(2), reply)} stop or change the return ${notation.line(line)(offset)}, and is it stronger than ${notation.line(actionMoves).init.last}? " +
                                   "The material observations describe this exact continuation; the comparison tests this response only."))
                             }
                           }
@@ -1251,7 +1252,7 @@ private[runtime] object CommentaryDiscovery:
                   emit(Anchor(start, preparation), List(preparedMoves.mkString(" "), goal.predicate.json.toString),
                     kind, goal.sourceRefs, goal.source, facts ++ effects ++ comparisons ++ returnedActions(comparisons, goal),
                     "contrast_context" :: (effects.collect { case value: FactComparison => value.id } ++ comparisons.map(_.id)),
-                    question = Some(s"What changes before ${goalName(goal)} after $preparation, which moves cause them, and is acting immediately available or preferable?"))
+                    question = Some(s"What changes before ${goalName(goal)} after ${notation.move(start, preparation)}, which moves cause them, and is acting immediately available or preferable?"))
                 }
 
                 // Alternatives come from independent goal observations or from a quiet move
@@ -1295,7 +1296,7 @@ private[runtime] object CommentaryDiscovery:
                         emit(Anchor(start, preparation), List(preparedMoves.mkString(" "), alternatePrefix.mkString(" ")),
                           "preparation-alternative", goal.sourceRefs, goal.source, facts,
                           List("contrast_context", "contrast_value"),
-                          question = Some(s"Does ${candidate.move} also prepare ${goalName(goal)}, and how does it compare with $preparation? The named continuations specify the scope of that comparison."))
+                          question = Some(s"Does ${notation.move(start, candidate.move)} also prepare ${goalName(goal)}, and how does it compare with ${notation.move(start, preparation)}? The named continuations specify the scope of that comparison."))
                       }
                     }
                 }
@@ -1305,7 +1306,7 @@ private[runtime] object CommentaryDiscovery:
                   val observedReply = beforeAction.last
                   emit(Anchor(start, preparation), List(counterPrefix.mkString(" "), observedReply, reply, goal.predicate.json.toString),
                     "plan-counter", goal.sourceRefs, goal.source, facts, List("contrast_context", "contrast_strength"),
-                    question = Some(s"Does the quiet reply $reply prevent or change ${goalName(goal)}, and is it stronger than $observedReply at this position?"))
+                    question = Some(s"Does the quiet reply ${notation.move(counterPrefix, reply)} prevent or change ${goalName(goal)}, and is it stronger than ${notation.move(counterPrefix, observedReply)} at this position?"))
                 }
               for
                 first <- preparationRow if first.capture.isEmpty && first.promotionRole.isEmpty
@@ -1379,7 +1380,7 @@ private[runtime] object CommentaryDiscovery:
                           List(left.sourceId, right.sourceId) ++ available.sourceIds ++ unavailable.sourceIds,
                         goal.source, facts ++ effects ++ continuations ++ comparisons,
                         "contrast_context" :: comparisons.map(_.id), Some(direct.move),
-                        Some(s"How does $preparation change the response to ${left.move} after ${goalName(goal)}, compared with immediate ${direct.move}, and how strong is that counter?"))
+                        Some(s"How does ${notation.move(start, preparation)} change the response to ${notation.move(preparedMoves, left.move)} after ${goalName(goal)}, compared with immediate ${notation.move(start, direct.move)}, and how strong is that counter?"))
                   }
                 }
             }

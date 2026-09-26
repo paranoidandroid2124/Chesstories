@@ -433,20 +433,65 @@ object RuntimeProtocol:
       if related.isEmpty then candidate else candidate + ("detail" ->
         ((candidate \ "detail").as[JsObject] ++ Json.obj("continuation_candidate_ids" -> related,
           "continuation_comparison_ids" -> comparisons)))
-    val questionComparisons = CommentaryProposal.comparisonCandidates(packet, preparedPaths, proposalEntries)
-      .map(projection.withMoveEffects)
+    def effects(candidate: JsObject) = (candidate \ "detail" \ "effects").asOpt[List[JsObject]].getOrElse(Nil).toSet
+    // Share only effects already carried by a visible explanation of this exact
+    // occurrence. Each different line, prefix, horizon and proof keeps its own text.
+    val explained = scala.collection.mutable.Map.empty[String, Set[JsObject]]
+    def retainEffects(candidate: JsObject): Unit =
+      if (candidate \ "selection").as[String] == "selected" then
+        val root = (candidate \ "root_occurrence_id").as[String]
+        explained(root) = explained.getOrElse(root, Set.empty) ++ effects(candidate)
+    def withFreshEffects(candidate: JsObject, context: List[MoveWorkProjection.Context] = Nil): JsObject =
+      val root = (candidate \ "root_occurrence_id").as[String]
+      val updated = projection.withMoveEffects(candidate, explained.getOrElse(root, Set.empty), context)
+      retainEffects(updated)
+      updated
+    // Delay wording until the root and its exact co-displayed questions are known.
+    // A PV card is required: without it these are independently displayed scenes.
+    val contexts = scala.collection.mutable.Map.empty[String, List[MoveWorkProjection.Context]]
+    val questions = CommentaryProposal.comparisonCandidates(packet, preparedPaths, proposalEntries,
+      Some((candidate, context) =>
+        contexts((candidate \ "id").as[String]) = context
+        candidate))
+    val sharedQuestions = scala.collection.mutable.Map.empty[String, JsObject]
+    val rootCandidates = (projection.baseJson \ "candidates").as[List[JsObject]].map { candidate =>
+      val detail = (candidate \ "detail").as[JsObject]
+      val pair = (candidate \ "line_ids").as[List[String]]
+      val cards = pvComparisons.filter(reading =>
+        List(reading.answer.referenceLineId, reading.answer.alternativeLineId).sorted == pair.sorted)
+      // A reversed PV may remain a separate card with its own report. That card
+      // would include the unordered question without this oriented root body.
+      val hasCard = (detail \ "type").as[String] == "root_comparison" && cards.nonEmpty && cards.forall(reading =>
+        (detail \ "reference_line_id").asOpt[String].contains(reading.answer.referenceLineId) &&
+          (detail \ "candidate_line_id").asOpt[String].contains(reading.answer.alternativeLineId))
+      val peers = if !hasCard then Nil else questions.filter { other =>
+        (other \ "selection").as[String] == "selected" &&
+          (other \ "root_occurrence_id") == (candidate \ "root_occurrence_id") &&
+          (other \ "line_ids").as[List[String]].sorted == pair.sorted &&
+          (other \ "detail" \ "prefix_moves_uci").as[List[String]].isEmpty &&
+          (other \ "detail" \ "evaluation_relation").asOpt[String].nonEmpty
+      }
+      val composed = projection.withSharedMoveEffects((candidate -> Nil) :: peers.map(other =>
+        other -> contexts((other \ "id").as[String])))
+      composed.foreach(retainEffects)
+      composed.tail.foreach(other => sharedQuestions((other \ "id").as[String]) = other)
+      composed.head
+    }
+    val rootSelection = projection.baseJson + ("candidates" -> Json.toJson(rootCandidates))
+    val questionComparisons = questions.map(candidate => sharedQuestions.getOrElse((candidate \ "id").as[String],
+      withFreshEffects(candidate, contexts((candidate \ "id").as[String]))))
     val questionScenes = questionComparisons.filter(candidate => (candidate \ "selection").as[String] == "selected")
       .map(candidate => Json.obj("id" -> CommentarySelection.stableId("question-scene", List((candidate \ "id").as[String])),
         "root_occurrence_id" -> (candidate \ "root_occurrence_id").as[String],
         "occurrence_ids" -> (candidate \ "occurrence_ids").as[List[String]],
         "line_ids" -> (candidate \ "line_ids").as[List[String]],
-        "candidate_ids" -> List((candidate \ "id").as[String]), "state" -> "ready"))
-    val additions = questionComparisons ++ (pvComparisons.map(value => projection.withMoveEffects(value.candidateJson(packet))) ++
+        "candidate_ids" -> List((candidate \ "id").as[String])))
+    val additions = questionComparisons ++ (pvComparisons.map(value => withFreshEffects(value.candidateJson(packet))) ++
       targetReadings.map(_.candidateJson(packet))).map(withTrajectories) ++
       shownTrajectories.map(_.candidateJson(packet)) ++ continuationComparisons.map(_.candidateJson(packet))
-    val compared = projection.json ++ Option.when(additions.nonEmpty)(Json.obj("candidates" ->
-      ((projection.json \ "candidates").as[List[JsObject]] ++ additions),
-      "scenes" -> ((projection.json \ "scenes").as[List[JsObject]] ++ questionScenes)))
+    val compared = rootSelection ++ Option.when(additions.nonEmpty)(Json.obj("candidates" ->
+      ((rootSelection \ "candidates").as[List[JsObject]] ++ additions),
+      "scenes" -> ((rootSelection \ "scenes").as[List[JsObject]] ++ questionScenes)))
       .getOrElse(Json.obj())
     val discovery = Option.when(discoveryState.inputKey.nonEmpty)(Json.obj("discovery" -> Json.obj(
       "version" -> 1, "input_key" -> discoveryState.inputKey,
@@ -456,8 +501,11 @@ object RuntimeProtocol:
         "deferred_request_ids" -> scan.deferredRequestIds,
         "pending_replay_prefixes" -> scan.pendingReplayPrefixes,
         "state" -> scan.state, "reason" -> scan.reason)))))
+    // A retained inquiry may outlive the PV comparison that originally ordered
+    // it. Its lifecycle stays intact; public links must name current candidates.
+    val orderingCandidates = pvComparisons.filter(_.eligibleQuietFocus).map(_.id).toSet
     val selection = compared ++ Option.when(proposalEntries.nonEmpty || localExpansionsUsed > 0 || discovery.nonEmpty)(Json.obj(
-        "proposals" -> CommentaryProposal.snapshots(proposalEntries, _.explanation(packet, preparedPaths)),
+        "proposals" -> CommentaryProposal.snapshots(proposalEntries, _.explanation(packet, preparedPaths), preparedPaths.notation.line),
       "local_expansions_used" -> localExpansionsUsed)).getOrElse(Json.obj()) ++
       discovery.getOrElse(Json.obj()) ++
       Option.when(rootSearches.nonEmpty)(Json.obj("root_searches" -> rootSearches.map { search =>
@@ -481,14 +529,10 @@ object RuntimeProtocol:
         reading.answer.referenceLineId == answer.referenceLineId &&
           reading.answer.alternativeLineId == answer.alternativeLineId &&
           reading.answer.workId == answer.workId && reading.answer.executionKeySha256 == answer.executionKeySha256))
-      val nextEvidence =
-        if inquiry.assessmentEffect.contains("needs_refresh") then "compare_roots"
-        else if inquiry.answer.nonEmpty then
-          if explained.exists(_.state == "ready") then "inspect_existing" else "unresolved"
-        else if Set("awaiting_engine", "deferred")(inquiry.state) then "compare_roots"
-        else "unresolved"
-      CommentaryInvestigation.snapshot(inquiry.question, inquiry.state, inquiry.answer, inquiry.stopReason) ++
-        Json.obj("explanation_candidate_ids" -> explained.map(_.id), "next_evidence" -> nextEvidence) ++
+      val question = inquiry.question.copy(orderingCandidateIds =
+        inquiry.question.orderingCandidateIds.filter(orderingCandidates))
+      CommentaryInvestigation.snapshot(question, inquiry.state, inquiry.answer, inquiry.stopReason) ++
+        Json.obj("explanation_candidate_ids" -> explained.map(_.id)) ++
         inquiry.assessmentEffect.map(value => Json.obj("assessment_effect" -> value)).getOrElse(Json.obj())
     })).getOrElse(Json.obj()) ++ Option.when(responseInquiries.nonEmpty)(Json.obj(
       "response_inquiries" -> responseInquiries.map(inquiry => TargetResponseInvestigation.snapshot(
@@ -496,7 +540,12 @@ object RuntimeProtocol:
         targetPeers(targetKey(inquiry.question)).filter(_.rootMove != inquiry.question.rootMove)
           .map(_.id).distinct.sorted)))).getOrElse(Json.obj()) ++
       Option.when(responseInquiries.nonEmpty || continuationInquiries.nonEmpty || responseSearches.nonEmpty)(
-        Json.obj("response_searches" -> responseSearches.map(_.json))).getOrElse(Json.obj()) ++
+        Json.obj("response_searches" -> responseSearches.map(search => search.json ++
+          Option.when(search.work.proposalRefs.nonEmpty)(Json.obj("proposal_ownership" -> Json.obj(
+            "work_id" -> search.work.workId, "execution_key_sha256" -> search.work.executionKeySha256,
+            "question_refs" -> search.work.proposalRefs.map((proposal, requirement) =>
+              Json.obj("proposal_id" -> proposal, "requirement_id" -> requirement)))))
+            .getOrElse(Json.obj())))).getOrElse(Json.obj()) ++
       Option.when(continuationInquiries.nonEmpty)(Json.obj("continuation_inquiries" -> continuationInquiries.map { inquiry =>
         val question = inquiry.question
         Json.obj("id" -> question.id, "scope" -> "line_continuation", "source" -> "automatic_observation",

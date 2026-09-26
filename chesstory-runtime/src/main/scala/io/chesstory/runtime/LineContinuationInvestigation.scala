@@ -218,7 +218,6 @@ private[runtime] object LineContinuationInvestigation:
       require(belongsTo(packet), "a continuation reading belongs to its exact packet")
       val rootPositionId = path.positions.head.id.get
       Json.obj("id" -> id, "kind" -> "conditional_line", "selection" -> "context",
-        "state" -> (if complete then "ready" else "partial"),
         "root_occurrence_id" -> packet.assembly.playedTransition.get.evidence.id,
         "occurrence_ids" -> (packet.assembly.playedTransition.get.evidence.id :: path.ids).distinct,
         "position_ids" -> path.positions.flatMap(_.id).filter(prepared.resourceIds).distinct,

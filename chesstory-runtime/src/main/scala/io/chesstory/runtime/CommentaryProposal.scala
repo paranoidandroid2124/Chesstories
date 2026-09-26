@@ -203,8 +203,13 @@ object CommentaryProposal:
     * comparison witness instead of repeating it in both directions.
     */
   private[runtime] def comparisonCandidates(packet: EvidenceBackedJudgmentPacket,
-      prepared: ObservedLineProtocol.PreparedPaths, entries: List[Entry]): List[JsObject] =
+      prepared: ObservedLineProtocol.PreparedPaths, entries: List[Entry],
+      compose: Option[(JsObject, List[MoveWorkProjection.Context]) => JsObject] = None): List[JsObject] =
     prepared.requireOwner(packet)
+    val notation = prepared.notation
+    lazy val projection = MoveWorkProjection.select(packet, prepared)
+    val render = compose.getOrElse((candidate: JsObject, context: List[MoveWorkProjection.Context]) =>
+      projection.withMoveEffects(candidate, context = context))
     val root = packet.assembly.playedTransition.get.evidence.id
     val pathsById = prepared.paths.map(path => path.line.ref.id -> path).toMap
     val ideas = CommentaryIdea.read(entries)
@@ -219,6 +224,9 @@ object CommentaryProposal:
           (entry.request.id, value, readings(value.id))
       }
     }
+    val answeredByQuestion = comparisons.flatMap { (id, value, reading) =>
+      reading.answer.map(answer => (id -> value.id) -> CommentaryIdea.AnsweredComparison(id, value, answer))
+    }.toMap
     val rows = comparisons.groupBy((_, value, _) => (value.prefixMovesUci, value.referenceMove, value.alternativeMove))
       .toList.sortBy((key, _) => key.toString).flatMap { case ((prefix, reference, alternative), unorderedMembers) =>
         val members = unorderedMembers.sortBy((id, value, _) => (id, value.id))
@@ -228,7 +236,7 @@ object CommentaryProposal:
             else observedPrefix(packet, prepared, prefix)).toList
           position <- context.positions.lift(prefix.size).toList
           mover <- position.sideToMove.toList
-          if answers.size == 1
+          if answers.size == 1 && (answers.head.nonEmpty || members.map(_._3.stopReason).distinct.size == 1)
           answer = answers.head
           paths = answer.fold(List(context))(value =>
             List(value.referenceLineId, value.alternativeLineId).flatMap(pathsById.get))
@@ -242,14 +250,20 @@ object CommentaryProposal:
             case _ => "equal to"
           }
           val pairText = comparison.fold(
-            s"The strength of $alternative relative to $reference for $side remains unverified at this position.")(
-            value => s"At this position, $alternative evaluates $value $reference for $side.")
+            s"The strength of ${notation.move(prefix, alternative)} relative to ${notation.move(prefix, reference)} for $side remains unverified at this position.")(
+            value => s"At this position, ${notation.move(prefix, alternative)} evaluates $value ${notation.move(prefix, reference)} for $side.")
           val presentChoice = members.exists((_, value, _) => value.id == "contrast_opponent_choice")
           val options = entries.filter(entry => members.exists(_._1 == entry.request.id))
             .sortBy(entry => entry.readings.find(_.requirementId == "tactical_strength").flatMap(_.answer)
               .fold(2)(answer => if answer.evaluationRelation == "better" then 0 else 1))
-            .flatMap(entry => opponentOptions(entry, includeCounter = prefix.isEmpty) ++
-              (if prefix.isEmpty then counterConsequences(packet, prepared, entry) else Nil)).distinct
+            .flatMap { entry =>
+              val parts = opponentOptions(entry, notation, includeCounter = prefix.isEmpty) ++
+                (if prefix.isEmpty then counterConsequences(packet, prepared, entry)
+                  .map(text => ComparisonPart(text, counter = counterKey(entry))) else Nil)
+              val (counter, other) = parts.partition(_.counter.nonEmpty)
+              // Keep a reply's conditions and both owned outcomes together at the text limit.
+              counter.headOption.map(first => first.copy(text = counter.map(_.text).distinct.mkString(" "))).toList ++ other
+            }.distinct
           val decisionFirst = relation.exists(result =>
             (prefix.isEmpty && ((reference == packet.assembly.input.playedMoveUci && result == "better") ||
               (alternative == packet.assembly.input.playedMoveUci && result == "worse"))) ||
@@ -264,7 +278,7 @@ object CommentaryProposal:
             .minOption.getOrElse(Int.MaxValue -> Int.MaxValue)
           val id = CommentarySelection.stableId("question-comparison", prefix ++ List(reference, alternative))
           val candidate = Json.obj("id" -> id,
-            "kind" -> "comparison", "state" -> (if answer.nonEmpty then "ready" else "partial"),
+            "kind" -> "comparison",
             "selection" -> (if selected then "selected" else "context"),
             "root_occurrence_id" -> root,
             "occurrence_ids" -> (root :: paths.flatMap(_.ids)).distinct,
@@ -290,7 +304,7 @@ object CommentaryProposal:
               value.requiredDepth, relation, idea.map(_.id))
           }
           (candidate, idea, (if selected then 0 else 1, if decisionFirst then 0 else if presentChoice then 1 else 2,
-            priority._1, priority._2, id), equivalent, pairText :: options)
+            priority._1, priority._2, id), equivalent, ComparisonPart(pairText) :: options)
       }
     // Unanswered or differently owned comparisons are never collapsed. The original
     // proposals still carry every expectation, orientation and answer independently.
@@ -309,12 +323,39 @@ object CommentaryProposal:
     val owners = distinct.flatMap { (candidate, idea, priority, _, _) =>
       idea.map(value => value.id -> (priority, (candidate \ "id").as[String]))
     }.groupMap(_._1)(_._2).view.mapValues(_.minBy(_._1)._2).toMap
+    val publishedCounters = scala.collection.mutable.Set.empty[(String, CounterKey)]
     distinct.map { (candidate, idea, _, _, parts) =>
       val synthesis = idea.filter(value => owners.get(value.id).contains((candidate \ "id").as[String]))
       val detail = (candidate \ "detail").as[JsObject]
-      val ordered = parts.take(1) ++ synthesis.toList.flatMap(_.decisionText) ++ parts.drop(1) ++
-        synthesis.toList.flatMap(_.explanationDetails(packet, prepared))
-      candidate + ("detail" -> (detail + ("text" -> JsString(comparisonText(ordered)))))
+      val selected = (candidate \ "selection").as[String] == "selected"
+      val occurrence = (candidate \ "root_occurrence_id").as[String]
+      val answered = (detail \ "question_refs").as[List[JsObject]].flatMap(ref =>
+        answeredByQuestion.get((ref \ "proposal_id").as[String] -> (ref \ "requirement_id").as[String])).toSet
+      val answer = answered.map(_.answer).toList match
+        case List(value) => Some(value)
+        case _ => None
+      val compact = compactTactics(parts, answer,
+        (detail \ "prefix_moves_uci").as[List[String]],
+        (candidate \ "line_ids").as[List[String]].flatMap(pathsById.get), notation)
+      // Unanswered reply conditions stay with their linked question. Their option still
+      // participates in selection above, without preceding observed effects in this body.
+      val fresh = compact.filter(part => part.publish && (!selected ||
+        part.counter.forall(key => !publishedCounters(occurrence -> key))))
+      // Keep the answer and its direct conditions intact. Later context competes
+      // only after the same compositor has admitted observed replies and costs.
+      val (direct, background) = fresh.drop(1).partition(part => part.direct || part.counter.nonEmpty)
+      val required = fresh.take(1).map(_.text) ++ synthesis.toList.flatMap(_.decisionText(answered, notation.line)) ++ direct.map(_.text)
+      val context = background.map(part => MoveWorkProjection.Context(part.text, part.qualification, part.attack,
+        part.tactic.filter(_ => part.attack.nonEmpty), part.tacticScope)) ++
+        synthesis.toList.flatMap(_.explanationDetails(packet, prepared, answered)) ++
+        Option.when(synthesis.isEmpty)(idea.toList.flatMap(_.questionFocus(packet, prepared, answered)).headOption)
+          .flatten.map(focus => MoveWorkProjection.Context("", question = Some(focus))).toList
+      val updated = render(candidate + ("detail" -> (detail + ("text" -> JsString(comparisonText(required))))), context)
+      val text = (updated \ "detail" \ "text").as[String]
+      // Only a whole bundle actually published by a selected candidate can own it.
+      if selected then fresh.filter(part => text.contains(part.text)).foreach(part =>
+        part.counter.foreach(key => publishedCounters += (occurrence -> key)))
+      updated
     }
 
   private[runtime] def stop(entries: List[Entry], reason: String): List[Entry] = entries.map(entry =>
@@ -334,7 +375,115 @@ object CommentaryProposal:
     if omitted > 0 then text.append(s" $omitted further explanations remain in the linked questions.")
     text.toString
 
-  private def opponentOptions(entry: Entry, includeCounter: Boolean): List[String] =
+  private type CounterKey = (CompareMoves, CommentaryInvestigation.Answer, List[(Fact, Option[Reading])])
+  private case class ComparisonPart(text: String, publish: Boolean = true, counter: Option[CounterKey] = None,
+      direct: Boolean = false, tactic: Option[TacticStep] = None, qualification: Option[String] = None,
+      attack: Option[MoveWorkProjection.AttackContext] = None,
+      tacticScope: Option[(List[String], String, Int)] = None)
+
+  private val TacticCaveat = "These concrete attacks do not by themselves establish a forced gain."
+  private[runtime] enum TacticClause:
+    case Contact(attacker: CommentaryFact.Piece, target: CommentaryFact.Piece, square: String)
+    case Loss(at: CommentaryFact.Event, victim: CommentaryFact.Piece)
+    case Departure(at: CommentaryFact.Event, blocker: CommentaryFact.Piece, square: String, removed: Boolean)
+
+  private[runtime] case class TacticStep(line: List[String], at: CommentaryFact.Event, actor: CommentaryFact.Piece,
+      contacts: List[(CommentaryFact.Piece, CommentaryFact.Piece, String)],
+      loss: Option[(CommentaryFact.Event, CommentaryFact.Piece)],
+      departures: List[(CommentaryFact.Event, CommentaryFact.Piece, String, Boolean)],
+      owner: Option[(CommentaryIdea.AnsweredComparison, String)]):
+    def clauses: List[TacticClause] = contacts.map(TacticClause.Contact.apply.tupled) ++
+      loss.toList.map(TacticClause.Loss.apply.tupled) ++ departures.map(TacticClause.Departure.apply.tupled)
+
+    def text(notation: CommentaryNotation, scope: Option[(List[String], String, Int)] = None,
+        omitted: Set[TacticClause] = Set.empty, includeQualification: Boolean = true): String =
+      def piece(value: CommentaryFact.Piece) = s"${value.side} ${value.role} originally on ${value.square}"
+      def step(event: CommentaryFact.Event) = notation.line(line)(event.fromPly) +
+        (if scope.isEmpty then "" else s" (ply ${event.fromPly + 1})")
+      val introduction = scope.fold(s"In the returned continuation ${notation.line(line).mkString(" ")}, ") { (prefix, move, from) =>
+        val between = notation.line(line).slice(from, at.fromPly)
+        s"In the returned ${notation.move(prefix, move)} line" + (if prefix.isEmpty then "" else s" after ${notation.line(prefix).mkString(" ")}") +
+          (if between.isEmpty then ": "
+           else s", after ${between.mkString(" ")} (plies ${from + 1}–${at.fromPly}): ")
+      }
+      val capture = loss.filterNot(value => omitted(TacticClause.Loss.apply.tupled(value)))
+        .map((event, victim) => s"${step(event)} removes the ${piece(victim)}").toList
+      val remainingDepartures = departures.filterNot(value => omitted(TacticClause.Departure.apply.tupled(value)))
+      // A new line-opening condition still qualifies the original contact set.
+      // Removing just its already-shared slider contact could attach that condition
+      // to an unrelated newly introduced direct attack instead.
+      val remainingContacts = if remainingDepartures.nonEmpty then contacts
+        else contacts.filterNot(value => omitted(TacticClause.Contact.apply.tupled(value)))
+      val attacks = remainingContacts.map((attacker, victim, square) =>
+        s"the ${piece(attacker)} attacks the ${piece(victim)} on $square")
+      val opened = remainingDepartures.map { (event, blocker, square, removed) =>
+        if removed then s"the ${piece(blocker)} on $square is removed by ${step(event)}"
+        else s"the ${piece(blocker)} leaves $square with ${step(event)}"
+      }
+      if capture.isEmpty && attacks.isEmpty && opened.isEmpty then ""
+      else introduction + (if attacks.nonEmpty then
+        (capture :+ s"${step(at)} by the ${piece(actor)} creates these new attacks: ${attacks.mkString("; ")}").mkString("; ") + "."
+        else s"For the attacks created by ${step(at)} with the ${piece(actor)}" +
+          (if capture.isEmpty then "." else s", ${capture.mkString("; ")}.")) +
+        (if opened.isEmpty then "" else s" The opened line depends on these departures: ${opened.mkString("; ")}.") +
+        (if scope.nonEmpty || !includeQualification then "" else " " + TacticCaveat)
+
+  private def compactTactics(parts: List[ComparisonPart], answer: Option[CommentaryInvestigation.Answer],
+      prefix: List[String], paths: List[ObservedLineProtocol.PreparedPath], notation: CommentaryNotation): List[ComparisonPart] =
+    val owned = parts.map(_.tactic.flatMap { tactic =>
+      for
+        (question, lineId) <- tactic.owner
+        comparison = question.comparison
+        receipt = question.answer
+        if answer.contains(receipt) && comparison.prefixMovesUci == prefix
+        path <- paths.find(_.line.ref.id == lineId)
+        if path.certified.nonEmpty && path.ids == path.declared && path.moves.startsWith(tactic.line) &&
+          tactic.at.fromPly == tactic.line.size - 1 && tactic.at.throughPly == tactic.line.size
+        move <- (if lineId == receipt.referenceLineId then Some(comparison.referenceMove)
+          else Option.when(lineId == receipt.alternativeLineId)(comparison.alternativeMove))
+        if path.moves.startsWith(prefix :+ move)
+      yield ((receipt, lineId), move)
+    })
+    val boundaries = parts.zip(owned).collect {
+      case (part, Some((key, _))) => key -> part.tactic.get.at.throughPly
+    }.groupMap(_._1)(_._2)
+    val shared = boundaries.iterator.collect { case (key, plies) if plies.size > 1 => key }.toSet
+    // Each event stays independently admissible at the existing text limit.
+    // Sharing the PV label must not make a later event depend on an earlier paragraph surviving.
+    parts.zip(owned).map { (part, ownership) =>
+      val anchored = part.copy(attack = ownership.map { (key, _) =>
+        val tactic = part.tactic.get
+        MoveWorkProjection.AttackContext(key._2, tactic.line,
+          tactic.contacts.map((actor, target, _) => actor -> target), Some(tactic.actor))
+      }, text = if ownership.isEmpty then part.text else part.tactic.get.text(notation, includeQualification = false),
+        qualification = if ownership.isEmpty then part.qualification else Some(TacticCaveat))
+      ownership.filter((key, _) => shared(key)).fold(anchored) { (key, move) =>
+        val tactic = part.tactic.get
+        // Retain intervening replies once; a shorter label must not erase an
+        // exchange or relocation that was visible in the original full prefix.
+        val from = boundaries(key).filter(_ <= tactic.at.fromPly).maxOption.getOrElse(prefix.size + 1)
+        val scope = Some((prefix, move, from))
+        anchored.copy(text = tactic.text(notation, scope), qualification = Some(TacticCaveat), tacticScope = scope)
+      }
+    }
+
+  private def counterKey(entry: Entry): Option[CounterKey] =
+    for
+      comparison <- entry.request.requirements.collectFirst { case value: CompareMoves if value.id == "tactical_strength" => value }
+      answer <- entry.readings.find(_.requirementId == comparison.id).flatMap(_.answer)
+    yield (comparison, answer, entry.request.requirements.collect {
+      case fact: Fact if fact.id.startsWith("tactical_") =>
+        // Sample IDs name the submitting proposal. Preserve their proof links and
+        // every actual line, history, source and value while sharing the same reading.
+        fact -> entry.readings.find(_.requirementId == fact.id).map(reading => reading.copy(
+          result = reading.result.map { result =>
+            val ids = result.samples.zipWithIndex.map((sample, index) => sample.id -> index.toString).toMap
+            result.copy(samples = result.samples.map(sample => sample.copy(id = ids(sample.id))),
+              proofs = result.proofs.map(proof => proof.copy(sampleIds = proof.sampleIds.map(id => ids.getOrElse(id, id)))))
+          }))
+    }.sortBy(_._1.id))
+
+  private def opponentOptions(entry: Entry, notation: CommentaryNotation, includeCounter: Boolean): List[ComparisonPart] =
     val facts = entry.request.requirements.collect { case fact: Fact => fact }.map(fact => fact.id -> fact).toMap
     val readings = entry.readings.map(reading => reading.requirementId -> reading).toMap
     def sampled(id: String): Option[String] = readings.get(id).filter(reading => Set("supported", "observed")(reading.state))
@@ -351,10 +500,10 @@ object CommentaryProposal:
       av <- sampled(left.id).toList
       bv <- sampled(right.id).toList
       am <- (left.path.source match
-        case CommentaryFact.Declared(moves) => moves.lastOption.toList
+        case CommentaryFact.Declared(moves) => notation.line(moves).lastOption.toList
         case _ => Nil)
       bm <- (right.path.source match
-        case CommentaryFact.Declared(moves) => moves.lastOption.toList
+        case CommentaryFact.Declared(moves) => notation.line(moves).lastOption.toList
         case _ => Nil)
     yield s"After $am, capture by the ${piece(actor)} of the ${piece(target)} is ${if av == "legal" then "available" else "unavailable"}; after $bm it is ${if bv == "legal" then "available" else "unavailable"}."
     val replies = entry.request.requirements.collect {
@@ -376,7 +525,7 @@ object CommentaryProposal:
           yield (actor, square)
         }.sortBy((actor, _) => if actor.square == line.head.take(2) then 0 else 1)
         if targets.size >= 2
-      yield s"After ${line.head}, the returned reply ${line.last} simultaneously attacks ${targets.map((actor, square) => s"${piece(actor)} on $square").mkString(" and ")}. This geometry does not establish a forced gain; the comparison evaluates the whole continuation."
+      yield s"After ${notation.line(line).head}, the returned reply ${notation.line(line).last} simultaneously attacks ${targets.map((actor, square) => s"${piece(actor)} on $square").mkString(" and ")}. This geometry does not establish a forced gain; the comparison evaluates the whole continuation."
     }
     val tactics = facts.values.toList.filter(fact => fact.id.startsWith("tactic_") && fact.id.endsWith("_cause"))
       .sortBy(fact => (fact.at.horizon, fact.id)).flatMap { cause =>
@@ -384,6 +533,9 @@ object CommentaryProposal:
         for
           line <- (cause.path.source match
             case CommentaryFact.Declared(moves) => Some(moves)
+            case _ => None)
+          event <- (cause.at match
+            case value: CommentaryFact.Event => Some(value)
             case _ => None)
           actor <- cause.predicate.subject
           if facts.values.filter(_.id.startsWith(stem + "_")).forall(fact => sampled(fact.id).nonEmpty)
@@ -398,24 +550,36 @@ object CommentaryProposal:
                 square <- sampled(target.id)
                 attack <- facts.get(target.id.stripSuffix("_target") + "_after")
                 attacker <- attack.predicate.subject
-              yield s"the ${piece(attacker)} attacks the ${piece(victim)} on $square"
+              yield (attacker, victim, square)
             }
           if contacts.nonEmpty
         yield
           val loss = facts.get(stem + "_exchange").flatMap(fact => fact.predicate.subject.map(victim =>
-            s"${line(fact.at.asInstanceOf[CommentaryFact.Event].fromPly)} removes the ${piece(victim)}; ")).getOrElse("")
+            fact.at.asInstanceOf[CommentaryFact.Event] -> victim))
           val departures = facts.values.toList.filter(fact => fact.id.startsWith(stem + "_contact_") && fact.id.endsWith("_left"))
             .sortBy(fact => (fact.at.horizon, fact.id)).flatMap { fact =>
               for
                 blocker <- fact.predicate.subject
                 square <- sampled(fact.id.stripSuffix("_left") + "_before")
-                step = line(fact.at.asInstanceOf[CommentaryFact.Event].fromPly)
-              yield if sampled(fact.id).contains("removed") then s"the ${piece(blocker)} on $square is removed by $step"
-                else s"the ${piece(blocker)} leaves $square with $step"
+              yield (fact.at.asInstanceOf[CommentaryFact.Event], blocker, square, sampled(fact.id).contains("removed"))
             }.distinct
-          s"In the returned continuation ${line.mkString(" ")}, ${loss}${line.last} by the ${piece(actor)} creates these new attacks: ${contacts.mkString("; ")}." +
-            (if departures.isEmpty then "" else s" The opened line depends on these departures: ${departures.mkString("; ")}.") +
-            " These concrete attacks do not by themselves establish a forced gain."
+          val owner = for
+            current <- facts.get("current_" + cause.id)
+            if current.predicate == cause.predicate && current.at == cause.at &&
+              current.through == cause.through && current.expected == cause.expected
+            (requirementId, arm) <- (current.path.source match
+              case CommentaryFact.Comparison(id, arm) => Some(id -> arm)
+              case _ => None)
+            comparison <- entry.request.requirements.collectFirst {
+              case value: CompareMoves if value.id == requirementId => value
+            }
+            answer <- readings.get(requirementId).flatMap(_.answer)
+            lineId <- arm match
+              case "reference" => Some(answer.referenceLineId)
+              case "alternative" => Some(answer.alternativeLineId)
+              case _ => None
+          yield (CommentaryIdea.AnsweredComparison(entry.request.id, comparison, answer), lineId)
+          TacticStep(line, event, actor, contacts, loss, departures, owner)
       }
     val defenses = facts.values.toList.filter(fact => fact.id.startsWith("defense_") && fact.id.endsWith("_reference"))
       .sortBy(_.id).flatMap { fact =>
@@ -436,26 +600,38 @@ object CommentaryProposal:
             case _ => None)
         yield
           val arm = if a == "present" then "reference" else "alternative"
-          val move = if a == "present" then left.head else right.head
+          val leftSan = notation.line(left)
+          val rightSan = notation.line(right)
+          val move = if a == "present" then leftSan.head else rightSan.head
           val use = facts.values.filter(value => value.id.startsWith(stem + s"_use_${arm}_") &&
             value.predicate.kind == "direct_support_use").exists(value =>
             sampled(value.id).contains("true") && sampled(value.id + "_continuity").contains("present"))
-          s"Against the common reply ${left.last}, support by the ${piece(provider)} for the ${piece(target)} is $a after ${left.head} and $b after ${right.head}. " +
+          (if leftSan.last == rightSan.last then
+            s"Against the common reply ${leftSan.last}, support by the ${piece(provider)} for the ${piece(target)} is $a after ${leftSan.head} and $b after ${rightSan.head}. "
+          else s"After ${leftSan.mkString(" ")}, support by the ${piece(provider)} for the ${piece(target)} is $a; after ${rightSan.mkString(" ")}, it is $b. ") +
             (if use then s"The current tested continuation after $move actually uses that defense to recapture the attacker. "
               else "Use of this support in a recapture has not yet been established in the current compared lines. ") +
             "This distinguishes the defensive condition; it does not make the common reply illegal or explain the whole evaluation difference."
       }
     val counters = entry.request.requirements.collect { case value: CompareMoves if value.id == "tactical_strength" => value }
       .filter(_ => includeCounter && readings.get("tactical_context").exists(_.state == "supported")).map { value =>
-        val assessment = readings.get(value.id).flatMap(_.answer).fold(
+        val answer = readings.get(value.id).flatMap(_.answer)
+        val assessment = answer.fold(
           "The relative strength of these replies remains unverified.") { answer =>
           val relation = answer.evaluationRelation match
-            case "better" => "stronger than"
-            case "worse" => "weaker than"
+            case "better" => "above"
+            case "worse" => "below"
             case _ => "equal to"
-          s"In this tested reply comparison, ${value.alternativeMove} is $relation ${value.referenceMove}. " +
-            (if answer.evaluationRelation == "better" then "Revise the explanation that relies on the weaker reply; the root choice needs verification."
-             else "This reply is not rated higher; whether the same explanation still applies depends on its recorded continuation.")
+          val location = if value.prefixMovesUci.isEmpty then "at the starting position"
+            else "after " + notation.line(value.prefixMovesUci).mkString(" ")
+          val meaning = answer.qualityBand match
+            case Some(PrincipalVariationComparison.QualityBand.Close) =>
+              "The engine evaluations are close; they do not establish a stronger refutation. Whether this reply changes the explanation depends on what happens in its continuation."
+            case Some(PrincipalVariationComparison.QualityBand.Separated) =>
+              if answer.evaluationRelation == "better" then "Revise the explanation that relies on the weaker reply; the root choice needs verification."
+              else "This reply is not rated higher; whether the same explanation still applies depends on its recorded continuation."
+            case None => "The scores alone do not yet show whether one reply is clearly stronger; its continuation still matters."
+          s"In this tested reply comparison $location, ${notation.move(value.prefixMovesUci, value.alternativeMove)} evaluates $relation ${notation.move(value.prefixMovesUci, value.referenceMove)}. $meaning"
         }
         val changes = facts.values.toList.filter(fact =>
           (fact.id.startsWith("tactical_direct_") || fact.id.startsWith("tactical_effect_")) && fact.id.endsWith("_reference"))
@@ -474,12 +650,16 @@ object CommentaryProposal:
                 case _ => s"presence of the ${piece(fact.predicate.subject.get)}"
               if a == b then s"$condition remains $a in both replies" else s"$condition changes from $a to $b"
           }
-        s"After ${value.prefixMovesUci.mkString(" ")}, check ${value.alternativeMove} instead of ${value.referenceMove}. $assessment " +
+        ComparisonPart(s"After ${notation.line(value.prefixMovesUci).mkString(" ")}, check ${notation.move(value.prefixMovesUci, value.alternativeMove)} instead of ${notation.move(value.prefixMovesUci, value.referenceMove)}. $assessment " +
           changes.mkString("Conditions: ", "; ", ". ") +
-          "These conditions explain what is being tested, not the whole evaluation difference."
+          "These conditions explain what is being tested, not the whole evaluation difference.", answer.nonEmpty, counterKey(entry))
       }
-    counters ++ defenses ++ tactics ++ replies ++ Option.when(captures.nonEmpty)(
-      "This identifies an opposing option; its legality alone does not establish its tactical value.") ++ captures
+    // The actual reply answers the present choice before an unrelated later
+    // line opening. Conditions and consequences inside each part stay together.
+    counters ++ (replies ++ defenses).map(ComparisonPart(_, direct = true)) ++
+      tactics.map(value => ComparisonPart(value.text(notation), tactic = Some(value))) ++
+      Option.when(captures.nonEmpty)(ComparisonPart(
+        "This identifies an opposing option; its legality alone does not establish its tactical value. " + captures.mkString(" ")))
 
   /** Read only the two lines owned by the current answer. An illustrative study line
     * cannot supply the consequences of an engine comparison with another continuation.
@@ -500,7 +680,7 @@ object CommentaryProposal:
               ((if capture.side.white then "black" else "white"), capture.capturedRole.name))(_ => 1)(_ + _)
               .toList.sortBy(_._1).map { case ((side, role), count) => s"$side loses $count $role${if count > 1 then "s" else ""}" }
             val promotions = events.filter(_.promotionGainCp > 0).map(event =>
-              s"${if event.movement.side.white then "white" else "black"} promotes to ${event.movement.afterRole.name} with ${event.moveUci}")
+              s"${if event.movement.side.white then "white" else "black"} promotes to ${event.movement.afterRole.name} with ${prepared.notation.line(line.path.moves)(event.plyOffset)}")
             val captures = line.events.filter(event => event.plyOffset >= value.prefixMovesUci.size && event.originalVictim.nonEmpty)
             val targets = entry.request.requirements.collect {
               case fact: Fact if fact.predicate.kind == "legal_capture" && fact.id.startsWith("tactical_") => fact.predicate.target.get
@@ -510,21 +690,21 @@ object CommentaryProposal:
                 s"$name remains on the board at this line's end"
               else s"the fate of $name is not established by the identified capture events"
               captures.find(_.originalVictim.contains(target.witness)).fold(absent) { capture =>
-                s"$name is captured on ${line.path.moves(capture.plyOffset)}"
+                s"$name is captured on ${prepared.notation.line(line.path.moves)(capture.plyOffset)}"
               }
             }
             val exchanges = captures.flatMap { loss =>
               line.captureLinks.filter(_.lossEventId == loss.id).flatMap(link => line.events.find(_.id == link.captureEventId))
-                .map(returned => s"the capturer on ${line.path.moves(loss.plyOffset)} is itself captured on ${line.path.moves(returned.plyOffset)}")
+                .map(returned => s"the capturer on ${prepared.notation.line(line.path.moves)(loss.plyOffset)} is itself captured on ${prepared.notation.line(line.path.moves)(returned.plyOffset)}")
             }.distinct
             val checks = (value.prefixMovesUci.size until line.path.moves.size).filter { offset =>
               line.path.positions.lift(offset + 1).exists(position => position.sideToMove.exists(side =>
                 position.id.flatMap(prepared.resourceViews(packet).get).exists(_.currentCheckSources(side).nonEmpty)))
-            }.map(offset => line.path.moves(offset)).toList
+            }.map(offset => prepared.notation.line(line.path.moves)(offset)).toList
             val observed = (targets ++ losses ++ promotions ++ exchanges.take(2) ++
               Option.when(checks.nonEmpty)("check occurs with " + checks.mkString(", "))).mkString("; ")
             val length = line.path.moves.size - value.prefixMovesUci.size
-            s"In the returned $length-ply continuation (${line.path.moves.drop(value.prefixMovesUci.size).mkString(" ")}) beginning $move, " +
+            s"In the returned $length-ply continuation (${prepared.notation.line(line.path.moves).drop(value.prefixMovesUci.size).mkString(" ")}) beginning ${prepared.notation.move(value.prefixMovesUci, move)}, " +
               (if observed.isEmpty then "no capture, promotion or check is observed" else observed) +
               "."
         }
@@ -552,11 +732,13 @@ object CommentaryProposal:
       "left_requirement_id" -> left, "right_requirement_id" -> right, "relation" -> relation)
     case FactGroup(id, mode, members) => Json.obj("id" -> id, "kind" -> "fact_group", "mode" -> mode, "members" -> members)
 
-  private[runtime] def snapshots(entries: List[Entry], render: CommentaryIdea.Idea => String = _.text): List[JsObject] =
+  private[runtime] def snapshots(entries: List[Entry], render: CommentaryIdea.Idea => String = _.text,
+      renderLine: List[String] => List[String] = identity): List[JsObject] =
     val summaries = CommentaryIdea.summaries(entries, render)
-    entries.map(entry => snapshot(entry, summaries.get(entry.request.id)))
+    entries.map(entry => snapshot(entry, summaries.get(entry.request.id), renderLine))
 
-  private[runtime] def snapshot(entry: Entry, idea: Option[String] = None): JsObject =
+  private[runtime] def snapshot(entry: Entry, idea: Option[String] = None,
+      renderLine: List[String] => List[String] = identity): JsObject =
     val origin = entry.request.origin
     Json.obj("id" -> entry.request.id, "admission" -> entry.admission,
       "origin" -> Json.obj("question" -> sourceJson(origin.question), "candidates" -> sourceJson(origin.candidates),
@@ -569,12 +751,13 @@ object CommentaryProposal:
           "work_id" -> reading.workId) ++ reading.result.fold(Json.obj())(result => Json.obj("result" -> result.json))
       }) ++ entry.questionText.fold(Json.obj())(question => Json.obj(
         "question_text" -> question, "answer_text" ->
-          (idea.fold("")(_ + " ") + questionAnswer(entry)).take(16000)))
+          (idea.fold("")(_ + " ") + questionAnswer(entry, renderLine)).take(16000)))
 
   /** The prose reads the same facts and receipts as the structured answer. It never turns a
     * whole-line score into a causal score for one preparation or one intervening move.
     */
-  private def questionAnswer(entry: Entry): String =
+  private def questionAnswer(entry: Entry, renderLine: List[String] => List[String]): String =
+    def label(value: CompareMoves, move: String) = renderLine(value.prefixMovesUci :+ move).last
     val requirements = entry.request.requirements.map(value => value.id -> value).toMap
     val readings = entry.readings.map(value => value.requirementId -> value).toMap
     def piece(value: CommentaryFact.Piece): String = s"${value.side} ${value.role} originally on ${value.square}"
@@ -593,7 +776,7 @@ object CommentaryProposal:
         val context = (left.path.source, right.path.source, left.at, right.at) match
           case (CommentaryFact.Declared(moves), CommentaryFact.Declared(other),
               CommentaryFact.Ply(before), CommentaryFact.Ply(after)) if moves == other && after == before + 1 =>
-            s"Move ${before + 1} (${moves(before)}) changes"
+            s"Move ${before + 1} (${renderLine(moves)(before)}) changes"
           case _ => "The named paths compare"
         s"$context ${predicate(left.predicate)}: $a / $b."
     }.distinct
@@ -607,14 +790,14 @@ object CommentaryProposal:
       })
     val comparisons = entry.request.requirements.collect { case value: CompareMoves =>
       val reading = readings(value.id)
-      reading.answer.fold(s"${value.alternativeMove} versus ${value.referenceMove}: unverified (${reading.stopReason.getOrElse(reading.state)}).")(
+      reading.answer.fold(s"${label(value, value.alternativeMove)} versus ${label(value, value.referenceMove)}: unverified (${reading.stopReason.getOrElse(reading.state)}).")(
         answer =>
           val relation = answer.evaluationRelation match
             case "better" => "above"
             case "worse" => "below"
             case _ => "equal to"
-          val location = if value.prefixMovesUci.isEmpty then "the starting position" else "the position after " + value.prefixMovesUci.mkString(" ")
-          s"${value.alternativeMove} evaluates $relation ${value.referenceMove} for the side to move at $location.")
+          val location = if value.prefixMovesUci.isEmpty then "the starting position" else "the position after " + renderLine(value.prefixMovesUci).mkString(" ")
+          s"${label(value, value.alternativeMove)} evaluates $relation ${label(value, value.referenceMove)} for the side to move at $location.")
     }
     val sacrificeFacts = entry.request.requirements.collect {
       case fact: Fact if fact.id.startsWith("sacrifice_") && !fact.id.endsWith("_role") => fact
@@ -660,8 +843,8 @@ object CommentaryProposal:
         val context = requirements.get(comparisonId).collect { case comparison: CompareMoves =>
           val move = if arm == "reference" then comparison.referenceMove else comparison.alternativeMove
           val where = if comparison.prefixMovesUci.isEmpty then "the starting position"
-            else "the position after " + comparison.prefixMovesUci.mkString(" ")
-          s" ($move from $where)"
+            else "the position after " + renderLine(comparison.prefixMovesUci).mkString(" ")
+          s" (${label(comparison, move)} from $where)"
         }.getOrElse("")
         s"The returned $arm line$context $observation $action within plies ${event.fromPly + 1}–${event.throughPly}."
     }.distinct

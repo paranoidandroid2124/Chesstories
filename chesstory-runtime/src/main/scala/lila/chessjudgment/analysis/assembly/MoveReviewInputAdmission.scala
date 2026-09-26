@@ -84,12 +84,11 @@ object MoveReviewInputAdmission:
       history.admitToFirstAutomaticTerminal(moves).toOption
         .flatMap(continuation => CanonicalLineReplay.fromHistory(
           continuation.resultingHistory.segmentReplaySteps.drop(history.segmentReplaySteps.size)
-        ))
-        .map(replay => AdmittedLegalLine(replay))
+        ).map(replay => AdmittedLegalLine(replay, automaticTerminal = continuation.automaticTerminal)))
     replay(List(played)).map { root =>
       // Keys are exact historical move prefixes, not board positions. Each new
       // edge is legally replayed once across all supplied nested alternatives.
-      val prefixes = scala.collection.mutable.Map(List.empty[String] -> (history, false))
+      val prefixes = scala.collection.mutable.Map(List.empty[String] -> (history, Option.empty[AutomaticTerminal]))
       def admitPrefix(inputMoves: List[String], maximumPrefixes: Int = 600): (List[String], Option[CommentaryLineStop]) =
         var moves = List.empty[String]
         var stop = Option.empty[CommentaryLineStop]
@@ -97,14 +96,14 @@ object MoveReviewInputAdmission:
         while iterator.hasNext && stop.isEmpty do
           val move = iterator.next()
           val (before, terminal) = prefixes(moves)
-          if terminal then stop = Some(CommentaryLineStop.AutomaticTerminal)
+          if terminal.nonEmpty then stop = Some(CommentaryLineStop.AutomaticTerminal)
           else
             val next = moves :+ move
             if !prefixes.contains(next) && prefixes.size > maximumPrefixes then
               stop = Some(CommentaryLineStop.InputLimit)
             else prefixes.get(next).orElse {
               before.admitToFirstAutomaticTerminal(List(move)).toOption.map { continuation =>
-                val value = continuation.resultingHistory -> continuation.automaticTerminal.nonEmpty
+                val value = continuation.resultingHistory -> continuation.automaticTerminal
                 prefixes.update(next, value)
                 value
               }
@@ -121,7 +120,7 @@ object MoveReviewInputAdmission:
         admitPrefix(moves.map(EvidenceRef.normalizeMove), Int.MaxValue)._1)
       val acceptedReplays = acceptedMoves.filter(_.nonEmpty).distinct.flatMap { moves =>
         CanonicalLineReplay.fromHistory(prefixes(moves)._1.segmentReplaySteps.drop(history.segmentReplaySteps.size))
-          .map(replay => AdmittedLegalLine(replay))
+          .map(replay => AdmittedLegalLine(replay, automaticTerminal = prefixes(moves)._2))
       }
       AdmittedMoveReviewInput(played, (root :: acceptedReplays).distinctBy(_.moves),
         Nil, None, history, suppliedLines = admitted)
@@ -135,8 +134,9 @@ object MoveReviewInputAdmission:
     val history = input.positionHistory
     // A child search already owns the entire exact history. Retain that legal
     // path through the same owner check, without replaying it or importing its score.
-    val replays = continuations.flatMap(_.stepsAfter(history))
-      .flatMap(CanonicalLineReplay.fromHistory).map(replay => AdmittedLegalLine(replay))
+    val replays = continuations.flatMap(continuation => continuation.stepsAfter(history)
+      .flatMap(CanonicalLineReplay.fromHistory)
+      .map(replay => AdmittedLegalLine(replay, automaticTerminal = continuation.automaticTerminal)))
     input.copy(legalLines = AdmittedLegalLine.merge(input.legalLines ++ replays))
 
   /** Promote only requested probe paths. Their replay calculations retain the exact
@@ -158,7 +158,8 @@ object MoveReviewInputAdmission:
     require(source != EvaluationSource.ResponseComparison, "conditional child scores cannot rank root moves")
     val admitted = lines.flatMap(materializeAdmission(input.positionHistory, _))
     input.copy(
-      legalLines = AdmittedLegalLine.merge(input.legalLines ++ admitted.map(value => AdmittedLegalLine(value.replay))),
+      legalLines = AdmittedLegalLine.merge(input.legalLines ++ admitted.map(value =>
+        AdmittedLegalLine(value.replay, automaticTerminal = value.automaticTerminal))),
       evaluationObservations = (input.evaluationObservations ++ admitted.map(value =>
         AdmittedEvaluationObservation(value.evaluation, source))).distinct
     )
@@ -410,7 +411,7 @@ object MoveReviewInputAdmission:
           }
       val candidates = reference.toList ++ played.toList ++ alternatives
       val legalLines = legalLineEvaluations.distinctBy(_.replay.replaySteps).map { admitted =>
-        AdmittedLegalLine(admitted.replay)
+        AdmittedLegalLine(admitted.replay, automaticTerminal = admitted.automaticTerminal)
       }
       legalLines
         .find(line => EvidenceRef.sameMove(line.rootMove, playedMove))

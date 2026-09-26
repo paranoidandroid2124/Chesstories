@@ -20,7 +20,7 @@ private[runtime] object LineContinuationComparison:
       require(owner eq packet, "a continuation comparison belongs to its exact packet")
       val root = packet.assembly.playedTransition.get
       val paths = List(left.path, right.path)
-      Json.obj("id" -> id, "kind" -> "comparison", "selection" -> "context", "state" -> "ready",
+      Json.obj("id" -> id, "kind" -> "comparison", "selection" -> "context",
         "root_occurrence_id" -> root.evidence.id,
         "occurrence_ids" -> (root.evidence.id :: paths.flatMap(_.ids)).distinct,
         "position_ids" -> paths.flatMap(_.positions.flatMap(_.id)).distinct,

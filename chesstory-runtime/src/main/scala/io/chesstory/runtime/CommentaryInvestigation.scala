@@ -44,7 +44,8 @@ private[runtime] object CommentaryInvestigation:
   case class Answer(workId: String, executionKeySha256: String, engineProfile: String, requiredDepth: Int,
       referenceDepth: Option[Int], alternativeDepth: Option[Int], evaluationRelation: String,
       referenceLineId: String, alternativeLineId: String, referenceEvaluation: JsObject, alternativeEvaluation: JsObject,
-      referenceOccurrenceId: String, alternativeOccurrenceId: String)
+      referenceOccurrenceId: String, alternativeOccurrenceId: String,
+      qualityBand: Option[PrincipalVariationComparison.QualityBand])
 
   /** The caller supplies same-work ownership; packet evaluation observations alone do not retain it. */
   def discover(packet: EvidenceBackedJudgmentPacket, referenceMove: String,
@@ -198,7 +199,8 @@ private[runtime] object CommentaryInvestigation:
         referencePath.ref.id, alternativePath.ref.id,
         ObservedLineProtocol.evaluationJson(referenceSource.evaluation, referenceSource.source),
         ObservedLineProtocol.evaluationJson(alternativeSource.evaluation, alternativeSource.source),
-        referenceOccurrence, alternativeOccurrence)
+        referenceOccurrence, alternativeOccurrence,
+        PrincipalVariationComparison.quality(mover, reference.evaluation, alternative.evaluation))
 
   private def sourceForWork(source: EvaluationSource, work: IssuedEngineWork): Boolean =
     ObservedLineProtocol.evaluationSourceId(source) == work.purpose.wireId

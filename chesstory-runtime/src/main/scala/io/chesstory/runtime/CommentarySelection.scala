@@ -10,32 +10,27 @@ import play.api.libs.json.*
   * or turn a supplied continuation into a forced line.
   */
 private[runtime] object CommentarySelection:
-  enum State(val wireId: String):
-    case Ready extends State("ready")
-    case Partial extends State("partial")
-    case NeedsExplanation extends State("needs_explanation")
-
   enum Display(val wireId: String):
     case Selected extends Display("selected")
     case DisplayCap extends Display("display_cap")
     case DisplayRepresentative extends Display("display_representative")
     case Context extends Display("context")
 
-  private enum ComparisonResult(val relation: String, val gap: Option[String], val state: State):
-    case MissingPath extends ComparisonResult("unavailable", Some("missing_path"), State.Partial)
-    case IncompleteLine extends ComparisonResult("unavailable", Some("incomplete_line"), State.Partial)
-    case MaterialUnavailable extends ComparisonResult("unavailable", Some("material_evidence_unavailable"), State.Partial)
-    case Equal extends ComparisonResult("equal", Some("beyond_material_scope"), State.NeedsExplanation)
-    case Different extends ComparisonResult("different", None, State.Ready)
+  private enum ComparisonResult(val relation: String, val unavailableReason: Option[String]):
+    case MissingPath extends ComparisonResult("unavailable", Some("missing_path"))
+    case IncompleteLine extends ComparisonResult("unavailable", Some("incomplete_line"))
+    case MaterialUnavailable extends ComparisonResult("unavailable", Some("material_evidence_unavailable"))
+    case Equal extends ComparisonResult("equal", None)
+    case Different extends ComparisonResult("different", None)
 
   private case class Source(lineId: String, kind: String, source: String, acceptedPlyCount: Int,
       stop: Option[CommentaryLineStop] = None):
     def json: JsObject = Json.obj("line_id" -> lineId, "kind" -> kind, "source" -> source,
       "accepted_ply_count" -> acceptedPlyCount, "stop" -> stop.map(_.wireId))
 
-  private case class Path(line: LegalLineNode, ids: List[String], positions: List[String], moves: List[String],
+  private case class Path(line: LegalLineNode, ids: List[String], positions: List[String], moves: List[String], sans: List[String],
       sources: List[Source], certified: Boolean, material: Option[LineMaterialSummary], complete: Boolean):
-    def state: State = if complete && certified then State.Ready else State.Partial
+    def completeAndCertified: Boolean = complete && certified
     def id: String = s"line:${line.ref.id}"
     lazy val signature: Option[MaterialSignature] = material.map(materialSignature)
     lazy val materialDescription: String = signature.map(materialText).getOrElse("")
@@ -53,15 +48,21 @@ private[runtime] object CommentarySelection:
       case Conditional(_) => Json.obj("type" -> "observed_line", "scope" -> "observed_line")
       case Comparison(ref, fact, reference, candidate, result) =>
         val material = for
-          _ <- Option.when(result.state != State.Partial)(())
+          _ <- Option.when(result.unavailableReason.isEmpty)(())
           left <- reference
           right <- candidate
           leftMaterial <- left.material
           rightMaterial <- right.material
         yield (left, right, leftMaterial, rightMaterial)
         val observed = result == ComparisonResult.Different
+        val exchanges = material.toList.flatMap { (left, right, _, _) =>
+          List(left, right).flatMap(path => path.material.flatMap(openingExchange(_, path.sans))
+            .map(value => (path.line.ref.rootMove -> path.sans.head) -> value._2))
+        }.groupMap(_._2)(_._1).toList.sortBy(_._2.head._1).map { (exchange, moves) =>
+          s"In the provided ${moves.map(_._2).distinct.mkString(" and ")} ${if moves.size > 1 then "lines" else "line"}, $exchange"
+        }.mkString(" ")
         val base = Json.obj(
-          "type" -> (if observed then "observed_material_comparison" else "evaluation_comparison"),
+          "type" -> "root_comparison",
           "scope" -> "observed_lines", "comparison_evidence_id" -> ref.id,
           "comparison_kind" -> (fact.kind match
             case CandidateComparisonKind.PlayedVsBest => "played_vs_best"
@@ -69,10 +70,10 @@ private[runtime] object CommentarySelection:
           "reference_line_id" -> reference.map(_.line.ref.id), "candidate_line_id" -> candidate.map(_.line.ref.id),
           "missing_line_ids" -> (Option.when(reference.isEmpty)(fact.referenceLine.id).toList ++
             Option.when(candidate.isEmpty)(fact.candidateLine.id).toList),
-          "material_relation" -> result.relation, "explanation_gap" -> result.gap,
-          "text" -> (if observed then material.map { (left, right, _, _) =>
-            s"In the provided ${left.moves.size}-ply line beginning ${left.line.ref.rootMove}, ${left.materialDescription}; " +
-              s"in the provided ${right.moves.size}-ply line beginning ${right.line.ref.rootMove}, ${right.materialDescription}. " +
+          "material_relation" -> result.relation, "material_unavailable_reason" -> result.unavailableReason,
+          "text" -> (List(exchanges, if observed then material.map { (left, right, _, _) =>
+            s"In the provided ${left.moves.size}-ply line beginning ${left.sans.head}, ${left.materialDescription}; " +
+              s"in the provided ${right.moves.size}-ply line beginning ${right.sans.head}, ${right.materialDescription}. " +
               "These are observed exchanges, not a forced outcome or the sole reason for the evaluation."
           }.getOrElse("") else if result == ComparisonResult.MissingPath then
             "The comparison is available, but a referenced continuation is missing."
@@ -80,18 +81,18 @@ private[runtime] object CommentarySelection:
             "The comparison is available, but its continuation evidence is incomplete."
           else if result == ComparisonResult.MaterialUnavailable then
             "The continuations are complete, but certified material evidence is unavailable."
-          else "The provided lines have the same counts of captured and promoted piece roles; " +
-            "those counts alone do not explain the choice."))
+          else "The provided lines have the same counts of captured and promoted piece roles.")
+            .filter(_.nonEmpty).mkString(" ")))
         base ++ material.map { (_, _, left, right) => Json.obj(
           "perspective" -> sideName(left.sideToMove),
           "reference_net_cp" -> left.observedNetCpForMover, "candidate_net_cp" -> right.observedNetCpForMover)
         }.getOrElse(Json.obj())
 
-  private case class Candidate(id: String, content: Content, state: State, display: Display,
+  private case class Candidate(id: String, content: Content, display: Display,
       rootOccurrence: String, occurrences: List[String], positions: List[String], lines: List[String],
       evidence: List[String], sources: List[Source]):
     def json: JsObject = Json.obj("id" -> id, "kind" -> content.kind,
-      "state" -> state.wireId, "selection" -> display.wireId,
+      "selection" -> display.wireId,
       "root_occurrence_id" -> rootOccurrence, "occurrence_ids" -> occurrences.distinct,
       "position_ids" -> positions.distinct, "line_ids" -> lines.distinct,
       "evidence_ids" -> evidence.distinct, "source_refs" -> sources.distinct.map(_.json),
@@ -100,18 +101,23 @@ private[runtime] object CommentarySelection:
   final class Result private[CommentarySelection] (
       private val candidates: List[Candidate], private val scenes: List[JsObject],
       private[runtime] val local: List[MoveWorkProjection.LocalCandidate],
-      val withMoveEffects: JsObject => JsObject
+      explainMoves: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject]
   ):
+    def withMoveEffects(candidate: JsObject, explained: Set[JsObject] = Set.empty,
+        context: List[MoveWorkProjection.Context] = Nil): JsObject = explainMoves(List(candidate -> context), explained).head
+    def withSharedMoveEffects(candidates: List[(JsObject, List[MoveWorkProjection.Context])]): List[JsObject] =
+      explainMoves(candidates, Set.empty)
     lazy val highlights: List[JsObject] = local.filter(_.selection == Display.Selected).map(_.highlight)
     // Local notes are consumed through highlights. Their candidate wrappers (including
     // rejected display alternatives) have no reader or scene dependency. Keep the typed
     // facts for selection/research, but never construct a second public representation.
-    lazy val json: JsObject = Json.obj("version" -> 1,
-      "candidates" -> candidates.map(candidate => withMoveEffects(candidate.json)), "scenes" -> scenes)
+    lazy val baseJson: JsObject = Json.obj("version" -> 2,
+      "candidates" -> candidates.map(_.json), "scenes" -> scenes)
+    lazy val json: JsObject = baseJson + ("candidates" -> Json.toJson(candidates.map(candidate => withMoveEffects(candidate.json))))
 
   def fromPacket(packet: EvidenceBackedJudgmentPacket,
       local: List[MoveWorkProjection.LocalCandidate], prepared: ObservedLineProtocol.PreparedPaths,
-      withMoveEffects: JsObject => JsObject): Result =
+      withMoveEffects: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject]): Result =
     prepared.requireOwner(packet)
     val ctx = packet.assembly
     val graph = packet.evidenceGraph
@@ -156,7 +162,7 @@ private[runtime] object CommentarySelection:
           case Nil => List(Source(line.ref.id, "admitted", "legal_replay", moves.size))
           case values => values.distinct
         val incompleteInput = sources.forall(_.stop.exists(_ != CommentaryLineStop.AutomaticTerminal))
-        Path(line, path.ids, positions.filter(resources), moves, sources, certified.nonEmpty, material,
+        Path(line, path.ids, positions.filter(resources), moves, prepared.notation.line(moves), sources, certified.nonEmpty, material,
           path.ids == path.declared && positions.forall(resources) && !incompleteInput)
     }
     val pathsByLine = paths.map(path => path.line.ref -> path).toMap
@@ -169,7 +175,7 @@ private[runtime] object CommentarySelection:
           val pair = List(reference, candidate)
           val result =
             if pair.exists(_.isEmpty) then ComparisonResult.MissingPath
-            else if pair.flatten.exists(_.state == State.Partial) then ComparisonResult.IncompleteLine
+            else if pair.flatten.exists(path => !path.completeAndCertified) then ComparisonResult.IncompleteLine
             else if pair.flatten.exists(_.material.isEmpty) then ComparisonResult.MaterialUnavailable
             else if (for
               left <- reference.flatMap(_.signature)
@@ -178,12 +184,12 @@ private[runtime] object CommentarySelection:
             else ComparisonResult.Equal
           val owned = pair.flatten
           Candidate(s"comparison:${ref.id}", Content.Comparison(ref, fact, reference, candidate, result),
-            result.state, Display.Selected, root.evidence.id,
+            Display.Selected, root.evidence.id,
             root.evidence.id :: owned.flatMap(_.ids), owned.flatMap(_.positions),
             owned.map(_.line.ref.id), ref.id :: parents.map(_.id), owned.flatMap(_.sources))
     }
     val lines = paths.map { path =>
-      Candidate(path.id, Content.Conditional(path), path.state, Display.Context, path.ids.head,
+      Candidate(path.id, Content.Conditional(path), Display.Context, path.ids.head,
         path.ids, path.positions, List(path.line.ref.id),
         Option.when(path.certified)(path.line.evidence.id).toList, path.sources)
     }
@@ -195,13 +201,35 @@ private[runtime] object CommentarySelection:
       Json.obj("id" -> s"scene:${comparison.id}", "root_occurrence_id" -> root.evidence.id,
         "occurrence_ids" -> comparison.occurrences.distinct,
         "line_ids" -> comparison.lines.distinct,
-        "candidate_ids" -> (comparison.id :: context.map(_.id)), "state" -> comparison.state.wireId)
+        "candidate_ids" -> (comparison.id :: context.map(_.id)))
     }
     // The only cross-kind order is obligation first, exact context next, optional facts last.
     // Local display ranking stays in MoveWorkProjection; it is not a game-scene importance score.
     new Result(comparisons ++ lines, scenes, local, withMoveEffects)
 
   private[runtime] type MaterialSignature = (List[(String, String, Int)], List[(String, String, String, Int)])
+
+  /** Lead with the current move's consecutive captures, keeping the existing
+    * ledger's recapture distinctions. Do not join across an intervening move or
+    * turn a conditional PV into a forced transaction.
+    */
+  private[runtime] def openingExchange(material: LineMaterialSummary,
+      moves: List[String]): Option[(List[LineMaterialCapture], String)] =
+    material.captures.headOption.flatMap { first =>
+      val startsHere = first.plyOffset == 0 || (first.plyOffset == 1 && first.side != material.sideToMove)
+      val chain = first :: material.captures.drop(1).zipWithIndex.takeWhile { (capture, offset) =>
+        capture.plyOffset == first.plyOffset + offset + 1
+      }.map(_._1)
+      Option.when(startsHere && chain.size >= 2 &&
+        !material.events.exists(event => event.promotionGainCp > 0 && event.plyOffset <= chain.last.plyOffset)) {
+        val actions = chain.map { capture =>
+          s"${sideName(capture.side).capitalize} ${capture.attackerRole.name} " +
+            s"${if capture.recapture then "recaptures" else "captures"} the ${sideName(!capture.side)} " +
+            s"${capture.capturedRole.name} on ${capture.square.key} with ${moves(capture.plyOffset)}"
+        }
+        chain -> s"the opening exchange is: ${actions.mkString("; ")}. This is the observed sequence, not a forced line."
+      }.filter(_._2.length <= 1400)
+    }
 
   private[runtime] def materialSignature(material: LineMaterialSummary): MaterialSignature =
     val losses = material.captures.groupMapReduce(capture =>

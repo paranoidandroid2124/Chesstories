@@ -99,6 +99,15 @@ final class PositionResourceView private[assembly] (
   // Reuse the admitted board state; consumers must not decode the public FEN.
   def occupantAt(square: EvidenceSquare): Option[RelationColoredPieceWitness] = inventory.occupantAt(square)
 
+  /** One admitted geometric capture's frozen-board own-king safety, not turn legality.
+    * King moves/captures, en passant and promotion are outside this query's scope.
+    * The exact current pieces and contact must exist; a missing contact is unknown.
+    */
+  def ordinaryCaptureKeepsKingSafe(actor: RelationColoredPieceWitness,
+      target: RelationColoredPieceWitness): Option[Boolean] =
+    if controlSources(actor, target.square).isEmpty then None
+    else inventory.ordinaryCaptureKeepsKingSafe(actor, target)
+
   lazy val checkingMoves: Option[List[LegalMoveResource]] = legalRows.map { rows =>
     val sources = inventory.checkingMoveSources.map(_.semanticId).toSet
     rows.filter(row => sources(row.sourceId))

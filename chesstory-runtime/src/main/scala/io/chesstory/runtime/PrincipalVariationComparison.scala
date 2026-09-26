@@ -38,12 +38,6 @@ private[runtime] object PrincipalVariationComparison:
     def eligibleQuietFocus: Boolean = materialRelation == MaterialRelation.Equal &&
       qualityBand == QualityBand.Close && rootObservationRelation == Relation.Different
 
-    // Ready describes these finite observations, never all causes of the score difference.
-    def state: String =
-      if materialRelation == MaterialRelation.Different || eventSequenceRelation == Relation.Different ||
-          rootObservationRelation == Relation.Different then "ready"
-      else "needs_explanation"
-
     def candidateJson(packet: EvidenceBackedJudgmentPacket): JsObject =
       require(belongsTo(packet), "a PV reading belongs to its exact packet")
       val root = packet.assembly.playedTransition.get
@@ -62,7 +56,7 @@ private[runtime] object PrincipalVariationComparison:
       ).flatten match
         case Nil => "The recorded material, event, and direct-mover facets are the same or unavailable."
         case values => values.mkString(" ")
-      Json.obj("id" -> id, "kind" -> "comparison", "state" -> state, "selection" -> "context",
+      Json.obj("id" -> id, "kind" -> "comparison", "selection" -> "context",
         "root_occurrence_id" -> root.evidence.id,
         "occurrence_ids" -> (root.evidence.id :: paths.flatMap(_.ids)).distinct,
         "position_ids" -> paths.flatMap(_.positions.flatMap(_.id)).filter(resourceIds).distinct,
@@ -126,7 +120,7 @@ private[runtime] object PrincipalVariationComparison:
       event.promotionGainCp)
   }
 
-  private def quality(mover: chess.Color, left: CandidateLineEvaluation, right: CandidateLineEvaluation): Option[QualityBand] =
+  private[runtime] def quality(mover: chess.Color, left: CandidateLineEvaluation, right: CandidateLineEvaluation): Option[QualityBand] =
     def close(value: EvalComparison): Boolean =
       Set(MoveChoiceVerdict.MatchesReference, MoveChoiceVerdict.PlayableLoss)(value.verdict)
     for
@@ -165,8 +159,7 @@ private[runtime] object PrincipalVariationComparison:
               candidate.evaluation.moves.head, receipt.work, receipt.lines, Some(prepared))
             reference <- prepared.path(packet, answer.referenceLineId)
             alternative <- prepared.path(packet, answer.alternativeLineId)
-            referenceEvaluation <- receipt.lines.find(_.evaluation.moves.head == referenceMoveUci).map(_.evaluation)
-            band <- quality(ctx.input.positionHistory.currentPosition.color, referenceEvaluation, candidate.evaluation)
+            band <- answer.qualityBand
           yield
             def material(path: ObservedLineProtocol.PreparedPath): Option[LineMaterialSummary] =
               Option.when(path.ids == path.declared && path.positions.forall(position =>

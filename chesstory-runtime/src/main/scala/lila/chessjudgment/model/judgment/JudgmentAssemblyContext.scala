@@ -1,11 +1,12 @@
 package lila.chessjudgment.model.judgment
 
 import lila.chessjudgment.analysis.position.PositionAnalysis
-import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
+import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
 
 final case class AdmittedLegalLine private[chessjudgment] (
     replay: CanonicalLineReplay,
-    discoveryOnly: Boolean = false
+    discoveryOnly: Boolean = false,
+    automaticTerminal: Option[AutomaticTerminal] = None
 ):
   val moves: List[String] = replay.replaySteps.map(step => EvidenceRef.normalizeMove(step.moveUci))
   val rootMove: String = moves.head
@@ -16,8 +17,13 @@ object AdmittedLegalLine:
     */
   def merge(lines: List[AdmittedLegalLine]): List[AdmittedLegalLine] =
     val qualified = lines.iterator.filterNot(_.discoveryOnly).map(_.moves).toSet
-    lines.distinctBy(_.moves).map(line =>
-      if line.discoveryOnly && qualified(line.moves) then line.copy(discoveryOnly = false) else line)
+    val terminals = lines.iterator.flatMap(line => line.automaticTerminal.map(line.moves -> _)).toMap
+    lines.distinctBy(_.moves).map { line =>
+      val discoveryOnly = line.discoveryOnly && !qualified(line.moves)
+      val terminal = terminals.get(line.moves)
+      if discoveryOnly == line.discoveryOnly && terminal == line.automaticTerminal then line
+      else line.copy(discoveryOnly = discoveryOnly, automaticTerminal = terminal)
+    }
 
 enum EvaluationSource:
   case DirectInput, RootSearch, FocusComparison, InvestigationComparison, ResponseComparison

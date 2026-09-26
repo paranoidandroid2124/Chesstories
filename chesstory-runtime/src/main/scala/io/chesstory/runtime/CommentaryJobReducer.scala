@@ -170,7 +170,9 @@ final case class IssuedEngineWork(
     commentaryLinePrefixUci: List[String],
     searchLimits: EngineSearchLimits,
     maxSearchElapsedMs: Int,
-    searchAnchor: Option[EngineSearchAnchor] = None
+    searchAnchor: Option[EngineSearchAnchor] = None,
+    // Issuance ownership survives when a deeper question retires this work's answer.
+    proposalRefs: List[(String, String)] = Nil
 ):
   def requiredDepth: Int = searchLimits.depth
   def multiPv: Int = searchLimits.multiPv
@@ -329,6 +331,11 @@ private[runtime] object EngineLineAdmission:
         .toOption
       if admittedLines.forall(line =>
         line.continuation.startingFen == CanonicalPositionHistory.normalizeFen(issuedWork.searchFen)
+      )
+      // Validate the search suffix before adding the commentary prefix, while retaining its legal replay.
+      if admittedLines.forall(line =>
+        serverEngineLine(line.continuation.moves, line.reported, 0, 0)
+          .flatMap(CandidateLineEvaluation.fromEngineLine(_, line.continuation.automaticTerminal)).nonEmpty
       )
       whitePrefixMoves = issuedWork.commentaryLinePrefixUci.indices.count { prefixIndex =>
         if commentaryOrigin.currentPosition.color.white then prefixIndex % 2 == 0 else prefixIndex % 2 != 0
@@ -1579,6 +1586,18 @@ object CommentaryJobReducer:
     val ideas = CommentaryIdea.read(active.proposalEntries)
     val withdrawn = ideas.filter(_.withdrawn).flatMap(_.members.map(_.entry.request.id)).toSet
     val pending = pendingProposalComparisons(active.proposalEntries.filterNot(entry => withdrawn(entry.request.id)))
+      .filter { (entry, value) =>
+        // Bare source pairs can consume existing answers, but their own legal choices
+        // alone do not justify new work. Filter owners before grouping shared pairs.
+        entry.admission != "generated" || value.prefixMovesUci.nonEmpty ||
+          entry.request.origin.question.producer != "C-opponent-choice" ||
+          value.id != "contrast_opponent_choice" || entry.generatedArms.exists(arm =>
+            arm.headRequirementIds.contains(value.id) && entry.request.requirements.exists {
+              case fact: CommentaryProposal.Fact => arm.memberRequirementIds.contains(fact.id) &&
+                fact.id != "choice_reference" && fact.id != "choice_alternative"
+              case _ => false
+            })
+      }
     val submitted = pending.collect { case (entry, value) if entry.admission != "generated" => key(value) }.toSet
     val currentMoves = Set(active.playedMoveUci, reference)
     val evaluations = active.packet.assembly.input.assessmentCandidates.map(_.evaluation.moves)
@@ -1660,10 +1679,16 @@ object CommentaryJobReducer:
           directCounter(other) == directCounter(value))
         .map(_.alternativeMove).filter(child.currentLegalMoveUcis.contains).sorted else Nil
       val moves = (value.referenceMove :: value.alternativeMove :: alternatives).distinct.take(3)
+      val owners = pending.collect { case (entry, other) if other.prefixMovesUci == prefix &&
+        other.referenceMove == value.referenceMove && moves.contains(other.alternativeMove) &&
+        (other == value || (value.id == "tactical_strength" && other.id == "tactical_strength" &&
+          directCounter(other) == directCounter(value))) => entry.request.id -> other.id
+      }.distinct.sorted
       val work = issuedWork(active.engineProfile, active.ledger.issuedWorkId,
         if prefix.isEmpty then EngineWorkPurpose.InvestigationComparison else EngineWorkPurpose.ResponseComparison,
         child, EngineRootRestriction.Restricted(moves), child.currentFen, Nil,
         EngineSearchLimits(investigationDepth(active), FocusNodes, FocusMovetimeMs, moves.size), FocusElapsedMs, searchAnchor)
+        .copy(proposalRefs = owners)
       val next = active.copy(explorationsIssued = active.explorationsIssued + (if verifyAfter then 0 else 1))
       val issued = issue(next, InvestigatingProposals(baseline, questions, responses, value, verifyAfter), work, next.ledger, Some(child))
         .asInstanceOf[ActiveCommentaryJob]
@@ -2595,7 +2620,38 @@ object CommentaryJobReducer:
       Choice(need.prefixMoves, (if generated then 1 else 0, moveRank(need.prefixMoves), 1, tie),
         outcomesAt(need.prefixMoves), None, () => issueFactContinuation(read, baseline, pending, responses, need))
     }
-    var remaining = (comparisons ++ responseChoices ++ facts).sortBy(_.priority)
+
+    // A restricted survey can cover a question without returning its two PVs.
+    // Keep that question unanswered, but do not repeat the same current scope.
+    val surveyedPools = explanationReceipts(read).filter(receipt => receipt.work.searchAnchor.isEmpty &&
+      CommentaryInvestigation.ownsSearch(read.positionHistory, receipt.work, receipt.lines) &&
+      CommentaryInvestigation.candidatesReady(receipt.work, receipt.lines)).flatMap { receipt =>
+        receipt.work.rootRestriction match
+          case EngineRootRestriction.Restricted(moves) => Some(moves.toSet)
+          case EngineRootRestriction.Unrestricted => None
+      }
+    val unanswered = pending.filter(inquiry => inquiry.state == "deferred" && inquiry.answer.isEmpty &&
+      inquiry.question.referenceMove == reference)
+    val linked = unanswered.filter(_.question.orderingCandidateIds.nonEmpty)
+    val eligible = if read.policy.previewDepth.nonEmpty then
+      unanswered.filter(inquiry => CommentaryInvestigation.investigationTier(inquiry.question) < 2)
+        .sortBy(inquiry => (CommentaryInvestigation.investigationTier(inquiry.question), inquiry.question.id))
+    else if linked.nonEmpty then linked else unanswered.filter(inquiry =>
+      inquiry.question.reasons.exists(_.kind != CommentaryInvestigation.Kind.EngineAlternative))
+    val family = eligible.filterNot(inquiry => surveyedPools.exists(moves =>
+      moves(inquiry.question.referenceMove) && moves(inquiry.question.alternativeMove)))
+    val familyChoice = family.headOption.map { next =>
+      val urgency = if family.exists(inquiry => CommentaryInvestigation.investigationTier(inquiry.question) < 2) then 2 else 3
+      // Existing target/PV evidence gives this family a place in the shared agenda;
+      // explicit questions and equally urgent current-PV responses still precede it.
+      Choice(Nil, (1, 0, urgency, comparisons.size + 1), Set.empty, None, () =>
+        val ids = family.map(_.question.id).toSet
+        val scheduled = pending.map(inquiry => if ids(inquiry.question.id) then
+          inquiry.copy(state = "awaiting_engine", stopReason = None) else inquiry)
+        Some(issueInvestigation(read, Investigating(baseline, scheduled, next.question, responses = responses),
+          reference :: family.map(_.question.alternativeMove).distinct.sorted)))
+    }
+    var remaining = (comparisons ++ responseChoices ++ facts ++ familyChoice).sortBy(_.priority)
     def prerequisite(choice: Choice): Choice =
       // Acceptance or a concrete reply challenge can invalidate this continuation.
       // A root value/immediate-action comparison alone does not erase the need to
@@ -2612,21 +2668,7 @@ object CommentaryJobReducer:
         case Some(issued) => return issued
         case None => remaining = remaining.filterNot(_ == selected)
 
-    // Keep the existing one root-hypothesis expansion bound, including its possible mandatory refresh.
-    val unanswered = pending.filter(inquiry => inquiry.state == "deferred" && inquiry.answer.isEmpty)
-    val linked = unanswered.filter(_.question.orderingCandidateIds.nonEmpty)
-    val family = if read.policy.previewDepth.nonEmpty then
-      unanswered.filter(inquiry => CommentaryInvestigation.investigationTier(inquiry.question) < 2)
-        .sortBy(inquiry => (CommentaryInvestigation.investigationTier(inquiry.question), inquiry.question.id))
-    else if linked.nonEmpty then linked else unanswered
-    family.headOption.filter(_ => !read.receipts.exists(_.work.purpose == EngineWorkPurpose.InvestigationComparison)) match
-      case Some(next) =>
-        val ids = family.map(_.question.id).toSet
-        val scheduled = pending.map(inquiry => if ids(inquiry.question.id) then
-          inquiry.copy(state = "awaiting_engine", stopReason = None) else inquiry)
-        issueInvestigation(read, Investigating(baseline, scheduled, next.question, responses = responses),
-          next.question.referenceMove :: family.map(_.question.alternativeMove).distinct.sorted)
-      case None => finishInvestigation(read, baseline, pending, responses)
+    finishInvestigation(read, baseline, pending, responses)
 
   private def responseAnswer(active: ActiveCommentaryJob, question: TargetResponseInvestigation.Question,
       search: TargetResponseInvestigation.Search): Option[CommentaryResponseAnswer] =

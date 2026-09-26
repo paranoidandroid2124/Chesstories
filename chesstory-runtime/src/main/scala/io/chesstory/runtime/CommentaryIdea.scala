@@ -12,6 +12,16 @@ private[runtime] object CommentaryIdea:
   type Pair = (List[String], Set[String])
   def pair(value: CompareMoves): Pair = value.prefixMovesUci -> Set(value.referenceMove, value.alternativeMove)
 
+  final case class AnsweredComparison(proposalId: String, comparison: CompareMoves,
+      answer: CommentaryInvestigation.Answer)
+  // Retain the existing proof match for presentation. These are references to
+  // certified requirements, not another reader or an estimate of move strength.
+  final case class Mechanism(condition: FactComparison, before: Fact, after: Fact,
+      test: FactComparison, action: Fact, alternative: Fact)
+  final case class QuestionFocus(owner: AnsweredComparison, key: Key, mechanism: Mechanism)
+  private case class ExplanationPart(text: String, comparison: Option[AnsweredComparison] = None,
+      remainder: String = "", facts: Option[(Fact, Fact)] = None)
+
   final case class Key(anchor: List[String], move: String, branch: List[String], action: Predicate, loss: Boolean)
   final case class Member(entry: Entry, key: Key, observation: Fact):
     val requirements = entry.request.requirements.map(value => value.id -> value).toMap
@@ -53,30 +63,77 @@ private[runtime] object CommentaryIdea:
           Some(left.predicate)
         case _ => None
     }
-    // A changed location/control is an observation. A mechanism additionally needs
-    // a usable response contrast, or the same action under a controlled move-order contrast.
-    val mechanism = differences.exists { difference =>
+    // Question members may share a mechanism, but a route's changed location and an
+    // unrelated legality contrast must not independently supply its two halves.
+    private def functionalEffect(owners: List[Member], use: Fact): Option[(FactComparison, Fact, Fact)] =
+      (use.path.source, use.at) match
+        case (Declared(moves), Ply(count)) =>
+          val destination = key.action.square.orElse(key.action.target.map(_ => key.branch.last.slice(2, 4)))
+          owners.iterator.filter(_.key == key).flatMap { owner =>
+            owner.ownedEffects.iterator.flatMap { difference =>
+              (owner.requirements(difference.leftRequirementId), owner.requirements(difference.rightRequirementId)) match
+                case (before: Fact, after: Fact) =>
+                  val onTrace = before.path.source match
+                    case Declared(trace) => trace.size >= count && trace.take(count) == moves.take(count)
+                    case _ => false
+                  val preserved = !owner.differences.exists { later =>
+                    owner.requirements(later.leftRequirementId) match
+                      case fact: Fact => fact.predicate == before.predicate && fact.path == before.path &&
+                        fact.at.horizon > key.anchor.size && fact.at.horizon < count
+                      case _ => false
+                  }
+                  val condition = before.predicate
+                  val clearsDestination = condition.kind == "location" && condition.subject != key.action.subject &&
+                    condition.subject.exists(piece => key.action.subject.exists(_.side == piece.side)) &&
+                    destination.exists(square => owner.values(before.id) == List(square) &&
+                      owner.values(after.id).nonEmpty && !owner.values(after.id).contains(square))
+                  val movesActor = owner.ownedEffects.exists { effect => owner.requirements(effect.leftRequirementId) match
+                    case fact: Fact => fact.predicate.kind == "location" && fact.predicate.subject == key.action.subject
+                    case _ => false
+                  }
+                  val opensAction = condition.kind == "control" && condition.subject == key.action.subject &&
+                    condition.square == destination && owner.values(before.id) == List("absent") &&
+                    owner.values(after.id) == List("present") && (key.action.target.nonEmpty || !movesActor)
+                  Option.when(onTrace && preserved && (clearsDestination || opensAction))((difference, before, after))
+                case _ => None
+            }
+          }.nextOption()
+        case _ => None
+
+    // A response contrast already names its supporting condition. A move-order
+    // contrast must likewise use a root-owned condition, not just a different origin.
+    def mechanismWitness(owners: List[Member]): Option[Mechanism] = differences.iterator.flatMap { difference =>
       (requirements(difference.leftRequirementId), requirements(difference.rightRequirementId)) match
         case (left: Fact, right: Fact) if left.predicate == right.predicate =>
-          val response = left.id.startsWith("reference_response") && left.predicate.kind == "legal_capture" &&
+          val response = Option.when(left.id.startsWith("reference_response") && left.predicate.kind == "legal_capture" &&
             values(left.id) == List("legal") && values(right.id).exists(Set("illegal", "actor_removed", "target_removed")) &&
-            ownedEffects.exists(effect => requirements(effect.leftRequirementId) match
+            ownedEffects.nonEmpty)(ownedEffects.find(effect => requirements(effect.leftRequirementId) match
               case fact: Fact => fact.predicate.kind == "control" && fact.predicate.subject == left.predicate.subject &&
                 !differences.exists(later => requirements(later.leftRequirementId) match
                   case changed: Fact => changed.predicate == fact.predicate && changed.path == fact.path &&
                     changed.at.horizon > key.anchor.size
                   case _ => false)
-              case _ => false)
+              case _ => false)).flatten.map { effect =>
+                (effect, requirements(effect.leftRequirementId).asInstanceOf[Fact],
+                  requirements(effect.rightRequirementId).asInstanceOf[Fact])
+              }
           val sameInterveningMoves = (left.path.source, right.path.source, left.at, right.at) match
             case (Declared(a), Declared(b), Ply(n), Ply(m)) if n == m && n > key.anchor.size && a.size >= n && b.size >= m =>
               a.take(n).startsWith(key.anchor :+ key.move) && b.take(m).startsWith(key.anchor) &&
                 a(key.anchor.size) != b(key.anchor.size) &&
                 a.take(n).drop(key.anchor.size + 1) == b.take(m).drop(key.anchor.size + 1)
             case _ => false
-          response || (left.predicate == key.action && sameInterveningMoves &&
-            values(left.id) == List("legal") && values(right.id) == List("illegal"))
-        case _ => false
-    }
+          response.orElse {
+            if left.predicate == key.action && sameInterveningMoves &&
+                values(left.id) == List("legal") && values(right.id) == List("illegal") then functionalEffect(owners, left)
+            else None
+          }.map { (condition, before, after) =>
+            Mechanism(condition, before, after, difference, left, right)
+          }
+        case _ => None
+    }.nextOption()
+    def mechanismWith(owners: List[Member]): Boolean = mechanismWitness(owners).nonEmpty
+    def mechanism: Boolean = mechanismWith(List(this))
     def ready(value: CompareMoves): Boolean = entry.generatedArms.exists(arm =>
       arm.headRequirementIds.contains(value.id) && arm.headRequirementIds
         .filterNot(id => requirements(id).isInstanceOf[CompareMoves]).forall(supported))
@@ -106,7 +163,7 @@ private[runtime] object CommentaryIdea:
       else if value.prefixMovesUci == key.anchor && value.referenceMove == key.move then 2
       else 3
 
-  final case class Idea(key: Key, members: List[Member], choices: List[(CompareMoves, Reading)] = Nil):
+  final case class Idea(key: Key, members: List[Member], choices: List[(String, CompareMoves, Reading)] = Nil):
     val id = CommentarySelection.stableId("practical-idea", key.anchor ++ List(key.move,
       key.branch.mkString(" "), key.action.json.toString, key.loss.toString))
     // The direct-action comparison tests the preparation's claimed benefit. An older,
@@ -118,12 +175,14 @@ private[runtime] object CommentaryIdea:
     // Otherwise the historical counter would keep a withdrawn preparation alive forever.
     val live = if withdrawn then Nil else members.filterNot(_.withdrawn)
     val contribution = live.exists(_.contribution)
-    val mechanism = key.loss || live.exists(_.mechanism)
-    val strongerComparisons = choices.filter { (value, reading) =>
+    private val mechanisms = live.flatMap(member => member.mechanismWitness(live).map(member -> _))
+    val mechanism = key.loss || mechanisms.nonEmpty
+    private val strongerOwnedComparisons = choices.filter { (_, value, reading) =>
       value.prefixMovesUci == key.anchor && reading.answer.exists(answer =>
         (value.referenceMove == key.move && answer.evaluationRelation == "better") ||
           (value.alternativeMove == key.move && answer.evaluationRelation == "worse"))
     }
+    val strongerComparisons = strongerOwnedComparisons.map((_, value, reading) => value -> reading).distinct
     val strongerChoices = strongerComparisons.map { (value, _) =>
       if value.referenceMove == key.move then value.alternativeMove else value.referenceMove }.distinct.sorted
     val observedReturn = !key.loss || live.exists(member => member.entry.request.requirements.exists {
@@ -156,6 +215,34 @@ private[runtime] object CommentaryIdea:
           member.ready(other) && member.explains(other))
         .map(other => (if contribution then 0 else 1, member.role(other)))).minOption
 
+    def questionFocus(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+        answered: Set[AnsweredComparison]): List[QuestionFocus] =
+      prepared.requireOwner(packet)
+      if withdrawn || tracking.isEmpty || !tracking.forall(_.currentConfirmed) then Nil
+      else mechanisms.flatMap { (member, witness) =>
+        val response = witness.action.id.startsWith("reference_response")
+        val exactCondition = !response || ((witness.action.path.source, witness.action.at) match
+          case (Declared(moves), Ply(count)) if count >= 0 && count <= moves.size =>
+            witness.action.predicate.target.exists(target => prepared.paths.exists(path =>
+              path.certified.nonEmpty && path.ids == path.declared && path.moves.startsWith(moves) &&
+                prepared.pieceAfter(packet, path, target.witness, count).flatten.exists(piece =>
+                  witness.after.predicate.square.contains(piece.square.key)))) &&
+              member.values(witness.before.id) == List("absent") && member.values(witness.after.id) == List("present")
+          case _ => false)
+        val testedAlternative = witness.alternative.path.source match
+          case Declared(moves) if moves.startsWith(key.anchor) => moves.lift(key.anchor.size)
+          case _ => None
+        // The condition member need not own an engine comparison. Its sibling's
+        // answer may supply that comparison only for this exact idea and tested alternative.
+        Option.when(exactCondition)(live).toList.flatten.flatMap { decision =>
+          decision.comparisons.filter(value => decision.ready(value) && value.prefixMovesUci == key.anchor &&
+            value.referenceMove == key.move && testedAlternative.contains(value.alternativeMove)).flatMap { value =>
+            decision.readings(value.id).answer.map(AnsweredComparison(decision.entry.request.id, value, _))
+              .filter(answered).map(owner => QuestionFocus(owner, key, witness))
+          }
+        }
+      }.distinct
+
     private def piece(value: Piece): String = s"${value.side} ${value.role} originally on ${value.square}"
     private def action(value: Predicate): String = value.subject.map(piece).getOrElse("the actor") +
       value.target.map(target => " capturing " + piece(target)).getOrElse(" moving to " + value.square.getOrElse("the named square"))
@@ -165,24 +252,63 @@ private[runtime] object CommentaryIdea:
       case "location" => value.subject.map(piece).getOrElse("the piece") + " location"
       case _ => value.kind + " " + value.subject.map(piece).orElse(value.property).getOrElse("")
 
-    private lazy val phrasing: (List[String], List[String]) =
+    private lazy val phrasing = phrasingFor(Set.empty)
+    private def phrasingFor(shown: Set[AnsweredComparison], renderLine: List[String] => List[String] = identity,
+        focus: Option[Mechanism] = None): (List[String], List[ExplanationPart]) =
+      import PrincipalVariationComparison.QualityBand
+      def label(prefix: List[String], move: String) = renderLine(prefix :+ move).last
+      def band(reading: Reading) = reading.answer.flatMap(_.qualityBand)
+      def where(value: CompareMoves) = if value.prefixMovesUci.isEmpty then "at the starting position"
+        else "after " + renderLine(value.prefixMovesUci).mkString(" ")
+      def covered(rows: List[(String, CompareMoves, Reading)]): Boolean =
+        // The displayed answer must own an exact question. Other questions can
+        // repeat its ranking only if every physical/evaluation receipt agrees.
+        rows.exists((id, value, reading) => reading.answer.exists(answer =>
+          shown(AnsweredComparison(id, value, answer)))) && rows.map { (_, value, reading) =>
+          val answer = reading.answer.get
+          val witnesses = List(
+            (value.referenceMove, answer.referenceLineId, answer.referenceOccurrenceId, answer.referenceDepth, answer.referenceEvaluation),
+            (value.alternativeMove, answer.alternativeLineId, answer.alternativeOccurrenceId, answer.alternativeDepth, answer.alternativeEvaluation)
+          ).sortBy(_._1)
+          val relation = if value.referenceMove < value.alternativeMove then answer.evaluationRelation
+            else answer.evaluationRelation match
+              case "better" => "worse"
+              case "worse" => "better"
+              case other => other
+          (value.prefixMovesUci, witnesses, answer.workId, answer.executionKeySha256, answer.engineProfile,
+            answer.requiredDepth, relation, answer.qualityBand)
+        }.distinct.size == 1
+      // Keep raw comparison/state ownership intact; calibrate only what its score difference licenses us to say.
+      val revisionComparisons = strongerOwnedComparisons ++ decisions.collect {
+        case (member, value, reading) if reading.answer.exists(_.evaluationRelation == "better") &&
+            (value.expectedRelation.nonEmpty || value.prefixMovesUci == key.anchor || (key.loss && member.role(value) == 0)) =>
+          (member.entry.request.id, value, reading)
+      }
+      val separatedRevision = revisionComparisons.find((_, _, reading) => band(reading).contains(QualityBand.Separated))
       val purpose = if key.loss then
-        s"After ${key.move}, the observed loss of ${key.action.subject.map(piece).getOrElse("material")} to ${key.branch.last} asks whether the follow-up justifies that loss and whether the opponent should accept it."
-      else if mechanism then s"${key.move} may help prepare ${action(key.action)} after ${key.branch.init.mkString(" ")}."
-      else s"The observed line after ${key.move} includes ${action(key.action)} after ${key.branch.init.mkString(" ")}; the changed conditions have not yet established how this move helps that action."
+        s"After ${label(key.anchor, key.move)}, the observed loss of ${key.action.subject.map(piece).getOrElse("material")} to ${renderLine(key.branch).last} asks whether the follow-up justifies that loss and whether the opponent should accept it."
+      else if mechanism then s"${label(key.anchor, key.move)} may help prepare ${action(key.action)} after ${renderLine(key.branch).init.mkString(" ")}."
+      // This question's missing contrast does not negate independently certified
+      // uses of a maintained relation or cleared corridor. Its decision state
+      // still governs practical value; describe only the action here.
+      else s"The observed line after ${label(key.anchor, key.move)} includes ${action(key.action)} after ${renderLine(key.branch).init.mkString(" ")}."
       val effects = live.flatMap(member => member.differences.flatMap { difference =>
         (member.requirements(difference.leftRequirementId), member.requirements(difference.rightRequirementId)) match
           case (left: Fact, right: Fact) if member.values(left.id).nonEmpty && member.values(right.id).nonEmpty =>
             val (order, scope) = (left.path.source, right.path.source, left.at, right.at) match
               case (Declared(a), Declared(b), Ply(before), Ply(after)) if a == b && after == before + 1 =>
-                (if before == key.anchor.size then 0 else 2, s"${a(before)} changes")
+                (if before == key.anchor.size then 0 else 2, s"${renderLine(a)(before)} changes")
               case (Declared(a), Declared(b), _, _) =>
                 (if left.id.startsWith("reference_response") then 1 else 3,
-                  s"The branches after ${a.mkString(" ")} and ${b.mkString(" ")} differ in")
+                  s"The branches after ${renderLine(a).mkString(" ")} and ${renderLine(b).mkString(" ")} differ in")
               case _ => (3, "The named branches differ in")
-            Some(order -> s"$scope ${describe(left.predicate)}: ${member.values(left.id).mkString("/")} versus ${member.values(right.id).mkString("/")}.")
+            val required = focus.exists(value => (value.before == left && value.after == right) ||
+              (value.action == left && value.alternative == right))
+            Some((if required then 0 else 1, order) -> ExplanationPart(
+              s"$scope ${describe(left.predicate)}: ${member.values(left.id).mkString("/")} versus ${member.values(right.id).mkString("/")}.",
+              facts = Some(left -> right)))
           case _ => None
-      }).distinct.sortBy(_._1).map(_._2).take(2)
+      }).sortBy(_._1).distinctBy(_._2.text).map(_._2).take(2)
       val returns = if !key.loss then Nil else live.flatMap(member => member.entry.request.requirements.collect {
         case fact: Fact if fact.id.startsWith("sacrifice_gain_") && !fact.id.endsWith("_role") && member.supported(fact.id) =>
           fact.at match
@@ -192,7 +318,17 @@ private[runtime] object CommentaryIdea:
       }.flatten).distinct.take(1)
       val decision = state match
         case "withdrawn" => "Withdrawn as a current explanation: its required events are absent from the current returned line."
-        case "revised" => "Revise this idea: a tested alternative is stronger; the observed possibility cannot justify preferring this continuation."
+        case "revised" if separatedRevision.nonEmpty =>
+          val (_, value, reading) = separatedRevision.get
+          val (higher, lower) = if reading.answer.exists(_.evaluationRelation == "better") then
+            value.alternativeMove -> value.referenceMove else value.referenceMove -> value.alternativeMove
+          if covered(separatedRevision.toList) then
+            "Revise this idea: the observed possibility alone does not justify preferring the clearly lower-scoring continuation."
+          else s"Revise this idea: the engine comparison ${where(value)} clearly favors ${label(value.prefixMovesUci, higher)} over ${label(value.prefixMovesUci, lower)}. The observed possibility alone does not justify preferring the lower-scoring continuation."
+        case "revised" if revisionComparisons.forall((_, _, reading) => band(reading).contains(QualityBand.Close)) =>
+          "The engine evaluations are close; the small differences alone do not rule out this idea."
+        case "revised" =>
+          "The search ranks another choice higher, but it has not established that the move is clearly stronger."
         case "adopted" => "Adopted as a conditional idea within the tested branches; this is not proof of the best plan or its sole cause."
         case _ if members.exists(_.entry.readings.exists(_.stopReason.contains("comparison_conflict"))) =>
           "Candidate idea under reconsideration: comparisons disagree on the same move; the divergent continuation and the earlier evaluation remain unverified."
@@ -200,29 +336,60 @@ private[runtime] object CommentaryIdea:
           "Candidate idea under reconsideration: an earlier answer no longer meets the current verification depth."
         case _ => "Candidate idea: its practical value is not yet established."
       val pending = essential.filter(_._3.answer.isEmpty).take(2).map { (_, value, reading) =>
-        val where = if value.prefixMovesUci.isEmpty then "at the starting position" else "after " + value.prefixMovesUci.mkString(" ")
-        s"Still needed: ${value.alternativeMove} versus ${value.referenceMove} $where (${reading.stopReason.getOrElse(reading.state)})."
+        s"Still needed: ${label(value.prefixMovesUci, value.alternativeMove)} versus ${label(value.prefixMovesUci, value.referenceMove)} ${where(value)} (${reading.stopReason.getOrElse(reading.state)})."
       }
+      // Only an explicit conclusion owning this same question and full receipt
+      // replaces its answer summary. A common move pair is not that ownership.
+      val concluded = (strongerOwnedComparisons ++
+        Option.when(state == "revised")(separatedRevision).flatten.toList).flatMap { (id, value, reading) =>
+          reading.answer.map(AnsweredComparison(id, value, _))
+        }.toSet
       val answered = knownDecisions.filter((member, value, reading) => reading.answer.nonEmpty &&
-        (!withdrawn || member.role(value) <= 1)).sortBy((member, value, _) => member.role(value)).take(3).map { (_, value, reading) =>
+        (!withdrawn || member.role(value) <= 1)).sortBy((member, value, _) => member.role(value)).take(3).flatMap { (member, value, reading) =>
+        val owner = AnsweredComparison(member.entry.request.id, value, reading.answer.get)
         val relation = reading.answer.get.evaluationRelation
-        val meaning = if value.expectedRelation.nonEmpty then
+        val meaning = if band(reading).contains(QualityBand.Close) then
+          "the engine evaluations are close; this difference alone does not establish a stronger choice"
+        else if band(reading).isEmpty then "it is not yet established whether either move is clearly stronger"
+        else if value.expectedRelation.nonEmpty then
           if relation == "better" then "this response challenges the continuation" else "this tested response does not establish a stronger refutation"
         else if value.prefixMovesUci == key.anchor then
           if relation == "better" then "this alternative limits the reason to choose this move" else "this comparison does not favor the alternative"
         else "this tests the opponent's choice of response, not compensation by itself"
-        val relative = if relation == "equal" then "equal to" else relation + " than"
-        s"${value.alternativeMove} is $relative ${value.referenceMove} for the side to move; $meaning."
+        val relative = relation match
+          case "better" => "above"
+          case "worse" => "below"
+          case _ => "equal to"
+        Option.unless(concluded(owner))(ExplanationPart(
+          s"${label(value.prefixMovesUci, value.alternativeMove)} evaluates $relative ${label(value.prefixMovesUci, value.referenceMove)} for the side to move ${where(value)}; $meaning.",
+          Some(owner), meaning.capitalize + ".")).toList
       }
-      val choice = Option.when(strongerChoices.nonEmpty)(
-        s"At this idea's starting position, ${strongerChoices.mkString(" or ")} is stronger than ${key.move} in the current tested comparisons. The observed plan does not override this choice.").toList
+      val choice = List(Some(QualityBand.Separated), Some(QualityBand.Close), None).flatMap { quality =>
+        val moves = strongerOwnedComparisons.filter((_, _, reading) => band(reading) == quality).groupBy { (_, value, _) =>
+          if value.referenceMove == key.move then value.alternativeMove else value.referenceMove
+        }.toList.collect { case (move, rows) if !covered(rows) => move }.sorted
+        Option.when(moves.nonEmpty) {
+          val conclusion = quality match
+            case Some(QualityBand.Separated) =>
+              s"${moves.map(label(key.anchor, _)).mkString(" or ")} is stronger than ${label(key.anchor, key.move)} in the current tested comparisons. The observed plan does not override this choice."
+            case Some(QualityBand.Close) =>
+              s"${moves.map(label(key.anchor, _)).mkString(" or ")} evaluates above ${label(key.anchor, key.move)}, but the engine evaluations are close."
+            case None =>
+              s"${moves.map(label(key.anchor, _)).mkString(" or ")} evaluates above ${label(key.anchor, key.move)}; that ranking alone does not establish a clearly stronger move."
+          s"At this idea's starting position, $conclusion"
+        }
+      }
       val costs = live.flatMap(_.lostResponses).distinct.map(response =>
         s"Compared with immediate execution, the prepared line gives up the recapture: ${action(response)}. This is a concession, not evidence that the preparation helps the action.")
-      (List(decision) ++ choice ++ costs, List(purpose) ++ effects ++ returns ++ answered ++ pending :+
-        "Other replies and later plans remain outside this conclusion. Exact branches and evidence are retained in the linked questions.")
+      (List(decision) ++ choice ++ costs,
+        List(ExplanationPart(purpose)) ++ effects ++ returns.map(text => ExplanationPart(text)) ++ answered ++
+          (pending :+ "Other replies and later plans remain outside this conclusion. Exact branches and evidence are retained in the linked questions.")
+            .map(text => ExplanationPart(text)))
 
     def decisionText: List[String] = phrasing._1
-    lazy val text: String = (decisionText ++ phrasing._2).mkString(" ")
+    def decisionText(shown: Set[AnsweredComparison], renderLine: List[String] => List[String] = identity): List[String] =
+      phrasingFor(shown, renderLine)._1
+    lazy val text: String = (decisionText ++ phrasing._2.map(_.text)).mkString(" ")
 
     /** Read only current answered branches, preserving the physical target and exact history.
       * A different first move is not a new strategic objective; describe the observed action.
@@ -273,15 +440,34 @@ private[runtime] object CommentaryIdea:
             s"the same action still occurs${if next.ply > expected.ply then " later" else ""}: ${next.text}"
           else if replacement.nonEmpty then s"the same physical target is captured by a different piece: ${next.text}"
           else s"the returned continuation instead begins with ${next.text}; the original action is not observed within the inspected continuation"
-          val line = alternative.moves.drop(value.prefixMovesUci.size).take(next.ply - value.prefixMovesUci.size + 1)
-          s"After the tested reply ${value.alternativeMove}, $result (${line.mkString(" ")}). This is a conditional continuation, not a forced plan or proof that the original goal must be abandoned."
+          val line = prepared.notation.line(alternative.moves).drop(value.prefixMovesUci.size).take(next.ply - value.prefixMovesUci.size + 1)
+          s"After the tested reply ${prepared.notation.move(value.prefixMovesUci, value.alternativeMove)}, $result (${line.mkString(" ")}). This is a conditional continuation, not a forced plan or proof that the original goal must be abandoned."
       }.distinct.take(2).mkString(" ")
 
     def explanation(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths): String =
-      (decisionText ++ explanationDetails(packet, prepared)).mkString(" ")
+      (decisionText(Set.empty, prepared.notation.line) ++ explanationDetails(packet, prepared).map(_.text)).mkString(" ")
 
-    def explanationDetails(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths): List[String] =
-      phrasing._2 ++ List(continuationText(packet, prepared)).filter(_.nonEmpty)
+    def explanationDetails(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+        answered: Set[AnsweredComparison] = Set.empty): List[MoveWorkProjection.Context] =
+      val focus = questionFocus(packet, prepared, answered).headOption
+      val parts = phrasingFor(Set.empty, prepared.notation.line, focus.map(_.mechanism))._2
+        .map(part => part.copy(text = if part.comparison.exists(answered) then part.remainder else part.text))
+        .filter(_.text.nonEmpty)
+      val contexts = focus match
+        case Some(value) =>
+          val required = Set(value.mechanism.before -> value.mechanism.after,
+            value.mechanism.action -> value.mechanism.alternative)
+          val (conditions, other) = parts.drop(1).partition(_.facts.exists(required))
+          // The purpose and its actual condition/test travel as one explanation;
+          // a field limit cannot leave the preparatory claim without its reason.
+          val complete = (parts.take(1) ++ conditions).map(_.text).mkString(" ")
+          val test = conditions.filter(_.facts.contains(value.mechanism.action -> value.mechanism.alternative))
+            .map(_.text).mkString(" ")
+          MoveWorkProjection.Context(complete, question = focus,
+            questionTest = Option.when(test.nonEmpty)(complete -> test)) ::
+            other.map(part => MoveWorkProjection.Context(part.text))
+        case None => parts.map(part => MoveWorkProjection.Context(part.text))
+      contexts ++ List(continuationText(packet, prepared)).filter(_.nonEmpty).map(MoveWorkProjection.Context(_))
 
   def read(entries: List[Entry]): List[Idea] =
     val choices = entries.flatMap { entry =>
@@ -290,7 +476,7 @@ private[runtime] object CommentaryIdea:
       entry.generatedArms.filter(arm => arm.headRequirementIds.filterNot(id =>
         requirements(id).isInstanceOf[CompareMoves]).forall(id => Set("supported", "observed")(readings(id).state)))
         .flatMap(_.headRequirementIds).distinct.flatMap(id => requirements(id) match
-          case value: CompareMoves if readings(id).answer.nonEmpty => List(value -> readings(id))
+          case value: CompareMoves if readings(id).answer.nonEmpty => List((entry.request.id, value, readings(id)))
           case _ => Nil)
     }.distinct
     entries.filter(_.admission == "generated").flatMap { entry =>

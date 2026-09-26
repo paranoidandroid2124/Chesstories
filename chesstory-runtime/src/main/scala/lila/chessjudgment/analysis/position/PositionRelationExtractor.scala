@@ -1516,30 +1516,30 @@ object PositionRelationExtractor:
         (controlled ++ advances).sortBy(resource => resource.destination.key -> resource.mode.stableKey)
       }
 
-    private def pseudoMovesFor(resource: ClosedMovementAffordance): List[Move] =
+    private def pseudoMovesFor(resource: ClosedMovementAffordance, at: Position): List[Move] =
       val origin = boardSquare(resource.piece.square)
       val destination = boardSquare(resource.destination)
-      position.board.pieceAt(origin).toList.filter(piece =>
-        piece.color == position.color && evidenceRole(piece.role) == resource.piece.role
+      at.board.pieceAt(origin).toList.filter(piece =>
+        piece.color == at.color && evidenceRole(piece.role) == resource.piece.role
       ).flatMap { piece =>
         val generated = resource.mode match
           case RelationMovementResourceMode.EnPassantCapture(_) =>
-            position.genEnPassant(origin.bb).filter(_.dest == destination)
+            at.genEnPassant(origin.bb).filter(_.dest == destination)
           case _ =>
             piece.role match
-              case Pawn   => position.genPawn(origin.bb, destination.bb)
-              case Knight => position.genKnight(origin.bb, destination.bb)
-              case Bishop => position.genBishop(origin.bb, destination.bb)
-              case Rook   => position.genRook(origin.bb, destination.bb)
-              case Queen  => position.genQueen(origin.bb, destination.bb)
-              case King   => position.genUnsafeKing(origin, destination.bb)
+              case Pawn   => at.genPawn(origin.bb, destination.bb)
+              case Knight => at.genKnight(origin.bb, destination.bb)
+              case Bishop => at.genBishop(origin.bb, destination.bb)
+              case Rook   => at.genRook(origin.bb, destination.bb)
+              case Queen  => at.genQueen(origin.bb, destination.bb)
+              case King   => at.genUnsafeKing(origin, destination.bb)
         generated.filter { move =>
           val exactTarget = resource.target match
-            case RelationControlTarget.Empty => position.board.pieceAt(destination).isEmpty
+            case RelationControlTarget.Empty => at.board.pieceAt(destination).isEmpty
             case RelationControlTarget.Friendly(_) => false
             case RelationControlTarget.Enemy(role) =>
               !role.name.equalsIgnoreCase(King.name) &&
-                position.board.pieceAt(destination).exists(target =>
+                at.board.pieceAt(destination).exists(target =>
                   target.color != piece.color && evidenceRole(target.role) == role
                 )
           val exactMode = resource.mode match
@@ -1557,6 +1557,51 @@ object PositionRelationExtractor:
           move.orig == origin && move.dest == destination && exactTarget && exactMode
         }
       }
+
+    private def kingControllersAfter(candidate: Move)
+        : Option[(BoardMoveEffect, EvidenceSquare, List[RelationPieceWitness])] =
+      val boardEffect = BoardGeometry.moveEffect(candidate)
+      val footprint = BoardGeometry.transitionFootprint(candidate, boardEffect)
+      val candidateBoard = candidate.after.board
+      candidate.after.kingPosOf(candidate.piece.color).map { kingSquare =>
+        val controllers = GeometricControlInventory.controllersAtAfterMove(
+          geometricControlInventory, candidateBoard, footprint, !candidate.piece.color, kingSquare
+        ).toList.map { origin =>
+          val controller = candidateBoard.pieceAt(origin).getOrElse(
+            throw IllegalArgumentException("a post-candidate king controller lost its piece identity")
+          )
+          RelationPieceWitness(evidenceSquare(origin), evidenceRole(controller.role))
+        }.sortBy(controller => controller.square.key -> controller.role.name)
+        (boardEffect, evidenceSquare(kingSquare), controllers)
+      }
+
+    private val ordinaryCaptureSafetyCache = scala.collection.mutable.HashMap.empty[
+      (RelationColoredPieceWitness, RelationColoredPieceWitness), Option[Boolean]]
+
+    /** Frozen-board safety of one ordinary non-king capture, independent of whose turn it is.
+      * None means the exact pieces/contact or supported capture kind is unavailable.
+      * This is not a legal move, a continuation, or a new member of the legal inventory.
+      */
+    private[chessjudgment] def ordinaryCaptureKeepsKingSafe(
+        actor: RelationColoredPieceWitness,
+        target: RelationColoredPieceWitness
+    ): Option[Boolean] = ordinaryCaptureSafetyCache.synchronized {
+      ordinaryCaptureSafetyCache.getOrElseUpdate(actor -> target, for
+        exactActor <- state.occupantAt(actor.square).filter(_ == actor)
+        exactTarget <- state.occupantAt(target.square).filter(_ == target)
+        if exactActor.side != exactTarget.side &&
+          !exactActor.role.name.equalsIgnoreCase(King.name) && !exactTarget.role.name.equalsIgnoreCase(King.name)
+        control <- controlsFrom(actor.square).find(value => value.side == actor.side &&
+          value.targetSquare == target.square && value.target == RelationControlTarget.Enemy(target.role))
+        resource = ClosedMovementAffordance(control.source, control.controller, control.targetSquare,
+          control.target, RelationMovementResourceMode.ControlledDestination)
+        // Only pseudo-generation uses this colour. Neither the owned position nor its
+        // actual turn, history, legal rows or graph evidence is replaced or published.
+        candidate <- pseudoMovesFor(resource, position.copy(color = actor.side)).find(move =>
+          !move.enpassant && move.promotion.isEmpty && move.capture.contains(boardSquare(target.square)))
+        (_, _, controllers) <- kingControllersAfter(candidate)
+      yield controllers.isEmpty)
+    }
 
     private val legalRestrictionCache =
       scala.collection.mutable.HashMap.empty[
@@ -1577,36 +1622,9 @@ object PositionRelationExtractor:
             legalMovesFrom(resource.piece.square).exists(_.destination == resource.destination)
         then None
         else
-          pseudoMovesFor(resource).headOption.flatMap { candidate =>
-            val boardEffect = BoardGeometry.moveEffect(candidate)
-            val footprint = BoardGeometry.transitionFootprint(candidate, boardEffect)
-            val candidateBoard = candidate.after.board
-            candidate.after.kingPosOf(position.color).flatMap { kingSquare =>
-              val controllers = GeometricControlInventory
-                .controllersAtAfterMove(
-                  geometricControlInventory,
-                  candidateBoard,
-                  footprint,
-                  !position.color,
-                  kingSquare
-                )
-                .toList
-                .map { origin =>
-                  val controller = candidateBoard.pieceAt(origin).getOrElse(
-                    throw IllegalArgumentException("a post-candidate king controller lost its piece identity")
-                  )
-                  RelationPieceWitness(evidenceSquare(origin), evidenceRole(controller.role))
-                }
-                .sortBy(controller => controller.square.key -> controller.role.name)
-              Option.when(controllers.nonEmpty)(
-                ClosedLegalResourceRestriction(
-                  resource,
-                  boardEffect,
-                  evidenceSquare(kingSquare),
-                  controllers
-                )
-              )
-            }
+          pseudoMovesFor(resource, position).headOption.flatMap(kingControllersAfter).flatMap {
+            (boardEffect, kingSquare, controllers) => Option.when(controllers.nonEmpty)(
+              ClosedLegalResourceRestriction(resource, boardEffect, kingSquare, controllers))
           }
       )
     }
