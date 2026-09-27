@@ -1,3 +1,4 @@
+import { reviewPgnError } from 'lib/game/reviewPgn';
 import { playable, playedTurns, readDests, writeDests, validUci } from 'lib/game';
 import * as keyboard from './keyboard';
 import { treeReconstruct, plyColor } from './util';
@@ -636,6 +637,12 @@ export default class AnalyseCtrl implements CevalHandler {
       stateChanged: this.setMoveReviewState.bind(this),
     };
     this.moveReviewCoordinator = new MoveReviewCoordinator(this.moveReviewLocale, host);
+    window.addEventListener('chesstory:language', () => {
+      this.moveReviewLocale = normalizeMoveReviewLocale();
+      this.moveReviewCopyValue = moveReviewCopy(this.moveReviewLocale);
+      this.moveReviewCoordinator!.locale = this.moveReviewLocale;
+      this.redraw();
+    });
     // A submitted game continues while the user changes tabs; leaving the page still releases its work.
     window.addEventListener('pagehide', () => this.moveReviewCoordinator?.deactivate());
     window.addEventListener('pageshow', () => this.moveReviewCoordinator?.activate());
@@ -1246,7 +1253,11 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   importPgn(rawPgn: string): boolean {
-    this.pgnError = '';
+    this.pgnError = reviewPgnError(rawPgn) ?? '';
+    if (this.pgnError) {
+      requestAnimationFrame(this.redraw);
+      return false;
+    }
     if (!submitPgnToImportPipeline(rawPgn)) {
       this.pgnError = pgnInputError(rawPgn);
       requestAnimationFrame(this.redraw);

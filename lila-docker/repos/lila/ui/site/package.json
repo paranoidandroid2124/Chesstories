@@ -17,7 +17,8 @@
         "module": "src/site.ts",
         "inline": "src/site.inline.ts"
       },
-      "src/site.importer.ts"
+      "src/site.importer.ts",
+      "src/site.reviewExample.ts"
     ]
   }
 }

@@ -1,7 +1,7 @@
 package views.pages
 
 import lila.app.UiEnv.*
-import lila.ui.Page
+import lila.ui.{ Esm, Page }
 import scala.annotation.unused
 
 private object resourcePageBits:
@@ -48,19 +48,23 @@ private object resourcePageBits:
 
 object help:
   private val questions = List(
-    "What can I import?" -> "Paste a PGN, choose a PGN file, or browse a public Lichess or Chess.com account.",
-    "What does Stockfish do here?" -> "Evaluation, depth, and candidate lines stay beside the board as evidence for the move you are reviewing.",
-    "What is a review study?" -> "A study keeps the board, move tree, notes, and saved sections together so you can reopen or share a specific chapter.",
-    "Can I use Chesstory without signing in?" -> "You can open the core board flow without an account. Sign in to manage Studies you explicitly save; ordinary analysis and imports are not retained as history.",
-    "Can I delete my data?" -> "Use the contact page for account, study, or privacy requests. The privacy policy describes the current handling of chess material."
+    ("What can I import?", "Paste a PGN, choose a PGN file, or browse a public Lichess or Chess.com account.", "import pgn file public account 가져오기 기보 파일 공개 계정 리체스 체스닷컴"),
+    ("What does Stockfish do here?", "Evaluation, depth, and candidate lines stay beside the board as evidence for the move you are reviewing.", "engine analysis evaluation depth candidate stockfish 엔진 분석 평가 깊이 후보 스톡피시"),
+    ("What is a review study?", "A study keeps the board, move tree, notes, and saved sections together so you can reopen or share a specific chapter.", "study review save share notes chapter 스터디 복기 저장 공유 메모 챕터"),
+    ("Can I use Chesstory without signing in?", "You can open the core board flow without an account. Sign in to manage Studies you explicitly save; ordinary analysis and imports are not retained as history.", "account login sign in anonymous free 계정 로그인 회원가입 비회원 무료"),
+    ("Can I delete my data?", "Use the contact page for account, study, or privacy requests. The privacy policy describes the current handling of chess material.", "data delete privacy personal information 데이터 삭제 개인정보 문의")
   )
 
   def apply(query: Option[String] = None)(using @unused ctx: Context): Page =
     val term = query.map(_.trim).filter(_.nonEmpty)
     val matched = term.fold(questions): needle =>
-      questions.filter { case (title, body) => s"$title $body".toLowerCase.contains(needle.toLowerCase) }
-    val matchedItems: List[Frag] = matched.map { case (title, body) =>
-      details(
+      val words = needle.toLowerCase.split("\\s+").filter(_.nonEmpty)
+      questions.filter { case (title, body, keywords) =>
+        val searchable = s"$title $body $keywords".toLowerCase
+        words.forall(searchable.contains)
+      }
+    val matchedItems: List[Frag] = matched.map { case (title, body, _) =>
+      details(if term.isDefined && matched.size == 1 then attr("open") := "open" else emptyFrag)(
         summary(title),
         p(body)
       )
@@ -83,10 +87,14 @@ object help:
           button(tpe := "submit", cls := "button button-thin")("Search")
         )
       ),
-      term.map(value =>
-        p(cls := "legal-status", role := "status", attr("aria-live") := "polite")(s"Results for “$value”")
+      st.section(cls := "legal-section legal-section--questions")(
+        h2(term.fold("Popular questions")(value => s"${matched.size} matching questions for “$value”")),
+        div(cls := "legal-questions")(
+          if matched.nonEmpty then frag(matchedItems*)
+          else p("No help topic matched that search. Try “import”, “engine”, “study”, or “privacy”.")
+        )
       ),
-      st.section(cls := "legal-section")(
+      st.section(cls := "legal-section legal-section--tasks")(
         h2("Start a task"),
         resourcePageBits.linkRows(
           List(
@@ -105,21 +113,14 @@ object help:
         )
       ),
       st.section(cls := "legal-section")(
-        h2("Popular questions"),
-        div(cls := "legal-questions")(
-          if matched.nonEmpty then frag(matchedItems*)
-          else p("No help topic matched that search. Try “import”, “engine”, “study”, or “privacy”.")
-        )
-      ),
-      st.section(cls := "legal-section")(
         h2("Contact, service, and policy"),
         resourcePageBits.factRows(
           List(
             "Contact" -> frag(a(href := routes.Main.contact.url)("Ask a question or request help.")),
             "Service" -> frag(
-              "The readiness endpoint is available at ",
-              code("/healthz"),
-              "."
+              "Found a problem? ",
+              a(href := routes.Main.contact.url)("Let us know"),
+              " so we can look into it."
             ),
             "Policies" -> frag(
               a(href := routes.Main.privacy.url)("Privacy"),
@@ -140,10 +141,16 @@ object pricing:
       "Beta access and pricing",
       "Chesstory is open beta. There is no active paid subscription or billing flow."
     )(
-      st.section(cls := "legal-section")(
-        h2("What is available now"),
+      st.section(cls := "legal-section legal-access-card")(
+        span(cls := "legal-access-card__label")("AVAILABLE NOW"),
+        h2("Open beta"),
         p(
           "The beta is for reviewing one game at a time: board, engine evidence, and saved study work when you are signed in."
+        ),
+        ul(
+          li("Explore a position without an account."),
+          li("Import a PGN or find a public game."),
+          li("Save your work in a study when signed in.")
         ),
         resourcePageBits.actionRow(List(("Start a review", routes.UserAnalysis.index.url, "button")))
       )
@@ -193,11 +200,9 @@ object trust:
               "A health endpoint is available. A public monitored status page is not published yet."
             ),
             "Changes" -> frag(
-              "Product changes are recorded in the ",
-              a(href := routes.Main.journal.url)("journal"),
-              " and planned work is listed on the ",
-              a(href := routes.Main.roadmap.url)("roadmap"),
-              "."
+              a(href := routes.Main.journal.url)("Read product changes in the journal."),
+              br,
+              a(href := routes.Main.roadmap.url)("See planned work on the roadmap.")
             ),
             "Source" -> frag(
               "Chesstory includes AGPL-licensed chess server software; see ",
@@ -205,8 +210,8 @@ object trust:
               " for source-availability details."
             ),
             "Contact" -> frag(
-              "For privacy, security, or source questions, use ",
-              a(href := routes.Main.contact.url)("contact"),
+              "Questions about privacy, security, or source code? ",
+              a(href := routes.Main.contact.url)("Send us a request"),
               contactEmail
                 .map(email => frag(" or ", a(href := s"mailto:$email")(email)))
                 .getOrElse(emptyFrag),
@@ -227,6 +232,23 @@ private[pages] object ReviewExample:
       "6. c3 supports d4 immediately; after 6...d6, 7. d4 challenges e5 with the break prepared."
   val lesson = "Prepare the support for a central break before playing the break itself."
 
+  def widget: Frag =
+    st.aside(id := "review-example", cls := "review-example", attr("data-fen") := fen, aria.label := "Interactive Italian Game example")(
+      div(cls := "review-example__head")(span("TRY A POSITION"), strong(opening)),
+      div(cls := "review-example__tabs", role := "group", aria.label := "Compare moves")(
+        button(tpe := "button", attr("data-line") := "played", attr("aria-pressed") := "true")("Played · 6. h3"),
+        button(tpe := "button", attr("data-line") := "reference", attr("aria-pressed") := "false")("Alternative · 6. c3")
+      ),
+      div(cls := "review-example__board cg-wrap", role := "img", aria.label := "Replay board for the selected example line"),
+      div(cls := "review-example__controls")(
+        button(tpe := "button", attr("data-step") := "prev", aria.label := "Previous example move")("←"),
+        div(strong(cls := "review-example__move", attr("aria-live") := "polite")("Starting position"), span(cls := "review-example__progress")("0 / 1")),
+        button(tpe := "button", attr("data-step") := "next", aria.label := "Next example move")("→")
+      ),
+      p(cls := "review-example__hint")("Choose a move, then use the arrows to compare."),
+      p(cls := "review-example__caption", attr("aria-live") := "polite")(explanation)
+    )
+
 object examples:
 
   def apply()(using @unused ctx: Context): Page =
@@ -239,13 +261,7 @@ object examples:
         h2(s"${ReviewExample.opening}: prepare the central break"),
         div(cls := "legal-example-list")(
           st.article(cls := "legal-example")(
-            chessgroundMini(ReviewExample.fen, chess.White, None)(
-              div(
-                cls := "legal-example__board",
-                role := "img",
-                aria.label := "Italian Game position after 5...O-O"
-              )
-            ),
+            ReviewExample.widget,
             div(cls := "legal-example__copy")(
               h3("Why 6. c3 comes before 7. d4"),
               dl(
@@ -261,7 +277,7 @@ object examples:
           )
         )
       )
-    )
+    ).js(Esm("site.reviewExample"))
 
 object roadmap:
   def apply()(using @unused ctx: Context): Page =
@@ -270,7 +286,7 @@ object roadmap:
       "Roadmap",
       "A beta roadmap without date promises."
     )(
-      st.section(cls := "legal-section")(
+      st.section(cls := "legal-section legal-roadmap")(
         h2("Now"),
         ul(
           li("One-game review flow."),
@@ -279,7 +295,7 @@ object roadmap:
           li("Review studies for saving and sharing work.")
         )
       ),
-      st.section(cls := "legal-section")(
+      st.section(cls := "legal-section legal-roadmap")(
         h2("Next"),
         ul(
           li("Clearer import, help, and study-sharing flows."),
@@ -287,7 +303,7 @@ object roadmap:
           li("Iterate on explanation quality with beta feedback and review evidence.")
         )
       ),
-      st.section(cls := "legal-section")(
+      st.section(cls := "legal-section legal-roadmap")(
         h2("Later"),
         ul(
           li("Player-level recurring weakness summaries."),

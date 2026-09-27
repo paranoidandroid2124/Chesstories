@@ -53,8 +53,8 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
     Page(title)
       .css("analyse.study.index")
       .js(Esm("analyse.study.index")):
-        main(cls := "page-menu")(
-          menu(active, order),
+        main(cls := (if ctx.isAuth then "page-menu" else "study-index-shell"))(
+          ctx.isAuth.option(menu(active, order)),
           div(cls := "page-menu__content study-index box")(
             header(cls := "box__top study-index__head")(
               div(cls := "study-index__intro")(
@@ -62,8 +62,8 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
                 p(lede)
               ),
               div(cls := "study-index__controls")(
-                bits.orderSelect(order, active, url),
-                ctx.isAuth.option(bits.newForm())
+                pag.currentPageResults.nonEmpty.option(bits.orderSelect(order, active, url)),
+                (ctx.isAuth && pag.currentPageResults.nonEmpty).option(bits.newForm())
               )
             ),
             notice.map((cssClass, message) => div(cls := cssClass)(message)),
@@ -79,7 +79,13 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
           if active == "mine" then "Create a study from the board or start a blank chapter here."
           else "Public studies will appear here when their owners choose to share them."
         ),
-        bits.newForm("Create study")
+        p(cls := "study-index__preview")("Keep the board, your notes, and the lines you explored together."),
+        a(cls := "button", href := routes.UserAnalysis.index.url)("Start with a game review"),
+        a(cls := "study-index__example", href := routes.Main.examples.url)("See an explained example →"),
+        details(cls := "study-index__create")(
+          summary("Or create a blank study"),
+          bits.newForm("Create study")
+        )
       )
     else
       div(cls := "studies list infinite-scroll")(

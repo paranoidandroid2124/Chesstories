@@ -38,8 +38,8 @@
         background-color: $c-font-dim;
 
         @include mq-site-header-tall {
-          width: 34px;
-          height: 3px;
+          width: 22px;
+          height: 2px;
         }
       }
 
@@ -61,7 +61,7 @@
         top: -6px;
 
         @include mq-site-header-tall {
-          top: -9px;
+          top: -6px;
         }
 
         transition:
@@ -73,7 +73,7 @@
         bottom: -7px;
 
         @include mq-site-header-tall {
-          bottom: -10px;
+          bottom: -7px;
         }
 
         transition:
@@ -132,7 +132,8 @@
     overscroll-behavior: contain;
     box-shadow: 2px 5px 7px hsla(0, 0, 0%, 0.5);
     border-radius: 0 3px 0 0;
-    max-width: 80%;
+    width: min(320px, calc(100vw - 3rem));
+    max-width: calc(100vw - 3rem);
     visibility: hidden;
 
     @include mq-safari {
@@ -140,7 +141,7 @@
     }
 
     @media (min-width: at-least($xx-small)) {
-      max-width: 70%;
+      max-width: calc(100vw - 3rem);
     }
 
     a {
@@ -175,8 +176,8 @@
       border: 1px solid transparent;
 
       &.is-active {
-        background: rgba($c-primary, 0.18);
-        border-color: rgba($c-primary, 0.45);
+        background: color-mix(in srgb, $c-primary 14%, transparent);
+        color: $c-primary;
       }
 
       &:active {

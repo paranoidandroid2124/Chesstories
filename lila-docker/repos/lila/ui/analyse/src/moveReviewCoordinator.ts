@@ -53,7 +53,7 @@ export class MoveReviewCoordinator {
   private selected?: MoveReviewSubject;
 
   constructor(
-    private readonly locale: MoveReviewLocale,
+    public locale: MoveReviewLocale,
     private readonly host: MoveReviewCoordinatorHost,
   ) {}
 

@@ -1,172 +1,66 @@
 $analyse-block-gap: var(---cs-shell-block-gap, #{$block-gap});
 $analyse-shell-gutter-x: var(---cs-shell-gutter-x, #{$block-gap});
 
-body {
-  /* prevents scroll bar flicker on page height changes */
-  overflow-y: scroll;
-}
-
-#main-wrap {
-  ---main-max-width: calc(100vh - #{$site-header-outer-height} - #{$col1-uniboard-controls});
-
-  @include mq-at-least-col2 {
-    ---main-max-width: var(---cs-workspace-max-width, 1520px);
-  }
-}
-
+body { overflow-y: scroll; }
+#main-wrap { ---main-max-width: var(---cs-workspace-max-width, 1440px); }
 .analyse {
   grid-area: main;
   display: grid;
-  inline-size: min(100%, var(---cs-workspace-max-width, 100%));
-  max-inline-size: 100%;
-  justify-self: center;
-  justify-content: center;
-  grid-row-gap: $analyse-block-gap;
-  padding: $analyse-block-gap $analyse-shell-gutter-x;
-
-  &__side {
-    grid-area: side;
-    justify-content: start;
-  }
-
-  &__board {
-    grid-area: board;
-
-    cg-container {
-      @include inline-end(0);
-    }
-  }
-
-  // Wrapper: horizontal eval gauge + board stacked vertically
-  &__board-wrap {
-    grid-area: board;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-self: start;
-    min-width: 0;
-
-    .eval-gauge--horizontal {
-      flex-shrink: 0;
-    }
-
-    .analyse__board {
-      flex: none;
-    }
-  }
-
-  &__tools {
-    grid-area: tools;
-  }
-
-  &__controls {
-    grid-area: controls;
-  }
-
-  &__underboard {
-    grid-area: under;
-
-    @include mq-is-col1 {
-      overflow: hidden; // helps truncating long study names
-    }
-  }
-
-  &__round-training {
-    grid-area: round-training;
-  }
-
-  &__puzzle {
-    grid-area: puzzle;
-  }
-
-  grid-template-rows: auto;
+  width: 100%;
+  min-width: 0;
+  gap: $analyse-block-gap;
+  padding: $analyse-block-gap 0;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    'board'
-    'controls'
-    'kb-move'
-    'tools'
-    'side'
-    'round-training'
-    'under';
-
-  @include mq-at-least-col2 {
-    // Chesstory: the board and evidence panel are peers; controls stay under the board.
-    ---board-scale: calc(((var(---zoom, 80) / 100) * 0.75 + 0.25) * 0.75);
-
-    grid-template-columns:
-      minmax(
-        0,
-        min(
-          var(---col2-uniboard-width),
-          560px,
-          calc(100vh - #{$site-header-outer-height} - #{$analyse-block-gap}),
-          calc(
-            100vw - 450px - #{$analyse-block-gap} - #{$analyse-shell-gutter-x} - #{$analyse-shell-gutter-x}
-          )
-        )
-      )
-      $analyse-block-gap
-      minmax(0, 450px);
-    grid-template-rows: min-content min-content minmax(0, 1fr) auto;
-    grid-template-areas:
-      'board    . tools'
-      'controls . tools'
-      'kb-move  . tools'
-      'under under under';
-
-    grid-row-gap: $analyse-block-gap;
-    padding: $analyse-block-gap $analyse-shell-gutter-x;
-
-    &__side,
-    &__tools {
-      min-width: 0;
-      max-width: none;
-    }
-  }
-
-  @include mq-is-col2-squeeze {
-    grid-template-columns:
-      minmax(
-        0,
-        min(
-          var(---col2-uniboard-width),
-          calc(100vh - #{$site-header-outer-height} - #{$analyse-block-gap}),
-          calc(
-            100vw - 240px - #{$analyse-block-gap} - #{$analyse-shell-gutter-x} - #{$analyse-shell-gutter-x}
-          )
-        )
-      )
-      $analyse-block-gap
-      minmax(0, 240px);
-  }
-
-  @include mq-at-least-col3 {
-    // Chesstory: keep wide screens stable and avoid "board suddenly grows" jump.
-    ---board-scale: calc(((var(---zoom, 80) / 100) * 0.75 + 0.25) * 0.72);
-
-    grid-template-columns: min(var(---col3-uniboard-width), 560px) $analyse-block-gap minmax(0, 450px);
-    grid-template-rows: min-content min-content minmax(0, 1fr) auto auto;
-    grid-template-areas:
-      'board . tools'
-      'controls . tools'
-      'kb-move . tools'
-      'under under under'
-      'round-training round-training round-training';
-
-    grid-row-gap: $analyse-block-gap;
-
-    &__side,
-    &__tools {
-      min-width: 0;
-      max-width: none;
-    }
-
-    grid-row-gap: $analyse-block-gap;
-    padding: $analyse-block-gap $analyse-shell-gutter-x;
+  grid-template-areas: 'board' 'tools' 'side' 'round-training' 'under';
+  &__board-column { grid-area: board; display: grid; gap: 0.75rem; align-content: start; min-width: 0; width: min(100%, 560px); justify-self: center; scroll-margin-top: calc(var(---site-header-height) + 1rem); }
+  &__board-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  &__board { flex: none; cg-container { @include inline-end(0); } }
+  &__tools { grid-area: tools; min-width: 0; align-self: start; }
+  &__controls { min-width: 0; }
+  &__side { grid-area: side; min-width: 0; }
+  &__underboard { grid-area: under; min-width: 0; }
+  &__round-training { grid-area: round-training; }
+  &__puzzle { grid-area: puzzle; }
+  @media (min-width: 1000px) {
+    grid-template-columns: minmax(0, min(46%, 560px, calc(100dvh - 190px))) minmax(0, 1fr);
+    grid-template-areas: 'board tools' 'under under' 'round-training round-training';
+    max-width: 1200px;
+    justify-self: center;
+    align-items: start;
+    &__board-column { position: sticky; top: calc(var(---site-header-height) + 1rem); }
   }
 }
-
-.blind-mode .analyse {
-  display: block;
+.analyse__return-board {
+  display: none;
+  @media (max-width: 999px) {
+    &:not([hidden]) { display: inline-flex; }
+    position: fixed;
+    z-index: 8;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    right: 1rem;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    border: $border;
+    border-radius: 999px;
+    background: $c-bg-popup;
+    color: $c-font-clear;
+    box-shadow: 0 4px 16px #0002;
+  }
 }
+.blind-mode .analyse { display: block; }
+
+.analyse--start {
+  grid-template-areas: 'tools' 'board' 'side' 'round-training' 'under';
+  @media (min-width: 1000px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+    grid-template-areas: 'tools board' 'under under' 'round-training round-training';
+  }
+  .analyse__empty-game { padding: clamp(1rem, 3vw, 2rem); }
+  .analyse__return-board { display: none; }
+}
+.analyse__start-links { display: grid; gap: 0.5rem; margin-top: 1rem; }
+.analyse__start-links a { display: flex; align-items: center; min-height: 44px; }
+.copyables__status-part + .copyables__status-part::before { content: ' · '; }
+.analyse__save-shortcut { display: flex; justify-content: flex-end; }

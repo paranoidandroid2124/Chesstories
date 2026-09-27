@@ -27,33 +27,8 @@ object support:
                 p(cls := "legal-meta")("Core board study stays open. Deeper review paths still follow current usage limits.")
               ),
               st.section(cls := "legal-section")(
-                h2("Why Support"),
-                p(
-                  "Chesstory keeps the board and guided review available without a public paid subscription. ",
-                  "If this helps your chess study, support goes toward hosting, maintenance, and keeping the free tier sustainable while deeper review paths stay online."
-                )
-              ),
-              st.section(cls := "legal-section")(
-                h2("Support Links"),
-                if links.nonEmpty then
-                  ul(
-                    links.map { (label, url) =>
-                      li(a(href := url, target := "_blank", rel := "noopener noreferrer")(label))
-                    }
-                  )
-                else
-                  p(
-                    "Support links are not configured yet. ",
-                    "For manual support options, please use ",
-                    a(href := routes.Main.contact.url)("Contact"),
-                    "."
-                  )
-              ),
-              st.section(cls := "legal-section")(
-                h2("Open Beta Feedback"),
-                p(
-                  "If you just used Guided Review, My Patterns, or a position exercise, you can tell us whether it already feels worth paying for and optionally join the paid-plan waitlist."
-                ),
+                h2("Help improve Chesstory"),
+                p("Tell us about a move explanation that helped, a confusing interaction, or a problem you ran into. Your feedback helps us choose what to improve next."),
                 div(cls := "legal-actions")(
                   a(
                     href := routes.BetaFeedback.formPage(
@@ -64,22 +39,18 @@ object support:
                       notify = false
                     ).url,
                     cls := "button"
-                  )("Share beta feedback"),
-                  a(
-                    href := routes.BetaFeedback.formPage(
-                      surface = "general",
-                      feature = "paid_plan_waitlist",
-                      entrypoint = "support_waitlist",
-                      returnTo = routes.Main.support.url,
-                      notify = true
-                    ).url,
-                    cls := "button button-empty"
-                  )("Join paid-plan waitlist")
+                  )("Share beta feedback")
                 )
               ),
-              st.section(cls := "legal-section")(
-                h2("Current Access Policy"),
-                p("Support helps sustain the service, but access still follows Chesstory's current login, quota, and fair-use controls."),
+              links.nonEmpty.option(st.section(cls := "legal-section")(
+                h2("Support the project"),
+                p("Your support helps with hosting and maintenance."),
+                ul(links.map { (label, url) => li(a(href := url, target := "_blank", rel := "noopener noreferrer")(label)) })
+              )),
+              details(cls := "legal-section")(
+                summary("Current access and future plans"),
+                p("There is no active paid subscription. Access follows the current beta limits."),
+                a(href := routes.BetaFeedback.formPage(surface = "general", feature = "paid_plan_waitlist", entrypoint = "support_waitlist", returnTo = routes.Main.support.url, notify = true).url, cls := "legal-link")("Join paid-plan waitlist"),
                 ul(
                   li("Anonymous full-game review is currently limited to 1 Game Chronicle request per day per IP."),
                   li("Signed-in free access is currently limited by current beta quota controls."),

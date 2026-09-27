@@ -1,3 +1,5 @@
+@import 'review-example';
+
 $c-bg-page: var(--c-bg-page);
 $c-bg-low: var(--c-bg-low);
 $c-bg-zebra: var(--c-bg-zebra);
@@ -7,13 +9,12 @@ $c-primary: var(--c-primary);
 $c-bad: var(--c-bad);
 
 .legal-page {
-  min-height: 100vh;
-  padding: clamp(1rem, 2.5vw, 2rem) 0 clamp(2rem, 5vw, 4rem);
+  padding: clamp(1.5rem, 4vw, 3.5rem) 0 clamp(2rem, 5vw, 4rem);
   background: $c-bg-page;
 }
 
 .legal-container {
-  width: min(100% - 2rem, 960px);
+  width: min(100%, 880px);
   margin-inline: auto;
 }
 
@@ -30,7 +31,7 @@ $c-bad: var(--c-bad);
 
   h1 {
     color: $c-font;
-    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-size: clamp(1.875rem, 3vw, 2.5rem);
     line-height: 1.14;
   }
 }
@@ -39,13 +40,13 @@ $c-bad: var(--c-bad);
 .legal-section > p,
 .legal-section li {
   color: $c-font;
-  line-height: 1.55;
+  line-height: 1.75;
 }
 
 .legal-content {
   display: grid;
-  gap: 1.5rem;
-  padding-top: 1.25rem;
+  gap: 2rem;
+  padding-top: 2rem;
 }
 
 .legal-footer {
@@ -76,8 +77,7 @@ $c-bad: var(--c-bad);
 .legal-section {
   display: grid;
   gap: 0.8rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid $c-border;
+  padding-top: 0.5rem;
 
   h2,
   h3,
@@ -87,7 +87,7 @@ $c-bad: var(--c-bad);
 
   h2 {
     color: $c-font;
-    font-size: 1.15rem;
+    font-size: 1.3rem;
     line-height: 1.25;
   }
 
@@ -99,6 +99,9 @@ $c-bad: var(--c-bad);
   ul {
     margin: 0;
     padding-inline-start: 1.25rem;
+    list-style: disc;
+    li { list-style: inherit; }
+    li + li { margin-top: 0.5rem; }
   }
 
   a {
@@ -130,7 +133,7 @@ $c-bad: var(--c-bad);
     box-sizing: border-box;
     padding-inline: 0.75rem;
     border: 1px solid $c-border;
-    border-radius: 0;
+    border-radius: 9px;
     background: $c-bg-low;
     color: $c-font;
   }
@@ -185,12 +188,12 @@ $c-bad: var(--c-bad);
   a.button {
     min-block-size: 44px;
     background: $c-primary;
-    color: var(--c-dark);
+    color: var(--c-over);
 
     &:visited,
     &:focus,
     &:hover {
-      color: var(--c-dark);
+      color: var(--c-over);
     }
 
     &:not(.disabled):hover {
@@ -252,7 +255,7 @@ html.light:not(.pro) .legal-actions a.button {
     display: grid;
     grid-template-columns: minmax(10rem, 0.45fr) minmax(0, 1.55fr);
     gap: 1rem;
-    padding: 0.7rem;
+    padding: 1rem 0.25rem;
 
     + div {
       border-top: 1px solid $c-border;
@@ -261,7 +264,7 @@ html.light:not(.pro) .legal-actions a.button {
 
   dt {
     color: $c-font;
-    font-size: 0.86rem;
+    font-size: 1rem;
     font-weight: 700;
   }
 
@@ -269,8 +272,8 @@ html.light:not(.pro) .legal-actions a.button {
     min-width: 0;
     margin: 0;
     color: $c-font;
-    font-size: 0.86rem;
-    line-height: 1.45;
+    font-size: 1rem;
+    line-height: 1.75;
     overflow-wrap: anywhere;
   }
 }
@@ -294,7 +297,14 @@ html.light:not(.pro) .legal-actions a.button {
     cursor: pointer;
     font-weight: 700;
     line-height: 1.4;
+    gap: 1rem;
+    list-style: none;
+    &::-webkit-details-marker { display: none; }
+    &::after { content: '+'; margin-left: auto; font-size: 1.5rem; font-weight: 400; color: $c-primary; }
   }
+
+  details[open] summary::after { content: '−'; }
+  details[open] { background: $c-bg-zebra; }
 
   p {
     margin: 0.55rem 0 0;
@@ -309,9 +319,34 @@ html.light:not(.pro) .legal-actions a.button {
   border-block: 1px solid $c-border;
 }
 
+.legal-access-card {
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: 20px;
+  background: color-mix(in srgb, $c-primary 6%, var(--c-bg));
+  border: 1px solid color-mix(in srgb, $c-primary 30%, $c-border);
+  &__label { color: $c-primary; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.08em; }
+  h2 { font-size: 2.5rem; margin: 0.25rem 0 0.5rem; }
+  .legal-actions { margin-top: 1rem; }
+}
+.legal-content:has(> .legal-roadmap) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  @media (max-width: 760px) { grid-template-columns: 1fr; }
+}
+.legal-roadmap {
+  align-content: start;
+  border-top: 3px solid var(--c-primary);
+  padding: 1.25rem;
+  border-radius: 0 0 12px 12px;
+  background: var(--c-bg);
+  &:nth-child(2) { border-color: var(--c-secondary); }
+  &:nth-child(3) { border-color: var(--c-border); }
+  li { font-size: 0.9375rem; }
+}
+
 .legal-example {
   display: grid;
-  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1.25rem 0;
 
@@ -396,7 +431,7 @@ html.light:not(.pro) .legal-actions a.button {
     min-height: 2.75rem;
     padding: 0.65rem 0.75rem;
     border: 1px solid $c-border;
-    border-radius: 0;
+    border-radius: 9px;
     background: $c-bg-low;
     color: $c-font;
   }
@@ -429,19 +464,23 @@ html.light:not(.pro) .legal-actions a.button {
 
   .legal-radio-grid {
     display: grid;
-    gap: 0;
-    border-block: 1px solid $c-border;
+    gap: 0.5rem;
   }
 
   .legal-radio-card {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.6rem;
-    padding: 0.7rem;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 0.35rem 0.75rem;
+    padding: 1rem;
+    border: 1px solid $c-border;
+    border-radius: 10px;
+    background: $c-bg-low;
     cursor: pointer;
+
+    input { grid-row: 1 / span 2; }
+    strong, span { grid-column: 2; }
+    span { color: var(--c-font-dim); font-size: 0.875rem; font-weight: 400; line-height: 1.5; }
+    &:has(input:checked) { border-color: $c-primary; background: color-mix(in srgb, $c-primary 8%, $c-bg-low); }
 
     + .legal-radio-card {
       border-top: 1px solid $c-border;
@@ -477,7 +516,7 @@ html.light:not(.pro) .legal-actions a.button {
 
 @media (max-width: 600px) {
   .legal-container {
-    width: min(100% - 1rem, 960px);
+    width: 100%;
   }
 
   .legal-link-row,
@@ -507,3 +546,15 @@ html.light:not(.pro) .legal-actions a.button {
     grid-template-columns: 1fr;
   }
 }
+
+.legal-contents {
+  padding: 1rem 1.25rem; border: 1px solid $c-border; border-radius: 14px; background: var(--c-bg);
+  summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 650; }
+  nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.5rem; }
+  a { display: flex; align-items: center; min-height: 44px; line-height: 1.45; font-size: 0.9375rem; }
+}
+.legal-section > h2 { scroll-margin-top: 88px; }
+.legal-link-rows { border: 1px solid $c-border; border-radius: 14px; overflow: hidden; background: var(--c-bg); }
+.legal-link-row { padding: 1rem 1.25rem; }
+.legal-link-row strong::after { content: ' ↗'; color: $c-primary; }
+@media (max-width: 600px) { .legal-contents nav { grid-template-columns: 1fr; } }

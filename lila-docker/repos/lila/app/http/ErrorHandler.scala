@@ -12,7 +12,7 @@ final class ErrorHandler(
     environment: Environment,
     config: Configuration,
     router: => Router,
-    @unused mainC: => controllers.Main
+    mainC: => controllers.Main
 )(using @unused executor: Executor)
     extends DefaultHttpErrorHandler(environment, config, router.some)
     with lila.web.ResponseWriter:
@@ -21,4 +21,6 @@ final class ErrorHandler(
     fuccess(InternalServerError(exception.getMessage))
 
   override def onClientError(req: RequestHeader, statusCode: Int, msg: String): Fu[Result] =
-    fuccess(Status(statusCode)(msg))
+    if statusCode == 404 && req.headers.get("Accept").exists(_.contains("text/html")) then
+      mainC.handlerNotFound(Option(msg).filter(_.nonEmpty))(using req)
+    else fuccess(Status(statusCode)(msg))

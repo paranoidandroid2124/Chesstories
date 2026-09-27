@@ -114,7 +114,8 @@ object privacy:
                 p(
                   "Chesstory does not use first-party advertising, analytics, preference, or consent cookies. Your browser may still use its normal HTTP cache for application and chess-engine assets; that asset cache is not an analysis history."
                 ),
-                h3("hCaptcha"),
+                  p("Your appearance and language choices are saved in this browser's local storage. They contain no account, game, or analysis data."),
+                  h3("hCaptcha"),
                 p(
                   "Account and anti-abuse screens may load hCaptcha, a third-party service. hCaptcha may use its own cookies or browser storage and process network, browser, device, timing, interaction, and challenge signals under its ",
                   a(href := "https://www.hcaptcha.com/privacy")("Privacy Policy"),
@@ -202,8 +203,6 @@ object privacy:
               ),
 
               footer(cls := "legal-footer")(
-                a(href := routes.Main.terms.url, cls := "legal-link")("Terms of Service"),
-                span(" • "),
                 a(href := routes.Main.contact.url, cls := "legal-link")("Contact"),
                 span(" • "),
                 a(href := homeUrl, cls := "legal-link")("Back to Home")

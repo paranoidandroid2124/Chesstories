@@ -1,6 +1,14 @@
 /* @font-face { font-family: 'chesstory' } is defined in layout.scala */
 
 @font-face {
+  font-family: 'Pretendard';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+  src: url(../font/pretendard-variable.woff2) format('woff2');
+}
+
+@font-face {
   font-family: 'Noto Chess';
   font-display: block;
   src: url(../font/chesstory-chess.woff2) format('woff2');

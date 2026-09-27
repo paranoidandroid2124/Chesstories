@@ -24,6 +24,8 @@ object boardEditor:
           )
         )
       .wrap: _ =>
-        main(cls := "page-small")(
+        main(cls := "page-small editor-page")(
+          h1("Set up a position"),
+          p(cls := "editor-page__intro")("Place pieces on the board, choose whose turn it is, then open a review."),
           div(id := "board-editor")
         )

@@ -1,11 +1,10 @@
 /* eslint no-restricted-syntax:"error" */ // no side effects allowed due to re-export by index.ts
 
-import { onInsert, hl, type VNode, type Attrs, type LooseVNodes } from './snabbdom';
+import { onInsert, hl, icon, type VNode, type Attrs, type LooseVNodes } from './snabbdom';
 import { isTouchDevice } from '@/device';
 import { frag } from '@/index';
 import { Janitor } from '@/event';
 import * as xhr from '@/xhr';
-import * as licon from '@/licon';
 import { pubsub } from '@/pubsub';
 
 export interface Dialog {
@@ -61,7 +60,7 @@ export async function domDialog(o: DomDialogOpts): Promise<Dialog> {
 
   if (!o.noCloseButton) {
     const anchor = frag<Element>('<div class="close-button-anchor">');
-    anchor.innerHTML = `<button class="close-button" aria-label="Close" data-icon="${licon.X}">`;
+    anchor.innerHTML = '<button class="close-button" aria-label="Close"><svg class="story-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
     dialog.appendChild(anchor);
   }
 
@@ -98,7 +97,7 @@ export function snabDialog(o: SnabDialogOpts): VNode {
       o.noCloseButton ||
       hl(
         'div.close-button-anchor',
-        hl('button.close-button', { attrs: { 'data-icon': licon.X, 'aria-label': 'Close' } }),
+        hl('button.close-button', { attrs: { 'aria-label': 'Close' } }, [icon('close')]),
       ),
       hl(
         `div.${o.noScrollable ? 'not-' : ''}scrollable`,

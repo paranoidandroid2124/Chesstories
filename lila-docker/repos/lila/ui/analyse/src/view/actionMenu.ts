@@ -1,7 +1,6 @@
-import * as licon from 'lib/licon';
 import { displayColumns } from 'lib/device';
 import type { VNode, ToggleSettings } from 'lib/view';
-import { bind, hl, toggle } from 'lib/view';
+import { bind, hl, icon, toggle } from 'lib/view';
 import type AnalyseCtrl from '../ctrl';
 import { clamp } from 'lib/algo';
 
@@ -30,11 +29,21 @@ const setVariationControls = (ctrl: AnalyseCtrl, closeMenu: () => void, enabled:
 };
 
 export function view(ctrl: AnalyseCtrl): VNode {
-  return hl('div.action-menu', { attrs: { id: 'analyse-action-menu' } }, boardSettingsView(ctrl));
+  return hl('div.action-menu', { attrs: { id: 'analyse-action-menu', role: 'region', 'aria-label': 'Board settings' } }, [
+    hl('div.action-menu__heading', [
+      hl('strong', 'Board settings'),
+      hl('button.button.button-empty', { attrs: { type: 'button', 'aria-label': 'Close board settings' }, hook: bind('click', () => {
+        ctrl.actionMenu(false);
+        ctrl.redraw();
+        document.querySelector<HTMLButtonElement>('[data-act="menu"]')?.focus();
+      }) }, 'Close'),
+    ]),
+    ...boardSettingsView(ctrl),
+  ]);
 }
 
 export function boardSettingsView(ctrl: AnalyseCtrl, opts: BoardSettingsOpts = {}): VNode[] {
-  const closeOnChange = opts.closeOnChange ?? true;
+  const closeOnChange = opts.closeOnChange ?? false;
   const closeMenu = () => {
     if (closeOnChange) ctrl.actionMenu.toggle();
   };
@@ -45,9 +54,9 @@ export function boardSettingsView(ctrl: AnalyseCtrl, opts: BoardSettingsOpts = {
         'button',
         {
           hook: bind('click', () => flipBoard(ctrl, closeMenu)),
-          attrs: { type: 'button', 'data-icon': licon.ChasingArrows, title: 'Hotkey: f' },
+          attrs: { type: 'button', title: 'Hotkey: f' },
         },
-        'Flip board',
+        [icon('chasingArrows'), 'Flip board'],
       ),
     ]),
     displayColumns() > 1 && hl('h2', 'Display'),
@@ -76,29 +85,24 @@ export function boardSettingsView(ctrl: AnalyseCtrl, opts: BoardSettingsOpts = {
 }
 
 function renderVariationOpacitySlider(ctrl: AnalyseCtrl): VNode {
-  return hl('span.setting.action-menu__range', [
-    hl('label', 'Line emphasis'),
-    hl('input.range', {
-      key: 'variation-arrows',
-      attrs: { min: 0, max: 1, step: 0.1, type: 'range', value: ctrl.variationArrowOpacity() || 0 },
-      props: { value: ctrl.variationArrowOpacity() || 0 },
-      hook: {
-        insert: (vnode: VNode) => {
-          const input = vnode.elm as HTMLInputElement;
-          input.addEventListener('input', () => {
-            ctrl.variationArrowOpacity(parseFloat(input.value));
-          });
-          input.addEventListener('wheel', e => {
-            e.preventDefault();
-            ctrl.variationArrowOpacity(
-              clamp((ctrl.variationArrowOpacity() || 0) + (e.deltaY > 0 ? -0.1 : 0.1), {
-                min: 0,
-                max: 1,
-              }),
-            );
-          });
+  const value = ctrl.variationArrowOpacity() || 0;
+  const set = (value: number) => { ctrl.variationArrowOpacity(value); ctrl.redraw(); };
+  return hl('div.setting.action-menu__range', [
+    hl('label', { attrs: { for: 'variation-emphasis' } }, 'Line emphasis'),
+    hl('output', { attrs: { for: 'variation-emphasis' } }, Math.round(value * 100) + '%'),
+    hl('input#variation-emphasis.range', {
+      attrs: { min: 0, max: 1, step: 0.1, type: 'range', 'aria-valuetext': Math.round(value * 100) + '%' },
+      props: { value },
+      on: {
+        input: event => set(Number((event.target as HTMLInputElement).value)),
+        wheel: event => {
+          event.preventDefault();
+          set(clamp(value + (event.deltaY > 0 ? -0.1 : 0.1), { min: 0, max: 1 }));
         },
       },
     }),
+    hl('small', 'Faint'),
+    hl('small', 'Strong'),
+    hl('p', 'Adjust the arrows that show side lines on the board.'),
   ]);
 }

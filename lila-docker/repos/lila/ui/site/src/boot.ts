@@ -7,6 +7,8 @@ import { updateTimeAgo, renderTimeAgo } from './renderTimeAgo';
 import { pubsub } from 'lib/pubsub';
 import { addExceptionListeners } from './unhandledError';
 import { clearLegacyClientStorage } from 'lib/legacyStorageCleanup';
+import { applyAppearance } from './appearance';
+import { initLanguage } from './language';
 
 const retireDormantServiceWorkers = () => {
   if (!('serviceWorker' in navigator)) return;
@@ -17,7 +19,9 @@ const retireDormantServiceWorkers = () => {
 };
 
 export function boot() {
+  initLanguage();
   void clearLegacyClientStorage();
+  if (!site.blindMode) applyAppearance(document.documentElement.dataset.appearance || document.body.dataset.theme || 'dark');
   addExceptionListeners();
   const setBlind = location.hash === '#blind';
   const showDebug = location.hash.startsWith('#debug');
@@ -50,9 +54,8 @@ export function boot() {
 
     const mql = prefersLightThemeQuery();
     if (typeof mql.addEventListener === 'function')
-      mql.addEventListener('change', e => {
-        if (document.body.dataset.theme === 'system')
-          document.documentElement.className = e.matches ? 'light' : 'dark';
+      mql.addEventListener('change', () => {
+        if (document.body.dataset.theme === 'system') applyAppearance('system');
       });
   }, 800);
 }

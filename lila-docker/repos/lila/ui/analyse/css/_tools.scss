@@ -63,7 +63,12 @@
   align-items: flex-start;
   justify-content: center;
   gap: 0.65rem;
-  padding: clamp(1.25rem, 6vw, 2.5rem);
+  padding: clamp(1rem, 3vw, 2rem);
+
+  .copyables { width: 100%; margin: 0; padding: 0; border: 0; background: transparent; }
+  .copyables__panel { padding: 0; border: 0; }
+  .copyables__panel--pgn textarea { min-height: 9rem; }
+  .analyse__import-link { margin: 0; font-size: 0.875rem; min-height: 44px; display: flex; align-items: center; }
 
   h2,
   p {
@@ -71,7 +76,7 @@
   }
 
   h2 {
-    font-size: 1.2rem;
+    font-size: 1.75rem;
   }
 
   p {
@@ -83,12 +88,13 @@
 
 .analyse__moves {
   @include prevent-select;
-  flex: 2 1 0;
+  flex: 0 0 auto;
+  max-height: 18rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
-  // 0 size forces vertical scrollbar
+  // The review column grows with its explanation; keep notation visible and bounded.
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -165,7 +171,7 @@
   .fbt {
     @extend %page-text;
 
-    flex: 0 0 2.5rem;
+    flex: 0 0 44px;
     min-block-size: 44px;
     border-inline-start: 1px solid $c-border;
     background: transparent;
@@ -179,11 +185,12 @@
 
   .fbt--engine-toggle {
     flex: 0 0 auto;
-    min-width: 5.75rem;
-    padding: 0 0.85rem;
+    min-width: 44px;
+    padding: 0 0.5rem;
     gap: 0.45rem;
 
     .label {
+      display: block;
       line-height: 1;
       font-size: 0.82rem;
       font-weight: 700;

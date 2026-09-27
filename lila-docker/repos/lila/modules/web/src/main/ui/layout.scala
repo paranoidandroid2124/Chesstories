@@ -39,7 +39,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
   import assetHelper.*
 
   val doctype = raw("<!DOCTYPE html>")
-  def htmlTag = html()
+  def htmlTag = html(lang := "en")
   val topComment = raw("""<!-- Chesstory Analysis Engine -->""")
   val charset = raw("""<meta charset="utf-8">""")
   val viewport = raw:
@@ -48,10 +48,23 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
     s"""<meta http-equiv="Content-Security-Policy" content="${lila.web.ContentSecurityPolicy.render(csp)}">"""
   def metaCsp(csp: Option[ContentSecurityPolicy])(using Context, Option[Nonce]): Frag =
     metaCsp(csp.getOrElse(defaultCsp))
-  def systemThemeScript(nonce: Option[Nonce]) =
+  def systemThemeScript(nonce: Option[Nonce], fallback: String = "system") =
     embedJsUnsafe(
-      "if (window.matchMedia('(prefers-color-scheme: light)')?.matches) " +
-        "document.documentElement.classList.add('light');"
+      s"""(() => {
+        let theme = '$fallback';
+        try { const saved = localStorage.getItem('chesstory.appearance');
+          if (['light', 'dark', 'system'].includes(saved)) theme = saved;
+        } catch {}
+        const root = document.documentElement;
+        try { const language = localStorage.getItem('chesstory.language');
+          if (language === 'ko' || language === 'en') root.lang = language;
+        } catch {}
+        const light = theme === 'light' || (theme === 'system' && matchMedia('(prefers-color-scheme: light)').matches);
+        root.dataset.appearance = theme;
+        root.classList.add('pro');
+        root.classList.toggle('light', light);
+        root.classList.toggle('dark', !light);
+      })();"""
     )(nonce)
   val noTranslate = raw("""<meta name="google" content="notranslate">""")
 
@@ -60,8 +73,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
 
   def fontsPreload(using ctx: Context) = frag(
     fontPreload("chesstory.woff2"),
-    fontPreload("noto-sans-latin.woff2"),
-    fontPreload("roboto-latin.woff2"),
+    fontPreload("pretendard-variable.woff2"),
     ctx.pref.pieceNotationIsLetter.not.option(fontPreload("chesstory-chess.woff2"))
   )
 
@@ -111,7 +123,10 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
       "dark" -> "Dark",
       "system" -> "Auto"
     )
-    div(cls := "site-theme-switch", role := "group", aria.label := "Theme")(
+    tag("details")(cls := "site-appearance")(
+      tag("summary")(aria.label := "Appearance and language", title := "Appearance and language")(span(attr("aria-hidden") := "true")("◐"), span(cls := "site-language-current", attr("data-no-translate") := "")("EN")),
+      div(cls := "site-theme-switch", role := "group", aria.label := "Theme")(
+      div(cls := "site-theme-choices")(
       choices.map: (value, label) =>
         button(
           tpe := "button",
@@ -120,6 +135,15 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
           attr("aria-pressed") := (value == current).toString,
           title := s"Use ${if value == "system" then "device theme" else s"$label theme"}"
         )(label)
+      ),
+      label(cls := "site-language")(
+        span("Language"),
+        select(cls := "js-language-choice", aria.label := "Language")(
+          tag("option")(value := "en", attr("lang") := "en")("English"),
+          tag("option")(value := "ko", attr("lang") := "ko")("한국어")
+        )
+      )
+      )
     )
 
   def scriptsPreload(keys: List[String]) =
@@ -185,6 +209,14 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
   def siteFooter(using ctx: Context) =
     footer(cls := "site-footer", aria.label := "Site footer")(
       div(cls := "site-footer__inner")(
+        div(cls := "site-footer__bar")(
+          span("Chesstory"),
+          a(href := routes.Main.help.url)("Help"),
+          a(href := routes.Main.privacy.url)("Privacy"),
+          a(href := routes.Main.terms.url)("Terms")
+        ),
+        tag("details")(cls := "site-footer__more")(
+          tag("summary")("Explore Chesstory"),
         div(cls := "site-footer__links")(
           div(cls := "site-footer__group")(
             strong("Product"),
@@ -213,6 +245,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
             a(href := routes.Main.contact.url)("Contact"),
             a(href := routes.Main.support.url)("Support")
           )
+        )
         )
       )
     )

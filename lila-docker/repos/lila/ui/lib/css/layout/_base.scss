@@ -5,10 +5,10 @@ $vp-max-width: 1200px;
 body {
   ---site-header-height: #{$site-header-short-height};
   ---site-header-margin: 0px;
-  ---cs-content-max-width: #{$main-max-width};
-  ---cs-workspace-max-width: #{$site-header-sticky-max-width};
-  ---cs-shell-gutter-x: 0px;
-  ---cs-shell-block-gap: 10px;
+  ---cs-content-max-width: 1160px;
+  ---cs-workspace-max-width: 1440px;
+  ---cs-shell-gutter-x: clamp(1rem, 2vw, 2rem);
+  ---cs-shell-block-gap: clamp(0.75rem, 1.5vw, 1.5rem);
   ---site-header-sticky-padding: max(
     0px,
     calc((100vw - var(---cs-workspace-max-width, #{$site-header-sticky-max-width})) / 2)
@@ -27,8 +27,6 @@ body {
   }
 
   @media (min-width: at-least($small)) {
-    ---cs-shell-gutter-x: 1vw;
-    ---cs-shell-block-gap: 15px;
     margin-bottom: $block-gap;
   }
 }

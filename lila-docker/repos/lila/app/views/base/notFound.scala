@@ -11,11 +11,10 @@ def notFound(msg: Option[String]) =
           strong("Page not found!"),
           msg.map(em(_)),
           p(cls := "text")(
-            "Page not found",
+            "This page may have moved or no longer exists.",
             br,
-            a(href := routes.UserAnalysis.index.url)("the homepage"),
-            br,
-            a(href := routes.Main.contact.url)("Contact")
+            a(href := routes.UserAnalysis.index.url, cls := "button")("Review a game"),
+            a(href := routes.Main.contact.url, cls := "button button-empty")("Contact")
           )
         )
       )

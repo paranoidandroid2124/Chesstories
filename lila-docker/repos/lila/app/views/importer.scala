@@ -93,6 +93,12 @@ object importer:
             attr("aria-describedby") := "import-workspace-status",
             required
           )(draft.getOrElse("")),
+            p(
+              id := "import-workspace-status",
+              cls := "import-workspace__status",
+              role := "status",
+              attr("aria-live") := "polite"
+            ),
           label(cls := "import-file", `for` := "import-file")(
             span("PGN file"),
             input(
@@ -106,13 +112,7 @@ object importer:
         div(cls := "import-workspace__submit")(
           div(
             p(
-              "Files above 200,000 bytes are rejected before reading. After loading, submitted PGN must be 200,000 characters or fewer. A selected file stays in this browser until it is copied into this field."
-            ),
-            p(
-              id := "import-workspace-status",
-              cls := "import-workspace__status",
-              role := "status",
-              attr("aria-live") := "polite"
+              "One game at a time. Your file is read locally before you open the review."
             )
           ),
           button(id := "import-submit", cls := "button", tpe := "submit")("Review this game")
@@ -155,7 +155,7 @@ object importer:
             required
           )
         ),
-        button(cls := "button", tpe := "submit")("Show recent games")
+        button(cls := "button button-empty", tpe := "submit")("Show recent games")
       )
     )
 

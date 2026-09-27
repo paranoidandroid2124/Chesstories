@@ -3,9 +3,9 @@
 .error-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: calc(100dvh - 80px);
   background-color: var(--c-bg-page);
-  font-family: Roboto, 'Noto Sans', 'Segoe UI', sans-serif;
+  font-family: inherit;
 }
 
 .error-container {
@@ -19,7 +19,7 @@
 .error-code {
   margin: 0;
   color: var(--c-font);
-  font-family: Georgia, serif;
+  font-family: inherit;
   font-size: 8rem;
   font-weight: 900;
   line-height: 1;
@@ -29,7 +29,7 @@
 .error-title {
   margin: -2rem 0 1.5rem;
   color: var(--c-font);
-  font-family: Georgia, serif;
+  font-family: inherit;
   font-size: 2.5rem;
   font-weight: 700;
 }
@@ -62,7 +62,7 @@
   gap: 10px;
   border: 1px solid transparent;
   background: var(--c-primary);
-  color: var(--c-bg-page);
+  color: var(--c-over);
   font-weight: 600;
   transition:
     background-color 150ms ease,

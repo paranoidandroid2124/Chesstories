@@ -80,8 +80,7 @@ object page:
           sitePreload(allModules),
           chesstoryFontFaceCss,
           pieceSetImages.load(ctx.pref.currentPieceSet.name),
-          (ctx.pref.bg === lila.pref.Pref.Bg.SYSTEM || ctx.impersonatedBy.isDefined)
-            .so(systemThemeScript(ctx.nonce))
+          (!ctx.blind).so(systemThemeScript(ctx.nonce, pref.currentBg))
         ).pipe(p.transformHead),
         st.body(
           cls := {

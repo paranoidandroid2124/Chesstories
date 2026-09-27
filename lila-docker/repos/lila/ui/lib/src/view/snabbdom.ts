@@ -72,6 +72,8 @@ export function icon(name: keyof typeof icons, className?: string): VNode {
         'stroke-width': '2',
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
+        'aria-hidden': 'true',
+        focusable: 'false',
       },
     },
     [snabH('path', { attrs: { d: icons[name] } })],

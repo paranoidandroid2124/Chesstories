@@ -1,3 +1,5 @@
+import { reviewPgnError } from 'lib/game/reviewPgn';
+
 export function initImporter() {
   const form = document.getElementById('import-workspace') as HTMLFormElement | null;
   const pgn = document.getElementById('import-pgn') as HTMLTextAreaElement | null;
@@ -14,10 +16,17 @@ export function initImporter() {
     file.value = '';
   };
   const overCharacterLimit = (value: string) => value.trim().length > characterLimit;
-  const characterLimitMessage = () =>
-    `PGN must be ${characterLimit.toLocaleString()} characters or fewer before opening the board.`;
+  const showStatus = (message: string, error = false) => {
+    status.textContent = message;
+    status.classList.toggle('import-message--error', error);
+    status.classList.toggle('import-message', !!message);
+    status.setAttribute('role', error ? 'alert' : 'status');
+    pgn.setAttribute('aria-invalid', String(error));
+    submit.setAttribute('aria-disabled', String(error));
+  };
   const syncManualStatus = () => {
-    status.textContent = overCharacterLimit(pgn.value) ? characterLimitMessage() : '';
+    const error = pgn.value.trim() ? reviewPgnError(pgn.value) : undefined;
+    showStatus(pgn.value.trim() ? error ?? 'PGN ready. Open the review when you are ready.' : '', !!error);
   };
   const setReading = (value: boolean) => {
     reading = value;
@@ -44,30 +53,31 @@ export function initImporter() {
     if (selected.size > byteLimit) {
       clearFile();
       setReading(false);
-      status.textContent = `Choose a PGN file no larger than ${byteLimit.toLocaleString()} bytes before reading.`;
+      showStatus(`Choose a PGN file no larger than ${byteLimit.toLocaleString()} bytes before reading.`, true);
       pgn.focus();
       return;
     }
 
     setReading(true);
-    status.textContent = `Reading ${selected.name}...`;
+    showStatus(`Reading ${selected.name}...`);
     void selected
       .arrayBuffer()
       .then(bytes => new TextDecoder('utf-8', { fatal: true }).decode(bytes))
       .then(text => {
         if (token !== generation) return;
         if (overCharacterLimit(text)) {
-          status.textContent = `The loaded file exceeds the ${characterLimit.toLocaleString()}-character PGN limit.`;
+          showStatus(`The loaded file exceeds the ${characterLimit.toLocaleString()}-character PGN limit.`, true);
           pgn.focus();
           return;
         }
         pgn.value = text;
-        status.textContent = `Loaded ${selected.name}. Review the PGN, then open the board.`;
+        const error = reviewPgnError(text);
+        showStatus(error ?? `Loaded ${selected.name}. Review the PGN, then open the board.`, !!error);
         pgn.focus();
       })
       .catch(() => {
         if (token !== generation) return;
-        status.textContent = 'That file could not be read. Paste the PGN text instead.';
+        showStatus('That file could not be read. Paste the PGN text instead.', true);
         pgn.focus();
       })
       .finally(() => {
@@ -77,14 +87,15 @@ export function initImporter() {
       });
   });
 
+  syncManualStatus();
   form.addEventListener('submit', event => {
     if (reading) {
       event.preventDefault();
-      status.textContent = 'Wait for the selected file to finish loading, or paste PGN text.';
+      showStatus('Wait for the selected file to finish loading, or paste PGN text.');
       pgn.focus();
-    } else if (overCharacterLimit(pgn.value)) {
+    } else if (reviewPgnError(pgn.value)) {
       event.preventDefault();
-      status.textContent = characterLimitMessage();
+      showStatus(reviewPgnError(pgn.value)!, true);
       pgn.focus();
     }
   });

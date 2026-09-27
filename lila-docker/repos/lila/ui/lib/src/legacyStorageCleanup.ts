@@ -39,7 +39,13 @@ function decodeCookieName(name: string): string {
 
 function clearWebStorage(getStorage: () => Storage): void {
   try {
-    getStorage().clear();
+    const storage = getStorage();
+    const appearance = storage.getItem('chesstory.appearance');
+    const language = storage.getItem('chesstory.language');
+    storage.clear();
+    if (appearance && ['light', 'dark', 'system'].includes(appearance))
+      storage.setItem('chesstory.appearance', appearance);
+    if (language === 'ko' || language === 'en') storage.setItem('chesstory.language', language);
   } catch {
     // Storage can be unavailable in hardened or opaque-origin browser contexts.
   }

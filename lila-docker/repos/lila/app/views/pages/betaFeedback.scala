@@ -43,20 +43,21 @@ object betaFeedback:
       accountEmail: Option[EmailAddress],
       success: Option[String] = None
   )(using @unused ctx: Context): Page =
-    Page("Open Beta Feedback - Chesstory")
+    val isContact = feedbackForm("entrypoint").value.contains("contact_page")
+    Page(if isContact then "Contact - Chesstory" else "Open Beta Feedback - Chesstory")
       .css("legal")
       .wrap: _ =>
         main(cls := "legal-page")(
           div(cls := "legal-container")(
             st.article(cls := "legal-content beta-feedback-page")(
               header(cls := "legal-header")(
-                h1("Open Beta Feedback"),
+                h1(if isContact then "Send a request" else "Open Beta Feedback"),
                 p(cls := "legal-meta")(
-                  "Tell us which study moments felt valuable after you actually used them. ",
-                  "This does not start billing or reserve a paid plan."
+                  if isContact then "Ask a question, report a problem, or request help with your data."
+                  else "Tell us which study moments felt valuable after you actually used them. This does not start billing or reserve a paid plan."
                 )
               ),
-              st.section(cls := "legal-section beta-feedback-intro")(
+              (!isContact).option(st.section(cls := "legal-section beta-feedback-intro")(
                 h2("What we want to learn"),
                 p(
                   "We use this form to understand which review moments, board exercises, and pattern studies feel worth returning to, which price bands feel reasonable, and who wants a launch email if paid plans open later."
@@ -66,14 +67,14 @@ object betaFeedback:
                   accountEmail.map(email => span(cls := "legal-beta-pill")(s"Signed in as ${email.value}")),
                   boolValue(feedbackForm, "notify").option(span(cls := "legal-beta-pill legal-beta-pill--accent")("Notify me is on"))
                 )
-              ),
+              )),
               feedbackForm.globalErrors.headOption.map(err =>
                 div(cls := "legal-form-banner legal-form-banner--error")(err.message)
               ),
               success.map(msg =>
                 div(cls := "legal-form-banner legal-form-banner--success")(msg)
               ),
-              st.form(cls := "legal-form", method := "post", action := routes.BetaFeedback.submitForm.url)(
+              if isContact then contactForm(feedbackForm, accountEmail) else st.form(cls := "legal-form", method := "post", action := routes.BetaFeedback.submitForm.url)(
                 input(tpe := "hidden", name := "entrypoint", value := feedbackForm("entrypoint").value.getOrElse("")),
                 input(tpe := "hidden", name := "returnTo", value := feedbackForm("returnTo").value.getOrElse("")),
                 div(cls := "legal-field")(
@@ -160,12 +161,45 @@ object betaFeedback:
                 )
               ),
               footer(cls := "legal-footer")(
-                a(href := routes.Main.support.url, cls := "legal-link")("Support"),
-                span(" • "),
-                a(href := routes.Main.privacy.url, cls := "legal-link")("Privacy Policy"),
-                span(" • "),
-                a(href := routes.Main.terms.url, cls := "legal-link")("Terms of Service")
+                a(href := routes.Main.help.url, cls := "legal-link")("Browse help")
               )
             )
           )
         )
+
+
+  private def contactForm(form: Form[FormInput], accountEmail: Option[EmailAddress]): Frag =
+    st.form(cls := "legal-form", method := "post", action := routes.BetaFeedback.submitForm.url)(
+      input(tpe := "hidden", name := "entrypoint", value := "contact_page"),
+      input(tpe := "hidden", name := "surface", value := "general"),
+      input(tpe := "hidden", name := "willingness", value := "maybe"),
+      input(tpe := "hidden", name := "returnTo", value := ""),
+      div(cls := "legal-field")(
+        label(attr("for") := "feature")("Request type"),
+        select(id := "feature", name := "feature")(
+          List("contact_general" -> "General question", "contact_bug" -> "Report a problem",
+            "contact_account" -> "Account help", "contact_privacy" -> "Privacy or deletion request",
+            "contact_legal" -> "Legal notice").map { (key, text) =>
+            option(value := key, if form("feature").value.contains(key) then selected := true else emptyFrag)(text)
+          }
+        )
+      ),
+      div(cls := "legal-field")(
+        label(attr("for") := "notes")("Your message"),
+        textarea(id := "notes", name := "notes", attr("rows") := "6", attr("maxlength") := "800", required := true,
+          placeholder := "What happened, and what would you like help with? Include the page or move if relevant.")(form("notes").value.getOrElse("")),
+        p(cls := "legal-note")("Up to 800 characters. Please do not include passwords or payment details."),
+        fieldError(form, "notes")
+      ),
+      div(cls := "legal-field")(
+        label(attr("for") := "email")("Reply email (optional)"),
+        input(id := "email", name := "email", tpe := "email", autocomplete := "email",
+          value := form("email").value.getOrElse(accountEmail.map(_.value).getOrElse("")), placeholder := "you@example.com"),
+        p(cls := "legal-note")("Leave an email if you would like a reply. This does not subscribe you to product emails."),
+        fieldError(form, "email")
+      ),
+      div(cls := "legal-actions")(
+        button(cls := "button", tpe := "submit")("Send request"),
+        a(href := routes.Main.help.url, cls := "legal-link")("Browse help")
+      )
+    )

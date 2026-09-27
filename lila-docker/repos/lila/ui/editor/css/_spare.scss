@@ -2,17 +2,18 @@
   @extend %box-radius;
 
   display: flex;
-  background: $c-font-dimmer;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3) inset;
+  background: color-mix(in srgb, #b7c2bb 65%, var(--c-bg));
+  border: 1px solid $c-border;
+  box-shadow: none;
 
   &-top {
     grid-area: spare-top;
-    margin-bottom: 2vh;
+    margin-bottom: 0.5rem;
   }
 
   &-bottom {
     grid-area: spare-bottom;
-    margin-top: 2vh;
+    margin-top: 0.5rem;
   }
 
   .no-square {
@@ -24,12 +25,15 @@
       background: $m-primary--fade-80;
     }
 
+    &:focus-visible { outline: 2px solid $c-primary; outline-offset: -3px; }
+
     &.selected-square {
       background: $m-primary--fade-50;
     }
 
     div {
       @extend %square;
+      .story-icon { position: absolute; width: 22px; height: 22px; inset: 50% auto auto 50%; transform: translate(-50%, -50%); color: #203039; }
     }
 
     &.pointer {
@@ -43,9 +47,6 @@
         background: $m-secondary--fade-40;
       }
 
-      piece {
-        background-image: url(../images/icons/pointer.svg);
-      }
     }
 
     &.trash {
@@ -59,9 +60,6 @@
         background: $m-bad--fade-40;
       }
 
-      piece {
-        background-image: url(../images/icons/trash.svg);
-      }
     }
   }
 
@@ -72,10 +70,4 @@
     height: 100%;
   }
 
-  piece.pointer,
-  piece.trash {
-    margin: 14%;
-    width: 72%;
-    height: 72%;
-  }
 }

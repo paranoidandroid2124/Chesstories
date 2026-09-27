@@ -15,15 +15,19 @@ object contact:
           div(cls := "legal-container")(
             st.article(cls := "legal-content")(
               header(cls := "legal-header")(
-                h1("Contact and Privacy Requests"),
+                h1("How can we help?"),
                 p(cls := "legal-meta")("Chesstory is currently run as a personal beta project by an individual developer based in the Republic of Korea.")
               ),
 
               st.section(cls := "legal-section")(
-                h2("1. Contact"),
+                h2("Get in touch"),
                 contactEmail.fold[Frag](
-                  p(
-                    "A public contact email has not been configured for this environment yet."
+                  frag(
+                    p("Use the request form for product questions, problems, and privacy requests. Leave a reply email if you would like us to follow up."),
+                    div(cls := "legal-actions")(
+                      a(href := routes.BetaFeedback.formPage(surface = "general", feature = "contact", entrypoint = "contact_page", returnTo = routes.Main.contact.url, notify = false).url, cls := "button")("Send a request"),
+                      a(href := routes.Main.help.url, cls := "button button-empty")("Browse help")
+                    )
                   )
                 )(email =>
                   p(
@@ -35,7 +39,7 @@ object contact:
               ),
 
               st.section(cls := "legal-section")(
-                h2("2. What to Include"),
+                h2("What to include"),
                 ul(
                   li("Your Chesstory username, if you have one"),
                   li("The email address connected to your account"),
@@ -45,7 +49,7 @@ object contact:
               ),
 
               st.section(cls := "legal-section")(
-                h2("3. What This Channel Covers"),
+                h2("Questions and requests"),
                 ul(
                   li("Account recovery or account security issues"),
                   li("Privacy requests such as access, correction, or deletion"),
@@ -55,7 +59,7 @@ object contact:
               ),
 
               st.section(cls := "legal-section")(
-                h2("4. Related Policies"),
+                h2("Related policies"),
                 p(
                   "For more detail about how Chesstory handles personal information, read the ",
                   a(href := routes.Main.privacy.url)("Privacy Policy"),
@@ -66,10 +70,6 @@ object contact:
               ),
 
               footer(cls := "legal-footer")(
-                a(href := routes.Main.privacy.url, cls := "legal-link")("Privacy Policy"),
-                span(" • "),
-                a(href := routes.Main.terms.url, cls := "legal-link")("Terms of Service"),
-                span(" • "),
                 a(href := homeUrl, cls := "legal-link")("Back to Home")
               )
             )

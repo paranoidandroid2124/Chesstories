@@ -1013,7 +1013,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       move_review_preparation_failed: '평가를 비교하는 데 필요한 수순을 준비하지 못했습니다.',
       repetition_history_unavailable: '반복 여부를 확인할 이전 기보가 없습니다.',
     },
-    selectedReference: '검색 기준 수를 두었습니다',
+    selectedReference: '이번 분석에서 가장 높게 평가한 수입니다',
     terminalResult: '종료된 포지션',
     drawClaimAvailable: '무승부 청구 가능',
     terminalLabels: {
@@ -1278,7 +1278,7 @@ const copies: Record<MoveReviewLocale, MoveReviewCopy> = {
       move_review_preparation_failed: 'The lines needed for the evaluation comparison could not be prepared.',
       repetition_history_unavailable: 'The earlier moves needed to check repetition are unavailable.',
     },
-    selectedReference: 'Played the search reference',
+    selectedReference: 'The highest-rated move in this analysis',
     terminalResult: 'Terminal position',
     drawClaimAvailable: 'Draw claim available',
     terminalLabels: {

@@ -1,4 +1,13 @@
 export const icons = {
+  playTriangle: 'M8 4l12 8-12 8z',
+  pointer: 'M5 3l14 9-7 1-3 7-4-17z',
+  trash: 'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',
+  reload: 'M3 10a9 9 0 1 1 2 8M3 4v6h6',
+  chasingArrows: 'M4 8h15l-4-4m5 12H5l4 4M20 8l-4 4M4 16l4-4',
+  microscope: 'M9 3l7 7-4 4-7-7 4-4zM12 14v3M8 21h12M15 11a6 6 0 0 1 0 10M4 17h8',
+  clipboard: 'M9 4H6a2 2 0 0 0-2 2v14h16V6a2 2 0 0 0-2-2h-3M9 2h6v4H9z',
+  checkmark: 'M4 12l5 5L20 6',
+  close: 'M6 6l12 12M18 6L6 18',
   book: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',
   jumpFirst: 'M11 19l-7-7 7-7m8 14l-7-7 7-7',
   lessThan: 'M15 18l-6-6 6-6',

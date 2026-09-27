@@ -23,9 +23,28 @@ export function renderBoardPreview(preview: BoardPreview, orientation: Color, se
 
   const cgVNode = h('div.cg-wrap.is2d', {
     hook: {
-      insert: (vnode: any) => (vnode.elm._cg = makeChessground(vnode.elm, cgConfig)),
-      update: (vnode: any) => vnode.elm._cg?.set(cgConfig),
-      destroy: (vnode: any) => vnode.elm._cg?.destroy(),
+      insert: (vnode: any) => {
+        const el = vnode.elm;
+        el._cgConfig = cgConfig;
+        el._cgInit = new ResizeObserver(() => {
+          cancelAnimationFrame(el._cgFrame);
+          el._cgFrame = requestAnimationFrame(() => {
+            if (!el.clientWidth || !el.clientHeight) return;
+            if (el._cg) el._cg.set(el._cgConfig);
+            else el._cg = makeChessground(el, el._cgConfig);
+          });
+        });
+        el._cgInit.observe(el);
+      },
+      update: (vnode: any) => {
+        vnode.elm._cgConfig = cgConfig;
+        if (vnode.elm.clientWidth && vnode.elm.clientHeight) vnode.elm._cg?.set(cgConfig);
+      },
+      destroy: (vnode: any) => {
+        vnode.elm._cgInit?.disconnect();
+        cancelAnimationFrame(vnode.elm._cgFrame);
+        vnode.elm._cg?.destroy();
+      },
     },
   });
 

@@ -1,11 +1,11 @@
 import * as licon from 'lib/licon';
-import { type VNode, hl } from 'lib/view';
+import { type VNode, hl, icon } from 'lib/view';
 import { playable } from 'lib/game';
 import { render as trainingView } from './roundTraining';
 import type AnalyseCtrl from '../ctrl';
 import { view as keyboardView } from '../keyboard';
 
-import { viewContext, renderBoard, renderMain, renderTools, renderUnderboard } from './components';
+import { viewContext, renderBoard, renderMain, renderTools, renderUnderboard, renderSaveShortcut } from './components';
 import { boardRectSig } from './boardRect';
 import { displayColumns } from 'lib/device';
 import { renderControls } from './controls';
@@ -35,9 +35,29 @@ function analyseView(ctrl: AnalyseCtrl): VNode {
   return renderMain(
     ctx,
     ctrl.keyboardHelp && keyboardView(ctrl),
-    renderBoard(ctx),
+    hl('div.analyse__board-column', [renderBoard(ctx), renderControls(ctrl), renderSaveShortcut(ctrl)]),
+    hl('button.analyse__return-board', {
+      attrs: { type: 'button', hidden: true },
+      hook: {
+        insert: vnode => {
+          const button = vnode.elm as HTMLButtonElement;
+          const board = document.querySelector<HTMLElement>('.analyse__board-column')!;
+          const observer = new IntersectionObserver(([entry]) => {
+            button.hidden = entry.isIntersecting || entry.boundingClientRect.top > 0;
+          }, { rootMargin: '-64px 0px 0px 0px' });
+          observer.observe(board);
+          (vnode.data as any).boardObserver = observer;
+        },
+        destroy: vnode => (vnode.data as any).boardObserver?.disconnect(),
+        update: (old, vnode) => { (vnode.data as any).boardObserver = (old.data as any).boardObserver; },
+      },
+      on: { click: () => {
+        const board = document.querySelector<HTMLElement>('.analyse__board-column');
+        board?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+        board?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true });
+      } },
+    }, [icon('jumpFirst'), document.documentElement.lang.startsWith('ko') ? '보드로 돌아가기' : 'Back to board']),
     renderTools(ctx),
-    renderControls(ctrl),
     renderUnderboard(ctx),
     trainingView(ctrl),
     !ctrl.synthetic &&

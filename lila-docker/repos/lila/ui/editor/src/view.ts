@@ -1,6 +1,6 @@
 import { h, type VNode } from 'snabbdom';
 import * as licon from 'lib/licon';
-import { copyMeInput, dataIcon } from 'lib/view';
+import { copyMeInput, icon } from 'lib/view';
 import type { MouchEvent, NumberPair } from '@lichess-org/chessground/types';
 import { dragNewPiece } from '@lichess-org/chessground/drag';
 import { eventPosition, opposite } from '@lichess-org/chessground/util';
@@ -11,9 +11,9 @@ import chessground from './chessground';
 import type { Selected, CastlingToggle, EditorState, EndgamePosition, OpeningPosition } from './interfaces';
 import { fenToEpd } from 'lib/game/chess';
 
-function castleCheckBox(ctrl: EditorCtrl, id: CastlingToggle, label: string, reversed: boolean): VNode {
+function castleCheckBox(ctrl: EditorCtrl, id: CastlingToggle, label: string): VNode {
   const input = h('input', {
-    attrs: { type: 'checkbox' },
+    attrs: { type: 'checkbox', 'aria-label': `${id === id.toUpperCase() ? 'White' : 'Black'} ${label}` },
     props: { checked: ctrl.castlingToggles[id] },
     on: {
       change(e) {
@@ -21,7 +21,7 @@ function castleCheckBox(ctrl: EditorCtrl, id: CastlingToggle, label: string, rev
       },
     },
   });
-  return h('label', reversed ? [input, label] : [label, input]);
+  return h('label', [input, label]);
 }
 
 function optgroup(name: string, opts: VNode[]): VNode {
@@ -33,17 +33,17 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
     return h('option', { attrs: { value: pos.epd || pos.fen, 'data-fen': pos.fen } }, pos.name);
   };
 
-  const buttonStart = (icon?: string) =>
+  const buttonStart = (withIcon?: string) =>
     h(
-      `a.button.button-empty${icon ? '.text' : ''}`,
-      { on: { click: ctrl.startPosition }, attrs: icon ? dataIcon(icon) : {} },
-      'Start position',
+      'button.button.button-empty',
+      { on: { click: ctrl.startPosition }, attrs: { 'aria-label': 'Start position' } },
+      [...(withIcon ? [icon('reload')] : []), 'Start position'],
     );
-  const buttonClear = (icon?: string) =>
+  const buttonClear = (withIcon?: string) =>
     h(
-      `a.button.button-empty${icon ? '.text' : ''}`,
-      { on: { click: ctrl.clearBoard }, attrs: icon ? dataIcon(icon) : {} },
-      'Clear board',
+      'button.button.button-empty',
+      { on: { click: ctrl.clearBoard }, attrs: { 'aria-label': 'Clear board' } },
+      [...(withIcon ? [icon('trash')] : []), 'Clear board'],
     );
 
   return h('div.board-editor__tools', [
@@ -53,6 +53,7 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
         h(
           'select',
           {
+            attrs: { 'aria-label': 'Side to move' },
             on: {
               change(e) {
                 ctrl.setTurn((e.target as HTMLSelectElement).value as Color);
@@ -74,12 +75,14 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
       h('div.castling', [
         h('strong', 'Castling'),
         h('div', [
-          castleCheckBox(ctrl, 'K', 'O-O', !!ctrl.options.inlineCastling),
-          castleCheckBox(ctrl, 'Q', 'O-O-O', true),
+          h('span.castling__color', 'White'),
+          castleCheckBox(ctrl, 'K', 'O-O'),
+          castleCheckBox(ctrl, 'Q', 'O-O-O'),
         ]),
         h('div', [
-          castleCheckBox(ctrl, 'k', 'O-O', !!ctrl.options.inlineCastling),
-          castleCheckBox(ctrl, 'q', 'O-O-O', true),
+          h('span.castling__color', 'Black'),
+          castleCheckBox(ctrl, 'k', 'O-O'),
+          castleCheckBox(ctrl, 'q', 'O-O-O'),
         ]),
       ]),
       h('div.enpassant', [
@@ -106,7 +109,7 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
                     disabled: Boolean(key && !state.enPassantOptions.includes(key)) /*Safari*/,
                   },
                 },
-                key,
+                key || 'None',
               ),
           ),
         ),
@@ -131,6 +134,7 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
           return h(
             'select.positions',
             {
+              attrs: { 'aria-label': 'Starting position' },
               props: { value },
               on: {
                 insert(vnode) {
@@ -160,7 +164,7 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
           h(
             'button.button.button-empty.text',
             {
-              attrs: { 'data-icon': licon.ChasingArrows },
+              attrs: { 'aria-label': 'Flip board' },
               on: {
                 click() {
                   ctrl.chessground!.toggleOrientation();
@@ -168,13 +172,18 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
                 },
               },
             },
-            'Flip board',
+            [icon('chasingArrows'), 'Flip board'],
           ),
+          ...(ctrl.resetFen ? [h('button.button.button-empty.board-editor__undo', {
+            attrs: { type: 'button' }, on: { click: ctrl.undoReset },
+          }, [icon('reload'), 'Undo board reset'])] : []),
           h(
             'a',
             {
               attrs: {
-                'data-icon': licon.Microscope,
+                'aria-label': 'Review this position',
+                'aria-disabled': String(!state.legalFen),
+                ...(!state.legalFen ? { 'aria-describedby': 'editor-position-error', tabindex: -1 } : {}),
                 rel: 'nofollow',
                 ...(state.legalFen
                   ? { href: ctrl.makeAnalysisUrl(state.legalFen, ctrl.bottomColor()) }
@@ -182,14 +191,16 @@ function controls(ctrl: EditorCtrl, state: EditorState): VNode {
               },
               class: {
                 button: true,
-                'button-empty': true,
+                'board-editor__review': true,
                 text: true,
                 disabled: !state.legalFen,
               },
             },
-            'Analysis',
+            [icon('microscope'), 'Review this position'],
           ),
         ]),
+        ...(!state.legalFen ? [h('p#editor-position-error.board-editor__error', { attrs: { role: 'status' } },
+          'Add one king for each side, keep pawns off the first and last ranks, and check whose turn it is.')] : []),
       ]),
   ]);
 }
@@ -200,34 +211,33 @@ function inputs(ctrl: EditorCtrl, fen: string): VNode | undefined {
     h('p', [
       h('strong', 'FEN'),
       h('input', {
-        attrs: { spellcheck: 'false', enterkeyhint: 'done' },
-        props: { value: fen },
+        attrs: { spellcheck: 'false', enterkeyhint: 'done', 'aria-label': 'FEN',
+          'aria-invalid': String(ctrl.fenError), ...(ctrl.fenError ? { 'aria-describedby': 'editor-fen-error' } : {}) },
+        props: { value: ctrl.fenInput ?? fen },
         on: {
-          change(e) {
-            const el = e.target as HTMLInputElement;
-            ctrl.setFen(el.value.trim());
-            el.reportValidity();
-          },
           input(e) {
-            const el = e.target as HTMLInputElement;
-            const valid = parseFen(el.value.trim()).isOk;
-            el.setCustomValidity(valid ? '' : 'Invalid FEN');
+            ctrl.fenInput = (e.target as HTMLInputElement).value;
+            ctrl.fenError = !parseFen(ctrl.fenInput.trim()).isOk;
+            ctrl.redraw();
           },
-          blur(e) {
-            const el = e.target as HTMLInputElement;
-            el.value = ctrl.getFen();
-            el.setCustomValidity('');
-          },
-          keypress(e) {
-            const el = e.target as HTMLInputElement;
+          change(e) { ctrl.setFen((e.target as HTMLInputElement).value.trim()); },
+          keydown(e) {
             if (e.key === 'Enter') {
-              el.blur();
+              e.preventDefault();
+              const el = e.target as HTMLInputElement;
+              if (ctrl.setFen(el.value.trim())) el.blur();
             }
           },
         },
       }),
     ]),
-    h('p', [h('strong.name', 'URL'), copyMeInput(ctrl.makeEditorUrl(fen, ctrl.bottomColor()))]),
+    ...(ctrl.fenError ? [h('div#editor-fen-error.board-editor__fen-error', { attrs: { role: 'alert' } }, [
+      h('span', 'Check the FEN format. Your board has not changed.'),
+      h('button.button.button-empty', { attrs: { type: 'button' }, on: { click: () => {
+        ctrl.fenInput = undefined; ctrl.fenError = false; ctrl.redraw();
+      } } }, 'Restore board FEN'),
+    ])] : []),
+    h('p', [h('strong.name', 'URL'), copyMeInput(ctrl.makeEditorUrl(fen, ctrl.bottomColor()), { 'aria-label': 'Position URL' })]),
   ]);
 }
 
@@ -267,6 +277,7 @@ function sparePieces(ctrl: EditorCtrl, color: Color, _orientation: Color, positi
       return h(
         'div',
         {
+          attrs: { role: 'button', tabindex: 0, 'aria-label': s === 'pointer' ? 'Move pieces' : s === 'trash' ? 'Remove pieces' : `${color} ${s[1]}`, 'aria-pressed': String(selectedSquare) },
           class: {
             'no-square': true,
             pointer: s === 'pointer',
@@ -274,6 +285,13 @@ function sparePieces(ctrl: EditorCtrl, color: Color, _orientation: Color, positi
             'selected-square': selectedSquare,
           },
           on: {
+            keydown: event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                ctrl.selected(s);
+                ctrl.redraw();
+              }
+            },
             mousedown: onSelectSparePiece(ctrl, s, 'mouseup'),
             touchstart: onSelectSparePiece(ctrl, s, 'touchend'),
             touchmove: e => {
@@ -281,7 +299,7 @@ function sparePieces(ctrl: EditorCtrl, color: Color, _orientation: Color, positi
             },
           },
         },
-        [h('div', [h('piece', { attrs })])],
+        [h('div', [s === 'pointer' || s === 'trash' ? icon(s) : h('piece', { attrs })])],
       );
     }),
   );

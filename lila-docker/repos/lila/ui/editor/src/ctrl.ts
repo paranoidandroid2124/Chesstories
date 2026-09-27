@@ -26,6 +26,10 @@ export default class EditorCtrl {
 
   selected: Prop<Selected>;
 
+  fenInput?: string;
+  fenError = false;
+  resetFen?: string;
+
   initialFen: string;
   turn: Color;
   castlingRights: SquareSet | undefined;
@@ -93,6 +97,9 @@ export default class EditorCtrl {
   }
 
   onChange(): void {
+    this.fenInput = undefined;
+    this.fenError = false;
+    this.resetFen = undefined;
     if (this.guessCastlingToggles) {
       this.castlingToggles = this.computeCastlingToggles();
       this.castlingRights = undefined;
@@ -235,13 +242,23 @@ export default class EditorCtrl {
     this.onChange();
   }
 
-  startPosition = (): boolean => this.setFen(makeFen(defaultPosition('chess').toSetup()));
+  private resetBoard(fen: string): boolean {
+    const previous = this.getFen();
+    const changed = this.setFen(fen);
+    if (changed && previous !== this.getFen()) this.resetFen = previous;
+    this.redraw();
+    return changed;
+  }
+
+  undoReset = (): void => { if (this.resetFen) this.setFen(this.resetFen); };
+
+  startPosition = (): boolean => this.resetBoard(makeFen(defaultPosition('chess').toSetup()));
 
   clearBoard = (): boolean => {
     this.guessCastlingToggles = true;
     const parts = EMPTY_FEN.split(' ');
     parts[1] = this.turn[0];
-    return this.setFen(parts.join(' '));
+    return this.resetBoard(parts.join(' '));
   };
 
   loadNewFen(fen: string | 'prompt'): void {

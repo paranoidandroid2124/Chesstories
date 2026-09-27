@@ -46,3 +46,9 @@
     }
   }
 }
+
+.analyse-controls > .fbt { display: flex; align-items: center; justify-content: center; gap: 0.35rem; padding-inline: 0.5rem; }
+.analyse-controls > .fbt .label { font-size: 0.75rem; }
+@media (max-width: 600px) {
+  .analyse-controls > .fbt { flex-direction: column; gap: 0.2rem; padding: 0.4rem; }
+}

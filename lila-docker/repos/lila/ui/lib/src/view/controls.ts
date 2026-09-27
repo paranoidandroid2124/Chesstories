@@ -1,8 +1,7 @@
 /* eslint no-restricted-syntax:"error" */ // no side effects allowed due to re-export by index.ts
 
 import { h, type Hooks, type VNode, type Attrs } from 'snabbdom';
-import { bind } from './snabbdom';
-import * as licon from '@/licon';
+import { bind, icon } from './snabbdom';
 
 export interface ToggleSettings {
   name: string;
@@ -67,8 +66,8 @@ export function copyMeInput(content: string, inputAttrs: Attrs = {}): VNode {
       attrs: { readonly: true, spellcheck: false, value: content, ...inputAttrs },
     }),
     h('button.copy-me__button.button.button-metal', {
-      attrs: { 'data-icon': licon.Clipboard, title: 'Copy to clipboard' },
-    }),
+      attrs: { title: 'Copy to clipboard', 'aria-label': 'Copy to clipboard' },
+    }, [icon('clipboard')]),
   ]);
 }
 

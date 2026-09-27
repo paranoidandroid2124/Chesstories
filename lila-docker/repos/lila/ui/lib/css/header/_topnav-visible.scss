@@ -58,8 +58,8 @@
       }
 
       &.is-active {
-        background: rgba($c-primary, 0.18);
-        border-color: rgba($c-primary, 0.45);
+        background: color-mix(in srgb, $c-primary 14%, transparent);
+        color: $c-primary;
       }
 
       &:focus-visible {

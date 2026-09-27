@@ -1,7 +1,7 @@
 package views.pages
 
 import lila.app.UiEnv.*
-import lila.ui.Page
+import lila.ui.{ Esm, Page }
 import scala.annotation.unused
 
 object landing:
@@ -9,36 +9,25 @@ object landing:
   def apply()(using @unused ctx: Context): Page =
     Page("Chesstory - Move-by-move chess explanations")
       .css("landing")
+      .js(Esm("site.reviewExample"))
       .wrap: _ =>
         main(cls := "landing")(
           st.section(cls := "landing__intro")(
             div(cls := "landing__grid")(
               div(cls := "landing__copy")(
+                span(cls := "landing__eyebrow")("A little clarity. Every move."),
                 h1("Understand why the game changed"),
                 p(
-                  "Review it move by move. Compare what was played with the reference line, follow the reason " +
-                    "for the move order, and keep the lesson for the next similar position."
+                  "See what your move changed, explore the alternative, and take one useful idea into your next game."
                 ),
                 div(cls := "landing__actions")(
                   a(href := routes.UserAnalysis.index.url, cls := "button landing__primary")(
-                    "Review move by move"
+                    "Review a game"
                   ),
-                  a(href := routes.Main.examples.url, cls := "landing__secondary")("See an explained example")
+                  a(href := "#review-example", cls := "landing__secondary")("Try the example ↓")
                 )
               ),
-              st.aside(cls := "landing__position", aria.label := "Explained position preview")(
-                board,
-                div(cls := "landing__position-meta")(
-                  span("Move under review"),
-                  strong(ReviewExample.move),
-                  p(s"White to move • ${ReviewExample.opening}")
-                ),
-                div(cls := "landing__line")(
-                  span("Why this sequence"),
-                  p(ReviewExample.explanation),
-                  code(s"Reference: ${ReviewExample.line}")
-                )
-              )
+              ReviewExample.widget
             )
           ),
           st.section(cls := "landing__routes", aria.label := "What the review explains")(
@@ -58,11 +47,6 @@ object landing:
             )
           )
         )
-
-  private def board: Frag =
-    chessgroundMini(ReviewExample.fen, chess.White, None)(
-      div(cls := "landing-board", role := "img", aria.label := "Italian Game position after 5...O-O")
-    )
 
   private def route(index: String, title: String, body: String): Frag =
     li(cls := "landing__route")(

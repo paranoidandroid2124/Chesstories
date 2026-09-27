@@ -51,7 +51,13 @@ object auth:
     page.wrap: _ =>
       main(cls := "auth-page")(
         div(cls := "auth-container")(
-          a(cls := "auth-home-link", href := homeUrl)("Chesstory home"),
+          a(cls := "auth-home-link", href := homeUrl, aria.label := "Chesstory home")(img(src := staticAssetUrl("logo/chesstory.svg"), alt := ""), span("Chesstory")),
+          label(cls := "auth-language")(
+            span("Language"),
+            st.select(cls := "js-language-choice", aria.label := "Language")(
+              option(value := "en")("English"), option(value := "ko")("한국어")
+            )
+          ),
           div(cls := "auth-card")(content)
         )
       )
@@ -89,6 +95,7 @@ object auth:
               autocomplete := "current-password",
               required
             ),
+            button(cls := "auth-password-toggle", tpe := "button", attr("aria-controls") := fieldId("password"), attr("aria-pressed") := "false")("Show password"),
             fieldError(formData, "password")
           ),
           label(cls := "auth-remember")(
@@ -102,7 +109,7 @@ object auth:
           ),
           button(cls := "auth-submit", tpe := "submit")(
             "Log In",
-            span(cls := "arrow")(" ->")
+            span(cls := "arrow", aria.hidden := "true")(" →")
           )
         ),
         div(cls := "auth-links")(
@@ -117,7 +124,7 @@ object auth:
     authPage("Sign Up - Chesstory", captchaCsp = captchaEnabled):
       frag(
         h1(cls := "auth-title")("Create your account"),
-        p(cls := "auth-subtitle")("Sign up with email and password."),
+        p(cls := "auth-subtitle")("Choose a username and sign up with your email and password."),
         globalErrors(formData),
         form(id := "signup-form", cls := "auth-form", method := "post", action := routes.Auth.signupPost.url)(
           div(cls := "form-group")(
@@ -143,8 +150,11 @@ object auth:
               placeholder := "username",
               value := (formData("username").value | ""),
               autocomplete := "username",
+              attr("minlength") := "2", attr("maxlength") := "20",
+              attr("aria-describedby") := "auth-username-hint",
               required
             ),
+            p(id := "auth-username-hint", cls := "auth-field-hint")("2–20 characters. This is your public name."),
             fieldError(formData, "username")
           ),
           div(cls := "form-group")(
@@ -155,8 +165,12 @@ object auth:
               name := "password",
               placeholder := "password",
               autocomplete := "new-password",
+              attr("minlength") := "4", attr("maxlength") := "999",
+              attr("aria-describedby") := "auth-password-hint",
               required
             ),
+            p(id := "auth-password-hint", cls := "auth-field-hint")("At least 4 characters. A longer, unique password is recommended."),
+            button(cls := "auth-password-toggle", tpe := "button", attr("aria-controls") := fieldId("password"), attr("aria-pressed") := "false")("Show password"),
             fieldError(formData, "password")
           ),
           if captchaEnabled then
@@ -172,7 +186,7 @@ object auth:
           else emptyFrag,
           button(cls := "auth-submit", tpe := "submit")(
             "Create Account",
-            span(cls := "arrow")(" ->")
+            span(cls := "arrow", aria.hidden := "true")(" →")
           )
         ),
         div(cls := "auth-links")(
@@ -201,7 +215,7 @@ object auth:
           ),
           button(cls := "auth-submit", tpe := "submit")(
             "Send Reset Link",
-            span(cls := "arrow")(" ->")
+            span(cls := "arrow", aria.hidden := "true")(" →")
           )
         ),
         div(cls := "auth-links")(
@@ -230,7 +244,7 @@ object auth:
           ),
           button(cls := "auth-submit", tpe := "submit")(
             "Update Password",
-            span(cls := "arrow")(" ->")
+            span(cls := "arrow", aria.hidden := "true")(" →")
           )
         )
       )
@@ -243,7 +257,7 @@ object auth:
         p(cls := "auth-message")(message),
         a(href := routes.Auth.passwordReset.url, cls := "auth-submit")(
           "Request a new reset link",
-          span(cls := "arrow")(" ->")
+          span(cls := "arrow", aria.hidden := "true")(" →")
         )
       )
 
@@ -269,7 +283,7 @@ object auth:
         form(cls := "auth-form", method := "post", action := formAction)(
           button(cls := "auth-submit", tpe := "submit")(
             "Confirm email",
-            span(cls := "arrow")(" ->")
+            span(cls := "arrow", aria.hidden := "true")(" →")
           )
         )
       )
@@ -282,6 +296,6 @@ object auth:
         p(cls := "auth-message")(message),
         a(href := routes.Auth.login.url, cls := "auth-submit")(
           "Back to login",
-          span(cls := "arrow")(" ->")
+          span(cls := "arrow", aria.hidden := "true")(" →")
         )
       )

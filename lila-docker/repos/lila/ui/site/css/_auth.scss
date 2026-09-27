@@ -17,6 +17,10 @@
   color: var(--c-font);
   font-weight: 700;
   text-decoration: none;
+  gap: 0.5rem;
+  font-size: 1.4rem;
+  letter-spacing: -0.045em;
+  img { width: 28px; height: 28px; }
 
   &:hover {
     color: var(--c-primary);
@@ -31,8 +35,8 @@
 .auth-card {
   padding: clamp(1.25rem, 4vw, 2rem);
   border: 1px solid var(--c-border);
-  border-radius: 6px;
-  background: var(--c-bg-low);
+  border-radius: 16px;
+  background: var(--c-bg);
 }
 
 .auth-title {
@@ -86,7 +90,7 @@
 
 .auth-field-error,
 .auth-error,
-.import-message--error {
+.import-message.import-message--error {
   margin: 0;
   padding: 0.65rem 0.75rem;
   border-left: 3px solid var(--c-bad);
@@ -115,13 +119,17 @@
 }
 
 .auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
   min-height: 44px;
   border: 1px solid var(--c-primary);
-  border-radius: 4px;
+  border-radius: 9px;
   background: var(--c-primary);
-  color: var(--c-bg-page);
+  color: var(--c-over);
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color var(--cs-motion-state, 150ms) ease-out,
@@ -174,9 +182,9 @@ html.light:not(.pro) .auth-submit {
 }
 
 .import-page {
-  width: min(100%, var(---cs-content-max-width, 1200px));
+  width: min(100%, 960px);
   margin: 0 auto;
-  padding: clamp(1rem, 4vw, 3rem) var(---cs-shell-gutter-x, 1rem) 3rem;
+  padding: clamp(1.5rem, 4vw, 3rem) 0 3rem;
 }
 
 .import-shell {
@@ -196,7 +204,8 @@ html.light:not(.pro) .auth-submit {
 
   h1 {
     margin-top: 0.25rem;
-    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-size: clamp(1.875rem, 3vw, 2.5rem);
+    line-height: 1.2;
   }
 
   > p:last-child {
@@ -210,20 +219,21 @@ html.light:not(.pro) .auth-submit {
 .import-account,
 .import-results {
   border: 1px solid var(--c-border);
-  border-radius: 6px;
+  border-radius: 16px;
   background: var(--c-bg-low);
 }
 
 .import-workspace {
+  textarea { width: 100%; min-height: 13rem; padding: 1rem; font: inherit; line-height: 1.6; resize: vertical; }
   &__form {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(14rem, 0.85fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
-    padding: 1rem;
+    padding: clamp(1rem, 3vw, 1.75rem);
   }
 
   &__game-text {
-    grid-row: span 2;
+    min-width: 0;
   }
 
   &__submit {
@@ -256,19 +266,35 @@ html.light:not(.pro) .auth-submit {
 
 .import-file {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 0.65rem;
   margin-top: 0.3rem;
   min-block-size: 44px;
   color: var(--c-font);
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 400;
 
   input {
     min-block-size: 44px;
     min-width: 0;
     color: var(--c-font);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+
+    &::file-selector-button {
+      min-height: 44px;
+      margin-right: 0.75rem;
+      padding: 0.5rem 0.875rem;
+      border: 1px solid var(--c-border);
+      border-radius: 8px;
+      background: var(--c-bg);
+      color: var(--c-font);
+      font: inherit;
+      cursor: pointer;
+    }
   }
 }
 
@@ -464,8 +490,7 @@ html.light:not(.pro) .import-workspace__submit .button {
 }
 
 @media (max-width: 390px) {
-  .auth-page,
-  .import-page {
+  .auth-page {
     padding-inline: 0.75rem;
   }
 
@@ -473,3 +498,19 @@ html.light:not(.pro) .import-workspace__submit .button {
     width: 100%;
   }
 }
+.auth-language {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-block: 0 1rem;
+  font-size: 0.875rem;
+  select { min-height: 44px; }
+}
+
+.auth-password-toggle { justify-self: end; min-height: 44px; padding: 0 0.5rem; border: 0; border-radius: 7px; background: transparent; color: var(--c-link); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.auth-field-hint { margin: 0; font-size: 0.875rem; line-height: 1.6; color: var(--c-font-dim); }
+.import-workspace__status:empty { display: none; }
+#import-submit[aria-disabled='true'] { opacity: 0.55; }
+#import-pgn[aria-invalid='true'] { border-color: var(--c-bad); }
+.import-message--error::before { content: '!'; display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; margin-inline-end: 0.5rem; border: 1px solid currentColor; border-radius: 50%; font-weight: 700; }

@@ -103,8 +103,9 @@ final class Main(
       case Some(post) => Ok.page(views.pages.journal(journalContent.all, Some(post)))
       case None => NotFound.page(views.site.message.notFound(Some("Journal post not found.")))
 
-  def handlerNotFound(msg: Option[String]) =
-    fuccess(NotFound(msg.getOrElse("Not Found")))
+  def handlerNotFound(msg: Option[String])(using RequestHeader): Fu[Result] =
+    makeContext.flatMap: context =>
+      NotFound.page(views.site.message.notFound(msg.filter(_.nonEmpty)))(using context)
 
   def robots = Anon:
     Ok:
@@ -117,7 +118,12 @@ final class Main(
       StaticContent.manifest(env.net)
 
   def contact = Open:
-    Ok.page(views.pages.contact(publicContactEmail))
+    publicContactEmail match
+      case Some(email) => Ok.page(views.pages.contact(Some(email)))
+      case None => Redirect(routes.BetaFeedback.formPage(
+        surface = "general", feature = "contact_general", entrypoint = "contact_page",
+        returnTo = "", notify = false
+      )).toFuccess
 
   def livez = Anon:
     Ok("ok").toFuccess

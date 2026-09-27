@@ -171,6 +171,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
 
   private def toSubmission(input: FormInput): Either[String, Submission] =
     for
+      _ <- Either.cond(input.entrypoint != "contact_page" || input.notes.exists(_.trim.nonEmpty), (), "Enter your message.")
       willingness <- Willingness.from(input.willingness).toRight("Choose how interested you are in a paid plan.")
       priceBand <- parsePriceBand(input.priceBand)
       email <- parseEmail(input.email)
@@ -180,7 +181,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
       entrypoint = input.entrypoint,
       willingness = willingness,
       priceBand = priceBand,
-      notifyRequested = input.notifyRequested,
+      notifyRequested = input.notifyRequested && input.entrypoint != "contact_page",
       email = email,
       notes = input.notes
     )

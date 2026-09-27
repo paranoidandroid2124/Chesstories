@@ -4,7 +4,7 @@ import scala.annotation.unused
 
 import lila.app.JournalContent
 import lila.app.UiEnv.{ *, given }
-import lila.ui.Page
+import lila.ui.{ Esm, Page }
 
 object journal:
 
@@ -13,19 +13,34 @@ object journal:
   ): Page =
     Page(s"${selected.fold("Journal")(post => post.title)} - Chesstory")
       .css("journal")
+      .js(Esm("site.reviewExample"))
       .wrap: _ =>
         main(cls := "journal-page")(
           div(cls := "journal-shell")(
-            header(cls := "journal-head")(
-              h1("Product and study notes"),
-              p(cls := "journal-intro")("Release context, engine limits, and practical notes from the board.")
+            if selected.isDefined then
+              a(href := routes.Main.journal.url, cls := "journal-back")("← Journal index")
+            else
+              header(cls := "journal-head")(
+                h1("Product and study notes"),
+                p(cls := "journal-intro")("Release context, engine limits, and practical notes from the board.")
+              ),
+            selected.isEmpty.option(
+              st.section(cls := "journal-feature")(
+                div(
+                  p(cls := "journal-post-kicker")("A lesson on the board"),
+                  h2("Prepare the idea. Then play it."),
+                  p(ReviewExample.lesson),
+                  a(href := routes.Main.examples.url, cls := "journal-back")("Explore the explained example →")
+                ),
+                ReviewExample.widget
+              )
             ),
-            div(cls := "journal-layout")(
+            div(cls := (if selected.isDefined then "journal-layout" else "journal-layout journal-layout--index"))(
               st.nav(cls := "journal-archive", aria.label := "Journal archive")(
-                h2("Archive"),
+                h2(if selected.isDefined then "Continue reading" else "All notes"),
                 if posts.nonEmpty then
                   ul(
-                    posts.map: post =>
+                    (if selected.isDefined then posts.filterNot(post => selected.exists(_.slug == post.slug)).take(2) else posts).map: post =>
                       li(
                         a(
                           href := routes.Main.journalPost(post.slug).url,
@@ -42,34 +57,11 @@ object journal:
                   )
                 else p(cls := "journal-empty-copy")("No posts published yet.")
               ),
-              selected.fold(
-                posts.headOption.fold(
-                  st.article(cls := "journal-post journal-post--empty")(
-                    header(cls := "journal-post-header")(
-                      p(cls := "journal-post-kicker")("Archive"),
-                      h2("No posts published yet"),
-                      p(cls := "journal-post-deck")("Published notes will appear here and in the archive.")
-                    )
-                  )
-                ): latest =>
-                  st.article(cls := "journal-post journal-post--landing")(
-                    header(cls := "journal-post-header")(
-                      p(cls := "journal-post-kicker")("Latest note"),
-                      h2(latest.title),
-                      p(cls := "journal-post-deck")(latest.summary),
-                      div(cls := "journal-post-meta")(latest.publishedLabel, " · ", latest.readTime)
-                    ),
-                    footer(cls := "journal-post-footer")(
-                      a(href := routes.Main.journalPost(latest.slug).url, cls := "journal-action")(
-                        "Read article"
-                      )
-                    )
-                  )
-              ): post =>
+              selected.map: post =>
                 st.article(cls := "journal-post")(
                   header(cls := "journal-post-header")(
                     p(cls := "journal-post-kicker")(post.kicker),
-                    h2(post.title),
+                    h1(post.title),
                     p(cls := "journal-post-deck")(post.summary),
                     div(cls := "journal-post-meta")(post.publishedLabel, " · ", post.readTime),
                     post.tags.nonEmpty.option(

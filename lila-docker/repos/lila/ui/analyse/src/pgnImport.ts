@@ -37,6 +37,8 @@ const readNode = (
 
 export default function (pgn: string): Partial<AnalyseData> {
   const game = parsePgn(pgn)[0];
+  if (!game || (!game.moves.children.length && !game.headers.has('FEN')))
+    throw new Error('No moves found. Paste a PGN with moves or a FEN header.');
   const headers = new Map(Array.from(game.headers, ([key, value]) => [key.toLowerCase(), value]));
   const variantHeader = headers.get('variant')?.trim() ?? '';
   const rules = parseVariant(headers.get('variant'));

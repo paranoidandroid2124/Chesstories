@@ -7,7 +7,15 @@ $study-rule: 1px solid var(--c-border);
 
 @import 'list-widget';
 
+main.page-menu:has(.study-index) {
+  width: min(100%, var(---cs-content-max-width));
+  margin: 1.5rem auto;
+}
+
 .study-index {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
   width: min(100%, var(---cs-content-max-width, 1180px));
   margin-inline: auto;
 
@@ -31,7 +39,7 @@ $study-rule: 1px solid var(--c-border);
 
     h1 {
       color: $study-text;
-      font-size: clamp(1.45rem, 2.5vw, 2rem);
+      font-size: clamp(1.875rem, 3vw, 2.5rem);
       line-height: 1.15;
     }
 
@@ -135,9 +143,11 @@ $study-rule: 1px solid var(--c-border);
 
   .nostudies {
     display: grid;
-    gap: 0.45rem;
-    padding: 1rem 0;
-    border-block: $study-rule;
+    gap: 1rem;
+    padding: 1rem 0 0;
+    > strong { font-size: 1.5rem; }
+    > .button { justify-self: start; margin-top: 0.5rem; }
+    details > summary { box-sizing: border-box; min-height: 44px; padding-block: 0.75rem; cursor: pointer; font-size: 0.875rem; color: $study-muted; }
 
     strong {
       color: $study-text;
@@ -212,7 +222,7 @@ $study-rule: 1px solid var(--c-border);
 
     dt {
       color: $study-muted;
-      font-size: 0.66rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -301,3 +311,8 @@ $study-rule: 1px solid var(--c-border);
     }
   }
 }
+
+.study-index-shell { width: min(100%, 860px); margin: 2rem auto; }
+.study-index__head:has(.study-index__controls:empty) { grid-template-columns: 1fr; }
+.study-index__preview { font-size: 0.9375rem; color: var(--c-font-dim); }
+.study-index__example { justify-self: start; min-height: 44px; align-content: center; }

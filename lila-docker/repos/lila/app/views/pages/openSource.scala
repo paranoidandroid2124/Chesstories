@@ -66,12 +66,6 @@ object openSource:
                 )
               ),
               footer(cls := "legal-footer")(
-                a(href := routes.Main.privacy.url, cls := "legal-link")("Privacy Policy"),
-                " • ",
-                a(href := routes.Main.terms.url, cls := "legal-link")("Terms of Service"),
-                " • ",
-                a(href := routes.Main.contact.url, cls := "legal-link")("Contact"),
-                " • ",
                 a(href := homeUrl, cls := "legal-link")("Back to Home")
               )
             )

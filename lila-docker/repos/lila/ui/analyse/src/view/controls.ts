@@ -14,7 +14,7 @@ export function renderControls(ctrl: AnalyseCtrl) {
     canJumpNext = !!ctrl.node.children[0],
     columns = displayColumns(),
     touchDevice = isTouchDevice(),
-    mobileUi = columns === 1 && touchDevice,
+    mobileUi = columns === 1,
     activeTool = ctrl.activeControlBarTool();
   const explorerOpen = activeTool === 'opening-explorer';
   const menuOpen = activeTool === 'action-menu';
@@ -38,9 +38,9 @@ export function renderControls(ctrl: AnalyseCtrl) {
       hl('div.jumps', [
         !mobileUi && jumpButton(licon.JumpFirst, 'first', canJumpPrev),
         jumpButton(licon.LessThan, 'prev', canJumpPrev),
-        mobileUi &&
+        mobileUi && touchDevice &&
           !scrubHelpAcknowledged() &&
-          hl('i.scrub-help', { attrs: { 'data-act': 'scrub-help' } }, [icon(licon.InfoCircle as any)]),
+          hl('button.scrub-help', { attrs: { 'data-act': 'scrub-help', type: 'button', 'aria-label': 'How to navigate moves' } }, [icon(licon.InfoCircle as any)]),
         jumpButton(licon.GreaterThan, 'next', canJumpNext),
         !mobileUi &&
           jumpButton(licon.JumpLast, 'last', ctrl.node !== ctrl.mainline[ctrl.mainline.length - 1]),
@@ -62,7 +62,7 @@ export function renderControls(ctrl: AnalyseCtrl) {
             active: activeTool === 'opening-explorer',
           },
         },
-        [icon(licon.Book as any)],
+        [icon(licon.Book as any), hl('span.label', 'Book')],
       ),
       hl(
         'button.fbt',
@@ -76,7 +76,7 @@ export function renderControls(ctrl: AnalyseCtrl) {
             ...(menuOpen ? { 'aria-controls': 'analyse-action-menu' } : {}),
           },
         },
-        [icon(licon.Hamburger as any)],
+        [icon(licon.Gear as any), hl('span.label', 'Settings')],
       ),
     ],
   );
