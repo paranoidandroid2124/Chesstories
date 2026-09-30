@@ -142,7 +142,8 @@ export function createMoveReviewRuntimeSource(execute: MoveReviewEngineExecutor)
           // assessment must not disappear while an optional follow-up uses the last second.
           const reportReserveMs = 1_500;
           const work = snapshot.issuedEngineWork;
-          const optional = work.purpose === 'investigation_comparison' || work.purpose === 'response_comparison';
+          const optional = work.purpose === 'investigation_comparison' || work.purpose === 'response_comparison' ||
+            work.purpose === 'threat_probe';
           const outcome: MoveReviewEngineOutcome = optional && remaining() < work.maxSearchElapsedMs + reportReserveMs
             ? {
                 kind: 'executor_failed', executorElapsedMs: 0, observedNodes: 0, engineTimeMs: 0,

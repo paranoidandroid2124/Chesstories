@@ -83,7 +83,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["kind", "ply_offset", "occurrence_id"],
       "properties": {
-        "kind": {"enum": ["line_end", "checkmate", "stalemate"]},
+        "kind": {"enum": ["line_end", "checkmate", "stalemate", "insufficient_material", "fivefold_repetition", "seventy_five_move_rule"]},
         "ply_offset": {"$ref": "#/$defs/offset"},
         "occurrence_id": {"$ref": "#/$defs/id"}
       }

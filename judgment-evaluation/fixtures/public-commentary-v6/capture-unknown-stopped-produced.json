@@ -1,0 +1,3662 @@
+{
+  "schema_version" : "chesstory.position-commentary.job-status.v6",
+  "request_id" : "request-independent",
+  "job_id" : "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+  "engine_profile" : "sf18-smallnet-t2-h16-v1",
+  "variant" : "standard",
+  "deadline_epoch_ms" : 10000,
+  "focus" : {
+    "kind" : "played_move",
+    "played_move_uci" : "d8d5",
+    "resulting_fen" : "rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 3"
+  },
+  "observations" : {
+    "statements" : [ {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+      "kind" : "capture",
+      "captured_role" : "pawn",
+      "captured_square" : "d5",
+      "recapture" : "unknown"
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:4d6bf22163f36ad910eb31a168a1106d34ae326f0fe358ebec4dc1280314e793", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "attack",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "a2"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "a2"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:4d6bf22163f36ad910eb31a168a1106d34ae326f0fe358ebec4dc1280314e793", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:21240cedca44b8c7c0c2c7549a24ea29fb2440d94c71c88fc839d4f90e3b211a", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "b7"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "b7"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:21240cedca44b8c7c0c2c7549a24ea29fb2440d94c71c88fc839d4f90e3b211a", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:35eee313c80600cb565ab8a45b57548ec1fedb8ebd9757ca2e76c6f7d31d81d5", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "c7"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:35eee313c80600cb565ab8a45b57548ec1fedb8ebd9757ca2e76c6f7d31d81d5", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "c7"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:167ba868b0c266e0407ba5cdd997c898cd44a0e9b1232cffeaa8e2437a4b6cef", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "bishop",
+          "square" : "c8"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:167ba868b0c266e0407ba5cdd997c898cd44a0e9b1232cffeaa8e2437a4b6cef", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "bishop",
+          "square" : "c8"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:3daf6ee44ba8fd1fdc0e341ab97695d20fa8fbc14261453145df3a4860a59292", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "attack",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "d2"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "d2"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:3daf6ee44ba8fd1fdc0e341ab97695d20fa8fbc14261453145df3a4860a59292", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:74e8cea5ad91c2b9112af820513f27818e450a999f4f17700d01d96742547424", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ],
+      "kind" : "piece_control",
+      "relation" : "attack",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "d5"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:74e8cea5ad91c2b9112af820513f27818e450a999f4f17700d01d96742547424", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : null,
+        "state" : "removed",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:1b59edb9ff96674637a16d0b790a4b62cf1a1b36c4f445d4ab096f2bf14444a4", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "e7"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:1b59edb9ff96674637a16d0b790a4b62cf1a1b36c4f445d4ab096f2bf14444a4", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "e7"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:2e970903b3f5a8b2bb354eecc0c47c35f39efcf9a6c7027381e2f5c94722b615", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "king",
+          "square" : "e8"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:2e970903b3f5a8b2bb354eecc0c47c35f39efcf9a6c7027381e2f5c94722b615", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "king",
+          "square" : "e8"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:100367cfae5feff8cf34a44c59e7f2c50ffe29d9646efe76d81217f07e3ed34f", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "f7"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "pawn",
+          "square" : "f7"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:100367cfae5feff8cf34a44c59e7f2c50ffe29d9646efe76d81217f07e3ed34f", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:6ccb505058b07a705e4e955483d23bdbf1a1852c464c0297809fe371796d0006", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "attack",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "g2"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "target" : {
+          "side" : "white",
+          "role" : "pawn",
+          "square" : "g2"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:6ccb505058b07a705e4e955483d23bdbf1a1852c464c0297809fe371796d0006", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:7b2fb2ab4fe23feeba2991e55772c7ed63bf7f06efb4749820177e4dcd068f9e", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "kind" : "piece_control",
+      "relation" : "support",
+      "before" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "king",
+          "square" : "e8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d8"
+        },
+        "state" : "present",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699:geometric_control:7b2fb2ab4fe23feeba2991e55772c7ed63bf7f06efb4749820177e4dcd068f9e", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699" ]
+      },
+      "after" : {
+        "controller" : {
+          "side" : "black",
+          "role" : "king",
+          "square" : "e8"
+        },
+        "target" : {
+          "side" : "black",
+          "role" : "queen",
+          "square" : "d5"
+        },
+        "state" : "absent",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ]
+      }
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:transition:85c389e772d13fc9e73e6e69d00e333ff935d459018635c1f1a86235c075e78a" ],
+      "kind" : "pawn_structure",
+      "phase" : "transition",
+      "before" : {
+        "side" : "white",
+        "square" : "d5",
+        "doubled" : true,
+        "isolated" : false,
+        "passed" : false,
+        "geometrically_protected_passer" : false,
+        "front_square" : "d6",
+        "front_occupant" : null,
+        "component_pawns" : [ "d5" ],
+        "connections" : [ ],
+        "enemy_pawn_contacts" : [ ]
+      },
+      "after" : null,
+      "changed_facets" : [ "removed" ]
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:transition:919c8098ac6a1535f1010d05ced1542c6842d615a11a49f10d2f5a44439ba4b3" ],
+      "kind" : "recapture_resources",
+      "phase" : "after",
+      "captured" : {
+        "side" : "white",
+        "role" : "pawn",
+        "square" : "d5"
+      },
+      "geometric_recapturers" : [ ],
+      "legal_recaptures" : [ ],
+      "restricted_recaptures" : [ ]
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:transition:cdfe0679e5880c4ad937614439fd156e115618a94d67a494adcc00cb9192ab2a" ],
+      "kind" : "pawn_structure",
+      "phase" : "transition",
+      "before" : {
+        "side" : "white",
+        "square" : "d2",
+        "doubled" : true,
+        "isolated" : false,
+        "passed" : false,
+        "geometrically_protected_passer" : false,
+        "front_square" : "d3",
+        "front_occupant" : null,
+        "component_pawns" : [ "a2", "b2", "c2", "d2" ],
+        "connections" : [ {
+          "peer" : "c2",
+          "kind" : "phalanx",
+          "direction" : "peer"
+        } ],
+        "enemy_pawn_contacts" : [ ]
+      },
+      "after" : {
+        "side" : "white",
+        "square" : "d2",
+        "doubled" : false,
+        "isolated" : false,
+        "passed" : false,
+        "geometrically_protected_passer" : false,
+        "front_square" : "d3",
+        "front_occupant" : null,
+        "component_pawns" : [ "a2", "b2", "c2", "d2" ],
+        "connections" : [ {
+          "peer" : "c2",
+          "kind" : "phalanx",
+          "direction" : "peer"
+        } ],
+        "enemy_pawn_contacts" : [ ]
+      },
+      "changed_facets" : [ "doubled" ]
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "side" : "black",
+      "role" : "queen",
+      "from" : "d8",
+      "to" : "d5",
+      "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:structural-delta:move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+      "kind" : "structural_change",
+      "phase" : "transition",
+      "changes" : [ ]
+    } ],
+    "paths" : [ {
+      "id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322",
+      "kind" : "played",
+      "start_fen" : "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2",
+      "moves" : [ "d8d5" ],
+      "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+      "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+      "line_summary" : {
+        "scope" : "observed_line",
+        "perspective" : "black",
+        "premise_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "events" : [ {
+          "ply_offset" : 0,
+          "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+          "move_uci" : "d8d5",
+          "kind" : "capture",
+          "side" : "black",
+          "piece_role" : "queen",
+          "target_role" : "pawn",
+          "square" : "d5"
+        } ],
+        "ending" : {
+          "kind" : "line_end",
+          "ply_offset" : 0,
+          "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081"
+        },
+        "material" : {
+          "events" : [ {
+            "ply_offset" : 0,
+            "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+            "move_uci" : "d8d5",
+            "side" : "black",
+            "from" : "d8",
+            "to" : "d5",
+            "before_role" : "queen",
+            "after_role" : "queen",
+            "promotion_gain_cp" : 0,
+            "delta_cp" : 100,
+            "balance_cp" : 100,
+            "capture" : {
+              "role" : "pawn",
+              "square" : "d5",
+              "value_cp" : 100,
+              "recapture" : "unknown"
+            }
+          } ],
+          "net_cp" : 100,
+          "max_gain_cp" : 100,
+          "max_loss_cp" : 0,
+          "recovered_after_loss" : false
+        }
+      }
+    } ],
+    "positions" : [ {
+      "id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+      "fen" : "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2",
+      "premise_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+      "controls" : {
+        "complete" : true,
+        "pieces" : [ {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          },
+          "squares" : [ "b6" ],
+          "source_ids" : [ "49f2070f5458b054ca0d8be5bc85aedbb56cdce725aa4ddbcd249317ceb0c7cf" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          },
+          "squares" : [ "a7", "b8" ],
+          "source_ids" : [ "540f0369a86b55c13a1b39440d2617e107d4879541537376fd5a107bdd4b343a", "13b8855d88a4cccf7617281dc6af159554892ad84019653792d8004da8ab9176" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          },
+          "squares" : [ "a6", "c6" ],
+          "source_ids" : [ "2b8c5e39f627a00155bb97fbdeb27af6f80c0d51c2d1c849b623c8edc2ec4117", "0c829ef1c088ed3d677ba0fe79db4c534410670ab5e47cb5e03bf568cf13ff12" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          },
+          "squares" : [ "a6", "c6", "d7" ],
+          "source_ids" : [ "8eac0bd93cc76693690993c0ab5e946c6b472c7977b29c7fbcd46ed649010ab1", "b6574857b97a5b2a1f0e0268ca0a0ac69fd5114e36e50994793f590c1939f223", "6322bdd4e38a25ec2724d96f5f9248379b2f46a4acea88156896f6225a16ee06" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          },
+          "squares" : [ "b6", "d6" ],
+          "source_ids" : [ "d807fa6606487d4cd42be73771750d33743f1a5e5a03047ea83974a3314ab5a7", "412c435231cba66459a06ec18a81ff53399de9bacfebc54ac3fcf3c350bcf5df" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          },
+          "squares" : [ "b7", "d7", "e6", "f5", "g4", "h3" ],
+          "source_ids" : [ "a6d3d0a5b705bd3cff7d47bffc68db03c8388948f0995a156f5da8be2be4f44a", "afa02d2bedc774462e58057f316e0bdabe8ba42028d8cebfe81fa66b331089f3", "056261e60b37b9940c7fec326df7ddf60e9a8515a6a63880e8bae248b2582abd", "c87d561b0426d22d17e5e1bd59db3e685806be229ec0176ceaa63d9defd91b14", "7002c9e471a0b222ae2ca35a8ec143cb94a563664495df6857804d5f3c5f2b52", "250179484dc1480e8ed12b437b05ae860a1888e0dabc85786bfb8bd14e575b9f" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          },
+          "squares" : [ "c7", "c8", "d5", "d6", "d7", "e7", "e8" ],
+          "source_ids" : [ "35eee313c80600cb565ab8a45b57548ec1fedb8ebd9757ca2e76c6f7d31d81d5", "167ba868b0c266e0407ba5cdd997c898cd44a0e9b1232cffeaa8e2437a4b6cef", "74e8cea5ad91c2b9112af820513f27818e450a999f4f17700d01d96742547424", "2711762da23e200bd5fda3471014903979b55f76e6e19d30711368259866794c", "0d0dd50699a6ee7d2a57c7bfa2cd1ab5c47f223f1d6558f16f0d3b1065eb5991", "1b59edb9ff96674637a16d0b790a4b62cf1a1b36c4f445d4ab096f2bf14444a4", "2e970903b3f5a8b2bb354eecc0c47c35f39efcf9a6c7027381e2f5c94722b615" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          },
+          "squares" : [ "d6", "f6" ],
+          "source_ids" : [ "e278437675cd563187817fe018648f835bf9d2b2392fd7d53679b6ab0995f1d9", "cc70742947dc6145f88790dd4f7711777daddabfee39728d0904ba92d2fc045b" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          },
+          "squares" : [ "d7", "d8", "e7", "f7", "f8" ],
+          "source_ids" : [ "9f50efdcccaacd8da9015732146156d2257315162cb9697e6cd6d72634c3d292", "7b2fb2ab4fe23feeba2991e55772c7ed63bf7f06efb4749820177e4dcd068f9e", "9dd6051d99ff7216e720c49bbe0d2d6e86f459f163adbb029c17be5f69751e0d", "99e2e4bbf0c3a32c3f043191b85bdda105b64daf50905fb1eaa796da701161be", "61e328c30cc6aa371c22ff297b9ef5cd4306c463c3251ebd6c03af1c7c7bb2eb" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          },
+          "squares" : [ "e6", "g6" ],
+          "source_ids" : [ "7e6250495dc7b35edcabefe7b77ba434fed24c63f7f0cf3f7e8efa0556a70352", "7e0fbcfe47efc9aba119a30ea0116981ad5965a09de5b0090cff95c0698ce765" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          },
+          "squares" : [ "e7", "g7" ],
+          "source_ids" : [ "ffe851a6b828ea0bcbc3639d6e3ad42e48c64c6e827d03eb8354fff034febad5", "f48dfbe760809d28ff7628686b766aa00d88b9577e56c848be5baf1016db255b" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          },
+          "squares" : [ "f6", "h6" ],
+          "source_ids" : [ "27cfa840e178f6861f1301dac07af20c4b81f37be487fe402a1c3b0bcc473487", "eba29cd8b37b57e9696aab831c971836ceeca357b1ae345639cf66d3d34c2404" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          },
+          "squares" : [ "e7", "f6", "h6" ],
+          "source_ids" : [ "322033b7a8b904b6cee1838920584a14736944db0316561491beddfb1a7522e8", "de56b0d1582cbb154364cd6a22c660c01e6fbaab5407940d80fd53a0791bf3de", "4f0b6b61b248147668360ac92346d54184d6f1d8fe202794aaf1dca7747b1680" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          },
+          "squares" : [ "g6" ],
+          "source_ids" : [ "27f9a464196941db330b4f34a072eaada5d262f44b516d60c8d52c329fef9000" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          },
+          "squares" : [ "g8", "h7" ],
+          "source_ids" : [ "05853390cd73b2b56debcee47ef77d3332e8e588ea07fba9710ba53c1cb34cf1", "6b1652e2348c7920350e85712b3ef9771c06e9c42df8a78acf47f87a07db7d89" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          },
+          "squares" : [ "a2", "b1" ],
+          "source_ids" : [ "e14b8e63e9a8303f6c7618c34d3afb141992204cdc20952c89f5f52e88f53c94", "8ab26ade095ed7f375eb5eab8c3135a13da5f53fc838d2eda0cfbf68b35b3df2" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "squares" : [ "b3" ],
+          "source_ids" : [ "a3348986091792287511ded2b3640e4a99e49ec09367fa1f10c000e5db4ea6eb" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          },
+          "squares" : [ "a3", "c3", "d2" ],
+          "source_ids" : [ "d01c402438cab5f0dc6fdffaef332ff786249d7dfd7039e688f9a8d10c34b21f", "4ad5a3def84080f51f268699c70ce0e1bd4d359837bdf5b9c2a353337bd45b80", "89dd12df2f6e1f0102ce317ce6aa65c697ab947dbe1faa000be0f87656768ced" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          },
+          "squares" : [ "a3", "c3" ],
+          "source_ids" : [ "053e045ee723d4441860e6faa59283b184acbd19e3b3b54fe3c14cff6e3c3bc4", "049513cc50a83a10de65d8ec518627a5d5c97cf6119ad3110a13b5150e9d8f63" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          },
+          "squares" : [ "b2", "d2" ],
+          "source_ids" : [ "efab92eb21776811e26b83a324412db24027bd8ca912cc65e35bd623d65b63be", "53de53dd99c29cfc31a3ff314c9f6994748e49269cd0c7aec992efae7ff99022" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          },
+          "squares" : [ "b3", "d3" ],
+          "source_ids" : [ "4e60d2e2233049a9f277be323077b773804a71262ce0cb0e8162406b25251915", "3c95891fef1220c52cffd8d55b1e5509b12162a8c32956f7df8c83e4fdc232de" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "c1", "c2", "d2", "e1", "e2", "f3", "g4", "h5" ],
+          "source_ids" : [ "ab39d6b27b6f26b636cd5b539b80c9bbc752ff819cb8c6470ee1b752334d2d11", "09285d9c9da45c4337bd419efa3e4f7fc89ee169f8d0658d146b045c57e0ea52", "bb4c5aeaa1406b0165182cdca9092aa6c97590dc293a58d6cbb33f8cf6782790", "2da41971f6fede051775b1f310a8f9e7c87c90b182582d4f772827064a572dae", "e14836ce7fac8c9face7a02ae33b6d0d351440a776af17cd4599bfe4693db3b3", "f7b29c63ed264e3f9b21091c1ff4d4079e5f017dbf605eb44364b230009b58d6", "4a12d02f8675d5be437cb4f14cff71dbc90c3828670e0c7f1e18a2882efb9263", "14e302b898326db0b54f4aa35cad1e17d8b27085e2cbca09e0fd8d59e14e60c1" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "squares" : [ "c3", "e3" ],
+          "source_ids" : [ "054567ab384e8cbe538df4834a9646b57b336d2698a78693d99219952cb79661", "1527e06fa91d0a0cfc0c36b5105cc82980fc75bfa3eb7703a9e091c8da82e150" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d5"
+          },
+          "squares" : [ "c6", "e6" ],
+          "source_ids" : [ "2cc3a073f3c358bb25a659c331f1b63796e44b978bc2a97a69d057a1a89b335b", "2bdb0bfd0cae621777d1942861f879a9b9687a5b8d22caa299d325782adbdf22" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          },
+          "squares" : [ "d1", "d2", "e2", "f1", "f2" ],
+          "source_ids" : [ "385c675048e30d769eadc6c61aa1c2c72cef09400f4f2ca23c7bee9dd88367ac", "1e7a96ed3b5baf962549cd69faedd083406b3ce9f78d653e4dbc7abf9ef9d5e9", "025835795f2b2b6ecd562702b42e99de179ee5d21ebac26ac742cf9b085da955", "5b925382cb69b0fb2bd99cc15c7d64cac67b47ac2554c54c2e7f8c93f4795af0", "30d3d750fdafd46bd06bc9d58928dbd4b83a7ba2ac04ccc1a3d4aa6702eade96" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          },
+          "squares" : [ "a6", "b5", "c4", "d3", "e2", "g2" ],
+          "source_ids" : [ "ae9ebcad4e9bed2613e4752085ec4571192ca8375596a3f87b0c5fe4fc0247b3", "b6b5faf84a640084c77853761b060ac74b71284bfcebb342b4a44f011a233785", "a4333fd666f169d7ae7f9b27943add5eaad929bae3d9f055ab758d0d00d3a9c7", "e79186b84cc1c84594463685b16326c76bae8df32a86c8137994e0b1057903d3", "9e256c58d66d415203f7a529f7b5ab73e8c94fcbf5f8b4374eafc055628a1c0a", "fea91146c353c48cf24c8086d00c18340586148e4c02bae5f8556b397da933d6" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "f2"
+          },
+          "squares" : [ "e3", "g3" ],
+          "source_ids" : [ "8b38d2d2e55e17c6b100ecfadb4ec139a95fe0f361b649c1ca573fcf7b448baa", "9e150530c3fb78f5695e08444408ab822d38f26d53133dc5b2a4a4f74bb90a7b" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          },
+          "squares" : [ "e2", "f3", "h3" ],
+          "source_ids" : [ "eebb688e3972cc5eb4b199a96a9d70b5a4d07ed269122963b343cfddefd08000", "7c49e34f6344cbcfb683ad1cd3668e05f1a00970eec230c7959c5e11bcf55606", "7e271570f570a642195298661e5a2c7e6d45fe56c2e30642f98ee708e1d581b4" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "squares" : [ "f3", "h3" ],
+          "source_ids" : [ "8c7d1fca8fc4943f564eb94fa2c58cb60a308a41877629cf2a7d919e120a1e60", "e76c5cdf9900dbed1ab994ab2c7eacf9859d51eaf7cebbd9c71850fb1facd689" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          },
+          "squares" : [ "g1", "h2" ],
+          "source_ids" : [ "bbb29a79a9613affffc2c7fa25695389ec7f3f09cbb1da3de8f38e4d6f035abe", "90e9d45d909d926ad89160a8c75d8fa57a56d9b525400e8f08c9b12c68ccae98" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          },
+          "squares" : [ "g3" ],
+          "source_ids" : [ "d7e840e6e28aa097aad07cfc40057b350b1845ea132a018a042f4199ebcd9439" ]
+        } ]
+      },
+      "rays" : {
+        "complete" : true,
+        "lines" : [ {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          },
+          "squares" : [ "a2", "a3", "a4", "a5", "a6", "a7", "a8" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          }, {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          } ],
+          "source_id" : "090381349886a7574b9cb3885fb69f80e1ff6ecc31b867dc648cfe918010a24c"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          },
+          "squares" : [ "b1", "c1", "d1", "e1", "f1", "g1", "h1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          }, {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          }, {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "ceb53141fc86ba4e78d669d19238bc4763ec8fff6a4213c0ba8f65181d51632e"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          },
+          "squares" : [ "a7", "a6", "a5", "a4", "a3", "a2", "a1" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          }, {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          } ],
+          "source_id" : "62430963f2c4cc05014b472f74ee1c027d25bee827958377ce7a15151068c75d"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          },
+          "squares" : [ "b8", "c8", "d8", "e8", "f8", "g8", "h8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          }, {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          }, {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          } ],
+          "source_id" : "fd0c1f0ef37083d7932fd6fef5e4c835002c71d46f1f47f68b14f9f5c6fe6d81"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          },
+          "squares" : [ "b2", "a3" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          } ],
+          "source_id" : "ca02d1b1100dc6e53348e2b99fbbd2b77f597d57421662747393d4505433c214"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          },
+          "squares" : [ "d2", "e3", "f4", "g5", "h6" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          } ],
+          "source_id" : "e5619b5a4f8ed01e7c9bf0cb52a52fbb85ef11d5d7129a51e87361072d51dab0"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          },
+          "squares" : [ "b7", "a6" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          } ],
+          "source_id" : "9ef48960cea08156baa3db2e281a5323f44096a04ff2aed70b13721f9076d70b"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          },
+          "squares" : [ "d7", "e6", "f5", "g4", "h3" ],
+          "occupants" : [ ],
+          "source_id" : "5f359b6d1febcb0b0d3afe2656c3ef6469e9696db9db1c05e151afb517536bc1"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "c1", "b1", "a1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          } ],
+          "source_id" : "a9eefa2168ee7e0ad3d40409d41c00e18b5131828fe237ca1e19e0fa54c493d0"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "c2", "b3", "a4" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          } ],
+          "source_id" : "c1ec8f35ad51245e85031d93cbff5faae4c3b03304e031c7768be9f90cbf3edb"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "d2", "d3", "d4", "d5", "d6", "d7", "d8" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          }, {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d5"
+          }, {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          } ],
+          "source_id" : "f6e1c6fb832b6db6117a4fc3ed38e87907d30efdc62fccb777840232c0135a14"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "e1", "f1", "g1", "h1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "a6ccfb39d76a72252388a35532f6d8105fac70d8f619a6b84429144ea45f940b"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "e2", "f3", "g4", "h5" ],
+          "occupants" : [ ],
+          "source_id" : "e77079565ea2abbd28e112e3d5df6af958f115333161247cbc786920d062b136"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          },
+          "squares" : [ "c7", "b6", "a5" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          } ],
+          "source_id" : "fcbe2a402cef0893f94dd8d876a05570f7b877a0efa376b65fc2ec92194ad0bc"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          },
+          "squares" : [ "c8", "b8", "a8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          } ],
+          "source_id" : "9b58eb02cd8b9682a0aa1716b2180916c3b98d5dc3404eb4d71077ce6bb70787"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          },
+          "squares" : [ "d7", "d6", "d5", "d4", "d3", "d2", "d1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d5"
+          }, {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          }, {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          } ],
+          "source_id" : "a446f29c4c9da4c5e39157de17822b4f19057ca3ee3b756205bc7aa57f013e69"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          },
+          "squares" : [ "e7", "f6", "g5", "h4" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          } ],
+          "source_id" : "a048226e16ba0d23b9fd9a077a1126cd6aa783e611beaa1d64cd4bf88a4bcbae"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          },
+          "squares" : [ "e8", "f8", "g8", "h8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          } ],
+          "source_id" : "6c8e3b0ed625874c13b35045bdce0122f9a0089290c663da7309ee69ae7034bc"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          },
+          "squares" : [ "e2", "d3", "c4", "b5", "a6" ],
+          "occupants" : [ ],
+          "source_id" : "ec99576396aa956bccc66c24e3ebe191862873b474ee8da06f9aac19effb229a"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          },
+          "squares" : [ "g2", "h3" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          } ],
+          "source_id" : "f70c837820a083668d3931872d6ae7bc9aaafd24598efef4a46b1658d9dedcfb"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          },
+          "squares" : [ "e7", "d6", "c5", "b4", "a3" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          } ],
+          "source_id" : "b67eb21cdc05899bb996bb985b953c7334d756f7dc10c9b1cc285d426eb4fefe"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          },
+          "squares" : [ "g7", "h6" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          } ],
+          "source_id" : "9194dd001c5e078e2cf77332cd548535d75230e3f0e4db78e9ebe754334366a0"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          },
+          "squares" : [ "g1", "f1", "e1", "d1", "c1", "b1", "a1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          }, {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          }, {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          } ],
+          "source_id" : "47f562d5542ca7d4cec9539e1109162b790cab1e6bb3bb45a055980ff693a737"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          },
+          "squares" : [ "h2", "h3", "h4", "h5", "h6", "h7", "h8" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          }, {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          } ],
+          "source_id" : "f89eb7892a1730b5023cc6dc323152b50412c1072d4b80d2a8182f868110d0cb"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          },
+          "squares" : [ "g8", "f8", "e8", "d8", "c8", "b8", "a8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          }, {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          }, {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          } ],
+          "source_id" : "5b1e650ac8f586a8730ac3869ca95f9cd50de1fd927c0e48cf06ad47b517d4d1"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          },
+          "squares" : [ "h7", "h6", "h5", "h4", "h3", "h2", "h1" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          }, {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "787cfdc512bebb7846f0f7edea67478a87d33dd54050956f895444e0c9733ba8"
+        } ]
+      },
+      "legal_moves" : {
+        "complete" : true,
+        "moves" : [ {
+          "uci" : "a7a5",
+          "destination" : "a5",
+          "source_id" : "5b31e442b1ed97bfd7fb79fafcc7aa272be3ead6f93851c1edfe8d1ebc12a5dc",
+          "gives_check" : false
+        }, {
+          "uci" : "a7a6",
+          "destination" : "a6",
+          "source_id" : "6b1613b3618cdc02fc888d77755b10e1fdbe3d75d1cceecfb292fda3d4045cec",
+          "gives_check" : false
+        }, {
+          "uci" : "b7b5",
+          "destination" : "b5",
+          "source_id" : "85f8a944d351875b67d65d1c45cc560ed14f046999b5a2871f9f3b4e491f390b",
+          "gives_check" : false
+        }, {
+          "uci" : "b7b6",
+          "destination" : "b6",
+          "source_id" : "bf677020509de05ac44c0349c6e8842ea39bf572732c3b3daf3964389ced7474",
+          "gives_check" : false
+        }, {
+          "uci" : "b8a6",
+          "destination" : "a6",
+          "source_id" : "135f6aa5a7d25397759160e5c2ae38be2dfbeed3128cfafab9b3a83abe1b59e7",
+          "gives_check" : false
+        }, {
+          "uci" : "b8c6",
+          "destination" : "c6",
+          "source_id" : "2f3eea9d267bb3fdc2999ff39ae1cae50c5069cd6511281bee880e1c0b7720bb",
+          "gives_check" : false
+        }, {
+          "uci" : "b8d7",
+          "destination" : "d7",
+          "source_id" : "490f64dc3c8ebb5ed191a59b95939ca84be726b7e2866edd161d7d503e19fbba",
+          "gives_check" : false
+        }, {
+          "uci" : "c7c5",
+          "destination" : "c5",
+          "source_id" : "ed63b46947cd83e89941f1f0ba11b9cebc557a8565c1740b8f04ebaba4a2a908",
+          "gives_check" : false
+        }, {
+          "uci" : "c7c6",
+          "destination" : "c6",
+          "source_id" : "1abfa0cb2e7e8bfda85705a2de503503f5eaaa6bb81fce185bcb7a5ee1d26c88",
+          "gives_check" : false
+        }, {
+          "uci" : "c8d7",
+          "destination" : "d7",
+          "source_id" : "cc6654cd5ea5480a8bafa0ea4b14aadd16334d9faa358bd3223c11e4dbf6bd1d",
+          "gives_check" : false
+        }, {
+          "uci" : "c8e6",
+          "destination" : "e6",
+          "source_id" : "a16b38f059f60c418ca63d57cacf4a5b4219615b8ec504b3d36aed4adf68c9ec",
+          "gives_check" : false
+        }, {
+          "uci" : "c8f5",
+          "destination" : "f5",
+          "source_id" : "4fc14d2bac46840250ab93c918a73fb5d3da72dda3cd7eab6b71d61c40bdbbfb",
+          "gives_check" : false
+        }, {
+          "uci" : "c8g4",
+          "destination" : "g4",
+          "source_id" : "0656ce9ebad26b5ed200219e875d98dd8e5e7b09206eb29a561846d6aac6f3f5",
+          "gives_check" : false
+        }, {
+          "uci" : "c8h3",
+          "destination" : "h3",
+          "source_id" : "a3414e91e5b39b068f79207eaf964c2a92581b1e57fbf6f4b839a7fbabcb788a",
+          "gives_check" : false
+        }, {
+          "uci" : "d8d5",
+          "destination" : "d5",
+          "source_id" : "89255a231a03228901208ae12853670a983dd6f1e0139af49a390138ff154cd1",
+          "captured_square" : "d5",
+          "gives_check" : false
+        }, {
+          "uci" : "d8d6",
+          "destination" : "d6",
+          "source_id" : "86648cbd4262c93bdbb78c94248853be33304b5ad4423977bfda01a347e29321",
+          "gives_check" : false
+        }, {
+          "uci" : "d8d7",
+          "destination" : "d7",
+          "source_id" : "323890daa7a7fdfbff6105a6cb044ad458afc853ce14297b823b048d1624544c",
+          "gives_check" : false
+        }, {
+          "uci" : "e7e5",
+          "destination" : "e5",
+          "source_id" : "54591d8c95f9fcc7eb0dd04989ca810d32e5ca978af17938b73663a3df528aa3",
+          "gives_check" : false
+        }, {
+          "uci" : "e7e6",
+          "destination" : "e6",
+          "source_id" : "25291a534b17070ae63668c9b9c3a2b32709020cdeac583895aed0829236d798",
+          "gives_check" : false
+        }, {
+          "uci" : "e8d7",
+          "destination" : "d7",
+          "source_id" : "6570d0d5046dc2f303164e282749fe26408085dc2d53c403b1ee2034d4861b78",
+          "gives_check" : false
+        }, {
+          "uci" : "f7f5",
+          "destination" : "f5",
+          "source_id" : "a07121c1fe372425d71351723ba43b92414979fb99c447fbd16f4e2bbc1fdf01",
+          "gives_check" : false
+        }, {
+          "uci" : "f7f6",
+          "destination" : "f6",
+          "source_id" : "32fce6886a29d9170719a77200bc366d00968d5fba35892be130e81943207b61",
+          "gives_check" : false
+        }, {
+          "uci" : "g7g5",
+          "destination" : "g5",
+          "source_id" : "f3617a6f3855cca3705fa8ac4770face697f4f2561a3a7207e0b008256c5300e",
+          "gives_check" : false
+        }, {
+          "uci" : "g7g6",
+          "destination" : "g6",
+          "source_id" : "3ca05c936a64284af61d266877c00804c2b624c9846150d42e10e296732f4d5d",
+          "gives_check" : false
+        }, {
+          "uci" : "g8f6",
+          "destination" : "f6",
+          "source_id" : "afcb058b379f2b06931dc990210af29f8f389d384879a43e2a719c10d8cc85f9",
+          "gives_check" : false
+        }, {
+          "uci" : "g8h6",
+          "destination" : "h6",
+          "source_id" : "d2764bf33a233f0453ec09e8db9e78e3028cc074e46667db5130e9e5dd0a0033",
+          "gives_check" : false
+        }, {
+          "uci" : "h7h5",
+          "destination" : "h5",
+          "source_id" : "2e864c05a9886ce21c331d36a47a7ee3f2ad8010062983a11ebfabbfcd73ec98",
+          "gives_check" : false
+        }, {
+          "uci" : "h7h6",
+          "destination" : "h6",
+          "source_id" : "92e628eb29a5b9b5db45c333cb66087c25273f19c48edf109ea9b62c835fb2c5",
+          "gives_check" : false
+        } ]
+      },
+      "pawn_states" : {
+        "complete" : true,
+        "pawns" : [ {
+          "square" : "a7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "7d02734f0c7c717b61c7cf8d8ce0e51ade685eca450b31a73e9a16d5ead9a5e3", "a687d1e0e3e560b5191fc4d414be7e70ac42ec99f35efc7775d0f7266cc03e8a", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "square" : "b7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "7d02734f0c7c717b61c7cf8d8ce0e51ade685eca450b31a73e9a16d5ead9a5e3", "a8859fa226ec7161bbd165dcc791846da3d75cadb51911d90db0f5ce5afec055", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "square" : "c7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "828418bf92ee63bc1c8b48bd5ba74243999731646d806e6c27b31655295dc9d8", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4", "f6919daef66faa3f617b1145be97465495b0a623173b30aa1105a64f52d9b102" ]
+        }, {
+          "square" : "e7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857", "a1baa45acd311303fad85bdf25dedb1d21365758231f19a1f7ffb6ad3633b2d2", "ef55c7a86ee414e8eca23aaa26330474c329695ff1a40f09f4ecb71e0eeb7f7a" ]
+        }, {
+          "square" : "f7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857", "47eb87634b0e8768f8bc7018f93588251cb7902c8ccc6fb3fd2645b624c44609", "ef55c7a86ee414e8eca23aaa26330474c329695ff1a40f09f4ecb71e0eeb7f7a" ]
+        }, {
+          "square" : "g7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "0d02ac39fd88ba8be3634792f916d0a4b36f050e37e84e5f58363f8807c2677c", "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857", "a76deb76e83c94ee926b1d1ab8321e569151e94e5bc6d7c2173019c3396145e5" ]
+        }, {
+          "square" : "h7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "0d02ac39fd88ba8be3634792f916d0a4b36f050e37e84e5f58363f8807c2677c", "3834253902e262f312c6e58c401a4bd58b543bebdd5c4ea8bc5629574569259f", "785c6f93c303fbec8d8070e0fbdb24f841605b2150bb31238ccd2114f5ce966e" ]
+        }, {
+          "square" : "a2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "53e2b20063599fef2acdd18bf85a3cbc17cf419b59d71f6bddbc5a70bda0a31f", "ccf84dbd7b3a8dc12e3b0dfc28bcc2135e13ef98b9a448247d133e9ea9699f2a" ]
+        }, {
+          "square" : "b2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "4073d4fb68c9af1befdae66adde1e31066f4ce82b1aaf426d277d199302651bb", "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "ccf84dbd7b3a8dc12e3b0dfc28bcc2135e13ef98b9a448247d133e9ea9699f2a" ]
+        }, {
+          "square" : "c2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "6eb84676720f8fa235b1d32d2d858389997386d73b6044192cd77fb038d62594", "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb" ]
+        }, {
+          "square" : "d2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : true,
+          "source_ids" : [ "215d0be34a5a371c9d5bf674198aa68c32f4ea77b0970073a40fb2e892b6176b", "943e3b3356c4b288ff7be00c108039c5f28220ba655f1cc77672c8eaab9fb8c9", "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb" ]
+        }, {
+          "square" : "d5",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : true,
+          "source_ids" : [ "12648b3c65e434bc687a76347136acc7f66f9798ca4fe1c5fa925da584663772", "943e3b3356c4b288ff7be00c108039c5f28220ba655f1cc77672c8eaab9fb8c9", "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb" ]
+        }, {
+          "square" : "f2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "101bdce1e8de908b5f0809a12785cf8d4a55e172c2aee7e6f49935615ba733a7", "4b173ee9003972ee7ae8de2ed0f393880eba66d9d827035dac1d160a6258d5de" ]
+        }, {
+          "square" : "g2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "0c6878eac7d1156a7add4e7196621d48c612be87a0ab78bd169fea4087cff974", "101bdce1e8de908b5f0809a12785cf8d4a55e172c2aee7e6f49935615ba733a7" ]
+        }, {
+          "square" : "h2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "38cbb64360b692ee39bec67c24fdcce7fac67242da176622b102f31da486ccc1", "c36dc7f9daac2449754239c353ba5e746e17c34d1f74a5a9399e46646565e1f5" ]
+        } ]
+      },
+      "pawn_files" : {
+        "complete" : true,
+        "files" : [ {
+          "file" : "a",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "ccf84dbd7b3a8dc12e3b0dfc28bcc2135e13ef98b9a448247d133e9ea9699f2a", "7d02734f0c7c717b61c7cf8d8ce0e51ade685eca450b31a73e9a16d5ead9a5e3" ]
+        }, {
+          "file" : "b",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "file" : "c",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb", "828418bf92ee63bc1c8b48bd5ba74243999731646d806e6c27b31655295dc9d8" ]
+        }, {
+          "file" : "d",
+          "occupancy" : "white_pawns_only",
+          "source_ids" : [ "943e3b3356c4b288ff7be00c108039c5f28220ba655f1cc77672c8eaab9fb8c9", "bcd47235a509c301fb704a28fba1b7ffa4f11494bc8c056d958e9035afc5de76" ]
+        }, {
+          "file" : "e",
+          "occupancy" : "black_pawns_only",
+          "source_ids" : [ "0b46b6e381ef9652ca04591172580be52c197bd3e4fc900eb123b25b39114690", "ef55c7a86ee414e8eca23aaa26330474c329695ff1a40f09f4ecb71e0eeb7f7a" ]
+        }, {
+          "file" : "f",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "101bdce1e8de908b5f0809a12785cf8d4a55e172c2aee7e6f49935615ba733a7", "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857" ]
+        }, {
+          "file" : "g",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "0d02ac39fd88ba8be3634792f916d0a4b36f050e37e84e5f58363f8807c2677c" ]
+        }, {
+          "file" : "h",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "38cbb64360b692ee39bec67c24fdcce7fac67242da176622b102f31da486ccc1", "3834253902e262f312c6e58c401a4bd58b543bebdd5c4ea8bc5629574569259f" ]
+        } ]
+      },
+      "pawn_advances" : {
+        "complete" : true,
+        "paths" : [ {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "destination" : "a3",
+          "traversed_squares" : [ "a3" ],
+          "source_id" : "893f024c52da1aef5ce0753be82df2e0c8bdcbacaecd5cd5c5ee133d48228cfb"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "destination" : "a4",
+          "traversed_squares" : [ "a3", "a4" ],
+          "source_id" : "0a9105a53f7246c50b49bdbc4511e2ccfeb91326acfaae5b305b2def86aadc30"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          },
+          "destination" : "a5",
+          "traversed_squares" : [ "a6", "a5" ],
+          "source_id" : "009d4281db7d0cad78615bb7a4a90d11d5950e9e230d7682e70eef2df87fae34"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          },
+          "destination" : "a6",
+          "traversed_squares" : [ "a6" ],
+          "source_id" : "dd659da2909ecec46fedab218a442bf4c6939e4efe62135aaa666f5b3ab54129"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          },
+          "destination" : "b3",
+          "traversed_squares" : [ "b3" ],
+          "source_id" : "a3905c83ea45bac00c95440704f8b48131db2b390f03b8b47983c9ffd9548e57"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          },
+          "destination" : "b4",
+          "traversed_squares" : [ "b3", "b4" ],
+          "source_id" : "55f566e875ad0ea3966c80f2bb2b113682a1bb3a14e098c90c85221c2ddd8a83"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          },
+          "destination" : "b5",
+          "traversed_squares" : [ "b6", "b5" ],
+          "source_id" : "a5f922dba5371f9c17879fa65a7e36ded71e72923d2353d4062c27e6d145a03c"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          },
+          "destination" : "b6",
+          "traversed_squares" : [ "b6" ],
+          "source_id" : "19010923826d596080ae973734dc0a2ed304cff5a26171a4de78e5fe716efcbb"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          },
+          "destination" : "c3",
+          "traversed_squares" : [ "c3" ],
+          "source_id" : "0f1916fc785fcd5098bd159174ecd493a983e1be499f3e17c6e29d8447ce2879"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          },
+          "destination" : "c4",
+          "traversed_squares" : [ "c3", "c4" ],
+          "source_id" : "37f0a315e1aa40fffb9b98f87a574fe1797585aeca4dbac93f9cf3b3a0be7abb"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          },
+          "destination" : "c5",
+          "traversed_squares" : [ "c6", "c5" ],
+          "source_id" : "10390de24fe11cfe2dffd66607e4cb4cd7a3665df10a8bd2e5495187bda65292"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          },
+          "destination" : "c6",
+          "traversed_squares" : [ "c6" ],
+          "source_id" : "2e73fed050df96834d7b20d321fe05b7522782909a27092b90a58f8da545a16c"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "destination" : "d3",
+          "traversed_squares" : [ "d3" ],
+          "source_id" : "0f7d24d925855badf865f8b43189937f7df3b940063be39f74e61b90e1dc014b"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "destination" : "d4",
+          "traversed_squares" : [ "d3", "d4" ],
+          "source_id" : "23f649b19feed8a9640e96834823dabfc7d8794a5ccc5a20f5ba0879e1487767"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d5"
+          },
+          "destination" : "d6",
+          "traversed_squares" : [ "d6" ],
+          "source_id" : "0234cc6a91b723130eea8860df5c5e206ddaff7f2ca62ea02a7fb3baea2d950f"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          },
+          "destination" : "e5",
+          "traversed_squares" : [ "e6", "e5" ],
+          "source_id" : "092434f443738c2a4f2f58b10021b3a59991c5ae3c893c71fce3b6f96f731a36"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          },
+          "destination" : "e6",
+          "traversed_squares" : [ "e6" ],
+          "source_id" : "da51887bce0730a8dc5af69a1677976d02b39e71d432508eaa71081fb07c7064"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "f2"
+          },
+          "destination" : "f3",
+          "traversed_squares" : [ "f3" ],
+          "source_id" : "a480b02039a4e1e6a5637e045ad7c87388ef79d4fe67ea85912d7181a843bc04"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "f2"
+          },
+          "destination" : "f4",
+          "traversed_squares" : [ "f3", "f4" ],
+          "source_id" : "e8d569ac279fbcb00d200970c849e2b8224d182f8b473eb61ef69c923f683909"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          },
+          "destination" : "f5",
+          "traversed_squares" : [ "f6", "f5" ],
+          "source_id" : "dd4ebfb61225a62e15ee3001dbcb715c8d63c80262823a5a31cf7ad2c4d93374"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          },
+          "destination" : "f6",
+          "traversed_squares" : [ "f6" ],
+          "source_id" : "3b1a12e1a40f2f34f00f8054a7c75dad060ef3e4b913fca548b8683da998c7c2"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "destination" : "g3",
+          "traversed_squares" : [ "g3" ],
+          "source_id" : "7b3bff588e93d9a82f6426f8e4790b0fed5b86648b824de4297bd62447b2f73b"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "destination" : "g4",
+          "traversed_squares" : [ "g3", "g4" ],
+          "source_id" : "02819a24221b674bce18eff2e23a8b2ac10ccd47b3e9bed491743ba5dbae0a5e"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          },
+          "destination" : "g5",
+          "traversed_squares" : [ "g6", "g5" ],
+          "source_id" : "b99dd8c4e246c72846cb1c284e7808bc94d5bb4b9beab0ddb7e1c0c1ee183042"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          },
+          "destination" : "g6",
+          "traversed_squares" : [ "g6" ],
+          "source_id" : "0b0e44d3fe5f9bb4658f25d94f8c3ddac121e9a527788ed0ee72451b7ef02e61"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          },
+          "destination" : "h3",
+          "traversed_squares" : [ "h3" ],
+          "source_id" : "56592e0c8d27dd79831aef6aba74c30fa1782fc284643519c8b0610002da076a"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          },
+          "destination" : "h4",
+          "traversed_squares" : [ "h3", "h4" ],
+          "source_id" : "16594dcd2ec9a2fcdde5a26fee2f8152b7be5c3fd32db53f38362752d0198451"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          },
+          "destination" : "h5",
+          "traversed_squares" : [ "h6", "h5" ],
+          "source_id" : "423671f65d502c3c8df4370881598d0efebf639cb0fae0d3a8f4f8d6cf0af331"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          },
+          "destination" : "h6",
+          "traversed_squares" : [ "h6" ],
+          "source_id" : "1e4f87ad406363517e789e7c9d307fbbedda8abc93db05e7f35865fb52ee1bcf"
+        } ]
+      }
+    }, {
+      "id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+      "fen" : "rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 3",
+      "premise_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+      "controls" : {
+        "complete" : true,
+        "pieces" : [ {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          },
+          "squares" : [ "b6" ],
+          "source_ids" : [ "49f2070f5458b054ca0d8be5bc85aedbb56cdce725aa4ddbcd249317ceb0c7cf" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          },
+          "squares" : [ "a7", "b8" ],
+          "source_ids" : [ "540f0369a86b55c13a1b39440d2617e107d4879541537376fd5a107bdd4b343a", "13b8855d88a4cccf7617281dc6af159554892ad84019653792d8004da8ab9176" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          },
+          "squares" : [ "a6", "c6" ],
+          "source_ids" : [ "2b8c5e39f627a00155bb97fbdeb27af6f80c0d51c2d1c849b623c8edc2ec4117", "0c829ef1c088ed3d677ba0fe79db4c534410670ab5e47cb5e03bf568cf13ff12" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          },
+          "squares" : [ "a6", "c6", "d7" ],
+          "source_ids" : [ "8eac0bd93cc76693690993c0ab5e946c6b472c7977b29c7fbcd46ed649010ab1", "b6574857b97a5b2a1f0e0268ca0a0ac69fd5114e36e50994793f590c1939f223", "6322bdd4e38a25ec2724d96f5f9248379b2f46a4acea88156896f6225a16ee06" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          },
+          "squares" : [ "b6", "d6" ],
+          "source_ids" : [ "d807fa6606487d4cd42be73771750d33743f1a5e5a03047ea83974a3314ab5a7", "412c435231cba66459a06ec18a81ff53399de9bacfebc54ac3fcf3c350bcf5df" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          },
+          "squares" : [ "b7", "d7", "e6", "f5", "g4", "h3" ],
+          "source_ids" : [ "a6d3d0a5b705bd3cff7d47bffc68db03c8388948f0995a156f5da8be2be4f44a", "afa02d2bedc774462e58057f316e0bdabe8ba42028d8cebfe81fa66b331089f3", "056261e60b37b9940c7fec326df7ddf60e9a8515a6a63880e8bae248b2582abd", "c87d561b0426d22d17e5e1bd59db3e685806be229ec0176ceaa63d9defd91b14", "7002c9e471a0b222ae2ca35a8ec143cb94a563664495df6857804d5f3c5f2b52", "250179484dc1480e8ed12b437b05ae860a1888e0dabc85786bfb8bd14e575b9f" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "a2", "a5", "b3", "b5", "b7", "c4", "c5", "c6", "d2", "d3", "d4", "d6", "d7", "d8", "e4", "e5", "e6", "f3", "f5", "f7", "g2", "g5", "h5" ],
+          "source_ids" : [ "4d6bf22163f36ad910eb31a168a1106d34ae326f0fe358ebec4dc1280314e793", "ae485f07e701618420639a6de69884017bdc429146e3c1535e7302cba7a9dd9c", "7d4c65771bf189564c6e1887640416c4a864fc6c1fd5b5965623a2f9c5ed2d23", "a80e604c382b0068901bf82307af690fba5065bf2ece506b196d21a59b2a37d7", "21240cedca44b8c7c0c2c7549a24ea29fb2440d94c71c88fc839d4f90e3b211a", "d5360e150d6808666da9abb454672bda2f6a6a7380833aa44779b68c3b266673", "644182b428aec49890c0e107fcd470455f03b74feda36efdaad86b07befdd954", "0283700c4fa12f90985c984727ed0ea2246c315f5583bb73e0f82c3a4c466921", "3daf6ee44ba8fd1fdc0e341ab97695d20fa8fbc14261453145df3a4860a59292", "d9f2ffb76029b28ac3aa2e31ecc56ab361149409fdf9ad5d3bfaa80391b083d8", "42b7fb22ae403f8b0a4b31f8cf17d4deaa541f18dfdc6561a297e6e8409b64c6", "43859fd5109599d483d5c78764c7b0db710fc043c5b8b5ec05f0f43f0be3500a", "897a9135beccc3e6b81ca5aaa86885679ef7c1f83ba2e71503c1d554f7cae38c", "d58f8c21de762661df449da8f9c6f055a0e4f4940d666d3bc0fb4cc779807384", "b42e34dfb0b653044b3b6ee637ded9bb7c0822a17683e0b3b1a5e6cab95e0d24", "f292845db3be546f0ce0012e571ace3f865128eeda259971c4eaa841e6e3981b", "734abc415c70b595994174cff727397ae9ca27e989d900e77c3f412cdf26089e", "fd940a0cfb78f73c9f56a683234f2240fa14c3dada6f5073526292bbb44f0eed", "7727909903e73087f3426bc2fa69677c1c2ab18c76e4fbd60efecf355dcbdaa7", "100367cfae5feff8cf34a44c59e7f2c50ffe29d9646efe76d81217f07e3ed34f", "6ccb505058b07a705e4e955483d23bdbf1a1852c464c0297809fe371796d0006", "a72048f33c8470a9bf146ec2346067db5d4a6e9db5e0f6d57dc606a76d6178b4", "e5a61e7c502a503f7cd893fb04d5e0ea9de27ef152b1a515f9108a13313c2faf" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          },
+          "squares" : [ "d6", "f6" ],
+          "source_ids" : [ "e278437675cd563187817fe018648f835bf9d2b2392fd7d53679b6ab0995f1d9", "cc70742947dc6145f88790dd4f7711777daddabfee39728d0904ba92d2fc045b" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          },
+          "squares" : [ "d7", "d8", "e7", "f7", "f8" ],
+          "source_ids" : [ "9f50efdcccaacd8da9015732146156d2257315162cb9697e6cd6d72634c3d292", "7b2fb2ab4fe23feeba2991e55772c7ed63bf7f06efb4749820177e4dcd068f9e", "9dd6051d99ff7216e720c49bbe0d2d6e86f459f163adbb029c17be5f69751e0d", "99e2e4bbf0c3a32c3f043191b85bdda105b64daf50905fb1eaa796da701161be", "61e328c30cc6aa371c22ff297b9ef5cd4306c463c3251ebd6c03af1c7c7bb2eb" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          },
+          "squares" : [ "e6", "g6" ],
+          "source_ids" : [ "7e6250495dc7b35edcabefe7b77ba434fed24c63f7f0cf3f7e8efa0556a70352", "7e0fbcfe47efc9aba119a30ea0116981ad5965a09de5b0090cff95c0698ce765" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          },
+          "squares" : [ "e7", "g7" ],
+          "source_ids" : [ "ffe851a6b828ea0bcbc3639d6e3ad42e48c64c6e827d03eb8354fff034febad5", "f48dfbe760809d28ff7628686b766aa00d88b9577e56c848be5baf1016db255b" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          },
+          "squares" : [ "f6", "h6" ],
+          "source_ids" : [ "27cfa840e178f6861f1301dac07af20c4b81f37be487fe402a1c3b0bcc473487", "eba29cd8b37b57e9696aab831c971836ceeca357b1ae345639cf66d3d34c2404" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          },
+          "squares" : [ "e7", "f6", "h6" ],
+          "source_ids" : [ "322033b7a8b904b6cee1838920584a14736944db0316561491beddfb1a7522e8", "de56b0d1582cbb154364cd6a22c660c01e6fbaab5407940d80fd53a0791bf3de", "4f0b6b61b248147668360ac92346d54184d6f1d8fe202794aaf1dca7747b1680" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          },
+          "squares" : [ "g6" ],
+          "source_ids" : [ "27f9a464196941db330b4f34a072eaada5d262f44b516d60c8d52c329fef9000" ]
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          },
+          "squares" : [ "g8", "h7" ],
+          "source_ids" : [ "05853390cd73b2b56debcee47ef77d3332e8e588ea07fba9710ba53c1cb34cf1", "6b1652e2348c7920350e85712b3ef9771c06e9c42df8a78acf47f87a07db7d89" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          },
+          "squares" : [ "a2", "b1" ],
+          "source_ids" : [ "e14b8e63e9a8303f6c7618c34d3afb141992204cdc20952c89f5f52e88f53c94", "8ab26ade095ed7f375eb5eab8c3135a13da5f53fc838d2eda0cfbf68b35b3df2" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "squares" : [ "b3" ],
+          "source_ids" : [ "a3348986091792287511ded2b3640e4a99e49ec09367fa1f10c000e5db4ea6eb" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          },
+          "squares" : [ "a3", "c3", "d2" ],
+          "source_ids" : [ "d01c402438cab5f0dc6fdffaef332ff786249d7dfd7039e688f9a8d10c34b21f", "4ad5a3def84080f51f268699c70ce0e1bd4d359837bdf5b9c2a353337bd45b80", "89dd12df2f6e1f0102ce317ce6aa65c697ab947dbe1faa000be0f87656768ced" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          },
+          "squares" : [ "a3", "c3" ],
+          "source_ids" : [ "053e045ee723d4441860e6faa59283b184acbd19e3b3b54fe3c14cff6e3c3bc4", "049513cc50a83a10de65d8ec518627a5d5c97cf6119ad3110a13b5150e9d8f63" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          },
+          "squares" : [ "b2", "d2" ],
+          "source_ids" : [ "efab92eb21776811e26b83a324412db24027bd8ca912cc65e35bd623d65b63be", "53de53dd99c29cfc31a3ff314c9f6994748e49269cd0c7aec992efae7ff99022" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          },
+          "squares" : [ "b3", "d3" ],
+          "source_ids" : [ "4e60d2e2233049a9f277be323077b773804a71262ce0cb0e8162406b25251915", "3c95891fef1220c52cffd8d55b1e5509b12162a8c32956f7df8c83e4fdc232de" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "c1", "c2", "d2", "e1", "e2", "f3", "g4", "h5" ],
+          "source_ids" : [ "ab39d6b27b6f26b636cd5b539b80c9bbc752ff819cb8c6470ee1b752334d2d11", "09285d9c9da45c4337bd419efa3e4f7fc89ee169f8d0658d146b045c57e0ea52", "bb4c5aeaa1406b0165182cdca9092aa6c97590dc293a58d6cbb33f8cf6782790", "2da41971f6fede051775b1f310a8f9e7c87c90b182582d4f772827064a572dae", "e14836ce7fac8c9face7a02ae33b6d0d351440a776af17cd4599bfe4693db3b3", "f7b29c63ed264e3f9b21091c1ff4d4079e5f017dbf605eb44364b230009b58d6", "4a12d02f8675d5be437cb4f14cff71dbc90c3828670e0c7f1e18a2882efb9263", "14e302b898326db0b54f4aa35cad1e17d8b27085e2cbca09e0fd8d59e14e60c1" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "squares" : [ "c3", "e3" ],
+          "source_ids" : [ "054567ab384e8cbe538df4834a9646b57b336d2698a78693d99219952cb79661", "1527e06fa91d0a0cfc0c36b5105cc82980fc75bfa3eb7703a9e091c8da82e150" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          },
+          "squares" : [ "d1", "d2", "e2", "f1", "f2" ],
+          "source_ids" : [ "385c675048e30d769eadc6c61aa1c2c72cef09400f4f2ca23c7bee9dd88367ac", "1e7a96ed3b5baf962549cd69faedd083406b3ce9f78d653e4dbc7abf9ef9d5e9", "025835795f2b2b6ecd562702b42e99de179ee5d21ebac26ac742cf9b085da955", "5b925382cb69b0fb2bd99cc15c7d64cac67b47ac2554c54c2e7f8c93f4795af0", "30d3d750fdafd46bd06bc9d58928dbd4b83a7ba2ac04ccc1a3d4aa6702eade96" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          },
+          "squares" : [ "a6", "b5", "c4", "d3", "e2", "g2" ],
+          "source_ids" : [ "ae9ebcad4e9bed2613e4752085ec4571192ca8375596a3f87b0c5fe4fc0247b3", "b6b5faf84a640084c77853761b060ac74b71284bfcebb342b4a44f011a233785", "a4333fd666f169d7ae7f9b27943add5eaad929bae3d9f055ab758d0d00d3a9c7", "e79186b84cc1c84594463685b16326c76bae8df32a86c8137994e0b1057903d3", "9e256c58d66d415203f7a529f7b5ab73e8c94fcbf5f8b4374eafc055628a1c0a", "fea91146c353c48cf24c8086d00c18340586148e4c02bae5f8556b397da933d6" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "f2"
+          },
+          "squares" : [ "e3", "g3" ],
+          "source_ids" : [ "8b38d2d2e55e17c6b100ecfadb4ec139a95fe0f361b649c1ca573fcf7b448baa", "9e150530c3fb78f5695e08444408ab822d38f26d53133dc5b2a4a4f74bb90a7b" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          },
+          "squares" : [ "e2", "f3", "h3" ],
+          "source_ids" : [ "eebb688e3972cc5eb4b199a96a9d70b5a4d07ed269122963b343cfddefd08000", "7c49e34f6344cbcfb683ad1cd3668e05f1a00970eec230c7959c5e11bcf55606", "7e271570f570a642195298661e5a2c7e6d45fe56c2e30642f98ee708e1d581b4" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "squares" : [ "f3", "h3" ],
+          "source_ids" : [ "8c7d1fca8fc4943f564eb94fa2c58cb60a308a41877629cf2a7d919e120a1e60", "e76c5cdf9900dbed1ab994ab2c7eacf9859d51eaf7cebbd9c71850fb1facd689" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          },
+          "squares" : [ "g1", "h2" ],
+          "source_ids" : [ "bbb29a79a9613affffc2c7fa25695389ec7f3f09cbb1da3de8f38e4d6f035abe", "90e9d45d909d926ad89160a8c75d8fa57a56d9b525400e8f08c9b12c68ccae98" ]
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          },
+          "squares" : [ "g3" ],
+          "source_ids" : [ "d7e840e6e28aa097aad07cfc40057b350b1845ea132a018a042f4199ebcd9439" ]
+        } ]
+      },
+      "rays" : {
+        "complete" : true,
+        "lines" : [ {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          },
+          "squares" : [ "a2", "a3", "a4", "a5", "a6", "a7", "a8" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          }, {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          } ],
+          "source_id" : "090381349886a7574b9cb3885fb69f80e1ff6ecc31b867dc648cfe918010a24c"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          },
+          "squares" : [ "b1", "c1", "d1", "e1", "f1", "g1", "h1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          }, {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          }, {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "ceb53141fc86ba4e78d669d19238bc4763ec8fff6a4213c0ba8f65181d51632e"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          },
+          "squares" : [ "a7", "a6", "a5", "a4", "a3", "a2", "a1" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          }, {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          } ],
+          "source_id" : "62430963f2c4cc05014b472f74ee1c027d25bee827958377ce7a15151068c75d"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          },
+          "squares" : [ "b8", "c8", "d8", "e8", "f8", "g8", "h8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          }, {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          } ],
+          "source_id" : "057b25cc6e53f6cc838ea8ced83287a22cd487c26723f82d007fd6b6eb357bf4"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          },
+          "squares" : [ "b2", "a3" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          } ],
+          "source_id" : "ca02d1b1100dc6e53348e2b99fbbd2b77f597d57421662747393d4505433c214"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          },
+          "squares" : [ "d2", "e3", "f4", "g5", "h6" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          } ],
+          "source_id" : "e5619b5a4f8ed01e7c9bf0cb52a52fbb85ef11d5d7129a51e87361072d51dab0"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          },
+          "squares" : [ "b7", "a6" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          } ],
+          "source_id" : "9ef48960cea08156baa3db2e281a5323f44096a04ff2aed70b13721f9076d70b"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          },
+          "squares" : [ "d7", "e6", "f5", "g4", "h3" ],
+          "occupants" : [ ],
+          "source_id" : "5f359b6d1febcb0b0d3afe2656c3ef6469e9696db9db1c05e151afb517536bc1"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "c1", "b1", "a1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          } ],
+          "source_id" : "a9eefa2168ee7e0ad3d40409d41c00e18b5131828fe237ca1e19e0fa54c493d0"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "c2", "b3", "a4" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          } ],
+          "source_id" : "c1ec8f35ad51245e85031d93cbff5faae4c3b03304e031c7768be9f90cbf3edb"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "d2", "d3", "d4", "d5", "d6", "d7", "d8" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          }, {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          } ],
+          "source_id" : "4d7fe20a1d909141389233121e3b9bb6e1530b6f78179a44d055c99e67e09721"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "e1", "f1", "g1", "h1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "a6ccfb39d76a72252388a35532f6d8105fac70d8f619a6b84429144ea45f940b"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          },
+          "squares" : [ "e2", "f3", "g4", "h5" ],
+          "occupants" : [ ],
+          "source_id" : "e77079565ea2abbd28e112e3d5df6af958f115333161247cbc786920d062b136"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "c4", "b3", "a2" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          } ],
+          "source_id" : "8ed22b71504cd332ec32f37e0c31b99d0c2e02660300fdb19c192aa614cb05c0"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "c5", "b5", "a5" ],
+          "occupants" : [ ],
+          "source_id" : "1d3f9bb14b5edbd6efc017c7111eee59178afcb10b6fbcd67001143b0f612c54"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "c6", "b7", "a8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          } ],
+          "source_id" : "db9ae023b2774f8a1aae6bc1577a0553230054c3203e0e5e2736f44b6b2120dd"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "d4", "d3", "d2", "d1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          }, {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          } ],
+          "source_id" : "dc37b608e69b58607a8aa9c2ab2746dcaa6e115d83e43a914408497b47e64ed9"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "d6", "d7", "d8" ],
+          "occupants" : [ ],
+          "source_id" : "6a732384ccb8c946a9129c22ad690cc01e3fa52a9f7daa93e98c4b41847c3d04"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "e4", "f3", "g2", "h1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "8b4aa8201cf5495b47be37a646d7ef5a8259aadf4d770619f7f7f8c9e9013ea3"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "e5", "f5", "g5", "h5" ],
+          "occupants" : [ ],
+          "source_id" : "7a88cb9d0ab71cc2fef14417123578429854b116b0591708ea5b0efff7efc8ac"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "squares" : [ "e6", "f7", "g8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          } ],
+          "source_id" : "286c8dbd3320ed0ed1a8c17989e1f384ddc1d1d2e94f160e20c7f2cc4fb15566"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          },
+          "squares" : [ "e2", "d3", "c4", "b5", "a6" ],
+          "occupants" : [ ],
+          "source_id" : "ec99576396aa956bccc66c24e3ebe191862873b474ee8da06f9aac19effb229a"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          },
+          "squares" : [ "g2", "h3" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          } ],
+          "source_id" : "f70c837820a083668d3931872d6ae7bc9aaafd24598efef4a46b1658d9dedcfb"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          },
+          "squares" : [ "e7", "d6", "c5", "b4", "a3" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          } ],
+          "source_id" : "b67eb21cdc05899bb996bb985b953c7334d756f7dc10c9b1cc285d426eb4fefe"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          },
+          "squares" : [ "g7", "h6" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          } ],
+          "source_id" : "9194dd001c5e078e2cf77332cd548535d75230e3f0e4db78e9ebe754334366a0"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          },
+          "squares" : [ "g1", "f1", "e1", "d1", "c1", "b1", "a1" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "g1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "f1"
+          }, {
+            "side" : "white",
+            "role" : "king",
+            "square" : "e1"
+          }, {
+            "side" : "white",
+            "role" : "queen",
+            "square" : "d1"
+          }, {
+            "side" : "white",
+            "role" : "bishop",
+            "square" : "c1"
+          }, {
+            "side" : "white",
+            "role" : "knight",
+            "square" : "b1"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "a1"
+          } ],
+          "source_id" : "47f562d5542ca7d4cec9539e1109162b790cab1e6bb3bb45a055980ff693a737"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          },
+          "squares" : [ "h2", "h3", "h4", "h5", "h6", "h7", "h8" ],
+          "occupants" : [ {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          }, {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          } ],
+          "source_id" : "f89eb7892a1730b5023cc6dc323152b50412c1072d4b80d2a8182f868110d0cb"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          },
+          "squares" : [ "g8", "f8", "e8", "d8", "c8", "b8", "a8" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "g8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "f8"
+          }, {
+            "side" : "black",
+            "role" : "king",
+            "square" : "e8"
+          }, {
+            "side" : "black",
+            "role" : "bishop",
+            "square" : "c8"
+          }, {
+            "side" : "black",
+            "role" : "knight",
+            "square" : "b8"
+          }, {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "a8"
+          } ],
+          "source_id" : "54cc1e8a401bb0a79771cc54c7ec6eb2a5a0e060e713f1edfb0a3197befcc965"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "rook",
+            "square" : "h8"
+          },
+          "squares" : [ "h7", "h6", "h5", "h4", "h3", "h2", "h1" ],
+          "occupants" : [ {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          }, {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          }, {
+            "side" : "white",
+            "role" : "rook",
+            "square" : "h1"
+          } ],
+          "source_id" : "787cfdc512bebb7846f0f7edea67478a87d33dd54050956f895444e0c9733ba8"
+        } ]
+      },
+      "legal_moves" : {
+        "complete" : true,
+        "moves" : [ {
+          "uci" : "a2a3",
+          "destination" : "a3",
+          "source_id" : "ffd76648d1f651de08ece5bf8cd48727d8e834aa40c2f9ed9dc0d6c169374ef4",
+          "gives_check" : false
+        }, {
+          "uci" : "a2a4",
+          "destination" : "a4",
+          "source_id" : "1f8ee383b2993b67257f116b7ee0d6a687f09735f823eabb7204aece4bc5c052",
+          "gives_check" : false
+        }, {
+          "uci" : "b1a3",
+          "destination" : "a3",
+          "source_id" : "e51c3e6ce808c87b8ac9f6f828882a3649742cc8429e1a0cd89e5517350fac33",
+          "gives_check" : false
+        }, {
+          "uci" : "b1c3",
+          "destination" : "c3",
+          "source_id" : "bcc2a94d17e7dc8ecc983a9f9e82282fc4101115bb6fc43df4d89f08b250deb8",
+          "gives_check" : false
+        }, {
+          "uci" : "b2b3",
+          "destination" : "b3",
+          "source_id" : "5cdb4370dec00cebbd4a9749183dba02e39800f7365bac140198559d3f44d73d",
+          "gives_check" : false
+        }, {
+          "uci" : "b2b4",
+          "destination" : "b4",
+          "source_id" : "46e2c70e40b0489e549071da6bd2324b1426e50724da8c619749fce200af2f9b",
+          "gives_check" : false
+        }, {
+          "uci" : "c2c3",
+          "destination" : "c3",
+          "source_id" : "98d897d38b9e37020d7fa4bd2befa7e987d91174b1ffeeb839ab061b79b711dc",
+          "gives_check" : false
+        }, {
+          "uci" : "c2c4",
+          "destination" : "c4",
+          "source_id" : "de4aab21d6524850a5a8be028d680852a428b7722b2ea46ba550aa5e62e35c67",
+          "gives_check" : false
+        }, {
+          "uci" : "d1e2",
+          "destination" : "e2",
+          "source_id" : "667a82da5f2ad0a1d757ba496b504323768845f995cf05579f33ab9d05463da5",
+          "gives_check" : false
+        }, {
+          "uci" : "d1f3",
+          "destination" : "f3",
+          "source_id" : "97cd13fd69139c12c5f38b8792cb1c60e566cb796252c9e08f321793930b5c6d",
+          "gives_check" : false
+        }, {
+          "uci" : "d1g4",
+          "destination" : "g4",
+          "source_id" : "31ce2ba094c89c552f9d6152acf16a93bb38b0b5563693ca4a24ee85da43c3f6",
+          "gives_check" : false
+        }, {
+          "uci" : "d1h5",
+          "destination" : "h5",
+          "source_id" : "9eb4e8ec41a090558c4a2213f74e4b501bde295f1caf672c23c1ba8cde645dca",
+          "gives_check" : false
+        }, {
+          "uci" : "d2d3",
+          "destination" : "d3",
+          "source_id" : "9a500b79b3ac22977dbd3ade5b25b7b6668987d08bd83bc051fd2368fe33d40f",
+          "gives_check" : false
+        }, {
+          "uci" : "d2d4",
+          "destination" : "d4",
+          "source_id" : "190f266c0b9892986769a2a62dfac3f67c60627588f5640d9ca9f400b9bc8fa7",
+          "gives_check" : false
+        }, {
+          "uci" : "e1e2",
+          "destination" : "e2",
+          "source_id" : "ef18b96db4155dea9320f7f7860cf4c56f8bc890a65ac58d1112eff18f832ec3",
+          "gives_check" : false
+        }, {
+          "uci" : "f1a6",
+          "destination" : "a6",
+          "source_id" : "8baff75f6ce617249660ac20ec0715b531477f5c57ffb39da04af04aca22b333",
+          "gives_check" : false
+        }, {
+          "uci" : "f1b5",
+          "destination" : "b5",
+          "source_id" : "490b66a180c3d56a989b86de1465b56419cb78c4f913788021fc7f5a1019e454",
+          "gives_check" : true
+        }, {
+          "uci" : "f1c4",
+          "destination" : "c4",
+          "source_id" : "e37c6d32783f23a6dbdb18ec64d8ca788ce42c95f7ac5ccd0eab6bf0a86f17c5",
+          "gives_check" : false
+        }, {
+          "uci" : "f1d3",
+          "destination" : "d3",
+          "source_id" : "b3101b2ce3342ad8abe8b7e4d7dff9fc80d1a4a38d86ee045a72d26851b94275",
+          "gives_check" : false
+        }, {
+          "uci" : "f1e2",
+          "destination" : "e2",
+          "source_id" : "e31db2b158a3bc2e9cdc409b5648010e081ffe97b501ca35bdaab109f8a285ec",
+          "gives_check" : false
+        }, {
+          "uci" : "f2f3",
+          "destination" : "f3",
+          "source_id" : "ff4b54ffee059fafe4c7be850a07af14319f2c279f1a80621f31e64d6ecfece0",
+          "gives_check" : false
+        }, {
+          "uci" : "f2f4",
+          "destination" : "f4",
+          "source_id" : "de9428cdf201311fc8945c6996b2b39302e17a4fee02ca965b83c6e24ea66a4c",
+          "gives_check" : false
+        }, {
+          "uci" : "g1e2",
+          "destination" : "e2",
+          "source_id" : "db11db885bea6822ebe2da7f21639e6839f1ed724bc20126e15899d5ab326b8e",
+          "gives_check" : false
+        }, {
+          "uci" : "g1f3",
+          "destination" : "f3",
+          "source_id" : "81bac1456219f8af0ecf8ff42d92b7cc1d8bbacd98057af83da34d9bbeb0b94d",
+          "gives_check" : false
+        }, {
+          "uci" : "g1h3",
+          "destination" : "h3",
+          "source_id" : "c6230f4d1fb4689260a5cf462ba1b1b2fb8772a018e4594b2180bbe164a3519c",
+          "gives_check" : false
+        }, {
+          "uci" : "g2g3",
+          "destination" : "g3",
+          "source_id" : "cb78b7a16f1f011de8bd47a0ce9e631c2557741791aa43a9dcaf41820c3df268",
+          "gives_check" : false
+        }, {
+          "uci" : "g2g4",
+          "destination" : "g4",
+          "source_id" : "7693fd821d1f8719ef34a5dfb62f02cd2a0ceeb96a0fe382dc861ae65b2efab1",
+          "gives_check" : false
+        }, {
+          "uci" : "h2h3",
+          "destination" : "h3",
+          "source_id" : "c4c76c8a6619f00928c2749a9555a8979a2ebf11fb99b1a77f7d774f4b8663c0",
+          "gives_check" : false
+        }, {
+          "uci" : "h2h4",
+          "destination" : "h4",
+          "source_id" : "aac1eae4b0de33bbebaefe891441b2a970c65ddc332df115e065768101622ebe",
+          "gives_check" : false
+        } ]
+      },
+      "pawn_states" : {
+        "complete" : true,
+        "pawns" : [ {
+          "square" : "a7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "7d02734f0c7c717b61c7cf8d8ce0e51ade685eca450b31a73e9a16d5ead9a5e3", "a687d1e0e3e560b5191fc4d414be7e70ac42ec99f35efc7775d0f7266cc03e8a", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "square" : "b7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "7d02734f0c7c717b61c7cf8d8ce0e51ade685eca450b31a73e9a16d5ead9a5e3", "a8859fa226ec7161bbd165dcc791846da3d75cadb51911d90db0f5ce5afec055", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "square" : "c7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "828418bf92ee63bc1c8b48bd5ba74243999731646d806e6c27b31655295dc9d8", "a0568337cea8c657d81cc6411821748a7faf04baa9d09539d357fe18e0714c17", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "square" : "e7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857", "b00c026337ac9609e93ad35dc0af5fe4e2a78dccc761f92a63fcddfe3547b3cf", "ef55c7a86ee414e8eca23aaa26330474c329695ff1a40f09f4ecb71e0eeb7f7a" ]
+        }, {
+          "square" : "f7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857", "47eb87634b0e8768f8bc7018f93588251cb7902c8ccc6fb3fd2645b624c44609", "ef55c7a86ee414e8eca23aaa26330474c329695ff1a40f09f4ecb71e0eeb7f7a" ]
+        }, {
+          "square" : "g7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "0d02ac39fd88ba8be3634792f916d0a4b36f050e37e84e5f58363f8807c2677c", "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857", "a76deb76e83c94ee926b1d1ab8321e569151e94e5bc6d7c2173019c3396145e5" ]
+        }, {
+          "square" : "h7",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "0d02ac39fd88ba8be3634792f916d0a4b36f050e37e84e5f58363f8807c2677c", "3834253902e262f312c6e58c401a4bd58b543bebdd5c4ea8bc5629574569259f", "785c6f93c303fbec8d8070e0fbdb24f841605b2150bb31238ccd2114f5ce966e" ]
+        }, {
+          "square" : "a2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "53e2b20063599fef2acdd18bf85a3cbc17cf419b59d71f6bddbc5a70bda0a31f", "ccf84dbd7b3a8dc12e3b0dfc28bcc2135e13ef98b9a448247d133e9ea9699f2a" ]
+        }, {
+          "square" : "b2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "4073d4fb68c9af1befdae66adde1e31066f4ce82b1aaf426d277d199302651bb", "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "ccf84dbd7b3a8dc12e3b0dfc28bcc2135e13ef98b9a448247d133e9ea9699f2a" ]
+        }, {
+          "square" : "c2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "6eb84676720f8fa235b1d32d2d858389997386d73b6044192cd77fb038d62594", "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb" ]
+        }, {
+          "square" : "d2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "215d0be34a5a371c9d5bf674198aa68c32f4ea77b0970073a40fb2e892b6176b", "ec32b59d66acc09c1a7a0c240f5f07cdfdc2812f8495e966f790f4f22a0d8c71", "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb" ]
+        }, {
+          "square" : "f2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "101bdce1e8de908b5f0809a12785cf8d4a55e172c2aee7e6f49935615ba733a7", "4b173ee9003972ee7ae8de2ed0f393880eba66d9d827035dac1d160a6258d5de" ]
+        }, {
+          "square" : "g2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "0c6878eac7d1156a7add4e7196621d48c612be87a0ab78bd169fea4087cff974", "101bdce1e8de908b5f0809a12785cf8d4a55e172c2aee7e6f49935615ba733a7" ]
+        }, {
+          "square" : "h2",
+          "passed" : false,
+          "isolated" : false,
+          "doubled" : false,
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "38cbb64360b692ee39bec67c24fdcce7fac67242da176622b102f31da486ccc1", "c36dc7f9daac2449754239c353ba5e746e17c34d1f74a5a9399e46646565e1f5" ]
+        } ]
+      },
+      "pawn_files" : {
+        "complete" : true,
+        "files" : [ {
+          "file" : "a",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "ccf84dbd7b3a8dc12e3b0dfc28bcc2135e13ef98b9a448247d133e9ea9699f2a", "7d02734f0c7c717b61c7cf8d8ce0e51ade685eca450b31a73e9a16d5ead9a5e3" ]
+        }, {
+          "file" : "b",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "4ed77143248e4a7b45064b9179c544ee93ab2095c79fc26fb6d144ddd7162b52", "e3fc4ce5b499ad8514eff1482c1206992c345ebf030a7d3d3b952735e5e4b7e4" ]
+        }, {
+          "file" : "c",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "f78b0a8f5941e75eb00d53b843939a7a8273457e08291d79bbdcaa3ec934a2cb", "828418bf92ee63bc1c8b48bd5ba74243999731646d806e6c27b31655295dc9d8" ]
+        }, {
+          "file" : "d",
+          "occupancy" : "white_pawns_only",
+          "source_ids" : [ "ec32b59d66acc09c1a7a0c240f5f07cdfdc2812f8495e966f790f4f22a0d8c71", "bcd47235a509c301fb704a28fba1b7ffa4f11494bc8c056d958e9035afc5de76" ]
+        }, {
+          "file" : "e",
+          "occupancy" : "black_pawns_only",
+          "source_ids" : [ "0b46b6e381ef9652ca04591172580be52c197bd3e4fc900eb123b25b39114690", "ef55c7a86ee414e8eca23aaa26330474c329695ff1a40f09f4ecb71e0eeb7f7a" ]
+        }, {
+          "file" : "f",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "101bdce1e8de908b5f0809a12785cf8d4a55e172c2aee7e6f49935615ba733a7", "400528dffb07db5e6c986401216c422246b29bbb7d77ea6257eb5f9b4f5fe857" ]
+        }, {
+          "file" : "g",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "046b655cd121bf30f158ab2ea5f5e4473cba324378c08f59a3f892be592487ab", "0d02ac39fd88ba8be3634792f916d0a4b36f050e37e84e5f58363f8807c2677c" ]
+        }, {
+          "file" : "h",
+          "occupancy" : "both_sides",
+          "source_ids" : [ "38cbb64360b692ee39bec67c24fdcce7fac67242da176622b102f31da486ccc1", "3834253902e262f312c6e58c401a4bd58b543bebdd5c4ea8bc5629574569259f" ]
+        } ]
+      },
+      "pawn_advances" : {
+        "complete" : true,
+        "paths" : [ {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "destination" : "a3",
+          "traversed_squares" : [ "a3" ],
+          "source_id" : "893f024c52da1aef5ce0753be82df2e0c8bdcbacaecd5cd5c5ee133d48228cfb"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "destination" : "a4",
+          "traversed_squares" : [ "a3", "a4" ],
+          "source_id" : "0a9105a53f7246c50b49bdbc4511e2ccfeb91326acfaae5b305b2def86aadc30"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          },
+          "destination" : "a5",
+          "traversed_squares" : [ "a6", "a5" ],
+          "source_id" : "009d4281db7d0cad78615bb7a4a90d11d5950e9e230d7682e70eef2df87fae34"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "a7"
+          },
+          "destination" : "a6",
+          "traversed_squares" : [ "a6" ],
+          "source_id" : "dd659da2909ecec46fedab218a442bf4c6939e4efe62135aaa666f5b3ab54129"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          },
+          "destination" : "b3",
+          "traversed_squares" : [ "b3" ],
+          "source_id" : "a3905c83ea45bac00c95440704f8b48131db2b390f03b8b47983c9ffd9548e57"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "b2"
+          },
+          "destination" : "b4",
+          "traversed_squares" : [ "b3", "b4" ],
+          "source_id" : "55f566e875ad0ea3966c80f2bb2b113682a1bb3a14e098c90c85221c2ddd8a83"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          },
+          "destination" : "b5",
+          "traversed_squares" : [ "b6", "b5" ],
+          "source_id" : "a5f922dba5371f9c17879fa65a7e36ded71e72923d2353d4062c27e6d145a03c"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "b7"
+          },
+          "destination" : "b6",
+          "traversed_squares" : [ "b6" ],
+          "source_id" : "19010923826d596080ae973734dc0a2ed304cff5a26171a4de78e5fe716efcbb"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          },
+          "destination" : "c3",
+          "traversed_squares" : [ "c3" ],
+          "source_id" : "0f1916fc785fcd5098bd159174ecd493a983e1be499f3e17c6e29d8447ce2879"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "c2"
+          },
+          "destination" : "c4",
+          "traversed_squares" : [ "c3", "c4" ],
+          "source_id" : "37f0a315e1aa40fffb9b98f87a574fe1797585aeca4dbac93f9cf3b3a0be7abb"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          },
+          "destination" : "c5",
+          "traversed_squares" : [ "c6", "c5" ],
+          "source_id" : "10390de24fe11cfe2dffd66607e4cb4cd7a3665df10a8bd2e5495187bda65292"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "c7"
+          },
+          "destination" : "c6",
+          "traversed_squares" : [ "c6" ],
+          "source_id" : "2e73fed050df96834d7b20d321fe05b7522782909a27092b90a58f8da545a16c"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "destination" : "d3",
+          "traversed_squares" : [ "d3" ],
+          "source_id" : "0f7d24d925855badf865f8b43189937f7df3b940063be39f74e61b90e1dc014b"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "destination" : "d4",
+          "traversed_squares" : [ "d3", "d4" ],
+          "source_id" : "23f649b19feed8a9640e96834823dabfc7d8794a5ccc5a20f5ba0879e1487767"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          },
+          "destination" : "e5",
+          "traversed_squares" : [ "e6", "e5" ],
+          "source_id" : "092434f443738c2a4f2f58b10021b3a59991c5ae3c893c71fce3b6f96f731a36"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "e7"
+          },
+          "destination" : "e6",
+          "traversed_squares" : [ "e6" ],
+          "source_id" : "da51887bce0730a8dc5af69a1677976d02b39e71d432508eaa71081fb07c7064"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "f2"
+          },
+          "destination" : "f3",
+          "traversed_squares" : [ "f3" ],
+          "source_id" : "a480b02039a4e1e6a5637e045ad7c87388ef79d4fe67ea85912d7181a843bc04"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "f2"
+          },
+          "destination" : "f4",
+          "traversed_squares" : [ "f3", "f4" ],
+          "source_id" : "e8d569ac279fbcb00d200970c849e2b8224d182f8b473eb61ef69c923f683909"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          },
+          "destination" : "f5",
+          "traversed_squares" : [ "f6", "f5" ],
+          "source_id" : "dd4ebfb61225a62e15ee3001dbcb715c8d63c80262823a5a31cf7ad2c4d93374"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "f7"
+          },
+          "destination" : "f6",
+          "traversed_squares" : [ "f6" ],
+          "source_id" : "3b1a12e1a40f2f34f00f8054a7c75dad060ef3e4b913fca548b8683da998c7c2"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "destination" : "g3",
+          "traversed_squares" : [ "g3" ],
+          "source_id" : "7b3bff588e93d9a82f6426f8e4790b0fed5b86648b824de4297bd62447b2f73b"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "destination" : "g4",
+          "traversed_squares" : [ "g3", "g4" ],
+          "source_id" : "02819a24221b674bce18eff2e23a8b2ac10ccd47b3e9bed491743ba5dbae0a5e"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          },
+          "destination" : "g5",
+          "traversed_squares" : [ "g6", "g5" ],
+          "source_id" : "b99dd8c4e246c72846cb1c284e7808bc94d5bb4b9beab0ddb7e1c0c1ee183042"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "g7"
+          },
+          "destination" : "g6",
+          "traversed_squares" : [ "g6" ],
+          "source_id" : "0b0e44d3fe5f9bb4658f25d94f8c3ddac121e9a527788ed0ee72451b7ef02e61"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          },
+          "destination" : "h3",
+          "traversed_squares" : [ "h3" ],
+          "source_id" : "56592e0c8d27dd79831aef6aba74c30fa1782fc284643519c8b0610002da076a"
+        }, {
+          "piece" : {
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "h2"
+          },
+          "destination" : "h4",
+          "traversed_squares" : [ "h3", "h4" ],
+          "source_id" : "16594dcd2ec9a2fcdde5a26fee2f8152b7be5c3fd32db53f38362752d0198451"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          },
+          "destination" : "h5",
+          "traversed_squares" : [ "h6", "h5" ],
+          "source_id" : "423671f65d502c3c8df4370881598d0efebf639cb0fae0d3a8f4f8d6cf0af331"
+        }, {
+          "piece" : {
+            "side" : "black",
+            "role" : "pawn",
+            "square" : "h7"
+          },
+          "destination" : "h6",
+          "traversed_squares" : [ "h6" ],
+          "source_id" : "1e4f87ad406363517e789e7c9d307fbbedda8abc93db05e7f35865fb52ee1bcf"
+        } ]
+      }
+    } ],
+    "highlights" : [ {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "text" : "Captures the pawn on d5.",
+      "squares" : [ "d8", "d5" ],
+      "premise_ids" : [ ],
+      "frames" : [ {
+        "phase" : "before",
+        "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+        "squares" : [ "d8", "d5" ],
+        "source_ids" : [ ]
+      }, {
+        "phase" : "after",
+        "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+        "squares" : [ "d8", "d5" ],
+        "source_ids" : [ ]
+      } ]
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "text" : "Black queen on d5 now targets White pawn on a2.",
+      "squares" : [ "d5", "a2" ],
+      "premise_ids" : [ ],
+      "frames" : [ {
+        "phase" : "before",
+        "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+        "squares" : [ "d5", "a2" ],
+        "source_ids" : [ ]
+      }, {
+        "phase" : "after",
+        "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+        "squares" : [ "d5", "a2" ],
+        "source_ids" : [ "4d6bf22163f36ad910eb31a168a1106d34ae326f0fe358ebec4dc1280314e793" ]
+      } ]
+    }, {
+      "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+      "text" : "Black queen on d5 now targets White pawn on d2.",
+      "squares" : [ "d5", "d2" ],
+      "premise_ids" : [ ],
+      "frames" : [ {
+        "phase" : "before",
+        "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+        "squares" : [ "d5", "d2" ],
+        "source_ids" : [ ]
+      }, {
+        "phase" : "after",
+        "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+        "squares" : [ "d5", "d2" ],
+        "source_ids" : [ "3daf6ee44ba8fd1fdc0e341ab97695d20fa8fbc14261453145df3a4860a59292" ]
+      } ]
+    } ],
+    "selection" : {
+      "version" : 1,
+      "candidates" : [ {
+        "id" : "line:move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322",
+        "kind" : "conditional_line",
+        "state" : "ready",
+        "selection" : "context",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+        "line_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "evidence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "source_refs" : [ {
+          "line_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322",
+          "kind" : "admitted",
+          "source" : "legal_replay",
+          "accepted_ply_count" : 1,
+          "stop" : null
+        } ],
+        "detail" : {
+          "type" : "observed_line",
+          "scope" : "observed_line"
+        }
+      }, {
+        "id" : "fact:4d4bb32651fabd7ce149b141e56836a848a0e560c48b71abef8cfc19aa85c51c",
+        "kind" : "local_fact",
+        "state" : "ready",
+        "selection" : "selected",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+        "line_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "evidence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "source_refs" : [ ],
+        "detail" : {
+          "type" : "capture",
+          "actor" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "captured_role" : "pawn",
+          "captured_square" : "d5",
+          "captured_position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+          "recapture" : "unknown"
+        },
+        "highlight" : {
+          "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+          "text" : "Captures the pawn on d5.",
+          "squares" : [ "d8", "d5" ],
+          "premise_ids" : [ ],
+          "frames" : [ {
+            "phase" : "before",
+            "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+            "squares" : [ "d8", "d5" ],
+            "source_ids" : [ ]
+          }, {
+            "phase" : "after",
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "squares" : [ "d8", "d5" ],
+            "source_ids" : [ ]
+          } ]
+        }
+      }, {
+        "id" : "fact:e6d185c18893160d08021d98ac76b9b50c699c9a9f93a06cd96c72cf90d11ed9",
+        "kind" : "local_fact",
+        "state" : "ready",
+        "selection" : "selected",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+        "line_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "evidence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:4d6bf22163f36ad910eb31a168a1106d34ae326f0fe358ebec4dc1280314e793" ],
+        "source_refs" : [ ],
+        "detail" : {
+          "type" : "attack",
+          "actor" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "target" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "a2"
+          },
+          "gained" : true
+        },
+        "highlight" : {
+          "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+          "text" : "Black queen on d5 now targets White pawn on a2.",
+          "squares" : [ "d5", "a2" ],
+          "premise_ids" : [ ],
+          "frames" : [ {
+            "phase" : "before",
+            "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+            "squares" : [ "d5", "a2" ],
+            "source_ids" : [ ]
+          }, {
+            "phase" : "after",
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "squares" : [ "d5", "a2" ],
+            "source_ids" : [ "4d6bf22163f36ad910eb31a168a1106d34ae326f0fe358ebec4dc1280314e793" ]
+          } ]
+        }
+      }, {
+        "id" : "fact:92051325e3f9455a8ceb160520e3de3333da0ec8afcf5f8d5b1fe6b2e7a95d2f",
+        "kind" : "local_fact",
+        "state" : "ready",
+        "selection" : "selected",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+        "line_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "evidence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:3daf6ee44ba8fd1fdc0e341ab97695d20fa8fbc14261453145df3a4860a59292" ],
+        "source_refs" : [ ],
+        "detail" : {
+          "type" : "attack",
+          "actor" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "target" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "d2"
+          },
+          "gained" : true
+        },
+        "highlight" : {
+          "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+          "text" : "Black queen on d5 now targets White pawn on d2.",
+          "squares" : [ "d5", "d2" ],
+          "premise_ids" : [ ],
+          "frames" : [ {
+            "phase" : "before",
+            "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+            "squares" : [ "d5", "d2" ],
+            "source_ids" : [ ]
+          }, {
+            "phase" : "after",
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "squares" : [ "d5", "d2" ],
+            "source_ids" : [ "3daf6ee44ba8fd1fdc0e341ab97695d20fa8fbc14261453145df3a4860a59292" ]
+          } ]
+        }
+      }, {
+        "id" : "fact:6ccd3f2edb1f61e8e2b07013e90ff064bad9ad9fe125859232930752fd6dfce2",
+        "kind" : "local_fact",
+        "state" : "ready",
+        "selection" : "display_cap",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+        "line_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "evidence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:position-occurrence:fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:relation:position:6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44:geometric_control:6ccb505058b07a705e4e955483d23bdbf1a1852c464c0297809fe371796d0006" ],
+        "source_refs" : [ ],
+        "detail" : {
+          "type" : "attack",
+          "actor" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "black",
+            "role" : "queen",
+            "square" : "d5"
+          },
+          "target" : {
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "side" : "white",
+            "role" : "pawn",
+            "square" : "g2"
+          },
+          "gained" : true
+        },
+        "highlight" : {
+          "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+          "text" : "Black queen on d5 now targets White pawn on g2.",
+          "squares" : [ "d5", "g2" ],
+          "premise_ids" : [ ],
+          "frames" : [ {
+            "phase" : "before",
+            "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+            "squares" : [ "d5", "g2" ],
+            "source_ids" : [ ]
+          }, {
+            "phase" : "after",
+            "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "squares" : [ "d5", "g2" ],
+            "source_ids" : [ "6ccb505058b07a705e4e955483d23bdbf1a1852c464c0297809fe371796d0006" ]
+          } ]
+        }
+      }, {
+        "id" : "line-continuation:827bc4a7a7886b8c8bd45f754c9d543a9421fa6f9a5ac4d733c3b5718effd058",
+        "kind" : "conditional_line",
+        "selection" : "context",
+        "state" : "ready",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+        "position_ids" : [ "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699", "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44" ],
+        "line_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "evidence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322" ],
+        "source_refs" : [ {
+          "line_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322",
+          "kind" : "admitted",
+          "source" : "legal_replay",
+          "accepted_ply_count" : 1,
+          "stop" : null
+        } ],
+        "detail" : {
+          "type" : "line_continuation",
+          "scope" : "observed_line",
+          "line_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:line:284c29260a24f05a8b79b6a6da8e91395baf34bd10c016139788dbbc12bbc322",
+          "events" : [ {
+            "id" : "continuation-event:894a11bee575bb99fc924ffc8b06c45fcfd2a533446f17872a80de8b00884829",
+            "ply_offset" : 0,
+            "occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+            "source_id" : "89255a231a03228901208ae12853670a983dd6f1e0139af49a390138ff154cd1",
+            "original_actor" : {
+              "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+              "side" : "black",
+              "role" : "queen",
+              "square" : "d8"
+            },
+            "original_victim" : {
+              "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+              "side" : "white",
+              "role" : "pawn",
+              "square" : "d5"
+            },
+            "actor_end" : {
+              "state" : "present",
+              "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+              "piece" : {
+                "position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+                "side" : "black",
+                "role" : "queen",
+                "square" : "d5"
+              },
+              "removed_by_event_id" : null
+            }
+          } ],
+          "capture_links" : [ ],
+          "other_target_gains" : [ ],
+          "open_loss_event_ids" : [ "continuation-event:894a11bee575bb99fc924ffc8b06c45fcfd2a533446f17872a80de8b00884829" ],
+          "recovery_losses" : [ ],
+          "support_comparisons" : [ {
+            "id" : "continuation-support:47fb66f00e123e5a23c97f7428b315353946f0edcb96597f46b8a898035ba275",
+            "kind" : "actor_continuation",
+            "state" : "complete",
+            "before_actor" : {
+              "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+              "side" : "black",
+              "role" : "queen",
+              "square" : "d8"
+            },
+            "after_actor" : {
+              "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+              "side" : "black",
+              "role" : "queen",
+              "square" : "d8"
+            },
+            "before_position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+            "after_position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "trigger_occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+            "targets" : [ {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "pawn",
+                "square" : "b7"
+              },
+              "before" : {
+                "state" : "absent",
+                "source_ids" : [ ]
+              },
+              "after" : {
+                "state" : "present",
+                "source_ids" : [ "21240cedca44b8c7c0c2c7549a24ea29fb2440d94c71c88fc839d4f90e3b211a" ]
+              }
+            }, {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "pawn",
+                "square" : "c7"
+              },
+              "before" : {
+                "state" : "present",
+                "source_ids" : [ "35eee313c80600cb565ab8a45b57548ec1fedb8ebd9757ca2e76c6f7d31d81d5" ]
+              },
+              "after" : {
+                "state" : "absent",
+                "source_ids" : [ ]
+              }
+            }, {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "pawn",
+                "square" : "e7"
+              },
+              "before" : {
+                "state" : "present",
+                "source_ids" : [ "1b59edb9ff96674637a16d0b790a4b62cf1a1b36c4f445d4ab096f2bf14444a4" ]
+              },
+              "after" : {
+                "state" : "absent",
+                "source_ids" : [ ]
+              }
+            }, {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "pawn",
+                "square" : "f7"
+              },
+              "before" : {
+                "state" : "absent",
+                "source_ids" : [ ]
+              },
+              "after" : {
+                "state" : "present",
+                "source_ids" : [ "100367cfae5feff8cf34a44c59e7f2c50ffe29d9646efe76d81217f07e3ed34f" ]
+              }
+            }, {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "bishop",
+                "square" : "c8"
+              },
+              "before" : {
+                "state" : "present",
+                "source_ids" : [ "167ba868b0c266e0407ba5cdd997c898cd44a0e9b1232cffeaa8e2437a4b6cef" ]
+              },
+              "after" : {
+                "state" : "absent",
+                "source_ids" : [ ]
+              }
+            } ]
+          }, {
+            "id" : "continuation-support:c86af9332c421727fecceac7da83cf06658f9441ef9cbd4b40327f7b032d7304",
+            "kind" : "actor_continuation",
+            "state" : "complete",
+            "before_actor" : {
+              "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+              "side" : "black",
+              "role" : "queen",
+              "square" : "d8"
+            },
+            "after_actor" : {
+              "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+              "side" : "black",
+              "role" : "queen",
+              "square" : "d8"
+            },
+            "before_position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "after_position_id" : "6e425450f75482d70b7a2f30d4f234228d021fd29a79ab23d8e0d465c6dd0f44",
+            "trigger_occurrence_ids" : [ "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081" ],
+            "targets" : [ {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "pawn",
+                "square" : "b7"
+              },
+              "before" : {
+                "state" : "present",
+                "source_ids" : [ "21240cedca44b8c7c0c2c7549a24ea29fb2440d94c71c88fc839d4f90e3b211a" ]
+              },
+              "after" : {
+                "state" : "present",
+                "source_ids" : [ "21240cedca44b8c7c0c2c7549a24ea29fb2440d94c71c88fc839d4f90e3b211a" ]
+              }
+            }, {
+              "original_target" : {
+                "position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+                "side" : "black",
+                "role" : "pawn",
+                "square" : "f7"
+              },
+              "before" : {
+                "state" : "present",
+                "source_ids" : [ "100367cfae5feff8cf34a44c59e7f2c50ffe29d9646efe76d81217f07e3ed34f" ]
+              },
+              "after" : {
+                "state" : "present",
+                "source_ids" : [ "100367cfae5feff8cf34a44c59e7f2c50ffe29d9646efe76d81217f07e3ed34f" ]
+              }
+            } ]
+          } ],
+          "capture_exposures" : [ ],
+          "direct_support_recaptures" : [ ],
+          "support_applications" : [ ],
+          "text" : "These are physical-piece and direct-support observations within the supplied line. A later gain is not proof of sufficient compensation, and geometric support is not a forced defense. Survival and missing recovery are bounded by this line's end; the existing line summary owns material values and terminal facts."
+        }
+      } ],
+      "scenes" : [ ],
+      "root_searches" : [ {
+        "work_id" : "work:0",
+        "execution_key_sha256" : "ea3c402dfb67cf092ea46ee08e270bb5f41711b78d52529dc3ffbe3f9f82e3b1",
+        "engine_profile" : "sf18-smallnet-t2-h16-v1",
+        "purpose" : "root_search",
+        "required_depth" : 16,
+        "multi_pv" : 3,
+        "root_position_id" : "fcef915f9a50debf456e63823f4c68edda99d7806946f5f49e7da4b34d2f1699",
+        "root_occurrence_id" : "move-review:dcc55ffb98c07deb298413a9ee9f1ab3ecafdf9e839dd9539b1d85ccd63c9727:3:d8d5:evidence:transition:9b1cb5de6ae3f1819df5fd9990e3695b0f0d057f9177043863909343ede3f081",
+        "root_restriction" : {
+          "kind" : "unrestricted"
+        },
+        "state" : "stopped",
+        "stop_reason" : "cancelled",
+        "candidates" : [ ]
+      } ]
+    }
+  },
+  "state" : "stopped",
+  "progress" : {
+    "phase" : "stopped",
+    "legal_move_count" : 28,
+    "root_candidate_lines_admitted" : 0,
+    "selected_commentaries_completed" : 0,
+    "physical_works_issued" : 1,
+    "physical_reports_accepted" : 0
+  },
+  "stop_condition" : "cancelled"
+}

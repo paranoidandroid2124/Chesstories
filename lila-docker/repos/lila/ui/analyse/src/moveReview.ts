@@ -1,4 +1,5 @@
 import { isMoveReviewEngineProfile, type MoveReviewEngineProfile } from 'lib/ceval/types';
+import { threatSetup } from 'lib/ceval/util';
 import { makeFen, parseFen } from 'chessops/fen';
 import { makeSan, makeSanAndPlay } from 'chessops/san';
 import { parseSquare, parseUci } from 'chessops/util';
@@ -441,18 +442,19 @@ export type MoveReviewPositionAction =
 export interface IssuedMoveReviewEngineWork {
   engineProfile: MoveReviewEngineProfile;
   workId: string;
-  purpose: 'root_search' | 'focus_comparison' | 'investigation_comparison' | 'response_comparison';
+  purpose: 'root_search' | 'focus_comparison' | 'investigation_comparison' | 'response_comparison' | 'threat_probe';
   executionKeySha256: string;
   variant: 'standard';
   enginePositionInitialFen: FEN;
   enginePositionMovesUci: Uci[];
   searchFen: FEN;
   searchAnchor?: { positionId: string; rootMove: Uci; rootOccurrenceId: string; prefixMovesUci: Uci[] };
+  threatOriginPrefixUci?: Uci[];
   rootRestriction: { kind: 'unrestricted' } | { kind: 'restricted'; movesUci: Uci[] };
   searchLimits: {
     depth: number;
-    nodes: 5_000_000 | 2_000_000;
-    movetimeMs: 5_000 | 2_500;
+    nodes: 5_000_000 | 2_000_000 | 250_000;
+    movetimeMs: 5_000 | 2_500 | 750;
     multiPv: number;
   };
   maxSearchElapsedMs: number;
@@ -606,6 +608,17 @@ export interface MoveReviewViewState {
   hoveredFrame?: MoveReviewFrameSelection;
   pinnedFrame?: MoveReviewFrameSelection;
   boardFrame?: MoveReviewFrameSelection;
+}
+
+export function updateMoveReviewViewForJob(
+  view: MoveReviewViewState,
+  previous: MoveReviewJobState,
+  next: MoveReviewJobState,
+): void {
+  const before = moveReviewObservations(previous)?.owner, after = moveReviewObservations(next)?.owner;
+  if (before?.requestId === after?.requestId && before?.jobId === after?.jobId) return;
+  // A retry can reuse the same subject, line IDs and plies for a different runtime job.
+  view.hoveredFrame = view.pinnedFrame = view.boardFrame = undefined;
 }
 
 export interface MoveReviewCopy {
@@ -1738,7 +1751,7 @@ function projectJobStatus(
   const assessment = raw.assessment === undefined ? undefined : projectAssessment(raw.assessment, common);
   if (
     (raw.assessment !== undefined && !assessment) ||
-    (work.purpose === 'investigation_comparison' || work.purpose === 'response_comparison'
+    (work.purpose === 'investigation_comparison' || work.purpose === 'response_comparison' || work.purpose === 'threat_probe'
       ? !assessment || !isObject(raw.progress) || raw.progress.selected_commentaries_completed !== 1
       : assessment && (!common.verification || common.verification.state !== 'pending' ||
           !isObject(raw.progress) || raw.progress.selected_commentaries_completed !== 1))
@@ -1878,27 +1891,42 @@ function projectIssuedEngineWork(
       'search_limits',
       'max_search_elapsed_ms',
       ...(value.search_anchor === undefined ? [] : ['search_anchor']),
+      ...(value.threat_origin_prefix_uci === undefined ? [] : ['threat_origin_prefix_uci']),
     ]) ||
     typeof value.work_id !== 'string' ||
     !workIdPattern.test(value.work_id) ||
     (value.purpose !== 'root_search' &&
       value.purpose !== 'focus_comparison' &&
       value.purpose !== 'investigation_comparison' &&
-      value.purpose !== 'response_comparison') ||
+      value.purpose !== 'response_comparison' &&
+      value.purpose !== 'threat_probe') ||
     value.engine_profile !== profile ||
     typeof value.execution_key_sha256 !== 'string' ||
     !sha256Pattern.test(value.execution_key_sha256) ||
     value.variant !== 'standard' ||
-    value.engine_position_initial_fen !== subject.initialFen ||
     !validUciMoves(value.engine_position_moves_uci, 0, value.purpose === 'response_comparison' ? 679 : 600) ||
-    !arrayPrefix(subject.movePrefixUci, value.engine_position_moves_uci) ||
     !fenText(value.search_fen) ||
-    replayFen(subject.initialFen, value.engine_position_moves_uci) !== value.search_fen ||
     !isObject(value.root_restriction) ||
     !isObject(value.search_limits) ||
     !hasExactKeys(value.search_limits, ['depth', 'nodes', 'movetime_ms', 'multi_pv'])
   )
     return;
+  const threat = value.purpose === 'threat_probe';
+  const threatPrefix = value.threat_origin_prefix_uci;
+  if (threat) {
+    if (!validUciMoves(threatPrefix, 0, 1) || (threatPrefix.length === 1 && threatPrefix[0] !== subject.played.uci)) return;
+    const originFen = threatPrefix.length ? subject.after.fen : subject.before.fen;
+    const setup = parseFen(originFen);
+    if (setup.isErr) return;
+    const origin = setupPosition('chess', setup.value);
+    if (origin.isErr || origin.value.isCheck() || origin.value.isEnd()) return;
+    const expected = makeFen(threatSetup(originFen));
+    // A passed turn has its own isolated engine origin, never a fictional move in the game history.
+    if (value.engine_position_initial_fen !== expected || value.engine_position_moves_uci.length !== 0 ||
+        value.search_fen !== expected) return;
+  } else if (threatPrefix !== undefined || value.engine_position_initial_fen !== subject.initialFen ||
+      !arrayPrefix(subject.movePrefixUci, value.engine_position_moves_uci) ||
+      replayFen(subject.initialFen, value.engine_position_moves_uci) !== value.search_fen) return;
   const limits = {
     depth: integerInRange(value.search_limits.depth, 1, 100),
     nodes: integerInRange(value.search_limits.nodes, 1, 5_000_000),
@@ -2033,6 +2061,8 @@ function projectIssuedEngineWork(
       ));
   if (value.purpose !== 'response_comparison' && anchor !== undefined) return;
   const shapeValid =
+    (threat && unrestricted && limits.depth === 8 && limits.nodes === 250_000 &&
+      limits.movetimeMs === 750 && limits.multiPv! <= 2 && value.max_search_elapsed_ms === 1_250) ||
     (value.purpose === 'root_search' &&
       rootOrFocusPosition &&
       unrestricted &&
@@ -2063,9 +2093,10 @@ function projectIssuedEngineWork(
     purpose: value.purpose,
     executionKeySha256: value.execution_key_sha256,
     variant: 'standard',
-    enginePositionInitialFen: subject.initialFen,
+    enginePositionInitialFen: value.engine_position_initial_fen as FEN,
     enginePositionMovesUci: [...value.engine_position_moves_uci],
     searchFen: value.search_fen as FEN,
+    ...(threat ? { threatOriginPrefixUci: [...(threatPrefix as Uci[])] } : {}),
     ...(responsePosition
       ? {
           searchAnchor: {
@@ -2081,8 +2112,8 @@ function projectIssuedEngineWork(
       : { kind: 'unrestricted' },
     searchLimits: {
       depth: limits.depth!,
-      nodes: limits.nodes as 5_000_000 | 2_000_000,
-      movetimeMs: limits.movetimeMs as 5_000 | 2_500,
+      nodes: limits.nodes as IssuedMoveReviewEngineWork['searchLimits']['nodes'],
+      movetimeMs: limits.movetimeMs as IssuedMoveReviewEngineWork['searchLimits']['movetimeMs'],
       multiPv: limits.multiPv!,
     },
     maxSearchElapsedMs: value.max_search_elapsed_ms as number,
@@ -3388,7 +3419,6 @@ function projectObservations(
   // Presentation selection is optional. A damaged highlight must not erase
   // independently decoded facts or historical paths.
   const highlights: NonNullable<MoveReviewObservations['highlights']> = [];
-  const counts = new Map<string, number>();
   const seen = new Set<string>();
   const byId = new Map(positions?.map(p => [p.id, p]));
   const positionSources = new Map<string, Set<string>>();
@@ -3422,8 +3452,7 @@ function projectObservations(
         raw.text.length > 1000 ||
         !squares(raw.squares) ||
         raw.squares.length === 0 ||
-        raw.squares.length > 64 ||
-        (counts.get(raw.occurrence_id) ?? 0) >= 3
+        raw.squares.length > 64
       )
         continue;
       const highlight = { occurrenceId: raw.occurrence_id, text: raw.text, squares: raw.squares };
@@ -3483,7 +3512,6 @@ function projectObservations(
       const key = `${raw.occurrence_id}:${raw.text}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      counts.set(raw.occurrence_id, (counts.get(raw.occurrence_id) ?? 0) + 1);
       highlights.push(linked ? { ...highlight, premiseIds: raw.premise_ids as string[], frames } : highlight);
     }
   const result: MoveReviewObservations = {

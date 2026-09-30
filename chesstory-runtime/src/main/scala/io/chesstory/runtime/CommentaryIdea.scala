@@ -464,7 +464,7 @@ private[runtime] object CommentaryIdea:
           val test = conditions.filter(_.facts.contains(value.mechanism.action -> value.mechanism.alternative))
             .map(_.text).mkString(" ")
           MoveWorkProjection.Context(complete, question = focus,
-            questionTest = Option.when(test.nonEmpty)(complete -> test)) ::
+            questionTest = Option.when(test.nonEmpty)(test)) ::
             other.map(part => MoveWorkProjection.Context(part.text))
         case None => parts.map(part => MoveWorkProjection.Context(part.text))
       contexts ++ List(continuationText(packet, prepared)).filter(_.nonEmpty).map(MoveWorkProjection.Context(_))

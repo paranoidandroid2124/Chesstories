@@ -466,7 +466,8 @@ object PositionCommentaryJobProtocol:
         "multi_pv" -> work.searchLimits.multiPv
       ),
       "max_search_elapsed_ms" -> work.maxSearchElapsedMs
-    ) ++ work.searchAnchor.map(anchor => Json.obj("search_anchor" -> Json.obj(
+    ) ++ work.threatOriginPrefixUci.map(prefix => Json.obj("threat_origin_prefix_uci" -> prefix)).getOrElse(Json.obj()) ++
+      work.searchAnchor.map(anchor => Json.obj("search_anchor" -> Json.obj(
       "root_move" -> anchor.rootMove, "root_occurrence_id" -> anchor.rootOccurrenceId,
       "position_id" -> anchor.positionId, "prefix_moves_uci" -> anchor.prefixMoves))).getOrElse(Json.obj())
 

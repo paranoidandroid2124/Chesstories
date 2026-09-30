@@ -1,0 +1,365 @@
+[
+  {
+    "id": "R1",
+    "beforeFEN": "rn1q1rk1/1b2bppp/pp1p1n2/4p3/4PP2/1NN5/PPP1B1PP/R1BQ1R1K w - - 1 11",
+    "uci": "e2f3",
+    "facts": [
+      {
+        "subject": {
+          "piece": "B",
+          "before": "e2",
+          "after": "f3"
+        },
+        "target": {
+          "piece": "P",
+          "before": "e4",
+          "after": "e4"
+        },
+        "before": "none",
+        "after": "support",
+        "change": "created"
+      }
+    ]
+  },
+  {
+    "id": "R2",
+    "beforeFEN": "2rqr1k1/1b1nbppp/p7/1p1n1P2/4N1P1/PN6/1PP1Q1BP/R1B2R1K b - - 0 18",
+    "uci": "d7f6",
+    "facts": [
+      {
+        "subject": {
+          "piece": "n",
+          "before": "d7",
+          "after": "f6"
+        },
+        "target": {
+          "piece": "N",
+          "before": "e4",
+          "after": "e4"
+        },
+        "before": "none",
+        "after": "attack",
+        "change": "created"
+      },
+      {
+        "subject": {
+          "piece": "n",
+          "before": "d7",
+          "after": "f6"
+        },
+        "target": {
+          "piece": "n",
+          "before": "d5",
+          "after": "d5"
+        },
+        "before": "none",
+        "after": "support",
+        "change": "created"
+      }
+    ]
+  },
+  {
+    "id": "R3",
+    "beforeFEN": "2r3k1/1p1b2pp/p2p4/3P1p2/1PPbr3/P4Q2/3BBqPP/2R1R2K w - - 7 25",
+    "uci": "d2c3",
+    "facts": [
+      {
+        "subject": {
+          "piece": "B",
+          "before": "d2",
+          "after": "c3"
+        },
+        "target": {
+          "piece": "R",
+          "before": "e1",
+          "after": "e1"
+        },
+        "before": "support",
+        "after": "support",
+        "change": "maintained"
+      },
+      {
+        "subject": {
+          "piece": "B",
+          "before": "d2",
+          "after": "c3"
+        },
+        "target": {
+          "piece": "P",
+          "before": "b4",
+          "after": "b4"
+        },
+        "before": "support",
+        "after": "support",
+        "change": "maintained"
+      },
+      {
+        "subject": {
+          "piece": "B",
+          "before": "d2",
+          "after": "c3"
+        },
+        "target": {
+          "piece": "R",
+          "before": "c1",
+          "after": "c1"
+        },
+        "before": "support",
+        "after": "none",
+        "change": "lost"
+      },
+      {
+        "subject": {
+          "piece": "B",
+          "before": "d2",
+          "after": "c3"
+        },
+        "target": {
+          "piece": "b",
+          "before": "d4",
+          "after": "d4"
+        },
+        "before": "none",
+        "after": "attack",
+        "change": "created"
+      }
+    ]
+  },
+  {
+    "id": "R4",
+    "beforeFEN": "2r1r1k1/1b3ppp/p2b4/1p1n1P2/6Pq/PNP5/1PQ3BP/R1B2R1K w - - 3 22",
+    "uci": "g2f3",
+    "facts": [
+      {
+        "subject": {
+          "piece": "Q",
+          "before": "c2",
+          "after": "c2"
+        },
+        "target": {
+          "piece": "P",
+          "before": "h2",
+          "after": "h2"
+        },
+        "before": "none",
+        "after": "support",
+        "change": "created"
+      },
+      {
+        "subject": {
+          "piece": "B",
+          "before": "g2",
+          "after": "f3"
+        },
+        "target": {
+          "piece": "n",
+          "before": "d5",
+          "after": "d5"
+        },
+        "before": "attack",
+        "after": "attack",
+        "change": "maintained"
+      }
+    ]
+  },
+  {
+    "id": "R5",
+    "beforeFEN": "2r1r1k1/1b3ppp/p2b4/1p1n1P2/6Pq/PNP2B2/1PQ4P/R1B2R1K b - - 4 22",
+    "uci": "d5b4",
+    "facts": [
+      {
+        "subject": {
+          "piece": "b",
+          "before": "b7",
+          "after": "b7"
+        },
+        "target": {
+          "piece": "n",
+          "before": "d5",
+          "after": "b4"
+        },
+        "before": "support",
+        "after": "none",
+        "change": "lost"
+      },
+      {
+        "subject": {
+          "piece": "b",
+          "before": "b7",
+          "after": "b7"
+        },
+        "target": {
+          "piece": "B",
+          "before": "f3",
+          "after": "f3"
+        },
+        "before": "none",
+        "after": "attack",
+        "change": "created"
+      },
+      {
+        "subject": {
+          "piece": "n",
+          "before": "d5",
+          "after": "b4"
+        },
+        "target": {
+          "piece": "Q",
+          "before": "c2",
+          "after": "c2"
+        },
+        "before": "none",
+        "after": "attack",
+        "change": "created"
+      },
+      {
+        "subject": {
+          "piece": "B",
+          "before": "f3",
+          "after": "f3"
+        },
+        "target": {
+          "piece": "n",
+          "before": "d5",
+          "after": "b4"
+        },
+        "before": "attack",
+        "after": "none",
+        "change": "lost"
+      }
+    ]
+  },
+  {
+    "id": "R6",
+    "beforeFEN": "4r1k1/1p4pp/p1Pp4/3P4/1P1R1p1q/P4B2/6PP/5R1K b - - 0 32",
+    "uci": "b7b5",
+    "facts": [
+      {
+        "subject": {
+          "piece": "p",
+          "before": "b7",
+          "after": "b5"
+        },
+        "target": {
+          "piece": "P",
+          "before": "c6",
+          "after": "c6"
+        },
+        "before": "attack",
+        "after": "none",
+        "change": "lost"
+      },
+      {
+        "subject": {
+          "piece": "p",
+          "before": "b7",
+          "after": "b5"
+        },
+        "target": {
+          "piece": "p",
+          "before": "a6",
+          "after": "a6"
+        },
+        "before": "support",
+        "after": "none",
+        "change": "lost"
+      }
+    ]
+  },
+  {
+    "id": "R7",
+    "beforeFEN": "8/2q4p/B1Pp1kp1/3P4/1P3p2/p6P/6P1/2R4K w - - 0 41",
+    "uci": "a6c4",
+    "facts": [
+      {
+        "subject": {
+          "piece": "B",
+          "before": "a6",
+          "after": "c4"
+        },
+        "target": {
+          "piece": "P",
+          "before": "d5",
+          "after": "d5"
+        },
+        "before": "none",
+        "after": "support",
+        "change": "created"
+      },
+      {
+        "subject": {
+          "piece": "R",
+          "before": "c1",
+          "after": "c1"
+        },
+        "target": {
+          "piece": "P",
+          "before": "c6",
+          "after": "c6"
+        },
+        "before": "support",
+        "after": "none",
+        "change": "lost"
+      },
+      {
+        "subject": {
+          "piece": "R",
+          "before": "c1",
+          "after": "c1"
+        },
+        "target": {
+          "piece": "B",
+          "before": "a6",
+          "after": "c4"
+        },
+        "before": "none",
+        "after": "support",
+        "change": "created"
+      }
+    ]
+  },
+  {
+    "id": "C1",
+    "beforeFEN": "4r2k/8/8/8/3b4/8/2P1N3/4K3 w - - 0 1",
+    "uci": "c2c3",
+    "facts": [
+      {
+        "subject": {
+          "piece": "N",
+          "before": "e2",
+          "after": "e2"
+        },
+        "target": {
+          "piece": "P",
+          "before": "c2",
+          "after": "c3"
+        },
+        "before": "none",
+        "after": "support",
+        "change": "created"
+      }
+    ]
+  },
+  {
+    "id": "C2",
+    "beforeFEN": "7k/r7/8/8/8/8/8/R6K b - - 0 1",
+    "uci": "a7a6",
+    "facts": [
+      {
+        "subject": {
+          "piece": "R",
+          "before": "a1",
+          "after": "a1"
+        },
+        "target": {
+          "piece": "r",
+          "before": "a7",
+          "after": "a6"
+        },
+        "before": "attack",
+        "after": "attack",
+        "change": "maintained"
+      }
+    ]
+  }
+]

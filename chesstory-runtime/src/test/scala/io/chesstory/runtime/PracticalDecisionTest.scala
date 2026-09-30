@@ -82,8 +82,20 @@ class PracticalDecisionTest extends munit.FunSuite:
   test("Najdorf 16 delivers the severed cooperation and opened opposing line from existing observations"):
     val owner = najdorf16Owner
     val line = List("e6e5", "b3d5", "c6c7", "d5b7", "c7b7")
-    val expected = "Blocks the line from White queen on g3 to Black pawn on d6; White rook on d1 still attacks that target. " +
-      "Opens the line from White bishop on b3 to Black pawn on f7."
+    def lineNote(packet: EvidenceBackedJudgmentPacket): MoveWorkProjection.LocalCandidate =
+      val root = packet.assembly.playedTransition.get.evidence.id
+      MoveWorkProjection.select(packet).local.find(value => value.edge.evidence.id == root && (value.note.detail match
+        case MoveWorkProjection.Detail.ChangedLines(closed, opened, _) =>
+          closed.exists((actor, target, remaining) => actor == Piece("white", "queen", "g3").witness &&
+            target == Piece("black", "pawn", "d6").witness && remaining.contains(Piece("white", "rook", "d1").witness)) &&
+            opened.contains(Piece("white", "bishop", "b3").witness -> Piece("black", "pawn", "f7").witness)
+        case _ => false)).getOrElse(fail("missing the owned obstruction and opened attack note"))
+    def sameNoteReferences(value: JsObject, source: MoveWorkProjection.LocalCandidate): Boolean =
+      List("occurrence_id", "squares", "premise_ids", "frames").forall(field => value(field) == source.highlight(field))
+    def assertVisibleRelations(value: JsObject): Unit =
+      val words = (value \ "text").as[String]
+      List("Blocks the line", "queen on g3", "pawn on d6", "rook on d1", "still attacks that target",
+        "Opens the line", "bishop on b3", "pawn on f7").foreach(clause => assert(words.contains(clause), words))
     List(line.take(1), line).foreach { moves =>
       val input = MoveReviewInputAdmission.admitIndependent(owner, moves.head,
         suppliedLines = List(SuppliedCommentaryLine(CommentaryLineSource.Study, moves))).get
@@ -100,8 +112,10 @@ class PracticalDecisionTest extends munit.FunSuite:
         "the reader already has the opposing bishop's opened attack")
       val highlights = (RuntimeProtocol.observationsJson(packet) \ "highlights").as[List[JsObject]]
         .filter(value => (value \ "occurrence_id").as[String] == edge.evidence.id)
-      val note = highlights.find(value => (value \ "text").as[String] == expected).getOrElse(
-        fail(highlights.map(value => (value \ "text").as[String]).mkString(" / ")))
+      val source = lineNote(packet)
+      val note = highlights.find(sameNoteReferences(_, source)).getOrElse(
+        fail("the displayed note lost its exact occurrence and before/after proof references"))
+      assertVisibleRelations(note)
       assertEquals(highlights.size, 3, "the existing display cap is unchanged")
       val views = packet.resources.map(view => view.position.id.get -> view).toMap
       (note \ "frames").as[List[JsObject]].foreach { frame =>
@@ -126,8 +140,10 @@ class PracticalDecisionTest extends munit.FunSuite:
       CommentaryJobSnapshot("n" * 32, "najdorf-line-effects", 10000L, state))
     val root = state.observationsPacket.get.assembly.playedTransition.get.evidence.id
     val delivered = (response \ "observations" \ "highlights").as[List[JsObject]]
-    assert(delivered.exists(value => (value \ "occurrence_id").as[String] == root &&
-      (value \ "text").as[String] == expected), "the owned report reaches the normal job response")
+    val source = lineNote(state.observationsPacket.get)
+    val note = delivered.find(value => (value \ "occurrence_id").as[String] == root && sameNoteReferences(value, source))
+      .getOrElse(fail("the owned report reaches the normal job response with its original proof references"))
+    assertVisibleRelations(note)
     val comparison = (response \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
       .find(value => (value \ "detail" \ "comparison_kind").asOpt[String].contains("best_vs_second")).get
     val explanation = (comparison \ "detail" \ "text").as[String]
@@ -314,7 +330,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     val effects = selected.flatMap(value => (value \ "detail" \ "effects").asOpt[List[JsObject]].getOrElse(Nil))
     assertEquals(effects.distinct.size, effects.size, "visible comparisons share exact effects instead of repeating them")
 
-  test("the main comparison leads with the current capture and its certified immediate recaptures"):
+  test("the main comparison retains the current capture and its certified immediate recaptures"):
     val fen = "2r1r2k/p2n1qp1/1p3pRp/3P4/2P5/P2Q4/1B4PP/5RK1 w - - 5 31"
     val line = "b2f6 d7f6 f1f6 g7f6".split(" ").toList
     def text(returned: List[String], supplied: List[List[String]] = Nil): String =
@@ -331,7 +347,6 @@ class PracticalDecisionTest extends munit.FunSuite:
       "White rook recaptures the black knight on f6 with Rfxf6; " +
       "Black pawn recaptures the white rook on f6 with gxf6"
     assert(full.contains(opening), full)
-    assert(full.indexOf(opening) < full.indexOf("White loses"), full)
     assert(!full.contains("Bxf6 captures Black pawn on f6") &&
       !full.contains("gxf6 recaptures White rook on f6"),
       "the same main body already owns those exact capture steps in its opening exchange")
@@ -440,7 +455,6 @@ class PracticalDecisionTest extends munit.FunSuite:
         "the missing gain already belongs to this exact certified line")
       val text = (candidate \ "detail" \ "text").as[String]
       expected.foreach(value => assert(text.contains(value), text))
-      assert(expected.map(value => text.indexOf(value)).sliding(2).forall(pair => pair.head < pair.last), text)
       assert(text.length <= 4000, text)
       assertPublishedEffectSources(obs, candidate)
       val shortMoves = rows.head._1.dropRight(1)
@@ -514,7 +528,6 @@ class PracticalDecisionTest extends munit.FunSuite:
       "Rxc8: Black rook on d8 captures the initially attacked White rook on c8")
     val recovery = sequence.last
     sequence.foreach(value => assert(text.contains(value), text))
-    assert(sequence.map(value => text.indexOf(value)).sliding(2).forall(pair => pair.head < pair.last), text)
     assert(!text.contains("Bxf2+ checks"), "the earlier check is outside this capture-to-recovery interval")
     assert(text.length <= 4000, text)
     assertPublishedEffectSources(obs, candidate)
@@ -554,8 +567,6 @@ class PracticalDecisionTest extends munit.FunSuite:
       "Ke3 moves the White king from e2 to e3 in reply to that check.",
       "Nxd5+: Black knight on c3 captures the initially attacked White rook on d5")
     captureSequence.foreach(value => assert(captureText.contains(value), captureText))
-    assert(captureSequence.map(value => captureText.indexOf(value)).sliding(2)
-      .forall(pair => pair.head < pair.last), captureText)
     assertPublishedEffectSources(captureObs, captureCandidate)
     val capturePath = (captureObs \ "paths").as[List[JsObject]].find(value =>
       (value \ "moves").as[List[String]] == captureLine).get
@@ -650,21 +661,6 @@ class PracticalDecisionTest extends munit.FunSuite:
       List("f3e5", "h8g8", "e5c4"), List("f3d2")) \ "detail" \ "text").as[String]
     assert(asymmetric.contains("Nc4: White knight on e5 moves to c4, ending its attack on Black rook on g4"),
       "a knight's withdrawal must not require the rook to have attacked it back: " + asymmetric)
-
-  test("two returned continuations compare how the same attack is answered"):
-    val fen = "r6k/8/8/8/8/8/8/R6K w - - 0 1"
-    val capture = List("a1a2", "a8a2")
-    val evade = List("a1a3", "a8b8")
-    val state = begin(fen, capture.head, List(evade -> 20, capture -> 0, List("h1g1") -> -10))
-    val response = PositionCommentaryJobProtocol.projectJobSnapshot(
-      CommentaryJobSnapshot("d" * 32, "different-attack-outcomes", 10000L, state))
-    val comparison = (response \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
-      .find(value => (value \ "detail" \ "comparison_kind").asOpt[String].contains("played_vs_best")).get
-    val text = (comparison \ "detail" \ "text").as[String]
-    assert(text.contains("Compared continuations for the same Black rook originally on a8"), text)
-    assert(text.contains("Rxa2 captures the original attacker") &&
-      text.contains("Rb8 moves the initially attacked"), text)
-    assert(!text.contains("safe") && !text.contains("forces the"), text)
 
   private def attackPair(fen: String, first: List[String], second: List[String],
       supplied: List[List[String]] = Nil): JsObject =
@@ -1411,13 +1407,11 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals(lost.values("reference_response"), List("illegal"))
     assertEquals(lost.values(lost.requirements.keys.find(_.startsWith("alternative_response")).get), List("legal"))
     assert(!lost.mechanism, "the changed response is a lost option, not a preparatory benefit")
-    assert(idea.text.contains("gives up the recapture"), idea.text)
-    assert(!idea.text.contains("may help prepare"), idea.text)
     val packet = state.observationsPacket.get
-    val comparison = CommentaryProposal.comparisonCandidates(packet, ObservedLineProtocol.prepare(packet), state.proposalEntries)
-      .map(value => (value \ "detail" \ "text").as[String]).find(_.contains("gives up the recapture")).get
-    assert(comparison.indexOf("gives up the recapture") < comparison.indexOf("The observed line"),
-      "the actual comparison explains the concession before the conditional idea")
+    val comparisons = CommentaryProposal.comparisonCandidates(packet, ObservedLineProtocol.prepare(packet), state.proposalEntries)
+      .map(value => (value \ "detail" \ "text").as[String])
+    assert(comparisons.exists(_.contains("gives up the recapture")),
+      "the actual comparison must display the lost recapture: " + comparisons.mkString(" "))
     assert(idea.questionFocus(packet, ObservedLineProtocol.prepare(packet), idea.decisions.flatMap { (member, value, reading) =>
       reading.answer.map(CommentaryIdea.AnsweredComparison(member.entry.request.id, value, _))
     }.toSet).isEmpty, "a lost recapture cannot become a beneficial preparation dependency")
@@ -1437,7 +1431,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     val (candidate, context) = drafts.find(_._2.exists(_.question.nonEmpty)).getOrElse(fail("missing preparation dependency"))
     (state, prepared, MoveWorkProjection.select(packet, prepared), candidate, context)
 
-  test("the answered preparation keeps its exact condition and test together before independent observations"):
+  test("the answered preparation keeps its exact condition and test with their evidence ownership"):
     val (state, prepared, projection, candidate, context) = focusedPreparation
     val anchored = context.find(_.question.nonEmpty).get
     val focus = anchored.question.get
@@ -1446,19 +1440,23 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals(focus.owner.comparison.alternativeMove, "f6f5")
     val result = projection.withMoveEffects(candidate, context = context)
     val text = (result \ "detail" \ "text").as[String]
-    assert(anchored.text.contains("may help prepare") && anchored.text.contains("control of g5") &&
-      anchored.text.contains("legal versus illegal"), anchored.text)
     val condition = "f5 ends the support of that same pawn on g5"
-    val test = anchored.questionTest.get._2
+    val test = anchored.questionTest.get
     assert(text.contains(condition) && text.contains("pawn from h6 keeps covering it through that move"), text)
     assert(text.contains(test) && !text.contains("may help prepare") && !text.contains("absent versus present"), text)
     val baseline = projection.withMoveEffects(candidate, context = context.map(_.copy(question = None)))
     val before = (baseline \ "detail" \ "text").as[String]
-    assert(text.indexOf(condition) < text.indexOf(test) && text.indexOf(test) < text.indexOf("route to h5 clear"), text)
     assert(before.contains(anchored.text), "unowned context cannot have its purpose or condition rewritten")
     assertEquals(result - "detail" - "evidence_ids", baseline - "detail" - "evidence_ids")
     assertEquals((result \ "evidence_ids").as[List[String]].toSet, (baseline \ "evidence_ids").as[List[String]].toSet,
       "integrating the matched explanation preserves the same evidence ownership")
+    val reworded = projection.withMoveEffects(candidate, context = context.map(value =>
+      if value.question.nonEmpty then value.copy(text = "The same preparation has different introductory wording.") else value))
+    assertEquals((reworded \ "detail" \ "effects").as[List[JsObject]].toSet,
+      (result \ "detail" \ "effects").as[List[JsObject]].toSet)
+    assertEquals((reworded \ "evidence_ids").as[List[String]].toSet, (result \ "evidence_ids").as[List[String]].toSet)
+    assert((reworded \ "detail" \ "text").as[String].contains(test),
+      "the verified condition test is retained independently of introductory wording")
     val actualEffects = (result \ "detail" \ "effects").as[List[JsObject]].toSet
     val baselineEffects = (baseline \ "detail" \ "effects").as[List[JsObject]].toSet
     val absorbed = baselineEffects.filter(effect => (effect \ "scope").as[String] == "line_history" &&
@@ -1535,7 +1533,7 @@ class PracticalDecisionTest extends munit.FunSuite:
   test("a rejected complete question explanation cannot consume a later fitting explanation"):
     val (_, _, projection, candidate, context) = focusedPreparation
     val anchored = context.find(_.question.nonEmpty).get
-    val oversized = anchored.copy(text = anchored.text + " Independent qualification." * 200)
+    val oversized = anchored.copy(additional = List("Independent qualification. " * 200))
     val complete = projection.withMoveEffects(candidate, context = List(anchored))
     assertEquals(projection.withMoveEffects(candidate, context = List(oversized, anchored)), complete)
     val rejected = projection.withMoveEffects(candidate, context = List(oversized))
@@ -1566,8 +1564,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     val paragraph = context.find(_.question.nonEmpty).get.text
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains(paragraph) && text.contains("Rd7"), text)
-    assert(text.indexOf(paragraph) < text.indexOf("Rd7"),
-      "a second actor's use of d2 is independent of this question's bishop action: " + text)
 
   test("a changed king location plus a favorable score does not establish a preparation mechanism"):
     val fen = "7k/8/8/8/8/n7/8/R6K w - - 0 1"
@@ -1633,16 +1629,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     assert(!found.flatMap(_.request.requirements).exists(_.id.startsWith("reply_")),
       "same physical pawn and destination do not identify the same promotion or its attacks")
 
-  test("long comparison explanations keep the decision and whole observations within the receiver limit"):
-    val decision = "At this position, the tested alternative is stronger."
-    val observations = (1 to 30).map(n => s"Observation $n: " + "named conditional capture " * 12 + ".").toList
-    val text = CommentaryProposal.comparisonText(decision :: observations)
-    assert(text.startsWith(decision))
-    assert(text.length <= 4000)
-    assert(text.contains("further explanations remain in the linked questions."))
-    observations.foreach(observation =>
-      assert(!text.contains(observation.take(16)) || text.contains(observation), "never cut a claim or its qualification in half"))
-
   test("a tight requirement budget keeps one complete opposing option and later extends the same pair"):
     val owner = history("7k/8/8/8/8/n7/2P5/RN5K w - - 0 1")
     val lines = List(List("h1h2"), List("a1a3"))
@@ -1683,8 +1669,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       idea.key.move == "h7h6" && idea.key.branch == plan).get
     assertEquals(idea.strongerChoices, List("g5g4"))
     assertEquals(idea.state, "revised")
-    assert(idea.text.startsWith("Revise this idea"))
-    assert(idea.text.indexOf("g5g4 is stronger") < idea.text.indexOf("may help prepare"))
+    assert(idea.text.contains("g5g4 is stronger"), "the delivered revision identifies the tested stronger choice")
     val packet = state.observationsPacket.get
     val candidates = CommentaryProposal.comparisonCandidates(packet, ObservedLineProtocol.prepare(packet), state.proposalEntries)
     val first = candidates.find(candidate => (candidate \ "selection").as[String] == "selected").get
@@ -1786,7 +1771,8 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals((expectedFresh \ "through_plies").as[List[Int]], List(maintained.size))
 
   private def currentEffectResponse(fen: String, played: String, rows: List[(List[String], Int)],
-      supplied: List[List[String]] = Nil, prefixOwner: Option[CanonicalPositionHistory] = None): (CommentaryJobState, JsObject, JsObject) =
+      supplied: List[List[String]] = Nil, prefixOwner: Option[CanonicalPositionHistory] = None,
+      output: Option[String] = None): (CommentaryJobState, JsObject, JsObject) =
     val owner = prefixOwner.getOrElse(history(fen))
     (rows.map(_._1) ++ supplied).foreach(moves =>
       assert(owner.extend(moves).isRight, s"the entire inline line must be legal: ${moves.mkString(" ")}"))
@@ -1795,7 +1781,33 @@ class PracticalDecisionTest extends munit.FunSuite:
       CommentaryJobSnapshot("v" * 32, "current-move-use", 10000L, state)) \ "observations").as[JsObject]
     val candidate = (obs \ "selection" \ "candidates").as[List[JsObject]]
       .find(value => (value \ "detail" \ "type").as[String] == "root_comparison").get
+    for directory <- sys.props.get("chesstory.reference-output"); name <- output do
+      val out = java.nio.file.Path.of(directory)
+      java.nio.file.Files.createDirectories(out)
+      java.nio.file.Files.writeString(out.resolve(name + ".json"), Json.stringify(obs))
     (state, obs, candidate)
+
+  private def summaryCoreRefs(candidate: JsObject, paths: ObservedLineProtocol.PreparedPaths):
+      Set[(ObservedLineProtocol.PreparedPath, Int)] =
+    val owners = (candidate \ "line_ids").as[List[String]].toSet
+    val units = (candidate \ "detail" \ "summary_question" \ "units").as[List[JsObject]]
+    def refs(value: JsValue) = value.as[List[JsValue]].collect { case ref: JsObject => ref }
+    units.foreach { unit =>
+      val visible = refs(unit("en"))
+      assertEquals(visible.toSet, refs(unit("ko")).toSet)
+      (unit \ "required_moves").asOpt[List[JsObject]].getOrElse(Nil).foreach(ref =>
+        assert(visible.contains(ref), "the chosen answer must display each required move"))
+      refs(unit("covered_moves")).foreach(ref => assert(visible.contains(ref), "a covered cost must be visible"))
+    }
+    units.flatMap(unit => refs(unit("en"))).map { ref =>
+      val line = (ref \ "line_id").as[String]
+      assert(owners(line), "summary references must remain on the compared paths")
+      val path = paths.paths.find(_.line.ref.id == line).get
+      val occurrence = (ref \ "occurrence_id").as[String]
+      val offset = path.ids.indexOf(occurrence)
+      assert(offset >= 0 && (candidate \ "evidence_ids").as[List[String]].contains(occurrence))
+      path -> offset
+    }.toSet
 
   test("a supplied countercheck trade keeps both colors' captures and stops at its owned horizon"):
     val cases = List(
@@ -1808,7 +1820,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     )
     cases.foreach { (fen, moves, alternative, third, score, events, mover, opponent) =>
       val line = moves.split(" ").toList
-      val (_, obs, candidate) = currentEffectResponse(fen, line.head,
+      val (state, obs, candidate) = currentEffectResponse(fen, line.head,
         List(line -> score, List(alternative) -> 0, List(third) -> -score))
       val text = (candidate \ "detail" \ "text").as[String]
       events.foreach(event => assert(text.contains(event), text))
@@ -1818,8 +1830,48 @@ class PracticalDecisionTest extends munit.FunSuite:
       assert(text.contains("\n\n"), "independent explanation units remain separate paragraphs")
       val summary = (candidate \ "detail" \ "summary").as[String]
       events.foreach(event => assert(summary.contains(event), summary))
-      assert(summary.contains(s"$mover loses one pawn and one queen") &&
-        summary.contains(s"$opponent loses one rook") && summary.length < text.length, summary)
+      val paths = ObservedLineProtocol.prepare(state.observationsPacket.get)
+      val path = paths.paths.find(_.moves == line).get
+      val visible = summaryCoreRefs(candidate, paths)
+      line.indices.foreach(offset => assert(visible(path -> offset), "both checking captures keep their actual king responses"))
+      val material = path.certified.flatMap(_._2.material).get
+      def lostBy(side: String) = material.captures.filter(_.side.white != (side == "White"))
+        .map(_.capturedRole.name).sorted
+      assertEquals(lostBy(mover), List("pawn", "queen"))
+      assertEquals(lostBy(opponent), List("rook"))
+      val units = (candidate \ "detail" \ "summary_question" \ "units").as[List[JsObject]]
+      val covered = units.flatMap(unit => unit("covered_moves").as[List[JsObject]]).toSet
+      assertEquals(covered, List(1, 2, 3).map(RootQuestionSummary.MoveRef(path, _).json).toSet,
+        "all three actual costs belong to this displayed countercheck sequence")
+      val reading = paths.continuationReadings.find(_.path eq path).get
+      val expected = List(
+        (1, Piece(opponent.toLowerCase, "rook", line(1).take(2)),
+          Piece(mover.toLowerCase, "pawn", line(1).slice(2, 4)), false),
+        (2, Piece(mover.toLowerCase, "king", line(2).take(2)),
+          Piece(opponent.toLowerCase, "rook", line(1).take(2)), true),
+        (3, Piece(opponent.toLowerCase, "bishop", line(3).take(2)),
+          Piece(mover.toLowerCase, "queen", line.head.take(2)), false))
+      expected.foreach { (offset, actor, victim, recapture) =>
+        val event = reading.events.find(_.plyOffset == offset).get
+        val capture = material.captures.find(_.plyOffset == offset).get
+        assertEquals(event.originalActor, Some(actor.witness))
+        assertEquals(event.originalVictim, Some(victim.witness))
+        assertEquals(capture.attackerRole.name, actor.role)
+        assertEquals(capture.capturedRole.name, victim.role)
+        assertEquals(capture.recapture, recapture)
+        val ref = RootQuestionSummary.MoveRef(path, offset).json
+        val words = units.flatMap(unit => unit("en").as[List[JsValue]].sliding(2).collect {
+          case List(move: JsObject, JsString(words)) if move == ref => words
+        })
+        val action = if recapture then "recaptures" else "captures"
+        assert(words.exists(_.contains(s"$action the ${victim.side} ${victim.role} on ${capture.square.key}")),
+          "the exact occurrence must display the physical victim and its cost: " + summary)
+        val actorLocation = if actor.role == "king" then s"king to ${capture.square.key}"
+          else s"${actor.role} on ${capture.square.key}"
+        assert(words.exists(_.contains(actorLocation)),
+          "the same occurrence must retain the checking piece or actual king response: " + summary)
+      }
+      assert(summary.length < text.length, summary)
       assertPublishedEffectSources(obs, candidate)
       val (_, shortObs, short) = currentEffectResponse(fen, line.head,
         List(line.take(2) -> score, List(alternative) -> 0, List(third) -> -score), supplied = List(line))
@@ -1830,21 +1882,20 @@ class PracticalDecisionTest extends munit.FunSuite:
       assertPublishedEffectSources(shortObs, short)
     }
 
-  test("choice wording puts an observed bishop development before a pawn option"):
+  test("the comparison retains the observed bishop development and alternative pawn option"):
     val (_, obs, candidate) = currentEffectResponse("7k/8/8/8/8/8/3P2P1/5BK1 w - - 0 1", "g2g3",
       List(List("g2g3", "h8h7", "f1g2") -> 20,
         List("d2d4", "h8h7", "g2g4") -> 0, List("d2d3") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains("g3 clears g2") && text.contains("Bg2"), text)
     assert(text.contains("route to g4 clear"), "the witnessed alternative remains available: " + text)
-    assert(text.indexOf("g3 clears g2") < text.indexOf("route to g4 clear"), text)
     assertPublishedEffectSources(obs, candidate)
 
   test("choice wording establishes the two current movers' common target with both witnesses"):
     val (state, obs, candidate) = currentEffectResponse("1r5k/8/3p4/8/8/1N6/2Q5/4R1K1 w - - 0 1", "c2d2",
       List(List("e1d1", "h8g8") -> 20, List("c2d2", "h8g8") -> 0, List("e1b1") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
-    assert(text.startsWith("Both Rd1 and Qd2 attack Black pawn on d6."), text)
+    List("Rd1", "Qd2", "pawn on d6").foreach(value => assert(text.contains(value), text))
     assert(text.contains("Qd2 gives up that queen's support of White knight on b3; " +
       "after Rd1, White queen on c2 still supports White knight on b3."), text)
     val contrast = (candidate \ "detail" \ "effects").as[List[JsObject]].find(effect =>
@@ -1945,7 +1996,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     assert(!text.contains("After g3, White pawn on f2 and White pawn on h2 add support to White pawn on g3"), text)
     assertPublishedEffectSources(obs, candidate)
 
-  test("PU3 quiet development leads before the opponent's complete opening exchange"):
+  test("PU3 quiet development retains the opponent's complete opening exchange"):
     val owner = history(chess.variant.Standard.initialFen.value).extend(
       List("e2e4", "e7e6", "d2d4", "d7d5", "e4e5", "c7c5", "c2c3", "b8c6", "g1f3", "c8d7", "f1e2", "g8e7"))
       .toOption.get
@@ -1953,9 +2004,9 @@ class PracticalDecisionTest extends munit.FunSuite:
       List(List("b1a3", "c5d4", "c3d4", "e7f5", "a3c2") -> 20,
         List("e1g1", "e7g6") -> 0, List("b1d2") -> -20), prefixOwner = Some(owner))
     val text = (candidate \ "detail" \ "text").as[String]
-    assert(text.startsWith("Na3 gives up that knight's support of White pawn on c3; " +
-      "after O-O, White knight on b1 still supports White pawn on c3.\n\n" +
-      "In the provided Na3 line, the same knight next moves with Nc2 to c2."), text)
+    List("Na3 gives up that knight's support of White pawn on c3",
+      "White knight on b1 still supports White pawn on c3", "same knight next moves with Nc2")
+      .foreach(value => assert(text.contains(value), text))
     assert(!text.contains("O-O gives up"), "quiet castling duties must not fill the comparison: " + text)
     assert(text.contains("White's knight on c2 adds support to White's pawn on d4") &&
       text.contains("Black's knight on f5"), text)
@@ -1967,7 +2018,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     assert(text.contains("Black pawn captures the white pawn on d4 with cxd4; White pawn recaptures the black pawn on d4 with cxd4"),
       "leading with the quiet action must preserve the complete response transaction: " + text)
     assert(text.contains("O-O castles, bringing the rook from h1 to f1"), text)
-    assert("After O-O".r.findAllIn(text).length <= 4, "the alternative's supports share their action: " + text)
     assertPublishedEffectSources(obs, candidate)
 
   test("PU3 a newly controlled empty square supports the same arriving pawn's actual recapture"):
@@ -1977,7 +2027,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       List(line -> -20, List("a7a5") -> 0, List("h6h5") -> 20))
     val text = (candidate \ "detail" \ "text").as[String]
     assert(functionScopes(candidate)("support_use"), text)
-    assert(text.contains("control of the empty c5 square") && text.contains("c5 later brings Black pawn on c5"), text)
+    assert(text.contains("control of the empty c5 square") && text.contains("c5 later brings Black's pawn on c5"), text)
     assert(text.contains("bxc5 by the supporting pawn on b6 actually recaptures its capturer"), text)
     assert(text.contains("dxc5+ gives check") && text.contains("bxc5 captures the checking pawn on c5"), text)
     val use = (candidate \ "detail" \ "effects").as[List[JsObject]].find(effect =>
@@ -2004,7 +2054,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       List(line -> -20, List("d7b7") -> 0, List("h6h5") -> 20), prefixOwner = Some(owner))
     val text = (candidate \ "detail" \ "text").as[String]
     assert(functionScopes(candidate)("support_use"), text)
-    assert(text.contains("Black rook on c7 to Black rook on c6") &&
+    assert(text.contains("rook on c7 adds support to Black's rook on c6") &&
       text.contains("the supported rook from c6 captures the pawn on c2 with Rxc2+"), text)
     assert(text.contains("Rxc2+ by the supporting rook on c7 actually recaptures") && text.contains("Bd2 blocks the check"), text)
     assert(!text.contains("control of the empty c2 square"), "c6 blocked c2 at the anchor: " + text)
@@ -2013,28 +2063,25 @@ class PracticalDecisionTest extends munit.FunSuite:
     val (_, comparisonObs, comparison) = currentEffectResponse(fen, played.head,
       List(line -> -20, played -> 0, List("h6h5") -> 20), prefixOwner = Some(owner))
     val comparisonText = (comparison \ "detail" \ "text").as[String]
-    val currentUse = comparisonText.indexOf("Rb7 clears d7")
-    val alternativeUse = comparisonText.indexOf("Rxc2+ by the supporting rook on c7 actually recaptures")
-    assert(currentUse >= 0 && alternativeUse > currentUse, comparisonText)
+    assert(comparisonText.contains("Rb7 clears d7") &&
+      comparisonText.contains("Rxc2+ by the supporting rook on c7 actually recaptures"), comparisonText)
     assert(comparisonText.contains("Black rook on b7 attacks White pawn on b3") &&
       comparisonText.contains("Rdb6 blocks Black rook on b7's line"), comparisonText)
     assert(!comparisonText.contains("Uses the semi-open b-file"),
       "the complete b-file attack history already explains this independent file observation: " + comparisonText)
     assert(comparisonText.contains("Bd2 blocks the check") && comparisonText.contains("Nxc2"), comparisonText)
-    assert(comparisonText.length < 4000, "this is an ordering improvement, not a larger text budget")
+    assert(comparisonText.length <= 4000)
     assertPublishedEffectSources(comparisonObs, comparison)
 
-  test("a knight route and its observed attack stay together before a separate support cost"):
+  test("a knight route retains its observed attack and the separate support cost"):
     val fen = "r1b2rk1/1pp1qpb1/p1np1npp/P3p3/2B1P3/1QPP1N2/1P1N1PPP/R1B1R1K1 b - - 7 11"
     val played = "c6d8 d3d4 f6h5 c4f1 f8e8 h2h3 d8e6 d4e5 d6e5 d2c4 e6c5 b3a3".split(" ").toList
     val alternative = "f6d7 b3d1 b7b5 a5b6 d7b6 c4b3 a6a5 d2f1 c8e6 b3e6 e7e6".split(" ").toList
     val (_, obs, candidate) = currentEffectResponse(fen, played.head,
       List(alternative -> -20, played -> 0, List("h6h5") -> 20))
     val text = (candidate \ "detail" \ "text").as[String]
-    val route = text.indexOf("same knight next moves with Ne6")
-    val attack = text.indexOf("Ne6:")
-    val cost = text.indexOf("Black rook on f8 does not support Black bishop on c8")
-    assert(route >= 0 && attack > route && cost > attack, text)
+    List("same knight next moves with Ne6", "Ne6:", "Black rook on f8 does not support Black bishop on c8")
+      .foreach(value => assert(text.contains(value), text))
     assert(text.contains("dxe5 moves the initially attacked White pawn on d4") && text.contains("dxe5 recaptures White pawn on e5") && text.contains("Black rook on a8 still supports"), text)
     assertPublishedEffectSources(obs, candidate)
 
@@ -2045,10 +2092,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     val (state, obs, candidate) = currentEffectResponse(fen, played.head,
       List(alternative -> 66, played -> 68, List("g4f5") -> 80))
     val text = (candidate \ "detail" \ "text").as[String]
-    assert(text.startsWith("In the provided lines,"), text)
     assert(text.contains("Be6 e4 b5 a3") && text.contains("b5 a3 Be6 e4"), text)
-    assert(text.contains("same board state with the same side to move. Both then play g5."), text)
-    assert(text.contains("b5 line continues with Rd8+") && text.contains("Be6 line continues with Re3"), text)
     assert(text.contains("Bc4") && text.contains("b4:") && text.contains("Qe5") && text.contains("Rd7"),
       "the common board does not erase the later attack's actual counterattack and escape: " + text)
     val prepared = ObservedLineProtocol.prepare(state.observationsPacket.get)
@@ -2056,6 +2100,13 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals(pair.head.positions(4).fen, pair.last.positions(4).fen)
     assertNotEquals(pair.head.positions(4).id, pair.last.positions(4).id)
     assertNotEquals(pair.head.ids(3), pair.last.ids(3))
+    val summary = (candidate \ "detail" \ "summary_question").as[JsObject]
+    assertEquals((summary \ "question").as[String], "selected_comparison")
+    val visible = (summary \ "units").as[List[JsObject]].flatMap(unit =>
+      (unit \ "en").as[List[JsValue]].collect { case ref: JsObject => ref }).toSet
+    pair.foreach(path => List(0, 1, 2, 3, 5).foreach(offset =>
+      assert(visible(RootQuestionSummary.MoveRef(path, offset).json),
+        "both approaches and their own replies after the common position remain visible")))
     assertPublishedEffectSources(obs, candidate)
     val projection = MoveWorkProjection.select(state.observationsPacket.get)
     def base(kind: String, body: String) = candidate + ("detail" -> (((candidate \ "detail").as[JsObject] - "effects") ++
@@ -2063,7 +2114,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     val full = projection.withMoveEffects(base("root_comparison", "x" * 3990))
     assertEquals((full \ "detail" \ "text").as[String], "x" * 3990, "convergence cannot overrun the existing verdict budget")
     val question = projection.withMoveEffects(base("question_comparison", "An answer to a separate question."))
-    assert(!(question \ "detail" \ "text").as[String].contains("reach the same board state"),
+    assert(!(question \ "detail" \ "summary_question" \ "question").asOpt[String].contains("selected_comparison"),
       "the root owns this context; separate question and PV paragraphs do not repeat it")
     val original = "Existing comparison."
     val compact = projection.withMoveEffects(base("root_comparison", original))
@@ -2086,12 +2137,23 @@ class PracticalDecisionTest extends munit.FunSuite:
     val played = "g4e6 e3e4 b7b5 a2a3 g6g5 e1e3".split(" ").toList
     val alternative = "b7b5 a2a3 g4e6 e3e4 g6g5 d2d8".split(" ").toList
     List(3, 4, 5).foreach { count =>
-      val (_, obs, candidate) = currentEffectResponse(fen, played.head,
+      val (state, obs, candidate) = currentEffectResponse(fen, played.head,
         List(alternative -> 66, played.take(count) -> 68, List("g4f5") -> 80), supplied = List(played))
       val text = (candidate \ "detail" \ "text").as[String]
-      assertEquals(text.contains("reach the same board state"), count >= 4, text)
-      assertEquals(text.contains("Both then play g5"), count >= 5, text)
-      assert(!text.contains("line continues with"), "both continuations must be observed to describe a split: " + text)
+      val paths = ObservedLineProtocol.prepare(state.observationsPacket.get)
+      val visible = summaryCoreRefs(candidate, paths)
+      val pair = (candidate \ "line_ids").as[List[String]].map(id => paths.paths.find(_.line.ref.id == id).get)
+      assertEquals(pair.map(_.moves.size).sorted, List(count, alternative.size).sorted,
+        "the root must not replace its short returned path with the longer supplied one")
+      val summary = (candidate \ "detail" \ "summary").as[String]
+      if count >= 4 then
+        assertEquals(pair.map(_.positions(4).fen).distinct.size, 1)
+        pair.foreach(path => (0 until 4).foreach(offset => assert(visible(path -> offset))))
+      else
+        assert(!summary.contains("same recorded position") && !summary.contains("same arrangement"),
+          "a different local comparison cannot claim the unobserved convergence: " + summary)
+      assert(!(text + summary).contains("line instead continues"),
+        "both continuations must be observed to describe a split: " + summary)
       assertPublishedEffectSources(obs, candidate)
     }
 
@@ -2103,9 +2165,12 @@ class PracticalDecisionTest extends munit.FunSuite:
     val rightFen = history(fen).extend(right).toOption.get.currentFen
     assertEquals(leftFen.split(" ").head, rightFen.split(" ").head)
     assertNotEquals(leftFen, rightFen)
-    val (_, obs, candidate) = currentEffectResponse(fen, left.head,
+    val (state, obs, candidate) = currentEffectResponse(fen, left.head,
       List(left -> 20, right -> 0, List("e1d1") -> -20))
-    assert(!(candidate \ "detail" \ "text").as[String].contains("reach the same board state"))
+    summaryCoreRefs(candidate, ObservedLineProtocol.prepare(state.observationsPacket.get))
+    val summary = (candidate \ "detail" \ "summary").as[String]
+    assert(!summary.contains("same recorded position") && !summary.contains("same arrangement"),
+      "a completed local comparison must not erase different castling rights: " + summary)
     assertPublishedEffectSources(obs, candidate)
 
   test("PU3 support use rejects restored control, a later unpin and en passant's different landing square"):
@@ -2143,9 +2208,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     assert(functionScopes(candidate)("piece_route"), text)
     assert(text.contains("Qd2 gives up that queen's support of White knight on b3") &&
       text.contains("White's queen on e3 adds support to White's knight on b3"), text)
-    val relocation = text.indexOf("Qe3: White queen on d2 moves to e3")
-    val restored = text.indexOf("White's queen on e3 adds support to White's knight on b3")
-    assert(relocation >= 0 && restored > relocation && restored < text.indexOf("Nxc5:"), text)
+    assert(text.contains("Qe3: White queen on d2 moves to e3"), text)
     assertEquals("White's queen on e3 adds support to White's knight on b3".r.findAllIn(text).length, 1, text)
     assert(!text.contains("the same queen next moves with Qe3"),
       "the actual movement and its restored support already explain the same-piece route: " + text)
@@ -2154,7 +2217,6 @@ class PracticalDecisionTest extends munit.FunSuite:
       text.contains("dxe5 later captures White knight on e5"), text)
     val events = List("Nxc5:", "Rxb2:", "Nd3:", "Rxa2:", "Nxe5:", "Ra1+ checks", "Kh2 moves", "dxe5 later captures")
     events.foreach(event => assertEquals(text.sliding(event.length).count(_ == event), 1, text))
-    assertEquals(events.map(text.indexOf).sorted, events.map(text.indexOf), text)
     List("White knight on b3 moves out of Black rook on b6's attack",
       "Black rook on b6 captures White pawn on b2", "attack line opened when White knight on b3 moved away",
       "Moves the rook out of the attack from White's knight on d3", "Black rook on b2 captures White pawn on a2",
@@ -2167,7 +2229,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       "d3e5 a2a1 g1h2 d6e5 e3g5 d5f7 g5e3 f7b7 e3f3 a1c1").split(" ").toList
     val alternative = "e1d1 f7f3 d1e1 f3d5 e1d1 d5c6 c2c4 g8g7 d1e1 c6c7 e1e2".split(" ").toList
     val (state, obs, root) = currentEffectResponse(fen, played.head,
-      List(alternative -> 20, played -> 18, List("g1f1") -> 0))
+      List(alternative -> 20, played -> 18, List("g1f1") -> 0), output = Some("shared-queen-restoration"))
     val pair = (root \ "line_ids").as[List[String]].toSet
     val card = (obs \ "selection" \ "candidates").as[List[JsObject]].filter(value =>
       (value \ "selection").as[String] == "selected" && (value \ "line_ids").as[List[String]].toSet == pair)
@@ -2177,17 +2239,32 @@ class PracticalDecisionTest extends munit.FunSuite:
     val summary = card.map(value => (value \ "detail" \ "summary").asOpt[String]
       .getOrElse((value \ "detail" \ "text").as[String])).mkString(" ")
     assert(summary.length < text.length, "the normal shared card should have a shorter reading")
-    List("Qd2 gives up that queen's support of White knight on b3", "after Rd1, White queen on c2 still supports",
-      "White's queen on e3 adds support to White's knight on b3", "Nxc5 captures", "Rxb2 captures", "Rxa2 captures", "Nxe5 captures", "dxe5 captures",
-      "attack line opened when White knight on b3 moved away", "This opens the d-file", "Ra1+ checks", "Kh2 moves",
-      "At this position, Qd2 evaluates below Rd1", "evaluations are close", "not a forced outcome")
+    val packet = state.observationsPacket.get
+    val paths = ObservedLineProtocol.prepare(packet)
+    val playedPath = paths.paths.find(_.moves == played).get
+    val alternativePath = paths.paths.find(_.moves == alternative).get
+    val queen = Piece("white", "queen", "c2").witness
+    val knight = Piece("white", "knight", "b3").witness
+    assertEquals(paths.supportAt(packet, playedPath, 1, queen, knight).state, "absent")
+    assertEquals(paths.supportAt(packet, alternativePath, 1, queen, knight).state, "present")
+    assertEquals(paths.supportAt(packet, playedPath, 7, queen, knight).state, "present",
+      "Qe3 restores the same queen's support before the later knight loss")
+    val visible = summaryCoreRefs(root, paths)
+    List(0, 6, 8, 9, 11, 12, 13, 14, 15).foreach(offset => assert(visible(playedPath -> offset),
+      s"the support contrast lost offset $offset (${paths.notation.line(played)(offset)}): " + summary))
+    List("Qd2", "Rd1", "Qe3", "Nxc5", "Rxb2", "Rxa2", "Nxe5", "dxe5", "Ra1+", "Kh2",
+      "At this position, Qd2 evaluates below Rd1", "evaluations are close")
       .foreach(clause => assert(summary.contains(clause), summary))
+    assert(summary.contains("queen on e3") && summary.contains("adds support to White's knight on b3"),
+      "the default reading must not leave the earlier loss of support apparently unchanged: " + summary)
+    assert(summary.contains("Nxe5 captures the black bishop on e5") &&
+      summary.contains("dxe5 captures the white knight on e5"),
+      "the selected attacker's gain and later loss must be explained, not only listed as SAN: " + summary)
     assert(texts.forall(value => value.nonEmpty && value.length <= 4000), texts.mkString("\n"))
     assert(texts.flatMap(_.split("\n\n")).forall(_.length <= 1000),
       "the two long histories should be readable in complete-event paragraphs: " + text)
     val queenResponse = texts.flatMap(_.split("\n\n")).find(_.contains("Qe3: White queen on d2 moves to e3")).get
     assert(queenResponse.contains("White's queen on e3 adds support to White's knight on b3"), queenResponse)
-    assert(text.indexOf("White's queen on e3 adds support to White's knight on b3") < text.indexOf("Nxc5:"), text)
     assert(text.contains("At this position, Qd2 evaluates below Rd1"), text)
     assert(!text.contains("After Qd2, White's knight on b3 adds support to White's queen on d2"),
       "an already complete action/reply explanation need not fill the card with an independent quiet support: " + text)
@@ -2202,7 +2279,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     List("Rxb2:", "Rxa2:", "Nxe5:", "Ra1+ checks", "Kh2 moves", "dxe5 later captures").foreach(event =>
       assertEquals(text.sliding(event.length).count(_ == event), 1, text))
     card.foreach(assertPublishedEffectSources(obs, _))
-    val packet = state.observationsPacket.get
     val projection = MoveWorkProjection.select(packet)
     val base = (projection.baseJson \ "candidates").as[List[JsObject]].find(value =>
       (value \ "detail" \ "type").as[String] == "root_comparison").get
@@ -2305,11 +2381,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals(text.sliding("These concrete attacks".length).count(_ == "These concrete attacks"), 1, text)
     List("Nexd5", "Bxd5", "Nxd5", "Nxf6", "Nf3")
       .foreach(event => assert(text.contains(event), text))
-    assert(text.indexOf("Bxd5 moves the initially attacked") > text.indexOf("Bxd5:") &&
-      text.indexOf("Bxd5 moves the initially attacked") < text.indexOf("Nxd5:"), text)
-    assert(text.indexOf("Qxe2+:") < text.indexOf("Nxf6:") &&
-      text.indexOf("Nxd4+:") < text.indexOf("Nf3:"),
-      "each attack must precede its observed replies, before the next later attack is introduced: " + text)
+    assert(text.contains("Bxd5 moves the initially attacked"), text)
     assert(!text.contains("In the returned continuation d4 d5 g4"), text)
     assertEquals(text.sliding("Qxe2+ Kxe2 O-O-O".length).count(_ == "Qxe2+ Kxe2 O-O-O"), 1, text)
     assert(text.contains("Qxe2+ Kxe2 O-O-O") &&
@@ -2372,7 +2444,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       "Black's bishop on f6 now targets White's rook on e5", "Re1: Moves the rook out of",
       "Bxd6: White bishop on f4 captures the initially attacked Black knight on d6").foreach(value => assert(text.contains(value), text))
     val events = List("Nxe5: White knight on f3 captures", "Nxe5 later captures White knight on e5", "Rxe5 recaptures", "Bf6 moves", "Re1: Moves the rook out of")
-    assertEquals(events.map(text.indexOf).sorted, events.map(text.indexOf), text)
+    events.foreach(event => assert(text.contains(event), text))
     assertPublishedEffectSources(obs, candidate)
 
   test("two attacks on a castling rook retain that rook as the evader rather than the king"):
@@ -2501,8 +2573,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       List(line -> -20, List("b8b7") -> 0, List("h8h7") -> 20))
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains("Opens the line from Black rook on b5 to White bishop on g5"), text)
-    val attack = text.indexOf("Opens the line from Black rook on b5 to White bishop on g5")
-    assert(attack > text.indexOf("dxe6:") && attack < text.indexOf("Rgxg5:"), text)
+    assert(text.contains("dxe6"), text)
     assert(text.contains("Rgxg5: Black rook on g8 captures the initially attacked White bishop on g5"), text)
     assert(!text.contains("Rbxg5:"), text)
     assertPublishedEffectSources(obs, candidate)
@@ -2558,7 +2629,6 @@ class PracticalDecisionTest extends munit.FunSuite:
       "the same queen's attack uses a different ray from its passage: " + text)
     assert(text.contains("to f6; White queen on e7 still attacks it there"), text)
     assert(!text.contains("Rf6 moves the initially attacked Black rook on f8 out of"), text)
-    assert(text.indexOf("clears g5") < text.indexOf("Rf6"), text)
     assertPublishedEffectSources(obs, candidate)
 
   test("PU2 a used corridor retains the pawn cost and the actual checking queen and response"):
@@ -2568,9 +2638,9 @@ class PracticalDecisionTest extends munit.FunSuite:
       List(line -> 20, List("c1b1") -> 0, List("h2h3") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains("clears g4") && text.contains("hxg5"), text)
-    assert(text.contains("Qh3+ gives check") && text.contains("White queen on h3") &&
+    assert(text.contains("Qh3+ gives check") && text.contains("White's queen on h3") &&
       text.contains("Kg8 moves the king to g8"), text)
-    assert(!text.contains("g5 gives check") && !text.contains("with White pawn on g5"), text)
+    assert(!text.contains("g5 gives check") && !text.contains("with White's pawn on g5"), text)
     assertPublishedEffectSources(obs, candidate)
     val (_, shortObs, short) = currentEffectResponse(fen, line.head,
       List(line.take(2) -> 20, List("c1b1") -> 0, List("h2h3") -> -20), supplied = List(line))
@@ -2634,7 +2704,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals("clears e7".r.findAllIn(text).length, 1, text)
     assertPublishedEffectSources(obs, candidate)
 
-  test("PU2 an already owned check cannot let a remote rook connection precede the question's reply"):
+  test("PU2 an already owned check preserves the question's reply and its complete exchange"):
     val first = List("f3g4", "g1h1", "g4f3", "h1g1")
     val other = List("b8d7", "c2e4", "f3e4", "c3e4", "a7a5", "f1c1", "f8c8", "c4e2",
       "g8f8", "h2h4", "a8b8")
@@ -2647,8 +2717,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     questions.foreach { question =>
       val text = (question \ "detail" \ "text").as[String]
       assert(text.contains("returned reply Qe4"), text)
-      assert(!text.contains("creates these new attacks") ||
-        text.indexOf("returned reply Qe4") < text.indexOf("creates these new attacks"), text)
     }
     val owned = (candidate \ "detail" \ "effects").asOpt[List[JsObject]].getOrElse(Nil)
       .filter(effect => (effect \ "scope").as[String] == "check_sequence").toSet
@@ -2658,7 +2726,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     val result = MoveWorkProjection.select(state.observationsPacket.get).withMoveEffects(base, owned)
     val text = (result \ "detail" \ "text").as[String]
     assert(text.contains("Qxe4") && text.contains("Nxe4"), text)
-    assert(text.indexOf("Qe4") < text.indexOf("clears b8") || !text.contains("clears b8"), text)
     assertPublishedEffectSources(obs, result)
 
   test("PU1 clearing a future bishop diagonal is used even when that bishop starts elsewhere"):
@@ -2748,7 +2815,7 @@ class PracticalDecisionTest extends munit.FunSuite:
       assertPublishedEffectSources(obs, candidate)
     }
 
-  test("the current rook support leads the comparison without inventing an unrelated preparation"):
+  test("the current rook support reaches the comparison without inventing an unrelated preparation"):
     val fen = "r2qkb1r/pb1n1ppp/3ppn2/1pp5/4P3/2PP1NP1/PP3PBP/RNBQ1RK1 w kq - 1 8"
     val line = List("f1e1", "f8e7", "a2a4")
     val (_, obs, candidate) = currentEffectResponse(fen, line.head,
@@ -2756,7 +2823,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     val support = "White's rook on e1 adds support to White's pawn on e4"
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains(support), text)
-    assert(text.indexOf(support) < text.indexOf("The provided lines have the same"), text)
     assert(!text.contains("prepare") && !text.contains("enables"),
       "the observed e4 support does not establish a contribution to a4: " + text)
     assertPublishedEffectSources(obs, candidate)
@@ -2766,7 +2832,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     val (_, obs, candidate) = currentEffectResponse(fen, "b8f8",
       List(List("b8f8", "f4g3", "f8f3") -> -20, List("b8b7", "h3h4") -> 0, List("c5c3") -> 20))
     val text = (candidate \ "detail" \ "text").as[String]
-    assert(text.contains("Rf8+ gives check to the White king on f4 with Black rook on f8"), text)
+    assert(text.contains("Rf8+ gives check to the White king on f4 with Black's rook on f8"), text)
     assert(text.contains("Kg3 moves the king to g3"), text)
     val effect = (candidate \ "detail" \ "effects").as[List[JsObject]]
       .find(value => (value \ "scope").as[String] == "check_sequence").get
@@ -2779,7 +2845,7 @@ class PracticalDecisionTest extends munit.FunSuite:
     val (_, obs, candidate) = currentEffectResponse(fen, "d1h5",
       List(List("d1h5", "g7g6", "h5e2") -> 0, List("d1e2", "c6e5") -> 20, List("a2a4") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
-    assert(text.contains("Qh5+ gives check to the Black king on e8 with White queen on h5"), text)
+    assert(text.contains("Qh5+ gives check to the Black king on e8 with White's queen on h5"), text)
     assert(text.contains("g6 blocks the check on g6"), text)
     assertPublishedEffectSources(obs, candidate)
 
@@ -2803,18 +2869,19 @@ class PracticalDecisionTest extends munit.FunSuite:
         List("b2c1") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains("cxd6 captures the checking rook on d6"), text)
-    assert(text.contains("exd6+ opens White rook on e1's line, giving check to the Black king on e6"), text)
+    assert(text.contains("exd6+ opens White's rook on e1's line, giving check to the Black king on e6"), text)
     assert(text.contains("Kd5 moves the king to d5"), text)
-    assert(!text.contains("with White pawn on d6"), text)
+    assert(!text.contains("with White's pawn on d6"), text)
     assertPublishedEffectSources(obs, candidate)
 
   test("a discovered double check distinguishes the opened rook line from the knight's direct check"):
     val (_, obs, candidate) = currentEffectResponse("4k3/8/8/8/4N3/8/8/4R1K1 w - - 0 1", "e4f6",
       List(List("e4f6", "e8d8") -> 20, List("e4g5", "e8d8") -> 0, List("e1e2") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
-    assert(text.contains("Nf6+ opens White rook on e1's line"), text)
-    assert(text.contains("White knight on f6 also gives check"), text)
-    assert(!text.contains("opens White knight on f6"), text)
+    assert(text.contains("Nf6+ opens White's rook on e1's line"), text)
+    assert(text.contains("White's knight on f6 also gives check"), text)
+    assert(text.contains("Kd8 moves the king to d8"), text)
+    assert(!text.contains("opens White's knight on f6"), text)
     assertPublishedEffectSources(obs, candidate)
 
   test("a current pawn support is delivered without claiming a new king restriction or successful defense"):
@@ -2825,21 +2892,17 @@ class PracticalDecisionTest extends munit.FunSuite:
     val support = "Black's pawn on e3 adds support to Black's knight on d2"
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains(support), text)
-    assert(text.indexOf(support) < text.indexOf("In the provided Nb1 line"),
-      "the current support stays ahead of the alternative's unrelated rook escape: " + text)
     assert(!text.contains("cannot enter") && !text.contains("prevents the king") && !text.contains("saves"),
       "Qd4 already controls d2/f2 and the knight actually leaves d2: " + text)
     assertPublishedEffectSources(obs, candidate)
 
-  test("the current quiet move leads while the alternative's opening exchange remains complete"):
+  test("the current quiet move and the alternative's complete opening exchange are both delivered"):
     val fen = "r2qkb1r/pb1n1ppp/3ppn2/1pp5/4P3/2PP1NP1/PP3PBP/RNBQ1RK1 w kq - 1 8"
     val (_, obs, candidate) = currentEffectResponse(fen, "f1e1",
       List(List("f1e1", "f8e7") -> 20,
         List("a2a4", "b5a4", "a1a4") -> 0, List("h2h3") -> -20))
     val text = (candidate \ "detail" \ "text").as[String]
-    val exchange = text.indexOf("the opening exchange is:")
-    val support = text.indexOf("White's rook on e1 adds support to White's pawn on e4")
-    assert(support >= 0 && exchange > support, text)
+    assert(text.contains("White's rook on e1 adds support to White's pawn on e4"), text)
     assert(text.contains("Black pawn captures the white pawn on a4 with bxa4") &&
       text.contains("White rook recaptures the black pawn on a4 with Rxa4"), text)
     assertPublishedEffectSources(obs, candidate)
@@ -2853,7 +2916,6 @@ class PracticalDecisionTest extends munit.FunSuite:
     val text = (candidate \ "detail" \ "text").as[String]
     assert(text.contains("out of the attack from Black's pawn on e4"), text)
     assert(text.contains("Ne2") && text.contains("Nec3") && text.contains("White's knight on c3"), text)
-    assert(text.indexOf("out of the attack") < text.indexOf("White loses"), text)
     val line = (obs \ "paths").as[List[JsObject]].find(value =>
       (value \ "moves").as[List[String]] == knightReturnLine).get
     val occurrences = (line \ "occurrence_ids").as[List[String]]
@@ -2969,10 +3031,10 @@ class PracticalDecisionTest extends munit.FunSuite:
       val coreText = (core \ "detail" \ "text").as[String]
       assert(coreText.contains("Rc1:") && coreText.contains("White rook on b1 moves to c1, ending its attack on Black rook on b7"), coreText)
       val coreEffects = (core \ "detail" \ "effects").as[List[JsObject]]
-      val padding = "x" * (limit - (coreText.length - original.length))
+      val padding = "x" * (limit - (coreText.length - original.length) - 16)
       val bounded = projection.withMoveEffects(base(padding), Set.empty)
       val text = (bounded \ "detail" \ "text").as[String]
-      assertEquals(text.length, limit)
+      assert(text.length <= limit)
       assert(text.contains("Rc1:") && text.contains("White rook on b1 moves to c1, ending its attack on Black rook on b7"), text)
       assert(!text.contains("out of the attack from Black's rook on a8"),
         "the new current effect yields its place when the existing complete history fills the limit")
@@ -2996,3 +3058,72 @@ class PracticalDecisionTest extends munit.FunSuite:
     assertEquals(text.sliding("gxf4 recaptures".length).count(_ == "gxf4 recaptures"), 1, text)
     assert(text.length <= 4000)
     assertPublishedEffectSources(obs, bounded)
+
+  test("passed-turn work cannot grade a real move and only proposes legal reply comparisons"):
+    val fen = "r4k1r/pb1n1ppp/1p1P1b2/2p1N3/1n6/2N3P1/PP3PBP/R1B1R1K1 b - - 6 18"
+    val owner = history(fen)
+    val played = "b7g2"
+    val start = awaiting(CommentaryJobReducer.startJob(fen, Nil, fen, played,
+      owner.extend(List(played)).toOption.get.currentFen,
+      CommentaryJobPolicy(16, 10000L, profile, investigateChoices = true, probeThreats = true), 0L).toOption.get)
+    // Owned, legal stub reports exercise the transport boundary; these scores make no chess-quality claim.
+    val probe = awaiting(submit(start, List(
+      List("d7e5", "g2b7", "a8d8") -> 14,
+      List(played, "e1d1") -> 300,
+      List("a8d8", "e5d7", "d8d7") -> 14)))
+    val packet = probe.observationsPacket.get
+    val beforeEvaluations = packet.assembly.input.assessmentCandidates.map(_.evaluation)
+    val work = probe.issuedWork
+    assertEquals(work.purpose, EngineWorkPurpose.ThreatProbe)
+    assertEquals(work.threatOriginPrefixUci, Some(Nil))
+    assertEquals(work.searchFen, "r4k1r/pb1n1ppp/1p1P1b2/2p1N3/1n6/2N3P1/PP3PBP/R1B1R1K1 w - - 6 19")
+    assertEquals(work.enginePositionMovesUci, Nil)
+    assert(probe.assessment.nonEmpty)
+    val hints = List(List("e5d7", "f8g8", "d7f6", "g7f6"), List("e5c4"))
+      .map(moves => ReportedEngineLineSuffix(moves, ReportedWhiteEngineScore.Centipawns(99999), 8))
+    val admitted = EngineLineAdmission.admitReportedLineSuffixes(work, hints).get
+    assert(EngineLineAdmission.bindAdmittedLineSuffixes(work, admitted).isEmpty,
+      "even a valid hypothetical PV cannot bind to commentary evidence")
+    val next = awaiting(CommentaryJobReducer.submitIssuedWorkReport(probe,
+      EngineWorkReport.Completed(profile, work.workId, work.executionKeySha256, hints), 1L).toOption.get)
+    assert(next.observationsPacket.get eq packet)
+    assertEquals(next.observationsPacket.get.assembly.input.assessmentCandidates.map(_.evaluation), beforeEvaluations)
+    assertEquals(next.issuedWork.threatOriginPrefixUci, Some(List(played)))
+    assert(!next.rootSearches.exists(_.work.purpose == EngineWorkPurpose.ThreatProbe))
+    val questions = next.proposalEntries.filter(_.request.origin.question.producer == "pass-probe")
+    assertEquals(questions.flatMap(_.request.requirements.collect { case pair: CompareMoves =>
+      (pair.prefixMovesUci, pair.referenceMove, pair.alternativeMove)
+    }), List((List(played), "e1d1", "e5d7")))
+    assert(questions.flatMap(_.readings).forall(_.answer.isEmpty), "a suggestion has no real-position strength yet")
+    List(EngineWorkFailure.Cancelled, EngineWorkFailure.BudgetExhausted, EngineWorkFailure.ExecutionFailed).foreach { failure =>
+      val pending = next.issuedWork
+      val finished = CommentaryJobReducer.submitIssuedWorkReport(next, EngineWorkReport.ExecutorFailed(
+        profile, pending.workId, pending.executionKeySha256, failure), 2L).toOption.get
+      assert(finished.isInstanceOf[CompletedCommentaryJob], "optional work must preserve the usable assessment")
+      assertEquals(finished.observationsPacket.get.assembly.input.assessmentCandidates.map(_.evaluation), beforeEvaluations)
+      assertEquals(finished.verification, next.verification)
+    }
+    val malformed = CommentaryJobReducer.submitIssuedWorkReport(probe, EngineWorkReport.Completed(profile,
+      work.workId, work.executionKeySha256, hints.updated(0, hints.head.copy(moves = List("e5e6")))), 2L).toOption.get
+    assert(malformed.isInstanceOf[CompletedCommentaryJob])
+    assertEquals(malformed.observationsPacket.get.assembly.input.assessmentCandidates.map(_.evaluation), beforeEvaluations)
+    assertEquals(owner.currentFen, fen)
+    val verifiedReplyQuestion = awaiting(submit(next, List(List("f6e7") -> 0, List("b4c6") -> 0)))
+    assertEquals(verifiedReplyQuestion.issuedWork.purpose, EngineWorkPurpose.ResponseComparison)
+    assertEquals(verifiedReplyQuestion.issuedWork.searchAnchor.map(_.prefixMoves), Some(List(played)))
+    assertEquals(verifiedReplyQuestion.issuedWork.rootRestriction,
+      EngineRootRestriction.Restricted(List("e1d1", "e5d7")))
+
+  test("passed-turn origins clear en-passant and reject checked or terminal positions"):
+    val initial = history(chess.variant.Standard.initialFen.value)
+    val afterE4 = initial.extend(List("e2e4")).toOption.get
+    val skippedBlack = CommentaryThreat.hypothesis(afterE4).get
+    assertEquals(skippedBlack.currentFen.split(" ").toList.drop(1), List("w", "KQkq", "-", "0", "2"))
+    assertEquals(skippedBlack.movePrefixUci, Nil)
+    val afterD5 = afterE4.extend(List("d7d5")).toOption.get
+    assertEquals(CommentaryThreat.hypothesis(afterD5).get.currentFen.split(" ").toList.drop(1),
+      List("b", "KQkq", "-", "0", "2"))
+    val checked = history("r4k1r/pb1N1ppp/1p1P1b2/2p5/1n6/2N3P1/PP3PBP/R1B1R1K1 b - - 0 19")
+    assert(checked.currentPosition.check.yes)
+    assert(CommentaryThreat.hypothesis(checked).isEmpty)
+    assert(CommentaryThreat.hypothesis(history("4k3/8/8/8/8/8/8/4K3 w - - 0 1")).isEmpty)

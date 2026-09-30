@@ -95,7 +95,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            set(definitions["moveCommentary"]["properties"]), {"primary"}
+            set(definitions["moveCommentary"]["properties"]), {"primary", "observations"}
         )
 
     def test_ready_response_rejects_retired_explanation_properties(self) -> None:

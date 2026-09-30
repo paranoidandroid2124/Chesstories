@@ -55,7 +55,7 @@ export async function esbuild(): Promise<any> {
         }
       },
     }),
-  ]);
+  ]).then(() => updateManifest());
 }
 
 export async function stopEsbuild(): Promise<void> {

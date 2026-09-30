@@ -1,0 +1,4091 @@
+{
+  "schema_version": "chesstories.research.resource-oracle.v1",
+  "scope": "Independent test fixtures only; no production case selection or chess interpretation is keyed by these positions.",
+  "cases": [
+    {
+      "id": "empty-d5-loss-and-maintenance",
+      "origin": "synthetic",
+      "purpose": "An empty target loses one white controller while another white controller and the black controller remain.",
+      "before_fen": "7k/8/4p3/8/4P3/2N5/8/7K w - - 0 1",
+      "move": "e4e5",
+      "targets": [
+        "d5",
+        "a1"
+      ],
+      "rays": [],
+      "pawns": [
+        {
+          "id": "mover",
+          "before": "e4",
+          "after": "e5"
+        },
+        {
+          "id": "black-blocked-after",
+          "before": "e6",
+          "after": "e6"
+        }
+      ],
+      "move_queries": [
+        "e4e5"
+      ],
+      "expected": {
+        "san": "e5",
+        "input_move_legal": true,
+        "changed_squares": [
+          "e4",
+          "e5"
+        ],
+        "before": {
+          "fen": "7k/8/4p3/8/4P3/2N5/8/7K w - - 0 1",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "d5": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "knight",
+                    "square": "c3"
+                  },
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "e4"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "pawn",
+                    "square": "e6"
+                  }
+                ]
+              }
+            },
+            "a1": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {},
+          "pawns": {
+            "mover": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "e4"
+              },
+              "forward_paths": [
+                {
+                  "destination": "e5",
+                  "traversed": [
+                    "e5"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "e4e5"
+              ]
+            },
+            "black-blocked-after": {
+              "state": "present",
+              "actor": {
+                "side": "black",
+                "role": "pawn",
+                "square": "e6"
+              },
+              "forward_paths": [
+                {
+                  "destination": "e5",
+                  "traversed": [
+                    "e5"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "e4e5": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "7k/8/4p3/4P3/8/2N5/8/7K b - - 0 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "d5": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "knight",
+                    "square": "c3"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "pawn",
+                    "square": "e6"
+                  }
+                ]
+              }
+            },
+            "a1": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {},
+          "pawns": {
+            "mover": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "e5"
+              },
+              "forward_paths": [],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            },
+            "black-blocked-after": {
+              "state": "present",
+              "actor": {
+                "side": "black",
+                "role": "pawn",
+                "square": "e6"
+              },
+              "forward_paths": [],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": []
+            }
+          },
+          "move_queries": {
+            "e4e5": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ray-third-occupant-changes",
+      "origin": "synthetic",
+      "purpose": "The third occupant leaves a rook ray; the first and second occupants and the rook's actual control remain unchanged.",
+      "before_fen": "7k/8/r7/p7/8/N7/8/R6K b - - 0 1",
+      "move": "a6b6",
+      "targets": [
+        "a3",
+        "a5",
+        "a6"
+      ],
+      "rays": [
+        {
+          "id": "a-file",
+          "before": "a1",
+          "after": "a1",
+          "direction": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "moving-rook-empty-ray",
+          "before": "a6",
+          "after": "b6",
+          "direction": [
+            1,
+            0
+          ]
+        }
+      ],
+      "pawns": [],
+      "move_queries": [
+        "a6b6"
+      ],
+      "expected": {
+        "san": "Rb6",
+        "input_move_legal": true,
+        "changed_squares": [
+          "a6",
+          "b6"
+        ],
+        "before": {
+          "fen": "7k/8/r7/p7/8/N7/8/R6K b - - 0 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "a3": {
+              "occupant": {
+                "side": "white",
+                "role": "knight",
+                "square": "a3"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "a1"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "a5": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "a5"
+              },
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "a6"
+                  }
+                ]
+              }
+            },
+            "a6": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "a6"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "a-file": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "a1"
+              },
+              "squares": [
+                "a2",
+                "a3",
+                "a4",
+                "a5",
+                "a6",
+                "a7",
+                "a8"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "knight",
+                  "square": "a3"
+                },
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "a5"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "a6"
+                }
+              ],
+              "controlled_squares": [
+                "a2",
+                "a3"
+              ]
+            },
+            "moving-rook-empty-ray": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "a6"
+              },
+              "squares": [
+                "b6",
+                "c6",
+                "d6",
+                "e6",
+                "f6",
+                "g6",
+                "h6"
+              ],
+              "occupants": [],
+              "controlled_squares": [
+                "b6",
+                "c6",
+                "d6",
+                "e6",
+                "f6",
+                "g6",
+                "h6"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "a6b6": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "7k/8/1r6/p7/8/N7/8/R6K w - - 1 2",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "a3": {
+              "occupant": {
+                "side": "white",
+                "role": "knight",
+                "square": "a3"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "a1"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "a5": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "a5"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "a6": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "b6"
+                  }
+                ]
+              }
+            }
+          },
+          "rays": {
+            "a-file": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "a1"
+              },
+              "squares": [
+                "a2",
+                "a3",
+                "a4",
+                "a5",
+                "a6",
+                "a7",
+                "a8"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "knight",
+                  "square": "a3"
+                },
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "a5"
+                }
+              ],
+              "controlled_squares": [
+                "a2",
+                "a3"
+              ]
+            },
+            "moving-rook-empty-ray": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "b6"
+              },
+              "squares": [
+                "c6",
+                "d6",
+                "e6",
+                "f6",
+                "g6",
+                "h6"
+              ],
+              "occupants": [],
+              "controlled_squares": [
+                "c6",
+                "d6",
+                "e6",
+                "f6",
+                "g6",
+                "h6"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "a6b6": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ray-first-occupant-leaves",
+      "origin": "synthetic",
+      "purpose": "The first occupant leaves the same geometry as the preceding case, exposing the second occupant to direct control.",
+      "before_fen": "7k/8/r7/p7/8/N7/8/R6K w - - 0 1",
+      "move": "a3b5",
+      "targets": [
+        "a3",
+        "a4",
+        "a5",
+        "a6"
+      ],
+      "rays": [
+        {
+          "id": "a-file",
+          "before": "a1",
+          "after": "a1",
+          "direction": [
+            0,
+            1
+          ]
+        }
+      ],
+      "pawns": [],
+      "move_queries": [
+        "a3b5"
+      ],
+      "expected": {
+        "san": "Nb5",
+        "input_move_legal": true,
+        "changed_squares": [
+          "a3",
+          "b5"
+        ],
+        "before": {
+          "fen": "7k/8/r7/p7/8/N7/8/R6K w - - 0 1",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "a3": {
+              "occupant": {
+                "side": "white",
+                "role": "knight",
+                "square": "a3"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "a1"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "a4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "a5": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "a5"
+              },
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "a6"
+                  }
+                ]
+              }
+            },
+            "a6": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "a6"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "a-file": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "a1"
+              },
+              "squares": [
+                "a2",
+                "a3",
+                "a4",
+                "a5",
+                "a6",
+                "a7",
+                "a8"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "knight",
+                  "square": "a3"
+                },
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "a5"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "a6"
+                }
+              ],
+              "controlled_squares": [
+                "a2",
+                "a3"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "a3b5": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "7k/8/r7/pN6/8/8/8/R6K b - - 1 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "a3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "a1"
+                  },
+                  {
+                    "side": "white",
+                    "role": "knight",
+                    "square": "b5"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "a4": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "a1"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "a5": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "a5"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "a1"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "a6"
+                  }
+                ]
+              }
+            },
+            "a6": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "a6"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "a-file": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "a1"
+              },
+              "squares": [
+                "a2",
+                "a3",
+                "a4",
+                "a5",
+                "a6",
+                "a7",
+                "a8"
+              ],
+              "occupants": [
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "a5"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "a6"
+                }
+              ],
+              "controlled_squares": [
+                "a2",
+                "a3",
+                "a4",
+                "a5"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "a3b5": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bf3-stationary-queen-resource",
+      "origin": "existing-reference-position",
+      "reference": {
+        "file": "chesstory-runtime/src/test/resources/piece-control-cases.json",
+        "id": "R4",
+        "context": "Doknjas Najdorf, Hjartarson-Vidit, 22.Bf3; the narrow queen-support statement is an independently reconstructed board claim, not an attributed quotation."
+      },
+      "purpose": "A bishop move opens the stationary queen's h2 support while the bishop's attack on the same d5 knight persists.",
+      "before_fen": "2r1r1k1/1b3ppp/p2b4/1p1n1P2/6Pq/PNP5/1PQ3BP/R1B2R1K w - - 3 22",
+      "move": "g2f3",
+      "targets": [
+        "h2",
+        "d5",
+        "b4",
+        "e7"
+      ],
+      "rays": [
+        {
+          "id": "queen-east",
+          "before": "c2",
+          "after": "c2",
+          "direction": [
+            1,
+            0
+          ]
+        }
+      ],
+      "pawns": [],
+      "move_queries": [
+        "g2f3"
+      ],
+      "continuation_probe": {
+        "target": "d5",
+        "lines": [
+          [
+            "g2f3"
+          ],
+          [
+            "g2f3",
+            "d5b4"
+          ],
+          [
+            "g2f3",
+            "d5e7"
+          ]
+        ]
+      },
+      "expected": {
+        "san": "Bf3",
+        "input_move_legal": true,
+        "changed_squares": [
+          "g2",
+          "f3"
+        ],
+        "before": {
+          "fen": "2r1r1k1/1b3ppp/p2b4/1p1n1P2/6Pq/PNP5/1PQ3BP/R1B2R1K w - - 3 22",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "h2": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "h2"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "h1"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "d6"
+                  },
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "h4"
+                  }
+                ]
+              }
+            },
+            "d5": {
+              "occupant": {
+                "side": "black",
+                "role": "knight",
+                "square": "d5"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "g2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "b7"
+                  }
+                ]
+              }
+            },
+            "b4": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "a3"
+                  },
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "c3"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "knight",
+                    "square": "d5"
+                  },
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "d6"
+                  }
+                ]
+              }
+            },
+            "e7": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "knight",
+                    "square": "d5"
+                  },
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "d6"
+                  },
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e8"
+                  },
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "h4"
+                  }
+                ]
+              }
+            }
+          },
+          "rays": {
+            "queen-east": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "queen",
+                "square": "c2"
+              },
+              "squares": [
+                "d2",
+                "e2",
+                "f2",
+                "g2",
+                "h2"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "bishop",
+                  "square": "g2"
+                },
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "h2"
+                }
+              ],
+              "controlled_squares": [
+                "d2",
+                "e2",
+                "f2",
+                "g2"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "g2f3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "2r1r1k1/1b3ppp/p2b4/1p1n1P2/6Pq/PNP2B2/1PQ4P/R1B2R1K b - - 4 22",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "h2": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "h2"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "queen",
+                    "square": "c2"
+                  },
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "h1"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "d6"
+                  },
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "h4"
+                  }
+                ]
+              }
+            },
+            "d5": {
+              "occupant": {
+                "side": "black",
+                "role": "knight",
+                "square": "d5"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "f3"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "b7"
+                  }
+                ]
+              }
+            },
+            "b4": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "a3"
+                  },
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "c3"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "knight",
+                    "square": "d5"
+                  },
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "d6"
+                  }
+                ]
+              }
+            },
+            "e7": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "knight",
+                    "square": "d5"
+                  },
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "d6"
+                  },
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e8"
+                  },
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "h4"
+                  }
+                ]
+              }
+            }
+          },
+          "rays": {
+            "queen-east": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "queen",
+                "square": "c2"
+              },
+              "squares": [
+                "d2",
+                "e2",
+                "f2",
+                "g2",
+                "h2"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "h2"
+                }
+              ],
+              "controlled_squares": [
+                "d2",
+                "e2",
+                "f2",
+                "g2",
+                "h2"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "g2f3": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        },
+        "continuation_probe": {
+          "initial_controls": [
+            "b4",
+            "b6",
+            "c3",
+            "c7",
+            "e3",
+            "e7",
+            "f4",
+            "f6"
+          ],
+          "lines": [
+            {
+              "moves": [
+                "g2f3"
+              ],
+              "end_fen": "2r1r1k1/1b3ppp/p2b4/1p1n1P2/6Pq/PNP2B2/1PQ4P/R1B2R1K b - - 4 22",
+              "visited": [],
+              "old_filter_selected": []
+            },
+            {
+              "moves": [
+                "g2f3",
+                "d5b4"
+              ],
+              "end_fen": "2r1r1k1/1b3ppp/p2b4/1p3P2/1n4Pq/PNP2B2/1PQ4P/R1B2R1K w - - 5 23",
+              "visited": [
+                "b4"
+              ],
+              "old_filter_selected": [
+                "b4"
+              ]
+            },
+            {
+              "moves": [
+                "g2f3",
+                "d5e7"
+              ],
+              "end_fen": "2r1r1k1/1b2nppp/p2b4/1p3P2/6Pq/PNP2B2/1PQ4P/R1B2R1K w - - 5 23",
+              "visited": [
+                "e7"
+              ],
+              "old_filter_selected": [
+                "e7"
+              ]
+            }
+          ],
+          "union_selected": [
+            "b4",
+            "e7"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bc3-maintains-and-blocks",
+      "origin": "existing-reference-position",
+      "reference": {
+        "file": "chesstory-runtime/src/test/resources/piece-control-cases.json",
+        "id": "R3",
+        "context": "Doknjas Najdorf, Zvara-Swiercz, 25.Bc3; board functions are checked independently below."
+      },
+      "purpose": "The same bishop keeps two supports, loses another support and creates an attack, while also blocking a stationary queen and rook.",
+      "before_fen": "2r3k1/1p1b2pp/p2p4/3P1p2/1PPbr3/P4Q2/3BBqPP/2R1R2K w - - 7 25",
+      "move": "d2c3",
+      "targets": [
+        "e1",
+        "b4",
+        "c1",
+        "d4",
+        "a3",
+        "c4"
+      ],
+      "rays": [
+        {
+          "id": "queen-west",
+          "before": "f3",
+          "after": "f3",
+          "direction": [
+            -1,
+            0
+          ]
+        },
+        {
+          "id": "rook-north",
+          "before": "c1",
+          "after": "c1",
+          "direction": [
+            0,
+            1
+          ]
+        }
+      ],
+      "pawns": [],
+      "move_queries": [
+        "d2c3"
+      ],
+      "expected": {
+        "san": "Bc3",
+        "input_move_legal": true,
+        "changed_squares": [
+          "d2",
+          "c3"
+        ],
+        "before": {
+          "fen": "2r3k1/1p1b2pp/p2p4/3P1p2/1PPbr3/P4Q2/3BBqPP/2R1R2K w - - 7 25",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "e1": {
+              "occupant": {
+                "side": "white",
+                "role": "rook",
+                "square": "e1"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "c1"
+                  },
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "d2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "f2"
+                  }
+                ]
+              }
+            },
+            "b4": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "b4"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "a3"
+                  },
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "d2"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "c1": {
+              "occupant": {
+                "side": "white",
+                "role": "rook",
+                "square": "c1"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "d2"
+                  },
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "e1"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "d4": {
+              "occupant": {
+                "side": "black",
+                "role": "bishop",
+                "square": "d4"
+              },
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e4"
+                  },
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "f2"
+                  }
+                ]
+              }
+            },
+            "a3": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "a3"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "queen",
+                    "square": "f3"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "c4": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "c4"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "c1"
+                  },
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "e2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "c8"
+                  }
+                ]
+              }
+            }
+          },
+          "rays": {
+            "queen-west": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "queen",
+                "square": "f3"
+              },
+              "squares": [
+                "e3",
+                "d3",
+                "c3",
+                "b3",
+                "a3"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "a3"
+                }
+              ],
+              "controlled_squares": [
+                "e3",
+                "d3",
+                "c3",
+                "b3",
+                "a3"
+              ]
+            },
+            "rook-north": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "c1"
+              },
+              "squares": [
+                "c2",
+                "c3",
+                "c4",
+                "c5",
+                "c6",
+                "c7",
+                "c8"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "c4"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "c8"
+                }
+              ],
+              "controlled_squares": [
+                "c2",
+                "c3",
+                "c4"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "d2c3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "2r3k1/1p1b2pp/p2p4/3P1p2/1PPbr3/P1B2Q2/4BqPP/2R1R2K b - - 8 25",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "e1": {
+              "occupant": {
+                "side": "white",
+                "role": "rook",
+                "square": "e1"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "c1"
+                  },
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "c3"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "f2"
+                  }
+                ]
+              }
+            },
+            "b4": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "b4"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "a3"
+                  },
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "c3"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "c1": {
+              "occupant": {
+                "side": "white",
+                "role": "rook",
+                "square": "c1"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "e1"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "d4": {
+              "occupant": {
+                "side": "black",
+                "role": "bishop",
+                "square": "d4"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "c3"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e4"
+                  },
+                  {
+                    "side": "black",
+                    "role": "queen",
+                    "square": "f2"
+                  }
+                ]
+              }
+            },
+            "a3": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "a3"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "c4": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "c4"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "bishop",
+                    "square": "e2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "c8"
+                  }
+                ]
+              }
+            }
+          },
+          "rays": {
+            "queen-west": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "queen",
+                "square": "f3"
+              },
+              "squares": [
+                "e3",
+                "d3",
+                "c3",
+                "b3",
+                "a3"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "bishop",
+                  "square": "c3"
+                },
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "a3"
+                }
+              ],
+              "controlled_squares": [
+                "e3",
+                "d3",
+                "c3"
+              ]
+            },
+            "rook-north": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "c1"
+              },
+              "squares": [
+                "c2",
+                "c3",
+                "c4",
+                "c5",
+                "c6",
+                "c7",
+                "c8"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "bishop",
+                  "square": "c3"
+                },
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "c4"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "c8"
+                }
+              ],
+              "controlled_squares": [
+                "c2",
+                "c3"
+              ]
+            }
+          },
+          "pawns": {},
+          "move_queries": {
+            "d2c3": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "pawn-empty-list-and-two-step-path",
+      "origin": "synthetic",
+      "purpose": "Moving a non-pawn creates both f-pawn routes; the g-pawn has only one route because its second destination is occupied.",
+      "before_fen": "7k/2p5/8/8/6p1/5N2/5PP1/7K w - - 0 1",
+      "move": "f3h4",
+      "targets": [
+        "f3",
+        "f4",
+        "g3",
+        "g4"
+      ],
+      "rays": [],
+      "pawns": [
+        {
+          "id": "f-pawn",
+          "before": "f2",
+          "after": "f2"
+        },
+        {
+          "id": "g-pawn",
+          "before": "g2",
+          "after": "g2"
+        },
+        {
+          "id": "black-starting-pawn",
+          "before": "c7",
+          "after": "c7"
+        }
+      ],
+      "move_queries": [
+        "f2f3",
+        "f2f4",
+        "g2g3",
+        "g2g4",
+        "f3h4"
+      ],
+      "expected": {
+        "san": "Nh4",
+        "input_move_legal": true,
+        "changed_squares": [
+          "f3",
+          "h4"
+        ],
+        "before": {
+          "fen": "7k/2p5/8/8/6p1/5N2/5PP1/7K w - - 0 1",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "f3": {
+              "occupant": {
+                "side": "white",
+                "role": "knight",
+                "square": "f3"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "g2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "pawn",
+                    "square": "g4"
+                  }
+                ]
+              }
+            },
+            "f4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "g3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "f2"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "g4": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "g4"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {},
+          "pawns": {
+            "f-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "f2"
+              },
+              "forward_paths": [],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": []
+            },
+            "g-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "g2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "g3",
+                  "traversed": [
+                    "g3"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "g2g3"
+              ]
+            },
+            "black-starting-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "black",
+                "role": "pawn",
+                "square": "c7"
+              },
+              "forward_paths": [
+                {
+                  "destination": "c6",
+                  "traversed": [
+                    "c6"
+                  ]
+                },
+                {
+                  "destination": "c5",
+                  "traversed": [
+                    "c6",
+                    "c5"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "f2f3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": false,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": null
+            },
+            "f2f4": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": false,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": null
+            },
+            "g2g3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            },
+            "g2g4": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": false,
+              "legal": false,
+              "is_capture": true,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": null
+            },
+            "f3h4": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "7k/2p5/8/8/6pN/8/5PP1/7K b - - 1 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "f3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "g2"
+                  },
+                  {
+                    "side": "white",
+                    "role": "knight",
+                    "square": "h4"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "pawn",
+                    "square": "g4"
+                  }
+                ]
+              }
+            },
+            "f4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "g3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "f2"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "g4": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "g4"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {},
+          "pawns": {
+            "f-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "f2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "f3",
+                  "traversed": [
+                    "f3"
+                  ]
+                },
+                {
+                  "destination": "f4",
+                  "traversed": [
+                    "f3",
+                    "f4"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            },
+            "g-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "g2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "g3",
+                  "traversed": [
+                    "g3"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            },
+            "black-starting-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "black",
+                "role": "pawn",
+                "square": "c7"
+              },
+              "forward_paths": [
+                {
+                  "destination": "c6",
+                  "traversed": [
+                    "c6"
+                  ]
+                },
+                {
+                  "destination": "c5",
+                  "traversed": [
+                    "c6",
+                    "c5"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "c7c5",
+                "c7c6"
+              ]
+            }
+          },
+          "move_queries": {
+            "f2f3": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "f2f4": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "g2g3": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "g2g4": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "f3h4": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "pawn-pinned-but-geometric-routes-open",
+      "origin": "synthetic",
+      "purpose": "A diagonally pinned starting-rank pawn has two clear forward routes and geometric controls, but neither advance is legal.",
+      "before_fen": "7k/8/8/8/1b6/8/P2P4/4K3 w - - 0 1",
+      "move": "a2a3",
+      "targets": [
+        "c3",
+        "e3",
+        "d3",
+        "d4"
+      ],
+      "rays": [
+        {
+          "id": "bishop-pin",
+          "before": "b4",
+          "after": "b4",
+          "direction": [
+            1,
+            -1
+          ]
+        }
+      ],
+      "pawns": [
+        {
+          "id": "pinned-pawn",
+          "before": "d2",
+          "after": "d2"
+        }
+      ],
+      "move_queries": [
+        "d2d3",
+        "d2d4",
+        "a2a3"
+      ],
+      "expected": {
+        "san": "a3",
+        "input_move_legal": true,
+        "changed_squares": [
+          "a2",
+          "a3"
+        ],
+        "before": {
+          "fen": "7k/8/8/8/1b6/8/P2P4/4K3 w - - 0 1",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "c3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "d2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "b4"
+                  }
+                ]
+              }
+            },
+            "e3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "d2"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "d3": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "d4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "bishop-pin": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "bishop",
+                "square": "b4"
+              },
+              "squares": [
+                "c3",
+                "d2",
+                "e1"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "d2"
+                },
+                {
+                  "side": "white",
+                  "role": "king",
+                  "square": "e1"
+                }
+              ],
+              "controlled_squares": [
+                "c3",
+                "d2"
+              ]
+            }
+          },
+          "pawns": {
+            "pinned-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "d2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "d3",
+                  "traversed": [
+                    "d3"
+                  ]
+                },
+                {
+                  "destination": "d4",
+                  "traversed": [
+                    "d3",
+                    "d4"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": []
+            }
+          },
+          "move_queries": {
+            "d2d3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": [
+                {
+                  "side": "black",
+                  "role": "bishop",
+                  "square": "b4"
+                }
+              ]
+            },
+            "d2d4": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": [
+                {
+                  "side": "black",
+                  "role": "bishop",
+                  "square": "b4"
+                }
+              ]
+            },
+            "a2a3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "7k/8/8/8/1b6/P7/3P4/4K3 b - - 0 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "c3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "d2"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "bishop",
+                    "square": "b4"
+                  }
+                ]
+              }
+            },
+            "e3": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "d2"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "d3": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "d4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "bishop-pin": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "bishop",
+                "square": "b4"
+              },
+              "squares": [
+                "c3",
+                "d2",
+                "e1"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "d2"
+                },
+                {
+                  "side": "white",
+                  "role": "king",
+                  "square": "e1"
+                }
+              ],
+              "controlled_squares": [
+                "c3",
+                "d2"
+              ]
+            }
+          },
+          "pawns": {
+            "pinned-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "d2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "d3",
+                  "traversed": [
+                    "d3"
+                  ]
+                },
+                {
+                  "destination": "d4",
+                  "traversed": [
+                    "d3",
+                    "d4"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "d2d3": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "d2d4": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "a2a3": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "pawn-unrelated-to-check-response",
+      "origin": "synthetic",
+      "purpose": "The pawn's clear routes cannot answer a rook check; after the king escapes, it is the opponent's turn, not a newly certified white legal-move inventory.",
+      "before_fen": "4r2k/8/8/8/8/8/P7/4K3 w - - 0 1",
+      "move": "e1f1",
+      "targets": [
+        "a3",
+        "a4",
+        "e1",
+        "f1"
+      ],
+      "rays": [
+        {
+          "id": "rook-check",
+          "before": "e8",
+          "after": "e8",
+          "direction": [
+            0,
+            -1
+          ]
+        }
+      ],
+      "pawns": [
+        {
+          "id": "a-pawn",
+          "before": "a2",
+          "after": "a2"
+        }
+      ],
+      "move_queries": [
+        "a2a3",
+        "a2a4",
+        "e1f1"
+      ],
+      "expected": {
+        "san": "Kf1",
+        "input_move_legal": true,
+        "changed_squares": [
+          "e1",
+          "f1"
+        ],
+        "before": {
+          "fen": "4r2k/8/8/8/8/8/P7/4K3 w - - 0 1",
+          "side_to_move": "white",
+          "in_check": true,
+          "targets": {
+            "a3": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "a4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "e1": {
+              "occupant": {
+                "side": "white",
+                "role": "king",
+                "square": "e1"
+              },
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e8"
+                  }
+                ]
+              }
+            },
+            "f1": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "e1"
+                  }
+                ],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-check": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "e8"
+              },
+              "squares": [
+                "e7",
+                "e6",
+                "e5",
+                "e4",
+                "e3",
+                "e2",
+                "e1"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "king",
+                  "square": "e1"
+                }
+              ],
+              "controlled_squares": [
+                "e7",
+                "e6",
+                "e5",
+                "e4",
+                "e3",
+                "e2",
+                "e1"
+              ]
+            }
+          },
+          "pawns": {
+            "a-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "a2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "a3",
+                  "traversed": [
+                    "a3"
+                  ]
+                },
+                {
+                  "destination": "a4",
+                  "traversed": [
+                    "a3",
+                    "a4"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": []
+            }
+          },
+          "move_queries": {
+            "a2a3": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": [
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "e8"
+                }
+              ]
+            },
+            "a2a4": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": [
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "e8"
+                }
+              ]
+            },
+            "e1f1": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "4r2k/8/8/8/8/8/P7/5K2 b - - 1 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "a3": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "a4": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "e1": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "f1"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e8"
+                  }
+                ]
+              }
+            },
+            "f1": {
+              "occupant": {
+                "side": "white",
+                "role": "king",
+                "square": "f1"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-check": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "e8"
+              },
+              "squares": [
+                "e7",
+                "e6",
+                "e5",
+                "e4",
+                "e3",
+                "e2",
+                "e1"
+              ],
+              "occupants": [],
+              "controlled_squares": [
+                "e7",
+                "e6",
+                "e5",
+                "e4",
+                "e3",
+                "e2",
+                "e1"
+              ]
+            }
+          },
+          "pawns": {
+            "a-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "a2"
+              },
+              "forward_paths": [
+                {
+                  "destination": "a3",
+                  "traversed": [
+                    "a3"
+                  ]
+                },
+                {
+                  "destination": "a4",
+                  "traversed": [
+                    "a3",
+                    "a4"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "a2a3": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "a2a4": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e1f1": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "pawn-capture-clears-stationary-rook",
+      "origin": "synthetic",
+      "purpose": "A pawn's diagonal capture opens the stationary rook's file and removes a different pawn; captures are not forward routes.",
+      "before_fen": "7k/4r3/8/3p4/4P3/8/8/4R2K w - - 0 1",
+      "move": "e4d5",
+      "targets": [
+        "d5",
+        "e5",
+        "e7"
+      ],
+      "rays": [
+        {
+          "id": "rook-file",
+          "before": "e1",
+          "after": "e1",
+          "direction": [
+            0,
+            1
+          ]
+        }
+      ],
+      "pawns": [
+        {
+          "id": "mover",
+          "before": "e4",
+          "after": "d5"
+        },
+        {
+          "id": "captured",
+          "before": "d5",
+          "after": null
+        }
+      ],
+      "move_queries": [
+        "e4e5",
+        "e4d5"
+      ],
+      "expected": {
+        "san": "exd5",
+        "input_move_legal": true,
+        "changed_squares": [
+          "e4",
+          "d5"
+        ],
+        "before": {
+          "fen": "7k/4r3/8/3p4/4P3/8/8/4R2K w - - 0 1",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "d5": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "d5"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "e4"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "e5": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e7"
+                  }
+                ]
+              }
+            },
+            "e7": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "e7"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-file": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "e1"
+              },
+              "squares": [
+                "e2",
+                "e3",
+                "e4",
+                "e5",
+                "e6",
+                "e7",
+                "e8"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "e4"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "e7"
+                }
+              ],
+              "controlled_squares": [
+                "e2",
+                "e3",
+                "e4"
+              ]
+            }
+          },
+          "pawns": {
+            "mover": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "e4"
+              },
+              "forward_paths": [
+                {
+                  "destination": "e5",
+                  "traversed": [
+                    "e5"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "e4d5",
+                "e4e5"
+              ]
+            },
+            "captured": {
+              "state": "present",
+              "actor": {
+                "side": "black",
+                "role": "pawn",
+                "square": "d5"
+              },
+              "forward_paths": [
+                {
+                  "destination": "d4",
+                  "traversed": [
+                    "d4"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "e4e5": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            },
+            "e4d5": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": true,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "7k/4r3/8/3P4/8/8/8/4R2K b - - 0 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "d5": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "d5"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "e5": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "e1"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "e7"
+                  }
+                ]
+              }
+            },
+            "e7": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "e7"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "e1"
+                  }
+                ],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-file": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "e1"
+              },
+              "squares": [
+                "e2",
+                "e3",
+                "e4",
+                "e5",
+                "e6",
+                "e7",
+                "e8"
+              ],
+              "occupants": [
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "e7"
+                }
+              ],
+              "controlled_squares": [
+                "e2",
+                "e3",
+                "e4",
+                "e5",
+                "e6",
+                "e7"
+              ]
+            }
+          },
+          "pawns": {
+            "mover": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "d5"
+              },
+              "forward_paths": [
+                {
+                  "destination": "d6",
+                  "traversed": [
+                    "d6"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            },
+            "captured": {
+              "state": "removed",
+              "actor": null,
+              "forward_paths": null,
+              "legal_status": "not_applicable",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "e4e5": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e4d5": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "en-passant-two-blockers-disappear",
+      "origin": "synthetic",
+      "purpose": "Legal en passant clears two squares of a horizontal ray although the move lands elsewhere; both stationary rooks gain mutual control.",
+      "before_fen": "1k6/8/8/r2pP2R/8/8/8/6K1 w - d6 0 2",
+      "move": "e5d6",
+      "targets": [
+        "a5",
+        "h5",
+        "d5",
+        "d6"
+      ],
+      "rays": [
+        {
+          "id": "rook-west",
+          "before": "h5",
+          "after": "h5",
+          "direction": [
+            -1,
+            0
+          ]
+        }
+      ],
+      "pawns": [
+        {
+          "id": "mover",
+          "before": "e5",
+          "after": "d6"
+        },
+        {
+          "id": "captured",
+          "before": "d5",
+          "after": null
+        }
+      ],
+      "move_queries": [
+        "e5d6",
+        "e5e6"
+      ],
+      "expected": {
+        "san": "exd6",
+        "input_move_legal": true,
+        "changed_squares": [
+          "d5",
+          "e5",
+          "d6"
+        ],
+        "before": {
+          "fen": "1k6/8/8/r2pP2R/8/8/8/6K1 w - d6 0 2",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "a5": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "a5"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "h5": {
+              "occupant": {
+                "side": "white",
+                "role": "rook",
+                "square": "h5"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "d5": {
+              "occupant": {
+                "side": "black",
+                "role": "pawn",
+                "square": "d5"
+              },
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "a5"
+                  }
+                ]
+              }
+            },
+            "d6": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "e5"
+                  }
+                ],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-west": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "h5"
+              },
+              "squares": [
+                "g5",
+                "f5",
+                "e5",
+                "d5",
+                "c5",
+                "b5",
+                "a5"
+              ],
+              "occupants": [
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "e5"
+                },
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "d5"
+                },
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "a5"
+                }
+              ],
+              "controlled_squares": [
+                "g5",
+                "f5",
+                "e5"
+              ]
+            }
+          },
+          "pawns": {
+            "mover": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "e5"
+              },
+              "forward_paths": [
+                {
+                  "destination": "e6",
+                  "traversed": [
+                    "e6"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "e5d6",
+                "e5e6"
+              ]
+            },
+            "captured": {
+              "state": "present",
+              "actor": {
+                "side": "black",
+                "role": "pawn",
+                "square": "d5"
+              },
+              "forward_paths": [
+                {
+                  "destination": "d4",
+                  "traversed": [
+                    "d4"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "e5d6": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": true,
+              "is_en_passant": true,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            },
+            "e5e6": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "1k6/8/3P4/r6R/8/8/8/6K1 b - - 0 2",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "a5": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "a5"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "h5"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "h5": {
+              "occupant": {
+                "side": "white",
+                "role": "rook",
+                "square": "h5"
+              },
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "a5"
+                  }
+                ]
+              }
+            },
+            "d5": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "rook",
+                    "square": "h5"
+                  }
+                ],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "a5"
+                  }
+                ]
+              }
+            },
+            "d6": {
+              "occupant": {
+                "side": "white",
+                "role": "pawn",
+                "square": "d6"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-west": {
+              "state": "present",
+              "slider": {
+                "side": "white",
+                "role": "rook",
+                "square": "h5"
+              },
+              "squares": [
+                "g5",
+                "f5",
+                "e5",
+                "d5",
+                "c5",
+                "b5",
+                "a5"
+              ],
+              "occupants": [
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "a5"
+                }
+              ],
+              "controlled_squares": [
+                "g5",
+                "f5",
+                "e5",
+                "d5",
+                "c5",
+                "b5",
+                "a5"
+              ]
+            }
+          },
+          "pawns": {
+            "mover": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "d6"
+              },
+              "forward_paths": [
+                {
+                  "destination": "d7",
+                  "traversed": [
+                    "d7"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            },
+            "captured": {
+              "state": "removed",
+              "actor": null,
+              "forward_paths": null,
+              "legal_status": "not_applicable",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "e5d6": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e5e6": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "en-passant-empty-target-is-not-legality",
+      "origin": "synthetic",
+      "purpose": "The pawn geometrically controls the empty en-passant target and the right exists, but using it exposes the own king to a rook.",
+      "before_fen": "6k1/8/8/r4pPK/8/8/8/8 w - f6 0 2",
+      "move": "h5h6",
+      "targets": [
+        "f6",
+        "g6",
+        "h5"
+      ],
+      "rays": [
+        {
+          "id": "rook-east",
+          "before": "a5",
+          "after": "a5",
+          "direction": [
+            1,
+            0
+          ]
+        }
+      ],
+      "pawns": [
+        {
+          "id": "g-pawn",
+          "before": "g5",
+          "after": "g5"
+        }
+      ],
+      "move_queries": [
+        "g5f6",
+        "g5g6",
+        "h5h6"
+      ],
+      "expected": {
+        "san": "Kh6",
+        "input_move_legal": true,
+        "changed_squares": [
+          "h5",
+          "h6"
+        ],
+        "before": {
+          "fen": "6k1/8/8/r4pPK/8/8/8/8 w - f6 0 2",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "f6": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "g5"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "g6": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "h5"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "h5": {
+              "occupant": {
+                "side": "white",
+                "role": "king",
+                "square": "h5"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-east": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "a5"
+              },
+              "squares": [
+                "b5",
+                "c5",
+                "d5",
+                "e5",
+                "f5",
+                "g5",
+                "h5"
+              ],
+              "occupants": [
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "f5"
+                },
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "g5"
+                },
+                {
+                  "side": "white",
+                  "role": "king",
+                  "square": "h5"
+                }
+              ],
+              "controlled_squares": [
+                "b5",
+                "c5",
+                "d5",
+                "e5",
+                "f5"
+              ]
+            }
+          },
+          "pawns": {
+            "g-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "g5"
+              },
+              "forward_paths": [
+                {
+                  "destination": "g6",
+                  "traversed": [
+                    "g6"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "g5g6"
+              ]
+            }
+          },
+          "move_queries": {
+            "g5f6": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": false,
+              "is_capture": true,
+              "is_en_passant": true,
+              "promotion_role": null,
+              "own_king_attackers_after": [
+                {
+                  "side": "black",
+                  "role": "rook",
+                  "square": "a5"
+                }
+              ]
+            },
+            "g5g6": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            },
+            "h5h6": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "6k1/8/7K/r4pP1/8/8/8/8 b - - 1 2",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "f6": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "g5"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "g6": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "h6"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "h5": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "king",
+                    "square": "h6"
+                  }
+                ],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "rook-east": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "a5"
+              },
+              "squares": [
+                "b5",
+                "c5",
+                "d5",
+                "e5",
+                "f5",
+                "g5",
+                "h5"
+              ],
+              "occupants": [
+                {
+                  "side": "black",
+                  "role": "pawn",
+                  "square": "f5"
+                },
+                {
+                  "side": "white",
+                  "role": "pawn",
+                  "square": "g5"
+                }
+              ],
+              "controlled_squares": [
+                "b5",
+                "c5",
+                "d5",
+                "e5",
+                "f5"
+              ]
+            }
+          },
+          "pawns": {
+            "g-pawn": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "g5"
+              },
+              "forward_paths": [
+                {
+                  "destination": "g6",
+                  "traversed": [
+                    "g6"
+                  ]
+                }
+              ],
+              "legal_status": "not_side_to_move",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "g5f6": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "g5g6": {
+              "status": "not_side_to_move",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "h5h6": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      },
+      "initial_fen": "6k1/5p2/8/r5PK/8/8/8/8 b - - 0 1",
+      "move_prefix": [
+        "f7f5"
+      ],
+      "runtime_fen": "6k1/8/8/r4pPK/8/8/8/8 w - - 0 2"
+    },
+    {
+      "id": "promotion-role-change-and-eight-moves",
+      "origin": "synthetic",
+      "purpose": "One empty forward destination permits four promotion moves; a separate capture destination permits four more. Underpromotion ends the pawn resource but not the physical actor.",
+      "before_fen": "5r1k/4P3/8/8/8/8/8/7K w - - 0 1",
+      "move": "e7f8n",
+      "targets": [
+        "e8",
+        "f8",
+        "g6",
+        "d7"
+      ],
+      "rays": [
+        {
+          "id": "captured-rook",
+          "before": "f8",
+          "after": null,
+          "direction": [
+            0,
+            -1
+          ]
+        }
+      ],
+      "pawns": [
+        {
+          "id": "promoted-actor",
+          "before": "e7",
+          "after": "f8"
+        }
+      ],
+      "move_queries": [
+        "e7e8",
+        "e7e8q",
+        "e7e8r",
+        "e7e8b",
+        "e7e8n",
+        "e7f8q",
+        "e7f8r",
+        "e7f8b",
+        "e7f8n"
+      ],
+      "expected": {
+        "san": "exf8=N",
+        "input_move_legal": true,
+        "changed_squares": [
+          "e7",
+          "f8"
+        ],
+        "before": {
+          "fen": "5r1k/4P3/8/8/8/8/8/7K w - - 0 1",
+          "side_to_move": "white",
+          "in_check": false,
+          "targets": {
+            "e8": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": [
+                  {
+                    "side": "black",
+                    "role": "rook",
+                    "square": "f8"
+                  }
+                ]
+              }
+            },
+            "f8": {
+              "occupant": {
+                "side": "black",
+                "role": "rook",
+                "square": "f8"
+              },
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "pawn",
+                    "square": "e7"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "g6": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "d7": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "captured-rook": {
+              "state": "present",
+              "slider": {
+                "side": "black",
+                "role": "rook",
+                "square": "f8"
+              },
+              "squares": [
+                "f7",
+                "f6",
+                "f5",
+                "f4",
+                "f3",
+                "f2",
+                "f1"
+              ],
+              "occupants": [],
+              "controlled_squares": [
+                "f7",
+                "f6",
+                "f5",
+                "f4",
+                "f3",
+                "f2",
+                "f1"
+              ]
+            }
+          },
+          "pawns": {
+            "promoted-actor": {
+              "state": "present",
+              "actor": {
+                "side": "white",
+                "role": "pawn",
+                "square": "e7"
+              },
+              "forward_paths": [
+                {
+                  "destination": "e8",
+                  "traversed": [
+                    "e8"
+                  ]
+                }
+              ],
+              "legal_status": "closed_for_side_to_move",
+              "legal_moves": [
+                "e7e8b",
+                "e7e8n",
+                "e7e8q",
+                "e7e8r",
+                "e7f8b",
+                "e7f8n",
+                "e7f8q",
+                "e7f8r"
+              ]
+            }
+          },
+          "move_queries": {
+            "e7e8": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": false,
+              "legal": false,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": null,
+              "own_king_attackers_after": null
+            },
+            "e7e8q": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": "queen",
+              "own_king_attackers_after": []
+            },
+            "e7e8r": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": "rook",
+              "own_king_attackers_after": []
+            },
+            "e7e8b": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": "bishop",
+              "own_king_attackers_after": []
+            },
+            "e7e8n": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": false,
+              "is_en_passant": false,
+              "promotion_role": "knight",
+              "own_king_attackers_after": []
+            },
+            "e7f8q": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": true,
+              "is_en_passant": false,
+              "promotion_role": "queen",
+              "own_king_attackers_after": []
+            },
+            "e7f8r": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": true,
+              "is_en_passant": false,
+              "promotion_role": "rook",
+              "own_king_attackers_after": []
+            },
+            "e7f8b": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": true,
+              "is_en_passant": false,
+              "promotion_role": "bishop",
+              "own_king_attackers_after": []
+            },
+            "e7f8n": {
+              "status": "evaluated_for_side_to_move",
+              "pseudo_legal": true,
+              "legal": true,
+              "is_capture": true,
+              "is_en_passant": false,
+              "promotion_role": "knight",
+              "own_king_attackers_after": []
+            }
+          }
+        },
+        "after": {
+          "fen": "5N1k/8/8/8/8/8/8/7K b - - 0 1",
+          "side_to_move": "black",
+          "in_check": false,
+          "targets": {
+            "e8": {
+              "occupant": null,
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "f8": {
+              "occupant": {
+                "side": "white",
+                "role": "knight",
+                "square": "f8"
+              },
+              "controllers": {
+                "white": [],
+                "black": []
+              }
+            },
+            "g6": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "knight",
+                    "square": "f8"
+                  }
+                ],
+                "black": []
+              }
+            },
+            "d7": {
+              "occupant": null,
+              "controllers": {
+                "white": [
+                  {
+                    "side": "white",
+                    "role": "knight",
+                    "square": "f8"
+                  }
+                ],
+                "black": []
+              }
+            }
+          },
+          "rays": {
+            "captured-rook": {
+              "state": "removed",
+              "slider": null,
+              "squares": [],
+              "occupants": [],
+              "controlled_squares": []
+            }
+          },
+          "pawns": {
+            "promoted-actor": {
+              "state": "no_longer_pawn",
+              "actor": {
+                "side": "white",
+                "role": "knight",
+                "square": "f8"
+              },
+              "forward_paths": null,
+              "legal_status": "not_applicable",
+              "legal_moves": null
+            }
+          },
+          "move_queries": {
+            "e7e8": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7e8q": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7e8r": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7e8b": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7e8n": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7f8q": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7f8r": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7f8b": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            },
+            "e7f8n": {
+              "status": "origin_absent",
+              "pseudo_legal": null,
+              "legal": null,
+              "own_king_attackers_after": null
+            }
+          }
+        }
+      }
+    }
+  ],
+  "verification": {
+    "library": "python-chess",
+    "chess_module_version": "1.11.2",
+    "case_count": 12,
+    "legal_input_transitions": 12,
+    "continuation_probe_replayed_plies": 5,
+    "producer_comparison": "Not executed by this sidecar; compare expected with new runtime output.",
+    "generator": "resource-audit.md Python block",
+    "not_claimed": [
+      "engine evaluation",
+      "forcedness",
+      "safety",
+      "runtime coverage",
+      "reachable-from-start proof"
+    ]
+  }
+}

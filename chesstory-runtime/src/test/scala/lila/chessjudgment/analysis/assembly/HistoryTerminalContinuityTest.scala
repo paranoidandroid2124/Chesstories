@@ -11,6 +11,7 @@ import lila.chessjudgment.model.line.{
 }
 import lila.chessjudgment.model.line.EngineLine
 import lila.chessjudgment.model.judgment.{
+  AdmittedLegalLine,
   EvidenceRecord,
   EvidenceRef,
   EvidenceConfidence,
@@ -47,6 +48,11 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
       assertEquals(candidate.evaluation, CandidateLineEvaluation.EngineSearch(line))
       assertEquals(candidate.evaluation.comparisonReady, line.mate.nonEmpty)
       assert(input.legalLines.exists(_.moves == line.moves))
+      val observed = input.legalLines.find(_.moves == line.moves).get
+      assertEquals(observed.automaticTerminal, Some(terminal))
+      val probe = observed.copy(discoveryOnly = true, automaticTerminal = None)
+      assertEquals(AdmittedLegalLine.merge(List(probe, observed)), List(observed))
+      assertEquals(AdmittedLegalLine.merge(List(observed, probe)), List(observed))
       val evaluations = MoveReviewAssembler.assemble(input).evidenceGraph.records
         .filter(record => record.ref.layer == EvidenceLayer.Eval && record.ref.line.exists(_.rootMove == "c7c8r"))
       if candidate.evaluation.comparisonReady then

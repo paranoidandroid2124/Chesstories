@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-01",
+  "status": "development checkpoint; phase1 release quality not met",
+  "product_llm": false,
+  "working_branch": "codex/commentary-foundation",
+  "parent_commit": "7809cf711a1e29b664427b3cdf7f9153450f2951",
+  "implementation": [
+    "Typed CommentaryAnswer preserves selected chess statements, original identities, required/covered moves and focus before CommentaryEnglish realization.",
+    "General comparisons, narrow verified threats, exchanges and recorded endings share RootQuestionSummary delivery; basic and detail use the same selected answer.",
+    "CommentaryMaterialAccount shares original capture accounting. Exact SAN occurrence and original board highlight frames are retained.",
+    "Position.blockedRay distinguishes actual intervening occupants from remaining attackers and is reused by both blocker explanation paths."
+  ],
+  "verification": {
+    "final_related_backend_tests": { "passed": 231, "failed": 0 },
+    "frontend_tests": { "passed": 44, "failed": 0, "repeated_after_backend_only_repair": false },
+    "offline_source_and_manifest_delivery": { "opened_positions": 18, "additional_positions": 18, "accepted_each": 18 },
+    "browser_docker_full_app_or_real_mobile_checked_in_this_scope": false,
+    "review_worker_final_completion_verified": false,
+    "korean_translation_quality_verified": false
+  },
+  "content_gate": { "useful_closed_minimum": 14, "positions": 18, "important_cost_omissions_maximum": 0, "unsupported_threat_claims_maximum": 0 },
+  "opened_regression_before_final_factual_repair": { "useful_closed": 12, "important_cost_omissions": 0, "readable_defaults": 4 },
+  "first_frozen_unseen_assessment": {
+    "source": "18 distinct Tata Steel Masters 2020 games, one balanced pre-move position per game",
+    "useful_closed": 6,
+    "important_cost_omissions": 2,
+    "unsupported_attack_resolution": 1,
+    "readable_defaults": 2,
+    "reviewer": "independent AI reading, not independent human reader assessment",
+    "later_reuse_is_regression": true,
+    "original_result_not_replaced_after_repair": true
+  },
+  "final_factual_repair": {
+    "incorrect_knight_blocker_replaced_by_actual_b5_pawn": true,
+    "separate_c6_knight_attack_preserved": true,
+    "changed_basic_bodies": 13,
+    "removed_required_or_capture_refs": 0,
+    "support_target_cost_omissions_still_unresolved": 2
+  },
+  "next_work_in_order": [
+    "Preserve certified original-piece removal Some(None) separately from unknown tracking None in shared control queries. unsupportedTargetLoss currently stops before account construction when the supporting queen was already captured.",
+    "Connect selected original support targets to their actual recorded losses: Qxc8/Qa5 a3-pawn Bxa3 and Qd1/Bf5 c3-pawn Bxc3. Keep unknown-evidence guards and do not claim loss of support forced capture.",
+    "Preserve quiet arrivals, escapes, en-passant predecessors and ray clearance required by the selected relationship before wording.",
+    "Compose basic English by condition, action, actual reply and remaining result; reduce repeated identity introductions without deleting relevant costs.",
+    "Finish residual legacy detail formatting and notation-derived check/castling guards with existing typed evidence. Keep automatic threat investigation off until measured benefit is shown."
+  ],
+  "preserved_local_evidence": {
+    "archive_id": "2026-10-01-cleanup",
+    "archive_root_relative_to_codex_home": "archives/chesstories/2026-10-01-cleanup",
+    "primary_research_directory": "meaning-reconstruction-20260930",
+    "important_records": [
+      "read/final-result.json",
+      "read/fresh-content-review.json",
+      "read/fresh-support-loss-diagnosis.json",
+      "read/post-assessment-content-delta-review.json",
+      "fresh/expectations.json",
+      "fresh/expectations-seal.json",
+      "replays/fresh/product-output.json",
+      "post-assessment-repair/validation-summary.json"
+    ],
+    "first_fresh_input_sha256": "121f3ed3b2f98c4562037d10566874ca6eb680d5abba767dfb6262a7fe7724c2",
+    "first_fresh_output_sha256": "570b35d51aaa7f050f001a41bd545fe6b69cc765ca07d238fb073f18e67f6ac8"
+  }
+}

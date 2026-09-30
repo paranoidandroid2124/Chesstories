@@ -10,6 +10,18 @@ import play.api.libs.json.*
   * or turn a supplied continuation into a forced line.
   */
 private[runtime] object CommentarySelection:
+  def primaryComparisonRecords(packet: EvidenceBackedJudgmentPacket) =
+    val graph = packet.evidenceGraph
+    packet.primary.toList.flatMap { primary =>
+      val ref = primary match
+        case PlayerFacingPrimary.MoveVerdict(value) => value
+        case PlayerFacingPrimary.BestChoice(value) => value
+      graph.candidateComparisonRecord(ref).toList.collect {
+        case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _) if graph.proofEligible(record) =>
+          (ref, fact, record.parents)
+      }
+    }
+
   enum Display(val wireId: String):
     case Selected extends Display("selected")
     case DisplayCap extends Display("display_cap")
@@ -108,6 +120,18 @@ private[runtime] object CommentarySelection:
     def withSharedMoveEffects(candidates: List[(JsObject, List[MoveWorkProjection.Context])]): List[JsObject] =
       explainMoves(candidates, Set.empty)
     lazy val highlights: List[JsObject] = local.filter(_.selection == Display.Selected).map(_.highlight)
+    // The answer can select a proved local frame below the ordinary display cap.
+    // Publish that original frame; a focus reference never invents new geometry.
+    def highlightsFor(delivered: JsObject): List[JsObject] =
+      val wanted = (delivered \ "candidates").as[List[JsObject]].flatMap { candidate =>
+        (candidate \ "detail" \ "summary_question").asOpt[JsObject].toList.flatMap { answer =>
+          List("units", "detail_units").flatMap(key => (answer \ key).asOpt[List[JsObject]].getOrElse(Nil))
+            .flatMap(unit => (unit \ "focus").asOpt[List[JsObject]].getOrElse(Nil))
+        }
+      }.map(focus => (focus \ "occurrence_id").as[String] -> (focus - "line_id" - "occurrence_id")).toSet
+      (highlights ++ local.filter { note =>
+        (note.highlight \ "frames").as[List[JsObject]].exists(frame => wanted(note.edge.evidence.id -> frame))
+      }.map(_.highlight)).distinct
     // Local notes are consumed through highlights. Their candidate wrappers (including
     // rejected display alternatives) have no reader or scene dependency. Keep the typed
     // facts for selection/research, but never construct a second public representation.
@@ -120,20 +144,11 @@ private[runtime] object CommentarySelection:
       withMoveEffects: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject]): Result =
     prepared.requireOwner(packet)
     val ctx = packet.assembly
-    val graph = packet.evidenceGraph
     val root = ctx.playedTransition.get
     val resources = prepared.resourceIds
     val suppliedByMoves = ctx.input.suppliedLines.groupBy(_.acceptedMoves)
     val evaluationsByMoves = ctx.input.evaluationObservations.groupBy(_.evaluation.moves)
-    val comparisonRecords = packet.primary.toList.flatMap { primary =>
-      val ref = primary match
-        case PlayerFacingPrimary.MoveVerdict(value) => value
-        case PlayerFacingPrimary.BestChoice(value) => value
-      graph.candidateComparisonRecord(ref).toList.collect {
-        case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _) if graph.proofEligible(record) =>
-          (ref, fact, record.parents)
-      }
-    }
+    val comparisonRecords = primaryComparisonRecords(packet)
     val comparedLines = comparisonRecords.flatMap((_, fact, _) => List(fact.referenceLine, fact.candidateLine)).toSet
 
     // Only scenes consume these wrappers. Other exact lines stay in observations.paths
@@ -213,23 +228,21 @@ private[runtime] object CommentarySelection:
     * ledger's recapture distinctions. Do not join across an intervening move or
     * turn a conditional PV into a forced transaction.
     */
-  private[runtime] def openingExchange(material: LineMaterialSummary,
-      moves: List[String]): Option[(List[LineMaterialCapture], String)] =
+  private[runtime] def openingCaptureChain(material: LineMaterialSummary): Option[List[LineMaterialCapture]] =
     material.captures.headOption.flatMap { first =>
       val startsHere = first.plyOffset == 0 || (first.plyOffset == 1 && first.side != material.sideToMove)
       val chain = first :: material.captures.drop(1).zipWithIndex.takeWhile { (capture, offset) =>
         capture.plyOffset == first.plyOffset + offset + 1
       }.map(_._1)
       Option.when(startsHere && chain.size >= 2 &&
-        !material.events.exists(event => event.promotionGainCp > 0 && event.plyOffset <= chain.last.plyOffset)) {
-        val actions = chain.map { capture =>
-          s"${sideName(capture.side).capitalize} ${capture.attackerRole.name} " +
-            s"${if capture.recapture then "recaptures" else "captures"} the ${sideName(!capture.side)} " +
-            s"${capture.capturedRole.name} on ${capture.square.key} with ${moves(capture.plyOffset)}"
-        }
-        chain -> s"the opening exchange is: ${actions.mkString("; ")}. This is the observed sequence, not a forced line."
-      }.filter(_._2.length <= 1400)
+        !material.events.exists(event => event.promotionGainCp > 0 && event.plyOffset <= chain.last.plyOffset))(chain)
     }
+
+  private[runtime] def openingExchange(material: LineMaterialSummary,
+      moves: List[String]): Option[(List[LineMaterialCapture], String)] =
+    openingCaptureChain(material).map { chain =>
+        chain -> CommentaryEnglish.openingExchange(chain, moves)
+    }.filter(_._2.length <= 1400)
 
   private[runtime] def materialSignature(material: LineMaterialSummary): MaterialSignature =
     val losses = material.captures.groupMapReduce(capture =>
@@ -242,18 +255,7 @@ private[runtime] object CommentarySelection:
     losses -> promotions
 
   private[runtime] def materialText(signature: MaterialSignature): String =
-    val (losses, promotions) = signature
-    val rows = List("white", "black").flatMap { side =>
-      val pieces = losses.collect { case (`side`, role, count) =>
-        if count == 1 then s"one $role" else s"$count ${role}s"
-      }
-      val listed = if pieces.size < 3 then pieces.mkString(" and ")
-        else pieces.init.mkString(", ") + ", and " + pieces.last
-      Option.when(pieces.nonEmpty)(s"${side.capitalize} loses $listed")
-    } ++ promotions.map { (side, before, after, count) =>
-      s"${side.capitalize} promotes $count ${if count == 1 then before else s"${before}s"} to ${if count == 1 then s"a $after" else s"${after}s"}"
-    }
-    if rows.isEmpty then "neither side loses material or promotes" else rows.mkString("; ")
+    CommentaryEnglish.materialDescription(signature)
 
   private def sideName(side: chess.Color): String = if side.white then "white" else "black"
 

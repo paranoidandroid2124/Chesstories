@@ -11,6 +11,7 @@ const exact: Record<string, string> = {
   'This is the observed sequence, not a forced line': '이는 관측된 진행 순서이며 강제 수순은 아닙니다',
   'These are observed exchanges, not a forced outcome or the sole reason for the evaluation': '이는 관측된 교환이며, 강제되는 결과나 평가의 유일한 이유를 뜻하지 않습니다',
   'No captures or promotions in the recorded continuation': '기록된 후속 수순에는 잡기나 승진이 없습니다',
+  'The provided lines have the same counts of captured and promoted piece roles': '제공된 두 수순에서 잡힌 기물과 승격한 기물의 종류별 개수가 같습니다',
   'that support is maintained': '그 지원이 유지됩니다',
   'neither side loses material or promotes': '양쪽 모두 기물 손실이나 승진이 없습니다',
   'The engine evaluations are close; the small differences alone do not rule out this idea': '엔진 평가가 비슷하므로, 작은 수치 차이만으로 이 아이디어를 배제할 수는 없습니다',
@@ -53,7 +54,7 @@ function noun(text: string): string {
     .replace(/,? and /g, ', ').replace(/nothing/g, '없음');
 }
 
-function withParticle(text: string, consonant: string, vowel: string): string {
+export function withParticle(text: string, consonant: string, vowel: string): string {
   const last = text.charCodeAt(text.length - 1);
   return text + (last >= 0xac00 && last <= 0xd7a3 && (last - 0xac00) % 28 === 0 ? vowel : consonant);
 }
@@ -65,6 +66,13 @@ function clause(input: string): string | undefined {
   let m: RegExpMatchArray | null;
   // These are presentation rules for the runtime's finite English templates, not a general translator.
   // ponytail: unknown templates retain their marked English source; add an explicit rule when new runtime copy ships.
+  if ((m = /^In the provided lines, (.+) and (.+) reach the same board state with the same side to move$/.exec(text)))
+    return `제공된 ${m[1]} 수순과 ${m[2]} 수순은 같은 배치와 같은 차례의 국면에 도달합니다`;
+  if ((m = /^Both then play (.+)$/.exec(text))) return `이후 두 수순의 공통 진행은 ${m[1]}입니다`;
+  if ((m = /^From that common board state, the (\S+) line continues with (\S+), while the (\S+) line continues with (\S+)$/.exec(text)))
+    return `그 뒤의 진행은 ${m[1]} 수순에서 ${m[2]}, ${m[3]} 수순에서 ${m[4]}입니다`;
+  if ((m = /^The recorded (\S+) line ends here; the (\S+) line additionally records (\S+)$/.exec(text)))
+    return `${m[1]} 수순의 기록은 여기까지이며, ${m[2]} 수순에는 다음 수 ${m[3]}도 기록되어 있습니다`;
   if ((m = /^(?:In the (?:same )?provided|In the returned) (\S+) line[, :]\s*(.+)$/s.exec(text))) {
     const rest = clause(m[2]);
     return rest && `제공된 ${m[1]} 수순에서 ${rest}`;
@@ -143,11 +151,11 @@ function clause(input: string): string | undefined {
   if ((m = /^(.+?) (captures|recaptures) (.+) with (\S+)$/.exec(text)))
     return `${m[4]}에서 ${noun(m[1])}: ${noun(m[3])} ${m[2] === 'recaptures' ? '되잡기' : '잡기'}`;
   if ((m = /^The captured (.+) was the attacker$/.exec(text))) return `잡힌 ${noun(m[1])}이 공격하던 기물이었습니다`;
-  if ((m = /^The initially attacked (.+) stays on (\S+)$/.exec(text))) return `처음 공격받던 ${noun(m[1])}은 ${m[2]}에 그대로 있습니다`;
-  if ((m = /^The initially attacked (.+) moves to (\S+)$/.exec(text))) return `처음 공격받던 ${noun(m[1])}이 ${m[2]}로 이동합니다`;
+  if ((m = /^The initially attacked (.+) stays on (\S+)$/.exec(text))) return `처음 공격받던 ${withParticle(noun(m[1]), '은', '는')} ${m[2]}에 그대로 있습니다`;
+  if ((m = /^The initially attacked (.+) moves to (\S+)$/.exec(text))) return `처음 공격받던 ${withParticle(noun(m[1]), '이', '가')} ${m[2]}로 이동합니다`;
   if ((m = /^This opens the ([a-h])-file$/.exec(text))) return `이로써 ${m[1]} 파일이 열립니다`;
-  if ((m = /^(.+) remains on (\S+) at this line's end$/.exec(text))) return `이 수순이 끝날 때 ${noun(m[1])}은 ${m[2]}에 남습니다`;
-  if ((m = /^(.+) is captured within this line$/.exec(text))) return `이 수순 안에서 ${noun(m[1])}이 잡힙니다`;
+  if ((m = /^(.+) remains on (\S+) at this line's end$/.exec(text))) return `이 수순이 끝날 때 ${withParticle(noun(m[1]), '은', '는')} ${m[2]}에 남습니다`;
+  if ((m = /^(.+) is captured within this line$/.exec(text))) return `이 수순 안에서 ${withParticle(noun(m[1]), '이', '가')} 잡힙니다`;
   if ((m = /^(.+) (attacks it again|still attacks it) there$/.exec(text))) return `그곳에서 ${noun(m[1])}이 그 대상을 ${m[2].startsWith('still') ? '계속' : '다시'} 공격합니다`;
   if ((m = /^(\S+) ends the support of (.+) by (.+)$/.exec(text))) return `${m[1]} 이후 ${noun(m[3])}의 ${noun(m[2])} 지원이 끝납니다`;
   if ((m = /^(.+) keeps covering it through that move$/.exec(text))) return `그 수까지 ${noun(m[1])}의 지원은 유지됩니다`;
@@ -181,14 +189,23 @@ function clause(input: string): string | undefined {
     return `${m[1] ? `${m[1]}: ` : ''}${noun(m[2])}을 ${m[3]}에서 ${m[4]}로 전개합니다${m[5] ? `. 통제하는 칸: ${noun(m[5])}` : ''}`;
   if ((m = /^(\S+) (develops|brings) the (\w+) to (\S+)$/.exec(text))) return `${m[1]}: ${noun(m[3])}을 ${m[4]}로 ${m[2] === 'develops' ? '전개' : '이동'}합니다`;
   if ((m = /^(?:(\S+) )?[Mm]oves the (.+?) out of the attack from (.+)$/.exec(text)))
-    return `${m[1] ? `${m[1]}: ` : ''}${noun(m[2])}이 ${noun(m[3])}의 공격에서 벗어납니다`;
+    return `${m[1] ? `${m[1]}: ` : ''}${withParticle(noun(m[2]), '이', '가')} ${noun(m[3])}의 공격에서 벗어납니다`;
   if ((m = /^(.+?) moves the initially attacked (.+?) out of (.+?)'s attack$/.exec(text)))
-    return `${noun(m[1])}: 처음 공격받던 ${noun(m[2])}이 ${noun(m[3])}의 공격에서 벗어납니다`;
+    return `${noun(m[1])}: 처음 공격받던 ${withParticle(noun(m[2]), '이', '가')} ${noun(m[3])}의 공격에서 벗어납니다`;
+  if ((m = /^Both (\S+) and (\S+) attack (.+)$/.exec(text)))
+    return `${m[1]}, ${m[2]} 모두 ${withParticle(noun(m[3]), '을', '를')} 공격합니다`;
   if ((m = /^(.+?) (now targets|keeps targeting|attacks|attack|does not attack) (.+)$/.exec(text)))
     return `${withParticle(noun(m[1]), '이', '가')} ${withParticle(noun(m[3]), '을', '를')} ${m[2] === 'does not attack' ? '공격하지 않습니다' : m[2] === 'keeps targeting' ? '계속 공격합니다' : m[2] === 'now targets' ? '새로 공격합니다' : '공격합니다'}`;
-  if ((m = /^(.+?) (adds? support to|keeps supporting|maintains support of|does not support|supports|support) (.+)$/.exec(text)))
-    return `${withParticle(noun(m[1]), '이', '가')} ${withParticle(noun(m[3]), '을', '를')} ${m[2] === 'does not support' ? '지원하지 않습니다' : m[2].startsWith('add') ? '새로 지원합니다' : m[2] === 'keeps supporting' || m[2] === 'maintains support of' ? '계속 지원합니다' : '지원합니다'}`;
+  if ((m = /^(\S+) gives up that (\w+)'s support of (.+)$/.exec(text)) && pieces[m[2]])
+    return `${m[1]} 이후 그 ${withParticle(noun(m[2]), '은', '는')} ${withParticle(noun(m[3]), '을', '를')} 더 이상 지원하지 않습니다`;
+  if ((m = /^(.+?) (adds? support to|keeps supporting|maintains support of|still supports?|does not support|supports|support) (.+)$/.exec(text)))
+    return `${withParticle(noun(m[1]), '이', '가')} ${withParticle(noun(m[3]), '을', '를')} ${m[2] === 'does not support' ? '지원하지 않습니다' : m[2].startsWith('add') ? '새로 지원합니다' : m[2] === 'keeps supporting' || m[2] === 'maintains support of' || m[2].startsWith('still') ? '계속 지원합니다' : '지원합니다'}`;
   if ((m = /^(.+?) ends its support of (.+)$/.exec(text))) return `${noun(m[1])}의 ${noun(m[2])} 지원이 끝납니다`;
+  if ((m = /^(\S+) lines up (.+) with (.+) through (.+)$/.exec(text)))
+    return `${m[1]} 이후 ${withParticle(noun(m[2]), '과', '와')} ${withParticle(noun(m[3]), '이', '가')} ${withParticle(noun(m[4]), '을', '를')} 사이에 두고 한 선에 놓입니다`;
+  if ((m = /^[Tt]he (\w+) screens the (\w+)$/.exec(text)) && pieces[m[1]] && pieces[m[2]])
+    return `그 ${withParticle(noun(m[1]), '이', '가')} ${withParticle(noun(m[2]), '을', '를')} 가립니다`;
+  if ((m = /^(\S+) breaks that alignment in this line$/.exec(text))) return `이 수순의 ${m[1]}로 그 일직선 배치가 깨집니다`;
   if ((m = /^(White|Black) loses (.+)$/.exec(text))) return `${noun(m[1])}: ${noun(m[2])}`;
   if ((m = /^(\S+) clears ([a-h][1-8])$/.exec(text))) return `${m[1]}로 ${m[2]}를 비웁니다`;
   if ((m = /^(?:later )?(\S+) (?:later )?(passes through|occupies) (that square|the vacated ([a-h][1-8]) square) in this line$/.exec(text)))

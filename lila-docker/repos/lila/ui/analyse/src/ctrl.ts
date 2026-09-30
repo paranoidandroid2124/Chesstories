@@ -48,6 +48,7 @@ import {
   moveReviewEngineOutcomeAtRequiredDepth,
   moveReviewProofById,
   moveReviewObservations,
+  updateMoveReviewViewForJob,
   moveReviewSubjectFromNodeList,
   moveReviewRecordFromTree,
   moveReviewSubjectKey,
@@ -893,6 +894,7 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   private setMoveReviewState(state: MoveReviewJobState): void {
+    updateMoveReviewViewForJob(this.moveReviewView, this.moveReviewJob, state);
     this.moveReviewJob = state;
     const subject =
       state.kind === 'completed' || state.kind === 'position-action'

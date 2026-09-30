@@ -7,9 +7,9 @@ import { defined, notNull, requestIdleCallback } from '@/index';
 import { type CevalHandler, type NodeEvals, CevalState } from '../types';
 import type { Position } from 'chessops/chess';
 import { makeSanAndPlay } from 'chessops/san';
-import { opposite, parseUci } from 'chessops/util';
+import { parseUci } from 'chessops/util';
 import { parseFen, makeBoardFen } from 'chessops/fen';
-import { renderEval } from '../util';
+import { renderEval, threatSetup } from '../util';
 import { setupPosition } from 'chessops/variant';
 import { renderCevalSettings } from './settings';
 import type CevalCtrl from '../ctrl';
@@ -354,8 +354,7 @@ export function renderPvs(ctrl: CevalHandler): VNode | undefined {
   if (!ctrl.cevalEnabled()) return;
   const ceval = ctrl.ceval;
   const multiPv = ceval.search.multiPv,
-    node = ctrl.getNode(),
-    setup = parseFen(node.fen).unwrap();
+    node = ctrl.getNode();
   let pvs: Tree.PvData[],
     threat = false,
     pvMoves: (string | null)[],
@@ -365,10 +364,7 @@ export function renderPvs(ctrl: CevalHandler): VNode | undefined {
     threat = true;
   } else if (node.ceval) pvs = node.ceval.pvs;
   else pvs = [];
-  if (threat) {
-    setup.turn = opposite(setup.turn);
-    if (setup.turn === 'white') setup.fullmoves += 1;
-  }
+  const setup = threat ? threatSetup(node.fen) : parseFen(node.fen).unwrap();
   const pos = setupPosition('chess', setup);
 
   return hl(

@@ -19,9 +19,9 @@ import {
   makeMoveReviewWork,
   CevalState,
 } from './types';
-import { sanIrreversible, showEngineError, fewerCores } from './util';
+import { sanIrreversible, showEngineError, fewerCores, threatSetup } from './util';
 import { setupPosition } from 'chessops/variant';
-import { parseFen } from 'chessops/fen';
+import { parseFen, makeFen } from 'chessops/fen';
 import { povChances } from './winningChances';
 import { prop, type Prop, type Toggle, toggle } from '../index';
 import { clamp } from '../algo';
@@ -240,8 +240,7 @@ export default class CevalCtrl {
     };
 
     if (threatMode) {
-      const c = step.ply % 2 === 1 ? 'w' : 'b';
-      const fen = step.fen.replace(/ (w|b) /, ' ' + c + ' ');
+      const fen = makeFen(threatSetup(step.fen));
       work.currentFen = fen;
       work.initialFen = fen;
     } else {

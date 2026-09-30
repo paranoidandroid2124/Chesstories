@@ -21,6 +21,56 @@ export interface CommentaryEffect {
   evidence_ids: string[];
 }
 
+export interface CommentaryExchangeSummary {
+  line_id: string;
+  retained_line_id: string;
+  role: 'knight' | 'bishop' | 'rook' | 'queen';
+  recapturer_role: CommentaryInquiryPiece['role'];
+  exchange_occurrence_ids: string[];
+  retention_occurrence_ids: string[];
+}
+
+export interface CommentaryQuestionMove {
+  line_id: string;
+  occurrence_id: string;
+}
+
+export interface CommentaryQuestionFocus extends CommentaryQuestionMove {
+  phase: 'before' | 'after';
+  position_id: string;
+  squares: Key[];
+  source_ids: string[];
+}
+
+export interface CommentaryQuestionUnit {
+  role: 'condition' | 'reply' | 'cost';
+  en: (string | CommentaryQuestionMove)[];
+  ko: (string | CommentaryQuestionMove)[];
+  covered_moves: CommentaryQuestionMove[];
+  required_moves?: CommentaryQuestionMove[];
+  recorded_end_moves?: CommentaryQuestionMove[];
+  focus?: CommentaryQuestionFocus[];
+  english_only?: true;
+}
+
+export interface CommentaryQuestionSummary {
+  schema_version?: 2;
+  question: 'provider_transfer' | 'support_and_interposition' | 'paired_support_use' |
+    'escape_or_recapture' | 'capture_now_or_after_attack' | 'attack_or_immediate_exchange' | 'counter_capture_comparison' |
+    'occupied_pawn_destination' | 'controlled_destination' | 'opening_counterplay' |
+    'observed_move_order' | 'observed_arrangement_convergence' | 'check_status_comparison' | 'deferred_pawn_attack' | 'contested_pair_response' | 'observed_route_use' | 'selected_target_response' | 'attacker_removal_or_recapture' |
+    'observed_exchange' | 'observed_terminal_comparison' | 'selected_comparison';
+  units: CommentaryQuestionUnit[];
+  detail_units?: CommentaryQuestionUnit[];
+  detail_moves: CommentaryQuestionMove[];
+  witness_line_ids?: string[];
+}
+
+export interface CommentarySummaryUnavailable {
+  question: string;
+  reason: 'answer_not_delivered';
+}
+
 export interface CommentaryCandidate {
   id: string;
   kind: 'local_fact' | 'conditional_line' | 'comparison';
@@ -37,7 +87,9 @@ export interface CommentaryCandidate {
     accepted_ply_count: number;
     stop: string | null;
   }[];
-  detail: Record<string, unknown> & { type: string; effects?: CommentaryEffect[] };
+  detail: Record<string, unknown> & { type: string; effects?: CommentaryEffect[];
+    summary_exchange?: CommentaryExchangeSummary; summary_question?: CommentaryQuestionSummary;
+    summary_unavailable?: CommentarySummaryUnavailable };
 }
 
 export interface CommentaryScene {
@@ -1242,6 +1294,495 @@ function trackedPieces(path: ObservationPath, ply: number): CommentaryTrackedPie
       square: makeSquare(square),
     },
   }));
+}
+
+export function questionFocusFrame(
+  focus: CommentaryQuestionFocus,
+  observations: MoveReviewObservations,
+): MoveReviewFrameSelection | undefined {
+  const path = observations.paths.find(path => path.id === focus.line_id);
+  const offset = path?.occurrenceIds.indexOf(focus.occurrence_id) ?? -1;
+  if (!path || offset < 0 || path.positionIds?.[offset + (focus.phase === 'after' ? 1 : 0)] !== focus.position_id) return;
+  const highlight = observations.highlights?.find(highlight => highlight.occurrenceId === focus.occurrence_id &&
+    highlight.frames?.some(frame => frame.phase === focus.phase && frame.positionId === focus.position_id &&
+      JSON.stringify(frame.squares) === JSON.stringify(focus.squares) &&
+      JSON.stringify(frame.sourceIds) === JSON.stringify(focus.source_ids)));
+  if (highlight) return { proofId: path.id, ply: offset + 1, phase: focus.phase, highlightKey: JSON.stringify(highlight) };
+  return;
+}
+
+function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evidence: string[],
+  summaryText: unknown, sources: CommentaryCandidate['sourceRefs'], observations: MoveReviewObservations): CommentaryQuestionSummary | undefined {
+  if (!object(value)) return;
+  const selectedAnswer = ['observed_exchange', 'observed_terminal_comparison', 'selected_comparison'].includes(String(value.question));
+  const typedAnswer = value.schema_version === 2;
+  const commonAnswer = typedAnswer || selectedAnswer;
+  const terminal = (path: ObservationPath) => {
+    const ending = path.lineSummary?.ending;
+    return !!ending && ['checkmate', 'stalemate', 'insufficient_material', 'fivefold_repetition', 'seventy_five_move_rule']
+      .includes(ending.kind) && ending.ply_offset === path.moves.length - 1 &&
+      ending.occurrence_id === path.occurrenceIds[ending.ply_offset];
+  };
+  if (!exactKeys(value, ['question', 'units', 'detail_moves'], ['schema_version', 'witness_line_ids', 'detail_units']) ||
+    (value.schema_version !== undefined && value.schema_version !== 2) ||
+    !['provider_transfer', 'support_and_interposition', 'paired_support_use',
+      'escape_or_recapture', 'capture_now_or_after_attack', 'attack_or_immediate_exchange', 'counter_capture_comparison',
+      'occupied_pawn_destination', 'controlled_destination', 'opening_counterplay',
+      'observed_move_order', 'observed_arrangement_convergence', 'check_status_comparison', 'deferred_pawn_attack', 'contested_pair_response', 'observed_route_use', 'selected_target_response', 'attacker_removal_or_recapture',
+      'observed_exchange', 'observed_terminal_comparison', 'selected_comparison'].includes(String(value.question)) ||
+    !Array.isArray(value.units) || !value.units.length || value.units.length > 8 ||
+    (value.detail_units !== undefined && (!Array.isArray(value.detail_units) || value.detail_units.length > 8)) ||
+    !Array.isArray(value.detail_moves) || value.detail_moves.length > 80 || usedPaths.length !== 2 ||
+    usedPaths[0].startFen !== usedPaths[1].startFen || usedPaths[0].positionIds?.[0] !== usedPaths[1].positionIds?.[0] ||
+    usedPaths[0].moves[0]?.uci === usedPaths[1].moves[0]?.uci || usedPaths.some(path =>
+      !path.lineSummary?.material || (path.lineSummary.ending.kind !== 'line_end' && !(commonAnswer && terminal(path))) ||
+      !path.lineSummary.premise_ids.every(id => evidence.includes(id)) ||
+      (!commonAnswer && value.question !== 'deferred_pawn_attack' && path.lineSummary.material.events.some(event => event.promotion_gain_cp)) ||
+      !sources.some(source => source.line_id === path.id &&
+        (source.stop === null || (commonAnswer && terminal(path) && source.stop === 'automatic_terminal')) &&
+        source.accepted_ply_count === path.moves.length))) return;
+  if (value.question === 'observed_terminal_comparison' && !usedPaths.some(terminal)) return;
+  const summaryPaths = [...usedPaths];
+  if (value.witness_line_ids !== undefined) {
+    if (value.question !== 'attacker_removal_or_recapture' || !ids(value.witness_line_ids) ||
+      !value.witness_line_ids.length || value.witness_line_ids.length > 2) return;
+    for (const lineId of value.witness_line_ids) {
+      const path = observations.paths.find(path => path.id === lineId);
+      // Retain the current evaluation pair. A supplementary path only witnesses
+      // an actual legal response after one of those same root transitions.
+      if (!path || summaryPaths.includes(path) || !path.lineSummary?.material ||
+        path.lineSummary.ending.kind !== 'line_end' ||
+        !path.lineSummary.premise_ids.every(id => evidence.includes(id)) ||
+        path.lineSummary.material.events.some(event => event.promotion_gain_cp) ||
+        !usedPaths.some(primary => primary.startFen === path.startFen &&
+          primary.positionIds?.[0] === path.positionIds?.[0] &&
+          primary.occurrenceIds[0] === path.occurrenceIds[0] && primary.moves[0]?.uci === path.moves[0]?.uci)) return;
+      summaryPaths.push(path);
+    }
+  }
+  const move = (raw: unknown): raw is CommentaryQuestionMove => object(raw) &&
+    exactKeys(raw, ['line_id', 'occurrence_id']) && id(raw.line_id) && id(raw.occurrence_id) &&
+    evidence.includes(raw.occurrence_id) && summaryPaths.some(path => path.id === raw.line_id && path.occurrenceIds.includes(raw.occurrence_id as string));
+  const parts = (raw: unknown): raw is (string | CommentaryQuestionMove)[] => Array.isArray(raw) &&
+    raw.length > 0 && raw.length <= 80 && raw.every(part => typeof part === 'string' ? part.length > 0 && part.length <= 2000 : move(part));
+  const key = (ref: CommentaryQuestionMove) => `${ref.line_id}/${ref.occurrence_id}`;
+  const refs = (parts: (string | CommentaryQuestionMove)[]) => parts.filter((p): p is CommentaryQuestionMove => typeof p !== 'string');
+  const signature = (moves: CommentaryQuestionMove[]) => moves.map(key).sort().join('|');
+  if (!value.detail_moves.every(move) || new Set(value.detail_moves.map(key)).size !== value.detail_moves.length) return;
+  for (const unit of [...value.units, ...((value.detail_units as unknown[] | undefined) ?? [])]) {
+    if (!object(unit) || !exactKeys(unit, ['role', 'en', 'ko', 'covered_moves'], ['required_moves', 'recorded_end_moves', 'focus', 'english_only']) ||
+      !['condition', 'reply', 'cost'].includes(String(unit.role)) || !parts(unit.en) || !parts(unit.ko) ||
+      !Array.isArray(unit.covered_moves) || unit.covered_moves.length > 80 || !unit.covered_moves.every(move) ||
+      signature(refs(unit.en)) !== signature(refs(unit.ko)) || !refs(unit.en).length ||
+      new Set(unit.covered_moves.map(key)).size !== unit.covered_moves.length ||
+      (unit.role === 'cost') !== (unit.covered_moves.length > 0) ||
+      (unit.english_only !== undefined && (unit.english_only !== true || JSON.stringify(unit.en) !== JSON.stringify(unit.ko)))) return;
+    const visible = new Set(refs(unit.en).map(key));
+    if (unit.required_moves !== undefined && (!Array.isArray(unit.required_moves) || unit.required_moves.length > 80 ||
+      !unit.required_moves.every(move) || new Set(unit.required_moves.map(key)).size !== unit.required_moves.length ||
+      unit.required_moves.some(ref => !visible.has(key(ref))))) return;
+    if (unit.recorded_end_moves !== undefined && (!Array.isArray(unit.recorded_end_moves) || unit.recorded_end_moves.length > 80 ||
+      !unit.recorded_end_moves.every(move) || new Set(unit.recorded_end_moves.map(key)).size !== unit.recorded_end_moves.length ||
+      unit.recorded_end_moves.some(ref => {
+        const path = summaryPaths.find(path => path.id === ref.line_id)!, ending = path.lineSummary!.ending;
+        return !visible.has(key(ref)) || ending.kind !== 'line_end' || ending.ply_offset !== path.moves.length - 1 ||
+          ending.occurrence_id !== ref.occurrence_id || path.occurrenceIds[path.moves.length - 1] !== ref.occurrence_id;
+      }))) return;
+    if (unit.focus !== undefined) {
+      if (!Array.isArray(unit.focus) || unit.focus.length > 80) return;
+      const assigned = new Set<string>();
+      for (const focus of unit.focus) {
+        if (!object(focus) || !exactKeys(focus, ['line_id', 'occurrence_id', 'phase', 'position_id', 'squares', 'source_ids']) ||
+          !move({ line_id: focus.line_id, occurrence_id: focus.occurrence_id }) ||
+          !['before', 'after'].includes(String(focus.phase)) || !id(focus.position_id) ||
+          !ids(focus.squares) || !focus.squares.length || focus.squares.length > 64 ||
+          !focus.squares.every(square => /^[a-h][1-8]$/.test(square)) || !ids(focus.source_ids)) return;
+        const ref = focus as unknown as CommentaryQuestionFocus;
+        if (!visible.has(key(ref)) || assigned.has(key(ref)) || !questionFocusFrame(ref, observations)) return;
+        assigned.add(key(ref));
+      }
+    }
+  }
+  const result = value as unknown as CommentaryQuestionSummary, mentioned = result.units.flatMap(u => refs(u.en));
+  const text = result.units.map(unit => unit.en.map(part => typeof part === 'string' ? part : (() => {
+    const path = summaryPaths.find(path => path.id === part.line_id)!;
+    return path.moves[path.occurrenceIds.indexOf(part.occurrence_id)].label;
+  })()).join('')).join(' ');
+  if (text !== summaryText || text.length > 4000 || usedPaths.some(path => !mentioned.some(ref =>
+    ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[0]))) return;
+  const delivered = (units: CommentaryQuestionUnit[]): boolean => {
+    const mentioned = units.flatMap(unit => refs(unit.en)),
+      recordedEnds = new Set(units.flatMap(unit => unit.recorded_end_moves ?? []).map(key));
+    if (units.some(unit => unit.covered_moves.some(ref => !refs(unit.en).some(other => key(ref) === key(other))))) return false;
+    for (const path of summaryPaths) {
+      const visible = mentioned.filter(ref => ref.line_id === path.id),
+        covered = [...new Map(units.flatMap(unit => unit.covered_moves).filter(ref => ref.line_id === path.id)
+          .map(ref => [key(ref), ref])).values()],
+        material = path.lineSummary!.material!.events,
+        has = (offset: number) => visible.some(ref => ref.occurrence_id === path.occurrenceIds[offset]);
+      if (covered.some(ref =>
+        !visible.some(other => key(other) === key(ref)) || !material.some(event => event.capture && event.occurrence_id === ref.occurrence_id))) return false;
+      for (const ref of visible) {
+        const offset = path.occurrenceIds.indexOf(ref.occurrence_id),
+          capture = material.find(event => event.ply_offset === offset && event.capture),
+          previous = material.find(event => event.ply_offset === offset - 1 && event.capture),
+          next = material.find(event => event.ply_offset === offset + 1 && event.capture),
+          ended = commonAnswer && terminal(path) && offset === path.lineSummary!.ending.ply_offset;
+        if (capture && !covered.some(other => key(other) === key(ref))) return false;
+        if (!ended && !recordedEnds.has(key(ref)) && !has(offset + 1) &&
+          setupPosition('chess', parseFen(path.moves[offset].fenAfter).unwrap()).unwrap().isCheck()) return false;
+        if (capture?.capture?.recapture === 'proven' && previous && previous.side !== capture.side &&
+          capture.capture.square === path.moves[offset - 1]?.uci.slice(2, 4) && !has(offset - 1)) return false;
+        if (capture && next?.capture?.recapture === 'proven' && next.side !== capture.side &&
+          next.capture.square === path.moves[offset].uci.slice(2, 4) && !has(offset + 1)) return false;
+      }
+    }
+    return true;
+  };
+  if (result.detail_units && !delivered(result.detail_units)) return;
+  if (commonAnswer || result.question === 'selected_target_response' || result.question === 'attacker_removal_or_recapture') {
+    // The producer owns the selected physical question and its closed account.
+    // Here validate delivery: every declared cost is visible in both languages,
+    // and neither a check's reply nor its immediate recapture can be folded away.
+    if ((!commonAnswer && result.detail_moves.length) || !delivered(result.units) ||
+      summaryPaths.some(path => !mentioned.some(ref => ref.line_id === path.id))) return;
+    return result;
+  }
+  // Unversioned summaries retain their original motif-specific compatibility checks.
+  // Version 2 has one producer-selected account; Unit grouping does not prove its meaning.
+  const alignment = ['observed_move_order', 'observed_arrangement_convergence', 'observed_route_use'].includes(result.question);
+  const ends = new Map<string, number>();
+  for (const path of usedPaths) {
+    const core = mentioned.filter(ref => ref.line_id === path.id),
+      covered = result.units.flatMap(unit => unit.covered_moves).filter(ref => ref.line_id === path.id),
+      detail = result.detail_moves.filter(ref => ref.line_id === path.id),
+      all = [...core, ...covered, ...(alignment ? detail : [])], end = Math.max(...all.map(ref => path.occurrenceIds.indexOf(ref.occurrence_id))),
+      materialEvents = path.lineSummary!.material!.events,
+      // This question states a material result across the entire supplied line.
+      captures = materialEvents.filter(event => event.capture &&
+        (result.question === 'occupied_pawn_destination' || event.ply_offset <= end));
+    ends.set(path.id, end);
+    if (alignment && (detail.length !== end + 1 || path.occurrenceIds.slice(0, end + 1).some(id =>
+      !detail.some(ref => ref.occurrence_id === id)))) return;
+    const materialQuestion = ['paired_support_use', 'escape_or_recapture',
+      'capture_now_or_after_attack', 'attack_or_immediate_exchange', 'counter_capture_comparison', 'occupied_pawn_destination', 'opening_counterplay',
+      'check_status_comparison', 'deferred_pawn_attack', 'contested_pair_response', 'observed_route_use'].includes(result.question);
+    for (let offset = 0; offset <= end; offset++) {
+      if (!/[+#]$/.test(path.moves[offset].label)) continue;
+      const matches = (ref: CommentaryQuestionMove, index: number) =>
+        ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[index];
+      const answeredInUnit = ['escape_or_recapture', 'opening_counterplay', 'check_status_comparison', 'deferred_pawn_attack', 'contested_pair_response'].includes(result.question) &&
+        result.units.some(unit => [offset, offset + 1].every(index => refs(unit.en).some(ref => matches(ref, index))));
+      const neutralCheck = result.question === 'check_status_comparison' && captures.some(first => first.ply_offset === offset &&
+        captures.some(second => second.ply_offset === offset + 1 && second.side !== first.side &&
+          second.capture!.role === first.capture!.role && second.capture!.recapture === 'proven'));
+      const pairedInDetail = (result.question === 'counter_capture_comparison' || neutralCheck) &&
+        [offset, offset + 1].every(index => result.detail_moves.some(ref => matches(ref, index)) &&
+          !core.some(ref => matches(ref, index)) && (neutralCheck || !captures.some(event => event.ply_offset === index)));
+      if (!answeredInUnit && !pairedInDetail) return;
+    }
+    if (materialQuestion) {
+      // A countercapture account follows the original taker through its removal,
+      // including an intervening gain or trade. Its last link cannot set its scope.
+      if (result.question === 'counter_capture_comparison' && captures.length) {
+        const first = captures[0], captor = trackedPieces(path, first.ply_offset)?.find(piece =>
+          piece.current.square === path.moves[first.ply_offset].uci.slice(0, 2))?.original;
+        if (!captor || materialEvents.some(event => event.capture && event.ply_offset > end &&
+          trackedPieces(path, event.ply_offset)?.some(piece => piece.current.square === event.capture!.square &&
+            samePiece(piece.original, captor)))) return;
+      }
+      // Truncating the declared prefix must not hide its immediate recapture.
+      // The actual capture square distinguishes an unrelated countercapture.
+      const lastCapture = captures.find(event => event.ply_offset === end),
+        nextCapture = path.lineSummary!.material!.events.find(event => event.ply_offset === end + 1 && event.capture);
+      if (lastCapture && nextCapture?.capture?.recapture === 'proven' && nextCapture.side !== lastCapture.side &&
+        nextCapture.capture.square === path.moves[end].uci.slice(2, 4)) return;
+      if (new Set(covered.map(key)).size !== covered.length ||
+        captures.length !== covered.length || captures.some(event => !covered.some(ref => ref.occurrence_id === event.occurrence_id)) ||
+        covered.some(ref => !core.concat(result.detail_moves).some(other => key(other) === key(ref)))) return;
+    } else if (covered.length || captures.length) return;
+    if (result.question === 'paired_support_use') {
+      if (!covered.length) return;
+      const balance = new Map<string, number>();
+      for (const event of captures) balance.set(event.capture!.role,
+        (balance.get(event.capture!.role) ?? 0) + (event.side === 'white' ? 1 : -1));
+      if ([...balance.values()].some(value => value !== 0)) return;
+    }
+  }
+  if (result.question === 'observed_route_use') {
+    const states = usedPaths.map(path => Array.from({ length: path.moves.length + 1 }, (_, count) => trackedPieces(path, count))),
+      roots = usedPaths.map((path, n) => states[n][0]?.find(p => p.current.square === path.moves[0].uci.slice(0, 2))?.original);
+    const validRoute = roots.some(focus => focus && (() => {
+      const routes = usedPaths.map((path, n) => path.moves.flatMap((move, offset) => {
+        const before = states[n][offset]?.find(p => samePiece(p.original, focus)),
+          after = states[n][offset + 1]?.find(p => samePiece(p.original, focus));
+        return before && after && before.current.square !== after.current.square ? [{ offset, square: after.current.square, uci: move.uci }] : [];
+      }));
+      const meetings = routes[0].flatMap(left => routes[1].filter(right => left.square === right.square).map(right => [left.offset, right.offset])),
+        first = meetings.filter(pair => !meetings.some(other => other[0] <= pair[0] && other[1] <= pair[1] &&
+          (other[0] < pair[0] || other[1] < pair[1])));
+      if (first.length !== 1) return false;
+      const arrivals = first[0], prefixes = routes.map((route, n) => route.filter(step => step.offset <= arrivals[n]));
+      if (prefixes[0].map(s => s.uci).join(' ') === prefixes[1].map(s => s.uci).join(' ')) return false;
+      const exchanged = usedPaths.map((path, n) => {
+        const events = path.lineSummary!.material!.events, arrival = arrivals[n],
+          gain = events.find(e => e.ply_offset === arrival && e.capture),
+          loss = events.find(e => e.ply_offset === arrival + 1 && e.capture?.recapture === 'proven');
+        if (!gain?.capture || !loss?.capture || gain.side !== focus.side || gain.capture.role !== focus.role) return;
+        const taken = states[n][arrival]?.find(p => p.current.square === gain.capture!.square)?.original,
+          removed = states[n][arrival + 1]?.find(p => p.current.square === loss.capture!.square)?.original;
+        return taken && removed && samePiece(removed, focus) ? taken : undefined;
+      });
+      const sameExchange = roots.every(root => root && samePiece(root, focus)) && exchanged.every(Boolean) &&
+        samePiece(exchanged[0]!, exchanged[1]!);
+      const mover = (n: number, offset: number) => states[n][offset]?.find(p =>
+        p.current.square === usedPaths[n].moves[offset]?.uci.slice(0, 2))?.original,
+        control = (n: number, count: number, actor: CommentaryInquiryPiece, target: CommentaryInquiryPiece) =>
+          continuationSupportAt(observations, usedPaths[n], actor, target, count, states[n][count]).state;
+      const notPinned = (n: number, count: number, piece = focus) => {
+        const resource = observations.positions?.find(p => p.id === usedPaths[n].positionIds![count]),
+          current = states[n][count]?.find(p => samePiece(p.original, piece))?.current;
+        return !!current && !!resource?.rays.complete && !resource.rays.lines.some(ray =>
+          ray.piece.side !== current.side && ray.occupants[0]?.square === current.square &&
+          ray.occupants[1]?.role === 'king' && ray.occupants[1].side === current.side);
+      };
+      const subjects: CommentaryInquiryPiece[] = [];
+      const own = (piece: CommentaryInquiryPiece | undefined) => {
+        if (piece && !subjects.some(p => samePiece(p, piece))) subjects.push(piece);
+      };
+      roots.forEach(own);
+      for (const [n, path] of usedPaths.entries()) {
+        for (const { offset } of prefixes[n]) {
+          const prior = mover(n, offset - 1), reply = mover(n, offset + 1);
+          if (prior && prior.side !== focus.side && control(n, offset - 1, prior, focus) === 'absent' &&
+            control(n, offset, prior, focus) === 'present' && control(n, offset + 1, prior, focus) === 'absent') own(prior);
+          if (reply && reply.side !== focus.side && control(n, offset, focus, reply) === 'absent' &&
+            control(n, offset + 1, focus, reply) === 'present' && notPinned(n, offset + 1) &&
+            control(n, offset + 2, focus, reply) === 'absent') own(reply);
+        }
+        const targets = (states[n][0] ?? []).map(p => p.original).filter(p => p.side !== focus.side &&
+          control(n, arrivals[n], focus, p) === 'absent' && control(n, arrivals[n] + 1, focus, p) === 'present' &&
+          notPinned(n, arrivals[n] + 1));
+        if (targets.every(p => p.role === 'pawn')) targets.forEach(own);
+        const next = routes[n].find(step => step.offset > arrivals[n]),
+          gain = path.lineSummary!.material!.events.find(e => e.capture && e.ply_offset === next?.offset),
+          taken = gain && states[n][gain.ply_offset]?.find(p => p.current.square === gain.capture!.square)?.original;
+        if (taken && Array.from({ length: gain!.ply_offset - arrivals[n] }, (_, i) => arrivals[n] + i + 1)
+          .every(count => control(n, count, focus, taken) === 'present' && notPinned(n, count))) own(taken);
+      }
+      return usedPaths.every((path, n) => {
+        const visible = (offset: number) => mentioned.some(ref => ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[offset]),
+          captures = path.lineSummary!.material!.events.filter(event => event.capture && event.ply_offset <= ends.get(path.id)!),
+          together = (...offsets: number[]) => result.units.some(unit => offsets.every(offset => refs(unit.en).some(ref =>
+            ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[offset]))),
+          actor = (offset: number) => mover(n, offset),
+          contact = (count: number, actor: CommentaryInquiryPiece, target: CommentaryInquiryPiece) =>
+            control(n, count, actor, target);
+        const unpinned = (count: number) => notPinned(n, count);
+        const interactionsKept = prefixes[n].every(({ offset }) => {
+          if (!visible(offset)) return false;
+          const prior = actor(offset - 1), reply = actor(offset + 1);
+          if (prior && prior.side !== focus.side && contact(offset - 1, prior, focus) === 'absent' &&
+            contact(offset, prior, focus) === 'present' && contact(offset + 1, prior, focus) === 'absent' &&
+            !together(offset - 1, offset)) return false;
+          if (reply && reply.side !== focus.side && contact(offset, focus, reply) === 'absent' &&
+            contact(offset + 1, focus, reply) === 'present' && unpinned(offset + 1) &&
+            contact(offset + 2, focus, reply) === 'absent' && !together(offset, offset + 1)) return false;
+          return true;
+        });
+        const victim = (event: (typeof captures)[number]) =>
+          states[n][event.ply_offset]?.find(p => p.current.square === event.capture!.square)?.original,
+          stationary = (piece: CommentaryInquiryPiece, from: number, through: number) => {
+            const square = states[n][from]?.find(p => samePiece(p.original, piece))?.current.square;
+            return !!square && states[n].slice(from, through + 1).every(state =>
+              state?.find(p => samePiece(p.original, piece))?.current.square === square);
+          },
+          laterLoss = path.lineSummary!.material!.events.find(event => event.capture && event.ply_offset > arrivals[n] &&
+            victim(event) && samePiece(victim(event)!, focus) && stationary(focus, arrivals[n] + 1, event.ply_offset));
+        if (laterLoss && laterLoss.ply_offset > ends.get(path.id)!) return false;
+        const groups: Array<typeof captures> = [];
+        for (const event of captures) {
+          const taken = victim(event), prior = groups.find(group => {
+            const last = group[group.length - 1], mover = actor(last.ply_offset);
+            return taken && mover && samePiece(taken, mover) && stationary(mover, last.ply_offset + 1, event.ply_offset);
+          });
+          if (prior) prior.push(event); else groups.push([event]);
+        }
+        const independent = (group: typeof captures) => {
+          if (group.length !== 2 || group.some(e => visible(e.ply_offset)) ||
+            group[1].ply_offset !== group[0].ply_offset + 1 || group[0].side === group[1].side ||
+            group[0].capture!.role !== group[1].capture!.role || group[1].capture!.recapture !== 'proven' ||
+            usedPaths.some(p => p.positionIds?.some(id => {
+              const resource = observations.positions?.find(position => position.id === id);
+              return !resource?.controls.complete || !resource.rays.complete;
+            }))) return false;
+          const pieces = (events: typeof captures) => events.flatMap(e => [actor(e.ply_offset), victim(e)])
+            .filter((p): p is CommentaryInquiryPiece => !!p),
+            participants = pieces(group),
+            owned = subjects.concat(pieces(path.lineSummary!.material!.events.filter(e => e.capture &&
+              e.ply_offset >= group[0].ply_offset && !group.includes(e))));
+          if (participants.length !== 4 || participants.some(p => owned.some(q => samePiece(p, q)))) return false;
+          const squares = new Set(prefixes[n].flatMap(({ offset }) => {
+            const from = states[n][offset]?.find(p => samePiece(p.original, focus))?.current,
+              to = states[n][offset + 1]?.find(p => samePiece(p.original, focus))?.current.square,
+              resource = observations.positions?.find(p => p.id === path.positionIds![offset]);
+            if (!from || !to || !resource) return [];
+            return [from.square, to, ...resource.rays.lines.filter(ray => ray.piece.square === from.square &&
+              ray.piece.side === from.side && ray.piece.role === from.role && ray.squares.includes(to))
+              .flatMap(ray => ray.squares.slice(0, ray.squares.indexOf(to)))];
+          }));
+          for (let count = group[0].ply_offset; count <= group[1].ply_offset + 1; count++) {
+            const resource = observations.positions!.find(p => p.id === path.positionIds![count])!,
+              current = (piece: CommentaryInquiryPiece) => states[n][count]?.find(p => samePiece(p.original, piece))?.current;
+            for (const p of participants) {
+              const piece = current(p);
+              if (!piece) continue;
+              const controls = resource.controls.pieces.find(row => row.piece.square === piece.square &&
+                row.piece.side === piece.side && row.piece.role === piece.role);
+              if (squares.has(piece.square) || controls?.squares.some(square => squares.has(square)) ||
+                owned.some(q => current(q) && (contact(count, p, q) !== 'absent' || contact(count, q, p) !== 'absent'))) return false;
+            }
+            if (count <= group[1].ply_offset && owned.some(p => owned.some(q => !samePiece(p, q) && current(p) && current(q) &&
+              (contact(count, p, q) !== contact(count + 1, p, q) || notPinned(n, count, p) !== notPinned(n, count + 1, p))))) return false;
+          }
+          return true;
+        };
+        const chained = groups.every(group => group.length >= 2 &&
+          (together(...group.map(event => event.ply_offset)) || independent(group)));
+        const next = prefixes[n].find(step => step.offset > 0),
+          use = captures.find(event => event.ply_offset === next?.offset && event.capture!.role === 'pawn'),
+          target = use && states[n][use.ply_offset]?.find(p => p.current.square === use.capture!.square)?.original,
+          balance = new Map<string, number>();
+        for (const event of captures) balance.set(event.capture!.role,
+          (balance.get(event.capture!.role) ?? 0) + (event.side === focus.side ? 1 : -1));
+        const compound = sameExchange && !!use && !!target && contact(0, focus, target) === 'absent' &&
+          Array.from({ length: use.ply_offset }, (_, i) => i + 1).every(count =>
+            contact(count, focus, target) === 'present' && unpinned(count)) &&
+          [...balance.values()].every(n => n === 0) && ends.get(path.id)! <= arrivals[n] + 2 &&
+          together(...captures.map(event => event.ply_offset)) && captures.every(event =>
+            [arrivals[n], arrivals[n] + 1].includes(event.ply_offset) || event.capture!.role === 'pawn' &&
+            (event.ply_offset < arrivals[n] ? [focus, exchanged[n]!].some(p => {
+              const mover = actor(event.ply_offset); return mover && samePiece(mover, p);
+            }) : event.ply_offset === arrivals[n] + 2 && event.side === focus.side));
+        return arrivals[n] <= ends.get(path.id)! && interactionsKept &&
+          (arrivals[n] === ends.get(path.id)! || visible(arrivals[n] + 1)) &&
+          (chained || compound);
+      });
+    })());
+    if (!validRoute) return;
+  }
+  if (result.question === 'contested_pair_response') {
+    const costs = result.units.filter(unit => unit.role === 'cost');
+    if (!costs.length || costs.some(unit => {
+      if (unit.covered_moves.some(move => !refs(unit.en).some(ref => key(ref) === key(move)))) return true;
+      return usedPaths.some(path => {
+        const moves = unit.covered_moves.filter(ref => ref.line_id === path.id);
+        if (!moves.length) return false;
+        if (moves.length !== 2) return true;
+        const start = path.occurrenceIds.indexOf(moves[0].occurrence_id), end = path.occurrenceIds.indexOf(moves[1].occurrence_id);
+        return end !== start + 1 ||
+          !path.lineSummary!.material!.events.some(event => event.ply_offset === end && event.capture?.recapture === 'proven');
+      });
+    })) return;
+  }
+  if (result.question === 'deferred_pawn_attack') {
+    const promotions = usedPaths.flatMap(path => path.lineSummary!.material!.events.filter(event => event.promotion_gain_cp)
+      .map(event => ({ path, event })));
+    if (promotions.length !== 1) return;
+    const { path, event } = promotions[0], at = event.ply_offset,
+      removal = path.lineSummary!.material!.events.find(row => row.ply_offset === at + 1),
+      actor = trackedPieces(path, at)?.find(piece => piece.current.square === event.from),
+      promoted = actor && trackedPieces(path, at + 1)?.find(piece => samePiece(piece.original, actor.original)),
+      remaining = trackedPieces(path, at + 2), peer = usedPaths.find(other => other !== path)!,
+      peerRoot = trackedPieces(peer, 0)?.find(piece => piece.current.square === peer.moves[0].uci.slice(0, 2));
+    const names = (ref: CommentaryQuestionMove, index: number) => ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[index];
+    if (!actor || actor.original.role !== 'pawn' || !promoted || promoted.current.role !== event.after_role ||
+      !remaining || remaining.some(piece => samePiece(piece.original, actor.original)) ||
+      !peerRoot || !samePiece(peerRoot.original, actor.original) || !event.capture || event.before_role !== 'pawn' ||
+      !removal?.capture || removal.capture.role !== event.after_role || removal.capture.recapture !== 'proven' ||
+      !result.units.some(unit => [at, at + 1].every(index => refs(unit.en).some(ref => names(ref, index)) &&
+        unit.covered_moves.some(ref => names(ref, index))))) return;
+    // Keep the intervening loss and the immediate countercapture visible,
+    // even when the caller also supplies a longer continuation.
+    const next = path.lineSummary!.material!.events.find(row => row.ply_offset === at + 2 && row.capture);
+    const through = next ? at + 2 : at + 1;
+    if (path.lineSummary!.material!.events.filter(row => row.capture && row.ply_offset <= through).some(row =>
+      !mentioned.some(ref => names(ref, row.ply_offset)) ||
+      !result.units.some(unit => unit.covered_moves.some(ref => names(ref, row.ply_offset))))) return;
+    const captures = peer.lineSummary!.material!.events.filter(row => row.capture), balance = new Map<string, number>();
+    for (const row of captures) balance.set(row.capture!.role, (balance.get(row.capture!.role) ?? 0) + (row.side === 'white' ? 1 : -1));
+    if ([...balance.values()].some(count => count !== 0) || captures.some(row => !result.units.some(unit =>
+      unit.covered_moves.some(ref => ref.line_id === peer.id && ref.occurrence_id === row.occurrence_id)))) return;
+  }
+  if (result.question === 'observed_arrangement_convergence') {
+    const end = usedPaths.map(path => ends.get(path.id)!),
+      boards = usedPaths.map(path => path.moves.map(move => move.fenAfter.split(' ').slice(0, 4).join(' '))),
+      meetings = boards[0].flatMap((board, i) => boards[1].flatMap((other, j) => board === other ? [[i, j]] : []));
+    const order = (a: number[], b: number[]) => Math.max(...a) - Math.max(...b) || a[0] + a[1] - b[0] - b[1];
+    const first = meetings.sort(order)[0];
+    if (!first || order(first, end) !== 0 || meetings.filter(pair => order(pair, first) === 0).length !== 1) return;
+    if (usedPaths.some((path, n) => !mentioned.some(ref =>
+      ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[end[n]])) ||
+      boards[0][end[0]] !== boards[1][end[1]]) return;
+  }
+  if (result.question === 'observed_move_order') {
+    for (const [n, path] of usedPaths.entries()) {
+      const peer = usedPaths[1 - n], end = ends.get(path.id)!,
+        other = path.moves.findIndex((move, index) => index > 0 && move.uci === peer.moves[0].uci),
+        remaining = trackedPieces(path, end + 1);
+      if (other < 1 || end !== other + 1 || !remaining || !mentioned.some(ref =>
+        ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[other]) || !mentioned.some(ref =>
+        ref.line_id === path.id && path.occurrenceIds.indexOf(ref.occurrence_id) % 2 === 1)) return;
+      for (const root of usedPaths) {
+        const actor = trackedPieces(root, 1)?.find(piece => piece.original.square === root.moves[0].uci.slice(0, 2));
+        const held = actor && remaining.find(piece => samePiece(piece.original, actor.original));
+        if (!actor || !held || actor.current.square !== held.current.square || actor.current.role !== held.current.role) return;
+      }
+    }
+  }
+  return result;
+}
+
+function decodeExchangeSummary(value: unknown, usedPaths: ObservationPath[], evidence: string[]): CommentaryExchangeSummary | undefined {
+  if (!object(value) || !exactKeys(value, ['line_id', 'retained_line_id', 'role', 'recapturer_role',
+    'exchange_occurrence_ids', 'retention_occurrence_ids']) || !id(value.line_id) || !id(value.retained_line_id) ||
+    value.line_id === value.retained_line_id || !['knight', 'bishop', 'rook', 'queen'].includes(String(value.role)) ||
+    !ids(value.exchange_occurrence_ids) || !ids(value.retention_occurrence_ids)) return;
+  const exchange = usedPaths.find(path => path.id === value.line_id),
+    retained = usedPaths.find(path => path.id === value.retained_line_id);
+  const neutral = (path: ObservationPath) => {
+    const summary = path.lineSummary, material = summary?.material;
+    if (!material || summary?.ending.kind !== 'line_end' || path.moves.length < 3 ||
+      !summary.premise_ids.every(id => evidence.includes(id)) || material.events.some(event => event.promotion_gain_cp)) return false;
+    const captures = material.events.filter(event => event.capture);
+    return captures.every((event, index) => index % 2 === 1 || !!captures[index + 1] &&
+      captures[index + 1].ply_offset === event.ply_offset + 1 && captures[index + 1].side !== event.side &&
+      captures[index + 1].capture!.role === event.capture!.role && captures[index + 1].capture!.recapture === 'proven');
+  };
+  if (usedPaths.length !== 2 || !exchange || !retained || !neutral(exchange) || !neutral(retained) ||
+    exchange.startFen !== retained.startFen || exchange.positionIds?.[0] !== retained.positionIds?.[0] ||
+    exchange.moves[0].uci === retained.moves[0].uci ||
+    exchange.moves[0].uci.slice(0, 2) !== retained.moves[0].uci.slice(0, 2) || /[+#]$/.test(exchange.moves[2].label) ||
+    value.exchange_occurrence_ids.length !== 3 || value.retention_occurrence_ids.length !== 2 ||
+    !value.exchange_occurrence_ids.every((id, index) => id === exchange.occurrenceIds[index] && evidence.includes(id)) ||
+    value.retention_occurrence_ids[0] !== retained.occurrenceIds[0] ||
+    value.retention_occurrence_ids[1] !== retained.occurrenceIds[retained.occurrenceIds.length - 1] ||
+    !value.retention_occurrence_ids.every(id => evidence.includes(id))) return;
+  const captures = exchange.lineSummary!.material!.events.filter(event => event.capture),
+    [loss, recovery] = captures;
+  if (loss?.ply_offset !== 1 || recovery?.ply_offset !== 2 || loss.before_role !== value.role ||
+    loss.capture!.role !== value.role || recovery.before_role !== value.recapturer_role) return;
+  const original = trackedPieces(exchange, 0),
+    actor = original?.find(piece => piece.original.square === exchange.moves[0].uci.slice(0, 2))?.original,
+    target = original?.find(piece => piece.original.square === exchange.moves[1].uci.slice(0, 2))?.original,
+    afterLoss = trackedPieces(exchange, 2), afterRecovery = trackedPieces(exchange, 3),
+    remaining = trackedPieces(retained, retained.moves.length);
+  if (!actor || !target || actor.role !== value.role || target.role !== value.role || actor.side === target.side ||
+    !afterLoss || !afterRecovery || !remaining || afterLoss.some(piece => samePiece(piece.original, actor)) ||
+    !afterLoss.some(piece => samePiece(piece.original, target)) ||
+    [actor, target].some(witness => afterRecovery.some(piece => samePiece(piece.original, witness)) ||
+      !remaining.some(piece => samePiece(piece.original, witness)))) return;
+  return value as unknown as CommentaryExchangeSummary;
 }
 
 function decodeRootSearches(
@@ -5537,6 +6078,8 @@ export function decodeCommentarySelection(
     if (raw.detail.summary !== undefined &&
       (typeof raw.detail.summary !== 'string' || !raw.detail.summary.trim() || raw.detail.summary.length > 4000))
       return;
+    if ((raw.detail.summary_exchange !== undefined || raw.detail.summary_question !== undefined || raw.detail.summary_unavailable !== undefined) &&
+      (raw.kind !== 'comparison' || raw.detail.type !== 'root_comparison')) return;
     const usedPaths = raw.line_ids.map(v => paths.get(v)!);
     // A missing comparison path may leave only its actual decision anchor. It
     // must still be an admitted occurrence, never a fabricated missing edge.
@@ -5669,7 +6212,16 @@ export function decodeCommentarySelection(
         raw.detail.type !== 'root_comparison' ||
         !exactKeys(detail, ['type', 'scope', 'comparison_evidence_id', 'comparison_kind',
           'reference_line_id', 'candidate_line_id', 'missing_line_ids', 'material_relation',
-          'material_unavailable_reason', 'text'], ['perspective', 'reference_net_cp', 'candidate_net_cp', 'effects', 'summary']) ||
+          'material_unavailable_reason', 'text'], ['perspective', 'reference_net_cp', 'candidate_net_cp', 'effects', 'summary', 'summary_kind', 'summary_exchange', 'summary_question', 'summary_unavailable']) ||
+        (detail.summary_unavailable !== undefined &&
+          (!object(detail.summary_unavailable) || !exactKeys(detail.summary_unavailable, ['question', 'reason']) ||
+            !id(detail.summary_unavailable.question) || !detail.summary_unavailable.question.trim() ||
+            detail.summary_unavailable.reason !== 'answer_not_delivered' ||
+            ['summary', 'summary_kind', 'summary_exchange', 'summary_question'].some(key => key in detail))) ||
+        (detail.summary_kind !== undefined &&
+          (!['observed_convergence', 'exchange_retention', 'question_answer'].includes(String(detail.summary_kind)) || typeof detail.summary !== 'string')) ||
+        ((detail.summary_kind === 'exchange_retention') !== (detail.summary_exchange !== undefined)) ||
+        ((detail.summary_kind === 'question_answer') !== (detail.summary_question !== undefined)) ||
         !available(reference) ||
         !available(candidate) ||
         (reference !== null && reference === candidate) ||
@@ -5682,6 +6234,18 @@ export function decodeCommentarySelection(
         detail.scope !== 'observed_lines'
       )
         return;
+      if (detail.summary_exchange !== undefined) {
+        try {
+          const exchange = decodeExchangeSummary(detail.summary_exchange, usedPaths, raw.evidence_ids);
+          if (!exchange || detail.material_relation === 'unavailable') return;
+          decodedDetail = { ...detail, summary_exchange: exchange };
+        } catch (_) { return; }
+      }
+      if (detail.summary_question !== undefined) {
+        const question = decodeQuestionSummary(detail.summary_question, usedPaths, raw.evidence_ids, detail.summary, sourceRefs, observations);
+        if (!question || detail.material_relation === 'unavailable') return;
+        decodedDetail = { ...detail, summary_question: question };
+      }
       const unavailable = detail.material_relation === 'unavailable';
       if (
         !['different', 'equal', 'unavailable'].includes(String(detail.material_relation)) ||

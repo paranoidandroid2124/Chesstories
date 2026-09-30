@@ -3,6 +3,20 @@
 import { isMobile } from '../device';
 import { memoize, escapeHtml } from '../index';
 import { domDialog } from '../view/dialog';
+import { parseFen } from 'chessops/fen';
+import { opposite } from 'chessops/util';
+import type { Setup } from 'chessops/setup';
+
+/** A hypothetical passed turn, shared by threat search and its displayed line.
+ * It has no legal game history; keep the position's clock out of move grading.
+ */
+export function threatSetup(fen: FEN): Setup {
+  const setup = parseFen(fen).unwrap();
+  setup.turn = opposite(setup.turn);
+  setup.epSquare = undefined;
+  if (setup.turn === 'white') setup.fullmoves += 1;
+  return setup;
+}
 
 export function isEvalBetter(a: Tree.ClientEval, b: Tree.ClientEval): boolean {
   return a.depth > b.depth || (a.depth === b.depth && a.nodes > b.nodes);

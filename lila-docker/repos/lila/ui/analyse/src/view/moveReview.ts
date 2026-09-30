@@ -4,13 +4,14 @@ import type { DrawShape } from '@lichess-org/chessground/draw';
 import { parseFen } from 'chessops/fen';
 import { parseSquare } from 'chessops/util';
 import { commentaryMoveTokens } from '../moveReviewText';
-import { koreanCommentary, commentarySentences } from '../moveReviewKorean';
+import { koreanCommentary, commentarySentences, withParticle } from '../moveReviewKorean';
 import {
   questionComparisonDetail,
   pvComparisonDetail,
   targetResponseDetail,
   lineContinuationDetail,
   continuationComparisonDetail,
+  questionFocusFrame,
   type CommentaryCandidate,
   type CommentaryEffect,
   type CommentaryEvaluation,
@@ -382,6 +383,7 @@ function renderPvReading(
   );
   const label = (id: string) => observations.paths.find(path => path.id === id)!.moves[0].label;
   const explanations = pvExplanations(observations, candidate, detail);
+  const explanationView = renderComparisonExplanations(explanations, observations, props);
   const material = {
     equal: ko
       ? '잡히거나 승격한 기물의 종류별 수는 같습니다.'
@@ -421,7 +423,7 @@ function renderPvReading(
     [
       hl('h4', ko ? '두 선택의 비교' : 'Compare the two choices'),
       hl('span.move-review__comparison-pair', `${label(answer.reference_line_id)} ↔ ${label(answer.alternative_line_id)}`),
-      ...renderComparisonExplanations(explanations, observations, props),
+      ...explanationView.body,
       hl(
         'p.move-review__pv-quality',
         !ordinaryScores
@@ -438,6 +440,7 @@ function renderPvReading(
       ),
       hl('details.move-review__comparison-records', [
         hl('summary', ko ? '비교의 상세 기록' : 'Comparison details'),
+        explanationView.history,
         continuationLinks(candidate.detail.continuation_candidate_ids, props),
         continuationLinks(candidate.detail.continuation_comparison_ids, props),
         hl('ul', [
@@ -2033,6 +2036,18 @@ function showObservationFrame(props: MoveReviewPanelProps, frame: MoveReviewFram
     document.querySelector<HTMLElement>('.analyse__move-review .move-review__observations'), 'start'));
 }
 
+function plainFrame(frame: MoveReviewFrameSelection, ply: number, phase: 'before' | 'after' = 'after'): MoveReviewFrameSelection {
+  return { proofId: frame.proofId, ply, phase, ...(frame.textAnchor ? { textAnchor: frame.textAnchor } : {}) };
+}
+
+function focusInspection(): void {
+  requestAnimationFrame(() => {
+    const notice = document.querySelector<HTMLElement>('.move-review__board-notice');
+    notice?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true });
+    notice?.scrollIntoView({ block: 'nearest' });
+  });
+}
+
 function observedTerminal(path: MoveReviewObservations['paths'][number] | undefined) {
   const ending = path?.lineSummary?.ending;
   if (!path || !ending || ending.kind === 'line_end' || ending.ply_offset !== path.moves.length - 1 ||
@@ -2137,12 +2152,12 @@ function renderComparisonPreview(
   mentions?: Map<string, MoveReviewFrameSelection[]>,
 ): VNode | undefined {
   const owned = new Set(lineIds);
-  // Only plain position selections belong here; relation/highlight controls keep their full proof view.
+  // Relation controls keep their full proof view unless an exact text link owns the preview.
   const frame = [props.view.hoveredFrame, props.view.pinnedFrame].find(frame =>
-    frame && owned.has(frame.proofId) && !frame.observationKey && !frame.highlightKey && !frame.inspectSquare &&
+    frame && owned.has(frame.proofId) &&
+    ((!frame.observationKey && !frame.highlightKey && !frame.inspectSquare) || !!frame.textAnchor) &&
     (!frame.textAnchor || mentions?.has(frame.textAnchor)) &&
-    Number.isInteger(frame.ply) && frame.ply > 0 &&
-    !!observations.paths.find(path => path.id === frame.proofId)?.moves[frame.ply - 1],
+    observations.paths.some(path => isOwnedFrame(path, frame, observations)),
   );
   if (!frame) return;
   const path = observations.paths.find(path => path.id === frame.proofId)!;
@@ -2213,7 +2228,7 @@ function renderComparisonPreview(
         hl('span', `${owner.moves[0].label} ${ko ? '수순' : 'line'} · ${owner.moves.slice(Math.max(0, choice.ply - 3), choice.ply).map(move => move.label).join(' ')}`),
       ]);
     })) : hl('div.move-review__preview-position', [
-      renderBoardPreview(proofBoard(path, frame), props.orientation, 'div.move-review__proof-board'),
+      renderBoardPreview(observationBoard(path, frame, observations).board, props.orientation, 'div.move-review__proof-board'),
       compact ? hl('p.move-review__preview-hint', ko ? '클릭하여 수순 살펴보기' : 'Click to explore the line') :
       !inline ? renderProofPlayer(path, frame, props) : hl('div.move-review__preview-controls', [
         hl('span', props.copy.frameLabels[frame.phase ?? 'after']),
@@ -2222,7 +2237,8 @@ function renderComparisonPreview(
             key: phase,
             attrs: { type: 'button', 'aria-pressed': (frame.phase ?? 'after') === phase ? 'true' : 'false' },
             on: { click: () => {
-              props.actions.pinFrame({ proofId: path.id, ply: frame.ply, phase, textAnchor: frame.textAnchor });
+              const next = { ...frame, phase };
+              props.actions.pinFrame(isOwnedFrame(path, next, observations) ? next : plainFrame(frame, frame.ply, phase));
             } },
           }, `${props.copy.frameLabels[phase]} ${numberedProofMove(path, frame.ply)}`),
         )),
@@ -2233,7 +2249,7 @@ function renderComparisonPreview(
             attrs: { type: 'button', disabled: ply < 1 || ply > path.moves.length },
             on: { click: event => {
               const button = event.currentTarget as HTMLButtonElement;
-              props.actions.pinFrame({ proofId: path.id, ply, phase: 'after', textAnchor: frame.textAnchor });
+              props.actions.pinFrame(plainFrame(frame, ply));
               requestAnimationFrame(() => {
                 if (button.disabled) button.parentElement?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
               });
@@ -2242,10 +2258,9 @@ function renderComparisonPreview(
         })),
         props.actions.inspectFrame && hl('button.button.button-thin.move-review__inspect', {
           attrs: { type: 'button' }, on: { click: event => {
-            props.actions.inspectFrame!({ proofId: path.id, ply: frame.ply, phase: frame.phase });
+            props.actions.inspectFrame!(frame);
             close(event);
-            requestAnimationFrame(() => document.querySelector('.move-review__board-notice')
-              ?.scrollIntoView({ block: 'nearest' }));
+            focusInspection();
           } },
         }, ko ? '메인 보드에서 보기' : 'View on main board'),
         !inline && hl('button.move-review__observation-frame', {
@@ -2278,7 +2293,7 @@ function renderTerminalExplanation(
   const sentence = props.locale === 'ko-KR'
     ? ply === 1 ? `${first}로 대국이 끝납니다: ${label}.` : `${first} 이후 제공된 수순은 ${last}에서 끝납니다: ${label}.`
     : ply === 1 ? `${first} ends the game: ${ending}.` : `The supplied line after ${first} ends at ${last}: ${ending}.`;
-  return [hl('p', { attrs: { lang: props.locale } }, sentence),
+  return [hl('p', { attrs: { lang: props.locale, 'data-terminal': kind, 'data-line': path.id, 'data-ply': ply } }, sentence),
     hl('div.move-review__observation-frames', [explanationFrameButton(path, ply, props, label)])];
 }
 
@@ -2286,7 +2301,7 @@ function renderComparisonExplanations(
   explanations: CommentaryCandidate[],
   observations: MoveReviewObservations,
   props: MoveReviewPanelProps,
-): VNode[] {
+): { body: VNode[]; history?: VNode } {
   const terminals = comparisonTerminals(explanations, observations);
   const effects = explanations.flatMap(explanation => (explanation.detail.effects as CommentaryEffect[] | undefined) ?? []);
   const seen = new Set([...terminals.values()].map(({ path, ply }) => `${path.id}:${ply}`));
@@ -2302,7 +2317,82 @@ function renderComparisonExplanations(
       buttons.push(explanationFrameButton(path, ply, props));
     });
   const mentions = new Map<string, MoveReviewFrameSelection[]>();
-  const furtherReading: VNode[] = [];
+  const inlineSan = (id: string, text: string, frames: MoveReviewFrameSelection[]): VNode => {
+    mentions.set(id, frames);
+    const frame = { ...frames[0], textAnchor: id, choosePosition: frames.length > 1 };
+    const active = props.view.hoveredFrame ?? props.view.pinnedFrame;
+    return hl('button.move-review__inline-san', {
+      key: id,
+      attrs: { id, type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': active?.textAnchor === id ? 'true' : 'false',
+        'aria-label': `${text} · ${props.locale === 'ko-KR' ? '위치 살펴보기' : 'Explore position'}` },
+      on: {
+        mouseenter: () => {
+          if (matchMedia('(hover: hover) and (min-width: 600px)').matches) props.actions.previewFrame(frame);
+        },
+        focus: () => props.actions.previewFrame(frame),
+        click: event => {
+          props.actions.pinFrame(frame);
+          if (event.detail === 0) requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(
+            '.move-review__text-preview:popover-open button')?.focus());
+        },
+        keydown: event => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopPropagation();
+          props.actions.clearPreview();
+          props.actions.clearPin();
+        },
+      },
+    }, text);
+  };
+  const exchangeParagraphs = (explanation: CommentaryCandidate): VNode[] => {
+    const summary = explanation.detail.summary_exchange!;
+    const path = observations.paths.find(path => path.id === summary.line_id)!;
+    const retained = observations.paths.find(path => path.id === summary.retained_line_id)!;
+    const link = (path: MoveReviewObservations['paths'][number], occurrence: string, index: number) => {
+      const frame = lineOccurrenceFrame(path, occurrence);
+      return inlineSan(`review-text-${explanation.id}-exchange-${index}`, path.moves[frame.ply - 1].label, [frame]);
+    };
+    const [root, reply, recovery] = summary.exchange_occurrence_ids.map((id, index) => link(path, id, index));
+    const other = link(retained, summary.retention_occurrence_ids[0], 3);
+    const role = props.copy.roleLabels[summary.role], recapturer = props.copy.roleLabels[summary.recapturer_role];
+    const ko = props.locale === 'ko-KR';
+    const lines = ko ? [
+      ['제시된 ', root, ' 수순에서는 ', reply, ` 이후 ${withParticle(recapturer, '이', '가')} `, recovery,
+        ` 수로 되잡아 ${withParticle(role, '을', '를')} 교환합니다.`],
+      ['반면 ', other, ` 수순에서는 양쪽 ${withParticle(role, '이', '가')} 남습니다.`],
+    ] : [
+      ['The supplied ', root, ` line trades ${summary.role}s with `, reply, ' ', recovery,
+        `; the ${summary.recapturer_role} recaptures.`],
+      [`Both ${summary.role}s remain in the supplied `, other, ' line.'],
+    ];
+    const ending = lineOccurrenceFrame(retained, summary.retention_occurrence_ids[1]);
+    if (!seen.has(`${retained.id}:${ending.ply}`)) buttons.push(explanationFrameButton(retained, ending.ply, props));
+    return lines.map(line => hl('p.move-review__commentary', { attrs: { lang: props.locale } }, line));
+  };
+  const questionParagraphs = (explanation: CommentaryCandidate, detail = false): VNode[] => {
+    const question = explanation.detail.summary_question!;
+    for (const move of detail ? [] : question.detail_moves) {
+      const path = observations.paths.find(path => path.id === move.line_id)!;
+      const frame = lineOccurrenceFrame(path, move.occurrence_id);
+      if (!seen.has(`${path.id}:${frame.ply}`)) {
+        seen.add(`${path.id}:${frame.ply}`);
+        buttons.push(explanationFrameButton(path, frame.ply, props));
+      }
+    }
+    // These are already complete condition/reply/cost units. Sentence-count
+    // folding would hide the answer; SAN parsing would lose its exact occurrence.
+    return (detail ? question.detail_units ?? [] : question.units).map((unit, index) => hl('p.move-review__commentary', {
+      attrs: { lang: unit.english_only ? 'en' : props.locale, ...(unit.english_only ? { 'data-no-translate': true } : {}) },
+    }, unit[props.locale === 'ko-KR' && !unit.english_only ? 'ko' : 'en'].map((part, at) => {
+        if (typeof part === 'string') return part;
+        const path = observations.paths.find(path => path.id === part.line_id)!;
+        const focus = unit.focus?.find(focus => focus.line_id === part.line_id && focus.occurrence_id === part.occurrence_id);
+        const frame = (focus && questionFocusFrame(focus, observations)) ?? lineOccurrenceFrame(path, part.occurrence_id);
+        return inlineSan(`review-text-${explanation.id}-question-${detail ? 'detail' : 'basic'}-${index}-${at}`,
+          path.moves[frame.ply - 1].label, [frame]);
+      })));
+  };
   const paragraphs = (explanation: CommentaryCandidate, text: string, brief = false) => text.split('\n\n').filter(Boolean).map((text, paragraphIndex) => {
     const line = brief && /^(\S+ → \S+)\. (.+)$/s.exec(text);
     const pair = line && line[1].split(' → ');
@@ -2316,31 +2406,7 @@ function renderComparisonExplanations(
       const linkedTokens = tokens.map((token, index) => {
         if (!token.frames.length) return token.text;
         const id = `review-text-${explanation.id}-${brief ? 'brief' : 'detail'}-${paragraphIndex}-${part}-${index}`;
-        mentions.set(id, token.frames);
-        const frame = { ...token.frames[0], textAnchor: id, choosePosition: token.frames.length > 1 };
-        const active = props.view.hoveredFrame ?? props.view.pinnedFrame;
-        return hl('button.move-review__inline-san', {
-          key: id,
-          attrs: { id, type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': active?.textAnchor === id ? 'true' : 'false',
-            'aria-label': `${token.text} · ${props.locale === 'ko-KR' ? '위치 살펴보기' : 'Explore position'}` },
-          on: {
-            mouseenter: () => {
-              if (matchMedia('(hover: hover) and (min-width: 600px)').matches) props.actions.previewFrame(frame);
-            },
-            click: event => {
-              props.actions.pinFrame(frame);
-              if (event.detail === 0) requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(
-                '.move-review__text-preview:popover-open button')?.focus());
-            },
-            keydown: event => {
-              if (event.key !== 'Escape') return;
-              event.preventDefault();
-              event.stopPropagation();
-              props.actions.clearPreview();
-              props.actions.clearPin();
-            },
-          },
-        }, token.text);
+        return inlineSan(id, token.text, token.frames);
       });
       if (props.locale !== 'ko-KR') return linkedTokens;
       // Resolve SAN in the original owning line before reordering words for Korean.
@@ -2359,50 +2425,56 @@ function renderComparisonExplanations(
         ? hl('ol.move-review__event-list', { attrs }, sentences.map(sentence => hl('li', linked(sentence))))
         : hl('p.move-review__commentary', { attrs }, linked(body));
     };
-    const opening = brief && !line && text.length > 280 ? text.indexOf('. ', text.indexOf('. ') + 2) : -1;
-    if (opening >= 0) {
-      furtherReading.push(readable(text.slice(opening + 2)));
-      return hl('p.move-review__commentary', { attrs }, linked(text.slice(0, opening + 1)));
-    }
     if (!line) {
       if (text === 'These are observed continuations, not a forced outcome or proof of why the evaluations differ.')
         return hl('p.move-review__scope-note', { attrs }, linked(text));
       return readable(text);
     }
-    const result = line[2].lastIndexOf(' In this line, ');
-    const body = result < 0 ? line[2] : line[2].slice(0, result);
-    const split = body.indexOf('. ');
-    if (split >= 0) furtherReading.push(hl('section.move-review__line-events', [
-      hl('h5', linked(line[1])), readable(body.slice(split + 2)),
-    ]));
-    if (result >= 0) furtherReading.push(hl('p.move-review__line-result', linked(line[2].slice(result + 1))));
     const role = paths[0] && reviewLineRole(paths[0], props);
     return hl('section.move-review__line-brief', { attrs: { ...attrs, 'data-line-role': role?.key } }, [
       role && hl('span.move-review__line-role', role.label),
       hl('h4', linked(line[1])),
-      hl('p.move-review__commentary', linked(split < 0 ? body : body.slice(0, split + 1))),
+      // The producer owns the summary's scope. A sentence boundary cannot tell
+      // whether the next move recaptures, offsets a gain, or changes the result.
+      readable(line[2]),
     ]);
   });
   const primary = explanations.find(explanation => explanation.detail.type === 'root_comparison') ?? explanations[0];
-  const detailed = explanations.filter(explanation => explanation !== primary ||
-    typeof explanation.detail.summary === 'string');
+  const hasSelectedQuestion = !!(primary?.detail.summary_question || primary?.detail.summary_unavailable);
+  const detailed = (hasSelectedQuestion ? [primary] : explanations).filter(explanation => explanation.detail.summary_question
+    ? !!explanation.detail.summary_question.detail_units?.length
+    : !!explanation.detail.summary_unavailable || explanation !== primary || typeof explanation.detail.summary === 'string');
   const content = [
-    ...[...terminals.values()].flatMap(terminal => renderTerminalExplanation(terminal, props)),
+    // The selected question owns its answer, including an explicit delivery failure.
+    ...(hasSelectedQuestion ? [] :
+      [...terminals.values()].flatMap(terminal => renderTerminalExplanation(terminal, props))),
     ...[primary].filter(explanation => typeof explanation?.detail.text === 'string')
-      .flatMap(explanation => paragraphs(explanation, (explanation.detail.summary ?? explanation.detail.text) as string, true)),
-    ...(furtherReading.length || detailed.length || buttons.length ? [hl('details.move-review__reading-details', [
+      .flatMap(explanation => explanation.detail.summary_unavailable ? [hl('p.move-review__scope-note', {
+        attrs: { lang: props.locale, 'data-summary-state': 'unavailable', 'data-question': explanation.detail.summary_unavailable.question },
+      }, props.locale === 'ko-KR' ? '이 비교의 설명은 아직 완성되지 않았습니다.' : 'The explanation for this comparison is incomplete.')] :
+        explanation.detail.summary_question ? questionParagraphs(explanation) :
+        explanation.detail.summary_exchange ? exchangeParagraphs(explanation) :
+        paragraphs(explanation, (explanation.detail.summary ?? explanation.detail.text) as string, true)),
+    ...(detailed.length || buttons.length ? [hl('details.move-review__reading-details', [
       hl('summary', props.locale === 'ko-KR' ? '이어지는 변화' : 'What happens next'),
-      ...furtherReading,
       detailed.length > 0 && hl('h5', props.locale === 'ko-KR' ? '관측된 변화' : 'Observed changes'),
-      ...detailed.flatMap(explanation => paragraphs(explanation, explanation.detail.text as string)),
+      ...detailed.flatMap(explanation => explanation.detail.summary_question ? questionParagraphs(explanation, true) :
+        paragraphs(explanation, explanation.detail.text as string)),
       buttons.length > 0 && hl('section.move-review__explanation-positions', [
         hl('h5', props.locale === 'ko-KR' ? '설명에 연결된 위치' : 'Positions in this explanation'),
         hl('div.move-review__observation-frames', buttons),
       ]),
     ])] : []),
   ];
+  const other = hasSelectedQuestion
+    ? explanations.filter(explanation => explanation !== primary && typeof explanation.detail.text === 'string')
+    : [];
+  const history = other.length ? hl('details.move-review__additional-explanations', [
+    hl('summary', props.locale === 'ko-KR' ? '추가 질문과 분석 기록' : 'Other questions and analysis'),
+    ...other.flatMap(explanation => paragraphs(explanation, explanation.detail.text as string)),
+  ]) : undefined;
   const preview = renderComparisonPreview(explanations.flatMap(explanation => explanation.lineIds), observations, props, mentions);
-  return [...content, ...(preview ? [preview] : [])];
+  return { body: [...content, ...(preview ? [preview] : [])], history };
 }
 
 function renderCommentarySelection(
@@ -2463,7 +2535,7 @@ function renderCommentarySelection(
           key: `${observations.owner?.jobId ?? ''}:${scene.id}`, on: comparisonPreviewExit(props),
         }, [
           hl('h3', ko ? '두 선택의 비교' : 'Comparison of the two choices'),
-          ...renderComparisonExplanations([main], observations, props),
+          ...renderComparisonExplanations([main], observations, props).body,
           hl('div.move-review__observation-frames', [
             ...main.lineIds.map(lineId => {
               const path = observations.paths.find(path => path.id === lineId);
@@ -2494,7 +2566,7 @@ function renderCommentarySelection(
     ...currentCards.filter(card => !card.terminal && card.primary),
     ...currentCards.filter(card => !card.terminal && !card.primary),
     ...cards.filter(card => card.child)];
-  const primary = ordered.find(card => card.primary) ?? ordered[0];
+  const primary = ordered[0];
   const additional = ordered.filter(card => card !== primary);
   // A rejected score report can still retain the current move's admitted automatic ending.
   const immediate = !cards.length && observations && subject && occurrence && anchor?.ply === 1
@@ -3637,35 +3709,8 @@ function renderProof(
   const statements = observations?.statements.flatMap((statement, index) =>
     statement.occurrenceId === occurrenceId ? [{ statement, key: observationKey(statement, index) }] : [],
   );
-  const selectedStatement = statements?.find(item => item.key === frame.observationKey)?.statement;
   const highlights = observations?.highlights?.filter(item => item.occurrenceId === occurrenceId) ?? [];
-  const board = proofBoard(proof, frame, selectedStatement);
-  const highlightFrame = highlights
-    .find(item => JSON.stringify(item) === frame.highlightKey)
-    ?.frames?.find(item => item.phase === frame.phase);
-  const positionId = path?.positionIds?.[frame.ply - (frame.phase === 'before' ? 1 : 0)];
-  const resources = observations?.positions?.find(
-    position => position.id === positionId && position.fen === board.fen,
-  );
-  if (highlightFrame) {
-    const sources = new Set(highlightFrame.sourceIds);
-    board.shapes = [
-      ...highlightFrame.squares.map(orig => ({ orig, brush: 'blue' })),
-      ...(resources?.controls.pieces ?? []).flatMap(entry =>
-        entry.squares.flatMap((dest, index) =>
-          sources.has(entry.source_ids[index]) ? [{ orig: entry.piece.square, dest, brush: 'blue' }] : [],
-        ),
-      ),
-    ];
-  }
-  if (frame.inspectSquare) {
-    board.shapes = [
-      { orig: frame.inspectSquare, brush: 'blue' },
-      ...(resources?.controls.pieces.filter(entry => entry.squares.includes(frame.inspectSquare!)) ?? []).map(
-        entry => ({ orig: entry.piece.square, dest: frame.inspectSquare, brush: 'blue' }),
-      ),
-    ];
-  }
+  const { board, resources } = observationBoard(proof, frame, observations);
   const grouped = (statement: MoveReviewObservation): boolean =>
     statement.kind === 'piece_control' ||
     statement.kind === 'pawn_structure' ||
@@ -3859,6 +3904,14 @@ function renderProof(
           `${reviewLineRole(proof, props).label} · ${props.copy.proofBoard}: ${proofFrameLabel(proof, frame.ply, props.copy)} · ${props.copy.frameLabels[frame.phase ?? 'after']}`,
         ),
         renderBoardPreview(board, props.orientation, 'div.move-review__proof-board'),
+        props.actions.inspectFrame && hl('button.button.button-thin.move-review__inspect', {
+          attrs: { type: 'button' }, on: { click: () => {
+            props.actions.inspectFrame!(frame);
+            props.actions.clearPreview();
+            props.actions.clearPin();
+            focusInspection();
+          } },
+        }, props.locale === 'ko-KR' ? '메인 보드에서 보기' : 'View on main board'),
         renderProofPlayer(proof, frame, props),
       ]),
       observations && renderPositionResources(resources, frame, props),
@@ -3958,19 +4011,18 @@ function observationKey(statement: MoveReviewObservation, index: number): string
   return JSON.stringify([statement, index]);
 }
 
-function activeFrame(
+function isOwnedFrame(
   proof: MoveReviewProof,
-  view: MoveReviewViewState,
+  frame: MoveReviewFrameSelection | undefined,
   observations?: MoveReviewObservations,
-  selected?: MoveReviewFrameSelection | null,
-): MoveReviewFrameSelection {
+): frame is MoveReviewFrameSelection {
   const path = observations?.paths.find(path => path.id === proof.id);
   const occurrenceIds = path?.occurrenceIds;
-  const valid = (frame?: MoveReviewFrameSelection): frame is MoveReviewFrameSelection =>
-    frame?.proofId === proof.id &&
+  return frame?.proofId === proof.id &&
     Number.isInteger(frame.ply) &&
     frame.ply >= 1 &&
     frame.ply <= proof.moves.length &&
+    (frame.phase === undefined || frame.phase === 'before' || frame.phase === 'after') &&
     (frame.highlightKey === undefined ||
       !!observations?.highlights?.some(
         item =>
@@ -3991,10 +4043,49 @@ function activeFrame(
           observationPhases(statement).includes(frame.phase ?? 'after') &&
           observationKey(statement, index) === frame.observationKey,
       ));
-  if (valid(view.hoveredFrame)) return view.hoveredFrame;
-  if (valid(view.pinnedFrame)) return view.pinnedFrame;
-  if (selected && valid(selected)) return selected;
+}
+
+function activeFrame(
+  proof: MoveReviewProof,
+  view: MoveReviewViewState,
+  observations?: MoveReviewObservations,
+  selected?: MoveReviewFrameSelection | null,
+): MoveReviewFrameSelection {
+  if (isOwnedFrame(proof, view.hoveredFrame, observations)) return view.hoveredFrame;
+  if (isOwnedFrame(proof, view.pinnedFrame, observations)) return view.pinnedFrame;
+  if (selected && isOwnedFrame(proof, selected, observations)) return selected;
   return { proofId: proof.id, ply: 1 };
+}
+
+function observationBoard(
+  proof: MoveReviewProof,
+  frame: MoveReviewFrameSelection,
+  observations?: MoveReviewObservations,
+): { board: ReturnType<typeof proofBoard>; resources?: PositionResources } {
+  const path = observations?.paths.find(path => path.id === proof.id);
+  const occurrenceId = path?.occurrenceIds[frame.ply - 1];
+  const statement = observations?.statements.find((statement, index) =>
+    statement.occurrenceId === occurrenceId && observationKey(statement, index) === frame.observationKey);
+  const board = proofBoard(proof, frame, statement);
+  const positionId = path?.positionIds?.[frame.ply - (frame.phase === 'before' ? 1 : 0)];
+  const resources = observations?.positions?.find(position => position.id === positionId && position.fen === board.fen);
+  const highlight = observations?.highlights?.find(item =>
+    item.occurrenceId === occurrenceId && JSON.stringify(item) === frame.highlightKey)
+    ?.frames?.find(item => item.phase === frame.phase && item.positionId === positionId);
+  if (highlight) {
+    const sources = new Set(highlight.sourceIds);
+    board.shapes = [
+      ...highlight.squares.map(orig => ({ orig, brush: 'blue' })),
+      ...(resources?.controls.pieces ?? []).flatMap(entry => entry.squares.flatMap((dest, index) =>
+        sources.has(entry.source_ids[index]) ? [{ orig: entry.piece.square, dest, brush: 'blue' }] : [])),
+    ];
+  }
+  if (frame.inspectSquare) board.shapes = [
+    { orig: frame.inspectSquare, brush: 'blue' },
+    ...(resources?.controls.pieces.filter(entry => entry.squares.includes(frame.inspectSquare!)) ?? []).map(
+      entry => ({ orig: entry.piece.square, dest: frame.inspectSquare, brush: 'blue' })),
+  ];
+  return { board, resources };
 }
 
 function proofBoard(
@@ -4072,23 +4163,47 @@ function proofBoard(
 
 export function renderMoveReviewBoard(props: MoveReviewPanelProps): { board: VNode; notice: VNode } | undefined {
   const frame = props.view.boardFrame;
-  const path = frame && moveReviewObservations(props.job)?.paths.find(path => path.id === frame.proofId);
-  if (!frame || !path?.moves[frame.ply - 1]) return;
+  const observations = moveReviewObservations(props.job);
+  const path = frame && observations?.paths.find(path => path.id === frame.proofId);
+  if (!path || !isOwnedFrame(path, frame, observations)) return;
   const ko = props.locale === 'ko-KR';
+  const close = () => {
+    if (frame.textAnchor) document.getElementById(frame.textAnchor)?.focus({ preventScroll: true });
+    props.actions.clearPreview();
+    props.actions.clearPin();
+    props.actions.clearInspection?.();
+  };
+  const escape = (event: KeyboardEvent) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    close();
+  };
   return {
     board: hl('div.move-review__main-preview', {
       attrs: { 'aria-label': `${numberedProofMove(path, frame.ply)} · ${props.copy.frameLabels[frame.phase ?? 'after']}` },
-    }, [renderBoardPreview(proofBoard(path, frame), props.orientation, 'div.move-review__inspection-board')]),
-    notice: hl('div.move-review__board-notice', [
+      on: { keydown: escape },
+    }, [renderBoardPreview(observationBoard(path, frame, observations).board, props.orientation, 'div.move-review__inspection-board')]),
+    notice: hl('div.move-review__board-notice', {
+      attrs: { 'aria-keyshortcuts': 'Escape' }, on: { keydown: escape },
+    }, [
       hl('span', { attrs: { role: 'status', 'aria-live': 'polite' } },
         `${ko ? '해설 수순' : 'Commentary line'} · ${numberedProofMove(path, frame.ply)}`),
       hl('div', [
         ...([-1, 1] as const).map(direction => hl('button', {
           attrs: { type: 'button', disabled: frame.ply + direction < 1 || frame.ply + direction > path.moves.length,
             'aria-label': direction < 0 ? (ko ? '이전 수' : 'Previous move') : (ko ? '다음 수' : 'Next move') },
-          on: { click: () => props.actions.inspectFrame?.({ ...frame, ply: frame.ply + direction, phase: 'after' }) },
+          on: { click: event => {
+            const button = event.currentTarget as HTMLButtonElement | null;
+            props.actions.clearPreview();
+            props.actions.clearPin();
+            props.actions.inspectFrame?.(plainFrame(frame, frame.ply + direction));
+            requestAnimationFrame(() => {
+              if (button?.disabled) button.parentElement?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+            });
+          } },
         }, direction < 0 ? '←' : '→')),
-        hl('button', { attrs: { type: 'button' }, on: { click: () => props.actions.clearInspection?.() } },
+        hl('button', { attrs: { type: 'button' }, on: { click: close } },
           ko ? '기보로 돌아가기' : 'Return to game'),
       ]),
     ]),

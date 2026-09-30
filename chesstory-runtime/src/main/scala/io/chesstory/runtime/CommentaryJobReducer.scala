@@ -41,7 +41,8 @@ final case class CommentaryJobPolicy(
     engineProfile: CommentaryEngineProfile,
     investigateChoices: Boolean = false,
     maximumLocalExpansions: Int = CommentaryProposal.MaximumLocalExpansions,
-    previewDepth: Option[Int] = None
+    previewDepth: Option[Int] = None,
+    probeThreats: Boolean = false
 )
 
 /** Search completion is separate from assessment freshness and never certifies chess sufficiency. */
@@ -78,6 +79,7 @@ enum CommentaryJobPhase(val wireId: String):
   case FocusComparison extends CommentaryJobPhase("focus_comparison")
   case InvestigationComparison extends CommentaryJobPhase("investigation_comparison")
   case ResponseComparison extends CommentaryJobPhase("response_comparison")
+  case ThreatProbe extends CommentaryJobPhase("threat_probe")
   case Completed extends CommentaryJobPhase("completed")
   case Stopped extends CommentaryJobPhase("stopped")
 
@@ -89,6 +91,7 @@ enum EngineWorkPurpose(val wireId: String):
   case FocusComparison extends EngineWorkPurpose("focus_comparison")
   case InvestigationComparison extends EngineWorkPurpose("investigation_comparison")
   case ResponseComparison extends EngineWorkPurpose("response_comparison")
+  case ThreatProbe extends EngineWorkPurpose("threat_probe")
 
 /** Why issued work yielded no admissible result; never a chess proposition state. */
 enum EngineWorkFailure:
@@ -172,7 +175,8 @@ final case class IssuedEngineWork(
     maxSearchElapsedMs: Int,
     searchAnchor: Option[EngineSearchAnchor] = None,
     // Issuance ownership survives when a deeper question retires this work's answer.
-    proposalRefs: List[(String, String)] = Nil
+    proposalRefs: List[(String, String)] = Nil,
+    threatOriginPrefixUci: Option[List[String]] = None
 ):
   def requiredDepth: Int = searchLimits.depth
   def multiPv: Int = searchLimits.multiPv
@@ -190,7 +194,8 @@ private[runtime] object IssuedEngineWork:
       commentaryLinePrefixUci: List[String],
       searchLimits: EngineSearchLimits,
       maxSearchElapsedMs: Int,
-      searchAnchor: Option[EngineSearchAnchor] = None
+      searchAnchor: Option[EngineSearchAnchor] = None,
+      threatOriginPrefixUci: Option[List[String]] = None
   ): IssuedEngineWork =
     val executionKey = digest(
       List(
@@ -207,7 +212,8 @@ private[runtime] object IssuedEngineWork:
         searchLimits.multiPv.toString,
         maxSearchElapsedMs.toString
       ) ++ searchAnchor.toList.flatMap(anchor => List(anchor.rootMove, anchor.rootOccurrenceId, anchor.positionId) ++
-        Option.when(anchor.plyOffset > 1)(anchor.prefixMoves.mkString(",")))
+        Option.when(anchor.plyOffset > 1)(anchor.prefixMoves.mkString(","))) ++
+        threatOriginPrefixUci.toList.flatMap(prefix => List(commentaryLineOriginFen, prefix.mkString(",")))
     )
     IssuedEngineWork(
       engineProfile,
@@ -222,7 +228,8 @@ private[runtime] object IssuedEngineWork:
       commentaryLinePrefixUci,
       searchLimits,
       maxSearchElapsedMs,
-      searchAnchor
+      searchAnchor,
+      threatOriginPrefixUci = threatOriginPrefixUci
     )
 
   private def restrictionIdentity(value: EngineRootRestriction): String = value match
@@ -324,6 +331,7 @@ private[runtime] object EngineLineAdmission:
       issuedWork: IssuedEngineWork,
       admittedLines: List[AdmittedPhysicalEngineLine]
   ): Option[List[AdmittedCandidateLine]] =
+    if issuedWork.purpose == EngineWorkPurpose.ThreatProbe then return None
     for
       _ <- Option.when(admittedLines.size == issuedWork.multiPv)(())
       commentaryOrigin <- CanonicalPositionHistory
@@ -717,6 +725,13 @@ object CommentaryJobReducer:
       prefixMoves: List[String]
   ) extends InvestigationPhase
 
+  private final case class ProbingThreat(
+      baseline: CompletedCommentaryJobRecord,
+      originPrefix: List[String],
+      questions: List[CommentaryInquiry] = Nil,
+      responses: List[CommentaryResponseInquiry] = Nil
+  ) extends InvestigationPhase
+
   private final case class ReviewContext(
       review: PreparedFocusedMoveReview,
       rootEvaluations: List[AdmittedCandidateLine]
@@ -761,7 +776,8 @@ object CommentaryJobReducer:
       override private[runtime] val localExpansionsUsed: Int = 0,
       override private[runtime] val discoveryState: CommentaryDiscovery.State = CommentaryDiscovery.State(),
       override val verification: Option[CommentaryVerification] = None,
-      childRechecksIssued: Int = 0
+      childRechecksIssued: Int = 0,
+      threatOriginsTried: Set[List[String]] = Set.empty
   ) extends AwaitingEngineWork:
     override def observationsPacket = Some(packet)
     override private[runtime] lazy val preparedPaths = Some(inheritedPrepared.filter(_.belongsTo(packet))
@@ -880,6 +896,23 @@ object CommentaryJobReducer:
       active: ActiveCommentaryJob,
       suffixes: List[ReportedEngineLineSuffix]
   ): Either[EngineWorkReportRejection, CommentaryJobState] =
+    active.phase match
+      case phase: ProbingThreat =>
+        val physical = EngineLineAdmission.admitReportedLineSuffixes(active.issuedWork, suffixes, active.searchHistory)
+        if physical.isEmpty then return Right(stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport))
+        val candidates = physical.get.flatMap { line =>
+          line.continuation.resultingHistory.segmentReplaySteps.headOption.filter(step =>
+            step.capturedRole.nonEmpty || step.after.check.yes).map(_.uci)
+        }
+        val proposed = CommentaryThreat.proposals(active.packet, phase.originPrefix, candidates, active.issuedWork.workId)
+          .filterNot(entry => active.proposalEntries.exists(_.request.id == entry.request.id))
+        val room = (CommentaryProposal.MaximumRequirements - active.proposalEntries.map(_.request.requirements.size).sum).max(0)
+        val entries = active.proposalEntries ++ proposed.take(room / 2)
+        require(CommentaryProposal.validRequests(entries.map(_.request)))
+        // Discard the counterfactual score and PV. The real packet and assessment retain their owners.
+        return Right(beginInvestigation(active.copy(ledger = active.ledger.afterAcceptedReport,
+          proposalEntries = entries), phase.baseline))
+      case _ => ()
     EngineLineAdmission.admitReportedLineSuffixes(active.issuedWork, suffixes,
       active.searchHistory.orElse(Some(active.positionHistory))) match
       case None => Right(stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport))
@@ -899,6 +932,7 @@ object CommentaryJobReducer:
               case EngineWorkPurpose.FocusComparison => EvaluationSource.FocusComparison
               case EngineWorkPurpose.InvestigationComparison => EvaluationSource.InvestigationComparison
               case EngineWorkPurpose.ResponseComparison => EvaluationSource.ResponseComparison
+              case EngineWorkPurpose.ThreatProbe => return Right(stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport))
             val response = source == EvaluationSource.ResponseComparison
             val retainedInput =
               if response then MoveReviewInputAdmission.retainLegalContinuations(
@@ -952,6 +986,7 @@ object CommentaryJobReducer:
                         !read.responseSearches.exists(_.work == read.issuedWork) then
                       Right(stop(read, CommentaryJobStopCondition.InvalidEngineWorkReport))
                     else Right(afterConditionalReport(read, investigation.baseline, investigation.questions))
+                  case _: ProbingThreat => Right(stop(retained, CommentaryJobStopCondition.InvalidEngineWorkReport))
 
   private def afterRootReport(
       active: ActiveCommentaryJob,
@@ -1164,7 +1199,7 @@ object CommentaryJobReducer:
       searchHistory: Option[CanonicalPositionHistory] = None
   ): CommentaryJobState =
     releaseUnusedCalculations(active.copy(phase = phase, issuedWork = work, ledger = ledger.afterIssuing,
-      rootSearches = if work.purpose == EngineWorkPurpose.ResponseComparison then active.rootSearches
+      rootSearches = if Set(EngineWorkPurpose.ResponseComparison, EngineWorkPurpose.ThreatProbe)(work.purpose) then active.rootSearches
         else active.rootSearches :+ CommentaryRootSearch(work),
       searchHistory = searchHistory.orElse(Some(active.positionHistory))))
 
@@ -1177,6 +1212,21 @@ object CommentaryJobReducer:
     val reference = baseline.result match
       case CompletedPositionCommentary.FocusedMoveReview(_, review) => review.bestMoveUci
       case _ => return baseline
+    if active.policy.investigateChoices && active.policy.probeThreats then
+      // Two bounded origins cover an existing danger and a threat created by the reviewed move.
+      // They do not replenish the two legal investigation slots or the request deadline.
+      val next = List(Nil, List(active.playedMoveUci)).filterNot(active.threatOriginsTried).flatMap { prefix =>
+        active.positionHistory.extend(prefix).toOption.flatMap(CommentaryThreat.hypothesis).map(prefix -> _)
+      }.headOption
+      next match
+       case Some((prefix, hypothesis)) =>
+        val work = IssuedEngineWork.create(active.engineProfile, active.ledger.issuedWorkId, EngineWorkPurpose.ThreatProbe,
+          hypothesis.initialFen, Nil, hypothesis.currentFen, EngineRootRestriction.Unrestricted,
+          active.positionHistory.currentFen, Nil, EngineSearchLimits(8, 250000, 750,
+            hypothesis.currentLegalMoveUcis.size.min(2)), 1250, threatOriginPrefixUci = Some(prefix))
+        return issue(active.copy(threatOriginsTried = active.threatOriginsTried + prefix),
+          ProbingThreat(baseline, prefix), work, active.ledger, Some(hypothesis))
+       case None => ()
     val retained = prepareProposalInputs(active) match
       case Left((retained, failure)) => return stop(retained, failure, Some(baseline))
       case Right(retained) => retained
@@ -1605,13 +1655,27 @@ object CommentaryJobReducer:
             })
       }
     val submitted = pending.collect { case (entry, value) if entry.admission != "generated" => key(value) }.toSet
-    val currentMoves = Set(active.playedMoveUci, reference)
+    val currentMoves = Set(active.playedMoveUci, reference) ++
+      CommentarySelection.primaryComparisonRecords(active.packet).flatMap { (_, comparison, _) =>
+        List(comparison.referenceLine.rootMove, comparison.candidateLine.rootMove)
+      }
     val evaluations = active.packet.assembly.input.assessmentCandidates.map(_.evaluation.moves)
     val presentChoices = pending.collect { case (entry, value) if value.id == "contrast_opponent_choice" &&
       entry.request.requirements.exists(requirement =>
         List("opponent_reference_", "reply_", "tactic_", "defense_").exists(requirement.id.startsWith)) => key(value)
     }.toSet
     val tacticalCounters = pending.collect { case (_, value) if value.id == "tactical_strength" => key(value) }.toSet
+    // A witnessed legal check/capture challenges the actual reply before its downstream
+    // outcome is worth searching. The source's hypothetical score does not establish strength.
+    val observedTacticalAlternatives = pending.collect { case (entry, value) if
+      value.prefixMovesUci.nonEmpty && entry.request.requirements.exists {
+        case move: CommentaryProposal.ObserveMove => move.prefixMovesUci == value.prefixMovesUci &&
+          move.moveUci == value.alternativeMove && entry.readings.exists(reading =>
+            reading.requirementId == move.id && reading.state == "observed")
+        case _ => false
+      } && historyAt(active, value.prefixMovesUci :+ value.alternativeMove).exists(history =>
+        history.currentPosition.check.yes || history.segmentReplaySteps.lastOption.exists(_.capturedRole.nonEmpty)) => key(value)
+    }.toSet
     val directCounters = pending.collect { case (entry, value) if value.id == "tactical_strength" &&
       entry.request.requirements.exists(_.id.startsWith("tactical_direct_")) => key(value) }.toSet
     val stale = pending.collect { case (entry, value) if entry.readings.exists(reading =>
@@ -1653,9 +1717,10 @@ object CommentaryJobReducer:
           else if onAssessment && tacticalCounters(key(value)) then (1, 0)
           else (2, 4))
       ProposalChoice(value, submitted(key(value)), decision,
-        ideaPriority.exists((contribution, role) => contribution == 0 && role <= 1), governing(key(value)))
+        ideaPriority.exists((contribution, role) => contribution == 0 && role <= 1),
+        governing(key(value)) || (onAssessment && observedTacticalAlternatives(key(value))))
     }.sortBy(choice => (choice.decision,
-      if choice.value.prefixMovesUci.headOption.contains(active.playedMoveUci) then 0 else 1,
+      if choice.value.prefixMovesUci.headOption.contains(active.playedMoveUci) then 0 else 1, choice.value.prefixMovesUci.size,
       choice.value.prefixMovesUci.mkString(" "), choice.value.referenceMove, choice.value.alternativeMove))
 
   private def issueProposalComparison(active: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
@@ -2491,8 +2556,14 @@ object CommentaryJobReducer:
       // position does not put two off-PV alternatives on the current path.
       val rank = List(value.referenceMove, value.alternativeMove)
         .map(move => moveRank(value.prefixMovesUci :+ move)).min
-      val links = conditionLinks.get(CommentaryIdea.pair(value)).fold(Set.empty[String])(_._2)
+      val branchOutcomes = if !choice.governsBranch || value.prefixMovesUci.isEmpty then Set.empty[String]
+        else (currentContinuations.map(inquiry => inquiry.question.prefixMoves -> inquiry.question.id) ++
+          factContinuations.map((generated, fact) => fact.need.prefixMoves -> factId(generated, fact)))
+          .collect { case (prefix, id) if prefix.startsWith(value.prefixMovesUci) &&
+            prefix.lift(value.prefixMovesUci.size).exists(Set(value.referenceMove, value.alternativeMove)) => id }.toSet
+      val links = conditionLinks.get(CommentaryIdea.pair(value)).fold(Set.empty[String])(_._2) ++ branchOutcomes
       val urgency = if choice.decision._1 < 0 || choice.decision._2 < 0 then 0
+        else if choice.governsBranch && rank == 0 then 1
         else if choice.essential && choice.decision._2 == 0 then
           if links.nonEmpty || currentOutcomeIds.isEmpty then 0 else 3
         else if choice.essential then 1 else 3
@@ -2819,6 +2890,9 @@ object CommentaryJobReducer:
     case investigation: InvestigatingFacts =>
       progress(CommentaryJobPhase.ResponseComparison, active.legalMoves.size,
         investigation.baseline.progress.rootCandidateLinesAdmitted, 1, ledger)
+    case investigation: ProbingThreat =>
+      progress(CommentaryJobPhase.ThreatProbe, active.legalMoves.size,
+        investigation.baseline.progress.rootCandidateLinesAdmitted, 1, ledger)
 
   private def progress(
       phase: CommentaryJobPhase,
@@ -2894,6 +2968,8 @@ object CommentaryJobReducer:
     case investigation: InvestigatingProposals =>
       finishInvestigation(active, investigation.baseline, investigation.questions, investigation.responses)
     case investigation: InvestigatingFacts =>
+      finishInvestigation(active, investigation.baseline, investigation.questions, investigation.responses)
+    case investigation: ProbingThreat =>
       finishInvestigation(active, investigation.baseline, investigation.questions, investigation.responses)
     case investigation: Investigating =>
       val questions = investigation.questions.map { previous =>

@@ -344,17 +344,19 @@ object CommentaryProposal:
       // Keep the answer and its direct conditions intact. Later context competes
       // only after the same compositor has admitted observed replies and costs.
       val (direct, background) = fresh.drop(1).partition(part => part.direct || part.counter.nonEmpty)
-      val required = fresh.take(1).map(_.text) ++ synthesis.toList.flatMap(_.decisionText(answered, notation.line)) ++ direct.map(_.text)
+      val required = fresh.take(1) ++ synthesis.toList.flatMap(_.decisionText(answered, notation.line))
+        .map(ComparisonPart(_)) ++ direct
       val context = background.map(part => MoveWorkProjection.Context(part.text, part.qualification, part.attack,
         part.tactic.filter(_ => part.attack.nonEmpty), part.tacticScope)) ++
         synthesis.toList.flatMap(_.explanationDetails(packet, prepared, answered)) ++
         Option.when(synthesis.isEmpty)(idea.toList.flatMap(_.questionFocus(packet, prepared, answered)).headOption)
           .flatten.map(focus => MoveWorkProjection.Context("", question = Some(focus))).toList
-      val updated = render(candidate + ("detail" -> (detail + ("text" -> JsString(comparisonText(required))))), context)
-      val text = (updated \ "detail" \ "text").as[String]
-      // Only a whole bundle actually published by a selected candidate can own it.
-      if selected then fresh.filter(part => text.contains(part.text)).foreach(part =>
-        part.counter.foreach(key => publishedCounters += (occurrence -> key)))
+      val wording = boundedText(required.map(_.text))
+      val updated = render(candidate + ("detail" -> (detail + ("text" -> JsString(wording.text)))), context)
+      // The compositor retains its mandatory input. Ownership follows the
+      // admitted parts, independent of punctuation or later wording changes.
+      if selected then wording.retained.foreach(index =>
+        required(index).counter.foreach(key => publishedCounters += (occurrence -> key)))
       updated
     }
 
@@ -363,17 +365,24 @@ object CommentaryProposal:
       if isResolved(reading) || Set("invalid_input", "unsupported_reading")(reading.state) then reading
       else reading.copy(state = "stopped", stopReason = Some(reason)))))
 
-  private[runtime] def comparisonText(parts: List[String]): String =
+  private[runtime] final case class BoundedText(text: String, retained: List[Int])
+
+  private[runtime] def comparisonText(parts: List[String]): String = boundedText(parts).text
+
+  private[runtime] def boundedText(parts: List[String]): BoundedText =
     val text = new StringBuilder
+    val retained = scala.collection.mutable.ListBuffer.empty[Int]
     var omitted = 0
-    parts.filter(_.nonEmpty).foreach { part =>
-      if text.length + part.length + 1 <= 3900 then
+    parts.zipWithIndex.foreach { (part, index) =>
+      if part.isEmpty then ()
+      else if text.length + part.length + 1 <= 3900 then
         if text.nonEmpty then text.append(' ')
         text.append(part)
+        retained += index
       else omitted += 1
     }
     if omitted > 0 then text.append(s" $omitted further explanations remain in the linked questions.")
-    text.toString
+    BoundedText(text.toString, retained.toList)
 
   private type CounterKey = (CompareMoves, CommentaryInvestigation.Answer, List[(Fact, Option[Reading])])
   private case class ComparisonPart(text: String, publish: Boolean = true, counter: Option[CounterKey] = None,

@@ -252,7 +252,6 @@
       "type": "array", "uniqueItems": true,
       "items": { "$ref": "#/$defs/evidence_id" }
     },
-    "selection_state": { "enum": ["ready", "partial", "needs_explanation"] },
     "selection_source": {
       "type": "object", "additionalProperties": false,
       "required": ["line_id", "kind", "source", "accepted_ply_count", "stop"],
@@ -278,6 +277,42 @@
         "side": { "$ref": "#/$defs/side" },
         "role": { "$ref": "#/$defs/role" },
         "square": { "$ref": "#/$defs/square" }
+      }
+    },
+    "selection_effects": {
+      "description": "References for complete effect groups included in the comparison text. They do not establish evaluation causality or force a continuation.",
+      "type": "array", "minItems": 1, "maxItems": 600,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["scope", "line_ids", "prefix_moves_uci", "through_plies", "actor", "target", "square", "occurrence_ids", "evidence_ids"],
+        "properties": {
+        "scope": { "enum": ["pair_difference", "line_history", "check_sequence", "support_handoff", "support_use", "support_retention", "piece_route", "blocker_handoff", "clearance_use", "pawn_option", "capture_choice", "advance_choice", "relative_pin", "capture_release"] },
+          "line_ids": { "allOf": [{ "$ref": "#/$defs/selection_ids" }, { "minItems": 1, "maxItems": 2 }] },
+          "prefix_moves_uci": { "type": "array", "maxItems": 79, "items": { "type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$" } },
+          "through_plies": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "type": "integer", "minimum": 1, "maximum": 600 } },
+          "attack_ply": {
+            "description": "Optional line_history attack start, counted as the 1-based ply after the actual attacking move. It is later than the comparison anchor and earlier than the full supplied line end. The same physical actor and target are anchored at the comparison; the attack must be its immediate reply or the exact actual-mover use of another independently validated functional effect in this candidate.",
+            "type": "integer", "minimum": 2, "maximum": 599
+          },
+          "actor": { "$ref": "#/$defs/selection_piece" },
+          "target": { "oneOf": [{ "$ref": "#/$defs/selection_piece" }, { "type": "null" }] },
+          "square": { "$ref": "#/$defs/square" },
+          "occurrence_ids": { "allOf": [{ "$ref": "#/$defs/selection_ids" }, { "minItems": 1 }] },
+          "evidence_ids": {
+            "description": "Owned occurrence, position and line-proof IDs, and canonical resource source_ids, resolved only within these exact paths and through-ply bounds.",
+            "allOf": [{ "$ref": "#/$defs/selection_ids" }, { "minItems": 1 }]
+          }
+        },
+        "allOf": [{
+          "if": { "required": ["attack_ply"] },
+          "then": { "properties": { "scope": { "const": "line_history" } } }
+        }, {
+          "if": { "properties": { "scope": { "not": { "enum": ["pair_difference", "pawn_option"] } } } },
+          "then": { "properties": { "target": { "$ref": "#/$defs/selection_piece" } } }
+        }],
+        "if": { "properties": { "scope": { "enum": ["pair_difference", "pawn_option", "capture_choice", "advance_choice"] } } },
+        "then": { "properties": { "line_ids": { "minItems": 2 }, "through_plies": { "minItems": 2 } } },
+        "else": { "properties": { "line_ids": { "maxItems": 1 }, "through_plies": { "maxItems": 1 } } }
       }
     },
     "selection_evaluation": {
@@ -772,6 +807,16 @@
         "child_position_id": { "$ref": "#/$defs/evidence_id" },
         "prefix_moves_uci": { "type": "array", "minItems": 1, "maxItems": 79, "items": { "type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$" } },
         "ply_offset": { "type": "integer", "minimum": 1, "maximum": 79 },
+        "proposal_ownership": {
+          "$comment": "Captured on the issued work. The consumer matches work/hash, retained question identities, exact prefix, common reference and bounded pool independently of current answer sufficiency.",
+          "type": "object", "additionalProperties": false,
+          "required": ["work_id", "execution_key_sha256", "question_refs"],
+          "properties": {
+            "work_id": { "type": "string", "pattern": "^work:[0-9]+$" },
+            "execution_key_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "question_refs": { "$ref": "#/$defs/selection_question_comparison_detail/properties/question_refs" }
+          }
+        },
         "root_restriction": { "$ref": "#/$defs/response_root_restriction" },
         "candidates": { "type": "array", "minItems": 1, "maxItems": 3,
           "items": { "type": "object", "additionalProperties": false,
@@ -786,7 +831,12 @@
           }
         }
       },
-      "dependentRequired": { "prefix_moves_uci": ["ply_offset"], "ply_offset": ["prefix_moves_uci"] }
+      "dependentRequired": { "prefix_moves_uci": ["ply_offset"], "ply_offset": ["prefix_moves_uci"] },
+      "allOf": [{ "if": { "required": ["proposal_ownership"] }, "then": {
+        "properties": { "root_restriction": { "properties": {
+          "kind": { "const": "restricted" }, "moves_uci": { "minItems": 2, "maxItems": 3 }
+        } } }
+      } }]
     },
     "response_selection": {
       "type": "object", "additionalProperties": false, "required": ["source", "work_id", "line_id"],
@@ -1316,7 +1366,7 @@
             "pattern": "^[a-f0-9]{64}$"
           },
           "uniqueItems": true,
-          "minItems": 1
+          "description": "Exact geometric pressure sources at the root and child positions. May be empty only when the same tracked target has an owned legal en-passant capture in the child position."
         },
         "capture_moves": {
           "type": "array",
@@ -2052,26 +2102,25 @@
         "alternative_move": { "type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$" },
         "reasons": { "type": "array", "minItems": 1, "maxItems": 218, "uniqueItems": true, "items": { "$ref": "#/$defs/inquiry_reason" } },
         "state": { "enum": ["deferred", "awaiting_engine", "answered", "stopped"] },
-        "stop_reason": { "enum": [null, "engine_unavailable", "browser_unsupported", "deadline_exceeded", "cancelled", "search_budget_exhausted", "engine_execution_failed", "invalid_engine_work_report", "review_construction_failed", "move_review_preparation_failed", "repetition_history_unavailable", "reference_changed", "investigation_limit"] },
+        "stop_reason": { "enum": [null, "engine_unavailable", "browser_unsupported", "deadline_exceeded", "cancelled", "search_budget_exhausted", "engine_execution_failed", "invalid_engine_work_report", "review_construction_failed", "move_review_preparation_failed", "repetition_history_unavailable", "reference_changed", "investigation_limit", "comparison_not_current"] },
         "answer": { "oneOf": [{ "$ref": "#/$defs/inquiry_answer" }, { "type": "null" }] },
         "assessment_effect": { "enum": ["unchanged", "refreshed", "needs_refresh"] },
         "ordering_candidate_ids": { "$ref": "#/$defs/selection_ids" },
-        "explanation_candidate_ids": { "$ref": "#/$defs/selection_ids" },
-        "next_evidence": { "enum": ["inspect_existing", "compare_roots", "unresolved"] }
+        "explanation_candidate_ids": { "$ref": "#/$defs/selection_ids" }
       },
       "dependentRequired": {
-        "ordering_candidate_ids": ["explanation_candidate_ids", "next_evidence"],
-        "explanation_candidate_ids": ["ordering_candidate_ids", "next_evidence"],
-        "next_evidence": ["ordering_candidate_ids", "explanation_candidate_ids"]
+        "ordering_candidate_ids": ["explanation_candidate_ids"],
+        "explanation_candidate_ids": ["ordering_candidate_ids"]
       },
       "allOf": [
         { "if": { "properties": { "state": { "const": "answered" } } },
           "then": { "properties": { "answer": { "$ref": "#/$defs/inquiry_answer" } } },
           "else": { "properties": { "answer": { "type": "null" } } } },
         { "if": { "properties": { "state": { "const": "awaiting_engine" } } }, "then": { "properties": { "stop_reason": { "type": "null" } } } },
-        { "if": { "properties": { "state": { "const": "deferred" } } }, "then": { "properties": { "stop_reason": { "enum": [null, "investigation_limit"] } } } },
+        { "if": { "properties": { "state": { "const": "deferred" } } }, "then": { "properties": { "stop_reason": { "enum": [null, "investigation_limit", "comparison_not_current"] } } } },
         { "if": { "properties": { "state": { "const": "stopped" } } }, "then": { "properties": { "stop_reason": { "type": "string" } } } },
         { "if": { "properties": { "stop_reason": { "const": "reference_changed" } } }, "then": { "properties": { "state": { "const": "stopped" } } } },
+        { "if": { "properties": { "stop_reason": { "const": "comparison_not_current" } } }, "then": { "properties": { "state": { "const": "deferred" } } } },
         { "if": { "properties": { "state": { "const": "answered" }, "stop_reason": { "type": "string" } } },
           "then": { "required": ["assessment_effect"], "properties": { "assessment_effect": { "const": "needs_refresh" },
             "stop_reason": { "not": { "enum": ["reference_changed", "investigation_limit"] } } } } }
@@ -2169,12 +2218,210 @@
         }
       ]
     },
-    "selection_comparison_detail": {
-      "description": "Material relation compares captured-role counts by losing side and promotion-role counts in the exact finite paths, not physical victim identity or event order. Ready closes only a different result for that question, not a unique evaluation cause or a forced continuation. Complete equal counts still need an explanation beyond material scope.",
-      "type": "object", "additionalProperties": false,
-      "required": ["type", "scope", "comparison_evidence_id", "comparison_kind", "reference_line_id", "candidate_line_id", "missing_line_ids", "material_relation", "explanation_gap", "text"],
+    "selection_question_move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line_id",
+        "occurrence_id"
+      ],
       "properties": {
-        "type": { "enum": ["observed_material_comparison", "evaluation_comparison"] },
+        "line_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "occurrence_id": {
+          "$ref": "#/$defs/evidence_id"
+        }
+      }
+    },
+    "selection_question_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question",
+        "units",
+        "detail_moves"
+      ],
+      "properties": {
+        "question": {
+          "enum": [
+            "provider_transfer",
+            "support_and_interposition",
+            "paired_support_use",
+            "escape_or_recapture",
+            "capture_now_or_after_attack",
+            "attack_or_immediate_exchange",
+            "counter_capture_comparison",
+            "occupied_pawn_destination",
+            "controlled_destination",
+            "opening_counterplay",
+            "observed_move_order",
+            "observed_arrangement_convergence",
+            "check_status_comparison",
+            "deferred_pawn_attack",
+            "contested_pair_response",
+            "observed_route_use"
+          ]
+        },
+        "detail_moves": {
+          "type": "array",
+          "maxItems": 80,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/selection_question_move"
+          }
+        },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "en",
+              "ko",
+              "covered_moves"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "condition",
+                  "reply",
+                  "cost"
+                ]
+              },
+              "en": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 80,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    {
+                      "$ref": "#/$defs/selection_question_move"
+                    }
+                  ]
+                }
+              },
+              "ko": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 80,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    {
+                      "$ref": "#/$defs/selection_question_move"
+                    }
+                  ]
+                }
+              },
+              "covered_moves": {
+                "type": "array",
+                "maxItems": 80,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/selection_question_move"
+                }
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "role": {
+                      "const": "cost"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "covered_moves": {
+                      "minItems": 1
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "covered_moves": {
+                      "maxItems": 0
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "selection_exchange_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line_id",
+        "retained_line_id",
+        "role",
+        "recapturer_role",
+        "exchange_occurrence_ids",
+        "retention_occurrence_ids"
+      ],
+      "properties": {
+        "line_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retained_line_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "knight",
+            "bishop",
+            "rook",
+            "queen"
+          ]
+        },
+        "recapturer_role": {
+          "$ref": "#/$defs/role"
+        },
+        "exchange_occurrence_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/evidence_id"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "retention_occurrence_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/evidence_id"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "selection_comparison_detail": {
+      "description": "Material relation compares captured-role counts by losing side and promotion-role counts in the exact finite paths, not physical victim identity or event order. Equal and different are both known results within this scope; neither establishes a unique evaluation cause or a forced continuation.",
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "scope", "comparison_evidence_id", "comparison_kind", "reference_line_id", "candidate_line_id", "missing_line_ids", "material_relation", "material_unavailable_reason", "text"],
+      "properties": {
+        "type": { "const": "root_comparison" },
         "scope": { "const": "observed_lines" },
         "comparison_evidence_id": { "$ref": "#/$defs/evidence_id" },
         "comparison_kind": { "enum": ["played_vs_best", "best_vs_second"] },
@@ -2182,36 +2429,103 @@
         "candidate_line_id": { "type": ["string", "null"], "minLength": 1 },
         "missing_line_ids": { "$ref": "#/$defs/selection_ids" },
         "material_relation": { "enum": ["different", "equal", "unavailable"] },
-        "explanation_gap": { "enum": [null, "missing_path", "incomplete_line", "material_evidence_unavailable", "beyond_material_scope"] },
-        "text": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "material_unavailable_reason": { "enum": [null, "missing_path", "incomplete_line", "material_evidence_unavailable"] },
+        "text": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "summary_kind": { "enum": ["observed_convergence", "exchange_retention", "question_answer"] },
+        "summary_exchange": { "$ref": "#/$defs/selection_exchange_summary" },
+        "summary_question": { "$ref": "#/$defs/selection_question_summary" },
+        "summary_unavailable": {
+          "type": "object", "additionalProperties": false,
+          "required": ["question", "reason"],
+          "properties": {
+            "question": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "\\S" },
+            "reason": { "const": "answer_not_delivered" }
+          }
+        },
+        "effects": { "$ref": "#/$defs/selection_effects" },
         "perspective": { "$ref": "#/$defs/side" },
         "reference_net_cp": { "type": "integer" },
         "candidate_net_cp": { "type": "integer" }
       },
+      "allOf": [
+        {
+          "if": { "required": ["summary_unavailable"] },
+          "then": { "not": { "anyOf": [
+            { "required": ["summary"] }, { "required": ["summary_kind"] },
+            { "required": ["summary_question"] }, { "required": ["summary_exchange"] }
+          ] } }
+        },
+        {
+          "if": {
+            "required": [
+              "summary_kind"
+            ],
+            "properties": {
+              "summary_kind": {
+                "const": "exchange_retention"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "summary_exchange"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "summary_exchange"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "summary_kind"
+            ],
+            "properties": {
+              "summary_kind": {
+                "const": "question_answer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "summary_question"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "summary_question"
+              ]
+            }
+          }
+        }
+      ],
       "dependentRequired": {
+        "summary_kind": ["summary"],
+        "summary_exchange": ["summary_kind", "summary"],
+        "summary_question": ["summary_kind", "summary"],
         "perspective": ["reference_net_cp", "candidate_net_cp"],
         "reference_net_cp": ["perspective", "candidate_net_cp"],
         "candidate_net_cp": ["perspective", "reference_net_cp"]
       },
       "oneOf": [
         { "properties": {
-          "type": { "const": "observed_material_comparison" },
-          "material_relation": { "const": "different" }, "explanation_gap": { "type": "null" }
+          "material_relation": { "enum": ["different", "equal"] }, "material_unavailable_reason": { "type": "null" }
         } },
         { "properties": {
-          "type": { "const": "evaluation_comparison" },
-          "material_relation": { "const": "equal" }, "explanation_gap": { "const": "beyond_material_scope" }
-        } },
-        { "properties": {
-          "type": { "const": "evaluation_comparison" },
           "material_relation": { "const": "unavailable" },
-          "explanation_gap": { "enum": ["missing_path", "incomplete_line", "material_evidence_unavailable"] }
+          "material_unavailable_reason": { "enum": ["missing_path", "incomplete_line", "material_evidence_unavailable"] }
         } }
       ],
       "if": { "properties": { "material_relation": { "const": "unavailable" } } },
       "then": {
         "not": { "anyOf": [{ "required": ["perspective"] }, { "required": ["reference_net_cp"] }, { "required": ["candidate_net_cp"] }] },
-        "if": { "properties": { "explanation_gap": { "const": "missing_path" } } },
+        "if": { "properties": { "material_unavailable_reason": { "const": "missing_path" } } },
         "then": {
           "properties": { "missing_line_ids": { "minItems": 1 } },
           "anyOf": [
@@ -2239,6 +2553,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["type", "scope", "answer", "material_relation", "event_sequence_relation", "root_observation_relation", "root_difference_occurrence_ids", "root_participants", "quality_band", "text"],
       "properties": {
+        "effects": { "$ref": "#/$defs/selection_effects" },
         "continuation_candidate_ids": { "$ref": "#/$defs/selection_ids" },
         "continuation_comparison_ids": { "$ref": "#/$defs/selection_ids" },
         "type": { "const": "pv_comparison" }, "scope": { "const": "observed_lines" },
@@ -2681,7 +2996,9 @@
         } },
         "evaluation_relation": { "enum": [null, "better", "equal", "worse"] },
         "stop_reason": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 },
-        "text": { "type": "string", "minLength": 1, "maxLength": 4000 }
+        "text": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "effects": { "$ref": "#/$defs/selection_effects" }
       }
     },
     "selection_candidate": {
@@ -2690,7 +3007,6 @@
       "required": [
         "id",
         "kind",
-        "state",
         "selection",
         "root_occurrence_id",
         "occurrence_ids",
@@ -2711,9 +3027,6 @@
             "conditional_line",
             "comparison"
           ]
-        },
-        "state": {
-          "$ref": "#/$defs/selection_state"
         },
         "selection": {
           "enum": [
@@ -2774,15 +3087,14 @@
           "not": { "required": ["highlight"] },
           "properties": {
             "kind": { "const": "comparison" },
-            "state": { "enum": ["ready", "partial"] },
             "selection": { "enum": ["selected", "context"] },
             "line_ids": { "minItems": 1 },
             "position_ids": { "minItems": 1 },
             "detail": { "$ref": "#/$defs/selection_question_comparison_detail" }
           },
           "if": { "properties": { "detail": { "properties": { "evaluation_relation": { "const": null } } } } },
-          "then": { "properties": { "state": { "const": "partial" }, "selection": { "const": "context" } } },
-          "else": { "properties": { "state": { "const": "ready" }, "line_ids": { "minItems": 2, "maxItems": 2 }, "detail": { "properties": { "stop_reason": { "const": null } } } } }
+          "then": { "properties": { "selection": { "const": "context" } } },
+          "else": { "properties": { "line_ids": { "minItems": 2, "maxItems": 2 }, "detail": { "properties": { "stop_reason": { "const": null } } } } }
         },
         {
           "not": {
@@ -2808,49 +3120,6 @@
             "detail": {
               "anyOf": [{ "$ref": "#/$defs/selection_pv_comparison_detail" }, { "$ref": "#/$defs/line_continuation_comparison_detail" }]
             }
-          },
-          "if": {
-            "properties": {
-              "detail": {
-                "anyOf": [
-                  {
-                    "properties": {
-                      "material_relation": {
-                        "const": "different"
-                      }
-                    }
-                  },
-                  {
-                    "properties": {
-                      "event_sequence_relation": {
-                        "const": "different"
-                      }
-                    }
-                  },
-                  {
-                    "properties": {
-                      "root_observation_relation": {
-                        "const": "different"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "state": {
-                "const": "ready"
-              }
-            }
-          },
-          "else": {
-            "properties": {
-              "state": {
-                "const": "needs_explanation"
-              }
-            }
           }
         },
         {
@@ -2860,9 +3129,6 @@
           "properties": {
             "kind": {
               "const": "local_fact"
-            },
-            "state": {
-              "const": "ready"
             },
             "selection": {
               "enum": [
@@ -2888,12 +3154,6 @@
           "properties": {
             "kind": {
               "const": "conditional_line"
-            },
-            "state": {
-              "enum": [
-                "ready",
-                "partial"
-              ]
             },
             "selection": {
               "const": "context"
@@ -2938,51 +3198,7 @@
             "detail": {
               "$ref": "#/$defs/selection_comparison_detail"
             }
-          },
-          "oneOf": [
-            {
-              "properties": {
-                "state": {
-                  "const": "ready"
-                },
-                "detail": {
-                  "properties": {
-                    "material_relation": {
-                      "const": "different"
-                    }
-                  }
-                }
-              }
-            },
-            {
-              "properties": {
-                "state": {
-                  "const": "needs_explanation"
-                },
-                "detail": {
-                  "properties": {
-                    "material_relation": {
-                      "const": "equal"
-                    }
-                  }
-                }
-              }
-            },
-            {
-              "properties": {
-                "state": {
-                  "const": "partial"
-                },
-                "detail": {
-                  "properties": {
-                    "material_relation": {
-                      "const": "unavailable"
-                    }
-                  }
-                }
-              }
-            }
-          ]
+          }
         },
         {
           "not": {
@@ -2997,12 +3213,6 @@
             "selection": {
               "const": "context"
             },
-            "state": {
-              "enum": [
-                "ready",
-                "partial"
-              ]
-            },
             "line_ids": {
               "minItems": 2,
               "maxItems": 2
@@ -3014,78 +3224,12 @@
             "detail": {
               "$ref": "#/$defs/target_response_detail"
             }
-          },
-          "if": {
-            "properties": {
-              "state": {
-                "const": "ready"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "detail": {
-                "properties": {
-                  "branches": {
-                    "items": {
-                      "properties": {
-                        "target_state": {
-                          "not": {
-                            "const": "unknown"
-                          }
-                        },
-                        "providers": {
-                          "properties": {
-                            "state": {
-                              "not": {
-                                "const": "unknown"
-                              }
-                            }
-                          }
-                        },
-                        "recaptures": {
-                          "properties": {
-                            "state": {
-                              "not": {
-                                "const": "unknown"
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "if": {
-                        "properties": {
-                          "recaptures": {
-                            "properties": {
-                              "moves": {
-                                "minItems": 1
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "then": {
-                        "properties": {
-                          "observed_recapture": {
-                            "properties": {
-                              "state": {
-                                "const": "complete"
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
           }
         }
       ]
     },
     "commentary_selection": {
-      "description": "Shared candidates precede display representative selection. Scenes are exact comparison bundles, not a claim that every move is a key scene. Version 1 orders the existing comparison obligation before its context and optional local facts.",
+      "description": "Shared candidates precede display representative selection. Scenes are exact comparison bundles, not a claim that every move is a key scene. Domain-specific readings retain their evidence and availability without a shared explanation-completeness state.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -3095,7 +3239,7 @@
       ],
       "properties": {
         "version": {
-          "const": 1
+          "const": 2
         },
         "candidates": {
           "type": "array",
@@ -3121,8 +3265,7 @@
               "root_occurrence_id",
               "occurrence_ids",
               "line_ids",
-              "candidate_ids",
-              "state"
+              "candidate_ids"
             ],
             "properties": {
               "id": {
@@ -3153,9 +3296,6 @@
                     "minItems": 1
                   }
                 ]
-              },
-              "state": {
-                "$ref": "#/$defs/selection_state"
               }
             }
           }

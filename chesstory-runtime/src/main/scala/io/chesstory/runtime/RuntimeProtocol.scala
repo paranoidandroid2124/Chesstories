@@ -580,7 +580,7 @@ object RuntimeProtocol:
             .distinct.flatMap(trajectoryIds.get) ++
             continuationComparisons.filter(_.lineIds.forall(question.sourceLineIds.contains)).map(_.id)))
       })).getOrElse(Json.obj())
-    observations ++ Json.obj("highlights" -> projection.highlights, "selection" -> selection)
+    observations ++ Json.obj("highlights" -> projection.highlightsFor(selection), "selection" -> selection)
 
   private[runtime] def completedResultJson(completed: CompletedCommentaryJob): JsObject =
     completed.result match

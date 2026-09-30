@@ -56,7 +56,83 @@ class TargetResponseInvestigationTest extends munit.FunSuite:
       prepared.certifiedPath(source, decline).get.line.ref.id, prepared).get
 
   private def branches(value: Reading, source: EvidenceBackedJudgmentPacket): List[JsObject] =
-    (value.candidateJson(source) \ "detail" \ "branches").as[List[JsObject]]
+    val candidate = value.candidateJson(source)
+    assert((candidate \ "state").toOption.isEmpty)
+    (candidate \ "detail" \ "branches").as[List[JsObject]]
+
+  test("owned child answers use the child mover and calibrate reply prose without changing raw answer states"):
+    import CommentaryProposal.*
+    import PrincipalVariationComparison.QualityBand
+    val cases = List(
+      (support, "d2d3", "d2d4", CommentaryFact.Piece("white", "king", "h1"),
+        List("d5e4", "d3e4"), List("d8d7")),
+      ("7k/7p/8/8/8/8/P7/K7 b - - 0 1", "h8g8", "h8g7", CommentaryFact.Piece("black", "king", "h8"),
+        List("a1b1"), List("a1b2")))
+    for
+      (fen, root, rootAlternative, king, referenceLine, alternativeLine) <- cases
+      (difference, expectedBand) <- List(10 -> QualityBand.Close, 600 -> QualityBand.Separated)
+    do
+      val source = packet(fen, root, List(root :: referenceLine, root :: alternativeLine))
+      val child = source.assembly.input.positionHistory.extend(List(root)).toOption.get
+      assert(child.currentPosition.color != source.assembly.input.positionHistory.currentPosition.color)
+      val cp = if child.currentPosition.color.white then difference else -difference
+      val supplied = receipt(source, root, List(referenceLine -> 0, alternativeLine -> cp),
+        s"child-band-${king.side}-$difference")
+      val owned = search(source, supplied)
+      val forward = owned.pairAnswer(source, referenceLine.head, alternativeLine.head).get
+      val reverse = owned.pairAnswer(source, alternativeLine.head, referenceLine.head).get
+      assertEquals(forward.qualityBand, Some(expectedBand))
+      assertEquals(reverse.qualityBand, Some(expectedBand))
+      assertEquals(forward.evaluationRelation, "better")
+      assertEquals(reverse.evaluationRelation, "worse")
+      assertEquals(forward.workId, supplied.work.workId)
+      assertEquals(reverse.executionKeySha256, forward.executionKeySha256)
+      assertEquals(reverse.referenceLineId, forward.alternativeLineId)
+      assertEquals(reverse.alternativeLineId, forward.referenceLineId)
+      assertEquals(owned.anchor.plyOffset, 1)
+      assert((CommentaryInvestigation.answerJson(forward) \ "quality_band").toOption.isEmpty)
+
+      val prepared = ObservedLineProtocol.prepare(source)
+      val origin = Source("generator", "C-tactical-counter", Some("inline-band"))
+      val context = Fact("tactical_context", CommentaryFact.Path("current", CommentaryFact.Declared(List(root))),
+        CommentaryFact.Predicate("presence", subject = Some(king)), CommentaryFact.Ply(1), expected = Some("present"))
+      val rootChoice = CompareMoves("contrast_opponent_choice", Nil, root, rootAlternative)
+      for (answer, reference, alternative) <- List(
+        (forward, referenceLine.head, alternativeLine.head), (reverse, alternativeLine.head, referenceLine.head))
+      do
+        val comparison = CompareMoves("tactical_strength", List(root), reference, alternative)
+        val request = Request(s"reply-prose-${king.side}-$difference-$reference", Origin(origin, origin, origin, origin),
+          List(context, rootChoice, comparison))
+        assert(validRequests(List(request)))
+        val entry = entries(List(request)).head.copy(admission = "generated",
+          generatedArms = List(GeneratedArm("current-choice", Nil, root, Some(rootAlternative),
+            List(context.id, rootChoice.id), List(context.id, rootChoice.id, comparison.id), origin, Nil)))
+        val answered = entry.copy(readings = entry.readings.map(reading =>
+          if reading.requirementId == comparison.id then pairReading(comparison, answer) else reading))
+        val current = CommentaryFactReader.read(source, prepared, List(answered)).head
+        assertEquals(current.readings.find(_.requirementId == context.id).get.state, "supported")
+        assertEquals(current.readings.find(_.requirementId == comparison.id).get.state, "answered")
+        assertEquals(current.readings.find(_.requirementId == rootChoice.id).get.state, "deferred",
+          "a child score and its wording do not answer the different root question")
+        val candidates = comparisonCandidates(source, prepared, List(current))
+        assertEquals(candidates.size, 1)
+        val detail = (candidates.head \ "detail").as[JsObject]
+        assertEquals((detail \ "evaluation_relation").toOption, Some(JsNull))
+        val text = (detail \ "text").as[String]
+        val relative = if answer.evaluationRelation == "better" then "above" else "below"
+        assert(text.contains(s"comparison after ${prepared.notation.move(Nil, root)}, ${prepared.notation.move(List(root), alternative)} evaluates $relative ${prepared.notation.move(List(root), reference)}"), text)
+        if expectedBand == QualityBand.Close then
+          assert(text.contains("The engine evaluations are close"), text)
+          assert(text.contains("do not establish a stronger refutation"), text)
+          assert(!text.contains("Revise the explanation") && !text.contains("weaker reply"), text)
+        else if answer.evaluationRelation == "better" then
+          assert(text.contains("Revise the explanation that relies on the weaker reply"), text)
+          assert(!text.contains("evaluations are close"), text)
+        else
+          assert(text.contains("This reply is not rated higher"), text)
+          assert(!text.contains("Revise the explanation"), text)
+        assert(!text.contains("assessment policy") && !text.contains("close band") &&
+          !text.contains("practical separation"), text)
 
   test("shared immediate identity snapshots preserve captured and unknown states with exact owners"):
     val capture = List("d2d3", "d5e4", "d3e4")
@@ -345,7 +421,13 @@ class TargetResponseInvestigationTest extends munit.FunSuite:
     assert(!hasExistingContrast(source, q, ObservedLineProtocol.prepare(source)))
     val retained = inspectExisting(source, q, ObservedLineProtocol.prepare(source)).get
     assert(!retained.complete)
-    assertEquals((retained.candidateJson(source) \ "state").as[String], "partial")
+    val retainedCapture = branches(retained, source).head
+    assertEquals((retainedCapture \ "target_state").as[String], "captured")
+    assertEquals((retainedCapture \ "providers" \ "state").as[String], "not_applicable")
+    assertEquals((retainedCapture \ "recaptures" \ "state").as[String], "complete")
+    assert((retainedCapture \ "recaptures" \ "moves").as[List[JsObject]]
+      .exists(row => (row \ "move_uci").as[String] == "d3e4"))
+    assertEquals((retainedCapture \ "observed_recapture" \ "state").as[String], "not_observed")
 
   test("existing paths prefer a completed branch without replacing a fixed partial read or mixing paths"):
     val shortCapture = List("d2d3", "d5e4")
@@ -399,6 +481,148 @@ class TargetResponseInvestigationTest extends munit.FunSuite:
     assertEquals((row \ "observed_recapture" \ "actor" \ "original" \ "square").as[String], "f2")
     assertEquals((row \ "recaptures" \ "moves").as[List[JsObject]].map(r => (r \ "move_uci").as[String]), List("f2e3"))
 
+  List(
+    ("white", "7k/8/8/8/3p4/8/4PB2/7K w - - 0 1",
+      List("e2e4", "d4e3", "f2e3"), List("e2e4", "h8g8")),
+    ("black", "7k/4pb2/8/3P4/8/8/8/7K b - - 0 1",
+      List("e7e5", "d5e6", "f7e6"), List("e7e5", "h1g1"))
+  ).foreach { (side, fen, capture, decline) =>
+    test(s"$side en passant alone discovers and reads the exact physical victim without geometric pressure"):
+      val source = packet(fen, capture.head, List(capture, decline))
+      val prepared = ObservedLineProtocol.prepare(source)
+      val root = source.assembly.playedTransition.get
+      val capturePath = prepared.certifiedPath(source, capture).get
+      val declinePath = prepared.certifiedPath(source, decline).get
+      val views = prepared.resourceViews(source)
+      val child = views(capturePath.positions(1).id.get)
+      val original = views(root.from.id.get).occupantAt(EvidenceSquare(capture.head.take(2))).get
+      val target = child.occupantAt(EvidenceSquare(capture.head.drop(2))).get
+      val replies = child.legalRows.get
+      val ep = replies.find(_.move == capture(1)).get
+      assert(ep.captures(target))
+      assertNotEquals(ep.to, target.square)
+      assertEquals(prepared.attackedRootTargets(source).find(_._1 == original), None)
+      assertEquals(child.attackedTargets(original.side).find(_._1 == target), None)
+
+      // The independently assembled owned question also diagnoses the reader when discovery is absent.
+      val owned = Question("ep-only-question", root.evidence.id, root.from.id.get, capture.head,
+        capturePath.ids.head, child.position.id.get, original, target, Nil,
+        List(capture(1)), replies.filterNot(_.captures(target)).map(_.move),
+        replies.map(row => row.move -> row.sourceId).toMap, capture(1), decline(1))
+      val discovered = discover(source, capture.head, prepared).find(_.originalTarget == original)
+      val direct = read(source, owned, capturePath.line.ref.id, declinePath.line.ref.id, prepared)
+      val existing = inspectExisting(source, owned, prepared)
+      assertEquals((discovered.nonEmpty, direct.nonEmpty, existing.nonEmpty), (true, true, true))
+      assert(direct.exists(_.complete))
+      assert(existing.exists(_.complete))
+      val q = discovered.get
+      assertEquals(q.target, target)
+      assertEquals(q.pressureSourceIds, Nil)
+      assertEquals(q.captureMoves, List(capture(1)))
+      assertEquals(q.referenceMove, capture(1))
+      assertEquals(q.alternativeMove, decline(1))
+      val value = read(source, q, capturePath.line.ref.id, declinePath.line.ref.id, prepared).get
+      assert(value.complete)
+      assertEquals(branches(value, source).map(row => (row \ "target_state").as[String]),
+        List("captured", "present"))
+      val taken = branches(value, source).head
+      assertEquals((taken \ "capturer" \ "square").as[String], capture(1).drop(2))
+      assertEquals((taken \ "observed_recapture" \ "actor" \ "original" \ "square").as[String],
+        capture(2).take(2))
+      assertEquals((taken \ "recaptures" \ "moves").as[List[JsObject]].map(row =>
+        (row \ "move_uci").as[String]), List(capture(2)))
+      assert(inspectExisting(source, q, prepared).exists(_.complete))
+
+      val wire = RuntimeProtocol.observationsJson(source,
+        responseInquiries = List(CommentaryResponseInquiry(q, reading = Some(value))), prepared = Some(prepared))
+      val inquiry = (wire \ "selection" \ "response_inquiries").as[List[JsObject]].head
+      assertEquals((inquiry \ "pressure_source_ids").as[List[String]], Nil)
+      assertEquals((inquiry \ "move_source_ids" \ capture(1)).as[String], ep.sourceId)
+      val delivered = (wire \ "selection" \ "candidates").as[List[JsObject]]
+        .find(row => (row \ "id").as[String] == value.id).get
+      assertEquals((delivered \ "detail" \ "branches").as[List[JsObject]], branches(value, source))
+
+      val recapturer = views(root.from.id.get).occupantAt(EvidenceSquare(capture(2).take(2))).get
+      val unrelated = child.completeFacts(RelationFactKind.GeometricControl).get.head.semanticId
+      val invalid = List(
+        q.copy(pressureSourceIds = List(ep.sourceId)),
+        q.copy(pressureSourceIds = List(unrelated)),
+        q.copy(rootOccurrenceId = "foreign-root"),
+        q.copy(rootMoveOccurrenceId = "foreign-root-move"),
+        q.copy(rootPositionId = q.childPositionId),
+        q.copy(childPositionId = capturePath.positions(2).id.get),
+        q.copy(originalTarget = recapturer),
+        q.copy(target = target.copy(square = ep.to)),
+        q.copy(captureMoves = Nil),
+        q.copy(declineMoves = q.declineMoves.tail),
+        q.copy(referenceMove = decline(1), alternativeMove = capture(1)),
+        q.copy(moveSourceIds = q.moveSourceIds - capture(1)),
+        q.copy(moveSourceIds = q.moveSourceIds.updated(capture(1), unrelated)))
+      invalid.foreach { altered =>
+        assertEquals(read(source, altered, capturePath.line.ref.id, declinePath.line.ref.id, prepared), None)
+        assertEquals(inspectExisting(source, altered, prepared), None)
+      }
+  }
+
+  test("a pinned pawn's illegal en passant does not seed a pressure-free victim"):
+    val fen = "3k4/8/8/8/3p4/8/4PB2/3R3K w - - 0 1"
+    val source = packet(fen, "e2e4", List(List("e2e4", "d8c8")))
+    val prepared = ObservedLineProtocol.prepare(source)
+    val child = prepared.resourceViews(source)(prepared.certifiedPath(source, List("e2e4")).get.positions(1).id.get)
+    val target = child.occupantAt(EvidenceSquare("e4")).get
+    assertEquals(child.attackedTargets(chess.White).find(_._1 == target), None)
+    assert(!child.legalRows.get.exists(_.move == "d4e3"))
+    assertEquals(discover(source, "e2e4", prepared), Nil)
+
+  List(
+    ("moved target", "7k/8/8/8/3p4/3b4/4PB2/7K w - - 0 1",
+      List("e2e4", "d4e3", "f2e3"), List("e2e4", "h8g8"), "e4", 2),
+    ("newly exposed target", "7k/8/8/8/1b6/2N5/8/4Q2K w - - 0 1",
+      List("c3e4", "b4e1"), List("c3e4", "h8g8"), "e1", 1),
+    ("unchanged pressure", support,
+      List("d2d3", "d5e4", "d3e4"), List("d2d3", "d8d7"), "e4", 1)
+  ).foreach { (name, fen, capture, decline, target, pressureCount) =>
+    test(s"$name delivers the discovered response contrast and rejects incomplete or foreign pressure scope"):
+      val source = packet(fen, capture.head, List(capture, decline))
+      val prepared = ObservedLineProtocol.prepare(source)
+      val q = discover(source, capture.head, prepared).find(_.target.square.key == target).get
+      assertEquals(q.referenceMove, capture(1))
+      assertEquals(q.alternativeMove, decline(1))
+      assertEquals(q.pressureSourceIds.size, pressureCount)
+      val captureId = prepared.certifiedPath(source, capture).get.line.ref.id
+      val declineId = prepared.certifiedPath(source, decline).get.line.ref.id
+      val value = read(source, q, captureId, declineId, prepared).get
+      assert(value.complete)
+      assertEquals(branches(value, source).map(row => (row \ "target_state").as[String]),
+        List("captured", "present"))
+      val existing = inspectExisting(source, q, prepared).get
+      assert(existing.complete)
+      assertEquals(existing.lineIds, value.lineIds)
+      val wire = RuntimeProtocol.observationsJson(source,
+        responseInquiries = List(CommentaryResponseInquiry(q, reading = Some(existing))), prepared = Some(prepared))
+      val delivered = (wire \ "selection" \ "candidates").as[List[JsObject]]
+        .find(row => (row \ "id").as[String] == existing.id).get
+      assertEquals((delivered \ "detail" \ "response_inquiry_id").as[String], q.id)
+      assertEquals((delivered \ "line_ids").as[List[String]], List(captureId, declineId))
+      assertEquals((delivered \ "detail" \ "branches").as[List[JsObject]], branches(existing, source))
+
+      val unrelated = prepared.resourceViews(source)(q.childPositionId)
+        .completeFacts(RelationFactKind.GeometricControl).get
+        .find(fact => !q.pressureSourceIds.contains(fact.semanticId)).get.semanticId
+      val invalid = List(
+        q.copy(pressureSourceIds = Nil),
+        q.copy(pressureSourceIds = (q.pressureSourceIds :+ unrelated).sorted),
+        q.copy(childPositionId = q.rootPositionId),
+        q.copy(rootMoveOccurrenceId = "foreign-root-occurrence"),
+        q.copy(target = q.target.copy(square = EvidenceSquare("a1"))),
+        q.copy(captureMoves = Nil)) ++ q.pressureSourceIds.map(id =>
+          q.copy(pressureSourceIds = q.pressureSourceIds.filterNot(_ == id)))
+      invalid.distinct.foreach { altered =>
+        assertEquals(read(source, altered, captureId, declineId, prepared), None)
+        assertEquals(inspectExisting(source, altered, prepared), None)
+      }
+  }
+
   test("ordinary development without a positive target contact does not acquire a response question"):
     val fen = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
     val source = packet(fen, "f1b5", List(List("f1b5", "a7a6"), List("f1c4", "g8f6")))
@@ -436,8 +660,12 @@ class TargetResponseInvestigationTest extends munit.FunSuite:
     val q = requestedPair(missing, "d2d3", "d5e4", "d8d7")
     val value = reading(missing, q, capture, decline)
     assert(!value.complete)
-    assertEquals((branches(value, missing).head \ "recaptures" \ "state").as[String], "unknown")
-    assertEquals((value.candidateJson(missing) \ "state").as[String], "partial")
+    val captureBranch = branches(value, missing).head
+    assertEquals((captureBranch \ "target_state").as[String], "captured")
+    assertEquals((captureBranch \ "providers" \ "state").as[String], "not_applicable")
+    assertEquals((captureBranch \ "recaptures" \ "state").as[String], "unknown")
+    assertEquals((captureBranch \ "recaptures" \ "moves").as[List[JsObject]], Nil)
+    assertEquals((captureBranch \ "observed_recapture" \ "state").as[String], "unknown")
     assert(!hasExistingContrast(missing, q, ObservedLineProtocol.prepare(missing)))
 
   test("related capture facts survive an incomplete or branching decline without completing that decline"):
@@ -466,14 +694,28 @@ class TargetResponseInvestigationTest extends munit.FunSuite:
         CommentaryResponseInquiry(q, reading = Some(current), retainedReadings = retained),
         CommentaryResponseInquiry(bq, reading = Some(otherCurrent), retainedReadings = List(otherFull))),
         prepared = Some(prepared))
-      val candidates = (wire \ "selection" \ "candidates").as[List[JsObject]]
+      val selection = (wire \ "selection").as[JsObject]
+      assertEquals((selection \ "version").as[Int], 2)
+      val candidates = (selection \ "candidates").as[List[JsObject]]
+      assert(candidates.forall(candidate => (candidate \ "state").toOption.isEmpty))
+      assert((selection \ "scenes").as[List[JsObject]].forall(scene => (scene \ "state").toOption.isEmpty))
       val pairIds = Set(path(source, pawn).line.ref.id, path(source, bishop).line.ref.id)
       assert(candidates.exists(candidate => (candidate \ "line_ids").as[List[String]].toSet == pairIds &&
         (candidate \ "detail" \ "differences").asOpt[List[JsObject]].exists(_.exists(row =>
           (row \ "kind").as[String] == "replacement_support" &&
             (row \ "original_target" \ "square").as[String] == "f3"))))
-      retained.foreach(value => assertEquals(candidates.find(candidate => (candidate \ "id").as[String] == value.id)
-        .map(candidate => (candidate \ "state").as[String]), Some(if complete then "ready" else "partial")))
+      retained.foreach { value =>
+        val candidate = candidates.find(candidate => (candidate \ "id").as[String] == value.id).get
+        assertEquals((candidate \ "line_ids").as[List[String]], value.lineIds)
+        val deliveredBranches = (candidate \ "detail" \ "branches").as[List[JsObject]]
+        assertEquals(deliveredBranches.map(row => (row \ "line_id").as[String]), value.lineIds)
+        assertEquals((deliveredBranches.head \ "observed_recapture" \ "state").as[String], "complete")
+        assertEquals((deliveredBranches.head \ "observed_recapture" \ "actor" \ "original" \ "square").as[String], "d2")
+        val deliveredDecline = deliveredBranches(1)
+        assertEquals((deliveredDecline \ "target_state").as[String], "present")
+        assertEquals((deliveredDecline \ "providers" \ "state").as[String], if complete then "complete" else "unknown")
+        assertEquals((deliveredDecline \ "recaptures" \ "state").as[String], "not_applicable")
+      }
       // Incomparable decline continuations remain separate paths and do not
       // become an arbitrary additional comparison with the other root arm.
       val declineIds = Set(path(source, first).line.ref.id, path(source, second).line.ref.id)

@@ -47,7 +47,7 @@ export const env = new (class {
   private status: { [key in Context]?: number | false } = {};
 
   manifestOk(): boolean {
-    return (['tsc', 'esbuild', 'sass'] as const).map(b => this.status[b]).every(x => x === 0);
+    return (['tsc', 'esbuild', 'sass'] as const).map(b => this.status[b]).every(x => x === 0 || x === false);
   }
 
   *tasks<T extends 'sync' | 'hash' | 'bundle'>(

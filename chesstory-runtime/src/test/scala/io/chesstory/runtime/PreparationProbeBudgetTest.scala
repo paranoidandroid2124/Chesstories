@@ -107,7 +107,9 @@ class PreparationProbeBudgetTest extends munit.FunSuite:
       val predicate = Predicate("control", Some(subjects(index / 64)),
         square = Some(chess.Square.all(index % 64).key))
       val path = Path(s"effect_$index", Declared(List("h2h3")))
-      val before = Fact(s"effect_${index}_before", path, predicate, Ply(0))
+      // Distinct declared scopes exercise the longer path comparison at the same
+      // reader limit; the compact adjacent-move wording no longer fills that budget.
+      val before = Fact(s"effect_${index}_before", Path(s"effect_${index}_root", Declared(Nil)), predicate, Ply(0))
       val after = Fact(s"effect_${index}_after", path, predicate, Ply(1))
       (before, after, FactComparison(s"effect_$index", before.id, after.id, "different"))
     }
@@ -120,12 +122,16 @@ class PreparationProbeBudgetTest extends munit.FunSuite:
     val request = Request("long-preparation-question", Origin(source, source, source, source), requirements)
     assertEquals(requirements.size, 599)
     assert(validRequests(List(request)))
-    def observed(fact: Fact, value: String): Reading = Reading(fact.id, "observed", result = Some(Result("observed",
-      samples = List(Sample(fact.id + "-sample", "inline-line", fact.path.binding, List("h2h3"),
-        fact.at.horizon, fact.at.horizon, Some(value), "known")))))
+    def observed(fact: Fact, value: String): Reading =
+      val moves = fact.path.source match
+        case Declared(moves) => moves
+        case _ => fail("this inline reader case uses declared paths")
+      Reading(fact.id, "observed", result = Some(Result("observed",
+        samples = List(Sample(fact.id + "-sample", "inline-line", fact.path.binding, moves,
+          fact.at.horizon, fact.at.horizon, Some(value), "known")))))
     val answer = CommentaryInvestigation.Answer("inline-work", "f" * 64, profile.wireId, 16,
       Some(16), Some(16), "better", "reference-line", "alternative-line", Json.obj(), Json.obj(),
-      "reference-occurrence", "alternative-occurrence")
+      "reference-occurrence", "alternative-occurrence", None)
     val readings = effects.flatMap { (before, after, compare) =>
       List(observed(before, "absent"), observed(after, "present"),
         Reading(compare.id, "supported", result = Some(Result("supported"))))
@@ -143,5 +149,20 @@ class PreparationProbeBudgetTest extends munit.FunSuite:
     assert(text.contains("Structural effects belong to the named moves."))
     assert(text.contains("Evaluation compares whole continuations; the observed plan is conditional and may change in the returned line."))
     assert(text.contains("further observations are omitted from this answer."))
-    assertEquals((body \ "requirements").as[List[JsObject]].size, requirements.size,
-      "omitting prose details must preserve each structured reading")
+    val rows = (body \ "requirements").as[List[JsObject]]
+    assertEquals(rows.map(row => (row \ "id").as[String]), requirements.map(_.id),
+      "omitting prose details must preserve each structured reading in its original order")
+    val byId = rows.map(row => (row \ "id").as[String] -> row).toMap
+    readings.foreach { reading =>
+      val row = byId(reading.requirementId)
+      assertEquals((row \ "state").as[String], reading.state)
+      assertEquals((row \ "stop_reason").asOpt[String], reading.stopReason)
+      assertEquals((row \ "answer").asOpt[JsObject], reading.answer.map(CommentaryInvestigation.answerJson))
+      assertEquals((row \ "result").asOpt[JsObject], reading.result.map(_.json))
+    }
+    requirements.collect { case fact: Fact => fact }.foreach { fact =>
+      val row = byId(fact.id)
+      assertEquals((row \ "path").as[JsObject], fact.path.json)
+      assertEquals((row \ "predicate").as[JsObject], fact.predicate.json)
+      assertEquals((row \ "at").as[JsObject], fact.at.json)
+    }
