@@ -48,6 +48,248 @@ class CommentaryAnswerTest extends munit.FunSuite:
       case move: MoveRef => paths.notation.line(move.path.moves)(move.offset)
     }.mkString
 
+  test("a root capture compares the same victim and retains its gain before delayed removal"):
+    val rows = List(List("f8f3", "h1h2"), List("d5d4", "f3f8", "e6f8", "h1h2"))
+    val (packet, paths) = prepare("5rk1/8/4n3/3p4/8/5Q2/8/7K b - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val answer = RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).get
+    val outcomes = answer.core.flatMap(_.statements).collect { case value: TargetOutcome => value }
+    val queen = CommentaryFact.Piece("white", "queen", "f3").witness
+    assertEquals(outcomes.map(_.original).toSet, Set(queen))
+    assertEquals(outcomes.map(_.removal.get.events.head.plyOffset), List(0, 2))
+    val prices = answer.core.flatMap(_.statements).collect { case value: Material => value }
+    assertEquals(prices.size, 1)
+    assertEquals(prices.head.path, pair(1))
+    assertEquals(prices.head.cost.commonExchanges, Nil)
+    assertEquals(prices.head.cost.whiteAdditionalLosses.map((role, n) => role.name -> n), List("queen" -> 1))
+    assertEquals(prices.head.cost.blackAdditionalLosses.map((role, n) => role.name -> n), List("rook" -> 1))
+    assertEquals(prices.head.cost.events.map(_.plyOffset), List(1, 2))
+    val complete = MoveWorkProjection.completeSelectedConditions(packet, paths, pair, positions,
+      MoveWorkProjection.select(packet, paths).local, answer).get
+    val reading = RootQuestionSummary.realize(paths, pair, complete).get
+    val units = (reading.json \ "units").as[List[JsObject]]
+    val covered = units.flatMap(unit => (unit \ "covered_moves").as[List[JsObject]]).toSet
+    val required = units.flatMap(unit => (unit \ "required_moves").as[List[JsObject]]).toSet
+    assert(answer.core.flatMap(_.covered).map(_.json).toSet.subsetOf(covered))
+    assert(prices.head.references.map(_.json).forall(required),
+      "the captured rook and checking capture/reply remain exact proof without a SAN checklist")
+
+  test("capture versus survival owns the original target while unrelated end history remains detail"):
+    val rows = List(List("a4a8", "h8h7"), List("a4d1", "a8a7", "h1g1", "h8g8"))
+    val (packet, paths) = prepare("r6k/8/8/8/Q7/8/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val rook = CommentaryFact.Piece("black", "rook", "a8").witness
+    val king = CommentaryFact.Piece("black", "king", "h8").witness
+    val incidental = PiecePresence(MoveRef(pair.head, 1), king,
+      paths.pieceAfter(packet, pair.head, king, pair.head.moves.size).flatten.get)
+    val answer = RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions,
+      List(Section(List(incidental)))).get
+    val outcomes = answer.core.flatMap(_.statements).collect { case value: TargetOutcome => value }
+    assertEquals(outcomes.map(_.original).toSet, Set(rook))
+    val retained = outcomes.find(_.root.path eq pair(1)).get
+    assertEquals(retained.departure, Some(MoveRef(pair(1), 1)))
+    assertEquals(retained.retained.get.original, rook)
+    assertEquals(retained.retained.get.current.square.key, "a7")
+    assert(!answer.core.flatMap(_.statements).contains(incidental))
+    assert(answer.details.flatMap(_.statements).contains(incidental))
+    val reading = RootQuestionSummary.realize(paths, pair, answer).get
+    val end = retained.retained.get.after
+    val units = (reading.json \ "units").as[List[JsObject]]
+    assert(units.flatMap(unit => (unit \ "required_moves").as[List[JsObject]]).contains(end.json))
+    assert(!units.flatMap(unit => (unit \ "en").as[List[JsValue]]).contains(end.json),
+      "recorded survival owns the last-position proof without narrating its unrelated king move")
+    val forged = retained.copy(original = king)
+    assert(RootQuestionSummary.realize(paths, pair,
+      answer.copy(core = List(Section(List(forged))))).isEmpty)
+    val falseRole = retained.copy(retained = retained.retained.map(_.copy(current = king)))
+    assert(RootQuestionSummary.realize(paths, pair,
+      answer.copy(core = List(Section(List(falseRole))))).isEmpty)
+
+  test("different root capture victims do not become the first target question"):
+    val rows = List(List("d4d8", "h8h7"), List("d4e4", "d8d1", "h1h2"))
+    val (packet, paths) = prepare("3q3k/8/8/8/3Qr3/8/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    assert(RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).isEmpty)
+
+  test("equal target outcomes and equal prices do not define the choice's core answer"):
+    val rows = List(List("a4a8", "h8h7"), List("a4d1", "a8a7", "d1a4", "a7a6", "a4a6", "h8g8"))
+    val (packet, paths) = prepare("r6k/8/8/8/Q7/8/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    assert(RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).isEmpty,
+      "the same rook removal at a different recorded time is not enough to replace another question")
+
+  test("a retained target's final position proof does not select an unrelated final capture"):
+    val rows = List(List("a4a8", "h8h7"), List("a4d1", "a8a7", "c3c4", "b5c4"))
+    val (packet, paths) = prepare("r6k/8/8/1p6/Q7/2P5/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val answer = RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).get
+    val incidental = MoveRef(pair(1), 3)
+    assert(answer.core.flatMap(_.references).contains(incidental), "the survival proof owns the exact end position")
+    assert(!answer.core.flatMap(_.actionReferences).contains(incidental))
+    assert(!answer.core.flatMap(_.covered).contains(incidental))
+    assert(answer.details.flatMap(_.covered).contains(incidental), "the full exchange ledger remains available")
+    val complete = MoveWorkProjection.completeSelectedConditions(packet, paths, pair, positions,
+      MoveWorkProjection.select(packet, paths).local, answer).get
+    assert(!complete.core.flatMap(_.covered).contains(incidental), "proof-only positions cannot seed core prices")
+    assert(RootQuestionSummary.realize(paths, pair, complete).nonEmpty)
+    val unpricedAction = complete.copy(core = complete.core :+ Section(List(Continuation(List(incidental)))))
+    assert(RootQuestionSummary.realize(paths, pair, unpricedAction).isEmpty,
+      "an actual selected capture still requires its material explanation")
+    val original = CommentaryFact.Piece("black", "rook", "a8").witness
+    val current = paths.pieceAfter(packet, pair(1), original, pair(1).moves.size).flatten.get
+    val linkedState = PiecePresence(incidental, original, current)
+    val stateAnswer = complete.copy(core = complete.core :+ Section(List(linkedState), linkedState.references))
+    val stateReading = RootQuestionSummary.realize(paths, pair, stateAnswer).get
+    val stateUnits = (stateReading.json \ "units").as[List[JsObject]]
+    val stateUnit = stateUnits.find(unit => (unit \ "en").as[List[JsValue]].contains(incidental.json)).get
+    assert((stateUnit \ "proof_moves").as[List[JsObject]].contains(incidental.json),
+      "the displayed endpoint SAN remains an exact board proof")
+    assert(!(stateUnit \ "action_moves").as[List[JsObject]].contains(incidental.json),
+      "a linked endpoint does not select its unrelated capture")
+    assert(!stateUnits.flatMap(unit => (unit \ "covered_moves").as[List[JsObject]]).contains(incidental.json))
+
+  test("a surviving target's actual gain belongs to its outcome price"):
+    val rows = List(List("a4a8", "h8h7"), List("a4d1", "a8a2", "h1g1"))
+    val (packet, paths) = prepare("r6k/8/8/8/Q7/8/P7/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val answer = RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).get
+    val outcome = answer.core.flatMap(_.statements).collect {
+      case value: TargetOutcome if value.root.path eq pair(1) => value
+    }.head
+    assert(outcome.removal.isEmpty && outcome.retained.nonEmpty)
+    val gain = MoveRef(pair(1), 1)
+    assert(answer.core.flatMap(_.covered).contains(gain))
+    assert(answer.core.flatMap(_.statements).collect { case value: Material if value.path eq pair(1) => value }
+      .exists(_.cost.whiteAdditionalLosses == List(EvidencePieceRole("pawn") -> 1)))
+    assert(RootQuestionSummary.realize(paths, pair, answer).nonEmpty)
+
+  test("a capture outcome does not evict a different closed root condition and its actual use"):
+    val rows = List(List("a4a8", "h8h7"), List("a4d1", "a8a7", "a1a4", "h8h7"))
+    val (packet, paths) = prepare("r6k/8/8/8/Q7/8/8/R6K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val queen = CommentaryFact.Piece("white", "queen", "a4").witness
+    val rook = CommentaryFact.Piece("white", "rook", "a1").witness
+    val use = SquareReoccupation(MoveRef(pair(1), 0), queen,
+      paths.pieceAfter(packet, pair(1), queen, 1).flatten.get, "a4", MoveRef(pair(1), 2), rook,
+      paths.pieceAfter(packet, pair(1), rook, 3).flatten.get)
+    assert(RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).nonEmpty)
+    assert(RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions,
+      List(Section(List(use), use.references))).isEmpty,
+      "rook survival is not an importance verdict on the separately verified vacancy/use answer")
+
+  test("a dependent capturer's later independent lifetime is not the selected queen's price"):
+    // Already-open World Championship 2016 pair; exact provided lines, no engine.
+    val rows = List(
+      "f8f3 h1g2 f3f7 e3g4 h6h5 g4h2 g6f8 h2f3 f8d7 b2b4 b7b6",
+      "d5d4 f3f8 g6f8 c3d4 e5d4 e3c4 f8d7 f2f4 a8b8 c4e5 d7e5 f4e5"
+    ).map(_.split(" ").toList)
+    val (packet, paths) = prepare("r4rk1/1p4p1/2p1p1np/p2pp3/P3P2P/2PPNQP1/1P3P2/R4R1K b - - 0 24", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val queen = CommentaryFact.Piece("white", "queen", "f3").witness
+    val arm = RootQuestionSummary.prepare(packet, paths, pair, positions).get(1)
+    val removal = arm.captures.find(_.plyOffset == 2).get
+    assertEquals(arm.recovery(removal).map(_.plyOffset), Some(11))
+    assertEquals(arm.continuousRecovery(removal), None)
+    assertEquals(arm.targetAccount(removal, queen).events.map(_.plyOffset), List(1, 2))
+    val answer = RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).get
+    val prices = answer.core.flatMap(_.statements).collect { case value: Material => value }
+    assertEquals(prices.head.cost.events.map(_.plyOffset), List(1, 2))
+    assert(!answer.core.flatMap(_.covered).contains(MoveRef(pair(1), 10)))
+    assert(answer.details.flatMap(_.covered).contains(MoveRef(pair(1), 10)))
+    val complete = MoveWorkProjection.completeSelectedConditions(packet, paths, pair, positions,
+      MoveWorkProjection.select(packet, paths).local, answer).get
+    assert(RootQuestionSummary.realize(paths, pair, complete).nonEmpty)
+
+  test("a narrower target question cannot preserve a selected root use while dropping that user's price"):
+    // Opened WCC 2016 game 11: Re1's actual Rxe4 use also owns the rook trade.
+    val rows = List(
+      "f1e1 d4c3 e1e4 e6b6 g1h1 e8e4 d3e4 b6d6 e4e5 d6a3 e5e6 a3d6 g5f5 d6d1 h1h2 d1d6 h2g1 d6d4 g1h2",
+      "c3d4 e4e3 f1e1 h7h6 g5c5 e6f6 e1e2 e8f8 c5d5 f8f7 d5a8 f7f8"
+    ).map(_.split(" ").toList)
+    val (packet, paths) = prepare("4r1k1/6pp/p3q3/1p4Q1/3pp3/P1PP3P/2P3P1/5RK1 w - - 0 24", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val use = RouteUse(MoveRef(pair.head, 0), MoveRef(pair.head, 2), "rook")
+    assert(RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions, Nil).nonEmpty)
+    assert(RootQuestionSummary.captureTargetAnswer(packet, paths, pair, positions,
+      List(Section(List(use), use.references))).isEmpty,
+      "keeping Rxe4 without its selected rook-loss and recapture price is not content preservation")
+
+  test("a stationary dependent capturer's later new attack cannot reopen a target outcome price"):
+    val rows = List(List("g8g6", "f1g2", "h8h7", "g2e4", "h7h8", "e4g6"), List("g8f8", "h1g1"))
+    val (packet, paths) = prepare("6rk/8/6Q1/8/8/8/P7/5B1K b - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val arm = RootQuestionSummary.prepare(packet, paths, pair, positions).get.head
+    val queen = CommentaryFact.Piece("white", "queen", "g6").witness
+    val gain = arm.captures.find(_.plyOffset == 0).get
+    assertEquals(arm.recovery(gain).map(_.plyOffset), Some(5))
+    assertEquals(arm.continuousRecovery(gain), None)
+    assertEquals(arm.targetAccount(gain, queen).events.map(_.plyOffset), List(0))
+    assertEquals(arm.account(gain, queen).events.map(_.plyOffset), List(0, 5),
+      "the existing broader selected account retains its original scope")
+
+  test("a selected supported countercapture retains the actual ally loss without inventing its legal recapture"):
+    val rows = List(List("h1g1", "a8b8", "d6c5"), List("h1g2", "a8a7"))
+    val (packet, paths) = prepare("rN3r1k/8/3Q4/2n5/8/8/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val arms = RootQuestionSummary.prepare(packet, paths, pair, positions).get
+    val gain = MaterialEvents(pair.head, arms.head.material.events.filter(_.plyOffset == 2))
+    val roots = Continuation(pair.map(MoveRef(_, 0)))
+    val original = Answer("selected_comparison", List(Section(List(roots, gain))), Nil, Nil)
+    val completed = MoveWorkProjection.completeSelectedPrices(arms, original, original.core.flatMap(_.statements)).get
+    val price = completed.core.flatMap(_.statements).collect { case value: Material => value }.head
+    assertEquals(price.cost.events.map(_.plyOffset), List(1, 2))
+    assertEquals(price.cost.commonExchanges, List(EvidencePieceRole("knight") -> 1))
+    assertEquals(price.cost.whiteAdditionalLosses, Nil)
+    assertEquals(price.cost.blackAdditionalLosses, Nil)
+    val recapturePosition = positions(pair.head.positions(2))
+    val recapture = recapturePosition.view.legalRows.get.find(_.move == "d6b8").get
+    val proof = recapturePosition.sourceRefs(List(recapture.sourceId))
+    assert(proof.nonEmpty && proof.forall(arms.head.proofs),
+      "the exact available recapture's owned source is retained as evidence")
+    assert(completed.core.flatMap(_.references).forall(ref => pair.exists(_ eq ref.path)),
+      "the unplayed Qxb8 alternative must not become a move on either recorded path")
+    assert(RootQuestionSummary.realize(paths, pair, completed).nonEmpty)
+
+  test("opposite adjacent captures without selected actor support are not one response price"):
+    val rows = List(List("h1g1", "a8b8", "f5c5"), List("h1g2", "a8a7"))
+    val (packet, paths) = prepare("rN3r1k/8/8/2n2Q2/8/8/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val arms = RootQuestionSummary.prepare(packet, paths, pair, positions).get
+    val gain = MaterialEvents(pair.head, arms.head.material.events.filter(_.plyOffset == 2))
+    val original = Answer("selected_comparison", List(Section(List(Continuation(pair.map(MoveRef(_, 0))), gain))), Nil, Nil)
+    val completed = MoveWorkProjection.completeSelectedPrices(arms, original, original.core.flatMap(_.statements)).get
+    assertEquals(completed.core.flatMap(_.covered).map(_.offset), List(2))
+    assertEquals(completed.core.flatMap(_.statements).collect { case value: Material => value }, Nil)
+
+  test("geometric support with an illegal recapture cannot join a selected countercapture price"):
+    val rows = List(List("d1d2", "a8b8", "d6d8"), List("d1e1", "a8a7"))
+    val (packet, paths) = prepare("rN1r4/7k/3Q4/8/8/8/8/3K4 w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val arms = RootQuestionSummary.prepare(packet, paths, pair, positions).get
+    val queen = CommentaryFact.Piece("white", "queen", "d6").witness
+    val knight = CommentaryFact.Piece("white", "knight", "b8").witness
+    assertEquals(arms.head.control(1, queen, knight), Some(true))
+    assert(!arms.head.position(2).get.view.legalRows.get.exists(_.move == "d6b8"),
+      "the queen is pinned to its king although it geometrically supports b8")
+    val gain = MaterialEvents(pair.head, arms.head.material.events.filter(_.plyOffset == 2))
+    val original = Answer("selected_comparison", List(Section(List(Continuation(pair.map(MoveRef(_, 0))), gain))), Nil, Nil)
+    val completed = MoveWorkProjection.completeSelectedPrices(arms, original, original.core.flatMap(_.statements)).get
+    assertEquals(completed.core.flatMap(_.covered).map(_.offset), List(2))
+    assertEquals(completed.core.flatMap(_.statements).collect { case value: Material => value }, Nil)
+
   test("selected contacts keep original pieces, quiet replies and material cost before wording"):
     val (packet, paths) = rookPair
     val (pair, selected) = select(packet, paths, List(capture, evade))
@@ -95,27 +337,23 @@ class CommentaryAnswerTest extends munit.FunSuite:
     List("Rxa2", "white rook originally on a1", "black rook originally on a8", "captures",
       "still present on a2", "Rb8", "out of the attack", "still present on b8").foreach(words =>
       assert(realized.text.contains(words), realized.text))
-    val korean = (realized.json \ "units").as[List[JsObject]].flatMap(unit => (unit \ "ko").as[List[JsValue]])
-      .collect { case JsString(words) => words }.mkString
-    List("원래 a1에 있던 백 룩", "원래 a8에 있던 흑 룩", "잡습니다", "a2에 남아", "공격을 피합니다", "b8에 남아")
-      .foreach(words => assert(korean.contains(words), korean))
+    val delivered = (realized.json \ "units").as[List[JsObject]]
+    delivered.foreach { unit =>
+      val enRefs = (unit \ "en").as[List[JsValue]].collect { case ref: JsObject => ref }
+      val koRefs = (unit \ "ko").as[List[JsValue]].collect { case ref: JsObject => ref }
+      assertEquals(koRefs, enRefs)
+      if (unit \ "english_only").asOpt[Boolean].contains(true) then
+        assertEquals(unit("ko"), unit("en"))
+    }
     assert(answer.evidence.nonEmpty)
     val graph = packet.evidenceGraph
     val ownedPositions = pair.flatMap(_.positions).toSet
-    val resources = packet.resources.filter(view => ownedPositions(view.position))
-    val semanticSources = resources.flatMap(_.records).collect {
-      case record @ EvidenceRecord(_, fact: RelationFactEvidence, _) => fact.semanticId -> record
-    }.groupMap(_._1)(_._2)
-    // Arm.controlSquare retains canonical relation IDs; LocalCandidate retains
-    // graph record IDs. Each must resolve to eligible evidence on these paths.
-    assert(answer.evidence.exists(id => !graph.byId.contains(id)))
+    // Internal relation IDs resolve at their owning position before delivery.
+    // The complete answer uses the same graph-record contract as local notes.
     answer.evidence.foreach { id =>
-      val records = graph.byId.get(id).toList ++ semanticSources.getOrElse(id, Nil)
-      assert(records.nonEmpty, s"unowned source: $id")
-      records.foreach { record =>
-        assert(ownedPositions(record.ref.position), s"source belongs to another position: $id")
-        assert(graph.byId.get(record.ref.id).contains(record) && graph.proofEligible(record), id)
-      }
+      val record = graph.byId.getOrElse(id, fail(s"unowned source: $id"))
+      assert(ownedPositions(record.ref.position), s"source belongs to another position: $id")
+      assert(graph.proofEligible(record), id)
     }
 
   test("a selected response cannot borrow a longer sibling's ending or another packet's paths"):
@@ -131,7 +369,7 @@ class CommentaryAnswerTest extends munit.FunSuite:
     val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
     assert(RootQuestionSummary.selectedAnswer(packet, paths, foreignPair, positions, Nil).isEmpty)
 
-  test("wording preserves selected references and displayed costs while incomplete realization is rejected"):
+  test("wording preserves selected proof and prices without requiring every proof move inline"):
     val (packet, paths) = rookPair
     val (pair, selected) = select(packet, paths, List(capture, evade))
     val answer = selected.get
@@ -143,27 +381,35 @@ class CommentaryAnswerTest extends munit.FunSuite:
     }
     val units = (realized.json \ "units").as[List[JsObject]].zip(answer.core).map { (unit, section) =>
       RootQuestionSummary.Unit((unit \ "role").as[String], parts(unit("en")), parts(unit("ko")),
-        parts(unit("covered_moves")).collect { case move: MoveRef => move }, section.required, section.focus)
+        parts(unit("covered_moves")).collect { case move: MoveRef => move }, section.required, section.focus,
+        englishOnly = (unit \ "english_only").asOpt[Boolean].contains(true),
+        expressed = CommentaryEnglish.renderedSection(section).expressed)
     }
     assertEquals(units.flatMap(_.focus).map(_.move).toSet, pair.map(MoveRef(_, 0)).toSet)
     for language <- List("en", "ko") do
       val visible = units.flatMap(unit => if language == "en" then unit.en else unit.ko)
         .collect { case move: MoveRef => move }
-      assertEquals(visible.toSet, answer.required.toSet)
+      assert(visible.forall(ref => units.exists(_.proofReferences.contains(ref))))
+      assert(answer.required.forall(ref => units.exists(_.contentReferences.contains(ref))))
       val text = units.map(unit => render(if language == "en" then unit.en else unit.ko, paths)).mkString(" ")
       List("Rxa2", "Rb8").foreach(move => assert(text.contains(move), text))
-      if language == "en" then assert(text.contains("White loses one rook"), text)
-      else assert(text.contains("백은") && text.contains("룩 한 개") && text.contains("내줍니다"), text)
-    val reworded = units.map(unit => unit.copy(en = unit.en.map {
-      case words: String => words.replace(" sequence,", " continuation,")
+      if language == "en" || units.filter(_.covered.nonEmpty).forall(_.englishOnly) then
+        assert(text.contains("White loses one rook"), text)
+      else
+        assert(text.contains("백은") && text.contains("룩 한 개") && text.contains("내줍니다"), text)
+    def reword(parts: List[String | MoveRef]) = parts.map {
+      case words: String => words.replace(" line,", " continuation,")
       case move: MoveRef => move
-    }))
+    }
+    val reworded = units.map(unit => unit.copy(en = reword(unit.en),
+      ko = if unit.englishOnly then reword(unit.ko) else unit.ko))
     val alternate = RootQuestionSummary.fromUnits(paths, pair, answer.question, reworded, answer.evidence).get
     assertNotEquals(alternate.text, realized.text)
     assertEquals(reworded.flatMap(_.refs), units.flatMap(_.refs))
     assertEquals(reworded.flatMap(_.covered), units.flatMap(_.covered))
     assertEquals(reworded.flatMap(_.required), units.flatMap(_.required))
     assertEquals(reworded.flatMap(_.focus), units.flatMap(_.focus))
+    assertEquals(reworded.flatMap(_.expressed), units.flatMap(_.expressed))
     assertEquals(alternate.evidence.toSet, realized.evidence.toSet)
     for missing <- List("cost", "quiet reply", "capture coverage") do
       val incomplete = answer.copy(core = answer.core.map(section => section.copy(statements = section.statements.map {
@@ -204,8 +450,14 @@ class CommentaryAnswerTest extends munit.FunSuite:
       case _ => false
     })
     val realized = RootQuestionSummary.realize(paths, pair, answer).get
-    assert(realized.text.contains("gxf6") && realized.text.contains("one bishop and one rook") &&
+    assert(realized.text.contains("one bishop and one rook") &&
       realized.text.contains("one pawn and one knight"), realized.text)
+    val basic = (realized.json \ "units").as[List[JsObject]]
+    val proof = basic.flatMap(unit => (unit \ "proof_moves").as[List[JsObject]])
+    assert(offsets.map(MoveRef(path, _).json).forall(proof.contains))
+    val inline = basic.flatMap(unit => (unit \ "en").as[List[JsValue]].collect { case move: JsObject => move })
+    assert(!inline.contains(MoveRef(path, 3).json),
+      "a role-count price does not need to repeat the last recapture notation")
     val roots = pair.map(MoveRef(_, 0))
     val scoped = RootQuestionSummary.completePairAnswer(packet, paths, pair, "selected_comparison",
       List(Section(List(Continuation(roots)), roots))).get
@@ -233,12 +485,22 @@ class CommentaryAnswerTest extends munit.FunSuite:
     val finalEvent = material.events.filter(_.plyOffset == end.offset)
     assertEquals(finalEvent.size, 1)
     assert(material.events.size > finalEvent.size)
-    assertEquals(answer.core.flatMap(_.covered).toSet, Set(end),
-      "the final capture is owned without treating its presence anchor as a material interval")
-    assertEquals(answer.core.flatMap(_.statements).collect { case value: MaterialEvents => value.events }, List(finalEvent))
+    assertEquals(answer.core.flatMap(_.covered), Nil,
+      "a position witness does not select the unrelated final capture")
+    assertEquals(answer.core.flatMap(_.statements).collect { case value: MaterialEvents => value.events }, Nil)
     assertEquals(answer.details.flatMap(_.statements).collect { case value: MaterialEvents => value.events }, List(material.events))
     assert(answer.core.flatMap(_.statements).contains(PiecePresence(end, original, current)))
     assert(RootQuestionSummary.realize(paths, pair, answer).nonEmpty)
+
+  test("proof-only root positions do not excuse an actual root capture or check reply"):
+    val rows = List(List("a4a8", "h8h7"), List("a4d1", "a8a7"))
+    val (packet, paths) = prepare("r6k/8/8/8/Q7/8/8/7K w - - 0 1", rows)
+    val pair = rows.map(row => paths.paths.find(_.moves == row).get)
+    val king = CommentaryFact.Piece("black", "king", "h8").witness
+    val core = pair.map(path => Section(List(PiecePresence(MoveRef(path, 0), king, king))))
+    val answer = Answer("selected_comparison", core, Nil, Nil)
+    assert(RootQuestionSummary.realize(paths, pair, answer).isEmpty,
+      "the compared Qa8+ still requires its captured rook and actual check reply")
 
   test("Action wording supplies a subject for relational clauses and a verb after castling"):
     val (packet, paths) = rookPair
@@ -346,6 +608,34 @@ class CommentaryAnswerTest extends munit.FunSuite:
       (unit \ "recorded_end_moves").asOpt[List[JsObject]].getOrElse(Nil))
     assert(ends.contains(MoveRef(stopped, 0).json))
 
+  test("a played move's actual checkmate consequence precedes the alternative's finite material account"):
+    val (packet, paths) = prepare("4r1k1/pp3ppp/2p5/8/8/2P5/PP3PPP/5RK1 w - - 0 1",
+      List(List("f1e1", "e8e1"), List("f1a1", "h7h6")), List(-1))
+    val root = (MoveWorkProjection.select(packet, paths).json \ "candidates").as[List[JsObject]].find(value =>
+      (value \ "detail" \ "type").as[String] == "root_comparison").get
+    val text = (root \ "detail" \ "summary").as[String]
+    assert(text.startsWith("In the Re1 line, White loses one rook. After Rxe1#, Black wins by checkmate."), text)
+    assertEquals(text.sliding("Black wins by checkmate".length).count(_ == "Black wins by checkmate"), 1)
+    assert(text.contains("Ra1"), text)
+
+  test("a quiet losing move retains the first checking reply and its capture before the final mate"):
+    val fen = "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1"
+    val rows = List("f1e1 f6f2 g1h1 f2e1 h1h2 f8f2 h2h3 e1h1 h3g4 h1g1 g4h5 f2h2",
+      "f1f6 f8f6").map(_.split(" ").toList)
+    val (packet, paths) = prepare(fen, rows, List(-6))
+    val root = (MoveWorkProjection.select(packet, paths).json \ "candidates").as[List[JsObject]].find(value =>
+      (value \ "detail" \ "type").as[String] == "root_comparison").get
+    val text = (root \ "detail" \ "summary").as[String]
+    List("Re1", "f2", "Qf2+", "Kh1", "Qxe1+", "Kh2", "Rh2#", "Rxf6").foreach(move =>
+      assert(text.contains(move), text))
+    assert(text.indexOf("Qf2+") < text.indexOf("Black wins by checkmate"), text)
+    assert(text.contains("does not control f2"), text)
+    assert(!text.contains("forced") && !text.contains("only legal"), text)
+    val units = (root \ "detail" \ "summary_question" \ "units").as[List[JsObject]]
+    val visible = units.flatMap(unit => (unit \ "en").as[List[JsValue]].collect { case ref: JsObject => ref }).toSet
+    val actual = paths.paths.find(_.moves == rows.head).get
+    assert((1 to 4).forall(offset => visible(MoveRef(actual, offset).json)))
+
   test("the actual terminal occurrence remains distinct from a finite observed prefix"):
     val line = "g7g8q h4h3 f6f5 h3h2 f5e4 h2h3 e4f3 h3h2 g8g2".split(" ").toList
     val later = "f6f5 h4g3 f5e4 g3g2 e4e3 g2g3 g7g8q g3h3 e3e4 h3h2 e4f4 h2h1 f4f3 h1h2 g8g2".split(" ").toList
@@ -376,12 +666,19 @@ class CommentaryAnswerTest extends munit.FunSuite:
     val realized = RootQuestionSummary.realize(paths, pair, answer).get
     assert(realized.text.contains("g8=Q promotes to a queen") && realized.text.contains("Qg2#") &&
       realized.text.contains("White wins by checkmate"), realized.text)
+    val completedAgain = RootQuestionSummary.completePairAnswer(packet, paths, pair,
+      answer.question, answer.core).get
+    assertEquals(completedAgain.core.flatMap(_.statements).collect { case value: Terminal => value }, endings)
+    assert(answer.required.forall(completedAgain.required.contains))
+    val again = RootQuestionSummary.realize(paths, pair, completedAgain).get.text
+    assertEquals(again.sliding("White wins by checkmate".length).count(_ == "White wins by checkmate"), 1)
     val root = (MoveWorkProjection.select(packet, paths).json \ "candidates").as[List[JsObject]].find(value =>
       (value \ "detail" \ "type").as[String] == "root_comparison").get
     assertEquals((root \ "detail" \ "summary_kind").as[String], "question_answer")
     assertEquals((root \ "detail" \ "summary_question" \ "question").as[String], "observed_terminal_comparison")
     val displayed = (root \ "detail" \ "summary").as[String]
     List("g8=Q", "Qg2#", "White wins by checkmate").foreach(required => assert(displayed.contains(required), displayed))
+    assertEquals(displayed.sliding("White wins by checkmate".length).count(_ == "White wins by checkmate"), 1)
     val visible = (root \ "detail" \ "summary_question" \ "units").as[List[JsObject]].flatMap(unit =>
       (unit \ "en").as[List[JsValue]].collect { case ref: JsObject => ref }).toSet
     assert(answer.required.map(_.json).toSet.subsetOf(visible))

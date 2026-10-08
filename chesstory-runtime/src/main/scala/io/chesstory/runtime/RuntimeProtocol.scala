@@ -341,7 +341,7 @@ object RuntimeProtocol:
         "accepted_ply_count" -> line.acceptedPlyCount, "reason" -> stop.wireId))
     }
     val observations = Json.obj("statements" -> statements, "paths" -> (paths ++ historyPath),
-      "positions" -> resources.map(PositionResourceProtocol.json)) ++
+      "positions" -> preparedPaths.resourceJson) ++
       Option.when(issues.nonEmpty)(Json.obj("input_issues" -> issues)).getOrElse(Json.obj())
     val projection = MoveWorkProjection.select(packet, preparedPaths)
     val trajectories = if continuationReadings.nonEmpty then continuationReadings
@@ -424,7 +424,7 @@ object RuntimeProtocol:
     val comparedLines = continuationComparisons.flatMap(_.lineIds).toSet
     // Quiet paths are only presented here when a selected pair exposes a concrete later functional difference.
     val shownTrajectories = trajectories.filter(reading => reading.events.nonEmpty ||
-      reading.captureExposures.nonEmpty || comparedLines(reading.path.line.ref.id))
+      reading.captureExposures.nonEmpty || reading.path.moves.size > 1 && comparedLines(reading.path.line.ref.id))
     val trajectoryIds = shownTrajectories.map(reading => reading.path.line.ref.id -> reading.id).toMap
     def withTrajectories(candidate: JsObject): JsObject =
       val lines = (candidate \ "line_ids").as[List[String]]
@@ -454,6 +454,17 @@ object RuntimeProtocol:
         contexts((candidate \ "id").as[String]) = context
         candidate))
     val sharedQuestions = scala.collection.mutable.Map.empty[String, JsObject]
+    val replySpaces = CommentaryIdea.replySpaces(proposalEntries).filter(_.verified)
+    val reserveEntries = CommentaryIdea.reserveEntries(proposalEntries).filter(value => value.verified &&
+      RootSubjectComparison.strongestReserveCounter(packet, preparedPaths, value, responseSearches))
+    val directReserveEntries = CommentaryIdea.directReserveEntries(proposalEntries).filter(_.verified)
+    val reserveHolds = CommentaryIdea.reserveHolds(proposalEntries).filter(value => value.verified &&
+      RootSubjectComparison.strongestReserveHold(packet, preparedPaths, value, responseSearches))
+    val reserveTimings = CommentaryIdea.reserveTimings(proposalEntries)
+    val reserveResponses = CommentaryIdea.reserveResponses(proposalEntries)
+    val replyFunctions = FunctionalReplyReading.read(proposalEntries)
+    val firstTargets = TargetResponseInvestigation.firstTargets(packet, preparedPaths,
+      responseInquiries, responseSearches)
     val rootCandidates = (projection.baseJson \ "candidates").as[List[JsObject]].map { candidate =>
       val detail = (candidate \ "detail").as[JsObject]
       val pair = (candidate \ "line_ids").as[List[String]]
@@ -471,7 +482,33 @@ object RuntimeProtocol:
           (other \ "detail" \ "prefix_moves_uci").as[List[String]].isEmpty &&
           (other \ "detail" \ "evaluation_relation").asOpt[String].nonEmpty
       }
-      val composed = projection.withSharedMoveEffects((candidate -> Nil) :: peers.map(other =>
+      val rootContext = replySpaces.filter(space =>
+        List(space.owner.answer.referenceLineId, space.owner.answer.alternativeLineId).sorted == pair.sorted)
+        .map(space => MoveWorkProjection.Context("", replySpace = Some(space))) ++
+        reserveEntries.filter(value =>
+          List(value.owner.answer.referenceLineId, value.owner.answer.alternativeLineId).sorted == pair.sorted)
+          .map(value => MoveWorkProjection.Context("", reserveEntry = Some(value))) ++
+        directReserveEntries.filter(value =>
+          List(value.owner.answer.referenceLineId, value.owner.answer.alternativeLineId).sorted == pair.sorted)
+          .map(value => MoveWorkProjection.Context("", directReserveEntry = Some(value))) ++
+        reserveHolds.filter(value =>
+          List(value.owner.answer.referenceLineId, value.owner.answer.alternativeLineId).sorted == pair.sorted)
+          .map(value => MoveWorkProjection.Context("", reserveHold = Some(value))) ++
+        reserveTimings.filter(value =>
+          List(value.owner.answer.referenceLineId, value.owner.answer.alternativeLineId).sorted == pair.sorted)
+          .map(value => MoveWorkProjection.Context("", reserveTiming = Some(value))) ++
+        reserveResponses.filter(value =>
+          List(value.owner.answer.referenceLineId, value.owner.answer.alternativeLineId).sorted == pair.sorted)
+          .map(value => MoveWorkProjection.Context("", reserveResponse = Some(value))) ++
+        replyFunctions.filter(value =>
+          preparedPaths.paths.exists(path => pair.contains(path.line.ref.id) &&
+            path.moves.headOption.contains(value.owner.comparison.referenceMove)))
+          .map(value => MoveWorkProjection.Context("", replyFunction = Some(value))) ++
+        firstTargets.filter(value => pair.flatMap(id => preparedPaths.path(packet, id)).exists(path =>
+          path.moves.headOption.contains(value.question.rootMove) &&
+            path.ids.headOption.contains(value.question.rootMoveOccurrenceId)))
+          .map(value => MoveWorkProjection.Context("", firstTarget = Some(value)))
+      val composed = projection.withSharedMoveEffects((candidate -> rootContext) :: peers.map(other =>
         other -> contexts((other \ "id").as[String])))
       composed.foreach(retainEffects)
       composed.tail.foreach(other => sharedQuestions((other \ "id").as[String]) = other)
@@ -488,7 +525,11 @@ object RuntimeProtocol:
         "candidate_ids" -> List((candidate \ "id").as[String])))
     val additions = questionComparisons ++ (pvComparisons.map(value => withFreshEffects(value.candidateJson(packet))) ++
       targetReadings.map(_.candidateJson(packet))).map(withTrajectories) ++
-      shownTrajectories.map(_.candidateJson(packet)) ++ continuationComparisons.map(_.candidateJson(packet))
+      shownTrajectories.map(_.candidateJson(packet)) ++ continuationComparisons.map { reading =>
+        val candidate = reading.candidateJson(packet)
+        candidate + ("detail" -> ((candidate \ "detail").as[JsObject] +
+          ("continuation_candidate_ids" -> Json.toJson(reading.lineIds.flatMap(trajectoryIds.get)))))
+      }
     val compared = rootSelection ++ Option.when(additions.nonEmpty)(Json.obj("candidates" ->
       ((rootSelection \ "candidates").as[List[JsObject]] ++ additions),
       "scenes" -> ((rootSelection \ "scenes").as[List[JsObject]] ++ questionScenes)))

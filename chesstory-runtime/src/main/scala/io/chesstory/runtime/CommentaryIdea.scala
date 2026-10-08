@@ -14,6 +14,34 @@ private[runtime] object CommentaryIdea:
 
   final case class AnsweredComparison(proposalId: String, comparison: CompareMoves,
       answer: CommentaryInvestigation.Answer)
+
+  // A small ordering difference cannot remove a comparable reply from the
+  // explanation's investigation. This only admits its owned continuation;
+  // the final functional comparison still has to prove its separate claim.
+  def comparableReserveArm(answer: CommentaryInvestigation.Answer, arm: String): Boolean =
+    Set("reference", "alternative")(arm) && Set("better", "worse", "equal")(answer.evaluationRelation) &&
+      (answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Close) ||
+        answer.evaluationRelation == "equal" || arm ==
+          (if answer.evaluationRelation == "better" then "alternative" else "reference"))
+
+  private def reserveAncestors(entry: Entry, name: String): Option[List[(AnsweredComparison, String)]] =
+    val facts = entry.request.requirements.collect { case value: Fact => value.id -> value }.toMap
+    val readings = entry.readings.map(value => value.requirementId -> value).toMap
+    val pairs = entry.request.requirements.collect {
+      case value: CompareMoves if value.id.startsWith(name + "_ancestor_") => value
+    }.sortBy(_.id)
+    val ancestors = pairs.flatMap { pair =>
+      for
+        answer <- readings.get(pair.id).flatMap(_.answer)
+        binding <- facts.get(pair.id + "_binding")
+        arm <- binding.path.source match
+          case Comparison(id, arm) if id == pair.id => Some(arm)
+          case _ => None
+        if comparableReserveArm(answer, arm) &&
+          readings.get(binding.id).exists(_.state == "supported")
+      yield AnsweredComparison(entry.request.id, pair, answer) -> arm
+    }
+    Option.when(ancestors.size == pairs.size && ancestors.size <= 2)(ancestors)
   // Retain the existing proof match for presentation. These are references to
   // certified requirements, not another reader or an estimate of move strength.
   final case class Mechanism(condition: FactComparison, before: Fact, after: Fact,
@@ -23,6 +51,333 @@ private[runtime] object CommentaryIdea:
       remainder: String = "", facts: Option[(Fact, Fact)] = None)
 
   final case class Key(anchor: List[String], move: String, branch: List[String], action: Predicate, loss: Boolean)
+
+  /** A verified root difference justifies looking for the retained option's
+    * use. It does not yet justify calling that option the reason for the gap. */
+  def reservedOptions(entries: List[Entry]): List[(Entry, AnsweredComparison)] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-use" then Nil
+    else
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      for
+        root <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_root" => value }
+        if root.prefixMovesUci.isEmpty && List("reserve_before", "reserve_after", "reserve_kept").forall(id =>
+          readings.get(id).exists(_.state == "supported"))
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+      yield entry -> AnsweredComparison(entry.request.id, root, answer)
+  }
+
+  final case class ReserveResponse(owner: AnsweredComparison, test: CompareMoves,
+      answer: Option[CommentaryInvestigation.Answer])
+
+  def reserveResponses(entries: List[Entry]): List[ReserveResponse] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-response" then Nil
+    else
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      for
+        root <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_root" => value }
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if root.prefixMovesUci.isEmpty && answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "reserve_response_context" => value }
+        if context.mode == "all" && (context.id :: context.members).forall(id => readings.get(id).exists(_.state == "supported"))
+        test <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_response" => value }
+        if test.prefixMovesUci == List(root.alternativeMove)
+      yield ReserveResponse(AnsweredComparison(entry.request.id, root, answer), test, readings.get(test.id).flatMap(_.answer))
+  }.distinct
+
+  final case class CurrentDuty(owner: AnsweredComparison, actual: CompareMoves, alternative: CompareMoves,
+      actualAnswer: Option[CommentaryInvestigation.Answer], alternativeAnswer: Option[CommentaryInvestigation.Answer])
+
+  def currentDuties(entries: List[Entry]): List[CurrentDuty] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-current-support-duty" then Nil
+    else
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      val pairs = entry.request.requirements.collect { case value: CompareMoves => value.id -> value }.toMap
+      for
+        root <- pairs.get("duty_root").toList if root.prefixMovesUci.isEmpty
+        answer <- readings.get(root.id).flatMap(_.answer).toList if Set("better", "worse", "equal")(answer.evaluationRelation)
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "duty_context" => value }
+        if context.mode == "all" && (context.id :: context.members).forall(id => readings.get(id).exists(_.state == "supported"))
+        actual <- pairs.get("duty_current_choice").toList
+        alternative <- pairs.get("duty_other_choice").toList
+        if actual.prefixMovesUci.size == 2 && alternative.prefixMovesUci.size == 2 &&
+          actual.prefixMovesUci.head == root.referenceMove && alternative.prefixMovesUci.head == root.alternativeMove &&
+          actual.prefixMovesUci.last == alternative.prefixMovesUci.last &&
+          actual.referenceMove == alternative.referenceMove
+      yield CurrentDuty(AnsweredComparison(entry.request.id, root, answer), actual, alternative,
+        readings.get(actual.id).flatMap(_.answer), readings.get(alternative.id).flatMap(_.answer))
+  }.distinct
+
+  final case class ReserveTiming(owner: AnsweredComparison, test: CompareMoves,
+      answer: Option[CommentaryInvestigation.Answer], source: Option[AnsweredComparison], sourceArm: String)
+
+  def reserveTimings(entries: List[Entry]): List[ReserveTiming] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-timing" then Nil
+    else
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      for
+        root <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_root" => value }
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if root.prefixMovesUci.isEmpty && answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "timing_context" => value }
+        if context.mode == "all" && (context.id :: context.members).forall(id => readings.get(id).exists(_.state == "supported"))
+        test <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_timing" => value }
+        if test.prefixMovesUci.size == 2 && test.prefixMovesUci.head == root.alternativeMove &&
+          test.referenceMove == root.referenceMove && entry.generatedArms.exists(arm =>
+            Set(root.id, test.id, context.id).subsetOf(arm.headRequirementIds.toSet))
+        binding <- entry.request.requirements.collect { case value: Fact if value.id == "timing_current" => value.path.source }
+        arm <- (binding match
+          case Comparison(_, arm) => Some(arm)
+          case _ => None).toList
+        source = entry.request.requirements.collectFirst { case value: CompareMoves if value.id == "timing_source" => value }
+          .flatMap(value => readings.get(value.id).flatMap(_.answer).map(answer =>
+            AnsweredComparison(entry.request.id, value, answer)))
+        if source.fold(binding == Comparison(root.id, "alternative"))(value =>
+          binding == Comparison(value.comparison.id, arm) && value.comparison.prefixMovesUci == test.prefixMovesUci.take(1) &&
+            comparableReserveArm(value.answer, arm))
+      yield ReserveTiming(AnsweredComparison(entry.request.id, root, answer), test,
+        readings.get(test.id).flatMap(_.answer), source, arm)
+  }.distinct
+
+  final case class ReserveHold(owner: AnsweredComparison, test: CompareMoves,
+      testAnswer: Option[CommentaryInvestigation.Answer], branch: List[String],
+      pawn: Piece, king: Piece, evidence: List[String], source: Option[AnsweredComparison], sourceArm: String,
+      ancestors: List[(AnsweredComparison, String)] = Nil):
+    def offset: Int = branch.size - 1
+    def verified: Boolean = testAnswer.exists(answer => answer.evaluationRelation == "better" &&
+      answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated))
+
+  def reserveHolds(entries: List[Entry]): List[ReserveHold] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-hold" then Nil
+    else
+      val facts = entry.request.requirements.collect { case value: Fact => value.id -> value }.toMap
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      for
+        ancestors <- reserveAncestors(entry, "hold").toList
+        root <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_root" => value }
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if root.prefixMovesUci.isEmpty && answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "hold_context" => value }
+        if context.mode == "all" && (context.id :: context.members).forall(id => readings.get(id).exists(_.state == "supported"))
+        test <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_hold" => value }
+        if entry.generatedArms.exists(arm => arm.prefixMoves.isEmpty && arm.referenceMove == root.referenceMove &&
+          Set(root.id, test.id, context.id).subsetOf(arm.headRequirementIds.toSet))
+        start <- facts.get("hold_start").toList
+        branch <- (start.path.source match
+          case Declared(moves) => Some(moves)
+          case _ => None).toList
+        if branch.size > 1 && branch.head == root.alternativeMove && branch.last == root.referenceMove &&
+          start.at == Ply(branch.size - 1) && test.prefixMovesUci == branch.init && test.alternativeMove == branch.last
+        pawn <- start.predicate.subject.toList if pawn.role == "pawn"
+        king <- facts.get("hold_king").flatMap(_.predicate.subject).toList if king.role == "king" && king.side == pawn.side
+        current <- facts.get("hold_current").toList if current.path.extend
+        binding <- (current.path.source match
+          case Comparison(id, arm) => Some(id -> arm)
+          case _ => None).toList
+        source = entry.request.requirements.collectFirst { case value: CompareMoves if value.id == "hold_source" => value }
+          .flatMap(value => readings.get(value.id).flatMap(_.answer).map(answer =>
+            AnsweredComparison(entry.request.id, value, answer)))
+        if binding == (root.id -> "alternative") && source.isEmpty || source.exists(value =>
+          binding._1 == value.comparison.id && value.comparison.prefixMovesUci.headOption.contains(root.alternativeMove) &&
+            comparableReserveArm(value.answer, binding._2))
+      yield ReserveHold(AnsweredComparison(entry.request.id, root, answer), test,
+        readings.get(test.id).flatMap(_.answer), branch, pawn, king,
+        entry.readings.flatMap(_.result.toList.flatMap(_.samples.flatMap(_.sourceIds))).distinct, source, binding._2, ancestors)
+  }.distinct
+
+  final case class ReserveEntry(owner: AnsweredComparison, test: CompareMoves,
+      testAnswer: Option[CommentaryInvestigation.Answer], branch: List[String], first: Int, last: Int,
+      pawn: Piece, king: Piece, guard: Piece, square: String, evidence: List[String],
+      source: Option[AnsweredComparison] = None, sourceArm: String = "alternative",
+      ancestors: List[(AnsweredComparison, String)] = Nil,
+      optionTest: Option[CompareMoves] = None, optionAnswer: Option[CommentaryInvestigation.Answer] = None):
+    // The relative score of two already losing defenses is not the mechanism.
+    // A completed comparison supplies real reply paths; their physical outcome
+    // is independently required by the selected-answer validator.
+    def verified: Boolean = testAnswer.exists(answer => Set("better", "worse", "equal")(answer.evaluationRelation))
+
+  def reserveEntries(entries: List[Entry]): List[ReserveEntry] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-entry" then Nil
+    else
+      val facts = entry.request.requirements.collect { case value: Fact => value.id -> value }.toMap
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      def supported(id: String) = readings.get(id).exists(_.state == "supported")
+      for
+        ancestors <- reserveAncestors(entry, "reserve").toList
+        root <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_root" => value }
+        if root.prefixMovesUci.isEmpty
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "reserve_context" => value }
+        if context.mode == "all" && supported(context.id) && context.members.forall(supported)
+        test <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_counter" => value }
+        if entry.generatedArms.exists(arm => arm.prefixMoves.isEmpty && arm.referenceMove == root.referenceMove &&
+          Set(root.id, test.id, context.id).subsetOf(arm.headRequirementIds.toSet))
+        start <- facts.get("reserve_start").toList
+        finish <- facts.get("reserve_finish").toList
+        first <- (start.at match
+          case Ply(n) => Some(n)
+          case _ => None).toList
+        last <- (finish.at match
+          case Ply(n) => Some(n - 1)
+          case _ => None).toList
+        branch <- (start.path.source match
+          case Declared(moves) => Some(moves)
+          case _ => None).toList
+        if first > 0 && first <= last && branch.size == last + 3 && branch.head == root.alternativeMove &&
+          branch(first) == root.referenceMove && finish.path == start.path &&
+          test.prefixMovesUci == branch.take(last + 1) && test.referenceMove == branch(last + 1)
+        pawn <- start.predicate.subject.toList if pawn.role == "pawn" && finish.predicate.subject.contains(pawn)
+        king <- facts.get("reserve_king").flatMap(_.predicate.subject).toList if king.role == "king" && king.side == pawn.side
+        guardFact <- facts.get("reserve_guard").toList
+        guard <- guardFact.predicate.subject.toList if guard.role == "king" && guard.side != king.side
+        square <- guardFact.predicate.square.toList if square == branch.last.slice(2, 4)
+        current <- facts.get("reserve_current").toList
+        binding <- (current.path.source match
+          case Comparison(id, arm) => Some(id -> arm)
+          case _ => None).toList
+        source = entry.request.requirements.collectFirst { case value: CompareMoves if value.id == "reserve_source" => value }
+          .flatMap(value => readings.get(value.id).flatMap(_.answer).map(answer =>
+            AnsweredComparison(entry.request.id, value, answer)))
+        if binding == (root.id -> "alternative") && source.isEmpty || source.exists(value =>
+          binding._1 == value.comparison.id && value.comparison.prefixMovesUci.headOption.contains(root.alternativeMove) &&
+            comparableReserveArm(value.answer, binding._2))
+        if current.path.extend && facts.get("reserve_current_entry").exists(fact =>
+          fact.path.source == Declared(branch) && !fact.path.extend)
+        optionTest = entry.request.requirements.collectFirst { case value: CompareMoves if value.id == "reserve_entry_value" => value }
+        if optionTest.forall(test => test.prefixMovesUci == branch.init && test.referenceMove == branch.last)
+      yield ReserveEntry(AnsweredComparison(entry.request.id, root, answer), test,
+        readings.get(test.id).flatMap(_.answer), branch, first, last, pawn, king, guard, square,
+        entry.readings.flatMap(_.result.toList.flatMap(_.samples.flatMap(_.sourceIds))).distinct, source, binding._2, ancestors,
+        optionTest, optionTest.flatMap(test => readings.get(test.id).flatMap(_.answer)))
+  }.distinct
+
+  /** A negative root effect: an ally loses a useful response to the actual
+    * first attack. The root comparison and the counterfactual child comparison
+    * keep separate receipts; neither score is substituted for the other. */
+  /** The counter resources have already been spent at this decision. This
+    * explicit mode owns an entry-value comparison, never a fictitious pawn
+    * counter or a successful missing receipt. */
+  final case class DirectReserveEntry(owner: AnsweredComparison, test: CompareMoves,
+      testAnswer: Option[CommentaryInvestigation.Answer], branch: List[String], offset: Int,
+      pawn: Piece, king: Piece, guard: Piece, square: String, evidence: List[String],
+      source: Option[AnsweredComparison] = None, sourceArm: String = "alternative",
+      ancestors: List[(AnsweredComparison, String)] = Nil):
+    def verified: Boolean = testAnswer.exists(comparableReserveArm(_, "reference"))
+
+  def directReserveEntries(entries: List[Entry]): List[DirectReserveEntry] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-entry" then Nil
+    else
+      val facts = entry.request.requirements.collect { case fact: Fact => fact.id -> fact }.toMap
+      val readings = entry.readings.map(reading => reading.requirementId -> reading).toMap
+      def supported(id: String) = readings.get(id).exists(_.state == "supported")
+      for
+        ancestors <- reserveAncestors(entry, "reserve").toList
+        root <- entry.request.requirements.collect { case pair: CompareMoves if pair.id == "reserve_root" => pair }
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if root.prefixMovesUci.isEmpty && answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+        context <- entry.request.requirements.collect { case group: FactGroup if group.id == "direct_context" => group }
+        if context.mode == "all" && (context.id :: context.members).forall(supported)
+        test <- entry.request.requirements.collect { case pair: CompareMoves if pair.id == "reserve_entry_value" => pair }
+        if entry.generatedArms.exists(arm => arm.prefixMoves.isEmpty && arm.referenceMove == root.referenceMove &&
+          Set(root.id, context.id, test.id).subsetOf(arm.headRequirementIds.toSet))
+        start <- facts.get("direct_wait").toList
+        offset <- (start.at match
+          case Ply(n) => Some(n - 1)
+          case _ => None).toList
+        currentEntry <- facts.get("direct_entry").toList
+        branch <- (currentEntry.path.source match
+          case Declared(moves) => Some(moves)
+          case _ => None).toList
+        if offset > 0 && branch.size == offset + 3 && branch.head == root.alternativeMove &&
+          branch(offset) == root.referenceMove && test.prefixMovesUci == branch.init &&
+          test.referenceMove == branch.last && currentEntry.at == Ply(branch.size)
+        pawn <- start.predicate.subject.toList if pawn.role == "pawn"
+        king <- facts.get("direct_king").flatMap(_.predicate.subject).toList if king.role == "king" && king.side == pawn.side
+        guardFact <- facts.get("direct_guard").toList
+        guard <- guardFact.predicate.subject.toList if guard.role == "king" && guard.side != king.side
+        square <- guardFact.predicate.square.toList if square == branch.last.slice(2, 4) &&
+          currentEntry.predicate == Predicate("location", Some(king))
+        current <- facts.get("direct_live").toList if current.path.extend
+        binding <- (current.path.source match
+          case Comparison(id, arm) => Some(id -> arm)
+          case _ => None).toList
+        source = entry.request.requirements.collectFirst { case pair: CompareMoves if pair.id == "reserve_source" => pair }
+          .flatMap(pair => readings.get(pair.id).flatMap(_.answer).map(answer => AnsweredComparison(entry.request.id, pair, answer)))
+        if binding == (root.id -> "alternative") && source.isEmpty || source.exists(value =>
+          binding._1 == value.comparison.id && value.comparison.prefixMovesUci.headOption.contains(root.alternativeMove) &&
+            comparableReserveArm(value.answer, binding._2))
+      yield DirectReserveEntry(AnsweredComparison(entry.request.id, root, answer), test,
+        readings.get(test.id).flatMap(_.answer), branch, offset, pawn, king, guard, square,
+        entry.readings.flatMap(_.result.toList.flatMap(_.samples.flatMap(_.sourceIds))).distinct,
+        source, binding._2, ancestors)
+  }.distinct
+
+  final case class ReplySpace(owner: AnsweredComparison, test: CompareMoves,
+      testAnswer: Option[CommentaryInvestigation.Answer], actual: List[String],
+      alternative: List[String], blocker: Piece, challenged: Piece, attacker: Piece,
+      square: String, evidence: List[String]):
+    def verified: Boolean = testAnswer.exists(answer => answer.evaluationRelation == "worse" &&
+      answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated))
+
+  def replySpaces(entries: List[Entry]): List[ReplySpace] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reply-space" then Nil
+    else
+      val facts = entry.request.requirements.collect { case fact: Fact => fact.id -> fact }.toMap
+      val pairs = entry.request.requirements.collect { case pair: CompareMoves => pair.id -> pair }.toMap
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      def fact(id: String) = facts.get(id)
+      def declared(fact: Fact) = fact.path.source match
+        case Declared(moves) => Some(moves)
+        case _ => None
+      def supported(id: String) = readings.get(id).exists(reading =>
+        Set("supported", "observed")(reading.state))
+      for
+        root <- pairs.get("constraint_root").toList if root.prefixMovesUci.isEmpty
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        // Even close root choices can differ in a concrete useful response.
+        // Investigate it; the separate child test must establish its value.
+        if answer.evaluationRelation == "better" && answer.qualityBand.nonEmpty
+        test <- pairs.get("constraint_reply").toList
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "constraint_context" => value }
+        if context.mode == "all" && supported(context.id) && context.members.forall(supported) &&
+          entry.generatedArms.exists(arm => arm.prefixMoves.isEmpty && arm.referenceMove == root.referenceMove &&
+            Set(root.id, test.id, context.id).subsetOf(arm.headRequirementIds.toSet))
+        before <- fact("constraint_before").toList
+        after <- fact("constraint_after").toList
+        actual <- declared(before).toList if actual.size == 3 && actual.head == root.referenceMove &&
+          declared(after).contains(actual) && before.at == Ply(0) && after.at == Ply(1) &&
+          before.predicate == after.predicate && before.predicate.kind == "location"
+        blocker <- before.predicate.subject.toList
+        blocked <- fact("constraint_blocked").toList
+        available <- fact("constraint_available").toList
+        alternative <- declared(available).toList if alternative == List(root.alternativeMove, actual(1)) &&
+          declared(blocked).contains(actual.take(2)) && blocked.at == Ply(2) && available.at == Ply(2) &&
+          blocked.predicate == available.predicate && blocked.predicate.kind == "legal_move" &&
+          test.prefixMovesUci == alternative && test.alternativeMove == actual(2)
+        challenged <- blocked.predicate.subject.toList
+        square <- blocked.predicate.square.toList if square == actual.head.slice(2, 4) &&
+          test.referenceMove == challenged.square + square && blocker != challenged && blocker.side == challenged.side
+        attack <- fact("constraint_attack").toList if attack.predicate.kind == "control" &&
+          attack.predicate.square.contains(challenged.square) && declared(attack).contains(actual.take(2))
+        attacker <- attack.predicate.subject.toList if attacker.side != challenged.side
+        // The historical hypothetical line cannot survive a changed current PV.
+        currentAttack <- fact("constraint_current_attack").toList
+        currentRetreat <- fact("constraint_current_retreat").toList
+        if List(currentAttack, currentRetreat).forall(fact =>
+          fact.path.source == Comparison(root.id, "reference") && supported(fact.id)) &&
+          currentAttack.predicate.subject.contains(attacker) && currentRetreat.predicate.subject.contains(challenged)
+      yield ReplySpace(AnsweredComparison(entry.request.id, root, answer), test,
+        readings.get(test.id).flatMap(_.answer), actual, alternative, blocker, challenged, attacker, square,
+        entry.readings.flatMap(_.result.toList.flatMap(_.samples.flatMap(_.sourceIds))).distinct)
+  }.distinct
+
   final case class Member(entry: Entry, key: Key, observation: Fact):
     val requirements = entry.request.requirements.map(value => value.id -> value).toMap
     val readings = entry.readings.map(value => value.requirementId -> value).toMap
@@ -32,9 +387,13 @@ private[runtime] object CommentaryIdea:
       value.result.exists(_.reason.contains("event_absent")))
     def values(id: String): List[String] = readings.get(id).toList.flatMap(_.result.toList
       .flatMap(_.samples.flatMap(_.value))).distinct
+    private val currentScope = requirements.get("sacrifice_current").collect {
+      case group: FactGroup if key.loss => group.members.toSet
+    }
     val current = entry.request.requirements.collect {
-      case fact @ Fact(_, Path(_, Comparison(id, "reference"), _), _, _: Event, _, _) if
-          comparisons.exists(value => value.id == id && value.prefixMovesUci == key.anchor && value.referenceMove == key.move) => fact
+      case fact @ Fact(_, Path(_, Comparison(id, "reference"), _), _, at, _, _) if
+          comparisons.exists(value => value.id == id && value.prefixMovesUci == key.anchor && value.referenceMove == key.move) &&
+          currentScope.forall(_(fact.id)) && (currentScope.nonEmpty || at.isInstanceOf[Event]) => fact
     }
     val withdrawn = current.exists(fact => absent(fact.id))
     val currentConfirmed = current.nonEmpty && current.forall(fact => supported(fact.id))
@@ -139,12 +498,36 @@ private[runtime] object CommentaryIdea:
         .filterNot(id => requirements(id).isInstanceOf[CompareMoves]).forall(supported))
 
     private lazy val contexts = comparisons.map(value => value.id -> comparisonContext(entry, value, readyOnly = true)).toMap
-    def explains(value: CompareMoves): Boolean = !key.loss || contexts.getOrElse(value.id, Nil).exists {
-      case fact if fact.id.startsWith("sacrifice_") && !fact.id.startsWith("sacrifice_loss_") &&
-          !fact.id.endsWith("_role") && supported(fact.id) => fact.at match
-        case event: Event => event.fromPly >= key.branch.size
-        case Ply(count) => count > key.branch.size
-      case _ => false
+    // A returned realization can differ from the root realization even when
+    // both comparisons begin with the same move. Keep the score and question;
+    // use only that comparison's own supported return as compensation evidence.
+    private def realizedContext(value: CompareMoves): List[Fact] =
+      val groupId = if value.id == "sacrifice_value" then "sacrifice_current"
+        else s"sacrifice_reply_${value.id}"
+      requirements.get(groupId) match
+        case Some(group: FactGroup) if readings.get(value.id).exists(_.answer.nonEmpty) =>
+          if supported(group.id) && group.members.forall(supported) then
+            group.members.flatMap(id => requirements.get(id).collect { case fact: Fact => fact })
+          else Nil
+        // The witnessed context justifies asking an unanswered comparison;
+        // it never supplies a missing returned realization after completion.
+        case _ => contexts.getOrElse(value.id, Nil)
+
+    def compensationFacts: List[Fact] =
+      if currentScope.nonEmpty then current.filter(fact => supported(fact.id))
+      else entry.request.requirements.collect { case fact: Fact if supported(fact.id) => fact }
+
+    private def isReturn(fact: Fact): Boolean =
+      val offset = fact.id.lastIndexOf("sacrifice_")
+      val id = if offset < 0 then fact.id else fact.id.substring(offset)
+      id.startsWith("sacrifice_") && !id.startsWith("sacrifice_loss_") && !id.endsWith("_role") &&
+        supported(fact.id) && (fact.at match
+          case event: Event => event.fromPly >= key.branch.size
+          case Ply(count) => count > key.branch.size)
+
+    def hasReturn: Boolean = compensationFacts.exists(isReturn)
+    def explains(value: CompareMoves): Boolean = !key.loss || realizedContext(value).exists { fact =>
+      isReturn(fact)
     }
 
     /** Dependency roles, not weights for motif names. Acceptance/decline tests whether the
@@ -185,13 +568,7 @@ private[runtime] object CommentaryIdea:
     val strongerComparisons = strongerOwnedComparisons.map((_, value, reading) => value -> reading).distinct
     val strongerChoices = strongerComparisons.map { (value, _) =>
       if value.referenceMove == key.move then value.alternativeMove else value.referenceMove }.distinct.sorted
-    val observedReturn = !key.loss || live.exists(member => member.entry.request.requirements.exists {
-      case fact: Fact if fact.id.startsWith("sacrifice_") && !fact.id.startsWith("sacrifice_loss_") &&
-          !fact.id.endsWith("_role") && member.supported(fact.id) => fact.at match
-        case event: Event => event.fromPly >= key.branch.size
-        case Ply(count) => count > key.branch.size
-      case _ => false
-    })
+    val observedReturn = !key.loss || live.exists(_.hasReturn)
     private def decisionsFor(selected: List[Member]) = selected.flatMap(member =>
       member.comparisons.filter(member.ready).map(value => (member, value, member.readings(value.id))))
       .sortBy((member, value, _) => member.role(value)).distinctBy((_, value, _) => pair(value))
@@ -304,13 +681,17 @@ private[runtime] object CommentaryIdea:
               case _ => (3, "The named branches differ in")
             val required = focus.exists(value => (value.before == left && value.after == right) ||
               (value.action == left && value.alternative == right))
-            Some((if required then 0 else 1, order) -> ExplanationPart(
-              s"$scope ${describe(left.predicate)}: ${member.values(left.id).mkString("/")} versus ${member.values(right.id).mkString("/")}.",
-              facts = Some(left -> right)))
+            val leftValues = member.values(left.id)
+            val rightValues = member.values(right.id)
+            Some(((if required then 0 else 1, order), (left, right, leftValues, rightValues), ExplanationPart(
+              s"$scope ${describe(left.predicate)}: ${leftValues.mkString("/")} versus ${rightValues.mkString("/")}.",
+              facts = Some(left -> right))))
           case _ => None
-      }).sortBy(_._1).distinctBy(_._2.text).map(_._2).take(2)
-      val returns = if !key.loss then Nil else live.flatMap(member => member.entry.request.requirements.collect {
-        case fact: Fact if fact.id.startsWith("sacrifice_gain_") && !fact.id.endsWith("_role") && member.supported(fact.id) =>
+      // Equal wording does not establish the same condition, path or event.
+      }).sortBy(_._1).distinctBy(_._2).map(_._3).take(2)
+      val returns = if !key.loss then Nil else live.flatMap(member => member.compensationFacts.collect {
+        case fact: Fact if fact.id.stripPrefix("current_").startsWith("sacrifice_gain_") &&
+            !fact.id.endsWith("_role") && member.supported(fact.id) =>
           fact.at match
             case event: Event if event.fromPly >= key.branch.size =>
               Some(s"The observed follow-up includes ${event.actor.map(piece).getOrElse("the actor")} capturing ${event.target.map(piece).getOrElse("material")}.")

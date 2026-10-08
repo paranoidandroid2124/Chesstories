@@ -273,6 +273,42 @@ test('verified work may deepen while the light root and focus keep their separat
   }
 });
 
+// A synthetic work envelope reuses exact board and occurrence references.
+test('a larger verified focus allowance requires a matching exhausted focus receipt', () => {
+  const { pending, context } = progressiveEnvelopes();
+  const work = pending.issued_engine_work;
+  const moves = [context.subject.played.uci, 'e2e4'];
+  work.purpose = pending.progress.phase = 'focus_comparison';
+  work.work_id = 'work:3';
+  work.execution_key_sha256 = '3'.repeat(64);
+  work.root_restriction = { kind: 'restricted', moves_uci: moves };
+  work.search_limits.multi_pv = 2;
+  pending.progress.physical_works_issued = 4;
+  pending.progress.physical_reports_accepted = 3;
+  const searches = pending.observations.selection.root_searches;
+  const exhausted = { ...structuredClone(searches[0]), work_id: 'work:2',
+    execution_key_sha256: '2'.repeat(64), purpose: 'focus_comparison', multi_pv: 2,
+    root_restriction: structuredClone(work.root_restriction), state: 'stopped',
+    stop_reason: 'search_budget_exhausted', candidates: [] };
+  pending.observations.selection = { version: 2, candidates: [], scenes: [], root_searches: [exhausted] };
+  const accepted = decodeMoveReviewSnapshot(pending, context);
+  assert.equal(accepted?.kind, 'awaiting-evidence');
+  assert.ok(accepted?.kind === 'awaiting-evidence' && accepted.issuedEngineWork.searchLimits.nodes === 5_000_000);
+  for (const mutate of [
+    (r: Wire) => { r.observations.selection.root_searches.pop(); },
+    (r: Wire) => { r.observations.selection.root_searches.at(-1).stop_reason = 'cancelled'; },
+    (r: Wire) => { r.observations.selection.root_searches.at(-1).required_depth = 17; },
+    (r: Wire) => { r.observations.selection.root_searches.at(-1).purpose = 'investigation_comparison'; },
+    (r: Wire) => { r.observations.selection.root_searches.at(-1).root_restriction.moves_uci[1] = 'd2d4'; },
+    (r: Wire) => { r.issued_engine_work.search_limits.depth = 8; },
+    (r: Wire) => { r.issued_engine_work.search_limits.movetime_ms = 10_000; },
+  ]) {
+    const invalid = structuredClone(pending);
+    mutate(invalid);
+    assert.equal(decodeMoveReviewSnapshot(invalid, context), undefined);
+  }
+});
+
 // Synthetic proposal attribution and requirements reuse existing admitted observations.
 // These checks do not claim that a generator discovered the question or executed a search.
 function proposalEntry(requirements: Wire[]) {

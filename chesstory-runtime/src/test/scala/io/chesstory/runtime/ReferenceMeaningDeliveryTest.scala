@@ -28,6 +28,12 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
   private def refs(value: JsValue): List[JsObject] =
     value.as[List[JsValue]].collect { case move: JsObject => move }
 
+  private def proofRefs(unit: JsObject): List[JsObject] =
+    (unit \ "proof_moves").toOption.fold(refs(unit("en")))(_.as[List[JsObject]])
+
+  private def deliveryRefs(unit: JsObject): List[JsObject] =
+    (proofRefs(unit) ++ refs(unit("en"))).distinct
+
   private def locateRef(paths: ObservedLineProtocol.PreparedPaths, ref: JsObject) =
     val path = paths.paths.find(_.line.ref.id == (ref \ "line_id").as[String])
       .getOrElse(fail(s"unowned line reference: $ref"))
@@ -41,15 +47,38 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       val visible = refs(unit("en"))
       val korean = refs(unit("ko"))
       val required = (unit \ "required_moves").asOpt[List[JsObject]].getOrElse(Nil)
+      val covered = refs(unit("covered_moves"))
+      val proof = (unit \ "proof_moves").toOption.map(_.as[List[JsObject]])
       assertEquals(visible.toSet, korean.toSet, "both realizations name the same owned events")
-      required.foreach(ref => assert(visible.contains(ref) && korean.contains(ref),
-        s"a required move must be displayed in both languages: $ref"))
-      refs(unit("covered_moves")).foreach(ref => assert(visible.contains(ref) && korean.contains(ref),
-        s"a claimed material cost must be displayed in both languages: $ref"))
-      (visible ++ refs(unit("covered_moves")) ++ required).foreach { ref =>
-        locateRef(paths, ref)
+      proof match
+        case Some(owned) =>
+          assert(owned.nonEmpty, "a typed answer retains its proof references")
+          assertEquals(owned.distinct.size, owned.size, "proof references name each owned occurrence once")
+          (required ++ covered).foreach(ref => assert(owned.contains(ref),
+            s"a required reply or material cost remains in the owned proof: $ref"))
+          (visible ++ korean).distinct.foreach { ref =>
+            if !owned.contains(ref) then
+              val (path, offset) = locateRef(paths, ref)
+              assert(offset == 0 && owned.exists(other =>
+                (other \ "line_id").as[String] == path.line.ref.id),
+                s"an inline reference outside the proof must be that same path's root header: $ref")
+          }
+        case None =>
+          required.foreach(ref => assert(visible.contains(ref) && korean.contains(ref),
+            s"a legacy required move must be displayed in both languages: $ref"))
+          covered.foreach(ref => assert(visible.contains(ref) && korean.contains(ref),
+            s"a legacy material cost must be displayed in both languages: $ref"))
+      (visible ++ korean ++ proof.toList.flatten ++ covered ++ required).distinct.foreach { ref =>
+        val (path, _) = locateRef(paths, ref)
+        assert(path.certified.nonEmpty && path.ids == path.declared && path.moves == path.sourceMoves,
+          s"a reference keeps its certified original source path: $ref")
         root.foreach(candidate => assert((candidate \ "evidence_ids").as[List[String]]
           .contains((ref \ "occurrence_id").as[String]), s"unpublished occurrence: $ref"))
+      }
+      covered.foreach { ref =>
+        val (path, offset) = locateRef(paths, ref)
+        assert(path.certified.flatMap(_._2.material).exists(_.captures.exists(_.plyOffset == offset)),
+          s"a claimed price names an actual capture in that same certified ledger: $ref")
       }
     }
 
@@ -58,7 +87,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     (value \ "detail_units").asOpt[List[JsObject]].getOrElse(Nil)
   private def detailRefs(value: JsObject): List[JsObject] =
     ((value \ "detail_moves").asOpt[JsValue].toList.flatMap(refs) ++
-      detailUnits(value).flatMap(unit => refs(unit("en")))).distinct
+      detailUnits(value).flatMap(deliveryRefs)).distinct
 
   private def selectedFacts(packet: EvidenceBackedJudgmentPacket, paths: ObservedLineProtocol.PreparedPaths,
       root: JsObject): CommentaryAnswer.Answer =
@@ -79,16 +108,20 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
   private def assertConvergenceDelivery(root: JsObject, summary: JsObject,
       paths: ObservedLineProtocol.PreparedPaths, meeting: Int, divergence: Int): Unit =
     val pair = (root \ "line_ids").as[List[String]].map(id => paths.paths.find(_.line.ref.id == id).get)
-    val core = coreUnits(summary).flatMap(unit => refs(unit("en"))).toSet
+    val core = coreUnits(summary).flatMap(deliveryRefs).toSet
     val displayed = core ++ detailRefs(summary)
     assertEquals(pair.map(_.positions(meeting).fen).distinct.size, 1,
       "both owned approaches reach the same recorded state")
     assertEquals(pair.map(_.ids(meeting - 1)).distinct.size, 2,
       "the common board does not merge the two approach occurrences")
     pair.foreach { path =>
-      ((0 until meeting).toList :+ divergence).foreach(offset =>
+      (0 until meeting).foreach(offset =>
         assert(core(RootQuestionSummary.MoveRef(path, offset).json),
-          "both approaches and each actual later choice remain in the core"))
+          "both approaches explain the same recorded position"))
+      assert(!core(RootQuestionSummary.MoveRef(path, divergence).json),
+        "a later choice after convergence is not a difference caused by the original choice")
+      assert(displayed(RootQuestionSummary.MoveRef(path, divergence).json),
+        "the later independent choice stays available in detail")
     }
     assert(pair.exists(path => (meeting until divergence).forall(offset =>
       displayed(RootQuestionSummary.MoveRef(path, offset).json))),
@@ -108,16 +141,12 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     (loss.originalVictim.toList ++ recovery.originalVictim).toSet
 
   // Reordering input lines may change sentences and unit grouping. It must not
-  // change the displayed events, cost coverage, required replies or path owners.
+  // change the owned proof events, cost coverage, required replies or path owners.
   private def summaryMeaning(value: JsObject) =
     val units = coreUnits(value)
     val details = detailUnits(value)
-    val visible = (for
-      language <- List("en", "ko")
-      unit <- units
-      ref <- refs(unit(language))
-    yield (language, ref)).toSet
-    (visible, units.flatMap(unit => refs(unit("covered_moves"))).toSet,
+    val owned = units.flatMap(deliveryRefs).toSet
+    (owned, units.flatMap(unit => refs(unit("covered_moves"))).toSet,
       units.flatMap(unit => (unit \ "required_moves").asOpt[List[JsObject]].getOrElse(Nil)).toSet,
       detailRefs(value).toSet, details.flatMap(unit => refs(unit("covered_moves"))).toSet,
       (value \ "witness_line_ids").asOpt[List[String]].getOrElse(Nil).toSet)
@@ -144,13 +173,14 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       .map(event => RootQuestionSummary.MoveRef(path, event.plyOffset).json)).toSet
     def assertLayer(layer: List[JsObject], wholeLedger: Boolean): Unit =
       val visible = layer.flatMap(unit => refs(unit("en"))).toSet
+      val owned = layer.flatMap(deliveryRefs).toSet
       val covered = layer.flatMap(unit => refs(unit("covered_moves"))).toSet
       val recordedEnds = layer.flatMap(unit =>
         (unit \ "recorded_end_moves").asOpt[List[JsObject]].getOrElse(Nil)).toSet
-      assertEquals(covered, captures.intersect(visible),
-        "coverage names exactly the original ledger captures actually displayed in this layer")
+      assertEquals(covered, captures.intersect(owned),
+        "coverage names exactly the original ledger captures owned by this layer's delivered account")
       if wholeLedger then assertEquals(covered, captures, "detail retains the entire original capture ledger")
-      visible.foreach { ref =>
+      owned.foreach { ref =>
         val (path, _) = locateRef(paths, ref)
         assert(pair.exists(_ eq path), "a layer cannot borrow a sibling line's occurrence")
       }
@@ -166,16 +196,16 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
         val material = fact.material.get
         val checks = fact.lineEvents.filter(_.kind == LineEventKind.Check).map(_.plyOffset).toSet
         assert(visible(at(0)), "both root choices retain their exact occurrence")
-        checks.filter(offset => visible(at(offset))).foreach { offset =>
+        checks.filter(offset => owned(at(offset))).foreach { offset =>
           if offset + 1 < path.moves.size then
-            assert(visible(at(offset + 1)), "a displayed actual check retains its recorded response")
+            assert(owned(at(offset + 1)), "an owned actual check retains its recorded response")
           else assert(path.automaticTerminal.nonEmpty || recordedEnds(at(offset)),
             "a final check needs either its actual terminal result or the explicit finite boundary")
         }
         material.captures.filter(_.recapture).foreach { recovery =>
           material.captures.find(_.plyOffset == recovery.plyOffset - 1).foreach { loss =>
-            if visible(at(loss.plyOffset)) then assert(visible(at(recovery.plyOffset)),
-              "a displayed capture cannot omit its original ledger's immediate recapture")
+            if owned(at(loss.plyOffset)) then assert(owned(at(recovery.plyOffset)),
+              "a delivered capture account cannot omit its original ledger's immediate recapture")
           }
         }
         val end = at(path.moves.size - 1)
@@ -187,7 +217,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
         if wholeLedger then
           val required = material.events.map(_.plyOffset) ++ checks ++
             checks.filter(_ + 1 < path.moves.size).map(_ + 1)
-          required.foreach(offset => assert(visible(at(offset)),
+          required.foreach(offset => assert(owned(at(offset)),
             s"detail lost an original material event or check response: ${path.moves(offset)}"))
       }
     assertLayer(units, wholeLedger = false)
@@ -486,7 +516,6 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assertEquals((choice \ "through_plies").as[List[Int]], List(1, 1))
     assert(text.contains("Qxd4 captures the pawn on d4 with the queen"), text)
     assert(text.contains("cxd4 captures that same pawn with the c3-pawn instead"), text)
-    assert(text.contains("After cxd4, Black bishop on b4 attacks White queen on d2"), text)
     val cost = effects.find(effect => (effect \ "scope").as[String] == "pair_difference" &&
       (effect \ "actor" \ "role").asOpt[String].contains("bishop") &&
       (effect \ "actor" \ "square").asOpt[String].contains("b4") &&
@@ -846,8 +875,6 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val detail = (root \ "detail").as[JsObject]
     val answer = (detail \ "summary").as[String]
     assertConvergenceDelivery(root, summary, paths, meeting = 4, divergence = 9)
-    List("exd5", "Rxd5", "Bxd5", "Nxd5", "Qf4", "Qe7+")
-      .foreach(required => assert(answer.contains(required), answer))
     val detailed = detailRefs(summary).toSet
     (root \ "line_ids").as[List[String]].foreach { id =>
       val path = paths.paths.find(_.line.ref.id == id).get
@@ -867,7 +894,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       .foreach(required => assert(full.contains(required), full))
     assert(full.length <= 4000)
 
-  test("a certified move-order answer keeps convergence and the later divergence together"):
+  test("a certified move-order answer keeps convergence in core and the later divergence in detail"):
     // Ding–Ju Wenjun, Tata Steel Masters 2024, after 21...Kf8; recorded depth-21 lines.
     val start = "3rrk2/1pq2p2/2pb1npp/p7/P1B4P/2P2NP1/1PQ2PK1/4RR2 w - - 0 22"
     val lines = List(
@@ -883,8 +910,6 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     val detail = (root \ "detail").as[JsObject]
     val answer = (detail \ "summary").as[String]
     assertConvergenceDelivery(root, summary, paths, meeting = 6, divergence = 12)
-    List("Qxe1", "Ne1", "Nd2")
-      .foreach(required => assert(answer.contains(required), answer))
     val detailed = detailRefs(summary).toSet
     (root \ "line_ids").as[List[String]].foreach { id =>
       val path = paths.paths.find(_.line.ref.id == id).get
@@ -895,7 +920,39 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     }
     assert((detail \ "text").as[String].length > answer.length, "the longer record remains available")
 
-  test("a common continuation states when only one supplied record continues"):
+  test("a target answer retains survival and exchange costs while moving a quiet end coordinate to detail"):
+    // Previously opened Candidates 2022 report; this checks delivery, not new generalization.
+    val lines = List(
+      "g5g4 f3d2 a7a6 f2f4 e5f4 f1f4 e8d7 e4e5 d7c7 a1e1 d6e5 e3e5 e7d6 e5d6 c7d6 f4f6",
+      "e6c4 f1d1 g5g4 f3d4 e5d4 e3d4 h8h6 d4c4 h6e6 d1e1 e8d7 c4b4 b7b6 e1e3 d7c7 a1e1 e6e5 b4c3 a7a5 h2h3 g4h3 f2f4")
+    val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(
+      fen = "3rk2r/pp2q3/2ppb3/4p1pp/4P3/4QN2/PPP2PPP/R4RK1 b k - 1 19", playedMoveUci = "g5g4",
+      variations = lines.zip(List(6, 68)).map((moves, cp) => EngineLine(moves.split(" ").toList, cp, None, 16)))).get
+    val packet = EvidenceBackedJudgmentPacket.fromAssembly(MoveReviewAssembler.assemble(input)).get
+    val paths = ObservedLineProtocol.prepare(packet)
+    val projection = MoveWorkProjection.select(packet, paths)
+    val pair = lines.map(line => paths.paths.find(_.moves == line.split(" ").toList).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val contacts = pair.flatMap(path => projection.local.filter(note => path.ids.contains(note.edge.evidence.id)).map(path -> _))
+    val answer = RootQuestionSummary.selectedAnswer(packet, paths, pair, positions, contacts).get
+    val target = Piece("white", "knight", "f3").witness
+    val response = answer.core.flatMap(_.statements).collect { case value: CommentaryAnswer.TargetResponse => value }
+      .find(value => (value.path eq pair.head) && value.originalTarget == target).get
+    assert(response.survives && response.escape.contains(1))
+    assert(response.targetEnd.isEmpty, "survival does not require the final rook move as basic content")
+    val end = RootQuestionSummary.MoveRef(pair.head, pair.head.moves.size - 1)
+    assert(!answer.core.flatMap(_.references).contains(end))
+    assert(answer.details.flatMap(_.statements).exists {
+      case presence: CommentaryAnswer.PiecePresence => presence.after == end && presence.original == target &&
+        presence.current == Piece("white", "knight", "d2").witness
+      case _ => false
+    })
+    List(4, 5, 7).foreach(offset => assert(answer.core.flatMap(_.covered).contains(
+      RootQuestionSummary.MoveRef(pair.last, offset)), "the target's capture and actual recovery remain in core"))
+    val rendered = RootQuestionSummary.realize(paths, pair, answer).get
+    assertOwnedBilingualUnits(coreUnits(rendered.json) ++ detailUnits(rendered.json), paths)
+
+  test("a bounded convergence keeps later finite-record differences in detail"):
     // Abdusattorov–Vachier-Lagrave, Sinquefield Cup 2025, before 15...a5; measured depth-16 reports.
     val start = "1r3k1r/p2qbpp1/1pnp1n1p/2pNp3/P1P1P3/3P1NPb/1P1B1PBP/R2Q1RK1 b - - 3 15"
     val rows = List(
@@ -914,10 +971,18 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assertEquals(pair.head.moves.drop(3), pair.last.moves.drop(3).take(pair.head.moves.size - 3))
     val next = pair.head.moves.size
     assertEquals(pair.last.moves(next), "c6d4")
-    val visible = (summary \ "units").as[List[JsObject]].flatMap(unit => refs(unit("en"))).toSet
-    assert(visible(RootQuestionSummary.MoveRef(pair.last, next).json))
-    assert(answer.contains("Bg4 line ends") && answer.contains("Nd4"),
-      "the default reading must distinguish an ended record from an observed different reply: " + answer)
+    assert(answer.contains("reach the same recorded position"), answer)
+    val detailed = detailUnits(summary)
+    assert(detailed.flatMap(deliveryRefs).contains(RootQuestionSummary.MoveRef(pair.last, next).json))
+    val detailText = detailed.flatMap(unit => unit("en").as[List[JsValue]]).map {
+      case JsString(words) => words
+      case ref: JsObject =>
+        val (path, offset) = locateRef(paths, ref)
+        paths.notation.line(path.moves)(offset)
+      case value => fail(s"unexpected detail part: $value")
+    }.mkString
+    assert(detailText.contains("Bg4 line ends") && detailText.contains("Nd4"),
+      "detail distinguishes an ended record from a different observed reply: " + detailText)
 
   test("removing an attacker retains the price of the defending capture"):
     // Vidit–Nepomniachtchi, Tata Steel Masters 2024, after 18.Rac1.
@@ -955,13 +1020,17 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       }
       (packet, paths, detail)
 
-    val (_, _, capture) = detail("4k3/8/8/3q4/4P3/8/8/4K3 w - - 0 31", List(
+    val (_, capturePaths, capture) = detail("4k3/8/8/3q4/4P3/8/8/4K3 w - - 0 31", List(
       "e4d5 e8e7 e1d2 e7d6 d2c3 d6d5", "e1e2 d5e4 e2d2 e8e7 d2c3 e7d6 c3b3 e4e2 b3b4 d6d5 b4b3 e2d2 b3a3 d5c6"))
     val captureSummary = (capture \ "summary").as[String]
     assert((capture \ "text").as[String].contains("passed pawn"), "the supplementary fact remains in detail")
     assert(!captureSummary.contains("passed pawn"), captureSummary)
-    List("exd5", "Kxd5", "Qxe4+", "Kd2", "one pawn", "one queen", "drawn")
+    List("exd5", "Kxd5", "Ke2", "one pawn", "one queen", "drawn")
       .foreach(value => assert(captureSummary.contains(value), captureSummary))
+    val captureProof = coreUnits((capture \ "summary_question").as[JsObject]).flatMap(deliveryRefs)
+      .map(ref => locateRef(capturePaths, ref)).map((path, offset) => capturePaths.notation.line(path.moves)(offset))
+    List("Qxe4+", "Kd2").foreach(value => assert(captureProof.contains(value),
+      "the summarized pawn loss still owns its actual checking capture and reply"))
 
     val (_, exchangePaths, exchange) = detail("r1bqk2r/pppp1ppp/2n2n2/8/1b1NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 3 6", List(
       "d4c6 b7c6 f1d3 d7d5 e4d5 e8g8 e1g1 c6d5 d1f3 c8e6 h2h3 c7c5 c1g5 h7h6 g5h4 c5c4 d3e2 f8e8 a1d1 b4c3 f3c3",
@@ -978,12 +1047,15 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assert(exchangeText.contains("Black knight on e3 captures White queen on d1."), exchangeText)
     assert(exchangeText.contains("The black knight originally on f6 remains on c3 at this line's end."), exchangeText)
     assert(!exchangeSummary.contains("route to f4"), exchangeSummary)
-    assert(exchangeSummary.contains("maintains support"), exchangeSummary)
+    assert((exchange \ "effects").as[List[JsObject]].exists(effect =>
+      (effect \ "scope").as[String] == "support_handoff" &&
+        (effect \ "actor" \ "square").asOpt[String].contains("f3") &&
+        (effect \ "target" \ "square").asOpt[String].contains("e4")), exchangeSummary)
     List("fxe4", "Nxd1", "Bxc5").foreach(value => assert(exchangeSummary.contains(value), exchangeSummary))
     val f3 = exchangePaths.paths.find(_.moves.headOption.contains("f2f3")).get
     val f3Reading = exchangePaths.continuationReadings.find(_.path eq f3).get
     val exchangeQuestion = (exchange \ "summary_question").as[JsObject]
-    val exchangeCore = coreUnits(exchangeQuestion).flatMap(unit => refs(unit("en"))).toSet
+    val exchangeCore = coreUnits(exchangeQuestion).flatMap(deliveryRefs).toSet
     val exchangeCovered = coreUnits(exchangeQuestion).flatMap(unit => refs(unit("covered_moves"))).toSet
     List(0, 11, 12, 13, 14, 20, 21, 22).foreach(offset =>
       assert(exchangeCore(RootQuestionSummary.MoveRef(f3, offset).json),
@@ -1015,9 +1087,8 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       "the independent later capture is still actually explained in detail")
 
     List((support \ "text").as[String], (support \ "summary").as[String]).foreach { reading =>
-      assert(reading.contains("cxd4 by the supporting pawn on c3 actually recaptures its capturer"), reading)
+      assert(reading.contains("cxd4") && reading.contains("supporting pawn"), reading)
       assert(reading.contains("pawn on d4 adds support to White's pawn on e5"), reading)
-      assert(reading.contains("queen on a4 now targets"), reading)
       List("bishop on a3", "knight on c6", "pawn on a7").foreach(target =>
         assert(reading.contains(s"Black's $target"), reading))
     }
@@ -1034,7 +1105,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     assertEquals((route \ "through_plies").as[List[Int]], List(17))
     assertEquals(route \ "through_plies", supportUse \ "through_plies")
     val visible = coreUnits((support \ "summary_question").as[JsObject])
-      .flatMap(unit => refs(unit("en"))).map(ref => (ref \ "occurrence_id").as[String]).toSet
+      .flatMap(deliveryRefs).map(ref => (ref \ "occurrence_id").as[String]).toSet
     // SupportUse already explains the pawn's arrival. Its route introduction may
     // be absorbed in prose, but the route proof and the new e5 duty must survive.
     val owned = (route \ "occurrence_ids").as[List[String]]
@@ -1101,7 +1172,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       assertEquals(recovery.originalActor.map(_.role.name), Some(recapturer))
       List(actor, target).foreach(piece =>
         assert(paths.pieceAfter(packet, retained, piece, retained.moves.size).flatten.nonEmpty))
-      val visible = (summary \ "units").as[List[JsObject]].flatMap(unit => refs(unit("en"))).toSet
+      val visible = (summary \ "units").as[List[JsObject]].flatMap(deliveryRefs).toSet
       (List(0, 1, 2).map(RootQuestionSummary.MoveRef(exchange, _)) ++
         List(0, retained.moves.size - 1).map(RootQuestionSummary.MoveRef(retained, _)))
         .foreach(ref => assert(visible(ref.json)))
@@ -1153,9 +1224,10 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
         assert(facts.collect { case value: CommentaryAnswer.MaterialEvents => value }
           .exists(value => (value.path eq exchanged) && value.events.exists(_.plyOffset == 7)),
           "the recapturer's loss remains explicit before wording")
-        for language <- List("en", "ko"); offset <- List(3, 4, 5, 6, 7) do
-          assert(units.flatMap(unit => refs(unit(language))).contains(RootQuestionSummary.MoveRef(exchanged, offset).json),
-            "the interleaved rook exchange and final recapturer loss remain visible")
+        List(3, 4, 5, 6, 7).foreach { offset =>
+          assert(units.flatMap(deliveryRefs).contains(RootQuestionSummary.MoveRef(exchanged, offset).json),
+            "the interleaved rook exchange and final recapturer loss remain in the delivered proof")
+        }
       val (_, _, reordered) = project(lines.reverse)
       assertEquals(summaryMeaning((reordered \ "detail" \ "summary_question").as[JsObject]), summaryMeaning(meaning))
       val (_, shortPaths, incomplete) = project(lines.map(line =>
@@ -1191,13 +1263,15 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       val units = (meaning \ "units").as[List[JsObject]]
       def occurrence(ref: JsObject) = locateRef(paths, ref)
       val covered = units.flatMap(unit => refs(unit("covered_moves")))
-      assertEquals(covered.size, captureCount)
+      assertEquals(covered.size, captureCount, covered.map(ref =>
+        val (path, offset) = occurrence(ref)
+        s"${path.moves.head}:$offset").mkString("actual delivered captures: ", ", ", ""))
       assertOwnedBilingualUnits(units, paths, Some(root))
       covered.foreach { ref =>
         val (path, offset) = occurrence(ref)
         assert(path.certified.flatMap(_._2.material).get.captures.exists(_.plyOffset == offset))
       }
-      val core = units.flatMap(unit => refs(unit("en"))).map(occurrence)
+      val core = units.flatMap(deliveryRefs).map(occurrence)
       if question == "escape_or_recapture" then
         val path = paths.paths.find(_.moves.head == "f3g4").get
         List(0, 1, 2, 5, 6).foreach(offset => assert(core.contains(path -> offset),
@@ -1239,7 +1313,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       val coverage = units.flatMap(unit => refs(unit("covered_moves"))).map(occurrence)
       assertEquals(coverage.distinct.size, coverage.size)
       assertOwnedBilingualUnits(detailUnits(meaning), paths, Some(root))
-      val displayed = (units.flatMap(unit => refs(unit("en"))) ++ detailRefs(meaning)).map(occurrence).distinct
+      val displayed = (units.flatMap(deliveryRefs) ++ detailRefs(meaning)).map(occurrence).distinct
       if question == "counter_capture_comparison" then
         val attack = paths.paths.find(_.moves.head == "h4e7").get
         val escape = paths.paths.find(_.moves.head == "b6a5").get
@@ -1293,7 +1367,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       assertOwnedBilingualUnits(units, paths, Some(root))
       assertOwnedBilingualUnits(detailUnits(meaning), paths, Some(root))
       val coverage = units.flatMap(unit => refs(unit("covered_moves"))).map(occurrence)
-      val core = units.flatMap(unit => refs(unit("en"))).map(occurrence).toSet
+      val core = units.flatMap(deliveryRefs).map(occurrence).toSet
       if question == "opening_counterplay" then
         val path = paths.paths.find(_.moves.head == "g8g7").get
         List(0, 1, 2, 3, 4).foreach(offset => assert(core(path -> offset),
@@ -1350,10 +1424,10 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       def occurrence(ref: JsObject) = locateRef(paths, ref)
       val sequences = selectedSequences(selectedFacts(packet, paths, root))
       val detailed = sequences.map(ref => ref.path -> ref.offset)
-      val core = units.flatMap(unit => refs(unit("en"))).map(occurrence)
+      val core = units.flatMap(deliveryRefs).map(occurrence)
       assertOwnedBilingualUnits(units ++ detailUnits(meaning), paths, Some(root))
-      val displayed = (units.flatMap(unit => refs(unit("en"))) ++ detailRefs(meaning)).toSet
-      sequences.foreach(ref => assert(displayed(ref.json), "the selected sequence remains fully displayed"))
+      val displayed = (units.flatMap(deliveryRefs) ++ detailRefs(meaning)).toSet
+      sequences.foreach(ref => assert(displayed(ref.json), "the selected sequence remains available in its owning layer"))
       assert(units.forall(unit => refs(unit("covered_moves")).isEmpty))
       val ends = detailed.groupMap(_._1)(_._2).toList.map { (path, offsets) =>
         val end = offsets.max
@@ -1443,7 +1517,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       assertEquals((meaning \ "question").as[String], question)
       val units = (meaning \ "units").as[List[JsObject]]
       def occurrence(ref: JsObject) = locateRef(paths, ref)
-      val core = units.flatMap(unit => refs(unit("en"))).map(occurrence)
+      val core = units.flatMap(deliveryRefs).map(occurrence)
       val covered = units.flatMap(unit => refs(unit("covered_moves"))).map(occurrence)
       assertOwnedBilingualUnits(units ++ detailUnits(meaning), paths, Some(root))
       val arms = core.map(_._1).distinct
@@ -1516,7 +1590,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
         ("b1d2 e4d6 f3e5 f7g7 d2f3 a5a4 b2b3 d7f8 e5d3 a4b3 a2b3 c8d7 h2h3 d7e8 f3e5 h7h5 g1h2 d6e4 f2f3", 44, 18, List(0, 1), 1))),
       ("r1bqr1k1/1pp2pbp/6p1/1P2pn2/3n4/2NP1NP1/2P2PBP/1RBQR1K1 w - - 1 15", "f3d2", "contested_pair_response", List(
         ("f3d4 f5d4 c1e3 h7h5 d1c1 d4f5 e3d2 f5d4 d2g5 f7f6 g5e3 d4f5 b5b6 c7c6 c3e4 f5e3 c1e3 g8h7 e3c5", 36, 17, List(0, 1), 1),
-        ("f3d2 a8a7 c3d5 d4b5 b1b5 c7c6 b5c5 c6d5 c5d5 d8c7 c1b2 c8e6 b2e5 c7c8 d5b5 e6d7 b5d5", 0, 21, List(0), 1))),
+        ("f3d2 a8a7 c3d5 d4b5 b1b5 c7c6 b5c5 c6d5 c5d5 d8c7 c1b2 c8e6 b2e5 c7c8 d5b5 e6d7 b5d5", 0, 21, List(0, 3, 4), 1))),
       ("4r1k1/pp1q2pp/2p2p2/3p1n2/3P1B2/2PQ4/PP3PPP/4R1K1 w - - 1 22", "e1e2", "contested_pair_response", List(
         ("e1e8 d7e8 g1f1 e8c8 g2g4 f5e7 h2h3 e7g6 f4h2 g6f8 d3g3 a7a6 b2b3", -9, 18, List(0, 1), 1),
         ("e1e2 g7g5 f4c1 g8g7 h2h3 f5d6 g1f1 e8e2 d3e2 d7e8 b2b3", -18, 18, List(0, 7, 8), 8))),
@@ -1561,12 +1635,12 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
           value.events.last.originalActor.get.square.key }.toSet
         assertEquals(recapturers, Set("c2", "a2"), "the two original pawns are different recapturers")
       def locate(ref: JsObject) = locateRef(paths, ref)
-      val core = units.flatMap(unit => refs(unit("en"))).map(locate)
+      val core = units.flatMap(deliveryRefs).map(locate)
       val covered = units.flatMap(unit => refs(unit("covered_moves"))).map(locate)
       assertOwnedBilingualUnits(units ++ detailUnits(meaning), paths, Some(root))
       reports.foreach { (moves, _, _, required, _) =>
         val path = paths.paths.find(_.moves == moves.split(" ").toList).get
-        required.foreach(offset => assert(core.contains(path -> offset), "required reply or recapture stays visible"))
+        required.foreach(offset => assert(core.contains(path -> offset), "required reply or recapture stays in the delivered proof"))
         if question == "contested_pair_response" then
           val events = covered.filter(_._1 == path).map(_._2).distinct.sorted
           // The survival anchor may be the supplied line's end. It does not
@@ -1581,7 +1655,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       }
       if question == "observed_arrangement_convergence" then
         val sequences = selectedSequences(selectedFacts(packet, paths, root))
-        val displayed = (units.flatMap(unit => refs(unit("en"))) ++ detailRefs(meaning)).toSet
+        val displayed = (units.flatMap(deliveryRefs) ++ detailRefs(meaning)).toSet
         sequences.foreach(ref => assert(displayed(ref.json)))
         val ends = sequences.map(ref => ref.path -> ref.offset).groupMap(_._1)(_._2).toList
         assert(ends.forall((_, offsets) => offsets.toSet == Set(0, 1, 2)))
@@ -1594,7 +1668,10 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
           val reading = paths.continuationReadings.find(_.path.line.ref == path.line.ref).get
           reading.events.filter(e => offsets.contains(e.plyOffset)).flatMap(_.originalVictim).toSet
         }
-        assertEquals(pairs.distinct.size, 1, "the two accounts concern the same original pieces")
+        if played == "f3d2" then
+          assertEquals(pairs.distinct.size, 2,
+            "the initial attacker exchanges a different target when the named knight escapes")
+        else assertEquals(pairs.distinct.size, 1, "the two accounts concern the same original pieces")
       if played == "f3d2" then
         val retreat = paths.paths.find(_.moves.head == played).get
         val knights = paths.identitiesAfter(packet, retreat, 0).map(_._1).filter(p => p.side.white && p.role.name == "knight")
@@ -1643,7 +1720,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       assertEquals((question \ "question").as[String], "observed_route_use")
       val units = (question \ "units").as[List[JsObject]]
       def locate(ref: JsObject) = locateRef(paths, ref)
-      val core = units.flatMap(unit => refs(unit("en"))).map(locate)
+      val core = units.flatMap(deliveryRefs).map(locate)
       val details = detailRefs(question).map(locate)
       val covered = units.flatMap(unit => refs(unit("covered_moves"))).map(locate)
       assertOwnedBilingualUnits(units ++ detailUnits(question), paths, Some(root))
@@ -1678,8 +1755,8 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
           assertEquals(pair.size, 2)
           assertEquals(pair.last.plyOffset, pair.head.plyOffset + 1)
           assert(pair.last.recapture)
-          assert(units.exists(unit => pair.forall(event => refs(unit("en")).map(locate).contains(path -> event.plyOffset))),
-            "a capturing reply and its recapture are one visible account")
+          assert(units.exists(unit => pair.forall(event => deliveryRefs(unit).map(locate).contains(path -> event.plyOffset))),
+            "a capturing reply and its recapture belong to one delivered account")
         }
       }
       val english = (root \ "detail" \ "summary").as[String]
@@ -1730,8 +1807,8 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       if played == "g6h4" then
         assertTrade("c6c4", Map("bishop" -> 1), Map("knight" -> 1))
         assertTrade("g6h4", Map("knight" -> 1, "pawn" -> 1), Map("rook" -> 1))
-        assert(english.contains("exd5") && english.contains("Bxd5"),
-          "the accounted intervening pawn exchange remains visible: " + english)
+        assertEquals(account("g6h4").commonExchanges, List(EvidencePieceRole("pawn") -> 1),
+          "the summarized price retains the actual intervening pawn exchange")
       val (_, _, reordered) = project(lines.reverse)
       val reorderedQuestion = (reordered \ "detail" \ "summary_question").as[JsObject]
       assertEquals(summaryMeaning(reorderedQuestion), summaryMeaning(question))
@@ -1759,9 +1836,12 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       (value \ "detail" \ "type").as[String] == "root_comparison").get
     (root \ "detail" \ "summary_question").asOpt[JsObject] match
       case Some(question) =>
-        val core = (question \ "units").as[List[JsObject]].flatMap(unit => (unit \ "en").as[List[JsValue]]).collect { case move: JsObject => move }
+        val units = (question \ "units").as[List[JsObject]]
+        val core = units.flatMap(deliveryRefs)
         assert(core.exists(ref => (ref \ "line_id").as[String] == path.line.ref.id &&
           (ref \ "occurrence_id").as[String] == path.ids(9)), "a complete exchange answer must retain Nxg5")
+        assert(units.flatMap(unit => (unit \ "covered_moves").as[List[JsObject]]).contains(
+          RootQuestionSummary.MoveRef(path, 9).json), "the price must include the actual later loss of the recapturing pawn")
       case None => assert((root \ "detail" \ "text").as[String].contains("Nxg5"), "unresolved comparison retains the observed cost in detail")
 
   test("shared exchange questions preserve both branch accounts and reject an unexplained root connection"):
@@ -1810,7 +1890,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       question.filter(_ => accepted).foreach { q =>
         val units = (q \ "units").as[List[JsObject]]
         def locate(ref: JsObject) = locateRef(paths, ref)
-        val core = units.flatMap(u => refs(u("en"))).map(locate)
+        val core = units.flatMap(deliveryRefs).map(locate)
         val covered = units.flatMap(u => refs(u("covered_moves"))).map(locate)
         assertOwnedBilingualUnits(units, paths)
         val trades = covered.distinct.groupMap(_._1)(_._2).toList
@@ -1864,7 +1944,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       assertEquals(question.map(q => (q \ "question").as[String]), Some("contested_pair_response"))
       val units = (question.get \ "units").as[List[JsObject]]
       def locate(ref: JsObject) = locateRef(paths, ref)
-      val core = units.flatMap(u => refs(u("en"))).map(locate)
+      val core = units.flatMap(deliveryRefs).map(locate)
       val covered = units.flatMap(u => refs(u("covered_moves"))).map(locate)
       assertOwnedBilingualUnits(units, paths)
       covered.distinct.groupMap(_._1)(_._2).foreach { (path, offsets) =>
@@ -1916,12 +1996,14 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
     units.foreach { unit =>
       val located = refs(unit("en")).map(ref => locateRef(paths, ref))
       assertEquals(located.map(_._1).distinct.size, 1)
-      val p = located.head._1
+      assertEquals(unit("covered_moves").as[List[JsObject]], Nil)
+    }
+    units.groupBy(unit => locateRef(paths, refs(unit("en")).head)._1).foreach { (p, branch) =>
+      val located = branch.flatMap(unit => refs(unit("en")).map(ref => locateRef(paths, ref)))
       val root = paths.notation.line(p.moves).head
       assertEquals(located.map(_._2).distinct.sorted, expected(root))
-      assertEquals(unit("covered_moves").as[List[JsObject]], Nil)
       if root == "Re3" then
-        val text = unit("en").as[List[JsValue]].collect { case JsString(s) => s }.mkString
+        val text = branch.flatMap(unit => unit("en").as[List[JsValue]].collect { case JsString(s) => s }).mkString
         assert(text.contains("b3") && text.contains("f3") && text.contains("support"))
         // Be2 at offset 4 stays under Nd4 attack; it cannot be called the escape here.
         assert(!located.exists(_._2 == 4))
@@ -2030,7 +2112,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
       val (paths, result, (packet, root)) = project(example)
       assertEquals(result.map(q => (q \ "question").as[String]), Some("contested_pair_response"))
       val units = (result.get \ "units").as[List[JsObject]]
-      val mentioned = units.flatMap(unit => refs(unit("en")))
+      val mentioned = units.flatMap(deliveryRefs)
       val owned = mentioned.map(r => (r \ "line_id").as[String]).distinct
       assertEquals(owned.size, 2)
       assertOwnedBilingualUnits(units, paths)
@@ -2041,7 +2123,7 @@ class ReferenceMeaningDeliveryTest extends munit.FunSuite:
         val root = paths.notation.line(p.moves).head
         def offsets(rs: List[JsObject]) = rs.filter(r => (r \ "line_id").as[String] == p.line.ref.id)
           .map(r => p.ids.indexOf((r \ "occurrence_id").as[String])).distinct.sorted
-        assert(expected(root).forall(offsets(mentioned).contains), "the original evasion and recapture remain visible")
+        assert(expected(root).forall(offsets(mentioned).contains), "the original evasion and recapture remain in the delivered proof")
         val extra = offsets(mentioned).filterNot(expected(root).contains)
         extra.foreach { offset =>
           val fact = presence.find(value => (value.after.path eq p) && value.after.offset == offset)

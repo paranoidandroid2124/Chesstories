@@ -19,10 +19,10 @@ class LineContinuationJobTest extends munit.FunSuite:
         maximumLocalExpansions = maximumLocalExpansions), 0L,
       supplied.map(SuppliedCommentaryLine(CommentaryLineSource.Study, _))).toOption.get.asInstanceOf[AwaitingEngineWork]
 
-  private def submit(state: AwaitingEngineWork, rows: List[(List[String], Int)]): CommentaryJobState =
+  private def submit(state: AwaitingEngineWork, rows: List[(List[String], Int)], now: Long = 1L): CommentaryJobState =
     CommentaryJobReducer.submitIssuedWorkReport(state, EngineWorkReport.Completed(profile,
       state.issuedWork.workId, state.issuedWork.executionKeySha256,
-      rows.map((moves, cp) => ReportedEngineLineSuffix(moves, ReportedWhiteEngineScore.Centipawns(cp), 16))), 1L)
+      rows.map((moves, cp) => ReportedEngineLineSuffix(moves, ReportedWhiteEngineScore.Centipawns(cp), 16))), now)
       .toOption.get
 
   private def supportChoice(board: String, donor: List[String]): AwaitingEngineWork =
@@ -699,6 +699,19 @@ class LineContinuationJobTest extends munit.FunSuite:
     val search = compared.responseSearches.find(_.work.workId == pair.workId).get
     assertEquals(pair.referenceLineId, search.pathsByMove("b1c3").line.ref.id)
     assertEquals(pair.challengeLineId, search.pathsByMove("e5f3").line.ref.id)
+    // Below the discovery allowance, accepted work still owns and answers its
+    // existing question. Dropping it leaves a restricted search the UI cannot admit.
+    val late = submit(probe, List(List("e5f3") -> 100, List("e5d3") -> 90, donor.drop(2) -> 0), now = 3001L)
+      .asInstanceOf[CompletedCommentaryJob]
+    val lateInquiry = late.continuationInquiries.find(_.question.id == inquiry.question.id).get
+    assertEquals(lateInquiry.routeChallenge.get.state, "compared")
+    assertEquals(lateInquiry.routeChallenge.get.moveClasses.head.comparison.get.workId, probe.issuedWork.workId)
+    assert(probe.continuationInquiries.forall(prior => late.continuationInquiries.exists(_.question.id == prior.question.id)))
+    assertEquals(late.progress.physicalWorksIssued, probe.progress.physicalWorksIssued)
+    val lateWire = PositionCommentaryJobProtocol.projectJobSnapshot(
+      CommentaryJobSnapshot("7" * 32, "late-continuation", 10000L, late))
+    assert((lateWire \ "observations" \ "selection" \ "continuation_inquiries").as[List[JsObject]]
+      .exists(row => (row \ "id").as[String] == inquiry.question.id))
     val reused = CommentaryJobReducer.readRouteChallenge(compared.observationsPacket.get, compared.preparedPaths.get,
       answered.question, compared.responseSearches, answered.routeChallenge).get
     assertEquals(reused, answered.routeChallenge.get)

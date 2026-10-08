@@ -68,6 +68,9 @@ trait PositionFacts:
       case detail: RelationWitnessDetail.LegalMove => Some(LegalMoveResource(source, detail))
       case _ => None).sortBy(_.move))
 
+  /** A missing checking inventory is unknown, including on a local probe. */
+  def checkingMoves: Option[List[LegalMoveResource]] = None
+
   /** An admitted enemy control of this side's actual king is a current check.
     * No result is not a certificate of safety when controls are incomplete.
     */
@@ -108,7 +111,7 @@ final class PositionResourceView private[assembly] (
     if controlSources(actor, target.square).isEmpty then None
     else inventory.ordinaryCaptureKeepsKingSafe(actor, target)
 
-  lazy val checkingMoves: Option[List[LegalMoveResource]] = legalRows.map { rows =>
+  override lazy val checkingMoves: Option[List[LegalMoveResource]] = legalRows.map { rows =>
     val sources = inventory.checkingMoveSources.map(_.semanticId).toSet
     rows.filter(row => sources(row.sourceId))
   }
@@ -207,6 +210,10 @@ object OccurrenceResources:
       def completeKinds = kinds
       protected def factsOf(kind: RelationFactKind) = analysis.relationInventory.relationsOf(kind)
       def occupantAt(square: EvidenceSquare) = analysis.relationInventory.occupantAt(square)
+      override lazy val checkingMoves = legalRows.map { rows =>
+        val sources = analysis.relationInventory.checkingMoveSources.map(_.semanticId).toSet
+        rows.filter(row => sources(row.sourceId))
+      }
     def piece(original: RelationColoredPieceWitness): Option[Option[RelationColoredPieceWitness]] = current(original)
     lazy val identities: Map[RelationColoredPieceWitness, Option[Option[RelationColoredPieceWitness]]] =
       originals.map(original => original -> piece(original)).toMap

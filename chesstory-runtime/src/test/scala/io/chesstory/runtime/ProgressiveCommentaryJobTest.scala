@@ -11,10 +11,10 @@ class ProgressiveCommentaryJobTest extends munit.FunSuite:
   private def history(prefix: List[String] = Nil, fen: String = initial) =
     CanonicalPositionHistory.from(fen, Nil, fen).toOption.get.extend(prefix).toOption.get
   private def start(actual: String = "d2d4", owner: CanonicalPositionHistory = history(), limit: Int = 600,
-      proposals: List[CommentaryProposal.Request] = Nil) =
+      proposals: List[CommentaryProposal.Request] = Nil, deadline: Long = 10000L) =
     CommentaryJobReducer.startJob(owner.initialFen, owner.movePrefixUci, owner.currentFen, actual,
       owner.extend(List(actual)).toOption.get.currentFen,
-      CommentaryJobPolicy(16, 10000L, profile, investigateChoices = true,
+      CommentaryJobPolicy(16, deadline, profile, investigateChoices = true,
         maximumLocalExpansions = limit, previewDepth = Some(8)), 0L, proposals = proposals).toOption.get.asInstanceOf[AwaitingEngineWork]
   private def submit(state: AwaitingEngineWork, rows: List[(List[String], Int)], now: Long = 1L): CommentaryJobState =
     val work = state.issuedWork
@@ -154,6 +154,69 @@ class ProgressiveCommentaryJobTest extends munit.FunSuite:
     }
     assertEquals(failed.progress.physicalReportsAccepted, 2)
     assertEquals(CommentaryJobReducer.expireJob(pending, 10000L).progress.physicalReportsAccepted, 1)
+
+  test("a budget-exhausted verified focus gets one larger-node attempt within the root time limit"):
+    def focus() =
+      val preview = waiting(submit(start("b1c3", limit = 0), simple))
+      val verified = waiting(submit(preview, List(List("e2e4") -> 30, List("b1c3") -> 20)))
+      waiting(submit(verified, simple))
+    def fail(state: AwaitingEngineWork, failure: EngineWorkFailure, now: Long = 2L) =
+      val work = state.issuedWork
+      CommentaryJobReducer.submitIssuedWorkReport(state, EngineWorkReport.ExecutorFailed(profile,
+        work.workId, work.executionKeySha256, failure), now).toOption.get
+    val original = focus()
+    val retried = waiting(fail(original, EngineWorkFailure.BudgetExhausted))
+    assertEquals(retried.issuedWork.purpose, EngineWorkPurpose.FocusComparison)
+    assertEquals(retried.issuedWork.rootRestriction, original.issuedWork.rootRestriction)
+    assertEquals(retried.issuedWork.searchLimits, EngineSearchLimits(16, 20000000, 5000, 2))
+    assertNotEquals(retried.issuedWork.executionKeySha256, original.issuedWork.executionKeySha256)
+    assertEquals(retried.rootSearches.find(_.work == original.issuedWork).get.stopReason,
+      Some(CommentaryJobStopCondition.SearchBudgetExhausted))
+    assertEquals(assessedDepths(retried), Set(8))
+    assertEquals(retried.progress.physicalReportsAccepted, original.progress.physicalReportsAccepted + 1)
+    val done = finish(submit(retried, List(List("e2e4") -> 30, List("b1c3") -> 20)))
+    assertEquals(done.verification.get.completedDepth, Some(16))
+    assertEquals(assessedDepths(done), Set(16))
+    val exhausted = fail(retried, EngineWorkFailure.BudgetExhausted)
+    assert(exhausted.isInstanceOf[CompletedCommentaryJob])
+    assertEquals(exhausted.verification.get.stopReason, Some("search_budget_exhausted"))
+    assertEquals(assessedDepths(exhausted), Set(8))
+    val compact = waiting(fail(original, EngineWorkFailure.BudgetExhausted, 2001L))
+    assertEquals(compact.issuedWork.searchLimits, EngineSearchLimits(16, 20000000, 2500, 2))
+    assertEquals(compact.issuedWork.maxSearchElapsedMs, 3500)
+    assertEquals(compact.issuedWork.rootRestriction, original.issuedWork.rootRestriction)
+    assert(fail(compact, EngineWorkFailure.BudgetExhausted, 2002L).isInstanceOf[CompletedCommentaryJob],
+      "the larger-node short retry cannot recursively renew itself")
+    assert(fail(original, EngineWorkFailure.BudgetExhausted, 4501L).isInstanceOf[CompletedCommentaryJob],
+      "less than the execution and delivery allowance cannot start the retry")
+    assert(CommentaryJobReducer.expireJob(retried, 10000L).isInstanceOf[CompletedCommentaryJob])
+    List(EngineWorkFailure.Cancelled, EngineWorkFailure.ExecutionFailed, EngineWorkFailure.EngineUnavailable,
+      EngineWorkFailure.BrowserUnsupported).foreach(reason =>
+      assert(fail(original, reason).isInstanceOf[CompletedCommentaryJob]))
+    val shallow = waiting(submit(start("b1c3", limit = 0), simple))
+    assert(fail(shallow, EngineWorkFailure.BudgetExhausted).isInstanceOf[StoppedCommentaryJob])
+
+  test("the mandatory verified focus can use the selected reply allowance once, leaving delivery time"):
+    val preview = waiting(submit(start("b1c3", limit = 0, deadline = 30000L), simple))
+    val root = waiting(submit(preview, List(List("e2e4") -> 30, List("b1c3") -> 20)))
+    val focus = waiting(submit(root, simple))
+    def exhausted(state: AwaitingEngineWork, now: Long) =
+      val work = state.issuedWork
+      CommentaryJobReducer.submitIssuedWorkReport(state, EngineWorkReport.ExecutorFailed(profile,
+        work.workId, work.executionKeySha256, EngineWorkFailure.BudgetExhausted), now).toOption.get
+    val retry = waiting(exhausted(focus, 19000L))
+    assertEquals(retry.issuedWork.searchLimits, EngineSearchLimits(16, 40000000, 8000, 2))
+    assertEquals(retry.issuedWork.maxSearchElapsedMs, 9000)
+    assertEquals(retry.issuedWork.rootRestriction, focus.issuedWork.rootRestriction)
+    assertEquals(retry.issuedWork.enginePositionInitialFen, focus.issuedWork.enginePositionInitialFen)
+    assertEquals(retry.issuedWork.enginePositionMovesUci, focus.issuedWork.enginePositionMovesUci)
+    assertEquals(assessedDepths(retry), Set(8))
+    assertEquals(waiting(exhausted(focus, 19001L)).issuedWork.searchLimits,
+      EngineSearchLimits(16, 20000000, 5000, 2))
+    assert(exhausted(retry, 19002L).isInstanceOf[CompletedCommentaryJob], "one failed retry must remain unverified")
+    val done = finish(submit(retry, List(List("e2e4") -> 30, List("b1c3") -> -450), 27000L))
+    assertEquals(assessedDepths(done), Set(16))
+    assertEquals(done.verification.get.state, "complete")
 
   private val targetBoard = "3r2k1/8/8/3p4/4P3/5N2/3P4/3Q1B1K w - - 0 1"
 

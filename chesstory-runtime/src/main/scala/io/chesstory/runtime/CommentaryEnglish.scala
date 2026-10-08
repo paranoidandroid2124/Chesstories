@@ -1,6 +1,6 @@
 package io.chesstory.runtime
 
-import lila.chessjudgment.model.judgment.{EvidencePieceRole, LineMaterialCapture, LineMaterialRecaptureStatus,
+import lila.chessjudgment.model.judgment.{EvidencePieceRole, EvidenceRef, LineEventKind, LineMaterialCapture, LineMaterialRecaptureStatus,
   RelationCheckResponseMode, RelationColoredPieceWitness}
 import lila.chessjudgment.model.line.AutomaticTerminal
 
@@ -13,6 +13,7 @@ private[runtime] object CommentaryEnglish:
   import MoveWorkProjection.Detail.*
   import RootQuestionSummary.MoveRef
   type Part = String | MoveRef
+  case class Rendered(parts: List[Part], expressed: List[Statement])
 
   def openingExchange(captures: List[LineMaterialCapture], moves: List[String]): String =
     val actions = captures.map { capture =>
@@ -123,6 +124,41 @@ private[runtime] object CommentaryEnglish:
     val verb = target.fold("control")(piece => if actor.side == piece.side then "support" else "attack")
     actor.possessiveName + " " + (if present then verb + "s" else "does not " + verb) + " " + target.fold(square)(_.possessiveName)
 
+  private def originalName(piece: Piece): String =
+    "the " + piece.sideName + " " + piece.roleName + " originally on " + piece.at
+
+  private def presenceState(original: Piece, current: Piece): String =
+    (if original.role == current.role then "is still present"
+      else "has promoted to a " + current.roleName + " and is still present") + " on " + current.at
+
+  private def relationActor(detail: Detail): Option[Piece] = detail match
+    case Attack(actor, _, _) => Some(actor)
+    case Support(actor, _, _, _) => Some(actor)
+    case _ => None
+
+  private def supportedCapture(value: SupportedCapture, introduced: Boolean = false): List[Part] =
+    val SupportedCapture(move, provider, target, use, fromStart, arrival, arrivalCapture) = value
+    val start: List[Part] = if fromStart then
+      val support: List[Part] = if introduced then List("That support continues")
+        else List("In the ", move, " line, " + provider.possessiveName + " keeps supporting " + target.possessiveName)
+      if target == use.target then support
+      else support ++ List(" as ") ++ arrival.toList ++ List(arrivalCapture.fold(
+        " moves that " + target.roleName + " to " + use.target.at)(detail =>
+        " " + description(detail).stripSuffix(".").toLowerCase(java.util.Locale.ROOT)))
+    else List("In the ", move, " line, " + provider.possessiveName + " controls the empty " + use.target.at +
+      " square; ") ++ arrival.toList ++ List(" brings " + use.target.possessiveName + " there under its support")
+    val stationaryTarget = fromStart && target == use.target
+    start ++ List(if stationaryTarget then " until " else ". After ",
+      MoveRef(move.path, use.targetCapture.plyOffset), " captures the supported " +
+      use.target.roleName + (if stationaryTarget then "; " else ", "), MoveRef(move.path, use.recapture.plyOffset),
+      " recaptures its capturer with the supporting " + use.provider.roleName + ".")
+
+  def clearedRouteUse(value: ClearedRoute, squareIntroduced: Boolean = false): List[Part] =
+    val action = if value.passage then "passes through " +
+      (if squareIntroduced then "that square" else "the vacated " + value.before.at + " square")
+    else "uses the cleared line to target " + value.targets.map(_.possessiveName).mkString(" and ")
+    List(value.use, " " + action + " in this line.")
+
   def checkDetail(value: CheckEvent, natural: Boolean = false): String = value match
     case CheckingMove(_, detail, opened) =>
       val king = s"${if detail.checkedSide.white then "White" else "Black"} king on ${detail.kingSquare.key}"
@@ -152,10 +188,202 @@ private[runtime] object CommentaryEnglish:
     else if cost.blackAdditionalLosses.nonEmpty then
       Some("Black " + (if common.nonEmpty then "also " else "") + "loses " + counted(cost.blackAdditionalLosses))
     else None
-    List("In the ") ++ sequence(value.references) ++
-      List(" sequence, " + (common.toList ++ extra).mkString("; ") + ".")
+    val description = common.toList ++ extra
+    if description.isEmpty then Nil else
+      List("In the ", MoveRef(value.path, 0), " line, " + description.mkString("; ") + ".")
+
+  private def checkingCapture(material: MaterialEvents, next: Statement): Option[List[Part]] =
+    val response = next match
+      case reply: CheckReply => Some(reply -> Option.empty[MoveRef])
+      case CheckSequence(anchor, List(reply: CheckReply)) if anchor.path eq material.path => Some(reply -> Some(anchor))
+      case _ => None
+    for
+      event <- material.events.headOption.filter(_ => material.events.size == 1)
+      if event.promotionGainCp == 0 && event.movement.beforeRole == event.movement.afterRole
+      capture <- event.capture
+      (reply, anchor) <- response
+      if (reply.move.path eq material.path) && reply.move.offset == event.plyOffset
+      if reply.detail.response.modes == List(RelationCheckResponseMode.CaptureChecker)
+      resource = reply.detail.response.resource
+      if resource.movement == event.movement && EvidenceRef.sameMove(resource.moveUci, event.moveUci)
+      if material.path.moves.lift(event.plyOffset).exists(EvidenceRef.sameMove(_, event.moveUci))
+      checkedCapture <- resource.capture
+      if checkedCapture.capturedSide != capture.side && checkedCapture.capturedRole == capture.capturedRole &&
+        checkedCapture.capturedSquare == capture.square
+    yield
+      anchor.toList.flatMap(ref => List("In the provided ", ref, " line: ")) ++
+        List(reply.move, (if capture.recapture then " recaptures" else " captures") + " the checking " +
+          (if checkedCapture.capturedSide.white then "white" else "black") + " " + capture.capturedRole.name +
+          " on " + capture.square.key + ".")
+
+  private def materialEvents(value: MaterialEvents, attacking: Set[Int] = Set.empty): List[Part] =
+    value.events.zipWithIndex.flatMap { (event, index) =>
+      val capture = event.capture.map(c =>
+        s"${if c.recapture then "recaptures" else "captures"} the ${if attacking(event.plyOffset) then "attacking " else ""}${if c.side.white then "black" else "white"} " +
+          s"${c.capturedRole.name} on ${c.square.key}")
+      val promotion = Option.when(event.promotionGainCp > 0)("promotes to a " + event.movement.afterRole.name)
+      (if index == 0 then Nil else List(" ")) ++ List(MoveRef(value.path, event.plyOffset), " " +
+        (capture.toList ++ promotion).mkString(" and ") + ".")
+    }
+
+  private def pieceExchange(value: PieceExchange, attacking: Set[Int] = Set.empty): List[Part] =
+    val PieceExchange(path, events, recaptureOffsets) = value
+    events.zipWithIndex.flatMap { (event, index) =>
+      val actor = event.originalActor.fold("the moving piece")(originalName)
+      // An immediately preceding capturer has one certified physical identity;
+      // its current role can differ from its original role after promotion.
+      val takesPrecedingActor = index > 0 && event.originalVictim.nonEmpty &&
+        event.originalVictim == events(index - 1).originalActor
+      val modifier = if attacking(event.plyOffset) then "attacking " else ""
+      val victim = if takesPrecedingActor then "that " + modifier + path.certified.flatMap(_._2.material)
+        .flatMap(_.captures.find(_.plyOffset == event.plyOffset)).fold("piece")(_.capturedRole.name)
+        else event.originalVictim.fold("the opposing piece")(piece =>
+          "the " + modifier + originalName(piece).stripPrefix("the "))
+      (if index == 0 then List("With ") else if takesPrecedingActor then List("; with ") else List(". With ")) ++
+        List(MoveRef(path, event.plyOffset), ", " + actor +
+          (if recaptureOffsets(event.plyOffset) then " recaptures " else " captures ") + victim)
+    } ++ Option.when(events.nonEmpty)(".").toList
+
+  /** A capture can express an evasion only when it actually removes that
+    * exact attacker, with the same moving piece and occurrence. Other attacks
+    * on the mover, and actions in another path, remain independent claims. */
+  private def capturesAttacker(value: Statement, evasion: Action): Boolean =
+    val captures = value match
+      case value: MaterialEvents => Some(value.path -> value.events)
+      case value: PieceExchange => value.path.certified.flatMap(_._2.material).map(material =>
+        value.path -> material.events.filter(event => value.events.exists(owned =>
+          owned.plyOffset == event.plyOffset && owned.originalVictim.nonEmpty)))
+      case _ => None
+    (captures, evasion.detail) match
+      case (Some((path, events)), Evades(target, attacker)) if evasion.move.path eq path =>
+        events.exists(event => event.plyOffset == evasion.move.offset && event.promotionGainCp == 0 &&
+          path.moves.lift(event.plyOffset).exists(EvidenceRef.sameMove(_, event.moveUci)) &&
+          event.movement.side == target.side && event.movement.afterRole == target.role &&
+          event.movement.to == target.square && event.capture.exists(capture =>
+            capture.side != attacker.side && capture.capturedRole == attacker.role && capture.square == attacker.square))
+      case _ => false
 
   def statement(value: Statement): List[Part] = value match
+    case value: LegalReplyOption =>
+      val proof = value.proof
+      val referenceRoot = value.referenceSequence.head
+      val alternativeRoot = value.alternativeSequence.head
+      val left = sequence(value.referenceSequence.tail)
+      val right = sequence(value.alternativeSequence.tail)
+      if proof.price.nonEmpty && proof.condition.subject == proof.effect.subject then
+        val guard = proof.effect.subject.get
+        val target = proof.effect.target.get
+        List(referenceRoot, " moves the " + guard.role + " from " + guard.square + ". In the legal variation ",
+          referenceRoot, " ") ++ left ++
+          List(", that " + guard.role + " cannot capture the " + target.role + ". After ",
+            alternativeRoot, " ") ++ right ++
+          List(", the same " + guard.role + " can capture it with ", value.priceMove.get, ". ") ++
+          value.remainingCapturers.toList.flatten.map(actor => actor.possessiveName +
+            " can still capture the " + target.role + " after that arrival. ") ++
+          List("This conditional capture difference does not establish the value of the " + target.role + " move.")
+      else if proof.price.nonEmpty then
+        val target = proof.effect.target.get
+        List(referenceRoot, " moves the " + target.role + " away from the later capture. In the legal variation ",
+          referenceRoot, " ") ++ left ++
+          List(", that " + target.role + " cannot be captured by the same " + proof.effect.subject.get.role +
+            ". After ", alternativeRoot, " ") ++ right ++
+          List(", that same central capture is legal, but " +
+            proof.effect.subject.get.side.capitalize + " can take the " + target.role + " with ",
+            value.priceMove.get, ". This is a conditional difference; the central capture need not be chosen.")
+      else proof.effect.kind match
+        case "legal_capture" =>
+          val provider = proof.action.subject.get
+          val checking = value.reference.certified.exists { (_, fact) => fact.lineEvents.exists(event =>
+            event.plyOffset == proof.reference.size - 1 && event.kind == LineEventKind.Check) }
+          List(referenceRoot, " adds " + provider.role + " control of " + proof.condition.square.get + ". " +
+            "In the legal variation ") ++ List(referenceRoot, " ") ++ left ++
+            List(", " + provider.side.capitalize + (if checking then " can answer the check with " else " can recapture with "), value.option,
+              ". After ", alternativeRoot, " ") ++ right ++
+            List(", that capture with the same " + provider.role + " is unavailable.")
+        case _ =>
+          List(referenceRoot, " changes the king's position: against ") ++ left ++
+            List(", " + proof.effect.side.get.capitalize + " is not in check and can continue with ", value.option,
+              ". After ", alternativeRoot, " ") ++ right ++
+            List(", the king is in check, so that same move cannot be played immediately.")
+    case value: ReserveBreak =>
+      val square = value.actual.moves(value.offset).slice(2, 4)
+      val advanced = value.actual.moves.head.slice(2, 4)
+      val sequence: List[Part] = value.sequence.flatMap(move => List(" ", move)).drop(1)
+      val retained: List[Part] = value.retainedSequence.flatMap(move => List(" ", move)).drop(1)
+      List("After ", MoveRef(value.actual, 0), ", the recorded ") ++ sequence ++
+        List(s" continuation gives ${if value.passer.side.white then "White" else "Black"} a passed pawn on $square. " +
+          s"Advancing the pawn to $advanced has removed its control of $square. ", MoveRef(value.alternative, 0),
+          s" keeps that pawn on ${value.guard.at}: after the same ") ++ retained ++
+        List(s", it still guards $square. After ", MoveRef(value.alternative, 0), ", the tested ",
+          MoveRef(value.held, 1), " evaluates below ", MoveRef(value.otherReply, 1), ".")
+    case value: ReserveTempo =>
+      val sequence: List[Part] = value.sequence.flatMap(move => List(" ", move)).drop(1)
+      List(MoveRef(value.actual, 0), " spends a pawn move that ", MoveRef(value.alternative, 0),
+        " keeps available. After ", MoveRef(value.alternative, 0), " ", MoveRef(value.route, 1),
+        ", the tested ", MoveRef(value.kept, 2), " evaluates above an immediate ", MoveRef(value.spent, 2),
+        ". In the recorded king manoeuvre, ") ++ sequence ++
+        List(s" restores the same piece placement with ${if value.pawn.side.white then "Black" else "White"} to move, while the pawn stays on ${value.pawn.at}. " +
+          "The king manoeuvre hands over the move without spending the pawn advance.")
+    case value: ReserveHold =>
+      val offset = value.proof.offset
+      val kingSquare = value.retreat.moves(offset).take(2)
+      List(MoveRef(value.actual, 0), " spends a pawn move that ", MoveRef(value.alternative, 0),
+        " keeps in reserve. In the tested continuation, ", MoveRef(value.waited, offset),
+        s" keeps the king on $kingSquare and ${value.square} guarded. The tested king retreat ",
+        MoveRef(value.retreat, offset), " gives up that control, allowing ",
+        MoveRef(value.retreat, offset + 1), " to enter. In that position, the retained pawn move evaluates above the king retreat.")
+    case value: ReserveEntry =>
+      val proof = value.proof
+      val king = value.entry.moves(proof.last + 2).take(2)
+      val sequence: List[Part] = value.sequence.flatMap(move => List(" ", move)).drop(1)
+      val counter: List[Part] = value.reply match
+        case ReserveReply.PassedPawn(pawn, supported) =>
+          List("Against ", MoveRef(value.counter, proof.last + 1),
+            ", which keeps that square guarded, ", MoveRef(value.counter, proof.last + 2),
+            " leaves a passed pawn on " + pawn.at +
+              (if supported then ", supported by the pawn kept in reserve." else "."))
+        case ReserveReply.LastPawnWait(offset, square, exchange) =>
+          List(MoveRef(value.counter, proof.last + 1), " keeps that square guarded. ") ++
+            (if exchange then List(MoveRef(value.counter, proof.last + 2), " recaptures that pawn. ") else Nil) ++
+          List("Later in that tested line, ",
+            MoveRef(value.counter, offset), s" holds the king's position. The opponent has no legal pawn move left. " +
+              "Every legal king reply, including ", MoveRef(value.counter, offset + 1),
+              s", gives up $square; the king can enter that square.")
+      val entry: List[Part] = if value.available.nonEmpty then
+        List("the king can enter with ", MoveRef(value.entry, proof.last + 2), ". ")
+      else List(MoveRef(value.entry, proof.last + 2), " enters that square. ")
+      List(MoveRef(value.actual, 0), " spends a pawn move that ", MoveRef(value.alternative, 0),
+        " keeps in reserve. Later in the analysed ", MoveRef(value.alternative, 0), " continuation, ") ++ sequence ++
+        List(s" keeps the king on $king. After ", MoveRef(value.waited, proof.last + 1),
+          " gives up control of " + proof.square + ", ") ++ entry ++ counter
+    case value: DirectReserveEntry =>
+      val proof = value.proof
+      val relation = if proof.testAnswer.exists(answer => answer.evaluationRelation == "worse" &&
+        answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)) then "evaluates above"
+        else "remains comparable to"
+      List(MoveRef(value.actual, 0), " spends a pawn move that ", MoveRef(value.alternative, 0),
+        " keeps in reserve. Later in the analysed ", MoveRef(value.alternative, 0), " continuation, ", MoveRef(value.entry, proof.offset),
+        " leaves the king in place. The opponent has no legal pawn move left: every legal king reply, including ",
+        MoveRef(value.entry, proof.offset + 1), ", gives up " + proof.square + ". In that tested position, ",
+        MoveRef(value.entry, proof.offset + 2), " " + relation + " ", MoveRef(value.otherwise, proof.offset + 2),
+        ".")
+    case value: ReplyConstraint =>
+      val target = value.proof.challenged.witness
+      List(MoveRef(value.actual, 0), s" occupies ${value.proof.square}, taking that retreat square away from " +
+        target.possessiveName + ". After ", MoveRef(value.actual, 1), " attacks the " + target.roleName +
+        ", the recorded reply is ", MoveRef(value.actual, 2), ". ", MoveRef(value.alternative, 0),
+        s" leaves ${value.proof.square} available: against the same ", MoveRef(value.available, 1),
+        ", " + (if target.side.white then "White" else "Black") + " can play ", MoveRef(value.available, 2),
+        ". In that tested position, ", MoveRef(value.available, 2), " evaluates above ",
+        MoveRef(value.otherwise, 2), ".")
+    case TargetDefense(move, target, attackers, defenders) =>
+      List("After ", move, ", " + target.possessiveName + " is under attack from " +
+        attackers.map(_.possessiveName).mkString(" and ") +
+        (if defenders.isEmpty then " and has no defender."
+         else "; it is supported by " + defenders.map(_.possessiveName).mkString(" and ") + "."))
+    case ComparisonSubject(roots, originals) =>
+      List("Compare what happens to " + originals.map(originalName).mkString(" and ") + " in the recorded ",
+        roots.head, " and ", roots.last, " lines.")
     case Action(move, detail) =>
       val text = description(detail, natural = true)
       detail match
@@ -163,22 +391,32 @@ private[runtime] object CommentaryEnglish:
           List("After ", move, ", " + (if text.startsWith("The ") then "the " + text.drop(4) else text))
         case ChangedLines(_, _, _) => List(move, ": " + text)
         case _ => List(move, " " + text.take(1).toLowerCase(java.util.Locale.ROOT) + text.drop(1))
+    case EnPassantCapture(advance, capture, pawn, capturer, captured, destination) =>
+      List(advance, " advances " + originalName(pawn) + " two squares. ", capture,
+        " replies en passant: " + originalName(capturer) + " captures that pawn on " + captured.at +
+          " and lands on " + destination + ".")
     case value: Material => material(value)
-    case MaterialEvents(path, events) => events.zipWithIndex.flatMap { (event, index) =>
-      val capture = event.capture.map(c =>
-        s"${if c.recapture then "recaptures" else "captures"} the ${if c.side.white then "black" else "white"} " +
-          s"${c.capturedRole.name} on ${c.square.key}")
-      val promotion = Option.when(event.promotionGainCp > 0)("promotes to a " + event.movement.afterRole.name)
-      (if index == 0 then Nil else List(" ")) ++ List(MoveRef(path, event.plyOffset), " " +
-        (capture.toList ++ promotion).mkString(" and ") + ".")
-    }
-    case PieceExchange(path, events, recaptureOffsets) => events.zipWithIndex.flatMap { (event, index) =>
-      def original(piece: Piece) = "the " + piece.sideName + " " + piece.roleName + " originally on " + piece.at
-      val actor = event.originalActor.fold("the moving piece")(original)
-      val victim = event.originalVictim.fold("the opposing piece")(original)
-      (if index == 0 then Nil else List(" ")) ++ List("With ", MoveRef(path, event.plyOffset), ", " + actor +
-        (if recaptureOffsets(event.plyOffset) then " recaptures " else " captures ") + victim + ".")
-    }
+    case MaterialBalance(path, cost, through) => cost match
+      case Some(value) => material(Material(path, value)) match
+        case "In the " :: root :: tail if through.nonEmpty =>
+          List("Through ", MoveRef(path, through.get), " in the recorded ", root) ++ tail
+        case "In the " :: tail => "In the recorded " :: tail
+        case parts => parts
+      case None => List("In the recorded ", MoveRef(path, 0), " line, no capture or promotion is recorded.")
+    case value: TargetOutcome =>
+      val target = value.original.sideName.toLowerCase(java.util.Locale.ROOT) + " " + value.original.roleName
+      val removal = value.removal.toList.flatMap(_.references).headOption
+      val outcome: List[Part] = removal match
+        case Some(move) if move == value.root => List(value.root, " captures the " + target + ".")
+        case Some(move) => List("In the ", value.root, " line, ", move, " captures that same " + target + ".")
+        case None => value.departure match
+          case Some(move) => List("In the ", value.root, " line, ", move,
+            " moves that same " + target + "; it remains on the board at the end of the recorded line.")
+          case None => List("In the ", value.root, " line, that same " + target +
+            " remains on the board at the end of the recorded line.")
+      outcome
+    case value: MaterialEvents => materialEvents(value)
+    case value: PieceExchange => pieceExchange(value)
     case value: TargetResponse =>
       val opening: List[Part] = if value.start == 0 then List(MoveRef(value.path, 0))
         else if value.start == 2 then List("After ", MoveRef(value.path, 0), " ", MoveRef(value.path, 1), ", ", MoveRef(value.path, 2))
@@ -189,7 +427,12 @@ private[runtime] object CommentaryEnglish:
         (value.targetCapture.toList ++ value.attackerRemoval.toList).sortBy(_.events.head.plyOffset)
           .flatMap(outcome => List(" ") ++ statement(outcome)) ++
         value.material.toList.flatMap(cost => List(" ") ++ material(cost)) ++
-        value.targetEnd.toList.flatMap(presence => List(" ") ++ statement(presence)) ++
+        value.targetEnd.toList.flatMap { presence =>
+          if presence.original == value.originalTarget && presence.current.role == value.target.role then
+            List(" After ", presence.after, ", the targeted " + value.target.sideName + " " + value.target.roleName +
+              " is still present on " + presence.current.at + ".")
+          else List(" ") ++ statement(presence)
+        } ++
         Option.when(value.survives && value.targetEnd.isEmpty)(
           " That " + value.target.role.name + " remains at the end of the line.").toList
     case RouteUse(move, use, role, opening) =>
@@ -206,43 +449,29 @@ private[runtime] object CommentaryEnglish:
         MoveRef(witness, use.targetCapture.plyOffset), " captures the " + use.originalTarget.role.name + "; ",
         MoveRef(witness, use.recapture.plyOffset), " recaptures that " + use.originalCapturer.role.name + ".")
     case SupportTransfer(move, provider, target, oldProvider, _, departure, use) =>
-      List("In the provided ", move, " line, " + provider.possessiveName + " maintains support of " + target.possessiveName +
-        " after ", departure, " ends the control of that target's square by the " + oldProvider.sideName +
-        " " + oldProvider.roleName + " originally on " + oldProvider.at + "; following ",
-        MoveRef(move.path, use.targetCapture.plyOffset), ", ", MoveRef(move.path, use.recapture.plyOffset),
-        " actually recaptures the piece that took that target.")
-    case SupportedCapture(move, provider, target, use, fromStart, arrival, arrivalCapture) =>
-      val start: List[Part] = if fromStart then
-        if target == use.target then List("In the provided ", move, " line, that support is maintained")
-        else List("In the provided ", move, " line, the supported " + target.roleName + " from " + target.at + " " +
-          arrivalCapture.fold("reaches " + use.target.at)(detail => description(detail).stripSuffix(".").toLowerCase(java.util.Locale.ROOT)) +
-          " with ") ++ arrival.toList ++ List(" while that support is maintained")
-      else List("In the provided line, ", move, " gives " + provider.possessiveName + " control of the empty " + use.target.at +
-        " square; ") ++ arrival.toList ++ List(" later brings " + use.target.possessiveName + " there under that support")
-      start ++ List(". After ", MoveRef(move.path, use.targetCapture.plyOffset), " captures the supported " +
-        use.target.roleName + " on " + use.target.at + ", ", MoveRef(move.path, use.recapture.plyOffset),
-        " by the supporting " + provider.roleName + " on " + provider.at + " actually recaptures its capturer.")
+      List("In the ", move, " line, " + provider.possessiveName + " keeps supporting " + target.possessiveName +
+        " after ", departure, " ends the support from " + oldProvider.possessiveName +
+        ". When ", MoveRef(move.path, use.targetCapture.plyOffset), " captures that " + target.roleName + ", ",
+        MoveRef(move.path, use.recapture.plyOffset), " recaptures its capturer with the supporting " + use.provider.roleName + ".")
+    case value: SupportedCapture => supportedCapture(value)
     case SupportRetention(move, _, provider, _, target, _, oldProvider, departure, currentTarget) =>
-      val identity = if currentTarget == target then "that same " + target.roleName + " on " + target.at
-        else "the same " + target.roleName + " from " + target.at + ", now on " + currentTarget.at
-      List("In the provided ", move, " line, ", departure, " ends the support of " + identity + " by the " +
-        oldProvider.sideName + " " + oldProvider.roleName + " originally on " + oldProvider.at + "; the " +
-        provider.roleName + " from " + provider.at + " keeps covering it through that move.")
+      val identity = if currentTarget == target then target.possessiveName
+        else "the " + target.sideName + " " + target.roleName + " from " + target.at + ", now on " + currentTarget.at
+      List("In the ", move, " line, " + provider.possessiveName + " keeps supporting " + identity +
+        " even after ", departure, " ends the support from " + oldProvider.possessiveName + ".")
     case BlockedLineTransfer(move, _, blocker, _, slider, departure, arrival, entrant) =>
       List(move, " keeps the line from " + slider.possessiveName + " toward " + entrant.at + " blocked: after ", departure,
         ", " + blocker.possessiveName + " remains in that line as its sole blocker. In the same provided line, ", arrival,
         " brings " + entrant.possessiveName + " there while that line is still blocked.")
     case BlockedAttack(after, attacker, target, blocker) =>
       List("After ", after, ", " + blocker.possessiveName + " blocks the line from " + attacker.possessiveName + " to " + target.possessiveName + ".")
-    case ClearedRoute(move, before, mover, _, use, _, targets, passage, development) =>
+    case value @ ClearedRoute(move, before, mover, _, _, _, _, _, development) =>
       val developed = development.nonEmpty || Set("bishop", "knight")(mover.roleName) &&
         Set('1', '8')(before.at.last) && mover.at.last != before.at.last
       val opening = if development.nonEmpty then " develops the " + mover.roleName + " to " + mover.at
         else if developed then " brings the " + mover.roleName + " to " + mover.at
         else " clears " + before.at
-      val action = if passage then "passes through " + (if developed then "the vacated " + before.at + " square" else "that square")
-        else "uses the cleared line to target " + targets.map(_.possessiveName).mkString(" and ")
-      List(move, opening + "; later ", use, " " + action + " in this line.")
+      List(move, opening + "; later ") ++ clearedRouteUse(value, squareIntroduced = !developed)
     case SquareReoccupation(move, _, _, square, use, _, _) =>
       List(move, " clears " + square + "; ", use, " later occupies that square in this line.")
     case PawnAdvanceOption(move, pawn, alternative, advancedPawn, square, use, supported) =>
@@ -276,6 +505,12 @@ private[runtime] object CommentaryEnglish:
         .zipWithIndex.flatMap { case ((ref, steps), index) =>
           (if index == 0 then Nil else List("; ")) ++ List(ref, " " + steps.map(checkDetail(_, natural = true)).mkString(" and "))
         } ++ List(".")
+    case Continuation(moves) if moves.size > 1 && moves.forall(_.offset == 0) &&
+        moves.map(_.path.positions.head).distinct.size == 1 &&
+        moves.map(_.path.moves.head).distinct.size == moves.size =>
+      List("The compared root choices are ") ++ moves.zipWithIndex.flatMap { (move, index) =>
+        (if index == 0 then Nil else List(if index == moves.size - 1 then " and " else ", ")) :+ move
+      } ++ List(".")
     case Continuation(moves) => List("The recorded continuation is ") ++ sequence(moves) ++ List(".")
     case NoMaterialChange(root, end) =>
       if root == end then List("The recorded ", root, " line contains no captures or promotions.")
@@ -299,15 +534,21 @@ private[runtime] object CommentaryEnglish:
     case RecordedEnd(move) =>
       List("The recorded line stops after ", move, "; no following reply is recorded.")
     case PiecePresence(after, original, current) =>
-      List("After ", after, ", the " + original.sideName + " " + original.roleName + " originally on " +
-        original.at + " is still present on " + current.at + ".")
+      List("After ", after, ", " + originalName(original) + " " + presenceState(original, current) + ".")
     case AttackWithdrawal(move, before, after, target) =>
       List(move, " moves the " + before.roleName + " from " + before.at + " to " + after.at +
         ", ending its attack on " + target.possessiveName + ".")
     case contrast: ControlContrast =>
-      List("After ", contrast.move, ", " + controlRelation(contrast.actor, contrast.target, contrast.square, contrast.present) +
-        "; after ", contrast.alternative, ", " + controlRelation(contrast.alternativeActor, contrast.alternativeTarget,
-          contrast.alternativeSquare, contrast.alternativePresent) + ".") ++
+      val sameRelation = contrast.actor == contrast.alternativeActor && contrast.target == contrast.alternativeTarget &&
+        contrast.square == contrast.alternativeSquare
+      val comparison: List[Part] = if sameRelation && contrast.present != contrast.alternativePresent then
+        List("After ", contrast.move, ", " + controlRelation(contrast.actor, contrast.target, contrast.square, contrast.present) +
+          (if contrast.present then ", but not after " else ", whereas the " + contrast.actor.at + "-" +
+            contrast.actor.roleName + " does after "), contrast.alternative, ".")
+      else List("After ", contrast.move, ", " + controlRelation(contrast.actor, contrast.target, contrast.square, contrast.present) +
+          "; after ", contrast.alternative, ", " + controlRelation(contrast.alternativeActor, contrast.alternativeTarget,
+            contrast.alternativeSquare, contrast.alternativePresent) + ".")
+      comparison ++
         Option.when(contrast.remaining.nonEmpty)(" " + contrast.remaining.map(_.possessiveName).mkString(" and ") +
           " still " + (if contrast.actor.side == contrast.target.get.side then "support" else "attack") +
           (if contrast.remaining.size == 1 then "s" else "") + " that target.").toList ++
@@ -333,55 +574,116 @@ private[runtime] object CommentaryEnglish:
       case (None, Some(b)) => List("The ", leftRoot, " line ends there; the ", rightRoot, " line also records ", b, ".")
       case _ => Nil
 
-  def section(value: Section): List[Part] =
-    val statements = value.statements.filterNot {
+  def section(value: Section): List[Part] = renderedSection(value).parts
+
+  def renderedSection(value: Section): Rendered =
+    val captures = value.statements.filter {
+      case _: MaterialEvents | _: PieceExchange => true
+      case _ => false
+    }
+    val joinedEvasions = value.statements.collect { case action: Action => action }.flatMap(action =>
+      captures.find(capturesAttacker(_, action)).map(_ -> action)).groupMap(_._1)(_._2)
+    val deferred: Set[Statement] = joinedEvasions.values.flatten.toSet
+    val statements = value.statements.filterNot(deferred).filterNot {
       case route: PieceRoute => value.statements.exists { use =>
         val actor = use match
           case support: SupportedCapture => support.use.recapture.originalActor
           case support: SupportTransfer => support.use.recapture.originalActor
           case _ => None
+        // The actual support-use receipt owns these same proof references;
+        // the filtered route is not itself credited as expressed.
         actor.contains(route.original) && route.references.forall(use.references.contains)
       }
       case _ => false
     }
     val expressed = scala.collection.mutable.Set.empty[Statement]
+    val receipts = scala.collection.mutable.ListBuffer.empty[Statement]
     var precedingPath: Option[ObservedLineProtocol.PreparedPath] = None
-    statements.flatMap { claim =>
+    val rendered = statements.flatMap { claim =>
       if expressed(claim) then Nil else
-        expressed += claim
+        val consumed = scala.collection.mutable.ListBuffer(claim)
         val parts = claim match
-          case Action(move, Attack(actor, _, gained)) =>
+          case material: MaterialEvents =>
+            val evasions = joinedEvasions.getOrElse(claim, Nil)
+            consumed ++= evasions
+            val index = statements.indexWhere(_ eq claim)
+            val joined = statements.lift(index + 1).flatMap(next =>
+              checkingCapture(material, next).map(next -> _))
+            joined match
+              case Some((next, words)) =>
+                consumed += next
+                words
+              case None => materialEvents(material, evasions.map(_.move.offset).toSet)
+          case exchange: PieceExchange =>
+            val evasions = joinedEvasions.getOrElse(claim, Nil)
+            consumed ++= evasions
+            pieceExchange(exchange, evasions.map(_.move.offset).toSet)
+          case Action(move, detail) if relationActor(detail).nonEmpty =>
+            val actor = relationActor(detail).get
             val peers = statements.collect {
-              case action @ Action(other, Attack(same, target, sameGain))
-                  if other == move && same == actor && sameGain == gained => action -> target
+              case action: Action if (action.move.path eq move.path) && action.move.offset == move.offset &&
+                  relationActor(action.detail).contains(actor) => action
             }
-            expressed ++= peers.map(_._1)
+            consumed ++= peers
+            val attackGains = scala.collection.mutable.Set.empty[Boolean]
+            val clauses = peers.map(_.detail).distinct.flatMap {
+              case Attack(_, _, gained) if attackGains.add(gained) =>
+                val sameGain = peers.collect { case Action(_, Attack(_, target, `gained`)) => target }.distinct
+                Some(
+                  (if gained then "now targets " else "keeps targeting ") + sameGain.map(_.possessiveName).mkString(" and "))
+              case Support(_, target, opposition, gained) => Some(
+                (if gained then "adds support to " else "keeps supporting ") + target.possessiveName +
+                  (if opposition.isEmpty then "" else ", which is under attack from " +
+                    opposition.map(_.possessiveName).mkString(" and ")))
+              case _ => None
+            }
+            val introduction = if peers.size == 1 then statement(claim) else
+              List("After ", move, ", " + actor.possessiveName + " " + clauses.mkString(", and ") + ".")
+            val uses = statements.collect {
+              case use: SupportedCapture if !expressed(use) && (use.move.path eq move.path) && use.move.offset == move.offset &&
+                  use.fromStart && use.provider == actor &&
+                  peers.exists(_.detail match
+                    case Support(_, target, _, _) => target == use.target
+                    case _ => false) => use
+            }
+            if uses.size != 1 || peers.count(_.detail.isInstanceOf[Support]) != 1 then introduction else
+              consumed += uses.head
+              introduction ++ List(" ") ++ supportedCapture(uses.head, introduced = true)
+          case Action(move, Evades(target, _)) =>
+            val peers = statements.collect {
+              case same @ Action(at, Evades(piece, _)) if at == move && piece == target => same
+            }
+            consumed ++= peers
             if peers.size == 1 then statement(claim) else
-              List("After ", move, ", " + actor.possessiveName +
-                (if gained then " now targets " else " attacks ") +
-                peers.map(_._2.possessiveName).distinct.mkString(" and ") + ".")
+              val attackers = peers.collect { case Action(_, Evades(_, actor)) => actor.possessiveName }.distinct
+              List(move, " moves the " + target.roleName + " out of the attacks from " + attackers.mkString(" and ") + ".")
           case presence: PiecePresence =>
             val peers = statements.collect {
               case same: PiecePresence if (same.after.path eq presence.after.path) &&
                   same.original == presence.original && same.current == presence.current => same
             }.sortBy(_.after.offset)
-            expressed ++= peers
+            consumed ++= peers
             if peers.size == 1 then statement(claim) else
-              List("The " + presence.original.sideName + " " + presence.original.roleName + " originally on " +
-                presence.original.at + " is still present on " + presence.current.at + " after ") ++
+              List(originalName(presence.original).capitalize + " " +
+                presenceState(presence.original, presence.current) + " after ") ++
                 peers.zipWithIndex.flatMap((same, index) =>
                   (if index == 0 then Nil else List(" and after ")) :+ same.after) ++ List(".")
           case _ => statement(claim)
-        val refs = parts.collect { case ref: MoveRef => ref }
-        val owner = refs.map(_.path).distinct match
-          case List(path) => Some(path)
-          case _ => None
-        val header = owner.filter(path => !precedingPath.exists(_ eq path) &&
-          !refs.exists(_.offset == 0)).toList.flatMap(path =>
-            List("In the ", MoveRef(path, 0), " line: "))
-        precedingPath = owner
-        List(" ") ++ header ++ parts
+        if parts.isEmpty then Nil else
+          consumed.distinct.foreach { statement =>
+            if expressed.add(statement) then receipts += statement
+          }
+          val refs = parts.collect { case ref: MoveRef => ref }
+          val owner = refs.map(_.path).distinct match
+            case List(path) => Some(path)
+            case _ => None
+          val header = owner.filter(path => !precedingPath.exists(_ eq path) &&
+            (!refs.exists(_.offset == 0) || claim.isInstanceOf[PieceExchange])).toList.flatMap(path =>
+              List("In the ", MoveRef(path, 0), " line: "))
+          precedingPath = owner
+          List(" ") ++ header ++ parts
     }.drop(1).foldLeft(List.empty[Part]) {
       case ((words: String) :: rest, next: String) => (words + next) :: rest
       case (all, next) => next :: all
     }.reverse
+    Rendered(rendered, receipts.toList)

@@ -133,6 +133,47 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
     assertEquals(inquiry.stopReason, Some("cancelled"))
     assertEquals(inquiry.assessmentEffect, Some("needs_refresh"))
 
+  test("a budget-failed root assessment refresh retains the owned rebound and baseline"):
+    // These invented scores isolate refresh failure; they are not an R02 engine recording.
+    val active = probe()
+    val baseline = active.assessment.get
+    val pairWork = active.issuedWork
+    assertEquals(pairWork.rootRestriction, EngineRootRestriction.Restricted(List("e2e4", "g1h3")))
+    val refresh = submit(active, List("e2e4" -> 30, "g1h3" -> 80)).asInstanceOf[AwaitingEngineWork]
+    val observed = refresh.inquiries.find(_.question.alternativeMove == "g1h3").get
+    assertEquals(observed.question.referenceMove, "e2e4")
+    assertEquals(observed.state, "answered")
+    assertEquals(observed.answer.get.workId, pairWork.workId)
+    assertEquals(observed.answer.get.executionKeySha256, pairWork.executionKeySha256)
+    assertEquals(observed.answer.get.evaluationRelation, "better")
+    assertEquals(refresh.assessmentNeedsRefresh, true)
+    assertEquals(RuntimeProtocol.completedResultJson(refresh.assessment.get), RuntimeProtocol.completedResultJson(baseline))
+    val work = refresh.issuedWork
+    assertEquals(work.purpose, EngineWorkPurpose.InvestigationComparison)
+    assertEquals(work.rootRestriction, EngineRootRestriction.Restricted(List("e2e4", "g1f3", "g1h3")))
+    val wrongOwner = EngineWorkReport.ExecutorFailed(profile, pairWork.workId,
+      pairWork.executionKeySha256, EngineWorkFailure.BudgetExhausted)
+    assertEquals(CommentaryJobReducer.submitIssuedWorkReport(refresh, wrongOwner, 2L),
+      Left(EngineWorkReportRejection.WorkNotOutstanding))
+    val done = CommentaryJobReducer.submitIssuedWorkReport(refresh, EngineWorkReport.ExecutorFailed(profile,
+      work.workId, work.executionKeySha256, EngineWorkFailure.BudgetExhausted), 2L).toOption.get
+      .asInstanceOf[CompletedCommentaryJob]
+    assertEquals(RuntimeProtocol.completedResultJson(done), RuntimeProtocol.completedResultJson(baseline))
+    val inquiry = done.inquiries.find(_.question.id == observed.question.id).get
+    assertEquals(inquiry.state, "answered")
+    assertEquals(inquiry.answer, observed.answer, "retain the actually observed owned pair")
+    assertEquals(inquiry.stopReason, Some("search_budget_exhausted"))
+    assertEquals(inquiry.assessmentEffect, Some("needs_refresh"))
+    assertEquals(done.assessmentNeedsRefresh, true)
+    val pair = done.rootSearches.find(_.work.workId == pairWork.workId).get
+    assert(pair.receipt.get.work eq pairWork)
+    assertEquals(pair.state, "completed")
+    val failed = done.rootSearches.find(_.work.workId == work.workId).get
+    assert(failed.work eq work)
+    assertEquals(failed.state, "stopped")
+    assertEquals(failed.stopReason, Some(CommentaryJobStopCondition.SearchBudgetExhausted))
+    assertEquals(failed.receipt, None)
+
   test("wrong work owner is rejected and invalid pair cannot overwrite the preserved review"):
     val active = probe()
     val wrong = EngineWorkReport.ExecutorFailed(profile, "work:0", active.issuedWork.executionKeySha256,
@@ -388,13 +429,34 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
         ReportedEngineLineSuffix(newActualPath, ReportedWhiteEngineScore.Centipawns(-400), 20))), 2L)
       .toOption.get.asInstanceOf[AwaitingEngineWork]
     assertEquals(following.assessmentNeedsRefresh, false)
-    assert(following.proposalEntries.exists(entry => entry.request.requirements.exists {
+    val nextWork = following.issuedWork
+    val currentQuestionIds = CommentaryIdea.currentQuestions(following.proposalEntries).map(_.request.id).toSet
+    // This fixed synthetic state owns a pending first-reply pool, not an
+    // answered pair or a chess-strength claim. Frozen versions 34 and 35
+    // independently issue this exact key and retain the named pair owners.
+    assert(following.proposalEntries.exists(entry => currentQuestionIds(entry.request.id) &&
+        entry.request.requirements.exists {
       case pair: CommentaryProposal.CompareMoves =>
-        following.issuedWork.rootRestriction ==
-          EngineRootRestriction.Restricted(List(pair.referenceMove, pair.alternativeMove)) &&
-          following.issuedWork.searchAnchor.map(_.prefixMoves).getOrElse(Nil) == pair.prefixMovesUci &&
+        val exactPair = nextWork.rootRestriction ==
+          EngineRootRestriction.Restricted(List(pair.referenceMove, pair.alternativeMove))
+        val firstChildPool = nextWork.rootRestriction == EngineRootRestriction.Unrestricted &&
+          nextWork.purpose == EngineWorkPurpose.ResponseComparison && nextWork.workId == "work:3" &&
+          nextWork.executionKeySha256 == "68bddeef0419d456287cbb3c4cd3ca4493b00037882983bd08e5ec77acc006d8" &&
+          pair.prefixMovesUci == List(following.playedMoveUci) && nextWork.multiPv == 3 &&
+          nextWork.engineProfile == profile && owner.extend(pair.prefixMovesUci).toOption.exists(child =>
+            nextWork.enginePositionInitialFen == child.initialFen &&
+            nextWork.enginePositionMovesUci == child.movePrefixUci && nextWork.searchFen == child.currentFen &&
+            List(pair.referenceMove, pair.alternativeMove).forall(child.currentLegalMoveUcis.contains)) &&
+          following.observationsPacket.exists(packet => packet.assembly.playedTransition.exists(root =>
+            nextWork.searchAnchor.exists(anchor => anchor.rootMove == following.playedMoveUci &&
+              anchor.rootOccurrenceId == root.evidence.id && root.to.id.contains(anchor.positionId) &&
+              anchor.prefixMoves == pair.prefixMovesUci)))
+        (exactPair || firstChildPool) && nextWork.requiredDepth == work.requiredDepth &&
+          CommentaryProposal.neededRequirementIds(entry)(pair.id) &&
+          nextWork.searchAnchor.map(_.prefixMoves).getOrElse(Nil) == pair.prefixMovesUci &&
+          nextWork.proposalRefs.contains(entry.request.id -> pair.id) &&
           entry.readings.exists(reading => reading.requirementId == pair.id &&
-            reading.state == "awaiting_engine" && reading.workId.contains(following.issuedWork.workId))
+            reading.state == "awaiting_engine" && reading.workId.contains(nextWork.workId) && reading.answer.isEmpty)
       case _ => false
     }))
     val done = CommentaryJobReducer.cancelJob(following).asInstanceOf[CompletedCommentaryJob]

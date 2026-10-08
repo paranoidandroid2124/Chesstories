@@ -113,6 +113,94 @@ private[runtime] object TargetResponseInvestigation:
       (-line.evaluation.rankingScoreForMover(child.currentPosition.color), line.evaluation.moves.head)), paths,
       child.currentPosition.color)
 
+  /** The completed first reply pool and the answered capture/decline pair
+    * retain separate owners. Their child scores do not explain the root grade. */
+  final class FirstTarget private[TargetResponseInvestigation] (
+      private val owner: EvidenceBackedJudgmentPacket, private val prepared: ObservedLineProtocol.PreparedPaths,
+      val inquiry: CommentaryResponseInquiry, val fullPool: Search, val captureDecline: Search):
+    val question: Question = inquiry.question
+    val leaderMove: String = fullPool.lines.head.evaluation.moves.head
+    val id: String = CommentarySelection.stableId("first-target", List(question.id,
+      fullPool.work.executionKeySha256, captureDecline.work.executionKeySha256))
+    def belongsTo(packet: EvidenceBackedJudgmentPacket, paths: ObservedLineProtocol.PreparedPaths): Boolean =
+      (owner eq packet) && (prepared eq paths)
+    def ownershipJson: JsObject = Json.obj("response_inquiry_id" -> question.id,
+      "full_pool_work_id" -> fullPool.work.workId,
+      "full_pool_execution_key_sha256" -> fullPool.work.executionKeySha256,
+      "capture_decline_work_id" -> captureDecline.work.workId,
+      "capture_decline_execution_key_sha256" -> captureDecline.work.executionKeySha256)
+
+  def firstTargets(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+      inquiries: List[CommentaryResponseInquiry], searches: List[Search]): List[FirstTarget] =
+    prepared.requireOwner(packet)
+    inquiries.flatMap { inquiry =>
+      val question = inquiry.question
+      def atChild(search: Search): Boolean = search.belongsTo(packet) &&
+        search.anchor.rootMove == question.rootMove &&
+        search.anchor.rootOccurrenceId == question.rootMoveOccurrenceId &&
+        search.anchor.positionId == question.childPositionId &&
+        search.anchor.prefixMoves == List(question.rootMove) && search.anchor.plyOffset == 1
+      for
+        _ <- Option.when(inquiry.state == "answered" && inquiry.stopReason.isEmpty &&
+          reviewedMover(packet, prepared, question))(())
+        _ <- queryResources(packet, question, prepared)
+        answer <- inquiry.answer
+        if answer.searchPositionId == question.childPositionId && answer.plyOffset == 1
+        _ <- inquiry.reading.filter(value => value.belongsTo(packet) && value.complete &&
+          value.question.id == question.id &&
+          value.lineIds == List(answer.pair.referenceLineId, answer.pair.alternativeLineId))
+        if inquiry.readingOwner.exists(_ eq packet)
+        comparison <- searches.find(search => atChild(search) &&
+          search.work.workId == answer.pair.workId &&
+          search.work.executionKeySha256 == answer.pair.executionKeySha256 &&
+          search.pairAnswer(packet, question.referenceMove, question.alternativeMove).contains(answer.pair))
+        pool <- searches.reverse.filter { search =>
+          atChild(search) && search.work.rootRestriction == EngineRootRestriction.Unrestricted &&
+            search.work.engineProfile == comparison.work.engineProfile &&
+            search.work.requiredDepth >= comparison.work.requiredDepth
+        }.sortBy(search => -search.work.requiredDepth).headOption
+        leaderMove = pool.lines.head.evaluation.moves.head
+        if Set(question.referenceMove, question.alternativeMove)(leaderMove)
+        selection = if leaderMove == question.referenceMove then question.referenceSelection
+          else question.alternativeSelection
+        if selection.source == "child_search"
+        selected <- searches.find(search => atChild(search) &&
+          search.work.engineProfile == pool.work.engineProfile &&
+          selection.workId.contains(search.work.workId) &&
+          search.pathsByMove.get(leaderMove).exists(path => selection.lineId.contains(path.line.ref.id)))
+        leader <- comparison.pathsByMove.get(leaderMove)
+        observed <- pool.pathsByMove.get(leaderMove)
+        current <- selected.pathsByMove.get(leaderMove)
+        if leader.moves.take(2) == observed.moves.take(2) && leader.ids.take(2) == observed.ids.take(2) &&
+          leader.positions.take(3) == observed.positions.take(3) &&
+          current.moves.take(2) == observed.moves.take(2) && current.ids.take(2) == observed.ids.take(2) &&
+          current.positions.take(3) == observed.positions.take(3)
+      yield new FirstTarget(packet, prepared, inquiry, pool, comparison)
+    }.distinctBy(_.question.id)
+
+  /** An exact capture question about the actually reviewed mover, rather
+    * than every geometrical contact at the same child position. */
+  def reviewedMover(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+      question: Question): Boolean =
+    prepared.requireOwner(packet)
+    packet.assembly.playedTransition.exists { root =>
+      question.rootMove == packet.assembly.input.playedMoveUci &&
+      question.rootOccurrenceId == root.evidence.id && root.from.id.contains(question.rootPositionId) &&
+      question.rootMoveOccurrenceId == root.evidence.id &&
+      packet.observations.find(_.transition.evidence.id == root.evidence.id).exists { observation =>
+        val mover = observation.mover
+        question.originalTarget == RelationColoredPieceWitness(mover.from, mover.beforeRole, mover.side) &&
+        question.target == RelationColoredPieceWitness(mover.to, mover.afterRole, mover.side) &&
+        prepared.paths.exists(path => path.certified.nonEmpty && path.ids == path.declared &&
+          path.moves == path.sourceMoves && path.moves.headOption.contains(question.rootMove) &&
+          path.ids.headOption.contains(question.rootMoveOccurrenceId) &&
+          path.positions.lift(1).flatMap(_.id).contains(question.childPositionId) &&
+          prepared.positionView(path, 1).flatMap(_.legalRows).exists(rows =>
+            question.captureMoves.nonEmpty && question.captureMoves.toSet ==
+              rows.filter(_.capture.contains(question.target)).map(_.move).toSet))
+      }
+    }
+
   def discover(packet: EvidenceBackedJudgmentPacket, referenceMove: String,
       prepared: ObservedLineProtocol.PreparedPaths, searches: List[Search] = Nil): List[Question] =
     prepared.requireOwner(packet)
@@ -309,6 +397,189 @@ private[runtime] object TargetResponseInvestigation:
 
   def hasExistingContrast(packet: EvidenceBackedJudgmentPacket, question: Question,
       prepared: ObservedLineProtocol.PreparedPaths): Boolean = existingContrast(packet, question, prepared).nonEmpty
+
+  /** A compact factual reading of the actual mover's answered first reply.
+    * Independent selected uses still close through the same price/protection
+    * callbacks; the competing capture remains an explicitly separate line. */
+  def withAnswer(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+      pair: List[ObservedLineProtocol.PreparedPath], proofs: List[FirstTarget],
+      notes: List[MoveWorkProjection.LocalCandidate], previous: CommentaryAnswer.Answer,
+      complete: CommentaryAnswer.Answer => Option[CommentaryAnswer.Answer],
+      protect: (CommentaryAnswer.Answer, List[CommentaryAnswer.Section]) => CommentaryAnswer.Answer)
+      : CommentaryAnswer.Answer =
+    import CommentaryAnswer.*
+    import MoveWorkProjection.{Detail, Position}
+    import RootQuestionSummary.MoveRef
+    prepared.requireOwner(packet)
+    if previous.question != "selected_comparison" || pair.size != 2 ||
+        pair.exists(_.automaticTerminal.nonEmpty) then return previous
+    val candidates = proofs.filter(value => value.belongsTo(packet, prepared) &&
+      pair.exists(path => path.moves.headOption.contains(value.question.rootMove) &&
+        path.ids.headOption.contains(value.question.rootMoveOccurrenceId) &&
+        path.positions.lift(1).flatMap(_.id).contains(value.question.childPositionId)))
+      .distinctBy(_.question.id)
+    if candidates.size != 1 then return previous
+    val proof = candidates.head
+    val question = proof.question
+
+    def firstOwn(path: ObservedLineProtocol.PreparedPath): Boolean =
+      path.moves.size >= 3 && prepared.paths.exists(_ eq path) && path.certified.nonEmpty &&
+        path.ids == path.declared && path.moves == path.sourceMoves &&
+        prepared.positionView(path, 2).flatMap(_.legalRows).exists(_.exists(row =>
+          row.move == path.moves(2) && row.actor.side == question.originalTarget.side &&
+            packet.observations.exists(observation =>
+              observation.transition.evidence.id == path.ids(2) &&
+              observation.transition.from == path.positions(2) && observation.transition.to == path.positions(3) &&
+              observation.mover.from == row.actor.square && observation.mover.beforeRole == row.actor.role &&
+              observation.mover.side == row.actor.side)))
+    val leader = proof.captureDecline.pathsByMove(proof.leaderMove)
+    val otherMove = if proof.leaderMove == question.referenceMove then question.alternativeMove
+      else question.referenceMove
+    val other = proof.captureDecline.pathsByMove(otherMove)
+    if !firstOwn(leader) || !firstOwn(other) then return previous
+    // Use the already selected root path only for the identical certified
+    // prefix. Its later PV never inherits the child comparison's evaluation.
+    val body = pair.find(path => path.moves.take(3) == leader.moves.take(3) &&
+      path.ids.take(3) == leader.ids.take(3) && path.positions.take(4) == leader.positions.take(4))
+      .getOrElse(leader)
+    def controls(path: ObservedLineProtocol.PreparedPath): Option[List[ControlState]] =
+      prepared.pieceAfter(packet, path, question.originalTarget, 2) match
+        case Some(None) => Some(Nil)
+        case Some(Some(_)) => supportThroughOwnAction(packet, prepared, question, path)
+        case None => None
+    val bodyControls = controls(body)
+    val otherControls = controls(other)
+    if bodyControls.isEmpty || otherControls.isEmpty then return previous
+    val child = prepared.positionView(body, 1).map(new Position(_))
+      .filter(_.complete(RelationFactKind.GeometricControl))
+    if child.isEmpty || !child.get.contains(question.target) then return previous
+    val attackers = child.get.controllers(question.target.square.key, !question.target.side)
+    if attackers.isEmpty then return previous
+    val root = MoveRef(body, 0)
+    val role = notes.filter(note => note.edge.evidence.id == body.ids.head &&
+      note.note.actor == question.target && (note.note.detail match
+        case Detail.Attack(actor, target, true) => actor == question.target && target.side != actor.side
+        case _: Detail.Development => true
+        case _ => false)).distinctBy(_.note.detail)
+    val introduction = Section(role.map(note => Action(root, note.note.detail)) :+
+      TargetDefense(root, question.target, attackers,
+        child.get.controllers(question.target.square.key, question.target.side)),
+      focus = role.map(note => Focus(root, note)).distinctBy(_.move))
+    def response(path: ObservedLineProtocol.PreparedPath, support: List[ControlState]): Section =
+      val moves = List(1, 2).map(MoveRef(path, _))
+      val evasions = notes.filter(note => note.edge.evidence.id == path.ids(2) &&
+        note.edge.from == path.positions(2) && note.edge.to == path.positions(3) &&
+        note.note.actor.side == question.originalTarget.side &&
+        note.note.actor.square.key == path.moves(2).slice(2, 4) && (note.note.detail match
+          case Detail.Evades(target, _) => target == note.note.actor && note.after.contains(target)
+          case _ => false)).distinctBy(_.note.detail)
+      val events = path.certified.flatMap(_._2.material).toList.flatMap(_.events)
+        .filter(event => Set(1, 2)(event.plyOffset))
+      Section(List(Continuation(moves)) ++ evasions.map(note => Action(MoveRef(path, 2), note.note.detail)) ++
+        Option.when(events.nonEmpty)(MaterialEvents(path, events)).toList ++ support, moves,
+        evasions.map(note => Focus(MoveRef(path, 2), note)).distinctBy(_.move))
+    val roots = Section(List(Continuation(pair.map(MoveRef(_, 0)))))
+    val immediate = pair.filter(path => path.certified.exists { (_, fact) =>
+      fact.material.exists(_.events.exists(_.plyOffset == 1)) ||
+        fact.lineEvents.exists(event => event.plyOffset == 1 && event.kind == LineEventKind.Check)
+    }).map(MoveRef(_, 1)).filterNot(move => move.path eq body)
+    val lead = List(introduction, response(body, bodyControls.get), roots) ++
+      Option.when(immediate.nonEmpty)(Section(List(Continuation(immediate)))).toList
+    val alternative = response(other, otherControls.get)
+    val recorded = previous.core ++ previous.details
+    val detail = Section(recorded.flatMap(_.statements).distinct,
+      recorded.flatMap(_.required).distinct, recorded.flatMap(_.focus).distinctBy(_.move))
+    // The alternative gets the same intrinsic trade/check closure, while its
+    // actions remain detail-only in the actual mover's selected reading.
+    val completedAlternative = RootQuestionSummary.completePairAnswer(packet, prepared, pair,
+      "first_target_response", List(alternative, roots)).flatMap(answer => complete(answer.copy(
+        completionSources = Some(alternative.statements ++ roots.statements))))
+    val answer = for
+      alternate <- completedAlternative
+      selected <- RootQuestionSummary.completePairAnswer(packet, prepared, pair, "first_target_response", lead,
+        detail :: alternate.core.filterNot(section => section.statements == roots.statements))
+      sources = lead.flatMap(_.statements)
+      protectedAnswer = protect(selected.copy(comparison = Some(ComparisonScope(Set(question.originalTarget))),
+        completionSources = Some(sources), evidence = (selected.evidence ++ previous.evidence ++
+          proof.fullPool.pathsByMove(proof.leaderMove).ids.take(2) ++ role.flatMap(_.evidence)).distinct), previous.core)
+      closed <- complete(protectedAnswer)
+      if RootQuestionSummary.realize(prepared, pair, closed).nonEmpty
+    yield closed
+    answer.getOrElse(previous)
+
+  /** The original target can keep a changed defense after an own action even
+    * when the opposing reply captured a different piece. Complete inventories
+    * certify the change; they do not certify safety or the value of that reply. */
+  def supportThroughOwnAction(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+      question: Question, path: ObservedLineProtocol.PreparedPath): Option[List[CommentaryAnswer.ControlState]] =
+    prepared.requireOwner(packet)
+    for
+      _ <- Option.when(prepared.paths.exists(_ eq path) && path.certified.nonEmpty &&
+        path.ids == path.declared && path.moves == path.sourceMoves && path.moves.size >= 3 &&
+        path.moves.headOption.contains(question.rootMove) &&
+        path.ids.headOption.contains(question.rootMoveOccurrenceId) &&
+        path.positions.lift(1).flatMap(_.id).contains(question.childPositionId) &&
+        (question.captureMoves ++ question.declineMoves).contains(path.moves(1)))(())
+      _ <- queryResources(packet, question, prepared)
+      if prepared.pieceAfter(packet, path, question.originalTarget, 1).contains(Some(question.target))
+      beforeView <- prepared.positionView(path, 2)
+      afterView <- prepared.positionView(path, 3)
+      if List(beforeView, afterView).forall(_.completeKinds(RelationFactKind.GeometricControl))
+      beforeTarget <- prepared.pieceAfter(packet, path, question.originalTarget, 2).flatten
+      afterTarget <- prepared.pieceAfter(packet, path, question.originalTarget, 3).flatten
+      if beforeView.occupantAt(beforeTarget.square).contains(beforeTarget) &&
+        afterView.occupantAt(afterTarget.square).contains(afterTarget)
+      own <- beforeView.legalRows.flatMap(_.find(_.move == path.moves(2)))
+      if own.actor.side == question.originalTarget.side
+      occurrence <- path.ids.lift(2)
+      observation <- packet.observations.find(_.transition.evidence.id == occurrence)
+      if observation.transition.from == path.positions(2) && observation.transition.to == path.positions(3) &&
+        observation.mover.from == own.actor.square && observation.mover.beforeRole == own.actor.role &&
+        observation.mover.side == own.actor.side
+      before = new MoveWorkProjection.Position(beforeView)
+      after = new MoveWorkProjection.Position(afterView)
+      beforeProviders = before.controllers(beforeTarget.square.key, beforeTarget.side)
+      afterProviders = after.controllers(afterTarget.square.key, afterTarget.side)
+      beforeIdentities = prepared.identitiesAfter(packet, path, 2)
+      afterIdentities = prepared.identitiesAfter(packet, path, 3)
+      if beforeProviders.forall(provider => beforeIdentities.exists(_._2.contains(Some(provider)))) &&
+        afterProviders.forall(provider => afterIdentities.exists(_._2.contains(Some(provider))))
+    yield
+      def originals(providers: List[RelationColoredPieceWitness], identities:
+          List[(RelationColoredPieceWitness, Option[Option[RelationColoredPieceWitness]])]) =
+        providers.flatMap(provider => identities.collectFirst {
+          case (original, Some(Some(current))) if current == provider => original
+        })
+      val beforeOriginals = originals(beforeProviders, beforeIdentities)
+      val afterOriginals = originals(afterProviders, afterIdentities)
+      val lost = beforeOriginals.filterNot(afterOriginals.contains)
+      val gained = afterOriginals.filterNot(beforeOriginals.contains)
+      val move = RootQuestionSummary.MoveRef(path, 2)
+      val withdrawals = lost.flatMap(original => prepared.pieceAfter(packet, path, original, 3).flatten.map(actor =>
+        CommentaryAnswer.ControlState(move, actor, Some(afterTarget), afterTarget.square.key, false,
+          Option.when(gained.isEmpty)(afterProviders))))
+      val arrivals = gained.flatMap(original => prepared.pieceAfter(packet, path, original, 3).flatten.map(actor =>
+        CommentaryAnswer.ControlState(move, actor, Some(afterTarget), afterTarget.square.key, true)))
+      withdrawals ++ arrivals
+
+  /** Add no new selected action: the existing root answer already owns this
+    * own move and will complete its prices after the defense is made explicit. */
+  def withOwnTargetSupport(packet: EvidenceBackedJudgmentPacket, prepared: ObservedLineProtocol.PreparedPaths,
+      pair: List[ObservedLineProtocol.PreparedPath], previous: CommentaryAnswer.Answer): CommentaryAnswer.Answer =
+    prepared.requireOwner(packet)
+    val additions = for
+      path <- pair.filter(_.moves.headOption.contains(packet.assembly.input.playedMoveUci))
+      if previous.core.exists(_.actionReferences.contains(RootQuestionSummary.MoveRef(path, 2)))
+      reference <- pair.find(peer => !(peer eq path)).map(_.moves.head).toList
+      question <- discover(packet, reference, prepared).filter(question =>
+        question.rootMove == path.moves.head && reviewedMover(packet, prepared, question))
+      statements <- supportThroughOwnAction(packet, prepared, question, path).toList
+      if statements.nonEmpty
+    yield path -> statements
+    previous.copy(core = previous.core.map(section => additions.find((path, _) =>
+      section.actionReferences.contains(RootQuestionSummary.MoveRef(path, 2))).fold(section) { (_, statements) =>
+        section.copy(statements = (section.statements ++ statements).distinct)
+      }))
 
   private def branch(packet: EvidenceBackedJudgmentPacket, question: Question,
       path: ObservedLineProtocol.PreparedPath, reply: String,

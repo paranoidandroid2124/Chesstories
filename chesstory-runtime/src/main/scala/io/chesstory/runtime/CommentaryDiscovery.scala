@@ -9,15 +9,32 @@ private[runtime] object CommentaryDiscovery:
   import CommentaryProposal.*
   import ObservedLineProtocol.{PreparedPath, PreparedPaths}
 
-  val GeneratorVersion = "11"
+  val GeneratorVersion = "32"
 
   final case class Anchor(prefixMoves: List[String], referenceMove: String)
-  final case class SourcePath(moves: List[String], source: Source)
+  final case class SourcePath(moves: List[String], source: Source,
+      choiceRank: Option[(List[String], Int)] = None)
   final case class Scan(anchor: Anchor, legalMoves: List[String], examinedMoves: List[String],
       state: String, reason: Option[String] = None, deferredRequestIds: List[String] = Nil,
       pendingReplayPrefixes: List[List[String]] = Nil)
   final case class State(inputKey: String = "", scans: List[Scan] = Nil, inventoryKey: String = "")
-  final case class Batch(additions: List[Entry], replayNeeds: List[List[String]], scans: List[Scan])
+  final case class Batch(additions: List[Entry], replayNeeds: List[List[String]], scans: List[Scan],
+      functionalReplayNeeds: List[List[String]] = Nil)
+
+  /** The source owns this decision, not the later witness's forecast or value. */
+  private[runtime] def sameReserveDecision(prepared: PreparedPaths, source: PreparedPath,
+      witness: PreparedPath, count: Int, actors: List[RelationColoredPieceWitness]): Boolean =
+    def owned(path: PreparedPath) = prepared.paths.exists(_ eq path) && path.certified.nonEmpty &&
+      path.ids == path.declared && path.moves == path.sourceMoves
+    count > 0 && actors.nonEmpty && List(source, witness).forall(path => owned(path) &&
+      path.moves.size >= count && path.ids.size >= count && path.positions.size > count) &&
+      source.moves.take(count) == witness.moves.take(count) &&
+      source.ids.take(count) == witness.ids.take(count) &&
+      source.positions.take(count + 1) == witness.positions.take(count + 1) &&
+      actors.distinct.forall { actor =>
+        val current = prepared.trackedPieceAfter(source, actor, count).flatten
+        current.nonEmpty && current == prepared.trackedPieceAfter(witness, actor, count).flatten
+      }
 
   private case class Board(moves: List[String], count: Int, view: PositionFacts,
       originals: Map[RelationColoredPieceWitness, Piece], sideToMove: Option[chess.Color],
@@ -110,6 +127,7 @@ private[runtime] object CommentaryDiscovery:
       }
     val additions = scala.collection.mutable.LinkedHashMap.empty[String, Entry]
     val replays = scala.collection.mutable.LinkedHashSet.empty[List[String]]
+    val functionalReplays = scala.collection.mutable.LinkedHashSet.empty[List[String]]
     val priorEntries = existing.map(entry => entry.request.id -> entry).toMap
     val sourcePrefixes = boundedSources.flatMap(_.moves.inits).toSet
     val investigativeRootMoves = Set(packet.assembly.input.playedMoveUci) ++
@@ -127,6 +145,7 @@ private[runtime] object CommentaryDiscovery:
     // Direct replies retain their two slots. At most two further replies test different
     // conditions, within the same job budget; these are coverage choices, not strength scores.
     val tacticalChoices = scala.collection.mutable.LinkedHashMap.empty[(List[String], String, String), (Boolean, Set[String])]
+    var followupRoom = 0
 
     def emit(anchor: Anchor, key: List[String], kind: String, refs: List[String], origin: Source,
         requirements: List[Requirement], headRequirementIds: List[String], alternative: Option[String] = None,
@@ -148,10 +167,23 @@ private[runtime] object CommentaryDiscovery:
       val Draft(id, anchor, kind, refs, origin, requirements, headRequirementIds, alternative, question, bundles) = draft
       val prior = additions.get(id).orElse(priorEntries.get(id))
       if prior.forall(_.admission == "generated") then
+        // A returned comparison can move the useful wait further along its
+        // line. Keep enough of the existing 600-item quota for the bounded
+        // chain of four investigations; unrelated child contacts cannot spend
+        // this room before the question they came from has been settled.
+        val linked = Set("reserve-hold", "reserve-entry")(kind) && requirements.exists {
+          case pair: CompareMoves => Set("hold_source", "reserve_source")(pair.id)
+          case fact: Fact if Set("hold_start", "reserve_start")(fact.id) => fact.path.source match
+            case Declared(moves) => boundedSources.exists(source =>
+              source.source.producer == "response_comparison" && source.moves.startsWith(moves))
+            case _ => false
+          case _ => false
+        }
+        val available = (remaining - (if linked then 0 else followupRoom)).max(0)
         // The pair can survive a tight budget with one complete observation. Further
         // observations keep their own deferred IDs rather than evicting the whole choice.
         val priorIds = prior.toList.flatMap(_.request.requirements.map(_.id)).toSet
-        var room = remaining - requirements.count(value => !priorIds(value.id))
+        var room = available - requirements.count(value => !priorIds(value.id))
         val accepted = bundles.flatMap { bundle =>
           val size = bundle.count(value => !priorIds(value.id))
           if size <= room then
@@ -181,7 +213,7 @@ private[runtime] object CommentaryDiscovery:
             mapped.filter(requirement => previousById.get(requirement.id).exists(_ != requirement))
               .map(requirement => previousById(requirement.id) -> requirement).mkString(","))
         val added = mapped.filterNot(requirement => previousById.contains(requirement.id))
-        if added.size > remaining then
+        if added.size > available then
           deferred.getOrElseUpdate(anchor.prefixMoves.mkString(" "), scala.collection.mutable.LinkedHashSet.empty) +=
             alternative.fold(id)(move => s"$id:$move")
         else
@@ -200,7 +232,10 @@ private[runtime] object CommentaryDiscovery:
             val arm = GeneratedArm(CommentarySelection.stableId("discovery-arm", id :: alternative.toList ++
               Option.when(index > 0)(heads.mkString(" "))),
               anchor.prefixMoves, anchor.referenceMove, alternative, heads.map(branchId),
-              mapped.map(_.id).distinct, origin, refs)
+              // A later search can witness the identical question. Its report
+              // kind is provenance, not a different semantic arm. The exact
+              // requirement body was checked above; accumulate the new refs.
+              mapped.map(_.id).distinct, joined(evidenceSource, origin.sourceRefs), refs)
             require(arm.headRequirementIds.nonEmpty && arm.headRequirementIds.forall(arm.memberRequirementIds.contains),
               "a generated arm's head must belong to its exact question context")
             val mergedArm = previousArms.find(_.id == arm.id).fold(arm) { previous =>
@@ -893,11 +928,815 @@ private[runtime] object CommentaryDiscovery:
                         }
                 }
               }
+
+              if start.isEmpty && Set(anchor.referenceMove, alternativeMove)
+                  .contains(packet.assembly.input.playedMoveUci) then
+                // A useful purpose can belong to either root, including a
+                // close/equal alternative. Engine ordering is not proof direction.
+                def inspectFunction(anchor: Anchor, alternativeMove: String,
+                    reference: Board, alternative: Board,
+                    referencePrefix: List[String], alternativePrefix: List[String]): Unit =
+                  val referenceRows = reference.view.legalRows.toList.flatten
+                  val alternativeRows = alternative.view.legalRows.toList.flatten
+                  // These short paths test a possible resource. They never seed
+                  // later goals/anchors and never supply an engine evaluation.
+                  def functionalBoard(moves: List[String]): Option[Board] =
+                    val current = inspect(moves)
+                    if current.isEmpty then
+                      functionalReplays += moves
+                      replays += moves
+                      pending += moves
+                    current
+                  def sameResource(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
+                    a.move == b.move && left.original(a.actor).nonEmpty &&
+                      left.original(a.actor) == right.original(b.actor) &&
+                      a.capture.flatMap(left.original) == b.capture.flatMap(right.original) &&
+                      a.promotionRole == b.promotionRole
+                  def emitFunction(condition: Predicate, leftMoves: List[String], rightMoves: List[String],
+                      effect: Predicate, option: LegalMoveResource, at: Board, refs: List[String],
+                      price: Option[(LegalMoveResource, Board)] = None): Unit =
+                    val optionMoves = if price.isEmpty then leftMoves :+ option.move else leftMoves
+                    val optionAt = leftMoves.size - (if price.isEmpty then 0 else 1)
+                    val pair = CompareMoves("function_root", Nil, anchor.referenceMove, alternativeMove)
+                    val optionAction = action(at, option, canonical).get
+                    val facts = List[Requirement](
+                      Fact("function_before", declared("function_reference", leftMoves), condition, Ply(0),
+                        expected = value(root, condition).value),
+                      Fact("function_root_reference", declared("function_reference", leftMoves), condition, Ply(1),
+                        expected = value(reference, condition).value),
+                      Fact("function_root_alternative", declared("function_alternative", rightMoves), condition, Ply(1),
+                        expected = value(alternative, condition).value),
+                      FactComparison("function_owned", "function_before", "function_root_reference", "different"),
+                      FactComparison("function_changed", "function_root_reference", "function_root_alternative", "different"),
+                      Fact("function_live", declared("function_live", List(anchor.referenceMove)), condition, Ply(1),
+                        expected = value(reference, condition).value),
+                      Fact("function_effect_reference", declared("function_reference", leftMoves), effect, Ply(leftMoves.size),
+                        expected = inspect(leftMoves).flatMap(value(_, effect).value)),
+                      Fact("function_effect_alternative", declared("function_alternative", rightMoves), effect, Ply(rightMoves.size),
+                        expected = inspect(rightMoves).flatMap(value(_, effect).value)),
+                      FactComparison("function_effect_changed", "function_effect_reference", "function_effect_alternative", "different"),
+                      Fact("function_option", declared("function_option", optionMoves), optionAction.predicate,
+                        Ply(optionAt), expected = Some("legal")),
+                      Fact("function_other_option", declared("function_alternative", rightMoves), optionAction.predicate,
+                        Ply(optionAt), expected = Some(if price.isEmpty then "illegal" else "legal")),
+                      Fact("function_option_end", declared("function_option", optionMoves),
+                        Predicate("location", Some(optionAction.actor)), Ply(optionMoves.size), expected = Some(optionAction.to))) ++
+                      price.toList.flatMap { (capture, _) => List(
+                        Fact("function_price", declared("function_price", rightMoves :+ capture.move), effect,
+                          Ply(rightMoves.size), expected = Some("legal")),
+                        Fact("function_price_end", declared("function_price", rightMoves :+ capture.move),
+                          Predicate("presence", effect.target), Ply(rightMoves.size + 1), expected = Some("removed"))) }
+                    val context = FactGroup("function_context", "all", facts.map(_.id))
+                    emit(anchor, List(condition.json.toString, effect.json.toString,
+                      leftMoves.mkString(" "), rightMoves.mkString(" "), option.move), "reply-function", refs,
+                      canonical, pair :: (facts :+ context), List(context.id), Some(alternativeMove),
+                      question = Some((if price.isEmpty then
+                        "Which already possible reply remains usable against this same conditional resource? " else
+                        "Which same legal capture has a different immediate price after this conditional resource? ") +
+                        "The root-owned condition and the legal response are separate from the resource's strength and the whole evaluation."))
+
+                  // A king relocation can remove the checking tempo of the same
+                  // opponent move while leaving an already legal plan usable.
+                  val king = root.originals.values.find(piece => piece.side == side && piece.role == "king")
+                  king.foreach { king =>
+                    val condition = Predicate("location", Some(king))
+                    if value(root, condition).value != value(reference, condition).value &&
+                      value(reference, condition).value != value(alternative, condition).value then
+                      val checkedReference = reference.view.checkingMoves.toList.flatten.map(_.move).toSet
+                      val checkedAlternative = alternative.view.checkingMoves.toList.flatten.map(_.move).toSet
+                      alternativeRows.filter(row => checkedAlternative(row.move) && !checkedReference(row.move))
+                        .sortBy(_.move).foreach { enemy =>
+                          referenceRows.find(row => sameResource(reference, alternative, row, enemy)).foreach { _ =>
+                            val leftMoves = referencePrefix :+ enemy.move
+                            val rightMoves = alternativePrefix :+ enemy.move
+                            for
+                              left <- functionalBoard(leftMoves)
+                              right <- functionalBoard(rightMoves)
+                              if value(left, Predicate("check", side = Some(side))).value.contains("absent") &&
+                                value(right, Predicate("check", side = Some(side))).value.contains("present")
+                              goal <- observedActions.filter(goal => goal.actor.side == side && goal.actor.role != "king" &&
+                                value(root, goal.predicate).value.contains("legal") &&
+                                value(left, Predicate("location", Some(goal.actor))).value.nonEmpty &&
+                                value(left, Predicate("location", Some(goal.actor))).value ==
+                                  value(right, Predicate("location", Some(goal.actor))).value &&
+                                value(left, goal.predicate).value.contains("legal") &&
+                                value(right, goal.predicate).value.contains("illegal"))
+                                .sortBy(goal => (goal.observedAt.getOrElse(MaximumPly), goal.predicate.json.toString)).take(1)
+                              option <- left.view.legalRows.toList.flatten.find(row =>
+                                action(left, row, canonical).exists(_.predicate == goal.predicate))
+                            do emitFunction(condition, leftMoves, rightMoves, Predicate("check", side = Some(side)),
+                              option, left, goal.sourceRefs :+ enemy.sourceId)
+                          }
+                        }
+                  }
+
+                  // Reuse the current first capture, but inspect its natural
+                  // recaptures even when a new PV chooses a different response.
+                  // Only an actual checking arrival on a root-changed square
+                  // can finish this control/use proof. Legality alone is not value.
+                  val firstReplies = boundedSources.filter(source => source.moves.size >= 2 &&
+                    Set(anchor.referenceMove, alternativeMove)(source.moves.head)).map(_.moves(1)).toSet
+                  val relocated = root.originals.values.toList.distinct.filter(piece =>
+                    piece.side == side && piece.role != "king" &&
+                      value(root, Predicate("location", Some(piece))).value !=
+                        value(reference, Predicate("location", Some(piece))).value &&
+                      value(reference, Predicate("location", Some(piece))).value !=
+                        value(alternative, Predicate("location", Some(piece))).value)
+                  // The opponent's move can already be legal in both arms.
+                  // Replay its arrival on a changed guarded square: losing the
+                  // specific guard capture is a fact, even if another capture
+                  // remains. It is not a safe-square or utility certificate.
+                  for
+                    guard <- relocated
+                    (_, destination, sourceId) <- changedControls.filter(_._1 == guard)
+                    arrival <- referenceRows.filter(row => row.to == destination && row.capture.isEmpty &&
+                      row.promotionRole.isEmpty).sortBy(row => (if firstReplies(row.move) then 0 else 1, row.move))
+                    peer <- alternativeRows.find(row => sameResource(reference, alternative, arrival, row))
+                    enemy <- reference.original(arrival.actor) if enemy.role != "king" && enemy.side != guard.side
+                    leftMoves = referencePrefix :+ arrival.move
+                    rightMoves = alternativePrefix :+ peer.move
+                    ends = functionalBoard(leftMoves) -> functionalBoard(rightMoves)
+                    left <- ends._1
+                    right <- ends._2
+                    if firstReplies(arrival.move) || attacked(left, enemy).nonEmpty || attacked(right, enemy).nonEmpty
+                    condition = Predicate("location", Some(guard))
+                    if (1 to leftMoves.size).forall(count =>
+                      inspect(leftMoves.take(count)).exists(at => value(at, condition).value == value(reference, condition).value) &&
+                        inspect(rightMoves.take(count)).exists(at => value(at, condition).value == value(alternative, condition).value))
+                    effect = Predicate("legal_capture", Some(guard), Some(enemy))
+                    if value(left, effect).value.contains("illegal") && value(right, effect).value.contains("legal")
+                    capture <- right.view.legalRows.toList.flatten.find(row =>
+                      action(right, row, canonical).exists(_.predicate == effect))
+                    paid <- functionalBoard(rightMoves :+ capture.move)
+                  do emitFunction(condition, leftMoves, rightMoves, effect, arrival, reference,
+                    List(sourceId, arrival.sourceId, peer.sourceId, capture.sourceId), Some(capture -> paid))
+                  val ownedControls = changedControls.filter { (provider, destination, _) =>
+                    val condition = Predicate("control", Some(provider), square = Some(destination.key))
+                    value(root, condition).value.contains("absent") && value(reference, condition).value.contains("present") &&
+                      value(alternative, condition).value.contains("absent")
+                  }
+                  if ownedControls.nonEmpty then referenceRows.filter(row => firstReplies(row.move) &&
+                      row.capture.nonEmpty && row.promotionRole.isEmpty).foreach { capture =>
+                    alternativeRows.find(row => sameResource(reference, alternative, capture, row)).foreach { _ =>
+                      val firstLeft = referencePrefix :+ capture.move
+                      val firstRight = alternativePrefix :+ capture.move
+                      for
+                        left <- functionalBoard(firstLeft)
+                        right <- functionalBoard(firstRight)
+                        capturer <- reference.original(capture.actor)
+                        recapture <- left.view.legalRows.toList.flatten.filter(row => row.promotionRole.isEmpty &&
+                          row.capture.flatMap(left.original).contains(capturer))
+                        other <- right.view.legalRows.toList.flatten.find(row => sameResource(left, right, recapture, row))
+                        middleLeft = firstLeft :+ recapture.move
+                        middleRight = firstRight :+ other.move
+                        a <- functionalBoard(middleLeft)
+                        b <- functionalBoard(middleRight)
+                        arrival <- a.view.checkingMoves.toList.flatten
+                        peer <- b.view.legalRows.toList.flatten.find(row => sameResource(a, b, arrival, row))
+                        if b.view.checkingMoves.exists(_.exists(_.move == peer.move))
+                        (provider, destination, sourceId) <- ownedControls if destination == arrival.to
+                        condition = Predicate("control", Some(provider), square = Some(destination.key))
+                        if (1 to 3).forall(count => inspect(middleLeft.take(count)).exists(at =>
+                          value(at, condition).value.contains("present")) && inspect(middleRight.take(count)).exists(at =>
+                          value(at, condition).value.contains("absent")))
+                        leftMoves = middleLeft :+ arrival.move
+                        rightMoves = middleRight :+ peer.move
+                        endLeft <- functionalBoard(leftMoves)
+                        endRight <- functionalBoard(rightMoves)
+                        enemy <- a.original(arrival.actor)
+                        effect = Predicate("legal_capture", Some(provider), Some(enemy))
+                        if value(endLeft, effect).value.contains("legal") && value(endRight, effect).value.contains("illegal")
+                        option <- endLeft.view.legalRows.toList.flatten.find(row =>
+                          action(endLeft, row, canonical).exists(_.predicate == effect))
+                      do emitFunction(condition, leftMoves, rightMoves, effect, option, endLeft,
+                        List(sourceId, capture.sourceId, recapture.sourceId, arrival.sourceId))
+                    }
+                  }
+
+                  // Reuse an observed friendly arrival, but inspect the price
+                  // of its capture even when the opponent's PV avoids it.
+                  // The same root-owned control can protect a rook, queen or
+                  // other piece. The conditional recapture is not a value test.
+                  for
+                    (provider, destination, sourceId) <- ownedControls
+                    (goal, middleLeft) <- witnessedActionPaths.filter((goal, line) =>
+                      line.headOption.contains(anchor.referenceMove) && line.size > 1 &&
+                        goal.actor.side == side && goal.actor != provider && goal.to == destination.key)
+                      .distinctBy(_._2).sortBy(_._2.size)
+                    middleRight = alternativePrefix ++ middleLeft.drop(referencePrefix.size)
+                    a <- functionalBoard(middleLeft)
+                    b <- functionalBoard(middleRight)
+                    condition = Predicate("control", Some(provider), square = Some(destination.key))
+                    if (1 to middleLeft.size).forall(count => inspect(middleLeft.take(count)).exists(at =>
+                      value(at, condition).value.contains("present")) && inspect(middleRight.take(count)).exists(at =>
+                      value(at, condition).value.contains("absent")))
+                    capture <- a.view.legalRows.toList.flatten.filter(row => row.promotionRole.isEmpty &&
+                      row.to == destination && row.capture.flatMap(a.original).contains(goal.actor))
+                    peer <- b.view.legalRows.toList.flatten.find(row => sameResource(a, b, capture, row))
+                    enemy <- a.original(capture.actor)
+                    leftMoves = middleLeft :+ capture.move
+                    rightMoves = middleRight :+ peer.move
+                    endLeft <- functionalBoard(leftMoves)
+                    endRight <- functionalBoard(rightMoves)
+                    effect = Predicate("legal_capture", Some(provider), Some(enemy))
+                    if value(endLeft, effect).value.contains("legal") && value(endRight, effect).value.contains("illegal")
+                    option <- endLeft.view.legalRows.toList.flatten.find(row =>
+                      action(endLeft, row, canonical).exists(_.predicate == effect))
+                  do emitFunction(condition, leftMoves, rightMoves, effect, option, endLeft,
+                    (goal.sourceRefs ++ List(sourceId, capture.sourceId)).distinct)
+
+                  // A legal capture can remain available in both arms while
+                  // its price changes. Follow one witnessed challenge, a quiet
+                  // escape, and a same-piece central capture/recapture. Every
+                  // local branch is replayed; none becomes a forced forecast.
+                  if relocated.nonEmpty then referenceRows.filter(row => firstReplies(row.move) &&
+                      row.capture.isEmpty && row.promotionRole.isEmpty).foreach { challenge =>
+                    alternativeRows.find(row => sameResource(reference, alternative, challenge, row)).foreach { _ =>
+                      val firstLeft = referencePrefix :+ challenge.move
+                      val firstRight = alternativePrefix :+ challenge.move
+                      for
+                        left <- functionalBoard(firstLeft)
+                        right <- functionalBoard(firstRight)
+                        enemy <- reference.original(challenge.actor)
+                        challenged <- attacked(left, enemy) if attacked(right, enemy).contains(challenged)
+                        retreat <- left.view.legalRows.toList.flatten.filter(row => row.capture.isEmpty &&
+                          row.promotionRole.isEmpty && left.original(row.actor).contains(challenged))
+                        peer <- right.view.legalRows.toList.flatten.find(row => sameResource(left, right, retreat, row))
+                        middleLeft = firstLeft :+ retreat.move
+                        middleRight = firstRight :+ peer.move
+                        a <- functionalBoard(middleLeft)
+                        b <- functionalBoard(middleRight)
+                        if !exposed(a, challenged) && !exposed(b, challenged)
+                        capture <- a.view.legalRows.toList.flatten.filter(row => row.capture.nonEmpty && row.promotionRole.isEmpty)
+                        other <- b.view.legalRows.toList.flatten.find(row => sameResource(a, b, capture, row))
+                        capturedLeft = middleLeft :+ capture.move
+                        capturedRight = middleRight :+ other.move
+                        c <- functionalBoard(capturedLeft)
+                        d <- functionalBoard(capturedRight)
+                        capturer <- a.original(capture.actor)
+                        recapture <- c.view.legalRows.toList.flatten.filter(row => row.promotionRole.isEmpty &&
+                          row.capture.flatMap(c.original).contains(capturer))
+                        matched <- d.view.legalRows.toList.flatten.find(row => sameResource(c, d, recapture, row))
+                        optionLeft = capturedLeft :+ recapture.move
+                        optionRight = capturedRight :+ matched.move
+                        endLeft <- functionalBoard(optionLeft)
+                        endRight <- functionalBoard(optionRight)
+                        target <- relocated
+                        condition = Predicate("location", Some(target))
+                        if (1 to optionLeft.size).forall(count =>
+                          inspect(optionLeft.take(count)).exists(at => value(at, condition).value == value(reference, condition).value) &&
+                          inspect(optionRight.take(count)).exists(at => value(at, condition).value == value(alternative, condition).value))
+                        price <- endRight.view.legalRows.toList.flatten.filter(row => row.capture.flatMap(endRight.original).contains(target))
+                        taker <- endRight.original(price.actor)
+                        effect = Predicate("legal_capture", Some(taker), Some(target))
+                        if value(endLeft, effect).value.contains("illegal") && value(endRight, effect).value.contains("legal")
+                        paid <- functionalBoard(optionRight :+ price.move)
+                      do emitFunction(condition, optionLeft, optionRight, effect, recapture, c,
+                        List(challenge.sourceId, retreat.sourceId, capture.sourceId, recapture.sourceId, price.sourceId),
+                        Some(price -> paid))
+                    }
+                  }
+                inspectFunction(anchor, alternativeMove, reference, alternative, referencePrefix, alternativePrefix)
+                inspectFunction(anchor.copy(referenceMove = alternativeMove), anchor.referenceMove,
+                  alternative, reference, alternativePrefix, referencePrefix)
             }
             // An independently observed later action can name its immediate legal alternative.
             // Keep the intervening history: a difference here asks about these two paths,
             // not whether the preparatory move forces the plan against every reply.
-            val preparations = witnessedActionPaths.groupBy(_._2).toList.sortBy(_._1.mkString(" "))
+            // A quiet move away from a newly created attack is a response, not
+            // evidence that the root intended to prepare that destination.
+            def quietReaction(goal: Action, line: List[String]): Option[Action] =
+              val offset = line.size - 1
+              if goal.capture.nonEmpty || goal.promotion.nonEmpty || offset <= ply + 1 then None
+              else for
+                before <- inspect(line.take(offset - 1))
+                challenged <- inspect(line.init)
+                escaped <- inspect(line)
+                reply <- observedAction(line, offset - 1)
+                if reply.actor.side != goal.actor.side && reply.capture.isEmpty && reply.promotion.isEmpty
+                target <- location(challenged, goal.actor)
+                after <- location(escaped, goal.actor)
+                if target != after && location(before, goal.actor).contains(target)
+                attack = Predicate("control", Some(reply.actor), square = Some(target))
+                if value(before, attack).value.contains("absent") && value(challenged, attack).value.contains("present") &&
+                  value(escaped, Predicate("control", Some(reply.actor), square = Some(after))).value.contains("absent")
+              yield reply
+
+            // A root move can occupy an ally's useful reply square. Test that
+            // exact reply after the same observed attack in the other root arm.
+            // The declared branch is a hypothesis: the fact reader must replay
+            // it and the child comparison must establish the reply's value.
+            if start.isEmpty then witnessedActionPaths.distinctBy(_._2).foreach { (retreat, line) =>
+              for
+                attack <- quietReaction(retreat, line).toList
+                if line.size == 3 && line.head == packet.assembly.input.playedMoveUci &&
+                  line.head != anchor.referenceMove
+                first <- rows.find(_.move == line.head).toList
+                blocker <- root.original(first.actor).toList
+                if first.capture.isEmpty && first.promotionRole.isEmpty && blocker != retreat.actor &&
+                  blocker.side == retreat.actor.side && retreat.actor.role != "king"
+                challenged <- inspect(line.init).toList
+                originalSquare <- location(challenged, retreat.actor).toList
+                if location(root, retreat.actor).contains(originalSquare) &&
+                  location(challenged, blocker).contains(first.to.key) &&
+                  challenged.view.currentCheckSources(mover).isEmpty &&
+                  challenged.view.currentCheckSources(!mover).isEmpty
+                available <- rows.filter(row => root.original(row.actor).contains(retreat.actor) &&
+                  row.to == first.to && row.capture.isEmpty && row.promotionRole.isEmpty)
+                other <- rows.find(_.move == anchor.referenceMove).toList
+                if other.capture.isEmpty && other.promotionRole.isEmpty
+                otherBoard <- branches.get(other.move).toList
+                if otherBoard.view.occupantAt(first.to).isEmpty &&
+                  location(otherBoard, retreat.actor).contains(originalSquare) &&
+                  otherBoard.view.currentCheckSources(!mover).isEmpty &&
+                  otherBoard.view.legalRows.exists(_.exists(row => row.move == line(1) &&
+                    otherBoard.original(row.actor).contains(attack.actor)))
+              do
+                val alternate = List(other.move, line(1))
+                val rootPair = CompareMoves("constraint_root", Nil, line.head, other.move)
+                val replyPair = CompareMoves("constraint_reply", alternate, available.move, line(2))
+                val locationPredicate = Predicate("location", Some(blocker))
+                val actionPredicate = Predicate("legal_move", Some(retreat.actor), square = Some(first.to.key))
+                val facts = List[Requirement](rootPair,
+                  Fact("constraint_before", declared("constraint_root_path", line), locationPredicate, Ply(0),
+                    expected = Some(first.actor.square.key)),
+                  Fact("constraint_after", declared("constraint_root_path", line), locationPredicate, Ply(1),
+                    expected = Some(first.to.key)),
+                  FactComparison("constraint_owned", "constraint_before", "constraint_after", "different"),
+                  Fact("constraint_blocked", declared("constraint_actual", line.init), actionPredicate, Ply(2),
+                    expected = Some("illegal")),
+                  Fact("constraint_available", declared("constraint_alternative", alternate), actionPredicate, Ply(2),
+                    expected = Some("legal")),
+                  FactComparison("constraint_changed", "constraint_blocked", "constraint_available", "different"),
+                  Fact("constraint_other_retreat", declared("constraint_alternative", alternate),
+                    retreat.predicate, Ply(2), expected = Some("legal")),
+                  Fact("constraint_attack", declared("constraint_actual", line.init),
+                    Predicate("control", Some(attack.actor), square = Some(originalSquare)), Ply(2), expected = Some("present")),
+                  Fact("constraint_current_attack", Path("constraint_current", Comparison(rootPair.id, "reference")),
+                    Predicate("location", Some(attack.actor)), Event("move", 1, "after", 1, 2,
+                      Some(attack.actor), square = Some(line(1).slice(2, 4))), expected = Some(line(1).slice(2, 4))),
+                  Fact("constraint_current_retreat", Path("constraint_current", Comparison(rootPair.id, "reference")),
+                    Predicate("location", Some(retreat.actor)), Event("move", 1, "after", 2, 3,
+                      Some(retreat.actor), square = Some(retreat.to)), expected = Some(retreat.to)))
+                val context = FactGroup("constraint_context", "all",
+                  facts.collect { case fact: Fact => fact.id; case fact: FactComparison => fact.id })
+                emit(Anchor(Nil, line.head), line ++ List(other.move, available.move), "reply-space",
+                  retreat.sourceRefs ++ attack.sourceRefs, retreat.source, facts ++ List(context, replyPair),
+                  List(context.id, rootPair.id, replyPair.id),
+                  question = Some(s"Does ${notation.move(Nil, line.head)} occupy a useful reply square after ${notation.move(List(line.head), line(1))}? Test that reply after ${notation.line(alternate).mkString(" ")} before attributing value to the missing square."))
+            }
+
+            // A lost supporting line may impose a duty before an opponent
+            // actually attacks the target. Compare postponing its observed
+            // departure after the same reply in both root arms. This only
+            // asks the question; loss of support alone does not prove danger.
+            if start.isEmpty then witnessedActionPaths.filter((goal, line) =>
+              line.size == 3 && line.head == packet.assembly.input.playedMoveUci &&
+                line.head != anchor.referenceMove && goal.actor.role != "king" && goal.actor.role != "pawn" &&
+                goal.capture.isEmpty && goal.promotion.isEmpty).distinctBy(_._2).foreach { (departure, line) =>
+              val alternative = List(anchor.referenceMove, line(1))
+              val rootPair = CompareMoves("duty_root", Nil, line.head, anchor.referenceMove)
+              for
+                first <- rows.find(row => row.move == line.head && row.capture.isEmpty && row.promotionRole.isEmpty).toList
+                other <- rows.find(row => row.move == anchor.referenceMove && row.capture.isEmpty && row.promotionRole.isEmpty).toList
+                actual <- inspect(line.init).toList
+                lost <- inspect(line.take(1)).toList
+                adjusted <- inspect(line).toList
+                retained <- inspect(List(other.move)).toList
+                target <- root.originals.values.toList.distinct.filter(piece => piece.side == departure.actor.side && piece.role != "king")
+                originalSquare <- location(root, target).toList
+                if location(actual, target).contains(originalSquare) &&
+                  retained.view.legalRows.exists(_.exists(_.move == line(1))) &&
+                  List(chess.White, chess.Black).forall(color => actual.view.currentCheckSources(color).isEmpty)
+                provider <- root.originals.values.toList.distinct.filter(piece => piece.side == target.side && piece != target)
+                support = Predicate("support", Some(provider), Some(target))
+                if value(root, support).value.contains("present") &&
+                  value(lost, support).value.contains("absent") &&
+                  value(actual, support).value.contains("absent") && value(retained, support).value.contains("present")
+                adjustment = Predicate("support", Some(departure.actor), Some(target))
+                if departure.actor == target || value(actual, adjustment).value.contains("absent") &&
+                  value(adjusted, adjustment).value.contains("present")
+                (otherResponse, otherLine) <- witnessedActionPaths.filter((goal, moves) =>
+                  moves.size == 3 && Set(line.head, other.move)(moves.head) && goal.capture.isEmpty && goal.promotion.isEmpty &&
+                    board(alternative).forall(at => value(at, goal.predicate).value.contains("legal")))
+                  .sortBy((_, moves) => (if moves.take(2) == alternative then 0 else if moves.head == other.move then 1 else 2,
+                    moves.mkString(" "))).distinctBy(_._2.last).take(1)
+                (plan, planLine) <- witnessedActionPaths.filter((goal, moves) =>
+                  Set(line.head, other.move)(moves.head) && moves.size > 3 && goal.actor.role == "pawn" &&
+                    goal.capture.isEmpty && goal.promotion.isEmpty && location(root, goal.actor) == location(actual, goal.actor) &&
+                    actual.view.legalRows.exists(_.exists(row => row.move == moves.last && actual.original(row.actor).contains(goal.actor))))
+                  .sortBy((_, moves) => (if moves.head == line.head then 0 else 1, moves.size, moves.mkString(" "))).take(1)
+                if planLine.last != otherLine.last
+              do
+                val planArm = if planLine.head == line.head then "reference" else "alternative"
+                val responseArm = if otherLine.head == line.head then "reference" else "alternative"
+                val path = declared("duty_actual", line)
+                val otherPath = declared("duty_alternative", alternative)
+                val facts = List[Requirement](
+                  Fact("duty_before", path, support, Ply(0), expected = Some("present")),
+                  Fact("duty_after_root", path, support, Ply(1), expected = Some("absent")),
+                  Fact("duty_actual_support", path, support, Ply(2), expected = Some("absent")),
+                  Fact("duty_other_support", otherPath, support, Ply(2), expected = Some("present")),
+                  Fact("duty_actual_plan", path, plan.predicate, Ply(2), expected = Some("legal")),
+                  Fact("duty_other_plan", otherPath, plan.predicate, Ply(2), expected = Some("legal")),
+                  Fact("duty_other_response", otherPath, otherResponse.predicate, Ply(2), expected = Some("legal")),
+                  Fact("duty_current_reply", Path("duty_current_reply", Comparison(rootPair.id, "reference")),
+                    Predicate("location", observedAction(line, 1).map(_.actor)), Event("move", 1, "after", 1, 2,
+                      observedAction(line, 1).map(_.actor), square = Some(line(1).slice(2, 4))), expected = Some(line(1).slice(2, 4))),
+                  Fact("duty_current", Path("duty_current", Comparison(rootPair.id, "reference")),
+                    Predicate("location", Some(departure.actor)), Event("move", 1, "after", 2, 3,
+                      Some(departure.actor), square = Some(departure.to)), expected = Some(departure.to)),
+                  Fact("duty_adjustment", path,
+                    if departure.actor == target then Predicate("location", Some(target)) else adjustment, Ply(3),
+                    expected = Some(if departure.actor == target then departure.to else "present")),
+                  // This observed move is a hypothesis after the common reply.
+                  // Its original source can have a different opponent reply;
+                  // the declared legal fact and child search certify the new use.
+                  Fact("duty_other_current", Path("duty_other_current", Comparison(rootPair.id, responseArm)),
+                    Predicate("location", Some(otherResponse.actor)), Event("move", 1, "after", 2, 3,
+                      Some(otherResponse.actor), square = Some(otherResponse.to)), expected = Some(otherResponse.to)),
+                  Fact("duty_other_reply", Path("duty_other_reply", Comparison(rootPair.id, responseArm)),
+                    Predicate("location", observedAction(otherLine, 1).map(_.actor)), Event("move", 1, "after", 1, 2,
+                      observedAction(otherLine, 1).map(_.actor), square = Some(otherLine(1).slice(2, 4))), expected = Some(otherLine(1).slice(2, 4))),
+                  Fact("duty_observed_plan", Path("duty_observed_plan", Comparison(rootPair.id, planArm)),
+                    Predicate("location", Some(plan.actor)), Event("move", 1, "after", planLine.size - 1, planLine.size,
+                      Some(plan.actor), square = Some(plan.to)), expected = Some(plan.to)))
+                val context = FactGroup("duty_context", "all", facts.map(_.id))
+                val current = CompareMoves("duty_current_choice", line.init, planLine.last, line.last)
+                val otherChoice = CompareMoves("duty_other_choice", alternative, planLine.last, otherLine.last)
+                emit(Anchor(Nil, line.head), line ++ List(other.move, responseArm, provider.json.toString, target.json.toString) ++
+                  otherLine ++ planLine,
+                  "current-support-duty", departure.sourceRefs ++ plan.sourceRefs, canonical,
+                  rootPair :: facts ++ List(context, current, otherChoice),
+                  List(rootPair.id, context.id, current.id, otherChoice.id),
+                  question = Some(s"Does the lost support make ${notation.move(line.init, line.last)} a current duty? Test the observed pawn plan after the same ${notation.move(List(line.head), line(1))} in both root choices."))
+            }
+
+            // An irreversible pawn move can spend an option that another quiet move
+            // retains. Ask where that exact option is used before assigning it
+            // a purpose. The root score is only a reason to investigate; this
+            // observation by itself is never an explanation of the score.
+            if start.isEmpty && root.originals.keys.forall(piece => Set("king", "pawn")(piece.role.name)) then
+              val played = packet.assembly.input.playedMoveUci
+              for
+                pawnMove <- rows.find(row => row.move == played && row.actor.role.name == "pawn" &&
+                  row.capture.isEmpty && row.promotionRole.isEmpty).toList
+                pawn <- root.original(pawnMove.actor).toList
+                other <- branches.keys.toList.sorted if other != played
+                preservingMove <- rows.find(row => row.move == other && row.actor != pawnMove.actor &&
+                  row.capture.isEmpty && row.promotionRole.isEmpty).toList
+                kept <- branches.get(other).toList
+                spent <- branches.get(played).toList
+                if location(kept, pawn).contains(pawnMove.actor.square.key) &&
+                  List(kept, spent).forall(at => at.view.currentCheckSources(!mover).isEmpty)
+              do
+                val choice = CompareMoves("reserve_root", Nil, played, other)
+                val before = Fact("reserve_before", declared("reserve_spent", List(played)),
+                  Predicate("location", Some(pawn)), Ply(0), expected = Some(pawnMove.actor.square.key))
+                val after = before.copy(id = "reserve_after", at = Ply(1), expected = Some(pawnMove.to.key))
+                val preserve = before.copy(id = "reserve_kept", path = declared("reserve_kept", List(other)), at = Ply(1))
+                val use = Fact("reserve_use", Path("reserve_use", Comparison(choice.id, "alternative"), extend = true),
+                  Predicate("location", Some(pawn)),
+                  Event("move", 1, "after", 1, MaximumPly, Some(pawn), square = Some(pawnMove.to.key)),
+                  expected = Some(pawnMove.to.key))
+                emit(Anchor(Nil, played), List(other, pawn.json.toString), "reserve-use", Nil, canonical,
+                  List(choice, before, after, preserve, use), List(choice.id, before.id, after.id, preserve.id, use.id),
+                  question = Some(s"Does ${notation.move(Nil, other)} retain a useful later ${notation.move(Nil, played)}? Locate the actual use before attributing value to the reserved pawn move."))
+
+                def reserveSource(goal: Action, line: List[String], offset: Int, id: String) =
+                  // A completed counter comparison can change the king's
+                  // actual entry square. Its prior source still owns the
+                  // position BEFORE this test; the new receipt owns the reply.
+                  val carried = CommentaryIdea.reserveEntries(existing).filter(entry =>
+                    entry.owner.comparison.referenceMove == played && entry.owner.comparison.alternativeMove == other &&
+                      entry.test.prefixMovesUci == line.take(offset) &&
+                      entry.testAnswer.exists(answer => goal.source.sourceRefs.contains(answer.workId) &&
+                        List(answer.referenceLineId, answer.alternativeLineId).exists(id =>
+                          paths.find(_.line.ref.id == id).exists(_.moves.startsWith(line)))))
+                    .flatMap(entry => entry.source.map(source =>
+                      (source.comparison.copy(id = id), entry.sourceArm, entry.ancestors)))
+                  val owned = CommentaryIdea.reserveResponses(existing).filter(response =>
+                    response.owner.comparison.referenceMove == played && response.owner.comparison.alternativeMove == other)
+                    .flatMap(response => response.answer.map(answer =>
+                      (response.test, answer, List.empty[(CommentaryIdea.AnsweredComparison, String)]))) ++
+                    CommentaryIdea.reserveTimings(existing).filter(timing =>
+                      timing.owner.comparison.referenceMove == played && timing.owner.comparison.alternativeMove == other)
+                      .flatMap(timing => timing.answer.map(answer =>
+                        (timing.test, answer, timing.source.toList.map(_ -> timing.sourceArm)))) ++
+                    CommentaryIdea.reserveHolds(existing).filter(hold =>
+                      hold.owner.comparison.referenceMove == played && hold.owner.comparison.alternativeMove == other)
+                      .flatMap(hold => hold.testAnswer.map(answer =>
+                        (hold.test, answer, hold.ancestors ++ hold.source.toList.map(_ -> hold.sourceArm))))
+                  // A later comparison may supply this goal after an earlier
+                  // comparable arm already owned the identical wait prefix.
+                  // Keep the goal's origin; neither its later moves nor value
+                  // become evidence from the earlier receipt.
+                  // Source refs can name work or resources. The accepted
+                  // source's concrete history, not that metadata namespace,
+                  // identifies the current certified witness.
+                  val witnesses = paths.filter(path => path.moves.startsWith(line) &&
+                    boundedSources.exists(source => source.source == goal.source &&
+                      source.moves.startsWith(line) && path.moves.startsWith(source.moves)))
+                  // An answered direct inquiry keeps the source that owned
+                  // this wait. Its returned child must own the entire current
+                  // source history, not merely share a work id or prefix.
+                  val directCarried = CommentaryIdea.directReserveEntries(existing).filter(entry =>
+                    entry.owner.comparison.referenceMove == played && entry.owner.comparison.alternativeMove == other &&
+                      entry.pawn == pawn && goal.actor == entry.pawn && entry.offset + 1 == offset &&
+                      entry.branch.take(offset) == line.take(offset) &&
+                      entry.testAnswer.exists(answer => goal.source.sourceRefs.contains(answer.workId) &&
+                        List(answer.referenceLineId, answer.alternativeLineId).exists(lineId =>
+                          paths.find(_.line.ref.id == lineId).exists(source => witnesses.exists(witness =>
+                            (source eq witness) && sameReserveDecision(prepared, source, witness, offset,
+                              List(entry.pawn.witness, entry.king.witness, entry.guard.witness)))))))
+                  carried.headOption.orElse {
+                    directCarried.headOption match
+                      case Some(entry) => entry.source.map(source =>
+                        (source.comparison.copy(id = id), entry.sourceArm, entry.ancestors))
+                      case None => owned.sortBy(value => -value._1.prefixMovesUci.size).flatMap { (test, answer, ancestors) =>
+                        List("reference" -> answer.referenceLineId, "alternative" -> answer.alternativeLineId).collect {
+                          case (arm, lineId) if test.prefixMovesUci.size < offset &&
+                              paths.find(_.line.ref.id == lineId).exists(source => witnesses.exists(witness =>
+                                sameReserveDecision(prepared, source, witness, offset, List(pawn.witness, goal.actor.witness)))) &&
+                              CommentaryIdea.comparableReserveArm(answer, arm) =>
+                            (test.copy(id = id), arm, ancestors)
+                        }
+                      }.headOption
+                  }
+                def ancestorFacts(lineage: List[(CommentaryIdea.AnsweredComparison, String)], name: String) =
+                  lineage.zipWithIndex.flatMap { case ((owner, arm), index) =>
+                    val pair = owner.comparison.copy(id = s"${name}_ancestor_$index")
+                    val selected = if arm == "reference" then pair.referenceMove else pair.alternativeMove
+                    for
+                      at <- inspect(pair.prefixMovesUci)
+                      row <- at.view.legalRows.flatMap(_.find(_.move == selected))
+                      actor <- at.original(row.actor)
+                    yield pair -> Fact(pair.id + "_binding", Path(pair.id, Comparison(pair.id, arm)),
+                      Predicate("location", Some(actor)), Ply(pair.prefixMovesUci.size + 1), expected = Some(row.to.key))
+                  }
+                def linkKey(test: CompareMoves, arm: String) =
+                  test.prefixMovesUci.mkString(" ") + ":" + test.referenceMove + ":" + test.alternativeMove + ":" + arm
+
+                // Before extending a cooperative king retreat far into the
+                // future, test the pawn reply already observed against the
+                // spent option in the retained arm too. Both replies remain
+                // hypotheses until the same-position engine comparison.
+                for
+                  spentLine <- boundedSources.map(_.moves).filter(line => line.headOption.contains(played) && line.size >= 2)
+                    .distinctBy(_.take(2))
+                  spentReply <- observedAction(spentLine, 1).toList if spentReply.capture.isEmpty && spentReply.promotion.isEmpty
+                  keptLine <- boundedSources.map(_.moves).filter(line => line.headOption.contains(other) && line.size >= 2)
+                    .distinctBy(_.take(2))
+                  keptReply <- observedAction(keptLine, 1).toList if keptLine(1) != spentLine(1) &&
+                    keptReply.promotion.isEmpty
+                  legal <- kept.view.legalRows.toList.flatten.filter(row => row.move == spentLine(1) &&
+                    kept.original(row.actor).contains(spentReply.actor))
+                do
+                  val test = CompareMoves("reserve_response", List(other), keptLine(1), spentLine(1))
+                  val observed = List(
+                    Fact("reserve_spent_reply", Path("reserve_spent_reply", Comparison(choice.id, "reference")),
+                      Predicate("location", Some(spentReply.actor)), Event("move", 1, "after", 1, 2,
+                        Some(spentReply.actor), square = Some(spentReply.to)), expected = Some(spentReply.to)),
+                    Fact("reserve_retained_reply", Path("reserve_retained_reply", Comparison(choice.id, "alternative")),
+                      Predicate("location", Some(keptReply.actor)), Event("move", 1, "after", 1, 2,
+                        Some(keptReply.actor), square = Some(keptReply.to)), expected = Some(keptReply.to)))
+                  val context = FactGroup("reserve_response_context", "all", List(before.id, after.id, preserve.id) ++ observed.map(_.id))
+                  emit(Anchor(Nil, played), List(other, spentLine(1), keptLine(1)), "reserve-response",
+                    spentReply.sourceRefs ++ keptReply.sourceRefs, canonical,
+                    List(choice, before, after, preserve) ++ observed ++ List(context, test),
+                    List(choice.id, context.id, test.id),
+                    question = Some(s"Does the observed reply ${notation.move(List(played), spentLine(1))} also work after ${notation.move(Nil, other)}, where the pawn move is retained? Compare it with the recorded reply before extending that reply's future plan."))
+
+                // Locate the first decision to keep the option, before looking
+                // for its use in a distant winning PV. The opponent's reply
+                // must already occur against the spent root move as well.
+                witnessedActionPaths.filter((goal, line) => line.size == 3 && line.head == other &&
+                  goal.actor.role == "king" && goal.capture.isEmpty && goal.promotion.isEmpty &&
+                  boundedSources.exists(source => source.moves.take(2) == List(played, line(1))))
+                  .distinctBy(_._2).foreach { (step, line) =>
+                  val source = reserveSource(step, line, 2, "timing_source")
+                  val binding = source.fold(Comparison(choice.id, "alternative"))((test, arm, _) => Comparison(test.id, arm))
+                  for
+                    at <- inspect(line.init).toList
+                    if source.forall(_._3.isEmpty) && location(at, pawn).contains(pawnMove.actor.square.key) &&
+                      List(chess.White, chess.Black).forall(color => at.view.currentCheckSources(color).isEmpty)
+                    legal <- at.view.legalRows.toList.flatten.filter(row => row.move == played &&
+                      at.original(row.actor).contains(pawn) && row.capture.isEmpty && row.promotionRole.isEmpty)
+                  do
+                    val path = declared("timing_position", line)
+                    val facts = List(before, after, preserve,
+                      Fact("timing_available", path, Predicate("legal_move", Some(pawn), square = Some(pawnMove.to.key)),
+                        Ply(2), expected = Some("legal")),
+                      Fact("timing_kept", path, Predicate("location", Some(pawn)), Ply(2), Some(Ply(3)),
+                        Some(pawnMove.actor.square.key)),
+                      Fact("timing_current", Path("timing_current", binding), Predicate("location", Some(step.actor)),
+                        Event("move", 1, "after", 2, 3, Some(step.actor), square = Some(step.to)), expected = Some(step.to)),
+                      Fact("timing_common_reply", Path("timing_common_reply", Comparison(choice.id, "reference")),
+                        Predicate("location", observedAction(line, 1).map(_.actor)),
+                        Event("move", 1, "after", 1, 2, observedAction(line, 1).map(_.actor), square = Some(line(1).slice(2, 4))),
+                        expected = Some(line(1).slice(2, 4))))
+                    val context = FactGroup("timing_context", "all", facts.map(_.id))
+                    val test = CompareMoves("reserve_timing", line.init, played, line.last)
+                    emit(Anchor(Nil, played), line ++ source.toList.map((test, arm, _) => linkKey(test, arm)),
+                      "reserve-timing", step.sourceRefs ++ step.source.sourceRefs, canonical,
+                      choice :: source.toList.map(_._1) ++ facts ++ List(context, test),
+                      List(choice.id, context.id, test.id),
+                      question = Some(s"After ${notation.line(line.init).mkString(" ")}, should the retained ${notation.move(Nil, played)} be used now? Compare it with the recorded king move before investigating its later use."))
+                }
+
+                // A witnessed use can be a sequence of pawn waits: the king
+                // stays on its useful square while the opponent spends a pawn
+                // move, then yields an entry. Test a legal pawn reply which
+                // keeps guarding that entry; a lone cooperative PV is not enough.
+                witnessedActionPaths.filter((goal, line) => goal.actor.role == "king" && line.head == other)
+                  .distinctBy(_._2).foreach { (entry, line) =>
+                  val last = line.size - 3
+                  val first = line.indexOf(played, 1)
+                  val responseSource = reserveSource(entry, line, last + 1, "reserve_source")
+                  val lineage = responseSource.toList.flatMap(_._3)
+                  val ancestors = ancestorFacts(lineage, "reserve")
+                  val currentSource = responseSource.fold(Comparison(choice.id, "alternative"))((source, arm, _) =>
+                    Comparison(source.id, arm))
+                  if first > 0 && first <= last && (last - first) % 2 == 0 &&
+                      ancestors.size == lineage.size && lineage.size <= 2 then
+                    for
+                      initial <- inspect(line.take(first)).toList
+                      waiting <- inspect(line.take(last + 1)).toList
+                      yielded <- inspect(line.init).toList
+                      square <- location(initial, entry.actor).toList
+                      guard <- initial.originals.values.filter(p => p.role == "king" && p.side != pawn.side).toList
+                      guardSquare <- location(initial, guard).toList
+                      if initial.view.occupantAt(EvidenceSquare(entry.to)).isEmpty &&
+                        (first to last + 1).forall(count => inspect(line.take(count)).exists(at =>
+                          location(at, entry.actor).contains(square) && location(at, guard).contains(guardSquare) &&
+                            value(at, Predicate("control", Some(guard), square = Some(entry.to))).value.contains("present"))) &&
+                        (first to last by 2).forall(offset => observedAction(line, offset).exists(step =>
+                          step.actor == pawn && step.capture.isEmpty && step.promotion.isEmpty) &&
+                          inspect(line.take(offset + 1)).exists(_.view.currentCheckSources(!mover).isEmpty)) &&
+                        observedAction(line, last + 1).exists(step => step.actor == guard && step.capture.isEmpty) &&
+                        value(yielded, Predicate("control", Some(guard), square = Some(entry.to))).value.contains("absent")
+                      counter <- waiting.view.legalRows.toList.flatten.filter(row => row.actor.role.name == "pawn" &&
+                        row.promotionRole.isEmpty).sortBy(_.move)
+                    do
+                      val path = declared("reserve_sequence", line)
+                      val heldKing = Predicate("location", Some(entry.actor))
+                      val guards = Predicate("control", Some(guard), square = Some(entry.to))
+                      val enters = Predicate("legal_move", Some(entry.actor), square = Some(entry.to))
+                      val counterPath = declared("reserve_counter", line.take(last + 1) :+ counter.move)
+                      val sequence = List[Requirement](before, after, preserve,
+                        Fact("reserve_start", path, Predicate("location", Some(pawn)), Ply(first),
+                          expected = Some(pawnMove.actor.square.key)),
+                        Fact("reserve_finish", path, Predicate("location", Some(pawn)), Ply(last + 1),
+                          expected = Some(line(last).slice(2, 4))),
+                        Fact("reserve_king", path, heldKing, Ply(first), Some(Ply(last + 1)), Some(square)),
+                        Fact("reserve_guard", path, guards, Ply(first), Some(Ply(last + 1)), Some("present")),
+                        Fact("reserve_yielded", path, guards, Ply(last + 2), expected = Some("absent")),
+                        Fact("reserve_entry", path, enters, Ply(last + 2), expected = Some("legal")),
+                        Fact("reserve_counter_guard", counterPath, guards, Ply(last + 2), expected = Some("present")),
+                        Fact("reserve_counter_entry", counterPath, enters, Ply(last + 2), expected = Some("illegal")),
+                        Fact("reserve_current", Path("reserve_current", currentSource, extend = true),
+                          Predicate("location", Some(pawn)), Event("move", 1, "after", last, last + 1,
+                            Some(pawn), square = Some(line(last).slice(2, 4))), expected = Some(line(last).slice(2, 4))),
+                        // The counter's completed line must realize this
+                        // entry. Its earlier parent need only own the wait;
+                        // a newly tested reply may choose a different square.
+                        Fact("reserve_current_entry", path,
+                          heldKing, Event("move", 1, "after", last + 2, last + 3,
+                            Some(entry.actor), square = Some(entry.to)), expected = Some(entry.to)))
+                      val context = FactGroup("reserve_context", "all", sequence.map(_.id) ++ ancestors.map(_._2.id))
+                      val test = CompareMoves("reserve_counter", line.take(last + 1), line(last + 1), counter.move)
+                      emit(Anchor(Nil, played), line ++ List(counter.move) ++ responseSource.toList.map((source, arm, _) =>
+                          linkKey(source, arm)) ++ lineage.map((owner, arm) => linkKey(owner.comparison, arm)), "reserve-entry", entry.sourceRefs, entry.source,
+                        choice :: responseSource.toList.map(_._1) ++ ancestors.flatMap((pair, fact) => List(pair, fact)) ++
+                          sequence ++ List(context, test), List(choice.id, context.id, test.id),
+                        question = Some(s"Does the retained pawn move let the king hold $square and later enter ${entry.to}? Compare the recorded king retreat with the legal pawn reply ${notation.move(test.prefixMovesUci, counter.move)} which keeps that entry guarded."))
+                }
+
+                // Counter resources can already be spent. Reuse the same
+                // entry question, but explicitly test a last-wait decision
+                // instead of manufacturing a guarding pawn counter. The
+                // entry's value is a separate inquiry even off the parent PV.
+                witnessedActionPaths.filter((goal, line) => goal.actor == pawn && line.head == other &&
+                  line.last == played && goal.capture.isEmpty && goal.promotion.isEmpty)
+                  .distinctBy(_._2).foreach { (wait, line) =>
+                  val offset = line.size - 1
+                  val source = reserveSource(wait, line, offset + 1, "reserve_source")
+                  val binding = source.fold(Comparison(choice.id, "alternative"))((test, arm, _) => Comparison(test.id, arm))
+                  val lineage = source.toList.flatMap(_._3)
+                  val ancestors = ancestorFacts(lineage, "reserve")
+                  val parent = boundedSources.filter(current => current.moves.startsWith(line) && current.moves.size > offset + 2)
+                    .sortBy(current => (if current.source == wait.source then 0 else 1,
+                      current.choiceRank.filter(_._1 == line).map(_._2).getOrElse(Int.MaxValue), current.moves.mkString(" ")))
+                    .headOption
+                  for
+                    current <- parent.toList
+                    path <- paths.filter(_.moves.startsWith(current.moves.take(offset + 3))).take(1)
+                    beforeWait <- inspect(line.init).toList
+                    king <- beforeWait.originals.values.find(p => p.role == "king" && p.side == pawn.side).toList
+                    guard <- beforeWait.originals.values.find(p => p.role == "king" && p.side != pawn.side).toList
+                    kingSquare <- location(beforeWait, king).toList
+                    release <- RootSubjectComparison.lastPawnWaitEntry(prepared, path, offset,
+                      pawn.witness, king.witness, guard.witness).toList
+                    (square, releaseRefs) = release
+                    if ancestors.size == lineage.size && lineage.size <= 2 &&
+                      location(beforeWait, pawn).contains(pawnMove.actor.square.key)
+                    child <- inspect(current.moves.take(offset + 2)).toList
+                    entry <- child.view.legalRows.toList.flatten.filter(row =>
+                      child.original(row.actor).contains(king) && row.to.key == square && row.capture.isEmpty && row.promotionRole.isEmpty)
+                    next = current.moves(offset + 2)
+                    legalChoices = child.view.legalRows.toList.flatten.filter(_.move != entry.move)
+                    childPrefix = current.moves.take(offset + 2)
+                    returnedChoices = legalChoices.flatMap(row => boundedSources.filter(source =>
+                      source.moves.startsWith(childPrefix :+ row.move)).flatMap(_.choiceRank.collect {
+                        case (prefix, rank) if prefix == childPrefix => rank
+                      }).minOption.map(rank => (rank, row))).sortBy((rank, row) => (rank, row.move))
+                    // The entry can already be the parent PV move. Its value
+                    // still needs a separate owned comparison; a quiet legal
+                    // king alternative is only a hypothesis until that returns.
+                    otherChoice <- (if next != entry.move then legalChoices.find(_.move == next)
+                      else returnedChoices.headOption.map(_._2).orElse(legalChoices.filter(row =>
+                        child.original(row.actor).contains(king) && row.capture.isEmpty && row.promotionRole.isEmpty)
+                        .sortBy(_.move).headOption)).toList
+                  do
+                    val branch = current.moves.take(offset + 2) :+ entry.move
+                    // The wait/reply conditions end before the optional
+                    // forecast. Its separately owned entry/value stays below.
+                    val path = declared("direct_sequence", current.moves.take(offset + 2))
+                    val entered = declared("direct_entry", branch)
+                    val heldKing = Predicate("location", Some(king))
+                    val guards = Predicate("control", Some(guard), square = Some(square))
+                    val facts = List[Requirement](before, after, preserve,
+                      Fact("direct_wait", path, Predicate("location", Some(pawn)), Ply(offset + 1),
+                        expected = Some(pawnMove.to.key)),
+                      Fact("direct_king", path, heldKing, Ply(offset), Some(Ply(offset + 1)), Some(kingSquare)),
+                      Fact("direct_guard", path, guards, Ply(offset), Some(Ply(offset + 1)), Some("present")),
+                      Fact("direct_released", path, guards, Ply(offset + 2), expected = Some("absent")),
+                      Fact("direct_option", path, Predicate("legal_move", Some(king), square = Some(square)),
+                        Ply(offset + 2), expected = Some("legal")),
+                      Fact("direct_live", Path("direct_live", binding, extend = true), Predicate("location", Some(pawn)),
+                        Event("move", 1, "after", offset, offset + 1, Some(pawn), square = Some(pawnMove.to.key)),
+                        expected = Some(pawnMove.to.key)))
+                    // The current board can ask for this option before the
+                    // value report supplies its actual move occurrence.
+                    val entryFact = Fact("direct_entry", entered, heldKing, Ply(branch.size), expected = Some(square))
+                    val context = FactGroup("direct_context", "all", facts.map(_.id) ++ ancestors.map(_._2.id))
+                    val test = CompareMoves("reserve_entry_value", branch.init, entry.move, otherChoice.move)
+                    emit(Anchor(Nil, played), List("direct_last_wait") ++ branch ++
+                        source.toList.map((test, arm, _) => linkKey(test, arm)) ++ lineage.map((owner, arm) => linkKey(owner.comparison, arm)),
+                      "reserve-entry", (wait.sourceRefs ++ releaseRefs.filter(_.length <= 256)).distinct, wait.source,
+                      choice :: source.toList.map(_._1) ++ ancestors.flatMap((pair, fact) => List(pair, fact)) ++
+                        facts ++ List(context, test, entryFact), List(choice.id, context.id, test.id),
+                      question = Some(s"After the retained pawn move and the recorded king reply, is the available ${notation.move(test.prefixMovesUci, test.referenceMove)} a comparable option alongside ${notation.move(test.prefixMovesUci, test.alternativeMove)}? All legal replies release $square; no guarding pawn counter is assumed."))
+                }
+
+                // A retained wait can also defend: compare it with a legal
+                // king move in the very same position. Neither the root gap
+                // nor keeping the king still establishes that value; the
+                // child comparison and the opponent's actual entry do.
+                witnessedActionPaths.filter((goal, line) => goal.actor == pawn && line.head == other &&
+                  line.last == played && goal.capture.isEmpty && goal.promotion.isEmpty)
+                  .distinctBy(_._2).foreach { (wait, line) =>
+                  val offset = line.size - 1
+                  val source = reserveSource(wait, line, offset, "hold_source")
+                  val binding = source.fold(Comparison(choice.id, "alternative"))((test, arm, _) => Comparison(test.id, arm))
+                  val lineage = source.toList.flatMap(_._3)
+                  val ancestors = ancestorFacts(lineage, "hold")
+                  for
+                    beforeWait <- inspect(line.init).toList
+                    afterWait <- inspect(line).toList
+                    king <- beforeWait.originals.values.find(p => p.role == "king" && p.side == pawn.side).toList
+                    kingSquare <- location(beforeWait, king).toList
+                    if ancestors.size == lineage.size && lineage.size <= 2 &&
+                      location(beforeWait, pawn).contains(pawnMove.actor.square.key) &&
+                      location(afterWait, king).contains(kingSquare) && afterWait.view.currentCheckSources(!mover).isEmpty
+                    // The best returned king move at this exact decision is
+                    // the challenger. A king move elsewhere in the PV cannot
+                    // make a weaker retreat look like the relevant alternative.
+                    retreat <- beforeWait.view.legalRows.toList.flatten.filter(row =>
+                      beforeWait.original(row.actor).contains(king) && row.capture.isEmpty && row.promotionRole.isEmpty)
+                      .sortBy(row => (boundedSources.filter(source => source.moves.startsWith(line.init :+ row.move))
+                        .flatMap(_.choiceRank.collect { case (prefix, rank) if prefix == line.init => rank }).minOption
+                        .getOrElse(Int.MaxValue), row.move)).take(1)
+                  do
+                    val path = declared("hold_sequence", line)
+                    val facts = List(before, after, preserve,
+                      Fact("hold_start", path, Predicate("location", Some(pawn)), Ply(offset), expected = Some(pawnMove.actor.square.key)),
+                      Fact("hold_use", path, Predicate("location", Some(pawn)), Ply(offset + 1), expected = Some(pawnMove.to.key)),
+                      Fact("hold_king", path, Predicate("location", Some(king)), Ply(offset), Some(Ply(offset + 1)), Some(kingSquare)),
+                      Fact("hold_current", Path("hold_current", binding, extend = true), Predicate("location", Some(pawn)),
+                        Event("move", 1, "after", offset, offset + 1, Some(pawn), square = Some(pawnMove.to.key)), expected = Some(pawnMove.to.key)))
+                    val context = FactGroup("hold_context", "all", facts.map(_.id) ++ ancestors.map(_._2.id))
+                    val test = CompareMoves("reserve_hold", line.init, retreat.move, played)
+                    emit(Anchor(Nil, played), line ++ List(retreat.move) ++ source.toList.map((test, arm, _) => linkKey(test, arm)) ++
+                        lineage.map((owner, arm) => linkKey(owner.comparison, arm)),
+                      "reserve-hold", wait.sourceRefs ++ wait.source.sourceRefs, canonical,
+                      choice :: source.toList.map(_._1) ++ ancestors.flatMap((pair, fact) => List(pair, fact)) ++
+                        facts ++ List(context, test), List(choice.id, context.id, test.id),
+                      question = Some(s"Does the retained pawn move keep the king's useful position on $kingSquare? Compare the wait with ${notation.move(line.init, retreat.move)} in that same position and inspect the opponent's actual reply."))
+                }
+
+            val preparations = witnessedActionPaths.filter((goal, line) => quietReaction(goal, line).isEmpty)
+              .groupBy(_._2).toList.sortBy(_._1.mkString(" "))
               .map((prefix, witnesses) => joinedActions(witnesses.map(_._1)) -> prefix)
             val previousActions = existing.filter(entry => entry.admission == "generated" &&
               entry.generatedArms.exists(_.prefixMoves == start)).flatMap(entry =>
@@ -1428,11 +2267,30 @@ private[runtime] object CommentaryDiscovery:
         }
         direct ++ additional
       }.map(_._1).toSet
+    // A changed PV is a new value question at the same exact child history,
+    // not evidence that the previously witnessed entry became worthless.
+    // Keep the parent's physical facts and counter receipt; append only the
+    // missing comparison with its newly recorded alternative.
+    CommentaryIdea.reserveEntries(existing).filter(_.optionTest.isEmpty).foreach { proof =>
+      for
+        test <- RootSubjectComparison.reserveEntryValue(prepared, proof)
+        parent <- existing.find(_.request.id == proof.owner.proposalId)
+      do
+        val requirements = parent.request.requirements :+ test
+        // Extend the already owned question: copying its facts into another
+        // proposal spent the last requirement slots before this one comparison
+        // could be admitted. Required completion precedes optional new drafts.
+        admit(Draft(parent.request.id, Anchor(Nil, proof.owner.comparison.referenceMove), "reserve-entry",
+          proof.evidence, parent.request.origin.evidence, requirements,
+          List(List("reserve_root", "reserve_context", "reserve_counter", test.id)), None,
+          Some(s"After ${notation.line(test.prefixMovesUci).mkString(" ")}, does the available ${notation.move(test.prefixMovesUci, test.referenceMove)} remain a useful choice alongside ${notation.move(test.prefixMovesUci, test.alternativeMove)}? Test the option before retaining its explanation."), Nil))
+    }
     val eligibleDrafts = drafts.values.filter(draft => draft.kind != "tactical-counter" || draft.requirements.exists {
       case compare: CompareMoves if compare.id == "tactical_strength" =>
         selectedTacticalChoices((compare.prefixMovesUci, compare.referenceMove, compare.alternativeMove))
       case _ => false
     }).toList
+    followupRoom = if eligibleDrafts.exists(_.kind == "reserve-use") then 80 else 0
     val byKind = eligibleDrafts.groupBy(_.id).values.toList.map(arms =>
       arms.sortBy(draft => (missingPaths(draft), if suppliedArm(draft) then 0 else 1, draft.alternative.getOrElse(""))))
       .groupBy(_.head.kind).toList.sortBy(_._1).map { (_, issues) =>
@@ -1441,7 +2299,8 @@ private[runtime] object CommentaryDiscovery:
             case fact: Fact if fact.id == "reference_action" => fact.at.horizon
           }).minOption.getOrElse(MaximumPly)
           (if arms.exists(_.anchor.referenceMove == packet.assembly.input.playedMoveUci) then 0 else 1,
-            actionPly, if arms.exists(suppliedArm) then 0 else 1, arms.head.id)
+            actionPly, if arms.exists(suppliedArm) then 0 else 1,
+            arms.head.requirements.map(_.toString).mkString("\n"))
         }
       }
     // This is a bounded coverage fallback, not an importance/utility estimate: one family of
@@ -1454,6 +2313,17 @@ private[runtime] object CommentaryDiscovery:
     // An admitted unanswered counter holds the frontier. Do not spend local replay
     // on later/historical questions, or on observations the requirement budget cannot admit.
     val currentEntries = (additions.values.toList ++ existing).distinctBy(_.request.id)
+    // Once admitted, the exact same-reply hypothesis needs its short board
+    // witness even if that reply is absent from the other root PV. This is
+    // local legal replay, not another search or another discovery source.
+    currentEntries.filter(entry => Set("C-reply-space", "C-reserve-entry", "C-current-support-duty", "C-reply-function")(entry.request.origin.question.producer)).foreach { entry =>
+      entry.request.requirements.collect { case fact: Fact => fact.path.source }.collect {
+        case Declared(moves) if moves.nonEmpty && board(moves).isEmpty => moves
+      }.distinct.foreach { moves =>
+        replays.add(moves)
+        if entry.request.origin.question.producer == "C-reply-function" then functionalReplays.add(moves)
+      }
+    }
     val openCounters = currentEntries.filter(_.request.origin.question.producer == "C-tactical-counter").flatMap { entry =>
       entry.request.requirements.collect {
         case compare: CompareMoves if compare.id == "tactical_strength" &&
@@ -1486,4 +2356,4 @@ private[runtime] object CommentaryDiscovery:
           pendingReplayPrefixes = (scan.pendingReplayPrefixes ++ replays).distinct)
       else scan
     }
-    Batch(additions.values.toList, replays.toList, finalScans)
+    Batch(additions.values.toList, replays.toList, finalScans, functionalReplays.toList)

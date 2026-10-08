@@ -1,0 +1,678 @@
+{
+  "schema_version": 1,
+  "game_id": "FC-SG45-NB1",
+  "request": {
+    "schema_version": "chesstory.position-commentary.job-request.v6",
+    "request_id": "human-evaluation-FC-SG45-NB1",
+    "variant": "standard",
+    "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "move_prefix_uci": [
+      "e2e4",
+      "c7c6",
+      "d2d3",
+      "d7d5",
+      "b1d2",
+      "g7g6",
+      "g1f3",
+      "f8g7",
+      "g2g3",
+      "g8f6",
+      "f1g2",
+      "e8g8",
+      "e1g1",
+      "c8g4",
+      "h2h3",
+      "g4f3",
+      "d1f3",
+      "b8d7",
+      "f3e2",
+      "d5e4",
+      "d3e4",
+      "d8c7",
+      "a2a4",
+      "a8d8",
+      "d2b3",
+      "b7b6",
+      "c1e3",
+      "c6c5",
+      "a4a5",
+      "e7e5",
+      "b3d2",
+      "f6e8",
+      "a5b6",
+      "a7b6",
+      "f1d1",
+      "c7c6"
+    ],
+    "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "d2b1",
+      "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19"
+    },
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "remaining_budget_ms": 180000
+  },
+  "saved_reports": [
+    {
+      "issued_work": {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:0",
+        "execution_key_sha256": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "b6b5",
+                "e3g5",
+                "e8f6",
+                "c4e3",
+                "c5c4",
+                "e3d5",
+                "g8h8",
+                "d5b4",
+                "c6c7"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 163
+              }
+            },
+            {
+              "moves": [
+                "e3g5",
+                "e8f6",
+                "d2c4",
+                "d8a8",
+                "a1a8",
+                "f8a8",
+                "c4e3"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 156
+              }
+            },
+            {
+              "moves": [
+                "h3h4",
+                "e8f6",
+                "g2f3",
+                "h7h5",
+                "d2c4"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 138
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "c993c73c53051844bb305fd81e7d52740b6022929fa22cdce43d997c99515cdb",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "d2c4",
+            "d2b1"
+          ]
+        },
+        "search_limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:1",
+        "execution_key_sha256": "c993c73c53051844bb305fd81e7d52740b6022929fa22cdce43d997c99515cdb",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "b6b5",
+                "c4a5",
+                "c6b6",
+                "e3g5",
+                "d8a8",
+                "d1d7",
+                "a8a5",
+                "a1a5",
+                "b6a5"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 201
+              }
+            },
+            {
+              "moves": [
+                "d2b1",
+                "e8c7",
+                "b1c3",
+                "d8a8",
+                "a1a8",
+                "f8a8",
+                "e2d3",
+                "d7f8",
+                "c3d5",
+                "c7d5",
+                "e4d5"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 158
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "f2b60ff6a043918e296b82c114f0dfd1d0c293edbdfc8787055033a456706ece",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:2",
+        "execution_key_sha256": "f2b60ff6a043918e296b82c114f0dfd1d0c293edbdfc8787055033a456706ece",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "e8f6",
+                "a1a7",
+                "d8a8",
+                "d1d6",
+                "c6d6",
+                "c4d6",
+                "a8a7",
+                "e2b5",
+                "a7a1",
+                "g2f1",
+                "a1d1",
+                "b5c6",
+                "f8d8",
+                "d6c4",
+                "g7f8",
+                "e3g5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 183
+              }
+            },
+            {
+              "moves": [
+                "h3h4",
+                "e8f6",
+                "g2f1",
+                "c6c7",
+                "f1h3",
+                "d7b8",
+                "e3g5",
+                "b8c6",
+                "c2c3",
+                "h7h5",
+                "a1a6",
+                "c6b8",
+                "a6a3",
+                "b8c6",
+                "d1a1",
+                "d8d6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 151
+              }
+            },
+            {
+              "moves": [
+                "g2f1",
+                "e8c7",
+                "d2c4",
+                "c7e6",
+                "c2c3",
+                "d7f6",
+                "a1a6",
+                "d8d1",
+                "e2d1",
+                "c6e4",
+                "c4b6",
+                "f8d8",
+                "d1a4",
+                "e4b1",
+                "a6a8",
+                "d8a8",
+                "a4a8",
+                "g7f8",
+                "b6c4",
+                "e5e4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 122
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:3",
+        "purpose": "focus_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "d2c4",
+            "d2b1"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:3",
+        "execution_key_sha256": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "e8f6",
+                "d1d6",
+                "c6c7",
+                "a1d1",
+                "b6b5",
+                "c4a3",
+                "b5b4",
+                "a3c4",
+                "f8e8",
+                "e2f3",
+                "h7h6",
+                "g2f1",
+                "g7f8",
+                "d6a6",
+                "g8g7",
+                "h3h4",
+                "d8a8",
+                "d1a1",
+                "a8a6",
+                "a1a6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 175
+              }
+            },
+            {
+              "moves": [
+                "d2b1",
+                "e8c7",
+                "e2d3",
+                "c5c4",
+                "d3d2",
+                "c7e6",
+                "b1c3",
+                "d7f6",
+                "c3d5",
+                "f6d5",
+                "e4d5",
+                "c6b5",
+                "d5e6",
+                "d8d2",
+                "d1d2",
+                "f7e6",
+                "a1a7",
+                "b5b2",
+                "d2d7",
+                "g7f6",
+                "e3h6",
+                "b2c2",
+                "h6f8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 109
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "expected_primary": {
+    "kind": "move_verdict",
+    "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:candidate-comparison:8cebe0524b050f0b782c1d81d3e222f8b870904bf0bf0a96009e75793fae3f22",
+    "verdict_code": "mistake",
+    "verdict_confidence": "engine_backed",
+    "mover": "white",
+    "delta": {
+      "candidate_win_percent_delta_for_mover": -5.672810041897051,
+      "kind": "engine_evaluation"
+    },
+    "reference_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "d2c4",
+        "e8f6",
+        "d1d6",
+        "c6c7",
+        "a1d1",
+        "b6b5",
+        "c4a3",
+        "b5b4",
+        "a3c4",
+        "f8e8",
+        "e2f3",
+        "h7h6",
+        "g2f1",
+        "g7f8",
+        "d6a6",
+        "g8g7",
+        "h3h4",
+        "d8a8",
+        "d1a1",
+        "a8a6",
+        "a1a6"
+      ],
+      "win_percent_for_mover": 65.57392814366,
+      "depth": 16
+    },
+    "played_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "d2b1",
+        "e8c7",
+        "e2d3",
+        "c5c4",
+        "d3d2",
+        "c7e6",
+        "b1c3",
+        "d7f6",
+        "c3d5",
+        "f6d5",
+        "e4d5",
+        "c6b5",
+        "d5e6",
+        "d8d2",
+        "d1d2",
+        "f7e6",
+        "a1a7",
+        "b5b2",
+        "d2d7",
+        "g7f6",
+        "e3h6",
+        "b2c2",
+        "h6f8"
+      ],
+      "win_percent_for_mover": 59.90111810176295,
+      "depth": 16
+    }
+  },
+  "conditional_example": {
+    "reference": [
+      "d2c4",
+      "e8f6",
+      "d1d6",
+      "c6d6"
+    ],
+    "alternative": [
+      "d2b1",
+      "e8f6",
+      "d1d6",
+      "c6d6"
+    ],
+    "option": [
+      "d2c4",
+      "e8f6",
+      "d1d6",
+      "c6d6",
+      "c4d6"
+    ],
+    "scope": "Declared legal local example supplied to the projection context. No engine evaluation or investigation receipt is attached to these extra paths."
+  },
+  "provenance": {
+    "reports_path": "target/decision-timing-20261006/mcFunctional24b/stored-reports.jsonl",
+    "reports_file_sha256": "5c05b41ed686606ac95f2772faf06057a74a9971d0234aaa4c085c5cd069e226",
+    "actual_replay_path": "target/meaning-conditions-20261008/nb1Realize24/snapshots.jsonl",
+    "actual_replay_sha256": "a3d0b722b512f13529aff6ca37ff25dd578e99082ca362dd9d5557e485286e46",
+    "original_actual_engine_execution": true,
+    "new_engine_execution": false,
+    "included_reports": "Only the original first four reports through focus comparison d16; later response reports and old rendered text are not injected into the test.",
+    "original_focus_comparison_key": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+    "scope_limit": "This fixture tests production physical bundle assembly with a declared conditional context, not automatic discovery or a proof of the entire numerical evaluation cause."
+  }
+}

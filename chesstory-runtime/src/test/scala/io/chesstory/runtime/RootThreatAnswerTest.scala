@@ -60,8 +60,11 @@ class RootThreatAnswerTest extends munit.FunSuite:
     assertEquals(response.use.recapture.originalVictim, Some(attacker))
     assertEquals(response.use.provider.square, EvidenceSquare("d8"))
     assert(response.use.support.sourceIds.nonEmpty)
-    assert((response.use.support.sourceIds ++ List(response.use.targetCapture.sourceId,
-      response.use.recapture.sourceId)).forall(answer.evidence.contains))
+    val sources = positions(response.witness.positions(response.use.supportCount)).sourceRefs(response.use.support.sourceIds) ++
+      List(response.use.targetCapture, response.use.recapture).flatMap(event =>
+        positions(response.witness.positions(event.plyOffset)).sourceRefs(List(event.sourceId)))
+    assert(sources.nonEmpty && sources.forall(answer.evidence.contains))
+    answer.evidence.foreach(id => assert(packet.evidenceGraph.byId.get(id).exists(packet.evidenceGraph.proofEligible), id))
     assertEquals(materials.size, 3)
     materials.foreach { value =>
       val original = value.path.certified.flatMap(_._2.material).get

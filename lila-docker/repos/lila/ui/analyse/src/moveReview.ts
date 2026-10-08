@@ -10,7 +10,9 @@ import {
   decodeCommentarySelection,
   continuationRoutePoolMatches,
   responsePoolMatchesClasses,
+  reviewedMoverResponsePoolMatches,
   responseSearchMatchesInquiry,
+  reserveResponsePoolMatches,
   commentarySearchAnchorPath,
   type CommentaryEvaluation,
   type CommentarySelection,
@@ -453,8 +455,8 @@ export interface IssuedMoveReviewEngineWork {
   rootRestriction: { kind: 'unrestricted' } | { kind: 'restricted'; movesUci: Uci[] };
   searchLimits: {
     depth: number;
-    nodes: 5_000_000 | 2_000_000 | 250_000;
-    movetimeMs: 5_000 | 2_500 | 750;
+    nodes: 250_000_000 | 40_000_000 | 20_000_000 | 5_000_000 | 2_000_000 | 250_000;
+    movetimeMs: 120_000 | 8_000 | 5_000 | 2_500 | 750;
     multiPv: number;
   };
   maxSearchElapsedMs: number;
@@ -1746,6 +1748,7 @@ function projectJobStatus(
     common.engineProfile,
     context.subject,
     common.observations,
+    common.verification,
   );
   if (!work || !validProgress(raw.progress, work.purpose)) return;
   const assessment = raw.assessment === undefined ? undefined : projectAssessment(raw.assessment, common);
@@ -1875,6 +1878,7 @@ function projectIssuedEngineWork(
   profile: MoveReviewEngineProfile,
   subject: MoveReviewSubject,
   observations: MoveReviewObservations | undefined,
+  contextVerification: MoveReviewVerification | undefined,
 ): IssuedMoveReviewEngineWork | undefined {
   if (
     !isObject(value) ||
@@ -1929,8 +1933,8 @@ function projectIssuedEngineWork(
       replayFen(subject.initialFen, value.engine_position_moves_uci) !== value.search_fen) return;
   const limits = {
     depth: integerInRange(value.search_limits.depth, 1, 100),
-    nodes: integerInRange(value.search_limits.nodes, 1, 5_000_000),
-    movetimeMs: integerInRange(value.search_limits.movetime_ms, 1, 5_000),
+    nodes: integerInRange(value.search_limits.nodes, 1, 250_000_000),
+    movetimeMs: integerInRange(value.search_limits.movetime_ms, 1, 120_000),
     multiPv: integerInRange(value.search_limits.multi_pv, 1, 3),
   };
   if (Object.values(limits).some(limit => limit === undefined)) return;
@@ -1966,6 +1970,29 @@ function projectIssuedEngineWork(
         ) ?? []
       : [],
   );
+  // Reserve questions survey an entire legal response class. A sampled weak
+  // retreat or quiet pawn reply cannot stand for a stronger class member.
+  const reserveClassPool = restrictedMoves && isObject(anchor) && Array.isArray(anchorPrefix) &&
+    observations?.selection?.proposals?.some(proposal =>
+      proposal.requirements.some(reading => {
+        if (reading.kind !== 'compare_moves' ||
+          reading.state !== 'awaiting_engine' || reading.work_id !== value.work_id ||
+          !arrayEquals(reading.prefix_moves_uci, anchorPrefix)) return false;
+        return typeof anchor.position_id === 'string' &&
+          reserveResponsePoolMatches(proposal, reading, restrictedMoves, observations, anchor.position_id) &&
+          limits.multiPv === Math.min(3, restrictedMoves.length);
+      }),
+    );
+  const firstReplySurvey = unrestricted && Array.isArray(anchorPrefix) && anchorPrefix.length === 1 &&
+    isObject(anchor) && observations?.positions?.some(position =>
+      position.id === anchor.position_id && position.legal_moves.complete &&
+      position.legal_moves.moves.length >= 2 && limits.multiPv === Math.min(3, position.legal_moves.moves.length) &&
+      observations.selection?.proposals?.some(proposal => proposal.admission === 'generated' &&
+        proposal.requirements.some(reading => reading.kind === 'compare_moves' &&
+          reading.state === 'awaiting_engine' && reading.work_id === value.work_id &&
+          arrayEquals(reading.prefix_moves_uci, anchorPrefix) && reading.reference_move !== reading.alternative_move &&
+          [reading.reference_move, reading.alternative_move].every(move =>
+            position.legal_moves.moves.some(row => row.uci === move)))));
   const responsePosition =
     value.purpose === 'response_comparison' &&
     isObject(anchor) &&
@@ -1992,7 +2019,7 @@ function projectIssuedEngineWork(
       anchor.position_id as string,
       anchorPrefix,
     ) &&
-    ((anchorPrefix.length === 1 &&
+    (firstReplySurvey || (anchorPrefix.length === 1 &&
       observations.selection?.response_inquiries?.some(
         inquiry =>
           inquiry.state === 'awaiting_engine' &&
@@ -2013,6 +2040,7 @@ function projectIssuedEngineWork(
                 observations.selection!.response_searches?.filter(search =>
                   responseSearchMatchesInquiry(search, inquiry),
                 ),
+                subject.played.uci,
               ) &&
               limits.multiPv === Math.min(3, restrictedMoves.length))),
       )) ||
@@ -2030,6 +2058,7 @@ function projectIssuedEngineWork(
               continuationRoutePoolMatches(inquiry, restrictedMoves, true) &&
               limits.multiPv === Math.min(3, restrictedMoves.length))),
       ) ||
+      reserveClassPool ||
       // One bounded work can answer several pairs at this exact prefix.
       (proposalComparisonMoves.size >= 2 &&
         proposalComparisonMoves.size <= 3 &&
@@ -2059,7 +2088,35 @@ function projectIssuedEngineWork(
             ),
         ),
       ));
+  const selectedFirstReply = value.purpose === 'response_comparison' &&
+    Array.isArray(anchorPrefix) && anchorPrefix.length === 1 && restrictedMoves &&
+    ((restrictedMoves.length === 2 && observations?.selection?.proposals?.some(proposal =>
+      proposal.admission === 'generated' &&
+      proposal.requirements.some(reading => reading.kind === 'compare_moves' &&
+        reading.state === 'awaiting_engine' && reading.work_id === value.work_id &&
+        arrayEquals(reading.prefix_moves_uci, anchorPrefix) &&
+        restrictedMoves.includes(reading.reference_move) && restrictedMoves.includes(reading.alternative_move)))) ||
+      (restrictedMoves.length >= 2 && restrictedMoves.length <= 3 &&
+        anchorPrefix[0] === subject.played.uci && observations?.selection?.response_inquiries?.some(inquiry =>
+          inquiry.state === 'awaiting_engine' && inquiry.root_move === subject.played.uci &&
+          inquiry.root_move_occurrence_id === anchor.root_occurrence_id &&
+          inquiry.child_position_id === anchor.position_id &&
+          inquiry.original_target.square === subject.played.uci.slice(0, 2) &&
+          inquiry.target.square === subject.played.uci.slice(2, 4) &&
+          reviewedMoverResponsePoolMatches([inquiry], restrictedMoves,
+            observations.selection?.response_searches, subject.played.uci))));
   if (value.purpose !== 'response_comparison' && anchor !== undefined) return;
+  const stoppedFocus = value.purpose === 'focus_comparison' && restrictedMoves &&
+    observations?.selection?.root_searches?.some(search => search.purpose === 'focus_comparison' &&
+      search.state === 'stopped' && search.stop_reason === 'search_budget_exhausted' &&
+      search.required_depth === limits.depth && search.root_restriction.kind === 'restricted' &&
+      arrayEquals(search.root_restriction.moves_uci, restrictedMoves));
+  const inquiryPrefix = anchorPrefix === undefined ? [] : Array.isArray(anchorPrefix) ? anchorPrefix : undefined;
+  const selectedInquiry = value.purpose !== 'focus_comparison' && inquiryPrefix && restrictedMoves &&
+    observations?.selection?.proposals?.some(proposal => proposal.requirements.some(reading =>
+      reading.kind === 'compare_moves' && reading.state === 'awaiting_engine' &&
+      reading.work_id === value.work_id && arrayEquals(reading.prefix_moves_uci, inquiryPrefix) &&
+      restrictedMoves.includes(reading.reference_move) && restrictedMoves.includes(reading.alternative_move)));
   const shapeValid =
     (threat && unrestricted && limits.depth === 8 && limits.nodes === 250_000 &&
       limits.movetimeMs === 750 && limits.multiPv! <= 2 && value.max_search_elapsed_ms === 1_250) ||
@@ -2067,7 +2124,12 @@ function projectIssuedEngineWork(
       rootOrFocusPosition &&
       unrestricted &&
       ((limits.depth === 8 && limits.nodes === 2_000_000 && limits.movetimeMs === 2_500 && value.max_search_elapsed_ms === 3_500) ||
-        (limits.depth! >= 16 && limits.nodes === 5_000_000 && limits.movetimeMs === 5_000 && value.max_search_elapsed_ms === 6_000))) ||
+        (limits.depth! >= 16 && limits.nodes === 5_000_000 && limits.movetimeMs === 5_000 && value.max_search_elapsed_ms === 6_000) ||
+        (limits.depth! >= 16 &&
+          ((limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 && value.max_search_elapsed_ms === 9_000) ||
+            (limits.nodes === 250_000_000 && limits.movetimeMs === 120_000 && value.max_search_elapsed_ms === 121_000)) &&
+          contextVerification?.state === 'pending' &&
+          contextVerification.reason === 'child_challenge' && contextVerification.targetDepth === limits.depth))) ||
     ((value.purpose === 'focus_comparison' ||
       value.purpose === 'investigation_comparison' ||
       value.purpose === 'response_comparison') &&
@@ -2081,11 +2143,21 @@ function projectIssuedEngineWork(
             undefined,
         )) &&
       (limits.depth! >= 16 || (value.purpose === 'focus_comparison' && limits.depth === 8)) &&
-      limits.nodes === 2_000_000 &&
-      limits.movetimeMs === 2_500 &&
+      ((limits.nodes === 2_000_000 && limits.movetimeMs === 2_500 && value.max_search_elapsed_ms === 3_500) ||
+        (limits.depth! >= 16 && (selectedInquiry || stoppedFocus) && limits.nodes === 20_000_000 && limits.movetimeMs === 2_500 &&
+          value.max_search_elapsed_ms === 3_500) ||
+        (selectedFirstReply && limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 &&
+          value.max_search_elapsed_ms === 9_000) ||
+        (limits.depth! >= 16 && stoppedFocus && limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 &&
+          value.max_search_elapsed_ms === 9_000) ||
+        (limits.depth! >= 16 && (limits.nodes === 5_000_000 || limits.nodes === 20_000_000) &&
+          limits.movetimeMs === 5_000 && value.max_search_elapsed_ms === 6_000 &&
+          // A selected inquiry may use more nodes inside the same five seconds
+          // for its direct reply or one server-scheduled retry. Position, legal roots,
+          // depth and MultiPV remain subject to the checks above.
+          (value.purpose !== 'focus_comparison' || stoppedFocus))) &&
       (value.purpose === 'response_comparison' ||
-        (restrictedMoves && limits.multiPv === Math.min(3, restrictedMoves.length))) &&
-      value.max_search_elapsed_ms === 3_500);
+        (restrictedMoves && limits.multiPv === Math.min(3, restrictedMoves.length))));
   if (!shapeValid) return;
   return {
     engineProfile: profile,

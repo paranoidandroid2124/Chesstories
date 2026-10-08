@@ -498,6 +498,102 @@ test('version 2 admits a closed four-capture cost unit and rejects missing costs
   }
 });
 
+test('current defense accepts the typed closed account and rejects hidden prices or foreign references', () => {
+  const fen = '6k1/5p2/5n2/8/4P3/8/1P5P/1N3BK1 w - - 0 1';
+  const observations: MoveReviewObservations = { statements: [], paths: [
+    deliveryPath('played', fen, ['f1c4', 'f6e4', 'b2b4', 'g8f8', 'c4d3', 'f7f5', 'd3e4', 'f5e4']),
+    deliveryPath('alternative', fen, ['b1d2', 'f6g4', 'g1g2']),
+  ] };
+  const { raw, summary } = questionResponse(observations, 'current_defense');
+  assert.equal(decodeCommentarySelection(raw, observations), undefined, 'this question requires the typed account');
+  summary.schema_version = 2;
+  const decoded = decodeCommentarySelection(raw, observations);
+  assert.equal((decoded?.candidates[0].detail.summary_question as CommentaryQuestionSummary)?.question, 'current_defense');
+  assert.equal(summary.units[0].covered_moves.length, 3, 'the immediate capture and the later price remain owned');
+  for (const section of ['units', 'detail_units'] as const) {
+    const hidden = structuredClone(raw);
+    hidden.candidates[0].detail.summary_question[section]![0].covered_moves.pop();
+    assert.equal(decodeCommentarySelection(hidden, observations), undefined, `${section}: later price cannot be hidden`);
+    const foreign = structuredClone(raw);
+    foreign.candidates[0].detail.summary_question[section]![0].required_moves![0].line_id = 'foreign';
+    assert.equal(decodeCommentarySelection(foreign, observations), undefined, `${section}: exact line ownership still applies`);
+  }
+});
+
+test('an investigated mechanism owns supplementary replies at the same original root', () => {
+  const observations: MoveReviewObservations = { statements: [], paths: [
+    deliveryPath('played', startFen, ['g1f3', 'd7d5']),
+    deliveryPath('alternative', startFen, ['b1c3', 'd7d5']),
+  ] };
+  const { raw, summary, sync } = questionResponse(observations, 'investigated_mechanism');
+  summary.schema_version = 2;
+  const witness = deliveryPath('witness', startFen, ['b1c3', 'e7e5', 'g1f3']);
+  witness.occurrenceIds[0] = observations.paths[1].occurrenceIds[0];
+  witness.positionIds![1] = observations.paths[1].positionIds![1];
+  observations.paths.push(witness);
+  summary.witness_line_ids = [witness.id];
+  raw.candidates[0].evidence_ids.push(...witness.occurrenceIds, ...witness.lineSummary!.premise_ids);
+  raw.candidates[0].evidence_ids = [...new Set(raw.candidates[0].evidence_ids)];
+  const ref = { line_id: witness.id, occurrence_id: witness.occurrenceIds[2] };
+  summary.units.push({ role: 'reply', en: ['The tested reply is ', ref, '.'],
+    ko: ['The tested reply is ', ref, '.'], english_only: true,
+    proof_moves: [ref], action_moves: [ref], required_moves: [ref], covered_moves: [] });
+  sync();
+  assert.ok(decodeCommentarySelection(raw, observations));
+  for (const [name, change] of [
+    ['untyped mechanism', (value: typeof raw) => { delete value.candidates[0].detail.summary_question.schema_version; }],
+    ['unrelated question', (value: typeof raw) => { value.candidates[0].detail.summary_question.question = 'selected_comparison'; }],
+    ['missing witness', (value: typeof raw) => { delete value.candidates[0].detail.summary_question.witness_line_ids; }],
+    ['foreign witness', (value: typeof raw) => { value.candidates[0].detail.summary_question.witness_line_ids = ['foreign']; }],
+    ['duplicate witness', (value: typeof raw) => { value.candidates[0].detail.summary_question.witness_line_ids!.push(witness.id); }],
+  ] as const) {
+    const changed = structuredClone(raw);
+    change(changed);
+    assert.equal(decodeCommentarySelection(changed, observations), undefined, name);
+  }
+  for (const [name, change] of [
+    ['different occurrence', (path: typeof witness) => { path.occurrenceIds[0] = 'another-root'; }],
+    ['different position', (path: typeof witness) => { path.positionIds![0] = 'another-position'; }],
+    ['different root move', (path: typeof witness) => { path.moves[0].uci = 'e2e4'; }],
+  ] as const) {
+    const changed = structuredClone(observations);
+    change(changed.paths[2]);
+    assert.equal(decodeCommentarySelection(raw, changed), undefined, name);
+  }
+});
+
+test('a typed terminal answer retains an owned supplementary explanation and its ending', () => {
+  const fen = '7k/5K2/6Q1/8/8/8/8/8 w - - 0 1';
+  const observations: MoveReviewObservations = { statements: [], paths: [
+    deliveryPath('played', fen, ['g6g7']), deliveryPath('alternative', fen, ['g6g5']),
+  ] };
+  const { raw, summary, sync } = questionResponse(observations, 'observed_terminal_comparison');
+  summary.schema_version = 2;
+  const witness = deliveryPath('witness', fen, ['g6g5', 'h8h7', 'g5g7']);
+  witness.occurrenceIds[0] = observations.paths[1].occurrenceIds[0];
+  witness.positionIds![1] = observations.paths[1].positionIds![1];
+  observations.paths.push(witness);
+  summary.witness_line_ids = [witness.id];
+  raw.candidates[0].evidence_ids = [...new Set([...raw.candidates[0].evidence_ids,
+    ...witness.occurrenceIds, ...witness.lineSummary!.premise_ids])];
+  const ref = { line_id: witness.id, occurrence_id: witness.occurrenceIds[2] };
+  summary.units.push({ role: 'reply', en: ['In the tested reply, ', ref, '.'],
+    ko: ['In the tested reply, ', ref, '.'], english_only: true,
+    proof_moves: [ref], action_moves: [ref], required_moves: [ref], covered_moves: [] });
+  sync();
+  assert.ok(decodeCommentarySelection(raw, observations));
+  const legacy = structuredClone(raw);
+  delete legacy.candidates[0].detail.summary_question.schema_version;
+  assert.equal(decodeCommentarySelection(legacy, observations), undefined);
+  const foreign = structuredClone(observations);
+  foreign.paths[2].occurrenceIds[0] = 'foreign-root';
+  assert.equal(decodeCommentarySelection(raw, foreign), undefined);
+  const nonterminal = structuredClone(observations);
+  nonterminal.paths[0].lineSummary!.ending.kind = 'line_end';
+  assert.equal(decodeCommentarySelection(raw, nonterminal), undefined,
+    'a supplementary terminal cannot substitute for the primary terminal obligation');
+});
+
 test('recorded ends allow only a visible finite final check to have no recorded reply', () => {
   const fen = '7k/8/8/8/8/8/8/R6K w - - 0 1';
   const observations: MoveReviewObservations = { statements: [], paths: [
@@ -1808,6 +1904,10 @@ test('functional effects require their exact sustained relation and actual legal
     { name: 'new control supports the original pawn when it later arrives', scope: 'support_use',
       fen: '7k/1pp5/8/8/3P4/8/8/7K b - - 0 1',
       moves: ['b7b6', 'h1h2', 'c7c5', 'd4c5', 'b6c5'], target: 'c7', square: 'c5', loss: 3, rays: [] },
+    { name: 'empty-square preparation survives an incidental support followed by an unsupported route', scope: 'support_use',
+      fen: '6k1/5p2/5n2/8/4P3/8/1P5P/1N3BK1 w - - 0 1',
+      moves: ['b1d2', 'f6g4', 'f1d3', 'g4e5', 'd3c4', 'e5c4', 'd2c4'],
+      target: 'f1', square: 'c4', loss: 5, rays: [] },
     { name: 'new support follows the same friendly rook to the eventual exchange square', scope: 'support_use',
       fen: '7k/3r4/2r5/8/8/4N3/2P5/7K b - - 0 1',
       moves: ['d7c7', 'h1h2', 'c6c2', 'e3c2', 'c7c2'], target: 'c6', square: 'c2', loss: 3, rays: [] },

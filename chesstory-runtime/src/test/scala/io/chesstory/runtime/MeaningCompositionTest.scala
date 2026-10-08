@@ -45,6 +45,34 @@ class MeaningCompositionTest extends munit.FunSuite:
     (effect \ "target" \ "role").asOpt[String].contains(role) &&
       (effect \ "target" \ "square").asOpt[String].contains(square)
 
+  test("a pawn remaining under the evading knight's attack does not invent a later counterattack"):
+    val (_, _, root) = project("6k1/5p2/5n2/4P3/8/8/8/6K1 b - - 0 1",
+      "f6d7 g1h2 f7f5 e5f6 g8h7", "f6e8 g1h2 f7f5 e5f6",
+      Some("retained-evasion-control"))
+    val effects = histories(root).filter(effect =>
+      (effect \ "actor" \ "square").asOpt[String].contains("d7") && target(effect, "pawn", "e5"))
+    assert(effects.nonEmpty)
+    assert(!effects.exists(effect => (effect \ "through_plies").as[List[Int]] == List(4)),
+      "exf6 moves the already-attacked pawn; the d7 knight did not begin another attack")
+
+  test("certified provider removal is absent control while unknown tracking remains unknown"):
+    val (packet, prepared, _) = project("3qr2k/8/8/8/8/P7/8/3Q3K w - - 0 1",
+      "d1d8 e8d8", "d1a4 h8g8")
+    val pair = List("d1d8", "d1a4").map(move => prepared.paths.find(_.moves.head == move).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val arm = RootQuestionSummary.prepare(packet, prepared, pair, positions).get.head
+    val queen = CommentaryFact.Piece("white", "queen", "d1").witness
+    val pawn = CommentaryFact.Piece("white", "pawn", "a3").witness
+    val unavailable = CommentaryFact.Piece("white", "bishop", "d2").witness
+    assertEquals(prepared.pieceAfter(packet, pair.head, queen, 2), Some(None))
+    assertEquals(arm.controlSquare(2, queen, "a3"), Some(false))
+    assertEquals(arm.control(2, queen, pawn), Some(false))
+    assertEquals(arm.controlSquare(2, unavailable, "a3"), None)
+    assertEquals(arm.controlSquare(3, queen, "a3"), None)
+    val absentPosition = new RootQuestionSummary.Arm(packet, prepared, pair.head,
+      positions - pair.head.positions(2), arm.reading)
+    assertEquals(absentPosition.controlSquare(2, queen, "a3"), None)
+
   test("bounded comparison text publishes retained item identities, not matching wording"):
     val shared = "The reply preserves its recapture condition."
     val examples = List(
@@ -120,7 +148,7 @@ class MeaningCompositionTest extends munit.FunSuite:
       else
         assert((result \ "detail" \ "effects").as[List[JsObject]].contains(costEffect.get),
           "the fallback retains the same attack target, both root paths and all of its proof references")
-        List(rootMove, prepared.notation.line(peer.moves).head, "bishop on c2", "pawn on e4", "attacks", "does not attack")
+        List(rootMove, prepared.notation.line(peer.moves).head, "bishop on c2", "pawn on e4")
           .foreach(clause => assert(text(result).contains(clause), text(result).takeRight(600)))
         assert(!text(result).contains("Bxe4") && !text(result).contains("Rxe4"), "the long trade really did not fit")
       assert(text(result).length <= 4000)
@@ -329,12 +357,12 @@ class MeaningCompositionTest extends munit.FunSuite:
       val effect = (root \ "detail" \ "effects").as[List[JsObject]].find(effect =>
         (effect \ "scope").as[String] == "support_retention" && (effect \ "target" \ "square").asOpt[String].contains(square))
         .getOrElse(fail(body))
-      assert(body.contains(s"$departure ends the support") && body.contains("keeps covering it through that move"), body)
       assertEquals((root \ "detail" \ "effects").as[List[JsObject]].count(_ == effect), 1,
         "the current support and its retained interval have one owner")
       assertEquals((effect \ "through_plies").as[List[Int]], List(3), "later target movement must not lengthen the earlier support claim")
       val path = prepared.paths.find(_.moves == moves(line)).get
       assertEquals((effect \ "occurrence_ids").as[List[String]], path.ids.take(3))
+      assert(body.contains(departure) && body.contains(square), "the retained interval explains its actual departure and target")
       val current = MoveWorkProjection.select(packet, prepared).local.find(note =>
         note.edge.evidence.id == path.ids.head && (note.note.detail match
           case MoveWorkProjection.Detail.Support(actor, target, _, true) =>
@@ -358,10 +386,14 @@ class MeaningCompositionTest extends munit.FunSuite:
 
   test("a pinned pawn's geometric retention never claims an available recapture"):
     val fen = "7k/7p/5p2/6p1/8/4B3/8/K6R b - - 0 1"
-    val (_, _, root) = project(fen,
+    val (_, prepared, root) = project(fen,
       "h7h6 a1a2 f6f5", "f6f5", Some("retention-pinned"))
-    assert(text(root).contains("keeps covering it through that move"), text(root))
-    assert(!text(root).contains("actually recaptures"), text(root))
+    val effects = (root \ "detail" \ "effects").as[List[JsObject]]
+    val retained = effects.find(effect => (effect \ "scope").as[String] == "support_retention").get
+    val path = prepared.paths.find(_.moves == moves("h7h6 a1a2 f6f5")).get
+    assertEquals((retained \ "occurrence_ids").as[List[String]], path.ids.take(3))
+    assert(!effects.exists(effect => Set("support_use", "support_handoff")((effect \ "scope").as[String])),
+      "geometric retention does not certify a legal recapture")
     val owner = CanonicalPositionHistory.from(fen, Nil, fen).toOption.get
     assert(owner.extend(moves("h7h6 a1a2 f6f5 e3g5")).isRight)
     assert(owner.extend(moves("h7h6 a1a2 f6f5 e3g5 h6g5")).isLeft,

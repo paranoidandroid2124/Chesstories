@@ -216,7 +216,55 @@ class RootQuestionAnswerTest extends munit.FunSuite:
       case ref: MoveRef => paths.notation.line(ref.path.moves)(ref.offset)
     }.mkString
     assert(words(alone).contains(" recaptures "))
-    assert(words(together).endsWith(words(alone)), "selection of earlier events cannot change a recapture's meaning")
+    assertEquals(CommentaryEnglish.statement(together).collect { case ref: MoveRef => ref }, together.references)
+    assertEquals(CommentaryEnglish.statement(alone).collect { case ref: MoveRef => ref }, alone.references)
+    assertEquals(together.events.last.originalVictim, alone.events.head.originalVictim)
+    assertEquals(together.events.last.originalActor, alone.events.head.originalActor)
+  }
+
+  test("a recorded move order retains the same original knight's root attack and actual release") {
+    // Already opened WCC 2016 game 8. The g4-knight and g6-knight are distinct identities.
+    val example = Example("earlier knight escape", "observed_move_order",
+      "3r2k1/4qppp/1p2p1n1/pN6/P1PR2n1/4P3/5PPP/4QBK1 b - - 0 24", List(
+        "g4f6 e1d1 d8b8 g2g3 g6e5 f1g2 h7h5 h2h3 e7c5 b5d6 c5b4 g1h2 b8f8 f2f4 e5d7 d6e4 f6e4 g2e4",
+        "g6e5 e1d2 d8b8 d4d6 g4f6 d2d4 e5d7 b5a7 e7e8 g2g4 e6e5 d4d1 d7c5 a7c6 g7g6"))
+    val lines = example.rows.map(row => EngineLine(row.split(" ").toList, 0, None, 16))
+    val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(fen = example.fen,
+      playedMoveUci = lines.head.moves.head, variations = lines)).get
+    val packet = EvidenceBackedJudgmentPacket.fromAssembly(MoveReviewAssembler.assemble(input)).get
+    val paths = ObservedLineProtocol.prepare(packet)
+    val pair = lines.map(line => paths.paths.find(_.moves == line.moves).get)
+    val positions = packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
+    val chosen = RootQuestionSummary.choose(packet, paths, pair, positions).get
+    assertEquals(chosen.question, example.question)
+    val content = chosen.confirmedFacts.core.flatMap(_.statements)
+    val contrast = content.collectFirst { case v: ControlContrast => v }.get
+    assertEquals(contrast.move, MoveRef(pair.head, 0))
+    assertEquals(contrast.alternative, MoveRef(pair.last, 0))
+    assertEquals(contrast.target.map(_.square.key), Some("f6"))
+    assertEquals(contrast.alternativeTarget.map(_.square.key), Some("g4"))
+    assert(!contrast.present && contrast.alternativePresent)
+    val knight = CommentaryFact.Piece("black", "knight", "g4").witness
+    val arms = RootQuestionSummary.prepare(packet, paths, pair, positions).get
+    assertEquals(arms.head.at(knight, 1), contrast.target)
+    assertEquals(arms.last.at(knight, 1), contrast.alternativeTarget)
+    val withdrawal = content.collectFirst { case v: AttackWithdrawal => v }.get
+    assertEquals(withdrawal.move, MoveRef(pair.last, 3))
+    assertEquals(withdrawal.before.square.key, "d4")
+    assertEquals(withdrawal.after.square.key, "d6")
+    assertEquals(withdrawal.target, knight)
+    val text = chosen.realize(paths, pair).get.text
+    List("Nf6", "N6e5", "rook on d4", "knight on g4", "Rd6", "ending its attack").foreach(s =>
+      assert(text.contains(s), text))
+    assert(!text.toLowerCase.contains("safe") && !text.toLowerCase.contains("forced"))
+    val unknownRoot = RootQuestionSummary.choose(packet, paths, pair, positions - pair.head.positions(1)).get
+    assert(!unknownRoot.confirmedFacts.core.flatMap(_.statements).exists(_.isInstanceOf[ControlContrast]),
+      "unknown root control cannot become an observed absence")
+    val unknownRelease = RootQuestionSummary.choose(packet, paths, pair, positions - pair.last.positions(3)).get
+    assert(!unknownRelease.confirmedFacts.core.flatMap(_.statements).exists(_.isInstanceOf[AttackWithdrawal]),
+      "the attacker's departure needs its own complete preceding geometry")
+    assertEquals(unknownRoot.question, chosen.question)
+    assertEquals(unknownRelease.question, chosen.question)
   }
 
   test("delivery failure does not erase the selected question or its factual answer") {

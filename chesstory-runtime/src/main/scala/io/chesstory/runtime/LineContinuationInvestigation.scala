@@ -246,6 +246,12 @@ private[runtime] object LineContinuationInvestigation:
             .concat("A later gain is not proof of sufficient compensation, and geometric support is not a forced defense. ")
             .concat("Survival and missing recovery are bounded by this line's end; the existing line summary owns material values and terminal facts.")))
 
+  /** Inspect this exact certified path without admitting it as an independent discovery source. */
+  private[runtime] def readOwnedPath(packet: EvidenceBackedJudgmentPacket, path: PreparedPath,
+      prepared: PreparedPaths): Option[Reading] =
+    if !prepared.belongsTo(packet) || !prepared.path(packet, path.line.ref.id).exists(_ eq path) then None
+    else prepared.continuationReading(packet, path) { read(packet, path, prepared) }
+
   def readAll(packet: EvidenceBackedJudgmentPacket, prepared: PreparedPaths,
       previous: List[Reading] = Nil): List[Reading] =
     prepared.requireOwner(packet)
@@ -730,8 +736,9 @@ private[runtime] object LineContinuationInvestigation:
       (_, fact) <- path.certified
       ledger <- fact.material
       exposures = readExposures(packet, path, prepared)
-      if (ledger.events.nonEmpty || path.moves.size > 1 || exposures.nonEmpty) &&
-        path.ids == path.declared && path.positions.forall(_.id.nonEmpty)
+      // A quiet one-move answer can still be the other arm of a verified question.
+      // Whether to show its trajectory belongs to delivery, not evidence reading.
+      if path.moves.nonEmpty && path.ids == path.declared && path.positions.forall(_.id.nonEmpty)
     yield
       val positions = path.positions.toVector
       val occurrenceIds = path.ids.toVector

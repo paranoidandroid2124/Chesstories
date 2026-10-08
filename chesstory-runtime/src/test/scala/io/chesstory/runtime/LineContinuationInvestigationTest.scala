@@ -306,7 +306,10 @@ class LineContinuationInvestigationTest extends munit.FunSuite:
     assertEquals(value.choicePoints.head.kinds, List("root_capture_response"))
     val quiet = packet(initial, List("e2e4", "e7e5", "g1f3", "b8c6"), List("f1b5"))
     val prepared = ObservedLineProtocol.prepare(quiet)
-    assertEquals(prepared.continuationReadings, Nil)
+    val quietReading = prepared.continuationReadings.find(_.path.moves == List("f1b5")).get
+    assert(quietReading.complete, "a certified quiet root remains readable as a comparison arm")
+    assertEquals(quietReading.events, Nil)
+    assertEquals(quietReading.choicePoints, Nil, "reading a quiet move does not invent a reply or an investigation")
     assert(prepared.continuationReadings eq prepared.continuationReadings)
 
   test("a delayed removal retains its immediate capture-chain ancestor choice point"):

@@ -44,6 +44,8 @@ private[runtime] object ObservedLineProtocol:
       val eligible: Set[String], val resourceIds: Set[String], val paths: List[PreparedPath]
   ):
     lazy val notation = new CommentaryNotation(owner)
+    private[runtime] lazy val workSelection = MoveWorkProjection.buildSelection(owner, this)
+    private[runtime] lazy val resourceJson = owner.resources.map(PositionResourceProtocol.json)
     def belongsTo(packet: EvidenceBackedJudgmentPacket): Boolean = owner eq packet
     def requireOwner(packet: EvidenceBackedJudgmentPacket): Unit =
       require(belongsTo(packet), "prepared paths must belong to this exact packet")
@@ -101,6 +103,10 @@ private[runtime] object ObservedLineProtocol:
     lazy val continuationReadings: List[LineContinuationInvestigation.Reading] =
       LineContinuationInvestigation.readAll(owner, this)
 
+    /** A certified conditional material witness does not become an independent investigation seed. */
+    private[runtime] def continuationReadingFor(value: PreparedPath): Option[LineContinuationInvestigation.Reading] =
+      LineContinuationInvestigation.readOwnedPath(owner, value, this)
+
     def continuationComparison(packet: EvidenceBackedJudgmentPacket,
         left: LineContinuationInvestigation.Reading, right: LineContinuationInvestigation.Reading)
         : Option[LineContinuationComparison.Reading] =
@@ -142,6 +148,19 @@ private[runtime] object ObservedLineProtocol:
     def pieceAfter(packet: EvidenceBackedJudgmentPacket, value: PreparedPath,
         original: RelationColoredPieceWitness, afterPlyCount: Int): Option[Option[RelationColoredPieceWitness]] =
       identitySnapshot(packet, value, afterPlyCount).piece(original)
+
+    /** Realization checks a selected identity against this preparation's owner;
+      * a foreign path or unavailable count is unknown, never a captured piece.
+      */
+    private[runtime] def trackedPieceAfter(value: PreparedPath, original: RelationColoredPieceWitness,
+        afterPlyCount: Int): Option[Option[RelationColoredPieceWitness]] =
+      if !paths.exists(_ eq value) || afterPlyCount < 0 || afterPlyCount > value.moves.size then None
+      else pieceAfter(owner, value, original, afterPlyCount)
+
+    private[runtime] def positionView(value: PreparedPath, count: Int): Option[PositionResourceView] =
+      Option.when(paths.exists(_ eq value) && count >= 0 && count <= value.moves.size)(value)
+        .flatMap(_.positions.lift(count)).flatMap(position =>
+          position.id.flatMap(views.get).filter(_.position == position))
 
     /** Only requested snapshots are read. Nested None still distinguishes unknown from captured. */
     def identitiesAfter(packet: EvidenceBackedJudgmentPacket, value: PreparedPath, afterPlyCount: Int)

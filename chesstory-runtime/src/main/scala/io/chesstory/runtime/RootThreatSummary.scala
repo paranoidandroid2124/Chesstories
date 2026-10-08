@@ -89,6 +89,5 @@ private[runtime] object RootThreatSummary:
           (if prepare.path eq witness.path then Nil else List(responseCost))
         Answer("attacker_removal_or_recapture", statements.map(statement =>
           Section(List(statement), statement.references)), Nil,
-          (arms :+ witness).flatMap(_.proofs.toList.sorted) ++ use.support.sourceIds ++
-            List(use.targetCapture.sourceId, use.recapture.sourceId))
+          (arms :+ witness).flatMap(_.proofs.toList.sorted) ++ witness.supportSources(use))
     }.nextOption()

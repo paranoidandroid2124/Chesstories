@@ -215,6 +215,11 @@ class CommentarySelectionTest extends munit.FunSuite:
         assertEquals(ObservedLineProtocol.summaryJson(path), ObservedLineProtocol.summaryJson(context, path.line))
       }
       assertEquals(MoveWorkProjection.projectFromPacket(source, prepared), MoveWorkProjection.projectFromPacket(source))
+      assert(MoveWorkProjection.select(source, prepared) eq MoveWorkProjection.select(source, prepared),
+        "repeated projection shares this packet's base selection")
+      val other = packet(context)
+      assert(!(MoveWorkProjection.select(source, prepared) eq MoveWorkProjection.select(other, ObservedLineProtocol.prepare(other))),
+        "equal histories in separate packets never share a selection owner")
       intercept[IllegalArgumentException] {
         MoveWorkProjection.projectFromPacket(packet(context), prepared)
       }

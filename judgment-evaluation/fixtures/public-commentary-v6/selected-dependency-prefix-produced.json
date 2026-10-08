@@ -1,0 +1,316 @@
+{
+  "scope": "Exact actual engine reports before the selected dependency was skipped. This fixture verifies scheduler behavior, not engine strength or causal sufficiency.",
+  "source_run": "criticalbrepeats1",
+  "source_sha256": "c1cf51a866b81e58c9f24742e8091af36e7cc9e1cb08c64cce81eb7adf860051",
+  "request": {
+    "schema_version": "chesstory.position-commentary.job-request.v6",
+    "request_id": "human-evaluation-H05R3",
+    "variant": "standard",
+    "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "move_prefix_uci": [],
+    "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "g3g4",
+      "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+    },
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "remaining_budget_ms": 30000
+  },
+  "saved_reports": [
+    {
+      "issued_work": {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "d94f4ede50d7130c8bc3b96f13474ea2ca47089aa99cab88d05598b2badbd01f",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:0",
+        "execution_key_sha256": "d94f4ede50d7130c8bc3b96f13474ea2ca47089aa99cab88d05598b2badbd01f",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f3e3",
+                "b4b3",
+                "e3f3",
+                "f7f6",
+                "f3e3",
+                "e5d6"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 81
+              }
+            },
+            {
+              "moves": [
+                "g3g4",
+                "e5e6",
+                "f3e3",
+                "e6f6",
+                "e3f4",
+                "f6g7"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 79
+              }
+            },
+            {
+              "moves": [
+                "c3b4",
+                "c5b4",
+                "a3b4",
+                "c4c3",
+                "b2c3",
+                "a4a3",
+                "f3e3"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -85
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:1",
+        "execution_key_sha256": "b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f3e3",
+                "e5f6",
+                "e3f4",
+                "f6g7",
+                "e4e5",
+                "g7g6",
+                "f4e4",
+                "g6h5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 214
+              }
+            },
+            {
+              "moves": [
+                "g3g4",
+                "f7f6",
+                "f3e3",
+                "b4b3",
+                "e3f3",
+                "e5d6",
+                "f3f4",
+                "d6e6",
+                "e4e5",
+                "f6e5",
+                "f4g5",
+                "e5e4",
+                "g5f4",
+                "e6d5",
+                "g4g5",
+                "e4e3",
+                "g5g6",
+                "d5e6",
+                "f4e3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 0
+              }
+            },
+            {
+              "moves": [
+                "a3b4",
+                "c5b4",
+                "c3b4",
+                "c4c3",
+                "b2c3",
+                "a4a3",
+                "f3g4",
+                "a3a2",
+                "g4g5",
+                "a2a1q",
+                "g5h6",
+                "a1c3",
+                "h6g7",
+                "c3b4",
+                "g7g8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -666
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "912fd2fd36b7b822be7e8ba25848b719f8102dc0e0898ce1d92ba54b6fcc76da",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5f6",
+            "f7f6"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 40000000,
+          "movetime_ms": 8000,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 9000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+          "prefix_moves_uci": [
+            "f3e3"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:2",
+        "execution_key_sha256": "912fd2fd36b7b822be7e8ba25848b719f8102dc0e0898ce1d92ba54b6fcc76da",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f7f6",
+                "e3f3",
+                "e5d6",
+                "f3e2",
+                "d6e5",
+                "e2e3",
+                "e5d6",
+                "e3d2",
+                "b4b3",
+                "d2e3",
+                "d6e5",
+                "e3f3",
+                "f6f5",
+                "e4f5",
+                "e5f5",
+                "g3g4",
+                "f5f6",
+                "f3f4",
+                "f6g6",
+                "g4g5",
+                "g6g7",
+                "f4g3",
+                "g7f8",
+                "g3g4",
+                "f8g8",
+                "g4f5",
+                "g8f7",
+                "g5g6",
+                "f7g7",
+                "f5g5",
+                "g7g8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 386
+              }
+            },
+            {
+              "moves": [
+                "e5f6",
+                "e3f4",
+                "f6e6",
+                "e4e5",
+                "f7f5",
+                "e5f6",
+                "e6f6",
+                "f4e4",
+                "f6e6",
+                "g3g4",
+                "b4b3",
+                "g4g5",
+                "e6f7",
+                "e4d5",
+                "f7e7",
+                "d5c5",
+                "e7f7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 536
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

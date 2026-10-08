@@ -1,0 +1,757 @@
+{
+  "scope": "First six actual reports; no newly invented engine answer. The missing option comparison must be issued next.",
+  "source": "target\\decision-timing-20261006\\optionh05r3prefix2\\stored-reports.jsonl",
+  "request": {
+    "schema_version": "chesstory.position-commentary.job-request.v6",
+    "request_id": "human-evaluation-H05R3",
+    "variant": "standard",
+    "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "move_prefix_uci": [],
+    "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "g3g4",
+      "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+    },
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "remaining_budget_ms": 30000
+  },
+  "saved_reports": [
+    {
+      "issued_work": {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "d94f4ede50d7130c8bc3b96f13474ea2ca47089aa99cab88d05598b2badbd01f",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:0",
+        "execution_key_sha256": "d94f4ede50d7130c8bc3b96f13474ea2ca47089aa99cab88d05598b2badbd01f",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f3e3",
+                "f7f6",
+                "g3g4",
+                "e5e6",
+                "a3b4",
+                "c5b4",
+                "c3b4"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 84
+              }
+            },
+            {
+              "moves": [
+                "g3g4",
+                "f7f6",
+                "f3e3",
+                "e5d6",
+                "e3f4",
+                "d6e6",
+                "e4e5",
+                "f6e5",
+                "f4e4",
+                "e6d6"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 71
+              }
+            },
+            {
+              "moves": [
+                "a3b4",
+                "c5b4",
+                "c3b4",
+                "c4c3",
+                "b2c3",
+                "a4a3",
+                "b4b5"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -156
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:1",
+        "execution_key_sha256": "b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f3e3",
+                "e5e6",
+                "e3f4",
+                "f7f6",
+                "f4f3",
+                "e6e7",
+                "f3e3",
+                "e7d6",
+                "e3d2",
+                "b4b3",
+                "d2e2",
+                "d6e5",
+                "e2f3",
+                "f6f5",
+                "e4f5",
+                "e5f5",
+                "g3g4",
+                "f5f6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 147
+              }
+            },
+            {
+              "moves": [
+                "g3g4",
+                "f7f6",
+                "f3e3",
+                "b4b3",
+                "e3f3",
+                "e5d6",
+                "f3f4",
+                "d6e6",
+                "e4e5",
+                "f6e5",
+                "f4g5",
+                "e5e4",
+                "g5f4",
+                "e6d5",
+                "g4g5",
+                "e4e3",
+                "f4f3",
+                "d5e5",
+                "f3e3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 2
+              }
+            },
+            {
+              "moves": [
+                "a3b4",
+                "c5b4",
+                "c3b4",
+                "c4c3",
+                "b2c3",
+                "a4a3",
+                "f3e3",
+                "a3a2",
+                "e3d3",
+                "a2a1q",
+                "d3c4",
+                "e5e4",
+                "b4b5",
+                "f7f5",
+                "b5b6",
+                "a1g1"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -674
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "b99959bced86e816949469aa2861c0c63ea5c669f06b1ea08654f1c767103a20",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5e6",
+            "f7f6"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 40000000,
+          "movetime_ms": 8000,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 9000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+          "prefix_moves_uci": [
+            "f3e3"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:2",
+        "execution_key_sha256": "b99959bced86e816949469aa2861c0c63ea5c669f06b1ea08654f1c767103a20",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f7f6",
+                "e3f3",
+                "e5d6",
+                "f3e2",
+                "d6e6",
+                "e2d2",
+                "e6e5",
+                "c3b4",
+                "c5b4",
+                "a3b4",
+                "e5d4",
+                "d2c2",
+                "c4c3",
+                "b2c3",
+                "d4e4",
+                "c2b2",
+                "e4d5",
+                "b2a3",
+                "f6f5",
+                "b4b5",
+                "d5c4",
+                "a3a4",
+                "c4c3",
+                "b5b6",
+                "c3c4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 492
+              }
+            },
+            {
+              "moves": [
+                "e5e6",
+                "e3d2",
+                "b4c3",
+                "b2c3",
+                "e6d7",
+                "d2e3",
+                "d7e6",
+                "e3f4",
+                "e6f6",
+                "e4e5",
+                "f6e6",
+                "f4e4",
+                "e6d7",
+                "e4f5",
+                "d7c8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 517
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "f2fb7618f9b646e4265afe0d5e64477f9cd87271cfeddbdf8bb06f2226cfe8a1",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3",
+          "f7f6"
+        ],
+        "search_fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "g3g4",
+            "e3f3"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 6000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "00c05612130864f6080fbf27b03f044ce8e4beb5558d815b92047a7f414fb158",
+          "prefix_moves_uci": [
+            "f3e3",
+            "f7f6"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:3",
+        "execution_key_sha256": "f2fb7618f9b646e4265afe0d5e64477f9cd87271cfeddbdf8bb06f2226cfe8a1",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "e3f3",
+                "e5d6",
+                "f3e2",
+                "d6c6",
+                "e2e3",
+                "c6d6",
+                "e3d2",
+                "b4b3",
+                "d2e2",
+                "d6e6",
+                "e2e3",
+                "e6f7",
+                "e3f4",
+                "f7g8",
+                "f4f5",
+                "g8f7",
+                "g3g4",
+                "f7g7",
+                "e4e5",
+                "f6e5",
+                "f5e5",
+                "g7h7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 417
+              }
+            },
+            {
+              "moves": [
+                "g3g4",
+                "b4b3",
+                "e3f3",
+                "e5d6",
+                "f3e2",
+                "d6e5",
+                "e2e3",
+                "e5d6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "e91ea474f3b858486bd7cec00e1a5064b70aa576c7d75665d78ab64a0c063dd3",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6c6",
+          "e2e3",
+          "c6d6",
+          "e3d2",
+          "b4b3",
+          "d2e2",
+          "d6e6",
+          "e2e3",
+          "e6f7",
+          "e3f4",
+          "f7g8",
+          "f4f5",
+          "g8f7"
+        ],
+        "search_fen": "8/5k2/5p2/2p2K2/p1p1P3/PpP3P1/1P6/8 w - - 8 44",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "g3g4",
+            "f5f4",
+            "f5g4"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "ac6bc15b417fdc692406cb8b7cfe93cf862100fda2c0c0c91faae936151eb817",
+          "prefix_moves_uci": [
+            "f3e3",
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6c6",
+            "e2e3",
+            "c6d6",
+            "e3d2",
+            "b4b3",
+            "d2e2",
+            "d6e6",
+            "e2e3",
+            "e6f7",
+            "e3f4",
+            "f7g8",
+            "f4f5",
+            "g8f7"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:4",
+        "execution_key_sha256": "e91ea474f3b858486bd7cec00e1a5064b70aa576c7d75665d78ab64a0c063dd3",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f5f4",
+                "f7g6",
+                "g3g4",
+                "g6g7",
+                "f4f5",
+                "g7f7",
+                "e4e5",
+                "f6e5",
+                "f5e5",
+                "f7e7",
+                "e5d5",
+                "e7d7",
+                "d5c5",
+                "d7e7",
+                "c5c6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 858
+              }
+            },
+            {
+              "moves": [
+                "f5g4",
+                "f7g6",
+                "g4f4",
+                "g6h6",
+                "f4f5",
+                "h6g7",
+                "g3g4",
+                "g7f7",
+                "e4e5",
+                "f6e5",
+                "f5e5",
+                "f7g6",
+                "e5d5",
+                "g6g5",
+                "d5c5",
+                "g5f4",
+                "c5c4",
+                "f4e3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 663
+              }
+            },
+            {
+              "moves": [
+                "g3g4",
+                "f7g7",
+                "e4e5",
+                "f6e5",
+                "f5e5",
+                "g7g6",
+                "e5d5",
+                "g6h6",
+                "d5c5",
+                "h6g5",
+                "c5c4",
+                "g5g4",
+                "c4b4",
+                "g4g3",
+                "b4a4",
+                "g3f4",
+                "a4b3",
+                "f4e5",
+                "b3a4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 541
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "233488ff302a70b655f15a403fe18287c9e7046860a0133fca595b6623eafa0f",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6c6",
+          "e2e3",
+          "c6d6",
+          "e3d2",
+          "b4b3",
+          "d2e2",
+          "d6e6",
+          "e2e3",
+          "e6f7",
+          "e3f4",
+          "f7g8",
+          "f4f5",
+          "g8f7",
+          "f5f4",
+          "f7g6",
+          "g3g4"
+        ],
+        "search_fen": "8/8/5pk1/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 45",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "g6g7",
+            "f6f5"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 6000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "b40cc952a2943e7a1957cd51e714e8a5f45fc456b8877650106b574952399ea3",
+          "prefix_moves_uci": [
+            "f3e3",
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6c6",
+            "e2e3",
+            "c6d6",
+            "e3d2",
+            "b4b3",
+            "d2e2",
+            "d6e6",
+            "e2e3",
+            "e6f7",
+            "e3f4",
+            "f7g8",
+            "f4f5",
+            "g8f7",
+            "f5f4",
+            "f7g6",
+            "g3g4"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:5",
+        "execution_key_sha256": "233488ff302a70b655f15a403fe18287c9e7046860a0133fca595b6623eafa0f",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "g6g7",
+                "e4e5",
+                "g7f7",
+                "f4f5",
+                "f6e5",
+                "f5e5",
+                "f7g6",
+                "e5d6",
+                "g6g5",
+                "d6c5",
+                "g5f4",
+                "g4g5",
+                "f4g5",
+                "c5c4",
+                "g5f4",
+                "c4b5",
+                "f4e4",
+                "b5a4",
+                "e4f4",
+                "a4b3",
+                "f4g4",
+                "b3b4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 913
+              }
+            },
+            {
+              "moves": [
+                "f6f5",
+                "e4f5",
+                "g6h6",
+                "g4g5",
+                "h6g7",
+                "f4e5",
+                "g7f7",
+                "e5d6",
+                "f7g7",
+                "d6e6",
+                "g7h7",
+                "e6f6",
+                "h7h8",
+                "g5g6",
+                "h8g8",
+                "f6e7",
+                "g8g7",
+                "e7e6",
+                "g7h6",
+                "e6f6",
+                "h6h5",
+                "g6g7",
+                "h5g4",
+                "g7g8q",
+                "g4f3",
+                "g8c4",
+                "f3e3",
+                "c4a4",
+                "e3f3",
+                "f6e6",
+                "f3g3",
+                "a4c4",
+                "g3h3",
+                "f5f6",
+                "h3g2",
+                "c4b3",
+                "g2h2",
+                "f6f7",
+                "h2g3",
+                "f7f8q",
+                "g3g4",
+                "b3c4",
+                "g4h5",
+                "f8c5",
+                "h5g6",
+                "c5f5",
+                "g6g7",
+                "f5f7",
+                "g7h8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 1612
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

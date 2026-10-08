@@ -832,9 +832,11 @@
         }
       },
       "dependentRequired": { "prefix_moves_uci": ["ply_offset"], "ply_offset": ["prefix_moves_uci"] },
-      "allOf": [{ "if": { "required": ["proposal_ownership"] }, "then": {
+      "allOf": [{ "if": { "required": ["proposal_ownership"],
+        "properties": { "root_restriction": { "properties": { "kind": { "const": "restricted" } } } }
+      }, "then": {
         "properties": { "root_restriction": { "properties": {
-          "kind": { "const": "restricted" }, "moves_uci": { "minItems": 2, "maxItems": 3 }
+          "moves_uci": { "minItems": 2, "maxItems": 218 }
         } } }
       } }]
     },
@@ -1353,7 +1355,7 @@
           "$ref": "#/$defs/selection_piece"
         },
         "related_inquiry_ids": {
-          "type": "array", "uniqueItems": true, "maxItems": 1,
+          "type": "array", "uniqueItems": true, "maxItems": 127,
           "items": { "$ref": "#/$defs/evidence_id" }
         },
         "target": {
@@ -2244,6 +2246,27 @@
         "detail_moves"
       ],
       "properties": {
+        "schema_version": { "const": 2 },
+        "first_target_response": {
+          "type": "object", "additionalProperties": false,
+          "required": ["response_inquiry_id", "full_pool_work_id", "full_pool_execution_key_sha256",
+            "capture_decline_work_id", "capture_decline_execution_key_sha256"],
+          "properties": {
+            "response_inquiry_id": { "$ref": "#/$defs/evidence_id" },
+            "full_pool_work_id": { "$ref": "#/$defs/evidence_id" },
+            "full_pool_execution_key_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "capture_decline_work_id": { "$ref": "#/$defs/evidence_id" },
+            "capture_decline_execution_key_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
+        "witness_line_ids": {
+          "type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true,
+          "items": { "$ref": "#/$defs/evidence_id" }
+        },
+        "detail_units": {
+          "type": "array", "maxItems": 8,
+          "items": { "$ref": "#/$defs/selection_question_summary/properties/units/items" }
+        },
         "question": {
           "enum": [
             "provider_transfer",
@@ -2261,7 +2284,17 @@
             "check_status_comparison",
             "deferred_pawn_attack",
             "contested_pair_response",
-            "observed_route_use"
+            "observed_route_use",
+            "selected_target_response",
+            "attacker_removal_or_recapture",
+            "observed_exchange",
+            "observed_terminal_comparison",
+            "selected_comparison",
+            "current_defense",
+            "observed_capture_target",
+            "investigated_mechanism",
+            "functional_response",
+            "first_target_response"
           ]
         },
         "detail_moves": {
@@ -2334,6 +2367,46 @@
                 "items": {
                   "$ref": "#/$defs/selection_question_move"
                 }
+              },
+              "proof_moves": {
+                "description": "Exact proof and replay references owned by the selected typed content; only the useful subset needs inline notation.",
+                "type": "array", "minItems": 1, "uniqueItems": true,
+                "items": { "$ref": "#/$defs/selection_question_move" }
+              },
+              "action_moves": {
+                "description": "Actual actions selected by the typed answer. A linked position-only proof does not activate an unrelated capture or check.",
+                "type": "array", "uniqueItems": true,
+                "items": { "$ref": "#/$defs/selection_question_move" }
+              },
+              "required_moves": {
+                "type": "array", "maxItems": 80, "uniqueItems": true,
+                "items": { "$ref": "#/$defs/selection_question_move" }
+              },
+              "recorded_end_moves": {
+                "type": "array", "maxItems": 80, "uniqueItems": true,
+                "items": { "$ref": "#/$defs/selection_question_move" }
+              },
+              "english_only": { "const": true },
+              "focus": {
+                "type": "array", "maxItems": 80,
+                "items": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["line_id", "occurrence_id", "phase", "position_id", "squares", "source_ids"],
+                  "properties": {
+                    "line_id": { "$ref": "#/$defs/evidence_id" },
+                    "occurrence_id": { "$ref": "#/$defs/evidence_id" },
+                    "phase": { "enum": ["before", "after"] },
+                    "position_id": { "$ref": "#/$defs/evidence_id" },
+                    "squares": {
+                      "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true,
+                      "items": { "$ref": "#/$defs/square" }
+                    },
+                    "source_ids": {
+                      "type": "array", "uniqueItems": true,
+                      "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+                    }
+                  }
+                }
               }
             },
             "allOf": [
@@ -2363,7 +2436,12 @@
             ]
           }
         }
-      }
+      },
+      "allOf": [{
+        "if": { "properties": { "question": { "const": "first_target_response" } } },
+        "then": { "required": ["schema_version", "first_target_response"] },
+        "else": { "not": { "required": ["first_target_response"] } }
+      }]
     },
     "selection_exchange_summary": {
       "type": "object",
@@ -3338,7 +3416,7 @@
         "continuation_inquiries": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/continuation_inquiry" } },
         "root_searches": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/root_search" } },
         "response_searches": {
-          "type": "array", "maxItems": 3,
+          "type": "array", "maxItems": 5,
           "items": { "$ref": "#/$defs/response_search" }
         }
       },

@@ -1,0 +1,1121 @@
+{
+  "schema_version": 1,
+  "game_id": "FC-SG45-NC4",
+  "request": {
+    "schema_version": "chesstory.position-commentary.job-request.v6",
+    "request_id": "human-evaluation-FC-SG45-NC4",
+    "variant": "standard",
+    "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "move_prefix_uci": [
+      "e2e4",
+      "c7c6",
+      "d2d3",
+      "d7d5",
+      "b1d2",
+      "g7g6",
+      "g1f3",
+      "f8g7",
+      "g2g3",
+      "g8f6",
+      "f1g2",
+      "e8g8",
+      "e1g1",
+      "c8g4",
+      "h2h3",
+      "g4f3",
+      "d1f3",
+      "b8d7",
+      "f3e2",
+      "d5e4",
+      "d3e4",
+      "d8c7",
+      "a2a4",
+      "a8d8",
+      "d2b3",
+      "b7b6",
+      "c1e3",
+      "c6c5",
+      "a4a5",
+      "e7e5",
+      "b3d2",
+      "f6e8",
+      "a5b6",
+      "a7b6",
+      "f1d1",
+      "c7c6"
+    ],
+    "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "d2c4",
+      "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19"
+    },
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "remaining_budget_ms": 180000
+  },
+  "saved_reports": [
+    {
+      "issued_work": {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:0",
+        "execution_key_sha256": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "b6b5",
+                "c4a5",
+                "c6b6",
+                "c2c3",
+                "e8f6"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 191
+              }
+            },
+            {
+              "moves": [
+                "e3g5",
+                "g7f6",
+                "g5e3",
+                "e8c7",
+                "h3h4",
+                "c7e6",
+                "c2c3",
+                "b6b5"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 158
+              }
+            },
+            {
+              "moves": [
+                "h3h4",
+                "e8f6",
+                "d2c4",
+                "b6b5",
+                "c4a5",
+                "c6b6",
+                "g2h3",
+                "h7h5",
+                "a5b3",
+                "b6c6"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 153
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "96c60a28ec6ed2577ce28e0004290712e822a543cf81e7505a6a3e4cbbb29577",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:1",
+        "execution_key_sha256": "96c60a28ec6ed2577ce28e0004290712e822a543cf81e7505a6a3e4cbbb29577",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "e8f6",
+                "d1d6",
+                "c6c7",
+                "a1d1",
+                "f8e8",
+                "d6d3",
+                "g7f8",
+                "c4d6",
+                "c5c4",
+                "d3d2",
+                "f8d6",
+                "d2d6",
+                "d8c8",
+                "e2d2",
+                "b6b5",
+                "d2b4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 186
+              }
+            },
+            {
+              "moves": [
+                "h3h4",
+                "e8f6",
+                "d2b1",
+                "d8a8",
+                "b1c3",
+                "a8a1",
+                "d1a1",
+                "f8a8",
+                "a1a8",
+                "c6a8",
+                "e2b5",
+                "g7f8",
+                "c3d5",
+                "a8a1",
+                "g2f1",
+                "f6d5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 163
+              }
+            },
+            {
+              "moves": [
+                "e2d3",
+                "e8d6",
+                "d2b1",
+                "d7f6",
+                "b1c3",
+                "c6c7",
+                "d3f1",
+                "h7h6",
+                "b2b3",
+                "g8h7",
+                "h3h4",
+                "d8a8",
+                "c3d5",
+                "f6d5",
+                "d1d5",
+                "a8a1",
+                "f1a1"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 123
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "1f7655d7dacfa049f8f89d5af0c1bef1bcd6f87a3313c0094e82d18b65b87b23",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6",
+          "d2c4"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 3500,
+        "search_anchor": {
+          "root_move": "d2c4",
+          "root_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee",
+          "position_id": "7c89252ff2bfd88e5943bb1e39e9f4eb7aa05dc8c434a821cca889c37ead136f",
+          "prefix_moves_uci": [
+            "d2c4"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:2",
+        "execution_key_sha256": "1f7655d7dacfa049f8f89d5af0c1bef1bcd6f87a3313c0094e82d18b65b87b23",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "e8f6",
+                "d1d6",
+                "c6c7",
+                "a1d1",
+                "b6b5",
+                "c4a3",
+                "b5b4",
+                "a3b5",
+                "c7b7",
+                "d6d2",
+                "d8b8",
+                "b5d6",
+                "b7c7",
+                "g2f1",
+                "d7b6",
+                "e2b5",
+                "f8d8",
+                "b5c5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 178
+              }
+            },
+            {
+              "moves": [
+                "c6c7",
+                "e2d3",
+                "e8f6",
+                "d3b3",
+                "d8a8",
+                "a1a8",
+                "f8a8",
+                "b3b5",
+                "a8b8",
+                "h3h4",
+                "h7h6",
+                "g2h3",
+                "d7f8",
+                "d1d6",
+                "f6e4",
+                "d6b6",
+                "b8b6",
+                "b5b6",
+                "c7b6",
+                "c4b6",
+                "f7f5",
+                "h3f1",
+                "f8e6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 186
+              }
+            },
+            {
+              "moves": [
+                "d8b8",
+                "a1a7",
+                "b8b7",
+                "a7b7",
+                "c6b7",
+                "h3h4",
+                "e8f6",
+                "c4d6",
+                "b7c6",
+                "g2f1",
+                "c6c7",
+                "e2c4",
+                "f6g4",
+                "e3g5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 199
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "issued_work": {
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "53a6073c33ea5d12c6250feb95a83886b06c85a979e0dfbbd5d7f2108a6b89e1",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6",
+          "d2c4",
+          "c6c7",
+          "e2d3",
+          "e8f6",
+          "d3b3",
+          "d8a8",
+          "a1a8"
+        ],
+        "search_fen": "R4rk1/2qn1pbp/1p3np1/2p1p3/2N1P3/1Q2B1PP/1PP2PB1/3R2K1 b - - 0 22",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 3500,
+        "search_anchor": {
+          "root_move": "d2c4",
+          "root_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee",
+          "position_id": "e56f8ed16b854b7f26db8ad4cde7ad00daff08333eeb0b95002d753854865c54",
+          "prefix_moves_uci": [
+            "d2c4",
+            "c6c7",
+            "e2d3",
+            "e8f6",
+            "d3b3",
+            "d8a8",
+            "a1a8"
+          ]
+        }
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:3",
+        "execution_key_sha256": "53a6073c33ea5d12c6250feb95a83886b06c85a979e0dfbbd5d7f2108a6b89e1",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f8a8",
+                "b3b5",
+                "g7f8",
+                "h3h4",
+                "a8d8",
+                "g2h3",
+                "h7h6",
+                "g1g2",
+                "d7b8",
+                "d1d8",
+                "c7d8",
+                "c4e5",
+                "f6e4",
+                "b5c4",
+                "e4d6",
+                "c4d5",
+                "d8e8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 182
+              }
+            },
+            {
+              "moves": [
+                "b6b5",
+                "a8f8",
+                "d7f8",
+                "b3b5",
+                "f8e6",
+                "b5a6",
+                "g7f8",
+                "g1h2",
+                "e6d4",
+                "c2c3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 532
+              }
+            },
+            {
+              "moves": [
+                "d7b8",
+                "c4b6",
+                "b8c6",
+                "c2c3",
+                "c7b7",
+                "a8a1",
+                "c6d4",
+                "c3d4",
+                "c5d4",
+                "e3d4",
+                "e5d4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 540
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "expected_primary": {
+    "kind": "best_choice",
+    "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:candidate-comparison:c6c18873a4075e5e8d7236543569ee1925dc37f6023c859aee2e7fad5a804f16",
+    "runner_up_verdict_code": "playable_loss",
+    "verdict_confidence": "engine_backed",
+    "mover": "white",
+    "delta": {
+      "candidate_win_percent_delta_for_mover": -1.9126800836421154,
+      "kind": "engine_evaluation"
+    },
+    "best_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "d2c4",
+        "e8f6",
+        "d1d6",
+        "c6c7",
+        "a1d1",
+        "f8e8",
+        "d6d3",
+        "g7f8",
+        "c4d6",
+        "c5c4",
+        "d3d2",
+        "f8d6",
+        "d2d6",
+        "d8c8",
+        "e2d2",
+        "b6b5",
+        "d2b4"
+      ],
+      "win_percent_for_mover": 66.4824067524339,
+      "depth": 16
+    },
+    "runner_up_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "h3h4",
+        "e8f6",
+        "d2b1",
+        "d8a8",
+        "b1c3",
+        "a8a1",
+        "d1a1",
+        "f8a8",
+        "a1a8",
+        "c6a8",
+        "e2b5",
+        "g7f8",
+        "c3d5",
+        "a8a1",
+        "g2f1",
+        "f6d5"
+      ],
+      "win_percent_for_mover": 64.56972666879179,
+      "depth": 16
+    }
+  },
+  "baseline": {
+    "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:candidate-comparison:c6c18873a4075e5e8d7236543569ee1925dc37f6023c859aee2e7fad5a804f16",
+    "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+    "candidate_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+    "question": "selected_comparison",
+    "text": "Nc4 clears d2; later Rd6 passes through that square in this line. After Nc4, White's knight on c4 does not support White's pawn on e4; after h4, White's knight on d2 supports White's pawn on e4. In the Nc4 line: After Rd6, White's rook on d6 now targets Black's queen on c6 and Black's knight on f6. Qc7 moves the queen out of the attack from White's rook on d6. After Qc7, Black's queen on c7 keeps targeting White's rook on d6. After Rd6, Black's queen on c6 now targets White's rook on d6. R6d3 moves the rook out of the attack from Black's queen on c7. After Qb4, the black queen originally on c6 is still present on c7. R6d3 moves the rook from d6 to d3, ending its attack on Black's knight on f6. After Qb4, the black knight originally on e8 is still present on f6. After Qb4, White's rook on d6 attacks Black's knight on f6. In the Nc4 line: Rd6 clears d1; Rad1 later occupies that square in this line. Nc4 clears d2; later Rad1 uses the cleared line to target White's rook on d6 in this line. After Nc4, White's knight on c4 does not support White's pawn on e4; after h4, White's knight on d2 supports White's pawn on e4. In the Nc4 line: After Rad1, White's rook on d1 adds support to White's rook on d6, which is under attack from Black's queen on c7. In the Nc4 line: R6d3 clears d6; Nd6 later occupies that square in this line. In the provided Nc4 line, the same knight next moves with Nd6 to d6. After Nc4, White's knight on c4 does not support White's pawn on e4; after h4, White's knight on d2 supports White's pawn on e4. In the Nc4 line: After Nd6, White's knight on d6 adds support to White's pawn on e4, which is under attack from Black's knight on f6, and now targets Black's rook on e8 and Black's pawn on f7. After c4, Black's pawn on c4 now targets White's rook on d3. Nc4 clears d2; R3d2 later occupies that square in this line. R3d2 moves the rook out of the attack from Black's pawn on c4. The black rook originally on f8 is still present on e8 after Bxd6 and after Qb4. The black pawn originally on f7 is still present on f7 after Bxd6 and after Qb4. Bxd6 captures the white knight on d6. Rxd6 recaptures the black bishop on d6. After Nc4, White's rook on d1 now targets Black's knight on d7. After Nd6, White's knight on d6 blocks the line from White's rook on d3 to Black's knight on d7. After Qb4, the black knight originally on d7 is still present on d7. After Qb4, White's rook on d6 attacks Black's knight on d7. After Nc4, White's knight on c4 now targets Black's pawn on b6. Nd6 moves the knight from c4 to d6, ending its attack on Black's pawn on b6. After Qb4, the black pawn originally on b6 is still present on b5. After Nc4, White's knight on c4 now targets Black's pawn on e5. Nd6 moves the knight from c4 to d6, ending its attack on Black's pawn on e5. After Qb4, the black pawn originally on e5 is still present on e5. In the Nc4 line: After Nef6, Black's knight on f6 now targets White's pawn on e4. In the h4 line: After Nef6, Black's knight on f6 now targets White's pawn on e4. In the Nc4 line: After Qb4, the white pawn originally on e4 is still present on e4. After Qb4, Black's knight on f6 attacks White's pawn on e4. In the h4 line: Nxd5 moves the knight from f6 to d5, ending its attack on White's pawn on e4. After Nxd5, the white pawn originally on e4 is still present on e4. In the h4 line: Nxd5 captures the white knight on d5.",
+    "exact_root_contrast": "After Nc4, White's knight on c4 does not support White's pawn on e4; after h4, White's knight on d2 supports White's pawn on e4.",
+    "exact_root_contrast_count": 3,
+    "core_unit_count": 8,
+    "core_unit_parts": [
+      28,
+      19,
+      39,
+      9,
+      7,
+      7,
+      21,
+      5
+    ],
+    "core_covered": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:8b5715d67e4098cd5e267edbfc7bb3469fe2246e2bfc97678ca11df5870b2fee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7d4ab250d7b1eaa6cf86d488f7b5e5b24c6a5b130be14555cafa1e2bb188450b"
+      }
+    ],
+    "core_required": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:89dde25f1589e96a4bb4794bbb4e04b280f13cd742dfe25dc4181e3144de213e"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3d9607fafac33f44ef2c1acf936d5db7fb4fa031aca8571509a48f8a6f8a6bb5"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7ff43ee8faba15782c870510cf8b7a27bfbba9646b326fcdaf69669d610a45e4"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3a964355e47349e465d636cdbbf2759f42737e604e83e50b1ccbad7ef93c969c"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:99f77e755a265360b328eaef02bc0b18643ff0419ccc4bbb8d981525d2c1e1a2"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:f26358e489bc4d76df066f24ea4529f500c1f8582a142456b9a6e30446963f3d"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:075cc9920954f9d01938f5337e864de4de7dcaa599586511dc72c9030e671923"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:f738ab2a1fab841cbba8e1a30c99b4dea87fa14e6654acbb83951b8fe3d717c5"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:c29d5df999f9994ad60b6dd0d1d955eebc6e13fdf9c7a47a0251055806703cbe"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:8b5715d67e4098cd5e267edbfc7bb3469fe2246e2bfc97678ca11df5870b2fee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:99321db081ef24d9efb96c32c64c1f7e197b5738f0072829841a5ba20dd6eb04"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:40b82a061dffff7724ad3abd861afce76c7e590aac27eff53b0c910d50c35d76"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7d4ab250d7b1eaa6cf86d488f7b5e5b24c6a5b130be14555cafa1e2bb188450b"
+      }
+    ],
+    "core_proof": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:89dde25f1589e96a4bb4794bbb4e04b280f13cd742dfe25dc4181e3144de213e"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3d9607fafac33f44ef2c1acf936d5db7fb4fa031aca8571509a48f8a6f8a6bb5"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7ff43ee8faba15782c870510cf8b7a27bfbba9646b326fcdaf69669d610a45e4"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3a964355e47349e465d636cdbbf2759f42737e604e83e50b1ccbad7ef93c969c"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:99f77e755a265360b328eaef02bc0b18643ff0419ccc4bbb8d981525d2c1e1a2"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:f26358e489bc4d76df066f24ea4529f500c1f8582a142456b9a6e30446963f3d"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:075cc9920954f9d01938f5337e864de4de7dcaa599586511dc72c9030e671923"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:c29d5df999f9994ad60b6dd0d1d955eebc6e13fdf9c7a47a0251055806703cbe"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:f738ab2a1fab841cbba8e1a30c99b4dea87fa14e6654acbb83951b8fe3d717c5"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:8b5715d67e4098cd5e267edbfc7bb3469fe2246e2bfc97678ca11df5870b2fee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:99321db081ef24d9efb96c32c64c1f7e197b5738f0072829841a5ba20dd6eb04"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:40b82a061dffff7724ad3abd861afce76c7e590aac27eff53b0c910d50c35d76"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7d4ab250d7b1eaa6cf86d488f7b5e5b24c6a5b130be14555cafa1e2bb188450b"
+      }
+    ],
+    "core_focus": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:89dde25f1589e96a4bb4794bbb4e04b280f13cd742dfe25dc4181e3144de213e",
+        "phase": "after",
+        "position_id": "35399ed1e9e6b4b39d666250d9d51be0485a406b35fc43cc5b72b07711ed03db",
+        "squares": [
+          "d6",
+          "c6"
+        ],
+        "source_ids": [
+          "82548fd00902f6d648e0532964fea8c1dad7f1e976d2a0e689dcc2e1f50d7884"
+        ]
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7ff43ee8faba15782c870510cf8b7a27bfbba9646b326fcdaf69669d610a45e4",
+        "phase": "after",
+        "position_id": "df5980867f39581c04e7836cfb7a824d38ec0306d954bae2f021cc95d12e07c1",
+        "squares": [
+          "c6",
+          "c7",
+          "d6"
+        ],
+        "source_ids": []
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3a964355e47349e465d636cdbbf2759f42737e604e83e50b1ccbad7ef93c969c",
+        "phase": "after",
+        "position_id": "f082021cc42919bdd2d50d8fff2d305c047daf6e1c5afb1867d9165c523d21f2",
+        "squares": [
+          "d6",
+          "d3",
+          "c7"
+        ],
+        "source_ids": []
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:f26358e489bc4d76df066f24ea4529f500c1f8582a142456b9a6e30446963f3d",
+        "phase": "after",
+        "position_id": "b66d9540e3e7d4e5fca4ec0f5d6410d8a8956a0eb26b34530cf0012983bc2745",
+        "squares": [
+          "d1",
+          "d6",
+          "c7"
+        ],
+        "source_ids": [
+          "0c566d8b01fce38ad32289c3cf2e530d5c5dc74ab3f0c85dc1506773011d631d",
+          "e02305c256eda3cf53659e334adbeca09540846100f3ab4e33188233e71d40c3"
+        ]
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:075cc9920954f9d01938f5337e864de4de7dcaa599586511dc72c9030e671923",
+        "phase": "after",
+        "position_id": "4ced5545f86ed61c1e932760e112d299568594096f38a8a9fc2e0faf674d1d4d",
+        "squares": [
+          "d6",
+          "e4",
+          "f6"
+        ],
+        "source_ids": [
+          "eee424f0d52b54c06b14761810126127cc714720b2fd99a6ab7d23a6a0368d3f",
+          "fcb0f56293bc96154917d57aee0e0ddc26005e629a872ba3eb2b694984d22eb2"
+        ]
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:f738ab2a1fab841cbba8e1a30c99b4dea87fa14e6654acbb83951b8fe3d717c5",
+        "phase": "after",
+        "position_id": "86f4239c8060c364ad4f2b2a5e5b7fb42075d4d56c3603bfa7bd61ed208cdadb",
+        "squares": [
+          "d3",
+          "d2",
+          "c4"
+        ],
+        "source_ids": []
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026",
+        "phase": "after",
+        "position_id": "57a8798cf0519550c0020d345e010fb1fd83df3da8e8c53db3478f35d6e38d50",
+        "squares": [
+          "f8",
+          "d6"
+        ],
+        "source_ids": []
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee",
+        "phase": "after",
+        "position_id": "7c89252ff2bfd88e5943bb1e39e9f4eb7aa05dc8c434a821cca889c37ead136f",
+        "squares": [
+          "d1",
+          "d7"
+        ],
+        "source_ids": [
+          "ef1993e016aa72fb8a75c207d7db0cf3681bde749970be3b198411f3a59acdf8"
+        ]
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:99321db081ef24d9efb96c32c64c1f7e197b5738f0072829841a5ba20dd6eb04",
+        "phase": "after",
+        "position_id": "762f84af583085e001cf7c1f5622ac6bc535758b26d4e43ef30228797410c30f",
+        "squares": [
+          "f6",
+          "e4"
+        ],
+        "source_ids": [
+          "fcb0f56293bc96154917d57aee0e0ddc26005e629a872ba3eb2b694984d22eb2"
+        ]
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:40b82a061dffff7724ad3abd861afce76c7e590aac27eff53b0c910d50c35d76",
+        "phase": "after",
+        "position_id": "34cc5a866062f4f67e24266ce32c1871b509562628cd19c9674c9071dc5a091d",
+        "squares": [
+          "f6",
+          "e4"
+        ],
+        "source_ids": [
+          "fcb0f56293bc96154917d57aee0e0ddc26005e629a872ba3eb2b694984d22eb2"
+        ]
+      }
+    ],
+    "detail_covered": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:8b5715d67e4098cd5e267edbfc7bb3469fe2246e2bfc97678ca11df5870b2fee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b9a54486a6c373bd2dd4d139ccf7bd625e848f15fb36573438e3690106125d60"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b5ce5ece38a3f1b737aeb56dd4fa8970e60a17ce66a8f63b5779e1956ce04d02"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:cfbe1bdadb0b59b4c2eb8b0bf38e90560f7300b8a306bf868084c9bf3cd3fc70"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:6cf610913633e459d1969ac69278544076b16c23e7fd06fb3caaf4a93e8a2ae7"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7d4ab250d7b1eaa6cf86d488f7b5e5b24c6a5b130be14555cafa1e2bb188450b"
+      }
+    ],
+    "detail_required": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:8b5715d67e4098cd5e267edbfc7bb3469fe2246e2bfc97678ca11df5870b2fee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3d9607fafac33f44ef2c1acf936d5db7fb4fa031aca8571509a48f8a6f8a6bb5"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b9a54486a6c373bd2dd4d139ccf7bd625e848f15fb36573438e3690106125d60"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b5ce5ece38a3f1b737aeb56dd4fa8970e60a17ce66a8f63b5779e1956ce04d02"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:cfbe1bdadb0b59b4c2eb8b0bf38e90560f7300b8a306bf868084c9bf3cd3fc70"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:6cf610913633e459d1969ac69278544076b16c23e7fd06fb3caaf4a93e8a2ae7"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:ad2dfc69722dde14f40b50e2eaa3a2a4875b8c7de4cd6bde201b100be00dd473"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b87cb04f33cf4deb497043e8818d0d115384477b8a13cffe25b6fe69d210b7d2"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7d4ab250d7b1eaa6cf86d488f7b5e5b24c6a5b130be14555cafa1e2bb188450b"
+      }
+    ],
+    "detail_proof": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:2cb3a805fefbb44bd6dac9e9359c21fef74f68819af258ca8543c7f7c0cc6026"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:72391649b245c77910d6beb1670cbd31ade88be816fe990cec039e39f4835e61",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:8b5715d67e4098cd5e267edbfc7bb3469fe2246e2bfc97678ca11df5870b2fee"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:3d9607fafac33f44ef2c1acf936d5db7fb4fa031aca8571509a48f8a6f8a6bb5"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b9a54486a6c373bd2dd4d139ccf7bd625e848f15fb36573438e3690106125d60"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b5ce5ece38a3f1b737aeb56dd4fa8970e60a17ce66a8f63b5779e1956ce04d02"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:cfbe1bdadb0b59b4c2eb8b0bf38e90560f7300b8a306bf868084c9bf3cd3fc70"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:6cf610913633e459d1969ac69278544076b16c23e7fd06fb3caaf4a93e8a2ae7"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:7d4ab250d7b1eaa6cf86d488f7b5e5b24c6a5b130be14555cafa1e2bb188450b"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:ad2dfc69722dde14f40b50e2eaa3a2a4875b8c7de4cd6bde201b100be00dd473"
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:line:87348a5084ac1d79659e0173e38b9cdc21c41807c3b150214e99c4fc9efcd68a",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:b87cb04f33cf4deb497043e8818d0d115384477b8a13cffe25b6fe69d210b7d2"
+      }
+    ]
+  },
+  "provenance": {
+    "reports_path": "target/decision-timing-20261006/mcFunctional29/stored-reports.jsonl",
+    "reports_sha256": "26f9aed3430c3adc8057ceb76428033e4a190570fdf9e2237c41b77a48e7f897",
+    "snapshots_path": "target/decision-timing-20261006/mcFunctional29/final-snapshots.jsonl.gz",
+    "snapshots_sha256": "4e6ea780b566a7770b81603f648c104877cc2bcfa59a1c12a245af531a82decc",
+    "actual_engine_execution": true,
+    "new_engine_execution": false,
+    "scope": "Unmodified actual four-report prefix and original public ownership metadata. Expected delivery deduplicates exact selected Statements without changing numerical selection, costs or the original global requirements. No conditional context is injected."
+  }
+}

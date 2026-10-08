@@ -47,6 +47,9 @@ export interface CommentaryQuestionUnit {
   en: (string | CommentaryQuestionMove)[];
   ko: (string | CommentaryQuestionMove)[];
   covered_moves: CommentaryQuestionMove[];
+  proof_moves?: CommentaryQuestionMove[];
+  /** Actual actions owned by the typed answer; position-only proof may still have a SAN link. */
+  action_moves?: CommentaryQuestionMove[];
   required_moves?: CommentaryQuestionMove[];
   recorded_end_moves?: CommentaryQuestionMove[];
   focus?: CommentaryQuestionFocus[];
@@ -59,11 +62,18 @@ export interface CommentaryQuestionSummary {
     'escape_or_recapture' | 'capture_now_or_after_attack' | 'attack_or_immediate_exchange' | 'counter_capture_comparison' |
     'occupied_pawn_destination' | 'controlled_destination' | 'opening_counterplay' |
     'observed_move_order' | 'observed_arrangement_convergence' | 'check_status_comparison' | 'deferred_pawn_attack' | 'contested_pair_response' | 'observed_route_use' | 'selected_target_response' | 'attacker_removal_or_recapture' |
-    'observed_exchange' | 'observed_terminal_comparison' | 'selected_comparison';
+    'observed_exchange' | 'observed_terminal_comparison' | 'selected_comparison' | 'current_defense' | 'observed_capture_target' | 'investigated_mechanism' | 'functional_response' | 'first_target_response';
   units: CommentaryQuestionUnit[];
   detail_units?: CommentaryQuestionUnit[];
   detail_moves: CommentaryQuestionMove[];
   witness_line_ids?: string[];
+  first_target_response?: {
+    response_inquiry_id: string;
+    full_pool_work_id: string;
+    full_pool_execution_key_sha256: string;
+    capture_decline_work_id: string;
+    capture_decline_execution_key_sha256: string;
+  };
 }
 
 export interface CommentarySummaryUnavailable {
@@ -582,13 +592,42 @@ export function responseSearchMatchesContinuation(
   );
 }
 
+// The reviewed mover's missing class is compared with the strongest returned
+// whole-pool reply at the same child; top-N omission does not rank that class.
+export function reviewedMoverResponsePoolMatches(
+  inquiries: CommentaryResponseInquiry[],
+  moves: Uci[],
+  searches: CommentaryResponseSearch[] | undefined,
+  playedMove: Uci,
+): boolean {
+  const inquiry = inquiries.find(inquiry => inquiry.root_move === playedMove &&
+    inquiry.original_target.square === playedMove.slice(0, 2) &&
+    inquiry.target.square === playedMove.slice(2, 4));
+  if (!inquiry) return false;
+  const owned = searches?.filter(search => responseSearchMatchesInquiry(search, inquiry)) ?? [];
+  const full = owned.filter(search => search.root_restriction.kind === 'unrestricted')
+    .sort((left, right) => Number(right.work_id.slice(5)) - Number(left.work_id.slice(5)))[0];
+  if (!full) return moves.length === 2 && sameIds(moves, [inquiry.reference_move, inquiry.alternative_move]);
+  const missing = [inquiry.capture_moves, inquiry.decline_moves].filter(family => !owned.some(search =>
+    (search.root_restriction.kind === 'unrestricted' ||
+      family.every(move => search.root_restriction.kind === 'restricted' &&
+        search.root_restriction.moves_uci.includes(move))) &&
+    search.candidates.some(candidate => family.includes(candidate.move_uci))));
+  if (!missing.length)
+    return moves.length === 2 && sameIds(moves, [inquiry.reference_move, inquiry.alternative_move]);
+  const leader = full.candidates[0]?.move_uci;
+  return !!leader && sameIds(moves, [...missing.flat(), leader]);
+}
+
 // Both issued work and completed receipts must name entire reply classes at one child.
 export function responsePoolMatchesClasses(
   inquiries: CommentaryResponseInquiry[],
   moves: Uci[],
   searches?: CommentaryResponseSearch[],
+  playedMove?: Uci,
 ): boolean {
   if (!inquiries.length) return false;
+  if (playedMove && reviewedMoverResponsePoolMatches(inquiries, moves, searches, playedMove)) return true;
   if (inquiries.some(inquiry => sameIds(moves, [inquiry.reference_move, inquiry.alternative_move])))
     return true;
   const classes = inquiries.flatMap(inquiry => [inquiry.capture_moves, inquiry.decline_moves]);
@@ -1312,10 +1351,13 @@ export function questionFocusFrame(
 }
 
 function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evidence: string[],
-  summaryText: unknown, sources: CommentaryCandidate['sourceRefs'], observations: MoveReviewObservations): CommentaryQuestionSummary | undefined {
+  summaryText: unknown, sources: CommentaryCandidate['sourceRefs'], observations: MoveReviewObservations,
+  proposals?: CommentaryProposal[], playedMove?: Uci, responseInquiries: CommentaryResponseInquiry[] = [],
+  responseSearches: CommentaryResponseSearch[] = []): CommentaryQuestionSummary | undefined {
   if (!object(value)) return;
   const selectedAnswer = ['observed_exchange', 'observed_terminal_comparison', 'selected_comparison'].includes(String(value.question));
   const typedAnswer = value.schema_version === 2;
+  if (value.question === 'current_defense' && !typedAnswer) return;
   const commonAnswer = typedAnswer || selectedAnswer;
   const terminal = (path: ObservationPath) => {
     const ending = path.lineSummary?.ending;
@@ -1323,13 +1365,13 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       .includes(ending.kind) && ending.ply_offset === path.moves.length - 1 &&
       ending.occurrence_id === path.occurrenceIds[ending.ply_offset];
   };
-  if (!exactKeys(value, ['question', 'units', 'detail_moves'], ['schema_version', 'witness_line_ids', 'detail_units']) ||
+  if (!exactKeys(value, ['question', 'units', 'detail_moves'], ['schema_version', 'witness_line_ids', 'detail_units', 'first_target_response']) ||
     (value.schema_version !== undefined && value.schema_version !== 2) ||
     !['provider_transfer', 'support_and_interposition', 'paired_support_use',
       'escape_or_recapture', 'capture_now_or_after_attack', 'attack_or_immediate_exchange', 'counter_capture_comparison',
       'occupied_pawn_destination', 'controlled_destination', 'opening_counterplay',
       'observed_move_order', 'observed_arrangement_convergence', 'check_status_comparison', 'deferred_pawn_attack', 'contested_pair_response', 'observed_route_use', 'selected_target_response', 'attacker_removal_or_recapture',
-      'observed_exchange', 'observed_terminal_comparison', 'selected_comparison'].includes(String(value.question)) ||
+      'observed_exchange', 'observed_terminal_comparison', 'selected_comparison', 'current_defense', 'observed_capture_target', 'investigated_mechanism', 'functional_response', 'first_target_response'].includes(String(value.question)) ||
     !Array.isArray(value.units) || !value.units.length || value.units.length > 8 ||
     (value.detail_units !== undefined && (!Array.isArray(value.detail_units) || value.detail_units.length > 8)) ||
     !Array.isArray(value.detail_moves) || value.detail_moves.length > 80 || usedPaths.length !== 2 ||
@@ -1342,21 +1384,139 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
         (source.stop === null || (commonAnswer && terminal(path) && source.stop === 'automatic_terminal')) &&
         source.accepted_ply_count === path.moves.length))) return;
   if (value.question === 'observed_terminal_comparison' && !usedPaths.some(terminal)) return;
+  const firstOwner = value.first_target_response;
+  if (value.question === 'first_target_response' ?
+    !typedAnswer || !object(firstOwner) || !exactKeys(firstOwner, ['response_inquiry_id', 'full_pool_work_id',
+      'full_pool_execution_key_sha256', 'capture_decline_work_id', 'capture_decline_execution_key_sha256']) ||
+      !['response_inquiry_id', 'full_pool_work_id', 'capture_decline_work_id'].every(field => id(firstOwner[field])) ||
+      !['full_pool_execution_key_sha256', 'capture_decline_execution_key_sha256'].every(field =>
+        typeof firstOwner[field] === 'string' && /^[a-f0-9]{64}$/.test(firstOwner[field] as string)) :
+    firstOwner !== undefined) return;
+  // A first-target body belongs to the reviewed mover and its completed child
+  // comparison. A question name cannot grant an unrelated path this ownership.
+  const firstTarget = value.question === 'first_target_response' && typedAnswer && playedMove ?
+    responseInquiries.find(inquiry => {
+      const primary = usedPaths.find(path => path.moves[0]?.uci === playedMove);
+      return primary && object(firstOwner) && inquiry.id === firstOwner.response_inquiry_id &&
+        inquiry.state === 'answered' && inquiry.stop_reason === null && inquiry.answer &&
+        inquiry.root_move === playedMove && inquiry.root_occurrence_id === primary.occurrenceIds[0] &&
+        inquiry.root_move_occurrence_id === primary.occurrenceIds[0] &&
+        inquiry.child_position_id === primary.positionIds?.[1] &&
+        inquiry.original_target.square === playedMove.slice(0, 2) &&
+        inquiry.target.square === playedMove.slice(2, 4);
+    }) : undefined;
+  const firstPair = firstTarget?.answer && object(firstOwner) ? responseSearches.find(search =>
+    responseSearchMatchesInquiry(search, firstTarget) && search.work_id === firstTarget.answer!.work_id &&
+    search.execution_key_sha256 === firstTarget.answer!.execution_key_sha256 &&
+    search.work_id === firstOwner.capture_decline_work_id &&
+    search.execution_key_sha256 === firstOwner.capture_decline_execution_key_sha256 &&
+    search.engine_profile === firstTarget.answer!.engine_profile &&
+    search.required_depth === firstTarget.answer!.required_depth &&
+    [firstTarget.answer!.reference_line_id, firstTarget.answer!.alternative_line_id].every(line =>
+      search.candidates.some(candidate => candidate.line_id === line))) : undefined;
+  const firstPool = firstTarget && firstPair ? [...responseSearches].reverse().filter(search =>
+    responseSearchMatchesInquiry(search, firstTarget) && search.root_restriction.kind === 'unrestricted' &&
+    search.engine_profile === firstPair.engine_profile && search.required_depth >= firstPair.required_depth)
+    .sort((left, right) => right.required_depth - left.required_depth)[0] : undefined;
+  const firstLeader = firstPool?.candidates[0];
+  const firstReplyPath = firstLeader && firstPair?.candidates.find(candidate => candidate.move_uci === firstLeader.move_uci);
+  if (value.question === 'first_target_response') {
+    if (!object(firstOwner) || !firstTarget || !firstPool || !firstPair || !firstReplyPath ||
+      firstPool.work_id !== firstOwner.full_pool_work_id ||
+      firstPool.execution_key_sha256 !== firstOwner.full_pool_execution_key_sha256) return;
+    const selection = firstLeader!.move_uci === firstTarget.reference_move ? firstTarget.reference_selection :
+      firstLeader!.move_uci === firstTarget.alternative_move ? firstTarget.alternative_selection : undefined;
+    const selected = selection?.source === 'child_search' && responseSearches.find(search =>
+      responseSearchMatchesInquiry(search, firstTarget) && search.work_id === selection.work_id &&
+      search.candidates.some(candidate => candidate.move_uci === firstLeader!.move_uci && candidate.line_id === selection.line_id));
+    const leaderPath = observations.paths.find(path => path.id === firstLeader!.line_id);
+    const pairPath = observations.paths.find(path => path.id === firstReplyPath.line_id);
+    const selectedPath = selected && observations.paths.find(path => path.id === selection!.line_id);
+    if (!leaderPath || !pairPath || !selectedPath || leaderPath.moves.length < 2 ||
+      ![pairPath, selectedPath].every(path => path.moves.length >= 2 && [0, 1].every(index =>
+        path.moves[index].uci === leaderPath.moves[index].uci &&
+        path.occurrenceIds[index] === leaderPath.occurrenceIds[index] &&
+        path.positionIds?.[index + 1] === leaderPath.positionIds?.[index + 1]))) return;
+  }
+  const conditionalPaths = new Set<string>();
+  // Other selected questions can carry a conditional proof in detail. A
+  // different label alone cannot move its foreign root into the core account.
+  const conditionalDetailIds = new Set<string>(Array.isArray(value.detail_units) ? value.detail_units
+    .filter(object).flatMap(unit => Array.isArray(unit.proof_moves) ? unit.proof_moves.filter(object)
+      .filter(ref => id(ref.line_id)).map(ref => ref.line_id as string) : []) : []);
+  if (typedAnswer) {
+    type Fact = Extract<CommentaryProposalReading, { kind: 'fact' }>;
+    const condition = (path: ObservationPath, predicate: CommentaryFactPredicate): string | undefined => {
+      const original = predicate.subject, resource = observations.positions?.find(p => p.id === path.positionIds?.[1]);
+      const current = original && trackedPieces(path, 1)?.find(piece =>
+        piece.original.side === original.side && piece.original.role === original.role &&
+        piece.original.square === original.square)?.current;
+      if (predicate.kind === 'location') return current?.square;
+      if (predicate.kind === 'control' && current && predicate.square && resource?.controls.complete) {
+        const row = resource.controls.pieces.find(row => row.piece.side === current.side &&
+          row.piece.role === current.role && row.piece.square === current.square);
+        if (row) return row.squares.includes(predicate.square) ? 'present' : 'absent';
+      }
+      return;
+    };
+    for (const proposal of proposals ?? []) {
+      if (proposal.admission !== 'generated' || proposal.origin.question.producer !== 'C-reply-function') continue;
+      const facts = proposal.requirements.filter((reading): reading is Fact => reading.kind === 'fact');
+      const fact = (id: string) => facts.find(reading => reading.id === id);
+      const root = proposal.requirements.find(reading => reading.id === 'function_root'),
+        context = proposal.requirements.find(reading => reading.id === 'function_context'),
+        live = fact('function_live'), left = fact('function_effect_reference'), right = fact('function_effect_alternative');
+      if (root?.kind !== 'compare_moves' || root.prefix_moves_uci.length ||
+        !playedMove || ![root.reference_move, root.alternative_move].includes(playedMove) ||
+        context?.kind !== 'fact_group' || context.mode !== 'all' || context.state !== 'supported' ||
+        !context.members.includes('function_live') || context.members.some(id =>
+          proposal.requirements.find(reading => reading.id === id)?.state !== 'supported') ||
+        !live || live.path.source.kind !== 'declared' || live.path.source.moves_uci.length !== 1 ||
+        live.path.source.moves_uci[0] !== root.reference_move || live.at.kind !== 'ply' || live.at.ply_count !== 1 ||
+        !left || !right || left.path.source.kind !== 'declared' || right.path.source.kind !== 'declared') continue;
+      const l = left.path.source.moves_uci, r = right.path.source.moves_uci;
+      if (l.length < 2 || l.length !== r.length || l[0] !== root.reference_move || r[0] !== root.alternative_move ||
+        !l.slice(1).every((move, index) => r[index + 1] === move)) continue;
+      const primary = usedPaths.find(path => path.moves[0]?.uci === root.reference_move),
+        peer = usedPaths.find(path => path !== primary), peerFact = fact('function_root_alternative');
+      if (!primary || !peer || !peerFact || live.expected === undefined || peerFact.expected === undefined ||
+        JSON.stringify(live.predicate) !== JSON.stringify(peerFact.predicate) ||
+        condition(primary, live.predicate) !== live.expected || condition(peer, live.predicate) !== peerFact.expected ||
+        live.expected === peerFact.expected) continue;
+      for (const reading of facts.filter(fact => ['function_effect_reference', 'function_effect_alternative',
+        'function_option', 'function_price'].includes(fact.id))) {
+        if (reading.state !== 'supported' || reading.path.source.kind !== 'declared') continue;
+        const moves = reading.path.source.moves_uci;
+        for (const path of observations.paths) if (path.startFen === primary.startFen &&
+          path.positionIds?.[0] === primary.positionIds?.[0] &&
+          (value.question === 'functional_response' || conditionalDetailIds.has(path.id)) &&
+          moves.every((move, index) => path.moves[index]?.uci === move)) conditionalPaths.add(path.id);
+      }
+    }
+  }
   const summaryPaths = [...usedPaths];
   if (value.witness_line_ids !== undefined) {
-    if (value.question !== 'attacker_removal_or_recapture' || !ids(value.witness_line_ids) ||
-      !value.witness_line_ids.length || value.witness_line_ids.length > 2) return;
+    const acceptsWitnesses = value.question === 'attacker_removal_or_recapture' ||
+      (typedAnswer && (['investigated_mechanism', 'observed_terminal_comparison', 'functional_response'].includes(String(value.question)) ||
+        value.question === 'first_target_response' && !!firstReplyPath ||
+        conditionalPaths.size > 0));
+    if (!acceptsWitnesses || !ids(value.witness_line_ids) ||
+      // A retained-option answer may join its first timing comparison, one
+      // owned king route, and the later two-arm use test. Every listed path
+      // still has to belong to a completed comparison at its exact prefix.
+      !value.witness_line_ids.length || value.witness_line_ids.length > 5) return;
     for (const lineId of value.witness_line_ids) {
       const path = observations.paths.find(path => path.id === lineId);
       // Retain the current evaluation pair. A supplementary path only witnesses
       // an actual legal response after one of those same root transitions.
       if (!path || summaryPaths.includes(path) || !path.lineSummary?.material ||
-        path.lineSummary.ending.kind !== 'line_end' ||
+        (path.lineSummary.ending.kind !== 'line_end' && !(typedAnswer && terminal(path))) ||
         !path.lineSummary.premise_ids.every(id => evidence.includes(id)) ||
-        path.lineSummary.material.events.some(event => event.promotion_gain_cp) ||
+        (!typedAnswer && path.lineSummary.material.events.some(event => event.promotion_gain_cp)) ||
         !usedPaths.some(primary => primary.startFen === path.startFen &&
           primary.positionIds?.[0] === path.positionIds?.[0] &&
-          primary.occurrenceIds[0] === path.occurrenceIds[0] && primary.moves[0]?.uci === path.moves[0]?.uci)) return;
+          (primary.occurrenceIds[0] === path.occurrenceIds[0] && primary.moves[0]?.uci === path.moves[0]?.uci ||
+            conditionalPaths.has(path.id)))) return;
       summaryPaths.push(path);
     }
   }
@@ -1367,25 +1527,42 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     raw.length > 0 && raw.length <= 80 && raw.every(part => typeof part === 'string' ? part.length > 0 && part.length <= 2000 : move(part));
   const key = (ref: CommentaryQuestionMove) => `${ref.line_id}/${ref.occurrence_id}`;
   const refs = (parts: (string | CommentaryQuestionMove)[]) => parts.filter((p): p is CommentaryQuestionMove => typeof p !== 'string');
+  const proofRefs = (unit: CommentaryQuestionUnit) => unit.proof_moves ?? refs(unit.en);
+  const accountRefs = (unit: CommentaryQuestionUnit) => unit.action_moves ?? (unit.proof_moves === undefined ? refs(unit.en) :
+    [...new Map([...proofRefs(unit), ...refs(unit.en)].map(ref => [key(ref), ref])).values()]);
   const signature = (moves: CommentaryQuestionMove[]) => moves.map(key).sort().join('|');
   if (!value.detail_moves.every(move) || new Set(value.detail_moves.map(key)).size !== value.detail_moves.length) return;
   for (const unit of [...value.units, ...((value.detail_units as unknown[] | undefined) ?? [])]) {
-    if (!object(unit) || !exactKeys(unit, ['role', 'en', 'ko', 'covered_moves'], ['required_moves', 'recorded_end_moves', 'focus', 'english_only']) ||
+    if (!object(unit) || !exactKeys(unit, ['role', 'en', 'ko', 'covered_moves'], ['proof_moves', 'action_moves', 'required_moves', 'recorded_end_moves', 'focus', 'english_only']) ||
       !['condition', 'reply', 'cost'].includes(String(unit.role)) || !parts(unit.en) || !parts(unit.ko) ||
       !Array.isArray(unit.covered_moves) || unit.covered_moves.length > 80 || !unit.covered_moves.every(move) ||
       signature(refs(unit.en)) !== signature(refs(unit.ko)) || !refs(unit.en).length ||
       new Set(unit.covered_moves.map(key)).size !== unit.covered_moves.length ||
       (unit.role === 'cost') !== (unit.covered_moves.length > 0) ||
       (unit.english_only !== undefined && (unit.english_only !== true || JSON.stringify(unit.en) !== JSON.stringify(unit.ko)))) return;
-    const visible = new Set(refs(unit.en).map(key));
+    if (unit.proof_moves !== undefined && (!Array.isArray(unit.proof_moves) || !unit.proof_moves.length ||
+      unit.proof_moves.length > summaryPaths.reduce((size, path) => size + path.occurrenceIds.length, 0) ||
+      !unit.proof_moves.every(move) ||
+      new Set(unit.proof_moves.map(key)).size !== unit.proof_moves.length)) return;
+    const proof = unit.proof_moves as CommentaryQuestionMove[] | undefined;
+    const owned = new Set((proof ?? refs(unit.en)).map(key));
+    if (unit.action_moves !== undefined && (!typedAnswer || !proof || !Array.isArray(unit.action_moves) ||
+      unit.action_moves.length > proof.length || !unit.action_moves.every(move) ||
+      new Set(unit.action_moves.map(key)).size !== unit.action_moves.length ||
+      unit.action_moves.some(ref => !owned.has(key(ref))) ||
+      unit.covered_moves.some(ref => !(unit.action_moves as CommentaryQuestionMove[]).some(other => key(other) === key(ref))))) return;
+    if (proof && (refs(unit.en).some(ref => !owned.has(key(ref)) &&
+      (!proof.some(other => other.line_id === ref.line_id) ||
+        summaryPaths.find(path => path.id === ref.line_id)!.occurrenceIds[0] !== ref.occurrence_id)) ||
+      unit.covered_moves.some(ref => !owned.has(key(ref))))) return;
     if (unit.required_moves !== undefined && (!Array.isArray(unit.required_moves) || unit.required_moves.length > 80 ||
       !unit.required_moves.every(move) || new Set(unit.required_moves.map(key)).size !== unit.required_moves.length ||
-      unit.required_moves.some(ref => !visible.has(key(ref))))) return;
+      unit.required_moves.some(ref => !owned.has(key(ref))))) return;
     if (unit.recorded_end_moves !== undefined && (!Array.isArray(unit.recorded_end_moves) || unit.recorded_end_moves.length > 80 ||
       !unit.recorded_end_moves.every(move) || new Set(unit.recorded_end_moves.map(key)).size !== unit.recorded_end_moves.length ||
       unit.recorded_end_moves.some(ref => {
         const path = summaryPaths.find(path => path.id === ref.line_id)!, ending = path.lineSummary!.ending;
-        return !visible.has(key(ref)) || ending.kind !== 'line_end' || ending.ply_offset !== path.moves.length - 1 ||
+        return !owned.has(key(ref)) || ending.kind !== 'line_end' || ending.ply_offset !== path.moves.length - 1 ||
           ending.occurrence_id !== ref.occurrence_id || path.occurrenceIds[path.moves.length - 1] !== ref.occurrence_id;
       }))) return;
     if (unit.focus !== undefined) {
@@ -1398,22 +1575,22 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
           !ids(focus.squares) || !focus.squares.length || focus.squares.length > 64 ||
           !focus.squares.every(square => /^[a-h][1-8]$/.test(square)) || !ids(focus.source_ids)) return;
         const ref = focus as unknown as CommentaryQuestionFocus;
-        if (!visible.has(key(ref)) || assigned.has(key(ref)) || !questionFocusFrame(ref, observations)) return;
+        if (!owned.has(key(ref)) || assigned.has(key(ref)) || !questionFocusFrame(ref, observations)) return;
         assigned.add(key(ref));
       }
     }
   }
-  const result = value as unknown as CommentaryQuestionSummary, mentioned = result.units.flatMap(u => refs(u.en));
+  const result = value as unknown as CommentaryQuestionSummary, mentioned = result.units.flatMap(accountRefs);
   const text = result.units.map(unit => unit.en.map(part => typeof part === 'string' ? part : (() => {
     const path = summaryPaths.find(path => path.id === part.line_id)!;
     return path.moves[path.occurrenceIds.indexOf(part.occurrence_id)].label;
   })()).join('')).join(' ');
-  if (text !== summaryText || text.length > 4000 || usedPaths.some(path => !mentioned.some(ref =>
+  if (text !== summaryText || text.length > 4000 || usedPaths.some(path => !result.units.flatMap(unit => refs(unit.en)).some(ref =>
     ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[0]))) return;
-  const delivered = (units: CommentaryQuestionUnit[]): boolean => {
-    const mentioned = units.flatMap(unit => refs(unit.en)),
+  const delivered = (units: CommentaryQuestionUnit[], extra: CommentaryQuestionMove[] = []): boolean => {
+    const mentioned = [...units.flatMap(accountRefs), ...extra],
       recordedEnds = new Set(units.flatMap(unit => unit.recorded_end_moves ?? []).map(key));
-    if (units.some(unit => unit.covered_moves.some(ref => !refs(unit.en).some(other => key(ref) === key(other))))) return false;
+    if (units.some(unit => unit.covered_moves.some(ref => !proofRefs(unit).some(other => key(ref) === key(other))))) return false;
     for (const path of summaryPaths) {
       const visible = mentioned.filter(ref => ref.line_id === path.id),
         covered = [...new Map(units.flatMap(unit => unit.covered_moves).filter(ref => ref.line_id === path.id)
@@ -1439,13 +1616,36 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     }
     return true;
   };
-  if (result.detail_units && !delivered(result.detail_units)) return;
+  if (value.question === 'first_target_response') {
+    const observed = observations.paths.find(path => path.id === firstReplyPath!.line_id);
+    const core = result.units.flatMap(accountRefs);
+    if (!observed || observed.moves.length < 3 || !summaryPaths.some(path =>
+      path.moves.length >= 3 && path.moves.slice(0, 3).every((move, index) => move.uci === observed.moves[index]?.uci &&
+        path.occurrenceIds[index] === observed.occurrenceIds[index] &&
+        path.positionIds?.[index + 1] === observed.positionIds?.[index + 1]) &&
+      [1, 2].every(offset => core.some(ref => ref.line_id === path.id &&
+        ref.occurrence_id === path.occurrenceIds[offset])))) return;
+  }
+  if (result.detail_units && !delivered(result.detail_units, typedAnswer ? result.detail_moves : [])) return;
   if (commonAnswer || result.question === 'selected_target_response' || result.question === 'attacker_removal_or_recapture') {
     // The producer owns the selected physical question and its closed account.
-    // Here validate delivery: every declared cost is visible in both languages,
-    // and neither a check's reply nor its immediate recapture can be folded away.
-    if ((!commonAnswer && result.detail_moves.length) || !delivered(result.units) ||
-      summaryPaths.some(path => !mentioned.some(ref => ref.line_id === path.id))) return;
+    // Position proof can have a SAN link without selecting that transition's
+    // capture. Actual roots, check replies and recaptures still close the account.
+    const roots: CommentaryQuestionMove[] = [];
+    if (typedAnswer) for (const path of usedPaths) {
+      const occurrence = path.occurrenceIds[0];
+      if (!id(occurrence)) return;
+      roots.push({ line_id: path.id, occurrence_id: occurrence });
+    }
+    // A typed position witness may describe an available conditional reply.
+    // Its certified proof must be shown, while only selected actual actions
+    // enter the capture/check account above.
+    const witnessed = typedAnswer ? result.units.flatMap(proofRefs) : mentioned;
+    const conditionalDetail = typedAnswer ? (result.detail_units ?? []).flatMap(proofRefs) : [];
+    if ((!commonAnswer && result.detail_moves.length) || !delivered(result.units, roots) ||
+      summaryPaths.some(path => !witnessed.some(ref => ref.line_id === path.id) &&
+        !((conditionalPaths.has(path.id) || firstPair?.candidates.some(candidate => candidate.line_id === path.id)) &&
+          conditionalDetail.some(ref => ref.line_id === path.id)))) return;
     return result;
   }
   // Unversioned summaries retain their original motif-specific compatibility checks.
@@ -1472,7 +1672,7 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       const matches = (ref: CommentaryQuestionMove, index: number) =>
         ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[index];
       const answeredInUnit = ['escape_or_recapture', 'opening_counterplay', 'check_status_comparison', 'deferred_pawn_attack', 'contested_pair_response'].includes(result.question) &&
-        result.units.some(unit => [offset, offset + 1].every(index => refs(unit.en).some(ref => matches(ref, index))));
+        result.units.some(unit => [offset, offset + 1].every(index => accountRefs(unit).some(ref => matches(ref, index))));
       const neutralCheck = result.question === 'check_status_comparison' && captures.some(first => first.ply_offset === offset &&
         captures.some(second => second.ply_offset === offset + 1 && second.side !== first.side &&
           second.capture!.role === first.capture!.role && second.capture!.recapture === 'proven'));
@@ -1573,7 +1773,7 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       return usedPaths.every((path, n) => {
         const visible = (offset: number) => mentioned.some(ref => ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[offset]),
           captures = path.lineSummary!.material!.events.filter(event => event.capture && event.ply_offset <= ends.get(path.id)!),
-          together = (...offsets: number[]) => result.units.some(unit => offsets.every(offset => refs(unit.en).some(ref =>
+          together = (...offsets: number[]) => result.units.some(unit => offsets.every(offset => accountRefs(unit).some(ref =>
             ref.line_id === path.id && ref.occurrence_id === path.occurrenceIds[offset]))),
           actor = (offset: number) => mover(n, offset),
           contact = (count: number, actor: CommentaryInquiryPiece, target: CommentaryInquiryPiece) =>
@@ -1674,7 +1874,7 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
   if (result.question === 'contested_pair_response') {
     const costs = result.units.filter(unit => unit.role === 'cost');
     if (!costs.length || costs.some(unit => {
-      if (unit.covered_moves.some(move => !refs(unit.en).some(ref => key(ref) === key(move)))) return true;
+      if (unit.covered_moves.some(move => !proofRefs(unit).some(ref => key(ref) === key(move)))) return true;
       return usedPaths.some(path => {
         const moves = unit.covered_moves.filter(ref => ref.line_id === path.id);
         if (!moves.length) return false;
@@ -1700,7 +1900,7 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       !remaining || remaining.some(piece => samePiece(piece.original, actor.original)) ||
       !peerRoot || !samePiece(peerRoot.original, actor.original) || !event.capture || event.before_role !== 'pawn' ||
       !removal?.capture || removal.capture.role !== event.after_role || removal.capture.recapture !== 'proven' ||
-      !result.units.some(unit => [at, at + 1].every(index => refs(unit.en).some(ref => names(ref, index)) &&
+      !result.units.some(unit => [at, at + 1].every(index => accountRefs(unit).some(ref => names(ref, index)) &&
         unit.covered_moves.some(ref => names(ref, index))))) return;
     // Keep the intervening loss and the immediate countercapture visible,
     // even when the caller also supplies a longer continuation.
@@ -1901,8 +2101,10 @@ function decodeResponseSearches(
   observations: MoveReviewObservations,
   context: CommentaryInquiryContext | undefined,
 ): CommentaryResponseSearch[] | undefined {
-  // Two explorations may be followed by the producer's one conflict recheck.
-  if (!Array.isArray(value) || value.length > 3 || !context) return;
+  // Two explorations can finish two already linked reserve questions; the
+  // producer may also issue one conflict recheck. Each receipt still needs
+  // its exact legal position, owned pool and completed candidate paths below.
+  if (!Array.isArray(value) || value.length > 5 || !context) return;
   const result: CommentaryResponseSearch[] = [];
   for (const raw of value) {
     if (
@@ -2262,12 +2464,15 @@ function decodeResponseInquiries(
             });
           const search = ranked?.[0];
           const best = search?.candidates.find(candidate => family.includes(candidate.move_uci));
-          if (
-            search?.work_id !== selection.work_id ||
-            best?.move_uci !== move ||
-            best.line_id !== selection.line_id
-          )
-            return;
+          if (best?.move_uci !== move) return;
+          const claimed = ranked?.find(search => search.work_id === selection.work_id &&
+            (search.root_restriction.kind === 'unrestricted' || family.every(move =>
+              search.root_restriction.kind === 'restricted' && search.root_restriction.moves_uci.includes(move))));
+          const originalChoice = claimed?.candidates.find(candidate => family.includes(candidate.move_uci));
+          // Retain the exact choice origin when a newer owned receipt still
+          // selects the same class member. The answer owns its separate scores.
+          if ((search?.work_id !== selection.work_id || best.line_id !== selection.line_id) &&
+            (originalChoice?.move_uci !== move || originalChoice.line_id !== selection.line_id)) return;
         } else if (
           selection.work_id !== null ||
           !['root_pv_hint', 'observed_line'].includes(String(selection.source)) ||
@@ -5804,10 +6009,60 @@ function proposalFactSourcesValid(
   );
 }
 
+export function reserveResponsePoolMatches(
+  proposal: CommentaryProposal,
+  reading: CommentaryProposalReading,
+  pool: string[],
+  observations: MoveReviewObservations,
+  positionId: string,
+): boolean {
+  if (proposal.admission !== 'generated' || reading.kind !== 'compare_moves') return false;
+  const hold = proposal.origin.question.producer === 'C-reserve-hold' && reading.id === 'reserve_hold';
+  const counter = proposal.origin.question.producer === 'C-reserve-entry' && reading.id === 'reserve_counter';
+  if (!hold && !counter) return false;
+  const position = observations.positions?.find(position => position.id === positionId);
+  if (!position?.legal_moves.complete) return false;
+  const side = parseFen(position.fen).unwrap().turn;
+  const pieces = position.controls.pieces.map(control => control.piece);
+  const king = pieces.find(piece => piece.side === side && piece.role === 'king');
+  const pawn = pieces.find(piece => piece.side === side && piece.role === 'pawn' &&
+    piece.square === reading.alternative_move.slice(0, 2));
+  if (!king || !pawn || reading.reference_move.slice(0, 2) !== king.square ||
+    ![reading.reference_move, reading.alternative_move].every(uci =>
+      position.legal_moves.moves.some(move => move.uci === uci))) return false;
+  const members = new Set<string>(pieces.filter(piece => piece.side === side && piece.role === (hold ? 'king' : 'pawn'))
+    .map(piece => piece.square));
+  const expected = new Set([hold ? reading.alternative_move : reading.reference_move, ...position.legal_moves.moves
+    .filter(move => members.has(move.uci.slice(0, 2))).map(move => move.uci)]);
+  return expected.size === pool.length && pool.every(move => expected.has(move));
+}
+
 export function proposalContainsResponsePool(
   proposals: CommentaryProposal[],
   search: CommentaryResponseSearch,
+  observations?: MoveReviewObservations,
 ): boolean {
+  if (search.root_restriction.kind === 'unrestricted') {
+    const ownership = search.proposal_ownership, prefix = responseSearchPrefix(search);
+    const position = observations?.positions?.find(position => position.id === search.child_position_id);
+    // A first-reply survey belongs to the issued questions even if its top
+    // results omit one named move. That omission cannot answer the pair.
+    return !!ownership && ownership.work_id === search.work_id &&
+      ownership.execution_key_sha256 === search.execution_key_sha256 && prefix.length === 1 &&
+      !!position?.legal_moves.complete && position.legal_moves.moves.length >= 2 &&
+      search.multi_pv === Math.min(3, position.legal_moves.moves.length) &&
+      ownership.question_refs.length > 0 &&
+      new Set(ownership.question_refs.map(ref => `${ref.proposal_id}/${ref.requirement_id}`)).size ===
+        ownership.question_refs.length &&
+      ownership.question_refs.every(ref => {
+        const proposal = proposals.find(proposal => proposal.id === ref.proposal_id);
+        const reading = proposal?.requirements.find(reading => reading.id === ref.requirement_id);
+        return proposal?.admission === 'generated' && reading?.kind === 'compare_moves' &&
+          sameIds(reading.prefix_moves_uci, prefix) && reading.reference_move !== reading.alternative_move &&
+          [reading.reference_move, reading.alternative_move].every(move =>
+            position.legal_moves.moves.some(row => row.uci === move));
+      });
+  }
   if (search.root_restriction.kind !== 'restricted') return false;
   const pool = search.root_restriction.moves_uci;
   const prefix = responseSearchPrefix(search);
@@ -5825,8 +6080,13 @@ export function proposalContainsResponsePool(
       issued.every(reading => reading.prefix_moves_uci.length === prefix.length &&
         reading.prefix_moves_uci.every((move, index) => move === prefix[index]) &&
         reading.reference_move === issued[0].reference_move) &&
-      pool.length >= 2 && pool.length <= 3 &&
-      sameIds(pool, [...new Set(issued.flatMap(reading => [reading.reference_move, reading.alternative_move]))]);
+      ((pool.length >= 2 && pool.length <= 3 &&
+        sameIds(pool, [...new Set(issued.flatMap(reading => [reading.reference_move, reading.alternative_move]))])) ||
+        !!observations && ownership.question_refs.every(ref => {
+          const proposal = proposals.find(proposal => proposal.id === ref.proposal_id)!;
+          const reading = proposal.requirements.find(reading => reading.id === ref.requirement_id)!;
+          return reserveResponsePoolMatches(proposal, reading, pool, observations, search.child_position_id);
+        }));
   }
   const pairs = proposals.flatMap(proposal =>
     proposal.requirements.filter(
@@ -5990,15 +6250,17 @@ export function decodeCommentarySelection(
   }
   if (
     responseSearches?.some(search => search.proposal_ownership !== undefined &&
-      !proposalContainsResponsePool(proposals ?? [], search)) ||
+      !proposalContainsResponsePool(proposals ?? [], search, observations)) ||
     responseSearches?.some(
       search =>
         search.root_restriction.kind === 'restricted' &&
         !responsePoolMatchesClasses(
           responseInquiries?.filter(inquiry => responseSearchMatchesInquiry(search, inquiry)) ?? [],
           search.root_restriction.moves_uci,
+          responseSearches.filter(prior => Number(prior.work_id.slice(5)) < Number(search.work_id.slice(5))),
+          context?.playedMove,
         ) &&
-        !proposalContainsResponsePool(proposals ?? [], search) &&
+        !proposalContainsResponsePool(proposals ?? [], search, observations) &&
         !continuationInquiries?.some(inquiry => {
           if (
             !responseSearchMatchesContinuation(search, inquiry) ||
@@ -6242,7 +6504,7 @@ export function decodeCommentarySelection(
         } catch (_) { return; }
       }
       if (detail.summary_question !== undefined) {
-        const question = decodeQuestionSummary(detail.summary_question, usedPaths, raw.evidence_ids, detail.summary, sourceRefs, observations);
+        const question = decodeQuestionSummary(detail.summary_question, usedPaths, raw.evidence_ids, detail.summary, sourceRefs, observations, proposals, context?.playedMove, responseInquiries, responseSearches);
         if (!question || detail.material_relation === 'unavailable') return;
         decodedDetail = { ...detail, summary_question: question };
       }
@@ -6616,12 +6878,16 @@ export function decodeCommentarySelection(
                 !control(kept, index + 1, actor.original, after.square)) return;
             } else if (effect.scope === 'advance_choice') {
               const [blocked, usedAdvance] = used, blocker = target!;
-              const destination = `${actor.current.square[0]}${Number(actor.current.square[1]) +
-                (actor.current.side === 'white' ? 1 : -1)}` as Key;
+              const destination = effect.square;
+              const available = position(blocked, index)?.pawn_advances.paths.find(row =>
+                located(row.piece, actor.current) && row.destination === destination &&
+                effect.evidence_ids.includes(row.source_id));
+              if (!available) return;
+              const traversed = available.traversed_squares;
               const blockingMove = legal(blocked, index)!, reply = legal(usedAdvance, index + 1);
               const stopped = position(blocked, index + 1)!;
               if (actor.current.role !== 'pawn' || blocker.current.role !== 'pawn' ||
-                actor.current.side === blocker.current.side || effect.square !== destination ||
+                actor.current.side === blocker.current.side ||
                 effect.through_plies[0] !== index + 1 || effect.through_plies[1] !== index + 2 ||
                 blockingMove.uci.slice(0, 2) !== blocker.current.square ||
                 blockingMove.destination !== destination || blockingMove.captured_square !== undefined ||
@@ -6629,10 +6895,10 @@ export function decodeCommentarySelection(
                 !located(at(blocked, actor.original, index + 1), actor.current) ||
                 !stopped.pawn_advances.complete || stopped.pawn_advances.paths.some(row =>
                   located(row.piece, actor.current) && row.destination === destination) ||
-                !advance(blocked, index, actor.original, destination, [destination]) ||
+                !advance(blocked, index, actor.original, destination, traversed) ||
                 !located(at(usedAdvance, actor.original, index + 1), actor.current) ||
                 !located(at(usedAdvance, blocker.original, index + 2), blocker.current) ||
-                !advance(usedAdvance, index + 1, actor.original, destination, [destination]) ||
+                !advance(usedAdvance, index + 1, actor.original, destination, traversed) ||
                 !reply || reply.uci !== actor.current.square + destination || reply.captured_square !== undefined ||
                 at(usedAdvance, actor.original, index + 2)?.square !== destination) return;
             } else if (effect.scope === 'relative_pin') {
@@ -6887,12 +7153,13 @@ export function decodeCommentarySelection(
                   if (!located(at(provider.original, count), actor.current)) return;
                 const oldTarget = at(related.original, index);
                 // A moving friendly target may keep using the same stationary provider.
+                // An empty-square preparation can also incidentally support the
+                // target elsewhere. Its route need not keep that other support.
                 const gainedSupport = oldTarget && controlAt(provider.original, index, oldTarget.square) === false &&
-                  controlAt(provider.original, anchor, related.current.square) === true;
-                if (gainedSupport) {
-                  for (let count = anchor; count <= loss.ply_offset; count++)
-                    if (support(provider.original, count) !== 'present') return;
-                } else {
+                  controlAt(provider.original, anchor, related.current.square) === true &&
+                  Array.from({ length: loss.ply_offset - anchor + 1 }, (_, offset) => anchor + offset)
+                    .every(count => support(provider.original, count) === 'present');
+                if (!gainedSupport) {
                   // A future target cannot borrow control of a square occupied by a different piece.
                   if (related.current.square === effect.square ||
                     controlAt(provider.original, index, effect.square) !== false) return;
@@ -7003,7 +7270,10 @@ export function decodeCommentarySelection(
               }
               if (departure === undefined) return;
             } else {
-              if (actor.current.side !== related.current.side || !['bishop', 'rook', 'queen'].includes(related.current.role) ||
+              // The same physical pawn may have promoted before using the
+              // cleared line. Its role at the actual use owns the geometry.
+              if (actor.current.side !== related.current.side ||
+                !['bishop', 'rook', 'queen'].includes(at(related.original, through)?.role ?? '') ||
                 originalActor.square !== effect.square || actor.current.square === effect.square ||
                 path.moves[last].uci.slice(0, 2) !== at(related.original, last)?.square ||
                 finalMove.destination !== at(related.original, through)?.square) return;
