@@ -60,10 +60,17 @@ private[runtime] object RootQuestionSummary:
       detailUnits: List[Unit] = Nil): Option[Result] =
     val mentioned = units.flatMap(_.refs)
     val allUnits = units ++ detailUnits
-    val references = allUnits.flatMap(u => u.proofReferences ++ u.ko.collect { case move: MoveRef => move } ++
-      u.covered ++ u.required ++ u.recordedEnds ++ u.focus.map(_.move)) ++ detail
+    def referencesFor(layer: List[Unit], extra: List[MoveRef] = Nil): List[MoveRef] =
+      layer.flatMap(u => u.proofReferences ++ u.ko.collect { case move: MoveRef => move } ++
+        u.covered ++ u.required ++ u.recordedEnds ++ u.focus.map(_.move)) ++ extra
+    val references = referencesFor(units) ++ referencesFor(detailUnits, detail)
     val used = references.map(_.path).distinct
     val witnesses = used.filterNot(p => pair.exists(_ eq p))
+    // The selected answer and the supplementary record each own a bounded
+    // proof. A detail-only conditional example cannot evict a complete core
+    // comparison, and neither layer can borrow the other's unused capacity.
+    def boundedWitnesses(layer: List[Unit], extra: List[MoveRef] = Nil): Boolean =
+      referencesFor(layer, extra).map(_.path).distinct.count(p => !pair.exists(_ eq p)) <= 5
     // A named conditional example can contrast another legal root choice.
     // It remains a separate proof, never the current evaluation pair. Only
     // its fully reread board condition and exact legal paths admit that root.
@@ -99,7 +106,8 @@ private[runtime] object RootQuestionSummary:
           }
         }}
       }
-    Option.when(pair.size == 2 && units.nonEmpty && units.size <= 8 && witnesses.size <= 5 &&
+    Option.when(pair.size == 2 && units.nonEmpty && units.size <= 8 &&
+      boundedWitnesses(units) && boundedWitnesses(detailUnits, detail) &&
       pair.forall(path => mentioned.contains(MoveRef(path, 0))) && references.forall(valid) &&
       visibleAccount(units, pair.map(MoveRef(_, 0))) && visibleAccount(detailUnits, detail) &&
       witnesses.forall(path => pair.exists(primary => path.positions.headOption == primary.positions.headOption &&
@@ -618,6 +626,7 @@ private[runtime] object RootQuestionSummary:
   def realize(paths: PreparedPaths, pair: List[PreparedPath], answer: CommentaryAnswer.Answer): Option[Result] =
     def validContent(statement: CommentaryAnswer.Statement): Boolean = statement match
       case value: CommentaryAnswer.LegalReplyOption => FunctionalReplyReading.valid(paths, value)
+      case value: CommentaryAnswer.FunctionRealization => FunctionalRealizationReading.valid(paths, value.value)
       case value: CommentaryAnswer.ReserveBreak => RootSubjectComparison.validReserveBreak(paths, value)
       case value: CommentaryAnswer.ReserveHold => RootSubjectComparison.validReserveHold(paths, value)
       case value: CommentaryAnswer.ReserveTempo => RootSubjectComparison.validReserveTempo(paths, value)
@@ -680,6 +689,8 @@ private[runtime] object RootQuestionSummary:
         root.path.certified.flatMap(_._2.material).exists(_.events.isEmpty)
       case value: CommentaryAnswer.PiecePresence => paths.trackedPieceAfter(value.after.path,
         value.original, value.after.offset + 1).contains(Some(value.current))
+      case value: CommentaryAnswer.PieceAbsence => paths.trackedPieceAfter(value.after.path,
+        value.original, value.after.offset + 1).contains(None)
       case CommentaryAnswer.Terminal(move, result) => move.offset == move.path.moves.size - 1 &&
         move.path.automaticTerminal.contains(result)
       case _ => true
@@ -764,6 +775,9 @@ private[runtime] object RootQuestionSummary:
     // filtering per-container references must not erase a missing quiet reply.
     val coreContent = answer.core.flatMap( section => CommentaryEnglish.renderedSection(section).expressed)
     if !answer.required.forall(coreContent.flatMap(_.references).contains) then return None
+    if !AnchoredChoiceAnswer.pricesExpressed(coreContent) ||
+        !AnchoredChoiceAnswer.pricesExpressed(answer.details.flatMap(section =>
+          CommentaryEnglish.renderedSection(section).expressed)) then return None
     // Physical episodes remain separate through selection and price closure.
     // At delivery, the same complete statement only needs one owner; sharing
     // that statement does not join the episodes or discard another obligation.
@@ -777,7 +791,10 @@ private[runtime] object RootQuestionSummary:
     val deliveryContent = deliveryCore.flatMap(section => CommentaryEnglish.renderedSection(section).expressed)
     if !answer.required.forall(deliveryContent.flatMap(_.references).contains) then return None
     val units = deliveryCore.flatMap(unitsFor)
-    val detailUnits = answer.details.flatMap(unitsFor)
+    // Repeated completion may retain the same whole price account again.
+    // Share only an exactly identical section, including its required moves
+    // and focus. Different physical witnesses or price contexts stay separate.
+    val detailUnits = answer.details.distinct.flatMap(unitsFor)
     // A physical episode owns its price before delivery. Several complete
     // episodes can share a bounded display container without sharing that
     // ownership or omitting content. Keep their order and incompatible focus
@@ -969,12 +986,14 @@ private[runtime] object RootQuestionSummary:
     /** The selected quiet user is actually lost. Own that loss and its
       * capturer's recorded recovery, while dependent losses still require a
       * connected recovery. Those dependencies are not new lifetime stories. */
-    def usedPieceLossAccount(seed: Event, focus: Piece): Account =
+    def usedPieceLossAccount(seed: Event, focus: Piece, counterTargets: Set[Piece] = Set.empty): Account =
       require(seed.originalVictim.contains(focus))
-      account(seed, focus, targetOutcome = true, comparison = true, ownedLoss = true)
+      require(counterTargets.subsetOf(originals.toSet))
+      account(seed, focus, targetOutcome = true, comparison = true, ownedLoss = true,
+        counterTargets = counterTargets)
 
     private def account(seed: Event, focus: Piece, targetOutcome: Boolean, comparison: Boolean,
-        ownedLoss: Boolean = false): Account =
+        ownedLoss: Boolean = false, counterTargets: Set[Piece] = Set.empty): Account =
       require(captures.contains(seed) && originals.contains(focus))
       val selected = mutable.ListBuffer.empty[Event]
       val offsets = mutable.Set.empty[Int]
@@ -993,6 +1012,13 @@ private[runtime] object RootQuestionSummary:
         captures.filter(e => e.plyOffset >= start.plyOffset && e.plyOffset <= end &&
           (e.originalActor == start.originalActor || recapture.contains(e)))
       span(seed, seed.originalActor.contains(focus), ownedLoss).foreach(add)
+      // A quiet selected attack can be answered by taking its user while an
+      // ally takes the originally threatened piece on another square. Own
+      // that immediate counter-capture and its connected recovery; a later
+      // unrelated gain is not compensation for this selected episode.
+      if ownedLoss && counterTargets.nonEmpty then captures.find(event =>
+        event.plyOffset == seed.plyOffset + 1 && event.originalActor.exists(_.side == focus.side) &&
+          event.originalVictim.exists(counterTargets)).foreach(event => span(event, false).foreach(add))
       seed.originalActor.flatMap(p => route(p).filter(_ < seed.plyOffset).lastOption).filter(checks)
         .flatMap(n => captures.find(_.plyOffset == n)).foreach(e => span(e, false).foreach(add))
       if !comparison && recovery(seed).isEmpty && seed.originalActor.contains(focus) then

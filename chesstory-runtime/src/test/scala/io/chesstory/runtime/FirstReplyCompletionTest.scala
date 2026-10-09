@@ -377,7 +377,7 @@ class FirstReplyCompletionTest extends munit.FunSuite:
     assertEquals(basicReview(read).bestMoveUci, root)
     assertEquals(rootAssessment(read), assessment)
 
-  test("an existing typed critical timing dependency keeps priority over general first-reply questions"):
+  test("an owned reserve family surveys the original defenses before a named timing continuation"):
     val relative = "judgment-evaluation/fixtures/public-commentary-v6/selected-dependency-prefix-produced.json"
     val path = List(Path.of(relative), Path.of("..", relative)).find(Files.isRegularFile(_)).get
     val data = Json.parse(Files.readString(path, UTF_8))
@@ -396,14 +396,24 @@ class FirstReplyCompletionTest extends munit.FunSuite:
       state = CommentaryJobReducer.submitIssuedWorkReport(next, report, index.toLong + 2L).toOption.get
     }
     val next = awaiting(state)
-    val timing = CommentaryIdea.reserveTimings(next.proposalEntries).find(value =>
+    val reserve = CommentaryIdea.reserveChoices(next.proposalEntries).find(value =>
       value.owner.comparison.referenceMove == next.playedMoveUci).get
-    assert(timing.source.exists(_.answer.evaluationRelation == "better"))
-    assertEquals(next.issuedWork.searchAnchor.map(_.prefixMoves), Some(timing.test.prefixMovesUci))
-    assertEquals(next.issuedWork.rootRestriction,
-      EngineRootRestriction.Restricted(List(timing.test.referenceMove, timing.test.alternativeMove)))
+    val owner = reserve.owner
+    assertEquals(owner.answer.evaluationRelation, "better")
+    assertEquals(next.issuedWork.searchAnchor.map(_.prefixMoves), Some(List(owner.comparison.referenceMove)))
+    assertEquals(next.issuedWork.rootRestriction, EngineRootRestriction.Unrestricted)
+    val family = AnchoredChoiceReading.family(next.observationsPacket.get, next.preparedPaths.get, next.proposalEntries,
+      next.responseSearches, Set(owner.comparison.referenceMove, owner.comparison.alternativeMove),
+      next.engineProfile.wireId, next.issuedWork.requiredDepth).get
+    assert(!family.initialComplete, "an old named timing receipt cannot stand in for either original defense pool")
+    assertEquals(family.roots.map(_.rootMove).toSet,
+      Set(owner.comparison.referenceMove, owner.comparison.alternativeMove))
+    val dependencies = family.obligations.filter(_.phase == -2)
+    assertEquals(dependencies.map(_.comparison.prefixMovesUci).toSet,
+      Set(List(owner.comparison.referenceMove), List(owner.comparison.alternativeMove)))
     assert(next.issuedWork.proposalRefs.exists((proposalId, requirementId) =>
-      requirementId == timing.test.id && next.proposalEntries.exists(entry =>
+      dependencies.exists(value => value.owner.proposalId == proposalId && value.comparison.id == requirementId) &&
+        next.proposalEntries.exists(entry =>
         entry.request.id == proposalId && entry.readings.exists(reading =>
           reading.requirementId == requirementId && reading.state == "awaiting_engine" &&
             reading.workId.contains(next.issuedWork.workId)))))

@@ -15,7 +15,6 @@ export class Protocol {
   private moveReviewSeldepth = 0;
   private moveReviewNodes = 0;
   private moveReviewMillis = 0;
-  private moveReviewEmittedDepth = 0;
   private moveReviewPreparing: Work | undefined;
   private initialReady = false;
   private resolveReady: (() => void) | undefined;
@@ -147,7 +146,10 @@ export class Protocol {
       const ev = this.work.ply % 2 === pivot ? -povEv : povEv;
 
       // Ignore primary bound messages; preserve non-primary bound metadata for consumers that need exact lines.
-      if (bound && multiPv === 1) return;
+      if (bound && multiPv === 1) {
+        if (isMoveReviewWork(this.work) && depth >= this.moveReviewDepth) this.moveReviewPvs.clear();
+        return;
+      }
 
       const pvData = {
         moves,
@@ -242,7 +244,6 @@ export class Protocol {
     this.moveReviewSeldepth = 0;
     this.moveReviewNodes = 0;
     this.moveReviewMillis = 0;
-    this.moveReviewEmittedDepth = 0;
 
     this.setOption('UCI_Variant', work.variant);
     // The dedicated standard review protocol uses king-destination castling
@@ -276,19 +277,23 @@ export class Protocol {
       depth < this.moveReviewDepth
     )
       return;
-    if (depth > this.moveReviewDepth) {
+    // Stockfish can replace its complete MultiPV set at the same depth. A
+    // fresh primary starts that set; its secondary lines cannot borrow entries
+    // from an earlier set, including one already emitted at this depth.
+    if (depth > this.moveReviewDepth || multiPv === 1) {
       this.moveReviewDepth = depth;
       this.moveReviewPvs.clear();
       this.moveReviewSeldepth = 0;
       this.moveReviewNodes = 0;
       this.moveReviewMillis = 0;
     }
+    if (multiPv !== 1 && !this.moveReviewPvs.has(1)) return;
     this.moveReviewPvs.set(multiPv, pv);
     this.moveReviewSeldepth = Math.max(this.moveReviewSeldepth, seldepth ?? 0);
     this.moveReviewNodes = Math.max(this.moveReviewNodes, nodes);
     this.moveReviewMillis = Math.max(this.moveReviewMillis, millis);
     const pvs = Array.from({ length: this.expectedPvs }, (_, index) => this.moveReviewPvs.get(index + 1));
-    if (pvs.some(candidate => candidate === undefined) || this.moveReviewEmittedDepth === depth) return;
+    if (pvs.some(candidate => candidate === undefined)) return;
     const complete = pvs as Tree.PvData[];
     const primary = complete[0]!;
     this.currentEval = {
@@ -301,7 +306,7 @@ export class Protocol {
       mate: primary.mate,
       pvs: complete,
     };
-    this.moveReviewEmittedDepth = depth;
+    this.moveReviewPvs.clear();
     work.emit(this.currentEval);
   }
 

@@ -13,6 +13,7 @@ import {
   reviewedMoverResponsePoolMatches,
   responseSearchMatchesInquiry,
   reserveResponsePoolMatches,
+  ownedChoiceSurveyMatches,
   commentarySearchAnchorPath,
   type CommentaryEvaluation,
   type CommentarySelection,
@@ -1717,7 +1718,7 @@ function projectJobStatus(
       ]) ||
       !isMoveReviewStopCondition(raw.stop_condition) ||
       common.verification?.state === 'pending' ||
-      !validProgress(raw.progress, 'stopped')
+      !validProgress(raw.progress, 'stopped', common.observations)
     )
       return;
     return { ...common, kind: 'abstained', stopCondition: raw.stop_condition };
@@ -1750,7 +1751,7 @@ function projectJobStatus(
     common.observations,
     common.verification,
   );
-  if (!work || !validProgress(raw.progress, work.purpose)) return;
+  if (!work || !validProgress(raw.progress, work.purpose, common.observations)) return;
   const assessment = raw.assessment === undefined ? undefined : projectAssessment(raw.assessment, common);
   if (
     (raw.assessment !== undefined && !assessment) ||
@@ -1842,8 +1843,19 @@ function wireFocusMatches(value: unknown, subject: MoveReviewSubject): boolean {
   );
 }
 
-function validProgress(value: unknown, phase: string): boolean {
+function validProgress(value: unknown, phase: string, observations?: MoveReviewObservations): boolean {
   const minimumLegalMoves = phase === 'stopped' ? 0 : 1;
+  // Ordinary jobs retain their prior bound. Only an already decoded owned
+  // finite resource task adds the same 24 physical-comparison allowance as
+  // its retained response receipts; an arbitrary generated pair adds none.
+  const functional = observations?.selection?.response_searches?.some(search =>
+    search.proposal_ownership?.question_refs.some(ref => {
+      const proposal = observations.selection?.proposals?.find(proposal => proposal.id === ref.proposal_id);
+      const reading = proposal?.requirements.find(reading => reading.id === ref.requirement_id);
+      return !!proposal && !!reading && ownedChoiceSurveyMatches(proposal, reading,
+        search.prefix_moves_uci ?? [search.root_move], search.root_move_occurrence_id);
+    }));
+  const maximumWorks = 32 + (functional ? 24 : 0);
   if (
     !isObject(value) ||
     !hasExactKeys(value, [
@@ -1858,8 +1870,8 @@ function validProgress(value: unknown, phase: string): boolean {
     integerInRange(value.legal_move_count, minimumLegalMoves, 218) === undefined ||
     integerInRange(value.root_candidate_lines_admitted, 0, 3) === undefined ||
     integerInRange(value.selected_commentaries_completed, 0, 1) === undefined ||
-    integerInRange(value.physical_works_issued, 0, 32) === undefined ||
-    integerInRange(value.physical_reports_accepted, 0, 32) === undefined
+    integerInRange(value.physical_works_issued, 0, maximumWorks) === undefined ||
+    integerInRange(value.physical_reports_accepted, 0, maximumWorks) === undefined
   )
     return false;
   const issued = value.physical_works_issued as number;
@@ -1932,7 +1944,7 @@ function projectIssuedEngineWork(
       !arrayPrefix(subject.movePrefixUci, value.engine_position_moves_uci) ||
       replayFen(subject.initialFen, value.engine_position_moves_uci) !== value.search_fen) return;
   const limits = {
-    depth: integerInRange(value.search_limits.depth, 1, 100),
+    depth: integerInRange(value.search_limits.depth, 1, 18),
     nodes: integerInRange(value.search_limits.nodes, 1, 250_000_000),
     movetimeMs: integerInRange(value.search_limits.movetime_ms, 1, 120_000),
     multiPv: integerInRange(value.search_limits.multi_pv, 1, 3),
@@ -1993,6 +2005,22 @@ function projectIssuedEngineWork(
           arrayEquals(reading.prefix_moves_uci, anchorPrefix) && reading.reference_move !== reading.alternative_move &&
           [reading.reference_move, reading.alternative_move].every(move =>
             position.legal_moves.moves.some(row => row.uci === move)))));
+  // A supported resource task first selects a competitor from the whole
+  // legal position. Its declared seed pair does not yet identify that rival.
+  // Only the task's first own decision and immediate opposing response are
+  // admitted here; an arbitrary downstream generated pair is not a survey.
+  const functionalSurvey = unrestricted && isObject(anchor) && Array.isArray(anchorPrefix) &&
+    observations?.positions?.some(position => position.id === anchor.position_id &&
+      position.legal_moves.complete && position.legal_moves.moves.length >= 2 &&
+      limits.multiPv === Math.min(3, position.legal_moves.moves.length) &&
+      observations.selection?.proposals?.some(proposal =>
+        proposal.requirements.some(reading => reading.kind === 'compare_moves' &&
+          reading.state === 'awaiting_engine' &&
+          reading.work_id === value.work_id && arrayEquals(reading.prefix_moves_uci, anchorPrefix) &&
+          ownedChoiceSurveyMatches(proposal, reading, anchorPrefix, anchor.root_occurrence_id as string) &&
+          reading.reference_move !== reading.alternative_move &&
+          [reading.reference_move, reading.alternative_move].every(move =>
+            position.legal_moves.moves.some(row => row.uci === move)))));
   const responsePosition =
     value.purpose === 'response_comparison' &&
     isObject(anchor) &&
@@ -2019,7 +2047,7 @@ function projectIssuedEngineWork(
       anchor.position_id as string,
       anchorPrefix,
     ) &&
-    (firstReplySurvey || (anchorPrefix.length === 1 &&
+    (firstReplySurvey || functionalSurvey || (anchorPrefix.length === 1 &&
       observations.selection?.response_inquiries?.some(
         inquiry =>
           inquiry.state === 'awaiting_engine' &&
@@ -2117,6 +2145,13 @@ function projectIssuedEngineWork(
       reading.kind === 'compare_moves' && reading.state === 'awaiting_engine' &&
       reading.work_id === value.work_id && arrayEquals(reading.prefix_moves_uci, inquiryPrefix) &&
       restrictedMoves.includes(reading.reference_move) && restrictedMoves.includes(reading.alternative_move)));
+  const initialRootCompletion = contextVerification?.state === 'pending' &&
+    contextVerification.reason === 'initial_verification' && contextVerification.targetDepth === limits.depth &&
+    limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 && value.max_search_elapsed_ms === 9_000 &&
+    observations?.selection?.root_searches?.some(search => search.state === 'stopped' &&
+      search.stop_reason === 'search_budget_exhausted' && search.purpose === 'root_search' &&
+      search.root_restriction.kind === 'unrestricted' && search.required_depth === limits.depth &&
+      search.engine_profile === profile);
   const shapeValid =
     (threat && unrestricted && limits.depth === 8 && limits.nodes === 250_000 &&
       limits.movetimeMs === 750 && limits.multiPv! <= 2 && value.max_search_elapsed_ms === 1_250) ||
@@ -2129,7 +2164,8 @@ function projectIssuedEngineWork(
           ((limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 && value.max_search_elapsed_ms === 9_000) ||
             (limits.nodes === 250_000_000 && limits.movetimeMs === 120_000 && value.max_search_elapsed_ms === 121_000)) &&
           contextVerification?.state === 'pending' &&
-          contextVerification.reason === 'child_challenge' && contextVerification.targetDepth === limits.depth))) ||
+          contextVerification.reason === 'child_challenge' && contextVerification.targetDepth === limits.depth) ||
+        initialRootCompletion)) ||
     ((value.purpose === 'focus_comparison' ||
       value.purpose === 'investigation_comparison' ||
       value.purpose === 'response_comparison') &&
@@ -2215,12 +2251,12 @@ function projectCompleted(
     ]) ||
     raw.annotation_policy_revision !== moveReviewAnnotationPolicyRevision ||
     raw.current_fen !== context.subject.before.fen ||
-    !wireFocusMatches(raw.focus, context.subject) ||
-    !validProgress(raw.progress, 'completed')
+    !wireFocusMatches(raw.focus, context.subject)
   )
     return;
   const common = projectCommon(raw, context);
-  if (!common || common.verification?.state === 'pending') return;
+  if (!common || common.verification?.state === 'pending' ||
+      !validProgress(raw.progress, 'completed', common.observations)) return;
   const assessment = projectAssessment(raw.result, common);
   return assessment ? { ...common, ...assessment } : undefined;
 }

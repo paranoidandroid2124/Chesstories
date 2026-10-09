@@ -271,7 +271,10 @@ class RootQuestionAnswerTest extends munit.FunSuite:
     val (paths, pair, selected) = prepare(examples.find(_.question == "observed_arrangement_convergence").get)
     val chosen = selected.get
     val oversized = RootQuestionSummary.SelectedQuestion(chosen.confirmedFacts.copy(
-      core = List.fill(9)(chosen.confirmedFacts.core.head)))
+      // Whole sections may be packed into the delivery containers. One
+      // unsplittable statement exceeding the part bound must still fail.
+      core = Section(List(Continuation(List.fill(81)(MoveRef(pair.head, 0))))) ::
+        chosen.confirmedFacts.core))
     assertEquals(oversized.realize(paths, pair), None)
     assertEquals(oversized.question, chosen.question)
     assertEquals(oversized.evidence, chosen.evidence)
@@ -281,4 +284,21 @@ class RootQuestionAnswerTest extends munit.FunSuite:
     assertEquals((failed \ "summary_unavailable" \ "reason").as[String], "answer_not_delivered")
     assertEquals(MoveWorkProjection.unavailableAnswer(None, None), Json.obj())
     assertEquals(MoveWorkProjection.unavailableAnswer(Some(chosen.question), chosen.realize(paths, pair)), Json.obj())
+  }
+
+  test("repeated completion of an identical detail account retains each price once") {
+    val (paths, pair, selected) = prepare(examples.find(_.name == "interleaved neutral trades").get)
+    val answer = selected.get.confirmedFacts
+    assert(answer.details.exists(_.covered.nonEmpty), "the example must own real detail prices")
+    val baseline = RootQuestionSummary.realize(paths, pair, answer).get
+    val repeated = answer.copy(details = List.fill(4)(answer.details).flatten)
+    val delivered = RootQuestionSummary.realize(paths, pair, repeated).get
+    assertEquals(delivered.text, baseline.text)
+    assertEquals((delivered.json \ "units").as[List[play.api.libs.json.JsObject]],
+      (baseline.json \ "units").as[List[play.api.libs.json.JsObject]])
+    assertEquals((delivered.json \ "detail_units").as[List[play.api.libs.json.JsObject]],
+      (baseline.json \ "detail_units").as[List[play.api.libs.json.JsObject]],
+      "sharing an exact section must retain all its moves, captures and focus without repeating the account")
+    assertEquals(repeated.required, answer.required)
+    assertEquals(repeated.details.flatMap(_.covered).toSet, answer.details.flatMap(_.covered).toSet)
   }

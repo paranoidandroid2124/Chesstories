@@ -508,7 +508,25 @@ object RuntimeProtocol:
           path.moves.headOption.contains(value.question.rootMove) &&
             path.ids.headOption.contains(value.question.rootMoveOccurrenceId)))
           .map(value => MoveWorkProjection.Context("", firstTarget = Some(value)))
-      val composed = projection.withSharedMoveEffects((candidate -> rootContext) :: peers.map(other =>
+      val functional = for
+        card <- cards.headOption
+        depth <- (card.answer.referenceDepth.toList ++ card.answer.alternativeDepth.toList).maxOption
+        task <- FunctionalChoiceReading.task(packet, preparedPaths, proposalEntries, responseSearches,
+          pair.flatMap(id => preparedPaths.path(packet, id)).flatMap(_.moves.headOption).toSet,
+          card.answer.engineProfile, depth)
+      yield MoveWorkProjection.Context("", functionalChoice = Some(task))
+      val anchored = for
+        card <- cards.headOption
+        depth <- (card.answer.referenceDepth.toList ++ card.answer.alternativeDepth.toList).maxOption
+        roots = pair.flatMap(id => preparedPaths.path(packet, id)).flatMap(_.moves.headOption).toSet
+        context <- AnchoredChoiceReading.family(packet, preparedPaths, proposalEntries, responseSearches,
+          roots, card.answer.engineProfile, depth)
+          .map(value => MoveWorkProjection.Context("", anchoredFamily = Some(value)))
+          .orElse(AnchoredChoiceReading.task(packet, preparedPaths, proposalEntries, responseSearches,
+            roots, card.answer.engineProfile, depth)
+            .map(value => MoveWorkProjection.Context("", anchoredChoice = Some(value))))
+      yield context
+      val composed = projection.withSharedMoveEffects((candidate -> (rootContext ++ functional ++ anchored)) :: peers.map(other =>
         other -> contexts((other \ "id").as[String])))
       composed.foreach(retainEffects)
       composed.tail.foreach(other => sharedQuestions((other \ "id").as[String]) = other)

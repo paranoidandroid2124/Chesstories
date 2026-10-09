@@ -20,6 +20,68 @@ private[runtime] object FunctionalReplyReading:
       reference: List[String], alternative: List[String], option: List[String],
       effect: Predicate, action: Predicate, evidence: List[String], price: Option[List[String]] = None)
 
+  /** A task and a conditional example have independent prerequisites. Keep
+    * the original resource actor/destination; a new defense need not perform
+    * the old capture before this task can receive its own value question.
+    */
+  final case class Resource(owner: RootOwner, condition: Predicate, actor: Piece,
+      square: String, move: String, witnessedPrefix: List[String], contextId: String,
+      expectedReference: String, expectedAlternative: String, evidence: List[String])
+
+  def resources(entries: List[Entry]): List[Resource] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reply-function" then Nil
+    else
+      val facts = entry.request.requirements.collect { case fact: Fact => fact.id -> fact }.toMap
+      val readings = entry.readings.map(reading => reading.requirementId -> reading).toMap
+      for
+        root <- entry.request.requirements.collect { case pair: CompareMoves if pair.id == "function_root" => pair }
+        if root.prefixMovesUci.isEmpty
+        context <- entry.request.requirements.collect {
+          case group: FactGroup if group.id == "function_task_context" && group.mode == "all" => group
+        }
+        if context.members == List("function_before", "function_root_reference", "function_root_alternative",
+          "function_owned", "function_changed", "function_live", "function_resource") &&
+          (context.id :: context.members).forall(id => readings.get(id).exists(_.state == "supported"))
+        live <- facts.get("function_live").toList
+        before <- facts.get("function_before").toList
+        left <- facts.get("function_root_reference").toList
+        right <- facts.get("function_root_alternative").toList
+        use <- facts.get("function_resource").toList
+        if live.path.source == Declared(List(root.referenceMove)) && live.at == Ply(1) &&
+          live.predicate == before.predicate && before.at == Ply(0) &&
+          live.predicate == left.predicate && left.predicate == right.predicate &&
+          left.at == Ply(1) && right.at == Ply(1) &&
+          List(before, left).forall(fact => fact.path.source match
+            case Declared(moves) => moves.headOption.contains(root.referenceMove)
+            case _ => false) && (right.path.source match
+            case Declared(moves) => moves.headOption.contains(root.alternativeMove)
+            case _ => false) &&
+          entry.request.requirements.exists {
+            case FactComparison("function_owned", a, b, relation) => a == before.id && b == left.id &&
+              Set("same", "different")(relation) && before.expected.nonEmpty && left.expected.nonEmpty &&
+              (before.expected == left.expected) == (relation == "same")
+            case _ => false
+          } &&
+          entry.request.requirements.contains(FactComparison("function_changed", left.id, right.id, "different")) &&
+          entry.generatedArms.exists(arm => arm.prefixMoves.isEmpty && arm.referenceMove == root.referenceMove &&
+            arm.alternativeMove.contains(root.alternativeMove) && arm.headRequirementIds == List(context.id)) &&
+          live.predicate.kind == "control" && use.predicate.kind == "legal_move" && use.predicate.property.isEmpty
+        actor <- use.predicate.subject.toList
+        square <- use.predicate.square.toList
+        if live.predicate.square.contains(square) && live.predicate.subject.exists(provider =>
+          provider.side == actor.side && provider != actor)
+        referenceValue <- left.expected.toList
+        alternativeValue <- right.expected.toList
+        if referenceValue != alternativeValue && use.expected.contains("legal")
+        moves <- (use.path.source match
+          case Declared(moves) => Some(moves)
+          case _ => None).toList
+        if moves.size >= 3 && moves.head == root.referenceMove && use.at == Ply(moves.size - 1)
+      yield Resource(RootOwner(entry.request.id, root, readings.get(root.id).flatMap(_.answer)),
+        live.predicate, actor, square, moves.last, moves.init, context.id, referenceValue, alternativeValue,
+        context.members.flatMap(id => readings(id).result.toList.flatMap(_.samples.flatMap(_.sourceIds))).distinct)
+  }.distinct
+
   object Proof:
     def apply(owner: AnsweredComparison, condition: Predicate, reference: List[String],
         alternative: List[String], option: List[String], effect: Predicate, action: Predicate,
@@ -70,17 +132,18 @@ private[runtime] object FunctionalReplyReading:
         entry.readings.flatMap(_.result.toList.flatMap(_.samples.flatMap(_.sourceIds))).distinct, price)
   }.distinct
 
-  private def read(paths: PreparedPaths, path: PreparedPath, at: Int, predicate: Predicate): Option[String] =
+  private[runtime] def conditionAt(paths: PreparedPaths, path: PreparedPath, at: Int, predicate: Predicate): Option[String] =
       paths.positionView(path, at).flatMap { view =>
         def piece(original: Piece) = paths.trackedPieceAfter(path, original.witness, at).flatten
         predicate.kind match
           case "location" => predicate.subject.flatMap(piece).map(_.square.key)
           case "control" =>
             for
-              actor <- predicate.subject.flatMap(piece)
+              original <- predicate.subject
+              actor <- paths.trackedPieceAfter(path, original.witness, at)
               square <- predicate.square
               if view.completeKinds(RelationFactKind.GeometricControl)
-            yield if new MoveWorkProjection.Position(view).controlledBy(actor)(square) then "present" else "absent"
+            yield if actor.exists(new MoveWorkProjection.Position(view).controlledBy(_)(square)) then "present" else "absent"
           case "check" => predicate.side.filter(_ => view.completeKinds(RelationFactKind.GeometricControl)).map(side =>
             if view.currentCheckSources(if side == "white" then chess.White else chess.Black).nonEmpty then "present" else "absent")
           case "legal_capture" =>
@@ -129,7 +192,7 @@ private[runtime] object FunctionalReplyReading:
     val count = proof.reference.size
     def owned(path: PreparedPath, moves: List[String]) = paths.paths.exists(_ eq path) &&
       path.certified.nonEmpty && path.ids == path.declared && path.moves.startsWith(moves) && path.sourceMoves == path.moves
-    def read(path: PreparedPath, at: Int, predicate: Predicate) = FunctionalReplyReading.read(paths, path, at, predicate)
+    def read(path: PreparedPath, at: Int, predicate: Predicate) = conditionAt(paths, path, at, predicate)
     val root = proof.owner.comparison
     // A present receipt is still evidence with an exact owner. An unfinished
     // numeric comparison supplies no receipt and does not invalidate a board
@@ -223,10 +286,32 @@ private[runtime] object FunctionalReplyReading:
       pair.find(_ ne owner).exists { peer =>
         value.reference.ids.headOption == owner.ids.headOption &&
           value.reference.positions.headOption == owner.positions.headOption &&
-          read(paths, peer, 1, value.proof.condition).nonEmpty &&
-          read(paths, peer, 1, value.proof.condition) == read(paths, value.alternative, 1, value.proof.condition)
+          conditionAt(paths, peer, 1, value.proof.condition).nonEmpty &&
+          conditionAt(paths, peer, 1, value.proof.condition) == conditionAt(paths, value.alternative, 1, value.proof.condition)
       }
     }
+
+  /** A current evaluated continuation can also own the same mechanical
+    * prefix. Reread every represented board; never move its numerical owner.
+    */
+  def rebase(paths: PreparedPaths, pair: List[PreparedPath], value: LegalReplyOption,
+      current: List[PreparedPath]): Option[LegalReplyOption] =
+    if !valid(paths, value) || !relevant(paths, pair, value) then return None
+    def replacements(original: PreparedPath, prefix: List[String]) = current.distinct.filter(path =>
+      paths.paths.exists(_ eq path) && path.moves.startsWith(prefix) &&
+        path.ids.take(prefix.size) == original.ids.take(prefix.size) &&
+        path.positions.take(prefix.size + 1) == original.positions.take(prefix.size + 1))
+    val proof = value.proof
+    (for
+      reference <- replacements(value.reference, proof.reference)
+      alternative <- replacements(value.alternative, proof.alternative)
+      available <- replacements(value.available, proof.option)
+      price <- proof.price.fold(List(Option.empty[PreparedPath]))(prefix =>
+        value.price.toList.flatMap(original => replacements(original, prefix)).map(Some(_)))
+      rebased = withRemainingCaptures(paths, value.copy(reference = reference,
+        alternative = alternative, available = available, price = price))
+      if valid(paths, rebased) && relevant(paths, pair, rebased)
+    yield rebased).minByOption(value => value.references.map(_.path).distinct.size)
 
   def withAnswer(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       pair: List[PreparedPath], proofs: List[Proof], previous: Answer,

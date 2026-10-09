@@ -2260,7 +2260,8 @@
           }
         },
         "witness_line_ids": {
-          "type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true,
+          "type": "array", "minItems": 1, "maxItems": 10, "uniqueItems": true,
+          "description": "Exact union of referenced supplementary paths: at most five in core and independently five in detail. Every path retains its normal ownership and account checks.",
           "items": { "$ref": "#/$defs/evidence_id" }
         },
         "detail_units": {
@@ -3416,7 +3417,8 @@
         "continuation_inquiries": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/continuation_inquiry" } },
         "root_searches": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/root_search" } },
         "response_searches": {
-          "type": "array", "maxItems": 5,
+          "description": "Parsing envelope only: five ordinary and 24 generic functional receipts remain limited by the consumer. Extra reserve-family capacity requires exact declared question slots and certified historical comparison dependencies; aliases grant no extra slots. At most 600 declarations bound the envelope to 5+24+3*600.",
+          "type": "array", "maxItems": 1829,
           "items": { "$ref": "#/$defs/response_search" }
         }
       },

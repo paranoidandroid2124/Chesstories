@@ -264,6 +264,48 @@ private[runtime] object CommentaryEnglish:
       case _ => false
 
   def statement(value: Statement): List[Part] = value match
+    case FunctionRealization(value) =>
+      val stage = value.stage
+      val root = MoveRef(stage.path, 0)
+      val arrived = MoveRef(stage.path, stage.offset)
+      val context: List[Part] = List("Later in the recorded ", root, " continuation, ") ++
+        Option.when(stage.offset > 0)(List[Part]("after ", MoveRef(stage.path, stage.offset - 1), ", ")).toList.flatten
+      val supporters = stage.providers.map(provider =>
+        provider.current.possessiveName + " (originally on " + provider.original.square.key + ")").mkString(" and ")
+      val access: List[Part] = List(arrived, " brings the original " + stage.resource.actor.role +
+        " from " + stage.resource.actor.square + " to " + stage.resource.square + ". " + supporters +
+        " provide" + (if stage.providers.size == 1 then "s" else "") +
+        " the current geometric support of that square; the original supporter is not providing it here. ")
+      val captures: List[Part] = if value.capturers.isEmpty then
+        List("The complete current legal inventory has no immediate capture of this piece.")
+      else List("The currently legal capturers are " + value.capturers.map(_.possessiveName).mkString(" and ") + ". ") ++
+        value.prices.flatMap { price =>
+          val events = price.events.filter(_.plyOffset > stage.offset)
+          List[Part]("If this available capture sequence is played: ") ++
+            materialEvents(MaterialEvents(price.path, events)) ++
+            List(" No immediate legal recapture follows at its recorded endpoint. ")
+        }
+      context ++ access ++ captures
+    case AnchoredDecision(value) =>
+      val pawn = value.task.stage.pawn
+      val decision: List[Part] = if value.task.use.get.refuted then
+        List("prefer ", value.alternative, " to an immediate ", value.choice, ". ")
+      else List(value.choice, " remains competitive alongside ", value.alternative, ". ")
+      List(value.rootAdvance, " advances the " + pawn.role + " from " + pawn.square +
+        "; ", value.rootDeferred, " defers that advance. After ") ++ sequence(value.prefix) ++
+        List(", ") ++ decision ++ List("A leading tested reply to ", value.choice,
+          " is ", value.replies.head, "; after ", value.alternative, " it is ", value.replies(1), ". ") ++
+        value.states.flatMap(value => statement(value) ++ List(" ")) ++
+        Option.when(value.laterAdvanceUnestablished)(
+          "A later advance of this pawn is not established by the examined continuation of this reply. ").toList
+    case ResourceDecision(value) =>
+      val introduction: List[Part] = List("After ", value.sequence.head, " ", value.sequence(1), ", ")
+      val choice: List[Part] = if value.use.refuted then
+        List("prefer ", value.other.get, " to an immediate ", value.sequence(2), ". ")
+      else List(value.sequence(2), " remains competitive") ++ value.other.toList.flatMap(move =>
+        List(" alongside ", move)) ++ List(" here. ")
+      value.conditions.flatMap(statement) ++ List(" ") ++ introduction ++ choice ++ List("A leading tested reply to ", value.sequence(2),
+        " is ", value.sequence(3), ".") ++ value.replyRoles.flatMap(value => List(" ") ++ statement(value))
     case value: LegalReplyOption =>
       val proof = value.proof
       val referenceRoot = value.referenceSequence.head
@@ -417,6 +459,8 @@ private[runtime] object CommentaryEnglish:
       outcome
     case value: MaterialEvents => materialEvents(value)
     case value: PieceExchange => pieceExchange(value)
+    case RecordedContext(moves) =>
+      List("Separately, in the recorded ") ++ sequence(moves) ++ List(" continuation:")
     case value: TargetResponse =>
       val opening: List[Part] = if value.start == 0 then List(MoveRef(value.path, 0))
         else if value.start == 2 then List("After ", MoveRef(value.path, 0), " ", MoveRef(value.path, 1), ", ", MoveRef(value.path, 2))
@@ -535,6 +579,8 @@ private[runtime] object CommentaryEnglish:
       List("The recorded line stops after ", move, "; no following reply is recorded.")
     case PiecePresence(after, original, current) =>
       List("After ", after, ", " + originalName(original) + " " + presenceState(original, current) + ".")
+    case PieceAbsence(after, original) =>
+      List("After ", after, ", " + originalName(original) + " is no longer on the board.")
     case AttackWithdrawal(move, before, after, target) =>
       List(move, " moves the " + before.roleName + " from " + before.at + " to " + after.at +
         ", ending its attack on " + target.possessiveName + ".")

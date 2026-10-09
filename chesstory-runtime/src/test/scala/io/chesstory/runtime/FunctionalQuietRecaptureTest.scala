@@ -82,6 +82,128 @@ class FunctionalQuietRecaptureTest extends munit.FunSuite:
       case move: RootQuestionSummary.MoveRef => value.paths.notation.line(move.path.moves)(move.offset)
     }.mkString
 
+  test("resource task retains its original actor independently of the old capture realization"):
+    val value = fixture()
+    val read = CommentaryFactReader.read(value.packet, value.paths, List(generatedEntry(value)))
+    val task = FunctionalReplyReading.resources(read).headOption.getOrElse(fail("missing quiet resource task"))
+    assertEquals(task.actor, friendly)
+    assertEquals(task.square, "d4")
+    assertEquals(task.move, "f3d4")
+    assertEquals(task.witnessedPrefix, reference.take(2))
+    val changed = read.map(entry => entry.copy(readings = entry.readings.map(reading =>
+      if Set("function_effect_reference", "function_effect_alternative", "function_option", "function_context")
+          (reading.requirementId) then reading.copy(state = "refuted", answer = None)
+      else reading)))
+    assertEquals(FunctionalReplyReading.resources(changed), List(task),
+      "a replaced downstream capture is not a falsifier of the original resource's value question")
+    assertEquals(FunctionalReplyReading.read(changed), Nil)
+
+  test("a current longer line owns the same legal recapture proof without inheriting a numerical receipt"):
+    val longerPeer = alternative :+ "h1h2"
+    val value = fixture(current = List(option, longerPeer))
+    val original = value.statement
+    val selected = List(value.path(option), value.path(longerPeer))
+    val rebased = FunctionalReplyReading.rebase(value.paths, value.pair, original, selected).get
+    assert(rebased.reference eq selected.head)
+    assert(rebased.available eq selected.head)
+    assert(rebased.alternative eq selected(1))
+    assertEquals(rebased.proof, original.proof)
+    assertEquals(rebased.proof.owner.answer, original.proof.owner.answer)
+    assert(FunctionalReplyReading.valid(value.paths, rebased))
+    assertEquals(rebased.actionReferences, Nil,
+      "the conditional option does not select the current line's entire later price account")
+
+  test("a replaced mechanical proof requires its whole canonical prefix and every represented arm"):
+    val longerPeer = alternative :+ "h1h2"
+    val changed = moves("a1d1 a7a5 f3d4 g7d4 d1d4")
+    val value = fixture(current = List(option, longerPeer), available = option)
+    assertEquals(FunctionalReplyReading.rebase(value.paths, value.pair, value.statement,
+      List(value.path(option))), None)
+    val other = fixture(current = List(changed, longerPeer), left = changed.take(4), available = changed)
+    assertEquals(FunctionalReplyReading.rebase(value.paths, value.pair, value.statement,
+      List(other.path(changed), value.path(longerPeer))), None,
+      "a different reply and a foreign prepared owner cannot replace a matching move name")
+
+  test("resource admission requires its exact independent root task arm"):
+    val value = fixture()
+    val read = CommentaryFactReader.read(value.packet, value.paths, List(generatedEntry(value)))
+    assert(FunctionalReplyReading.resources(read).nonEmpty)
+    val missing = read.map(entry => entry.copy(generatedArms = entry.generatedArms.filterNot(
+      _.headRequirementIds == List("function_task_context"))))
+    assertEquals(FunctionalReplyReading.resources(missing), Nil)
+    val wrong = read.map(entry => entry.copy(generatedArms = entry.generatedArms.map(arm =>
+      if arm.headRequirementIds == List("function_task_context") then arm.copy(referenceMove = alternative.head)
+      else arm)))
+    assertEquals(FunctionalReplyReading.resources(wrong), Nil)
+
+  test("a capturing arrival is the same original resource with a freshly priced transaction"):
+    val value = fixture(initialFen = "6k1/p5b1/8/8/3p4/5N2/8/R6K w - - 0 1")
+    val entry = generatedEntry(value)
+    val read = CommentaryFactReader.read(value.packet, value.paths, List(entry))
+    val task = FunctionalReplyReading.resources(read).head
+    assertEquals(task.actor, friendly)
+    assertEquals(task.move, "f3d4")
+    assertEquals(task.square, "d4")
+    val current = FunctionalChoiceReading.originalRow(value.paths, value.path(reference), 2, task.actor, task.square).get
+    assert(current.capture.nonEmpty)
+    val material = value.path(reference).certified.flatMap(_._2.material).get
+    assert(material.events.exists(event => event.plyOffset == 2 && event.capture.nonEmpty),
+      "the initial pawn capture is a new price, not the old quiet-arrival transaction")
+    assert(entry.request.requirements.exists {
+      case fact: Fact => fact.id == "function_resource" && fact.predicate.kind == "legal_move" &&
+        fact.predicate.subject.contains(friendly) && fact.predicate.square.contains("d4")
+      case _ => false
+    })
+
+  test("preserving an existing function and creating a new one share the same resource contract"):
+    val left = moves("h1g1 a7a6 f3d4 g7d4")
+    val right = moves("d1b1 a7a6 f3d4 g7d4")
+    val value = fixture(initialFen = "6k1/p5b1/8/8/8/5N2/8/3R3K w - - 0 1",
+      current = List(left, right), left = left, right = right, available = left :+ "d1d4")
+    val additions = CommentaryDiscovery.discover(value.packet, value.paths,
+      List(CommentaryDiscovery.Anchor(Nil, left.head)),
+      List(left, right).map(line => CommentaryDiscovery.SourcePath(line, Source("user", "preserved-function"))),
+      Nil, pvGuided = true).additions
+    val entries = CommentaryFactReader.read(value.packet, value.paths, additions)
+    val tasks = FunctionalReplyReading.resources(entries)
+    val task = tasks.find(task => task.actor == friendly && task.square == "d4").getOrElse(
+      fail("the quiet king move retains the original rook's already-present d4 support"))
+    assertEquals(task.condition.subject, Some(Piece("white", "rook", "d1")))
+    val owner = entries.find(_.request.id == task.owner.proposalId).get
+    assert(owner.request.requirements.contains(FactComparison("function_owned", "function_before",
+      "function_root_reference", "same")))
+    assertEquals(FunctionalReplyReading.conditionAt(value.paths, value.path(left), 0, task.condition), Some("present"))
+    assertEquals(FunctionalReplyReading.conditionAt(value.paths, value.path(left), 1, task.condition), Some("present"))
+    assertEquals(FunctionalReplyReading.conditionAt(value.paths, value.path(right), 1, task.condition), Some("absent"))
+
+  test("a task cannot borrow its before condition from another root or a price premise"):
+    val value = fixture()
+    val read = CommentaryFactReader.read(value.packet, value.paths, List(generatedEntry(value)))
+    val wrong = read.map(entry => entry.copy(request = entry.request.copy(requirements =
+      entry.request.requirements.map {
+        case fact: Fact if fact.id == "function_before" => fact.copy(path = Path("foreign", Declared(alternative)))
+        case other => other
+      })))
+    assertEquals(FunctionalReplyReading.resources(wrong), Nil)
+    val dependent = read.map(entry => entry.copy(request = entry.request.copy(requirements =
+      entry.request.requirements.map {
+        case group: FactGroup if group.id == "function_task_context" => group.copy(members = group.members :+ "function_option")
+        case other => other
+      })))
+    assertEquals(FunctionalReplyReading.resources(dependent), Nil)
+
+  test("current resource legality follows the original actor rather than a destination or old UCI"):
+    val value = fixture(initialFen = "6k1/p5b1/8/8/8/1N3N2/8/R6K w - - 0 1")
+    val path = value.path(reference)
+    val rows = value.paths.positionView(path, 2).flatMap(_.legalRows).get
+    assert(rows.exists(_.move == "b3d4") && rows.exists(_.move == "f3d4"))
+    assertEquals(FunctionalChoiceReading.originalRow(value.paths, path, 2, friendly, "d4")
+      .map(_.move), Some("f3d4"))
+    assertEquals(FunctionalChoiceReading.originalRow(value.paths, path, 4, friendly, "d4"), None,
+      "another surviving knight does not replace the captured original resource")
+    assertEquals(FunctionalChoiceReading.originalRow(value.paths, path, 2, provider, "d4")
+      .map(_.move), Some("d1d4"), "a relocated original actor supplies its current legal UCI")
+
   test("root control supports a conditional quiet recapture of the same enemy after it takes the same friendly arrival"):
     val value = fixture()
     val statement = value.statement

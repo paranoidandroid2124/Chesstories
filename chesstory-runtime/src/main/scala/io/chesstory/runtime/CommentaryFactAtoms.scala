@@ -16,6 +16,17 @@ private[runtime] object CommentaryFactAtoms:
 
   def read(packet: EvidenceBackedJudgmentPacket, prepared: PreparedPaths, path: PreparedPath,
       count: Int, predicate: CommentaryFact.Predicate): Value =
+    readOwned(packet, prepared, path, count, predicate, inspection = false)
+
+  /** Candidate provenance names the inspected semantic relation and its exact
+    * point/identity anchors. It is not the public evidence certificate. Keep
+    * both readings behind the same exact admitted-source validation. */
+  def readForDiscovery(packet: EvidenceBackedJudgmentPacket, prepared: PreparedPaths, path: PreparedPath,
+      count: Int, predicate: CommentaryFact.Predicate): Value =
+    readOwned(packet, prepared, path, count, predicate, inspection = true)
+
+  private def readOwned(packet: EvidenceBackedJudgmentPacket, prepared: PreparedPaths, path: PreparedPath,
+      count: Int, predicate: CommentaryFact.Predicate, inspection: Boolean): Value =
     def unavailable(reason: String) = Value(None, reason = Some(reason))
     if !CommentaryFact.validPredicate(predicate) then unavailable("invalid_predicate")
     else if !prepared.belongsTo(packet) then unavailable("packet_owner_mismatch")
@@ -26,17 +37,53 @@ private[runtime] object CommentaryFactAtoms:
       val views = prepared.resourceViews(packet)
       val view = position.id.flatMap(views.get).filter(_.position == position)
       val identitySources = path.positions.head.id.flatMap(views.get).map(_.occurrence.id).toList ++ path.ids.take(count)
-      def directUse(): Value =
+      // A semantic relation can recur at several positions. Only its actual
+      // queried/event position can supply the public evidence reference.
+      def sourceRefs(at: Int, sources: List[String]): Option[List[String]] =
+        lazy val point = path.positions.lift(at).flatMap(position => position.id.flatMap(views.get)
+          .filter(_.position == position)).map(new MoveWorkProjection.Position(_))
+        sources.foldLeft(Option(List.empty[String])) { (collected, source) =>
+          val refs = packet.evidenceGraph.byId.get(source) match
+            case Some(record) => Option.when(packet.evidenceGraph.proofEligible(record))(List(source))
+            case None => point.flatMap { current =>
+              val exact = current.sourceRefs(List(source))
+              Option.when(exact.nonEmpty && exact.forall(id => packet.evidenceGraph.byId.get(id)
+                .exists(packet.evidenceGraph.proofEligible)))(exact)
+            }
+          for previous <- collected; current <- refs yield (previous ++ current).distinct
+        }
+      lazy val directUse: (Value, Value) =
         val observation = LineContinuationInvestigation.directSupportUse(packet, path, prepared, count,
           predicate.subject.get.witness, predicate.target.get.witness)
-        if observation.uses.nonEmpty then Value(Some("true"), observation.uses.flatMap(use =>
-          use.support.sourceIds ++ List(use.targetCapture.sourceId, use.recapture.sourceId)))
-        else if observation.complete then Value(Some("false"), path.certified.map(_._1.ref.id).toList)
-        else Value(None, reason = observation.reason)
-      readCore(predicate, Context(position.sideToMove, view,
+        if observation.uses.nonEmpty then
+          val sources = observation.uses.map { use =>
+            for
+              support <- sourceRefs(use.supportCount, use.support.sourceIds)
+              capture <- sourceRefs(use.targetCapture.plyOffset, List(use.targetCapture.sourceId))
+              recapture <- sourceRefs(use.recapture.plyOffset, List(use.recapture.sourceId))
+            yield support ++ capture ++ recapture
+          }
+          if sources.forall(_.nonEmpty) then
+            Value(Some("true"), observation.uses.flatMap(use =>
+              use.support.sourceIds ++ List(use.targetCapture.sourceId, use.recapture.sourceId)).distinct) ->
+              Value(Some("true"), sources.flatten.flatten.distinct)
+          else
+            val missing = unavailable("missing_position_evidence")
+            missing -> missing
+        else
+          val value = if observation.complete then Value(Some("false"), path.certified.map(_._1.ref.id).toList)
+            else Value(None, reason = observation.reason)
+          value -> value
+      val context = Context(position.sideToMove, view,
         piece => prepared.pieceAfter(packet, path, piece.witness, count),
         (actor, target) => prepared.supportAt(packet, path, count, actor.witness, target.witness),
-        directUse, identitySources, view.map(_.occurrence.id).toList))
+        () => directUse._2, identitySources, view.map(_.occurrence.id).toList)
+      val value = readCore(predicate, context)
+      val admitted = sourceRefs(count, value.sourceIds).fold(unavailable("missing_position_evidence"))(
+        sources => value.copy(sourceIds = sources))
+      if inspection && admitted.value.nonEmpty then
+        readCore(predicate, context.copy(directSupportUse = () => directUse._1))
+      else admitted
 
   /** Local semantic readings are candidate-generation inputs, never public occurrence evidence. */
   def readProbe(position: OccurrenceResources.ProbePosition, predicate: CommentaryFact.Predicate): Value =

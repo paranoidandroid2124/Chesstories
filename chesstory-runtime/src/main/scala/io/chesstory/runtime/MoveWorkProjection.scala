@@ -29,6 +29,9 @@ private[runtime] object MoveWorkProjection:
       reserveTiming: Option[CommentaryIdea.ReserveTiming] = None,
       reserveResponse: Option[CommentaryIdea.ReserveResponse] = None,
       replyFunction: Option[FunctionalReplyReading.Proof] = None,
+      functionalChoice: Option[FunctionalChoiceReading.Task] = None,
+      anchoredChoice: Option[AnchoredChoiceReading.Task] = None,
+      anchoredFamily: Option[AnchoredChoiceReading.Family] = None,
       firstTarget: Option[TargetResponseInvestigation.FirstTarget] = None)
   private val values = Map("pawn" -> 1, "knight" -> 3, "bishop" -> 3, "rook" -> 5, "queen" -> 9, "king" -> 0)
   private[runtime] type Piece = RelationColoredPieceWitness
@@ -3035,6 +3038,17 @@ private[runtime] object MoveWorkProjection:
           value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value),
           (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
         .map(answer => TargetResponseInvestigation.withOwnTargetSupport(packet, paths, ownedPair, answer))
+        .map(answer => FunctionalChoiceReading.withAnswer(packet, paths, ownedPair,
+          requests.flatMap(_._2.flatMap(_.functionalChoice)).distinct, answer,
+          (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
+        .map(answer => FunctionalRealizationReading.withDetail(packet, paths, ownedPair,
+          requests.flatMap(_._2.flatMap(_.functionalChoice)).distinct, answer))
+        .map(answer => AnchoredChoiceAnswer.withAnswer(packet, paths, ownedPair,
+          requests.flatMap(_._2.flatMap(_.anchoredChoice)).distinct, answer,
+          (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
+        .map(answer => AnchoredChoiceAnswer.withFamily(packet, paths, ownedPair,
+          requests.flatMap(_._2.flatMap(_.anchoredFamily)).distinct, answer,
+          (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
         .flatMap(answer => completeSelectedConditions(packet, paths, ownedPair, positions, local, answer))
         .map(answer => BasicPurposeReading.simplify(packet, paths, ownedPair, positions, local, answer))
         .map(answer => RootSubjectComparison.withMaterialContrast(answer, ownedPair, packet.assembly.playedTransition.map(_.moveUci)))
@@ -3234,7 +3248,12 @@ private[runtime] object MoveWorkProjection:
                   arm.position(count).nonEmpty && arm.at(user, count) == after) =>
                 // This actual quiet user is lost before moving again. Its
                 // capturer's connected recovery may also be its price.
-                Some(List(arm.usedPieceLossAccount(loss, user)))
+                val targets = section.statements.collect {
+                  case Action(move, Detail.Attack(actor, target, _)) if move == use && after.contains(actor) => target
+                }.flatMap(target => arm.originals.find(arm.at(_, use.offset + 1).contains(target)))
+                  .filter(target => target.side != user.side &&
+                    arm.control(use.offset + 1, user, target).contains(true)).toSet
+                Some(List(arm.usedPieceLossAccount(loss, user, targets)))
               case Some(_) => None
               case None => Some(Nil)
       }
@@ -3308,6 +3327,23 @@ private[runtime] object MoveWorkProjection:
       }.map(_.core)
     RootSubjectComparison.protect(answer, bundles, close, selectedReplies)
 
+  /** A captured promoted role still belongs to its exact original pawn.
+    * Keep the certified role/material change even when it was not a check. */
+  private[runtime] def capturedOriginalPromotions(arm: RootQuestionSummary.Arm,
+      events: List[ObservedLineMaterialEvent]): List[ObservedLineMaterialEvent] =
+    events.flatMap { capture => capture.capture.toList.flatMap { cost =>
+      arm.captures.find(_.plyOffset == capture.plyOffset).flatMap(_.originalVictim).toList.flatMap { original =>
+        arm.material.events.filter(event => event.plyOffset < capture.plyOffset &&
+          event.promotionGainCp > 0 && event.movement.beforeRole.name == "pawn" &&
+          event.movement.afterRole == cost.capturedRole &&
+          arm.path.moves.lift(event.plyOffset).contains(event.moveUci) &&
+          arm.reading.events.exists(use => use.plyOffset == event.plyOffset && use.originalActor.contains(original) &&
+            arm.path.ids.lift(use.plyOffset).contains(use.occurrenceId)) &&
+          arm.at(original, event.plyOffset + 1).exists(_.role == cost.capturedRole) &&
+          arm.at(original, capture.plyOffset).exists(_.role == cost.capturedRole))
+      }
+    }}.distinct.sortBy(_.plyOffset)
+
   private[runtime] def completeSelectedConditions(packet: EvidenceBackedJudgmentPacket,
       paths: ObservedLineProtocol.PreparedPaths, pair: List[ObservedLineProtocol.PreparedPath],
       positions: Map[PositionNodeRef, Position], notes: List[LocalCandidate],
@@ -3331,17 +3367,8 @@ private[runtime] object MoveWorkProjection:
       core.map { section => section.copy(statements = section.statements.map {
         case value: MaterialEvents =>
           val promotions = arms.find(_.path eq value.path).toList.flatMap { arm =>
-            value.events.flatMap { capture => capture.capture.toList.flatMap { cost =>
-              arm.captures.find(_.plyOffset == capture.plyOffset).flatMap(_.originalVictim).toList.flatMap { original =>
-                arm.material.events.filter(event => event.plyOffset < capture.plyOffset &&
-                  event.promotionGainCp > 0 && event.movement.beforeRole.name == "pawn" &&
-                  event.movement.afterRole == cost.capturedRole &&
-                  arm.reading.events.exists(use => use.plyOffset == event.plyOffset && use.originalActor.contains(original)) &&
-                  arm.at(original, event.plyOffset + 1).exists(_.role == cost.capturedRole) &&
-                  arm.at(original, capture.plyOffset).exists(_.role == cost.capturedRole) &&
-                  !statedPromotions.exists((path, stated) => (path eq value.path) && stated == event))
-              }
-            }}
+            capturedOriginalPromotions(arm, value.events).filterNot(event =>
+              statedPromotions.exists((path, stated) => (path eq value.path) && stated == event))
           }
           value.copy(events = (value.events ++ promotions).distinct.sortBy(_.plyOffset))
         case statement => statement

@@ -99,3 +99,27 @@ class FirstReplyUsePriceTest extends munit.FunSuite:
       "the next bishop capture is available in detail, not a new use seeded by the added rook price")
     assert(answer.details.flatMap(_.statements).contains(Continuation(List(MoveRef(routePath, 6)))))
     assert(RootQuestionSummary.realize(paths, pair, answer).nonEmpty)
+
+  test("a new functional center preserves the original first reply duty without promoting closed prices"):
+    val seed = Continuation(List(MoveRef(routePath, 1)))
+    val previous = protect(List(seed))
+    val roots = Continuation(pair.map(MoveRef(_, 0)))
+    val answer = FunctionalChoiceReading.completeAnswer(packet, paths, pair,
+      List(Section(List(roots))), previous, Nil,
+      (answer, sections) => MoveWorkProjection.protectRootUses(packet, paths, pair, positions, notes, answer, sections)).get
+    assert(core(answer).contains(route))
+    assert(core(answer).flatMap(_.covered).contains(MoveRef(routePath, 5)),
+      "the originally selected file-opening reply still owns its used rook's capture")
+    assert(answer.completionSources.get.contains(seed))
+    assert(!answer.completionSources.get.flatMap(_.covered).contains(MoveRef(routePath, 5)),
+      "the completed price cannot become another selected lifetime episode")
+    assert(!core(answer).contains(Continuation(List(MoveRef(routePath, 6)))))
+
+  test("a new functional center cannot turn a computed first reply capture into an idea seed"):
+    val previous = protect(Nil, computedReply = true)
+    val roots = Continuation(pair.map(MoveRef(_, 0)))
+    val answer = FunctionalChoiceReading.completeAnswer(packet, paths, pair,
+      List(Section(List(roots))), previous, Nil,
+      (answer, sections) => MoveWorkProjection.protectRootUses(packet, paths, pair, positions, notes, answer, sections)).get
+    assert(!core(answer).contains(route))
+    assert(!answer.completionSources.get.flatMap(_.actionReferences).contains(MoveRef(routePath, 1)))

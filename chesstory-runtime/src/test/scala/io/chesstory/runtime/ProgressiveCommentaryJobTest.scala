@@ -155,6 +155,43 @@ class ProgressiveCommentaryJobTest extends munit.FunSuite:
     assertEquals(failed.progress.physicalReportsAccepted, 2)
     assertEquals(CommentaryJobReducer.expireJob(pending, 10000L).progress.physicalReportsAccepted, 1)
 
+  test("an unfinished initial root pool gets one larger owned attempt within the original deadline"):
+    val pending = waiting(submit(start(limit = 0, deadline = 30000L), simple))
+    def failed(state: AwaitingEngineWork, now: Long) =
+      val work = state.issuedWork
+      CommentaryJobReducer.submitIssuedWorkReport(state, EngineWorkReport.ExecutorFailed(profile,
+        work.workId, work.executionKeySha256, EngineWorkFailure.BudgetExhausted), now).toOption.get
+    val retry = waiting(failed(pending, 2L))
+    assertEquals(assessedDepths(retry), Set(8), "failed numerical lines never refresh the preview assessment")
+    assertEquals(retry.issuedWork.requiredDepth, 16)
+    assertEquals(retry.issuedWork.rootRestriction, EngineRootRestriction.Unrestricted)
+    assertEquals(retry.issuedWork.searchLimits, EngineSearchLimits(16, 40_000_000, 8_000, 3))
+    assertEquals(retry.issuedWork.maxSearchElapsedMs, 9_000)
+    assertNotEquals(retry.issuedWork.executionKeySha256, pending.issuedWork.executionKeySha256)
+    assertEquals(retry.verification.get.reason, "initial_verification")
+    assertEquals(retry.verification.get.state, "pending")
+    assertEquals(retry.progress.physicalWorksIssued, 3)
+    assertEquals(retry.progress.physicalReportsAccepted, 2)
+    assert(retry.rootSearches.exists(search => search.work == pending.issuedWork &&
+      search.stopReason.contains(CommentaryJobStopCondition.SearchBudgetExhausted)))
+    val exhausted = failed(retry, 3L)
+    assert(exhausted.isInstanceOf[CompletedCommentaryJob], "the larger attempt is never retried indefinitely")
+    assertEquals(assessedDepths(exhausted), Set(8))
+    assertEquals(exhausted.verification.get.state, "stopped")
+    assertEquals(exhausted.verification.get.stopReason, Some("search_budget_exhausted"))
+    val done = finish(submit(retry, simple.updated(1, List("d2d4") -> -450)))
+    assertEquals(assessedDepths(done), Set(16))
+    assertEquals(done.verification.get.completedDepth, Some(16))
+
+  test("initial root completion cannot create time beyond the request budget"):
+    val pending = waiting(submit(start(limit = 0, deadline = 10000L), simple))
+    val work = pending.issuedWork
+    val stopped = CommentaryJobReducer.submitIssuedWorkReport(pending, EngineWorkReport.ExecutorFailed(profile,
+      work.workId, work.executionKeySha256, EngineWorkFailure.BudgetExhausted), 2L).toOption.get
+    assert(stopped.isInstanceOf[CompletedCommentaryJob])
+    assertEquals(stopped.progress.physicalWorksIssued, 2)
+    assertEquals(stopped.verification.get.state, "stopped")
+
   test("a budget-exhausted verified focus gets one larger-node attempt within the root time limit"):
     def focus() =
       val preview = waiting(submit(start("b1c3", limit = 0), simple))
@@ -290,7 +327,7 @@ class ProgressiveCommentaryJobTest extends munit.FunSuite:
     val ignored = finish(submit(verifying, targetRoots.updated(0, List("d2d3", "d5e4", "d3e4") -> 50)))
     assert(ignored.assessmentNeedsRefresh)
     assertEquals(ignored.verification.get.state, "stopped")
-    assertEquals(ignored.verification.get.stopReason, Some("verification_limit"))
+    assertEquals(ignored.verification.get.stopReason, Some("depth_limit"))
     assertEquals(ignored.verification.get.triggerWorkIds, List("work:2", "work:3", probe.issuedWork.workId))
 
   test("a full ordinary agenda leaves room for the question required to verify its own conflicting answers"):

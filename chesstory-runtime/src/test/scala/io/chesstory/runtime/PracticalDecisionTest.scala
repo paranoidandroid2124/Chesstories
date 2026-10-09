@@ -1040,18 +1040,34 @@ class PracticalDecisionTest extends munit.FunSuite:
         (value \ "detail" \ "alternative_move").asOpt[String].contains("e7f8")),
       "a counter to the withdrawn prefix has no current pending comparison")
 
-  test("a stronger conditional defense requires root verification and cannot become the root score"):
+  test("a stronger conditional child16 defense preserves the root while required22 verification is depth limited"):
     val owner = najdorfOwner
     val pending = awaiting(begin(owner.currentFen, "b6b4", List(najdorfGame -> 200, List("d8d7", "c3d5") -> 0, List("b6c7") -> 300),
       prefixOwner = Some(owner)))
     assertEquals(pending.issuedWork.searchAnchor.map(_.prefixMoves), Some(najdorfGame.take(6)))
     val defense = "e7f8 g3e3 e8e3 e2e3 c8e8 e3d3 b7c6 b2f6 g7f6 c2c4".split(" ").toList
-    val after = awaiting(submit(pending, List(defense -> -100, List("b7c6", "e2a6") -> 200, List("e7d8") -> 180)))
-    assertEquals(after.issuedWork.purpose, EngineWorkPurpose.RootSearch)
+    val after = submit(pending, List(defense -> -100, List("b7c6", "e2a6") -> 200, List("e7d8") -> 180))
+      .asInstanceOf[CompletedCommentaryJob]
     assertEquals(after.verification.map(_.reason), Some("child_challenge"))
     assertEquals(after.verification.flatMap(_.completedDepth), Some(16))
+    assertEquals(after.verification.map(_.targetDepth), Some(22))
+    assertEquals(after.verification.map(_.state), Some("stopped"))
+    assertEquals(after.verification.flatMap(_.stopReason), Some("depth_limit"))
+    assert(after.assessmentNeedsRefresh)
+    assertEquals(after.progress.physicalWorksIssued, pending.progress.physicalWorksIssued)
+    assert(after.rootSearches.forall(_.work.requiredDepth <= 18))
     assert(after.responseSearches.exists(_.work.workId == pending.issuedWork.workId))
-    assertEquals(after.assessment.map(_.result), pending.assessment.map(_.result), "a child score cannot replace the root judgment")
+    assertEquals(RuntimeProtocol.completedResultJson(after), RuntimeProtocol.completedResultJson(pending.assessment.get),
+      "a child score cannot replace the whole original public root judgment")
+    assertEquals(after.rootSearches, pending.rootSearches, "the exact original root work and receipts remain the numerical owners")
+    def rootValues(packet: EvidenceBackedJudgmentPacket) = packet.assembly.input.assessmentCandidates.map { candidate =>
+      (candidate.rootMove, candidate.evaluation.moves,
+        candidate.evaluation.engineLine.map(line => (line.scoreCp, line.mate, line.depth)))
+    }
+    val originalReview = pending.assessment.get.result.asInstanceOf[CompletedPositionCommentary.FocusedMoveReview].review
+    val retainedReview = after.result.asInstanceOf[CompletedPositionCommentary.FocusedMoveReview].review
+    assertEquals(rootValues(retainedReview.judgmentPacket), rootValues(originalReview.judgmentPacket),
+      "completed child values remain separate from every original root candidate value")
     val entry = after.proposalEntries.find(entry => entry.request.origin.question.producer == "C-tactical-counter" &&
       entry.request.requirements.exists {
         case value: CompareMoves => value.id == "tactical_strength" && value.alternativeMove == "e7f8"
@@ -1059,7 +1075,18 @@ class PracticalDecisionTest extends munit.FunSuite:
       }).get
     val reading = entry.readings.find(_.requirementId == "tactical_strength").get
     assertEquals(reading.answer, None)
-    assertEquals(reading.stopReason, Some("comparison_not_current"))
+    val currentFacts = entry.readings.filter(_.requirementId.startsWith("tactical_current_"))
+    assertEquals(currentFacts.size, 7)
+    currentFacts.foreach { value =>
+      assertEquals(value.state, "stopped")
+      assertEquals(value.stopReason, Some("depth_limit"), "the unverified root context cannot authorize its strength comparison")
+    }
+    val context = entry.readings.find(_.requirementId == "tactical_context").get
+    assertEquals(context.state, "stopped")
+    assertEquals(context.stopReason, Some("depth_limit"))
+    assertEquals(entry.readings.filter(_.requirementId.startsWith("tactical_direct_condition:")).map(_.state),
+      List.fill(4)("supported"), "the independent legal board facts survive the numerical verification limit")
+    assertEquals(reading.stopReason, Some("prerequisite_unresolved"))
     val search = after.responseSearches.find(_.work.workId == pending.issuedWork.workId).get
     val answer = search.pairAnswer(after.observationsPacket.get, "b7c6", "e7f8").get
     assertEquals(answer.evaluationRelation, "better", "the conditional answer remains with its exact owned report")
@@ -1070,15 +1097,9 @@ class PracticalDecisionTest extends munit.FunSuite:
     val challenge = CommentaryComparisonConflict.unansweredChallenge(after.observationsPacket.get, List(search), List(answered))
     assertEquals(challenge.map(_.prefix), Some(najdorfGame.take(6)))
     assertEquals(challenge.map(_.move), Some("b7c6"), "a root line keeping the disproved reply does not settle this counter")
-    val refreshed = submit(after, List((najdorfGame.take(6) ++ defense) -> 100,
-      List("d8d7", "c3d5") -> 0, List("b6c7") -> 300))
-    val withdrawn = refreshed.proposalEntries.find(_.request.id == entry.request.id).get
-    assert(withdrawn.readings.filter(_.requirementId.startsWith("tactical_current_")).exists(_.result.exists(_.reason.contains("event_absent"))))
-    val response = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot("q" * 32, "changed-reply", 10000L, refreshed))
-    assert((response \ "observations" \ "selection" \ "proposals").as[List[JsObject]].exists(value =>
-      (value \ "id").as[String] == entry.request.id && (value \ "answer_text").as[String].contains("Withdraw this earlier reply explanation")))
-    assert(!deliveredComparisons(refreshed).contains("check Bf8 instead of bxc6"),
-      "once the root selects Bf8, the earlier b7c6 explanation must not stay current merely because its prefix still matches")
+    // The policy stops before a new root22 work exists. Do not submit a child
+    // value as a made-up root receipt. The preceding changed-root test retains
+    // the independent historical-prefix withdrawal assertions.
 
   test("tactical probes follow the current capture and do not spend replay beyond admission room"):
     val owner = najdorfOwner

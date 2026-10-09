@@ -404,13 +404,13 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
     assertEquals(done.proposalEntries.find(_.request.id == requested.id).get.readings.head.answer.map(_.workId),
       Some(pair.issuedWork.workId))
 
-  test("deeper evidence with the same reference rechecks actual and replaces its verdict and explanation"):
+  test("synthetic deeper evidence within18 rechecks actual and replaces its verdict and explanation"):
     val active = probe()
     val baseline = active.assessment.get
     val before = review(baseline).judgmentPacket
     // The reference's name and score are unchanged. Its deeper receipt still leaves actual unverified.
-    val verify = submit(active, List("e2e4" -> 30, "g1h3" -> -50), depth = 20).asInstanceOf[AwaitingEngineWork]
-    assertEquals(verify.issuedWork.requiredDepth, 20)
+    val verify = submit(active, List("e2e4" -> 30, "g1h3" -> -50), depth = 18).asInstanceOf[AwaitingEngineWork]
+    assertEquals(verify.issuedWork.requiredDepth, 18)
     assertEquals(verify.issuedWork.rootRestriction, EngineRootRestriction.Restricted(List("e2e4", "g1f3")))
     assertEquals(verify.assessmentNeedsRefresh, true)
     assertEquals(RuntimeProtocol.completedResultJson(verify.assessment.get), RuntimeProtocol.completedResultJson(baseline))
@@ -425,15 +425,16 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
     val newActualPath = List("g1f3", "d7d5", "d2d4", "g8f6")
     val following = CommentaryJobReducer.submitIssuedWorkReport(verify, EngineWorkReport.Completed(profile,
       work.workId, work.executionKeySha256, List(
-        ReportedEngineLineSuffix(List("e2e4"), ReportedWhiteEngineScore.Centipawns(30), 20),
-        ReportedEngineLineSuffix(newActualPath, ReportedWhiteEngineScore.Centipawns(-400), 20))), 2L)
+        ReportedEngineLineSuffix(List("e2e4"), ReportedWhiteEngineScore.Centipawns(30), 18),
+        ReportedEngineLineSuffix(newActualPath, ReportedWhiteEngineScore.Centipawns(-400), 18))), 2L)
       .toOption.get.asInstanceOf[AwaitingEngineWork]
     assertEquals(following.assessmentNeedsRefresh, false)
     val nextWork = following.issuedWork
+    assertEquals(nextWork.executionKeySha256, "1b2a719c3430c676ab7768037ba55bc2917cc02b90b2ab14987dfb4873861dab")
     val currentQuestionIds = CommentaryIdea.currentQuestions(following.proposalEntries).map(_.request.id).toSet
     // This fixed synthetic state owns a pending first-reply pool, not an
-    // answered pair or a chess-strength claim. Frozen versions 34 and 35
-    // independently issue this exact key and retain the named pair owners.
+    // answered pair or a chess-strength claim. The original synthetic20
+    // fixture is frozen separately; this current18 fixture owns its new key.
     assert(following.proposalEntries.exists(entry => currentQuestionIds(entry.request.id) &&
         entry.request.requirements.exists {
       case pair: CommentaryProposal.CompareMoves =>
@@ -441,7 +442,7 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
           EngineRootRestriction.Restricted(List(pair.referenceMove, pair.alternativeMove))
         val firstChildPool = nextWork.rootRestriction == EngineRootRestriction.Unrestricted &&
           nextWork.purpose == EngineWorkPurpose.ResponseComparison && nextWork.workId == "work:3" &&
-          nextWork.executionKeySha256 == "68bddeef0419d456287cbb3c4cd3ca4493b00037882983bd08e5ec77acc006d8" &&
+          nextWork.executionKeySha256 == "1b2a719c3430c676ab7768037ba55bc2917cc02b90b2ab14987dfb4873861dab" &&
           pair.prefixMovesUci == List(following.playedMoveUci) && nextWork.multiPv == 3 &&
           nextWork.engineProfile == profile && owner.extend(pair.prefixMovesUci).toOption.exists(child =>
             nextWork.enginePositionInitialFen == child.initialFen &&
@@ -465,7 +466,7 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
     val packet = review(done).judgmentPacket
     val actual = packet.assembly.input.assessmentCandidates.find(_.rootMove.contains("g1f3")).get.evaluation
     assertEquals(actual.moves, newActualPath)
-    assertEquals(actual.engineLine.map(line => (line.scoreCp, line.depth)), Some((-400, 20)))
+    assertEquals(actual.engineLine.map(line => (line.scoreCp, line.depth)), Some((-400, 18)))
     assertNotEquals(packet.primary, before.primary)
     assert((RuntimeProtocol.completedResultJson(done) \\ "verdict_code").contains(JsString("blunder")))
     assertEquals(done.assessmentScope, "investigation_pair")
@@ -473,22 +474,58 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
     assert(before.assembly.legalLines.map(_.ref.id).toSet.subsetOf(packet.assembly.legalLines.map(_.ref.id).toSet))
 
   test("a deeper actual-reference pair cannot be replaced by a later shallower investigation"):
-    val active = submit(start(), root, depth = 24).asInstanceOf[AwaitingEngineWork]
-    assertEquals(active.issuedWork.requiredDepth, 24)
+    val active = submit(start(), root, depth = 18).asInstanceOf[AwaitingEngineWork]
+    assertEquals(active.issuedWork.requiredDepth, 18)
     val rejected = submit(active, List("e2e4" -> 30, "g1h3" -> 80), depth = 16).asInstanceOf[CompletedCommentaryJob]
     assertEquals(RuntimeProtocol.completedResultJson(rejected), RuntimeProtocol.completedResultJson(active.assessment.get))
     assertEquals(rejected.rootSearches.last.receipt, None)
     assertEquals(rejected.assessmentNeedsRefresh, false)
-    val verify = submit(active, List("e2e4" -> 30, "g1h3" -> 80), depth = 24).asInstanceOf[AwaitingEngineWork]
-    assertEquals(verify.issuedWork.requiredDepth, 24)
+    val verify = submit(active, List("e2e4" -> 30, "g1h3" -> 80), depth = 18).asInstanceOf[AwaitingEngineWork]
+    assertEquals(verify.issuedWork.requiredDepth, 18)
     assertEquals(verify.issuedWork.multiPv, 3)
     // The earlier new-candidate win disappears; the old reference remains in this same new work.
-    val done = submit(verify, List("e2e4" -> 40, "g1f3" -> 10, "g1h3" -> 20), depth = 24)
+    val done = submit(verify, List("e2e4" -> 40, "g1f3" -> 10, "g1h3" -> 20), depth = 18)
       .asInstanceOf[CompletedCommentaryJob]
     assertEquals(review(done).bestMoveUci, "e2e4")
     assertEquals(done.assessmentNeedsRefresh, false)
     assertEquals(review(done).judgmentPacket.assembly.input.assessmentCandidates
+      .flatMap(_.evaluation.engineLine.map(_.depth)).distinct, List(18))
+
+  test("historical20 and24 comparison receipts retain the original assessment without issuing over18 work"):
+    List(20, 24).foreach { historicalDepth =>
+      val active = probe()
+      val baseline = active.assessment.get
+      val oldPrimary = review(baseline).judgmentPacket.primary
+      val stopped = submit(active, List("e2e4" -> 30, "g1h3" -> -50), depth = historicalDepth)
+        .asInstanceOf[CompletedCommentaryJob]
+      assertEquals(stopped.progress.physicalWorksIssued, active.progress.physicalWorksIssued)
+      assert(stopped.rootSearches.forall(_.work.requiredDepth <= 18))
+      assertEquals(stopped.rootSearches.last.work, active.issuedWork)
+      assertEquals(stopped.rootSearches.last.receipt.get.lines.flatMap(_.evaluation.engineLine.map(_.depth)).distinct,
+        List(historicalDepth), "the supplied historical receipt is not downcast")
+      assertEquals(stopped.verification.get.targetDepth, historicalDepth)
+      assertEquals(stopped.verification.get.state, "stopped")
+      assertEquals(stopped.verification.get.stopReason, Some("depth_limit"))
+      assert(stopped.assessmentNeedsRefresh)
+      assertEquals(RuntimeProtocol.completedResultJson(stopped), RuntimeProtocol.completedResultJson(baseline))
+      assertEquals(review(stopped).judgmentPacket.primary, oldPrimary)
+      assertEquals(stopped.inquiries.find(_.question.alternativeMove == "g1h3").get.answer.map(_.workId),
+        Some(active.issuedWork.workId), "the old completed pair retains its physical owner")
+    }
+
+  test("a historical24 root receipt preserves its grade but cannot authorize a new24 explanation search"):
+    val started = start()
+    val stopped = submit(started, root, depth = 24).asInstanceOf[CompletedCommentaryJob]
+    assertEquals(stopped.progress.physicalWorksIssued, 1)
+    assertEquals(stopped.rootSearches.map(_.work), List(started.issuedWork))
+    assertEquals(stopped.rootSearches.head.receipt.get.lines.flatMap(_.evaluation.engineLine.map(_.depth)).distinct,
+      List(24))
+    assertEquals(review(stopped).bestMoveUci, "e2e4")
+    assertEquals(review(stopped).judgmentPacket.assembly.input.assessmentCandidates
       .flatMap(_.evaluation.engineLine.map(_.depth)).distinct, List(24))
+    assertEquals(stopped.verification.get.targetDepth, 24)
+    assertEquals(stopped.verification.get.stopReason, Some("depth_limit"))
+    assert(stopped.assessmentNeedsRefresh)
 
   test("admitted but unequal-depth root evidence preserves the old assessment as needing refresh"):
     val active = probe()
@@ -506,7 +543,7 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
   test("a same-reference best-choice pair refreshes with its runner-up and inherits the assessment depth"):
     val rows = List("g1f3" -> 30, "e2e4" -> 20, "d2d4" -> 10)
     val active = submit(start(), rows).asInstanceOf[AwaitingEngineWork]
-    val done = submit(active, List("g1f3" -> 30, "g1h3" -> -100), depth = 20).asInstanceOf[CompletedCommentaryJob]
+    val done = submit(active, List("g1f3" -> 30, "g1h3" -> -100), depth = 18).asInstanceOf[CompletedCommentaryJob]
     assertEquals(done.progress.physicalWorksIssued, 2)
     assertEquals(review(done).bestMoveUci, "g1f3")
     assertEquals(done.assessmentScope, "investigation_pair")
@@ -519,14 +556,14 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
     assertEquals(staleChoice.request.requirements.collect { case fact: CommentaryProposal.Fact => fact.id }.toSet,
       Set("choice_reference", "choice_alternative"))
     assertEquals(staleChoice.readings.find(_.requirementId == "contrast_opponent_choice").get.answer, None,
-      "a bare comparison cannot borrow its old depth-16 answer after the assessment reaches depth 20")
+      "a bare comparison cannot borrow its old depth-16 answer after the assessment reaches depth18")
     assertEquals(review(done).judgmentPacket.assembly.input.assessmentCandidates
-      .flatMap(_.evaluation.engineLine.map(_.depth)).distinct, List(20))
-    val deeper = submit(start(), rows, depth = 24).asInstanceOf[AwaitingEngineWork]
-    assertEquals(deeper.issuedWork.requiredDepth, 24)
+      .flatMap(_.evaluation.engineLine.map(_.depth)).distinct, List(18))
+    val deeper = submit(start(), rows, depth = 18).asInstanceOf[AwaitingEngineWork]
+    assertEquals(deeper.issuedWork.requiredDepth, 18)
     assertEquals(deeper.issuedWork.rootRestriction, EngineRootRestriction.Restricted(List("g1f3", "g1h3")))
     assertEquals(deeper.issuedWork.multiPv, 2)
-    val refreshed = submit(deeper, List("g1f3" -> 30, "g1h3" -> -100), depth = 24).asInstanceOf[CompletedCommentaryJob]
+    val refreshed = submit(deeper, List("g1f3" -> 30, "g1h3" -> -100), depth = 18).asInstanceOf[CompletedCommentaryJob]
     assertEquals(refreshed.assessmentNeedsRefresh, false)
     assertEquals(review(refreshed).bestMoveUci, "g1f3")
 
@@ -539,21 +576,21 @@ class CommentaryInvestigationJobTest extends munit.FunSuite:
       List("g1f3" -> 30, "e2e4" -> 20, "d2d4" -> 10)).asInstanceOf[AwaitingEngineWork]
     val before = active.proposalEntries.find(_.request.id == requested.id).get.readings.head
     assertEquals(before.answer.map(_.workId), Some("work:0"))
-    val refresh = submit(active, List("g1f3" -> 30, "g1h3" -> -100), depth = 20)
+    val refresh = submit(active, List("g1f3" -> 30, "g1h3" -> -100), depth = 18)
       .asInstanceOf[AwaitingEngineWork]
     assertEquals(refresh.assessmentNeedsRefresh, false)
     assertEquals(refresh.issuedWork.rootRestriction, EngineRootRestriction.Restricted(List("g1f3", "d2d4")))
-    assertEquals(refresh.issuedWork.requiredDepth, 20)
+    assertEquals(refresh.issuedWork.requiredDepth, 18)
     val owners = refresh.proposalEntries.filter(entry => entry.readings.exists(reading =>
       reading.requirementId == "contrast_opponent_choice" && reading.state == "awaiting_engine" &&
         reading.workId.contains(refresh.issuedWork.workId)))
     assert(owners.exists(_.request.id == requested.id))
     assert(owners.exists(_.admission == "generated"))
-    val done = submit(refresh, List("g1f3" -> 30, "d2d4" -> 10), depth = 20).asInstanceOf[CompletedCommentaryJob]
+    val done = submit(refresh, List("g1f3" -> 30, "d2d4" -> 10), depth = 18).asInstanceOf[CompletedCommentaryJob]
     val answers = owners.map(owner => done.proposalEntries.find(_.request.id == owner.request.id).get.readings
       .find(_.requirementId == "contrast_opponent_choice").get.answer.get)
     assertEquals(answers.map(_.workId).distinct, List(refresh.issuedWork.workId))
-    assertEquals(answers.map(_.referenceDepth).distinct, List(Some(20)))
+    assertEquals(answers.map(_.referenceDepth).distinct, List(Some(18)))
     assertEquals(answers.distinct.size, 1)
     assertEquals(done.progress.physicalWorksIssued, 3)
     assertEquals(done.progress.physicalReportsAccepted, 3)

@@ -92,7 +92,7 @@ private[runtime] object CommentaryDiscovery:
     def value(at: Board, predicate: Predicate): CommentaryFactAtoms.Value =
       values.getOrElseUpdate(at.key -> predicate, at.path.fold(
         CommentaryFactAtoms.readProbe(at.probe.get, predicate))(
-        path => CommentaryFactAtoms.read(packet, prepared, path, at.count, predicate)))
+        path => CommentaryFactAtoms.readForDiscovery(packet, prepared, path, at.count, predicate)))
     val controlCache = scala.collection.mutable.Map.empty[(String, Int, String), List[(Piece, EvidenceSquare, String)]]
     def controls(at: Board) = controlCache.getOrElseUpdate(at.key,
       at.view.completeFacts(RelationFactKind.GeometricControl).toList.flatten.flatMap { fact =>
@@ -146,6 +146,7 @@ private[runtime] object CommentaryDiscovery:
     // conditions, within the same job budget; these are coverage choices, not strength scores.
     val tacticalChoices = scala.collection.mutable.LinkedHashMap.empty[(List[String], String, String), (Boolean, Set[String])]
     var followupRoom = 0
+    var functionalRoom = 0
 
     def emit(anchor: Anchor, key: List[String], kind: String, refs: List[String], origin: Source,
         requirements: List[Requirement], headRequirementIds: List[String], alternative: Option[String] = None,
@@ -179,7 +180,10 @@ private[runtime] object CommentaryDiscovery:
             case _ => false
           case _ => false
         }
-        val available = (remaining - (if linked then 0 else followupRoom)).max(0)
+        val functional = kind == "reply-function" && anchor.prefixMoves.isEmpty &&
+          requirements.exists(_.id == "function_task_context") && alternative.exists(move =>
+            Set(anchor.referenceMove, move) == investigativeRootMoves.toSet)
+        val available = (remaining - (if linked then functionalRoom else followupRoom.max(functionalRoom))).max(0)
         // The pair can survive a tight budget with one complete observation. Further
         // observations keep their own deferred IDs rather than evicting the whole choice.
         val priorIds = prior.toList.flatMap(_.request.requirements.map(_.id)).toSet
@@ -954,7 +958,8 @@ private[runtime] object CommentaryDiscovery:
                       a.promotionRole == b.promotionRole
                   def emitFunction(condition: Predicate, leftMoves: List[String], rightMoves: List[String],
                       effect: Predicate, option: LegalMoveResource, at: Board, refs: List[String],
-                      price: Option[(LegalMoveResource, Board)] = None): Unit =
+                      price: Option[(LegalMoveResource, Board)] = None,
+                      resource: Option[(Action, List[String])] = None): Unit =
                     val optionMoves = if price.isEmpty then leftMoves :+ option.move else leftMoves
                     val optionAt = leftMoves.size - (if price.isEmpty then 0 else 1)
                     val pair = CompareMoves("function_root", Nil, anchor.referenceMove, alternativeMove)
@@ -966,7 +971,8 @@ private[runtime] object CommentaryDiscovery:
                         expected = value(reference, condition).value),
                       Fact("function_root_alternative", declared("function_alternative", rightMoves), condition, Ply(1),
                         expected = value(alternative, condition).value),
-                      FactComparison("function_owned", "function_before", "function_root_reference", "different"),
+                      FactComparison("function_owned", "function_before", "function_root_reference",
+                        if value(root, condition).value == value(reference, condition).value then "same" else "different"),
                       FactComparison("function_changed", "function_root_reference", "function_root_alternative", "different"),
                       Fact("function_live", declared("function_live", List(anchor.referenceMove)), condition, Ply(1),
                         expected = value(reference, condition).value),
@@ -987,9 +993,25 @@ private[runtime] object CommentaryDiscovery:
                         Fact("function_price_end", declared("function_price", rightMoves :+ capture.move),
                           Predicate("presence", effect.target), Ply(rightMoves.size + 1), expected = Some("removed"))) }
                     val context = FactGroup("function_context", "all", facts.map(_.id))
+                    // The task owns the original actor and destination before
+                    // its use. An incidental capture/recapture realization is
+                    // not a prerequisite for valuing that same resource under
+                    // a different current defense.
+                    val task = resource.filter((goal, moves) => goal.promotion.isEmpty &&
+                      moves.size >= 3 && condition.kind == "control" && condition.square.contains(goal.to))
+                      .map { (goal, moves) =>
+                        val use = Fact("function_resource", declared("function_resource", moves),
+                          Predicate("legal_move", Some(goal.actor), square = Some(goal.to)),
+                          Ply(moves.size - 1), expected = Some("legal"))
+                        val group = FactGroup("function_task_context", "all", List("function_before",
+                          "function_root_reference", "function_root_alternative", "function_owned",
+                          "function_changed", "function_live", use.id))
+                        List[Requirement](use, group)
+                      }.getOrElse(Nil)
                     emit(anchor, List(condition.json.toString, effect.json.toString,
                       leftMoves.mkString(" "), rightMoves.mkString(" "), option.move), "reply-function", refs,
-                      canonical, pair :: (facts :+ context), List(context.id), Some(alternativeMove),
+                      canonical, pair :: (facts ++ task :+ context), List(context.id), Some(alternativeMove),
+                      additionalHeads = Option.when(task.nonEmpty)(List("function_task_context")).toList,
                       question = Some((if price.isEmpty then
                         "Which already possible reply remains usable against this same conditional resource? " else
                         "Which same legal capture has a different immediate price after this conditional resource? ") +
@@ -1072,7 +1094,7 @@ private[runtime] object CommentaryDiscovery:
                     List(sourceId, arrival.sourceId, peer.sourceId, capture.sourceId), Some(capture -> paid))
                   val ownedControls = changedControls.filter { (provider, destination, _) =>
                     val condition = Predicate("control", Some(provider), square = Some(destination.key))
-                    value(root, condition).value.contains("absent") && value(reference, condition).value.contains("present") &&
+                    value(root, condition).value.nonEmpty && value(reference, condition).value.contains("present") &&
                       value(alternative, condition).value.contains("absent")
                   }
                   if ownedControls.nonEmpty then referenceRows.filter(row => firstReplies(row.move) &&
@@ -1143,7 +1165,8 @@ private[runtime] object CommentaryDiscovery:
                     option <- endLeft.view.legalRows.toList.flatten.find(row =>
                       action(endLeft, row, canonical).exists(_.predicate == effect))
                   do emitFunction(condition, leftMoves, rightMoves, effect, option, endLeft,
-                    (goal.sourceRefs ++ List(sourceId, capture.sourceId)).distinct)
+                    (goal.sourceRefs ++ List(sourceId, capture.sourceId)).distinct,
+                    resource = Some(goal -> middleLeft))
 
                   // A legal capture can remain available in both arms while
                   // its price changes. Follow one witnessed challenge, a quiet
@@ -1399,8 +1422,10 @@ private[runtime] object CommentaryDiscovery:
                   Predicate("location", Some(pawn)),
                   Event("move", 1, "after", 1, MaximumPly, Some(pawn), square = Some(pawnMove.to.key)),
                   expected = Some(pawnMove.to.key))
+                val reserveContext = FactGroup("reserve_context", "all", List(before.id, after.id, preserve.id))
                 emit(Anchor(Nil, played), List(other, pawn.json.toString), "reserve-use", Nil, canonical,
-                  List(choice, before, after, preserve, use), List(choice.id, before.id, after.id, preserve.id, use.id),
+                  List(choice, before, after, preserve, use, reserveContext),
+                  List(choice.id, before.id, after.id, preserve.id, use.id, reserveContext.id),
                   question = Some(s"Does ${notation.move(Nil, other)} retain a useful later ${notation.move(Nil, played)}? Locate the actual use before attributing value to the reserved pawn move."))
 
                 def reserveSource(goal: Action, line: List[String], offset: Int, id: String) =
@@ -2291,6 +2316,12 @@ private[runtime] object CommentaryDiscovery:
       case _ => false
     }).toList
     followupRoom = if eligibleDrafts.exists(_.kind == "reserve-use") then 80 else 0
+    functionalRoom = if eligibleDrafts.exists(draft => draft.kind == "reply-function" &&
+      draft.anchor.prefixMoves.isEmpty && draft.requirements.exists(_.id == "function_task_context") &&
+      draft.alternative.exists(move => Set(draft.anchor.referenceMove, move) == investigativeRootMoves.toSet)) ||
+      existing.exists(entry => entry.request.requirements.exists(_.id == "function_task_context")) then
+        (48 - existing.flatMap(_.request.requirements).count(_.id.startsWith(FunctionalChoiceReading.ValuePrefix))).max(0)
+      else 0
     val byKind = eligibleDrafts.groupBy(_.id).values.toList.map(arms =>
       arms.sortBy(draft => (missingPaths(draft), if suppliedArm(draft) then 0 else 1, draft.alternative.getOrElse(""))))
       .groupBy(_.head.kind).toList.sortBy(_._1).map { (_, issues) =>

@@ -165,6 +165,12 @@ private[runtime] object CommentaryAnswer:
   final case class Continuation(moves: List[MoveRef]) extends Statement:
     def references = moves
 
+  /** Identify a separate recorded forecast without selecting its prefix as
+    * another action or using its old values to price a current decision. */
+  final case class RecordedContext(moves: List[MoveRef]) extends Statement:
+    def references = moves
+    override def actionReferences = Nil
+
   final case class NoMaterialChange(root: MoveRef, end: MoveRef) extends Statement:
     def references = List(root, end).distinct
 
@@ -174,6 +180,21 @@ private[runtime] object CommentaryAnswer:
   final case class ControlState(move: MoveRef, actor: Piece, target: Option[Piece], square: String,
       present: Boolean, remaining: Option[List[Piece]] = None) extends Statement:
     def references = List(move)
+
+  final case class ResourceDecision(value: FunctionalChoiceReading.Decision) extends Statement:
+    def references = (value.sequence ++ value.other.toList ++
+      value.conditions.flatMap(_.references) ++ value.replyRoles.flatMap(_.references)).distinct
+
+  /** A later observed use has its own current supporters and a complete local
+    * conditional capture price. This is factual detail, not another score or
+    * a claim that the original support arrangement caused the root judgment. */
+  final case class FunctionRealization(value: FunctionalRealizationReading.Checked) extends Statement:
+    def references = value.references
+    override def actionReferences = value.priceReferences
+    override def covered = value.covered
+
+  final case class AnchoredDecision(value: AnchoredChoiceAnswer.Reading) extends Statement:
+    def references = value.references
 
   /** The complete current control inventory of a threatened ally. This says
     * who attacks/supports it, never that a capture is forced or uncompensated. */
@@ -261,6 +282,10 @@ private[runtime] object CommentaryAnswer:
     def references = List(move)
 
   final case class PiecePresence(after: MoveRef, original: Piece, current: Piece) extends Statement:
+    def references = List(after)
+    override def actionReferences = Nil
+
+  final case class PieceAbsence(after: MoveRef, original: Piece) extends Statement:
     def references = List(after)
     override def actionReferences = Nil
 

@@ -158,6 +158,8 @@ enum EngineWorkReport:
 final case class EngineSearchAnchor(rootMove: String, rootOccurrenceId: String, positionId: String,
     prefixMovesUci: List[String] = Nil):
   def prefixMoves: List[String] = if prefixMovesUci.isEmpty then List(rootMove) else prefixMovesUci
+  private[runtime] def scopeKey: (String, String, String, List[String]) =
+    (rootMove, rootOccurrenceId, positionId, prefixMoves)
   def plyOffset: Int = prefixMoves.size
 
 final case class IssuedEngineWork(
@@ -555,6 +557,9 @@ private[runtime] final case class CommentaryRouteChallenge(
 
 /** Pure single-job reducer. Engine search is always issued to the browser. */
 object CommentaryJobReducer:
+  // An unresolved explanation is not permission for unbounded search. Keep
+  // normal commentary work within the user's chosen explanatory horizon.
+  private[runtime] val MaximumAnalysisDepth = 18
   private val RootNodes = 5_000_000
   private val RootMovetimeMs = 5_000
   // A selected pair can need more nodes than the three-root survey. Keep its
@@ -587,6 +592,7 @@ object CommentaryJobReducer:
       proposals: List[CommentaryProposal.Request] = Nil
   ): Either[CommentaryJobStartRejection, CommentaryJobState] =
     if !EngineLineAdmission.acceptsRequiredDepth(policy.rootSearchDepth) ||
+        policy.rootSearchDepth > MaximumAnalysisDepth ||
         policy.previewDepth.exists(depth => depth != 8 || depth >= policy.rootSearchDepth) then
       Left(CommentaryJobStartRejection.RootSearchDepthInvalid)
     else if !CommentaryProposal.validRequests(proposals) then Left(CommentaryJobStartRejection.InvalidProposals)
@@ -644,7 +650,23 @@ object CommentaryJobReducer:
               val selectedInquiry = live.phase.isInstanceOf[CollectingFocus] ||
                 live.phase.isInstanceOf[InvestigatingProposals] || live.phase.isInstanceOf[InvestigatingFacts] || responseInquiry
               val compactFocus = live.phase.isInstanceOf[CollectingFocus] && remaining < RootElapsedMs + 2_000
-              if failure == EngineWorkFailure.BudgetExhausted && selectedInquiry &&
+              val initialRoot = live.phase.isInstanceOf[CollectingRoot] &&
+                live.verification.exists(value => value.state == "pending" && value.reason == "initial_verification" &&
+                  value.targetDepth == live.issuedWork.requiredDepth) &&
+                live.issuedWork.rootRestriction == EngineRootRestriction.Unrestricted &&
+                live.issuedWork.searchLimits.nodes == RootNodes &&
+                live.issuedWork.searchLimits.movetimeMs == RootMovetimeMs
+              if failure == EngineWorkFailure.BudgetExhausted && initialRoot &&
+                  remaining >= SelectedReplyElapsedMs + 2_000 then
+                val retained = accepted.copy(rootSearches = accepted.rootSearches.map(search =>
+                  if search.work == live.issuedWork then search.copy(stopReason =
+                    Some(CommentaryJobStopCondition.SearchBudgetExhausted)) else search))
+                val work = issuedWork(live.engineProfile, retained.ledger.issuedWorkId,
+                  EngineWorkPurpose.RootSearch, live.positionHistory, EngineRootRestriction.Unrestricted,
+                  live.positionHistory.currentFen, Nil, EngineSearchLimits(live.issuedWork.requiredDepth,
+                    SelectedReplyNodes, SelectedReplyMovetimeMs, live.issuedWork.multiPv), SelectedReplyElapsedMs)
+                Right(issue(retained, live.phase, work, retained.ledger))
+              else if failure == EngineWorkFailure.BudgetExhausted && selectedInquiry &&
                   live.issuedWork.requiredDepth >= 16 && live.issuedWork.searchLimits.movetimeMs == FocusMovetimeMs &&
                   live.issuedWork.searchLimits.nodes == FocusNodes &&
                   remaining >= (if responseInquiry then 12_000 else
@@ -1186,6 +1208,11 @@ object CommentaryJobReducer:
   /** Return this work with the existing assessment before running discovery or another engine search. */
   private def issueVerification(active: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
       verification: CommentaryVerification): CommentaryJobState =
+    if verification.targetDepth > MaximumAnalysisDepth then
+      val bounded = active.copy(verification = Some(verification.copy(state = "stopped",
+        stopReason = Some("depth_limit"))))
+      return finishInvestigation(bounded, baseline, baseline.inquiries,
+        baseline.responseInquiries, needsRefresh = true)
     // The child comparison has already changed the assessment's required
     // depth. Complete that root obligation with the existing larger profile
     // when the request still has room; do not give it another small root pass.
@@ -1570,12 +1597,13 @@ object CommentaryJobReducer:
         case Some((packet, Some(failure))) => Left(retained.copy(packet = packet) -> failure)
         case None => Left(retained -> CommentaryJobStopCondition.ReviewConstructionFailed)
 
-  private def prepareProposalInputs(active: ActiveCommentaryJob)
+  private def prepareProposalInputs(active: ActiveCommentaryJob, onlyProducer: Option[String] = None)
       : Either[(ActiveCommentaryJob, CommentaryJobStopCondition), ActiveCommentaryJob] =
     if active.proposalEntries.isEmpty then return Right(active)
     val replay = new LocalReplayBatch(active)
     val entries = active.proposalEntries.map { entry =>
-      val needed = CommentaryProposal.neededRequirementIds(entry)
+      val needed = if onlyProducer.exists(_ != entry.request.origin.question.producer) then Set.empty[String]
+        else CommentaryProposal.neededRequirementIds(entry)
       def ensure(moves: List[String]) = replay.ensurePath(moves, discoveryOnly = entry.admission == "generated")
       entry.copy(readings = entry.request.requirements.map { requirement =>
         val previous = entry.readings.find(_.requirementId == requirement.id).get
@@ -1607,8 +1635,8 @@ object CommentaryJobReducer:
     // Several heads can ask the same oriented comparison. Resolve its owned/current
     // answer once in this refresh; each head still applies its own expected relation.
     val comparisons = scala.collection.mutable.Map.empty[
-      (List[String], String, String), (Option[CommentaryInvestigation.Answer], Boolean)]
-    val entries = active.proposalEntries.map { entry =>
+      (List[String], String, String, Boolean), (Option[CommentaryInvestigation.Answer], Boolean)]
+    def readComparisons(input: List[CommentaryProposal.Entry]) = input.map { entry =>
       entry.copy(readings = entry.request.requirements.map { requirement =>
         val prior = entry.readings.find(_.requirementId == requirement.id).get
         requirement match
@@ -1624,8 +1652,14 @@ object CommentaryJobReducer:
               .getOrElse(prior)
           case value: CommentaryProposal.CompareMoves =>
             val (answer, outdated) = comparisons.getOrElseUpdate(
-              (value.prefixMovesUci, value.referenceMove, value.alternativeMove), {
-                val answers = if value.prefixMovesUci.isEmpty then CommentaryInvestigation.preferredReceipts(active.receipts).iterator.flatMap(receipt =>
+              (value.prefixMovesUci, value.referenceMove, value.alternativeMove,
+                value.id.startsWith(FunctionalChoiceReading.ValuePrefix) ||
+                  value.id.startsWith(AnchoredChoiceReading.ValuePrefix)), {
+                val answers = if value.id.startsWith(FunctionalChoiceReading.ValuePrefix) ||
+                    value.id.startsWith(AnchoredChoiceReading.ValuePrefix) then
+                  CommentaryChoiceValue.read(active.packet, prepared, value, active.responseSearches,
+                    active.engineProfile.wireId, investigationDepth(active)).iterator.map(_.answer)
+                else if value.prefixMovesUci.isEmpty then CommentaryInvestigation.preferredReceipts(active.receipts).iterator.flatMap(receipt =>
                   CommentaryInvestigation.pairedAnswer(active.packet, value.referenceMove, value.alternativeMove,
                     receipt.work, receipt.lines, Some(prepared)))
                 else active.responseSearches.reverseIterator.filter(_.anchor.prefixMoves == value.prefixMovesUci)
@@ -1638,16 +1672,22 @@ object CommentaryJobReducer:
                 }
                 answer -> outdated
               })
-            val conflict = answer.exists(answer => active.comparisonConflicts.exists(_.affects(value, answer)))
-            if conflict then CommentaryProposal.Reading(value.id,
+            val functionalValue = value.id.startsWith(FunctionalChoiceReading.ValuePrefix) ||
+              value.id.startsWith(AnchoredChoiceReading.ValuePrefix)
+            val conflict = answer.exists(answer => active.comparisonConflicts.exists(_.affects(value, answer))) ||
+              (functionalValue && CommentaryChoiceValue.conflict(active.packet, prepared, value,
+                active.responseSearches, active.engineProfile.wireId, investigationDepth(active)).nonEmpty)
+            val awaiting = active.ledger.physicalReportsAccepted < active.ledger.physicalWorksIssued &&
+              proposalWorkMatches(value, active.issuedWork)
+            // A new owned revalidation is pending even when the historical answer
+            // disagrees. Keep its issued owner, but never publish the old answer.
+            if awaiting && (conflict || answer.isEmpty) && !Set("invalid_input", "stopped")(prior.state) then prior.copy(state = "awaiting_engine",
+              stopReason = None, answer = None, workId = Some(active.issuedWork.workId))
+            else if conflict then CommentaryProposal.Reading(value.id,
               if prior.state == "stopped" then "stopped" else "deferred",
               if prior.state == "stopped" then prior.stopReason else Some("comparison_conflict"))
             else answer.map(CommentaryProposal.pairReading(value, _)).getOrElse {
-              val awaiting = active.ledger.physicalReportsAccepted < active.ledger.physicalWorksIssued &&
-                proposalWorkMatches(value, active.issuedWork)
-              if awaiting && !Set("invalid_input", "stopped")(prior.state) then prior.copy(state = "awaiting_engine",
-                stopReason = None, answer = None, workId = Some(active.issuedWork.workId))
-              else if outdated || prior.answer.nonEmpty then prior.copy(state = "deferred", answer = None, workId = None,
+              if outdated || prior.answer.nonEmpty then prior.copy(state = "deferred", answer = None, workId = None,
                 stopReason = Some("comparison_not_current"))
               else if prior.state == "awaiting_engine" then prior.copy(state = "deferred", workId = None,
                 stopReason = Some("not_returned"))
@@ -1655,9 +1695,25 @@ object CommentaryJobReducer:
             }
       })
     }
+    val entries = readComparisons(active.proposalEntries)
     val facts = CommentaryFactReader.read(active.packet, prepared, entries, active.continuationInquiries)
+    val reference = active.phase match
+      case phase: InvestigationPhase => reviewReference(phase.baseline).getOrElse(active.playedMoveUci)
+      case _ => active.playedMoveUci
+    val functional = FunctionalChoiceReading.withQuestions(active.packet, prepared, facts,
+      active.responseSearches, Set(active.playedMoveUci, reference),
+      active.engineProfile.wireId, investigationDepth(active))
+    val realizationResources = FunctionalChoiceReading.task(active.packet, prepared, functional,
+      active.responseSearches, Set(active.playedMoveUci, reference),
+      active.engineProfile.wireId, investigationDepth(active)).toList.map(_.resource)
+    val realizing = FunctionalRealizationReading.withQuestions(active.packet, prepared, functional, realizationResources)
+    val augmented = AnchoredChoiceReading.withQuestions(active.packet, prepared, realizing,
+      active.responseSearches, Set(active.playedMoveUci, reference),
+      active.engineProfile.wireId, investigationDepth(active))
+    val current = if augmented == facts then facts else CommentaryFactReader.read(active.packet,
+      prepared, readComparisons(augmented), active.continuationInquiries)
     val outstanding = active.ledger.physicalReportsAccepted < active.ledger.physicalWorksIssued
-    active.copy(proposalEntries = facts.map(entry => entry.copy(readings = entry.readings.map { reading =>
+    active.copy(proposalEntries = current.map(entry => entry.copy(readings = entry.readings.map { reading =>
       val awaiting = outstanding && reading.result.toList.flatMap(_.needs).exists { need =>
         (need.kind == "continuation" && active.issuedWork.purpose == EngineWorkPurpose.ResponseComparison &&
           active.issuedWork.searchAnchor.exists(_.prefixMoves == need.prefixMoves)) ||
@@ -1668,6 +1724,32 @@ object CommentaryJobReducer:
         reading.copy(state = "awaiting_engine", stopReason = None, workId = Some(active.issuedWork.workId))
       else reading
     })))
+
+  /** A final returned comparison can first reveal a later realization. Admit
+    * only its bounded local ObserveMove traces before final publication;
+    * otherwise the last report would leave a correct reader permanently unused.
+    * Existing local expansion and evidence admission limits still own this work.
+    */
+  private def prepareFunctionalRealizations(active: ActiveCommentaryJob, reference: String)
+      : Either[(ActiveCommentaryJob, CommentaryJobStopCondition), ActiveCommentaryJob] =
+    var current = active
+    var wave = 0
+    while wave < FunctionalRealizationReading.MaximumLocalWaves do
+      val needed = current.proposalEntries.filter(_.request.origin.question.producer ==
+        FunctionalRealizationReading.Producer).exists(entry =>
+          CommentaryProposal.neededRequirementIds(entry).nonEmpty)
+      if !needed then return Right(current)
+      val before = current
+      prepareProposalInputs(current, Some(FunctionalRealizationReading.Producer)) match
+        case Left(failure) => return Left(failure)
+        case Right(retained) =>
+          val rebound = if retained.packet eq current.packet then retained
+            else readPrincipalVariations(retained, reference)
+          current = refreshProposalReadings(rebound)
+      wave += 1
+      if (before.packet eq current.packet) && before.proposalEntries == current.proposalEntries then
+        return Right(current)
+    Right(current)
 
   /** Needs carry their finite horizon; a topic name or an empty root is not a child frontier. */
   private case class FactContinuation(need: CommentaryFact.Need, owners: Set[(String, String)])
@@ -1732,6 +1814,141 @@ object CommentaryJobReducer:
 
   private case class ProposalChoice(value: CommentaryProposal.CompareMoves, submitted: Boolean,
       decision: (Int, Int), essential: Boolean, governsBranch: Boolean, rootDependency: Boolean = false)
+
+  private def functionalChoiceTask(active: ActiveCommentaryJob, reference: String) =
+    active.preparedPaths.flatMap(paths => FunctionalChoiceReading.task(active.packet, paths,
+      active.proposalEntries, active.responseSearches, Set(active.playedMoveUci, reference),
+      active.engineProfile.wireId, investigationDepth(active)))
+
+  private def anchoredChoiceObligations(active: ActiveCommentaryJob, reference: String) =
+    active.preparedPaths.toList.flatMap { paths =>
+      val roots = Set(active.playedMoveUci, reference)
+      AnchoredChoiceReading.family(active.packet, paths, active.proposalEntries,
+        active.responseSearches, roots, active.engineProfile.wireId, investigationDepth(active))
+        .map(_.obligations).getOrElse(
+          AnchoredChoiceReading.task(active.packet, paths, active.proposalEntries,
+            active.responseSearches, roots, active.engineProfile.wireId, investigationDepth(active))
+            .toList.flatMap(_.obligations))
+    }
+
+  /** Both readers retain an exact current position and completed root owner.
+    * Their known decisions finish before an unrelated future idea. */
+  private def currentChoiceObligations(active: ActiveCommentaryJob, reference: String) =
+    functionalChoiceTask(active, reference).toList.flatMap(_.obligations)
+      .map(value => value.comparison -> value.phase) ++
+      anchoredChoiceObligations(active, reference)
+        .map(value => value.comparison -> value.phase)
+
+  private def pendingChoiceTask(active: ActiveCommentaryJob, reference: String): Boolean =
+    val roots = Set(active.playedMoveUci, reference)
+    // A root refresh may temporarily withdraw the family's certificate. Its
+    // already selected unanswered duties still precede speculative discovery.
+    val pendingHeads = active.proposalEntries.exists(entry =>
+      entry.request.requirements.exists {
+        case pair: CommentaryProposal.CompareMoves => pair.prefixMovesUci.isEmpty &&
+          Set(pair.referenceMove, pair.alternativeMove) == roots
+        case _ => false
+      } && entry.readings.exists(reading =>
+        (reading.requirementId.startsWith(FunctionalChoiceReading.ValuePrefix) ||
+          reading.requirementId.startsWith(AnchoredChoiceReading.ValuePrefix)) &&
+          Set("deferred", "awaiting_engine")(reading.state)))
+    pendingHeads || functionalChoiceTask(active, reference).exists(!_.complete) || active.preparedPaths.exists { paths =>
+      AnchoredChoiceReading.family(active.packet, paths, active.proposalEntries,
+        active.responseSearches, roots, active.engineProfile.wireId, investigationDepth(active))
+        .fold(AnchoredChoiceReading.task(active.packet, paths, active.proposalEntries,
+          active.responseSearches, roots, active.engineProfile.wireId, investigationDepth(active))
+          .exists(!_.complete))(!_.complete)
+    }
+
+  private def currentChoiceConflicts(active: ActiveCommentaryJob, reference: String) =
+    currentChoiceObligations(active, reference).sortBy((value, phase) =>
+      (phase, value.prefixMovesUci.size, value.prefixMovesUci.mkString(" "), value.id))
+      .flatMap { (value, _) => active.preparedPaths.toList.flatMap(paths =>
+        CommentaryChoiceValue.conflict(active.packet, paths, value, active.responseSearches,
+          active.engineProfile.wireId, investigationDepth(active)).map(value -> _)) }
+      .distinctBy((value, conflict) => (CommentaryIdea.pair(value), conflict.workIds))
+
+  /** Register a current dependency before optional discovery can consume the
+    * remaining proposition slots. Old questions and their receipts stay intact.
+    */
+  private def registerComparisonConflicts(active: ActiveCommentaryJob, reference: String): ActiveCommentaryJob =
+    val required = currentChoiceConflicts(active, reference).map(_._2)
+    val candidates = (required ++ active.comparisonConflicts).distinct
+      .flatMap(_.entry).filter(entry => CommentaryProposal.validRequests(List(entry.request)))
+      .filterNot(entry => active.proposalEntries.exists(_.request.id == entry.request.id))
+      .distinctBy(_.request.id)
+    val room = (CommentaryProposal.MaximumRequirements -
+      active.proposalEntries.map(_.request.requirements.size).sum).max(0)
+    val additions = candidates.take(room)
+    if additions.isEmpty then active else refreshProposalReadings(
+      active.copy(proposalEntries = active.proposalEntries ++ additions))
+
+  /** A local contradictory value first tests its concrete divergent reply,
+    * then renews the parent selection. Neither child score changes the root
+    * assessment or supplies a missing parent value.
+    */
+  private def revalidateChoice(active: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
+      questions: List[CommentaryInquiry], responses: List[CommentaryResponseInquiry], reference: String)
+      : Option[CommentaryJobState] =
+    currentChoiceConflicts(active, reference).headOption.map { (choice, conflict) =>
+      val entry = conflict.entry.flatMap(value =>
+        active.proposalEntries.find(_.request.id == value.request.id))
+      def receiptOrder(id: String) = active.responseReceipts.indexWhere(_.work.workId == id)
+      val lastConflict = conflict.workIds.map(receiptOrder).max
+      val childAnswer = for
+        pair <- conflict.comparison
+        owner <- entry
+        answer <- owner.readings.find(_.requirementId == pair.id).flatMap(_.answer)
+        if answer.referenceDepth == answer.alternativeDepth && answer.referenceDepth.exists(_ >= conflict.depth)
+        if receiptOrder(answer.workId) > lastConflict
+        search <- active.responseSearches.find(search => search.belongsTo(active.packet) &&
+          search.work.workId == answer.workId && search.work.executionKeySha256 == answer.executionKeySha256)
+        if search.anchor.prefixMoves == pair.prefixMovesUci
+        if search.pairAnswer(active.packet, pair.referenceMove, pair.alternativeMove).contains(answer)
+      yield answer
+      val missingEntry = conflict.comparison.nonEmpty && entry.isEmpty
+      val stoppedChild = entry.exists(_.readings.exists(reading =>
+        conflict.comparison.exists(_.id == reading.requirementId) && reading.state == "stopped"))
+      val renewParent = conflict.comparison.isEmpty || childAnswer.nonEmpty
+      val depthLimit = conflict.depth > MaximumAnalysisDepth ||
+        (renewParent && conflict.depth >= MaximumAnalysisDepth)
+      val issued = if missingEntry || stoppedChild || depthLimit then None
+        else conflict.comparison.filter(_ => childAnswer.isEmpty) match
+          case Some(pair) =>
+            // A matching old child receipt may answer this generic pair at a
+            // lower depth or before the current contradiction. Its immutable
+            // observation remains, but this exact current conflict owns a new
+            // unanswered duty at conflict.depth.
+            val pendingChild = active.copy(proposalEntries = active.proposalEntries.map { value =>
+              if !entry.exists(_.request.id == value.request.id) then value else
+                value.copy(readings = value.readings.map { reading =>
+                  if reading.requirementId != pair.id then reading else
+                    reading.copy(state = "deferred", answer = None, workId = None, stopReason = None)
+                })
+            })
+            issueProposalComparison(pendingChild, baseline, questions, responses, pair,
+              rootDependency = true, minimumDepth = conflict.depth)
+          // A verified child cannot settle the parent's inconsistent values.
+          // Repeat its full selection at a higher level, not the same horizon.
+          case None if !depthLimit => issueProposalComparison(active, baseline, questions, responses, choice,
+            rootDependency = true, surveyFirstReply = true, minimumDepth = conflict.depth + 1)
+          case None => None
+      issued.getOrElse {
+        val reason = if missingEntry then "requirement_limit" else if stoppedChild then "search_budget_exhausted"
+          else if depthLimit then "depth_limit"
+          else "comparison_revalidation_incomplete"
+        val pair = CommentaryIdea.pair(choice)
+        val entries = active.proposalEntries.map(entry => entry.copy(readings = entry.readings.map { reading =>
+          if entry.request.requirements.exists {
+            case value: CommentaryProposal.CompareMoves => value.id == reading.requirementId &&
+              CommentaryIdea.pair(value) == pair
+            case _ => false
+          } then reading.copy(state = "stopped", stopReason = Some(reason), answer = None, workId = None)
+          else reading
+        }))
+        finishInvestigation(active.copy(proposalEntries = entries), baseline, questions, responses)
+      }
+    }
 
   /** A ready counter to an observed first reply belongs to the current root
     * comparison. Its named changed condition must own that exact reply pair;
@@ -1828,6 +2045,8 @@ object CommentaryJobReducer:
 
   private def proposalChoices(active: ActiveCommentaryJob, reference: String): List[ProposalChoice] =
     def key(value: CommentaryProposal.CompareMoves) = (value.prefixMovesUci, Set(value.referenceMove, value.alternativeMove))
+    val functional = currentChoiceObligations(active, reference)
+      .map((value, phase) => key(value) -> phase).toMap
     val ideas = CommentaryIdea.read(active.proposalEntries)
     val withdrawn = ideas.filter(_.withdrawn).flatMap(_.members.map(_.entry.request.id)).toSet
     val failed = active.proposalEntries.flatMap(entry => entry.request.requirements.collect {
@@ -1839,7 +2058,7 @@ object CommentaryJobReducer:
       .filter { (entry, value) =>
         // Bare source pairs can consume existing answers, but their own legal choices
         // alone do not justify new work. Filter owners before grouping shared pairs.
-        !failed(key(value)) && (entry.admission != "generated" || value.prefixMovesUci.nonEmpty ||
+        (!failed(key(value)) || functional.contains(key(value))) && (entry.admission != "generated" || value.prefixMovesUci.nonEmpty ||
           entry.request.origin.question.producer != "C-opponent-choice" ||
           value.id != "contrast_opponent_choice" || entry.generatedArms.exists(arm =>
             arm.headRequirementIds.contains(value.id) && entry.request.requirements.exists {
@@ -1887,7 +2106,7 @@ object CommentaryJobReducer:
         .map(response => key(response.test)).toSet
     val witnessedReplyDependencies = knownReplyDependencies ++ firstReplyDependencies
     val replyDependencies = witnessedReplyDependencies ++ holdDependencies ++ directEntryDependencies ++ timingDependencies ++ dutyDependencies ++
-      generalFirstReplyDependencies
+      generalFirstReplyDependencies ++ functional.keySet
     val evaluations = active.packet.assembly.input.assessmentCandidates.map(_.evaluation.moves)
     val presentChoices = pending.collect { case (entry, value) if value.id == "contrast_opponent_choice" &&
       entry.request.requirements.exists(requirement =>
@@ -1923,8 +2142,10 @@ object CommentaryJobReducer:
     pending.groupBy((_, value) => key(value)).values.map(values =>
       values.map(_._2).sortBy(value => (if value.id == "tactical_strength" then 0 else 1,
         value.id, value.referenceMove, value.alternativeMove)).head).toList.filter { value =>
-      val tried = (if value.prefixMovesUci.isEmpty then active.receipts else active.responseReceipts).exists(receipt =>
-        receipt.work.requiredDepth >= investigationDepth(active) && proposalWorkMatches(value, receipt.work) &&
+      val tried = !functional.contains(key(value)) && (if value.prefixMovesUci.isEmpty then active.receipts else active.responseReceipts).exists(receipt =>
+        receipt.work.requiredDepth >= (if functional.contains(key(value)) then
+          CommentaryChoiceValue.pairDepth(active.packet, value.prefixMovesUci, active.responseSearches,
+            active.engineProfile.wireId, investigationDepth(active)) else investigationDepth(active)) && proposalWorkMatches(value, receipt.work) &&
           (receipt.work.rootRestriction match
           case EngineRootRestriction.Restricted(moves) => moves.toSet == Set(value.referenceMove, value.alternativeMove) ||
             (Set("tactical_strength", "reserve_hold", "reserve_counter")(value.id) && Set(value.referenceMove, value.alternativeMove).subsetOf(moves.toSet))
@@ -1941,6 +2162,7 @@ object CommentaryJobReducer:
       // before investigating a new reason for adopting the same current continuation.
       val decision = if onAssessment && stale(key(value)) then (-1, 0)
         else if onAssessment && directCounters(key(value)) then (0, -2)
+        else if functional.contains(key(value)) then (0, -1 + functional(key(value)))
         else if dutyDependencies(key(value)) then (0, -1)
         else if timingDependencies(key(value)) then (0, -1)
         // Complete the known entry's counter before speculating whether a
@@ -1975,11 +2197,19 @@ object CommentaryJobReducer:
   private def issueProposalChoice(active: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
       questions: List[CommentaryInquiry], responses: List[CommentaryResponseInquiry], choice: ProposalChoice)
       : Option[CommentaryJobState] =
-    val survey = choice.decision == (0, 2) && choice.value.prefixMovesUci.size == 1 &&
+    val functional = currentChoiceObligations(active, reviewReference(baseline).getOrElse(active.playedMoveUci))
+      .exists((value, _) => CommentaryIdea.pair(value) == CommentaryIdea.pair(choice.value))
+    val functionalSurvey = functional && (CommentaryChoiceValue.survey(active.packet,
+      choice.value.prefixMovesUci, active.responseSearches, active.engineProfile.wireId,
+      investigationDepth(active)).isEmpty || CommentaryChoiceValue.selectionDepth(active.packet,
+      choice.value, active.responseSearches, active.engineProfile.wireId, investigationDepth(active)) >
+        CommentaryChoiceValue.pairDepth(active.packet, choice.value.prefixMovesUci,
+          active.responseSearches, active.engineProfile.wireId, investigationDepth(active)))
+    val survey = functionalSurvey || (choice.decision == (0, 2) && choice.value.prefixMovesUci.size == 1 &&
       active.explorationsIssued < 3 && !active.firstReplySurveysIssued(choice.value.prefixMovesUci) &&
       !active.responseSearches.exists(search => search.belongsTo(active.packet) &&
         search.anchor.prefixMoves == choice.value.prefixMovesUci &&
-        search.work.rootRestriction == EngineRootRestriction.Unrestricted)
+        search.work.rootRestriction == EngineRootRestriction.Unrestricted))
     issueProposalComparison(active, baseline, questions, responses, choice.value,
       rootDependency = choice.rootDependency, surveyFirstReply = survey)
 
@@ -2015,7 +2245,8 @@ object CommentaryJobReducer:
   private def issueProposalComparison(active: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
       questions: List[CommentaryInquiry], responses: List[CommentaryResponseInquiry],
       value: CommentaryProposal.CompareMoves, verifyAfter: Boolean = false,
-      rootDependency: Boolean = false, surveyFirstReply: Boolean = false): Option[CommentaryJobState] =
+      rootDependency: Boolean = false, surveyFirstReply: Boolean = false,
+      minimumDepth: Int = 0): Option[CommentaryJobState] =
     val prefix = value.prefixMovesUci
     val history = historyAt(active, prefix)
     val anchor = if prefix.isEmpty then Some(None) else
@@ -2028,6 +2259,51 @@ object CommentaryJobReducer:
         response.test.prefixMovesUci == prefix &&
           Set(response.test.referenceMove, response.test.alternativeMove) == Set(value.referenceMove, value.alternativeMove)))
     val requiredComparison = firstReply || rootDependency || verifyAfter
+    val functional = rootDependency && currentChoiceObligations(active,
+      reviewReference(baseline).getOrElse(active.playedMoveUci)).exists((question, _) =>
+        CommentaryIdea.pair(question) == CommentaryIdea.pair(value))
+    val valueDepth = if functional then
+      if surveyFirstReply then CommentaryChoiceValue.selectionDepth(active.packet, value,
+        active.responseSearches, active.engineProfile.wireId, investigationDepth(active)) else
+        CommentaryChoiceValue.pairDepth(active.packet, prefix, active.responseSearches,
+          active.engineProfile.wireId, investigationDepth(active))
+      else investigationDepth(active)
+    val targetDepth = math.max(valueDepth, minimumDepth)
+    // Generic aliases may share a child pair with an older answered conflict.
+    // Keep the exact current conflict owner visible without reviving a stopped
+    // historical parent or attaching an anonymous owner after failure.
+    val conflictOwners = if !rootDependency then Nil else
+      currentChoiceConflicts(active, reviewReference(baseline).getOrElse(active.playedMoveUci))
+        .flatMap { (_, conflict) => for
+          request <- conflict.entry.toList
+          entry <- active.proposalEntries.filter(_.request.id == request.request.id)
+          pair <- conflict.comparison.toList if pair == value
+          if CommentaryProposal.neededRequirementIds(entry)(pair.id) && entry.readings.exists(reading =>
+            reading.requirementId == pair.id && reading.state == "deferred")
+        yield entry -> pair }
+    val pendingOwners = (pendingProposalComparisons(CommentaryIdea.currentQuestions(active.proposalEntries)) ++
+      conflictOwners).distinct
+    val currentOwner = pendingOwners.exists { (_, other) =>
+      if functional then CommentaryIdea.pair(other) == CommentaryIdea.pair(value) else other == value
+    }
+    // A failed/stopped choice may remain an unresolved value question, but it
+    // cannot renew an anonymous engine job after losing its pending owner.
+    val currentReplyOwner = surveyFirstReply && firstReplyOwners(active, prefix,
+      reviewReference(baseline).getOrElse(active.playedMoveUci)).nonEmpty
+    if !currentOwner && !currentReplyOwner then return None
+    if targetDepth > MaximumAnalysisDepth then
+      val key = CommentaryIdea.pair(value)
+      val bounded = active.copy(proposalEntries = active.proposalEntries.map(entry =>
+        entry.copy(readings = entry.readings.map { reading =>
+          if Set("deferred", "awaiting_engine")(reading.state) && entry.request.requirements.exists {
+            case pair: CommentaryProposal.CompareMoves => pair.id == reading.requirementId &&
+              CommentaryIdea.pair(pair) == key
+            case _ => false
+          } then reading.copy(state = "stopped", stopReason = Some("depth_limit"),
+            answer = None, workId = None)
+          else reading
+        })))
+      return Some(finishInvestigation(bounded, baseline, questions, responses))
     val submitted = pendingProposalComparisons(active.proposalEntries).exists((entry, other) =>
       other == value && entry.admission != "generated")
     val compact = active.remainingBudgetMs < RootElapsedMs + 2_000
@@ -2039,7 +2315,7 @@ object CommentaryJobReducer:
       if List(value.referenceMove, value.alternativeMove).forall(child.currentLegalMoveUcis.contains)
       if !compact || ((requiredComparison || submitted) && active.remainingBudgetMs >= FocusElapsedMs + 2_000)
     yield
-      val pending = pendingProposalComparisons(CommentaryIdea.currentQuestions(active.proposalEntries))
+      val pending = pendingOwners
       val direct = pending.collect { case (entry, other) if other.id == "tactical_strength" &&
           entry.request.requirements.exists(_.id.startsWith("tactical_direct_")) =>
           (other.prefixMovesUci, other.referenceMove, other.alternativeMove)
@@ -2061,10 +2337,11 @@ object CommentaryJobReducer:
         else if pawnClass.nonEmpty then (value.referenceMove :: pawnClass.sorted).distinct
         else (value.referenceMove :: value.alternativeMove :: alternatives).distinct.take(3)
       val originalOwners = pending.collect { case (entry, other) if other.prefixMovesUci == prefix &&
-        other.referenceMove == value.referenceMove && moves.contains(other.alternativeMove) &&
-        (other == value || (value.id == "reserve_counter" && other.id == "reserve_counter") ||
-          (value.id == "tactical_strength" && other.id == "tactical_strength" &&
-          directCounter(other) == directCounter(value))) => entry.request.id -> other.id
+        ((functional && CommentaryIdea.pair(other) == CommentaryIdea.pair(value)) ||
+          other.referenceMove == value.referenceMove && moves.contains(other.alternativeMove) &&
+          (other == value || (value.id == "reserve_counter" && other.id == "reserve_counter") ||
+            (value.id == "tactical_strength" && other.id == "tactical_strength" &&
+            directCounter(other) == directCounter(value)))) => entry.request.id -> other.id
       }.distinct.sorted
       val owners = (originalOwners ++ Option.when(surveyFirstReply)(
         firstReplyOwners(active, prefix, reviewReference(baseline).getOrElse(active.playedMoveUci))).toList.flatten)
@@ -2075,7 +2352,7 @@ object CommentaryJobReducer:
       val work = issuedWork(active.engineProfile, active.ledger.issuedWorkId,
         if prefix.isEmpty then EngineWorkPurpose.InvestigationComparison else EngineWorkPurpose.ResponseComparison,
         child, if surveyFirstReply then EngineRootRestriction.Unrestricted else EngineRootRestriction.Restricted(moves), child.currentFen, Nil,
-        EngineSearchLimits(investigationDepth(active),
+        EngineSearchLimits(targetDepth,
           if longReply then SelectedReplyNodes else if requiredComparison || compact then SelectedInquiryNodes else FocusNodes,
           if longReply then SelectedReplyMovetimeMs else if compact then FocusMovetimeMs
             else if requiredComparison then RootMovetimeMs else FocusMovetimeMs,
@@ -2131,6 +2408,11 @@ object CommentaryJobReducer:
 
   private def issueInvestigation(active: ActiveCommentaryJob, phase: Investigating,
       moves: List[String]): CommentaryJobState =
+    if investigationDepth(active) > MaximumAnalysisDepth then
+      val verification = CommentaryVerification(investigationDepth(active), state = "stopped",
+        reason = "explanation_depth_limit", stopReason = Some("depth_limit"))
+      return finishInvestigation(active.copy(verification = Some(verification)),
+        phase.baseline, phase.questions, phase.responses, needsRefresh = true)
     val roots = moves.distinct
     val work = issuedWork(active.engineProfile, active.ledger.issuedWorkId,
       EngineWorkPurpose.InvestigationComparison, active.positionHistory,
@@ -2213,6 +2495,11 @@ object CommentaryJobReducer:
     val refresh = rootAssessmentRefresh(active, phase, evaluations) match
       case Some(value) => value
       case None => return beginResponses(active.copy(phase = phase), phase.baseline, phase.questions)
+    if refresh.requiredDepth > MaximumAnalysisDepth then
+      val verification = CommentaryVerification(refresh.requiredDepth, state = "stopped",
+        reason = "explanation_depth_limit", stopReason = Some("depth_limit"))
+      return finishInvestigation(active.copy(verification = Some(verification)),
+        phase.baseline, refresh.questions, refresh.responses, needsRefresh = true)
     val heads = evaluations.map(_.evaluation.moves.head).toSet
     if heads(refresh.referenceMove) && heads(active.playedMoveUci) &&
         evaluations.flatMap(_.evaluation.engineLine.map(_.depth)).forall(_ >= refresh.requiredDepth) then
@@ -2595,9 +2882,41 @@ object CommentaryJobReducer:
     val automatic = active.continuationInquiries.filter(inquiry => inquiry.state == "forced" &&
       inquiry.question.observedMoves.isEmpty && inquiry.question.prefixMoves.size < 80)
       .map(inquiry => inquiry.question.prefixMoves -> 80)
-    def facts(generated: Boolean) = pendingFactContinuations(active, generated).map(_.need).filter(need =>
-      factContinuationContext(active, need.prefixMoves).exists(_._1.currentLegalMoveUcis.size == 1))
-      .map(need => need.prefixMoves -> need.horizon.get)
+    val factScopes = List(false, true).flatMap(generated =>
+      pendingFactContinuations(active, generated).map(generated -> _))
+    def facts(generated: Boolean) = factScopes.collect {
+      case (scope, value) if scope == generated && factContinuationContext(active, value.need.prefixMoves)
+          .exists(_._1.currentLegalMoveUcis.size == 1) => value.need
+    }.map(need => need.prefixMoves -> need.horizon.get)
+    val capBlocked = scala.collection.mutable.Set.empty[(String, String, CommentaryFact.Need)]
+    def recordCapFailure(initialPrefix: List[String], moves: List[String], horizon: Int,
+        discoveryOnly: Boolean): Unit =
+      factScopes.filter((generated, value) =>
+        generated == discoveryOnly && value.need.prefixMoves == initialPrefix).foreach { (_, value) =>
+        value.owners.foreach { (requestId, requirementId) =>
+          active.proposalEntries.find(_.request.id == requestId).toList
+            .flatMap(_.readings.filter(_.requirementId == requirementId))
+            .flatMap(_.result.toList.flatMap(_.needs)).filter(need =>
+              need.kind == "continuation" && need.prefixMoves == initialPrefix &&
+                need.horizon.exists(at => at >= moves.size && at <= horizon))
+            .foreach(need => capBlocked += ((requestId, requirementId, need)))
+        }
+      }
+    def retainCapReasons(current: ActiveCommentaryJob): ActiveCommentaryJob =
+      if capBlocked.isEmpty then current
+      else
+        val fresh = refreshProposalReadings(current)
+        fresh.copy(proposalEntries = fresh.proposalEntries.map { entry =>
+          val needed = CommentaryProposal.neededRequirementIds(entry)
+          entry.copy(readings = entry.readings.map { reading =>
+            val exactBlocked = reading.result.exists(_.needs.exists(need =>
+              capBlocked((entry.request.id, reading.requirementId, need))))
+            if needed(reading.requirementId) && !CommentaryProposal.isResolved(reading) &&
+                !Set("invalid_input", "stopped")(reading.state) && exactBlocked then
+              reading.copy(state = "stopped", stopReason = Some("local_expansion_limit"))
+            else reading
+          })
+        })
     def grouped(points: List[(List[String], Int)]) = points.groupMap(_._1)(_._2).toList
       .map((prefix, horizons) => prefix -> horizons.max).sortBy((prefix, _) => (prefix.size, prefix.mkString(" ")))
     val existing = grouped(automatic ++ facts(generated = false))
@@ -2616,7 +2935,9 @@ object CommentaryJobReducer:
         def prepare(moves: List[String]): Option[CanonicalPositionHistory] = replay.ensurePath(moves, discoveryOnly) match
           case Right(history) => Some(history)
           case Left(reason) =>
-            if reason != "local_expansion_limit" then invalidContinuation = true
+            if reason == "local_expansion_limit" then
+              recordCapFailure(initialPrefix, moves, horizon, discoveryOnly)
+            else invalidContinuation = true
             None
         var current = prepare(prefix)
         var continue = true
@@ -2636,9 +2957,9 @@ object CommentaryJobReducer:
           case Right(retained) if invalidContinuation =>
             Left(stop(retained, CommentaryJobStopCondition.ReviewConstructionFailed, Some(baseline)))
           case Right(retained) if replay.hasAdditions =>
-            val read = readPrincipalVariations(retained, reference)
+            val read = retainCapReasons(readPrincipalVariations(retained, reference))
             Left(beginResponses(read, baseline, questions))
-          case Right(retained) => Right(retained)
+          case Right(retained) => Right(retainCapReasons(retained))
 
   private[runtime] def investigationPrefixRelation(state: AwaitingEngineWork,
       reference: String): List[String] => Int =
@@ -2728,6 +3049,11 @@ object CommentaryJobReducer:
     */
   private def beginResponses(before: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
       questions: List[CommentaryInquiry]): CommentaryJobState =
+    if investigationDepth(before) > MaximumAnalysisDepth then
+      val verification = CommentaryVerification(investigationDepth(before), state = "stopped",
+        reason = "explanation_depth_limit", stopReason = Some("depth_limit"))
+      return finishInvestigation(before.copy(verification = Some(verification)),
+        baseline, questions, before.responseInquiries, needsRefresh = true)
     val reference = reviewReference(baseline).getOrElse(before.playedMoveUci)
     val retained = prepareProposalInputs(before) match
       case Left((retained, failure)) => return stop(retained, failure, Some(baseline))
@@ -2739,19 +3065,17 @@ object CommentaryJobReducer:
     val owned = observeForcedContinuations(forcedReady, reference, baseline, questions, includeGenerated = false) match
       case Left(result) => return result
       case Right(value) => value
-    val expanded = discoverQuestions(owned, reference) match
+    val required = registerComparisonConflicts(owned, reference)
+    val expanded = (if pendingChoiceTask(required, reference) then Right(required)
+      else discoverQuestions(required, reference)) match
       case Left((retained, failure)) => return stop(retained, failure, Some(baseline))
       case Right(retained) => retained
     val discoveredActive = refreshProposalReadings(
-      if expanded.packet eq owned.packet then expanded else readPrincipalVariations(expanded, reference))
-    val conflictEntries = discoveredActive.comparisonConflicts.sortBy(value =>
-      if discoveredActive.packet.assembly.input.assessmentCandidates.exists(_.evaluation.moves.startsWith(value.prefix :+ value.move))
-      then 0 else 1).flatMap(_.entry).filter(entry => CommentaryProposal.validRequests(List(entry.request)))
-      .filterNot(entry => discoveredActive.proposalEntries.exists(_.request.id == entry.request.id))
-      .distinctBy(_.request.id).take((CommentaryProposal.MaximumRequirements -
-        discoveredActive.proposalEntries.map(_.request.requirements.size).sum).max(0))
-    val active = if conflictEntries.isEmpty then discoveredActive else
-      refreshProposalReadings(discoveredActive.copy(proposalEntries = discoveredActive.proposalEntries ++ conflictEntries))
+      if expanded.packet eq required.packet then expanded else readPrincipalVariations(expanded, reference))
+    val realizedActive = prepareFunctionalRealizations(discoveredActive, reference) match
+      case Left((retained, failure)) => return stop(retained, failure, Some(baseline))
+      case Right(retained) => retained
+    val active = registerComparisonConflicts(realizedActive, reference)
     val discovered = if active.policy.investigateChoices then
       TargetResponseInvestigation.discover(active.packet, reference, active.preparedPaths.get, active.responseSearches)
       else Nil
@@ -2773,6 +3097,9 @@ object CommentaryJobReducer:
       val inquiry = reconsiderInquiry(read, prior)
       if inquiry.state == "deferred" then inquiry.copy(stopReason = inquiry.stopReason.orElse(Some("investigation_limit"))) else inquiry
     }
+    revalidateChoice(read, baseline, pending, responses, reference) match
+      case Some(issued) => return issued
+      case None => ()
     // A contradictory answer is a verification obligation, not a third speculative topic.
     // Spend the existing single child recheck on its concrete divergence, then re-evaluate
     // the root. The child comparison cannot replace either conflicting parent score.
@@ -2788,7 +3115,7 @@ object CommentaryJobReducer:
     conflict.flatMap(value => read.verification.filter(_.state == "complete").map(value -> _)) match
       case Some((value, previous)) =>
         val needed = value.depth + value.prefix.size
-        val reason = if needed > 100 then Some("depth_limit")
+        val reason = if needed > MaximumAnalysisDepth then Some("depth_limit")
           else Option.when(read.childRechecksIssued >= 1)("verification_limit")
         val verification = previous.copy(targetDepth = math.max(previous.targetDepth, math.min(100, needed)),
           state = if reason.nonEmpty then "stopped" else "pending", reason = "child_challenge",
@@ -2854,6 +3181,15 @@ object CommentaryJobReducer:
             EngineSearchAnchor(question.rootMove, question.rootMoveOccurrenceId, question.childPositionId),
             restriction, question.id, requiredTarget = true)
         } match
+          case Some(issued) => return issued
+          case None => ()
+      val functional = currentChoiceObligations(read, reference)
+        .map((value, _) => CommentaryIdea.pair(value)).toSet
+      // Finish the finite resource already owned by this root question. A
+      // quiet root grade or a completed, different reserve is not its answer.
+      proposalChoices(read, reference).find(choice => choice.rootDependency &&
+        functional(CommentaryIdea.pair(choice.value)))
+        .flatMap(choice => issueProposalChoice(read, baseline, pending, responses, choice)) match
           case Some(issued) => return issued
           case None => ()
       val completedReserve = CommentaryIdea.reserveEntries(read.proposalEntries).filter(entry =>
@@ -3207,7 +3543,7 @@ object CommentaryJobReducer:
         val responses = readResponseInquiries(observed,
           (discovered ++ active.responseInquiries.map(_.question)).distinctBy(_.id))
         val needed = candidate.evaluation.engineLine.map(_.depth).getOrElse(active.issuedWork.requiredDepth) + anchor.plyOffset
-        val reason = if needed > 100 then Some("depth_limit")
+        val reason = if needed > MaximumAnalysisDepth then Some("depth_limit")
           else Option.when(active.childRechecksIssued >= 1)("verification_limit")
         val verification = previous.copy(targetDepth = math.max(previous.targetDepth, math.min(100, needed)),
           state = if reason.nonEmpty then "stopped" else "pending", reason = "child_challenge",
@@ -3231,6 +3567,7 @@ object CommentaryJobReducer:
       maxSearchElapsedMs: Int,
       searchAnchor: Option[EngineSearchAnchor] = None
   ): IssuedEngineWork =
+    require(limits.depth <= MaximumAnalysisDepth, "commentary work must remain within the depth18 horizon")
     IssuedEngineWork.create(
       engineProfile,
       workId,

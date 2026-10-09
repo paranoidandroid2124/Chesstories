@@ -110,6 +110,27 @@ private[runtime] object CommentaryIdea:
         readings.get(actual.id).flatMap(_.answer), readings.get(alternative.id).flatMap(_.answer))
   }.distinct
 
+  final case class ReserveChoice(owner: AnsweredComparison, context: FactGroup)
+
+  /** The exact root difference starts an investigation without requiring a
+    * future use or a particular king route to appear in the principal line. */
+  def reserveChoices(entries: List[Entry]): List[ReserveChoice] = entries.flatMap { entry =>
+    if entry.admission != "generated" || entry.request.origin.question.producer != "C-reserve-use" then Nil
+    else
+      val readings = entry.readings.map(value => value.requirementId -> value).toMap
+      for
+        root <- entry.request.requirements.collect { case value: CompareMoves if value.id == "reserve_root" => value }
+        answer <- readings.get(root.id).flatMap(_.answer).toList
+        if root.prefixMovesUci.isEmpty && answer.evaluationRelation == "better" &&
+          answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated)
+        context <- entry.request.requirements.collect { case value: FactGroup if value.id == "reserve_context" => value }
+        if context.mode == "all" && context.members.toSet == Set("reserve_before", "reserve_after", "reserve_kept") &&
+          context.members.size == 3 && (context.id :: context.members).forall(id =>
+            readings.get(id).exists(_.state == "supported")) && entry.generatedArms.exists(arm =>
+              Set(root.id, context.id).subsetOf(arm.headRequirementIds.toSet))
+      yield ReserveChoice(AnsweredComparison(entry.request.id, root, answer), context)
+  }.distinct
+
   final case class ReserveTiming(owner: AnsweredComparison, test: CompareMoves,
       answer: Option[CommentaryInvestigation.Answer], source: Option[AnsweredComparison], sourceArm: String)
 

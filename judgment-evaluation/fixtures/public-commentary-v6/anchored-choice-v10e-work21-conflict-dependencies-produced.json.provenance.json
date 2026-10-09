@@ -1,0 +1,16 @@
+{
+  "sealed_utc": "2026-10-08T23:49:30.042200+00:00",
+  "new_engine_queries": 0,
+  "native_fixture_sha256": "63f34201085160954147ffeb6db6eb69e860b36d3d2fce6eea911608cbe94f95",
+  "byte_exact_copied_native_sha256": "63f34201085160954147ffeb6db6eb69e860b36d3d2fce6eea911608cbe94f95",
+  "before_product_bundle_sha256": "0aecf8712080dd1a4131400b32b4fc00fce4d35a682ec5f17a4304aa1dbe90fb",
+  "module_sha256": "884696f531d2b439e8c421ad2b60bf4cbb9cdde75c0e961a25be3c62070fb1d5",
+  "projected_observations_sha256": "444ed9fe7dd716c7ddd685b900447ffe13c1dd1444517e4033a99d105a2117d3",
+  "original_graph_json_sha256": "a8f4a514df1557adc0742dbd80adfc8396f32b731294ab6aa5e07b4addd9ad32",
+  "actual_graph_projection": true,
+  "graph_transformation": "Actual accepted public production graph projection only; no atoms, values, paths or actor identities invented.",
+  "native_pending_request_unchanged": true,
+  "public_selection_test_seam": "Exported decodeCommentarySelection with actual accepted graph and native wire selection. Pending250m research lease is validated separately in research bridge.",
+  "former_selection_absent": true,
+  "parent_authorized": true
+}

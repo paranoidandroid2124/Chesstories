@@ -1,4 +1,4 @@
-import type { MoveReviewFrameSelection, MoveReviewObservations, ObservedLineSummary } from './moveReview';
+import type { MoveReviewFrameSelection, MoveReviewObservations, ObservedLineSummary, PositionResources } from './moveReview';
 import { parseFen } from 'chessops/fen';
 import { parseSquare, parseUci, makeSquare, kingCastlesTo, rookCastlesTo } from 'chessops/util';
 import { castlingSide } from 'chessops/chess';
@@ -1501,10 +1501,9 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
         value.question === 'first_target_response' && !!firstReplyPath ||
         conditionalPaths.size > 0));
     if (!acceptsWitnesses || !ids(value.witness_line_ids) ||
-      // A retained-option answer may join its first timing comparison, one
-      // owned king route, and the later two-arm use test. Every listed path
-      // still has to belong to a completed comparison at its exact prefix.
-      !value.witness_line_ids.length || value.witness_line_ids.length > 5) return;
+      // Each delivery layer has its own five-path proof budget. The exact
+      // referenced union is checked after admitting the units below.
+      !value.witness_line_ids.length || value.witness_line_ids.length > (typedAnswer ? 10 : 5)) return;
     for (const lineId of value.witness_line_ids) {
       const path = observations.paths.find(path => path.id === lineId);
       // Retain the current evaluation pair. A supplementary path only witnesses
@@ -1581,6 +1580,17 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     }
   }
   const result = value as unknown as CommentaryQuestionSummary, mentioned = result.units.flatMap(accountRefs);
+  const witnessIds = (units: CommentaryQuestionUnit[], extra: CommentaryQuestionMove[] = []) => new Set(
+    [...units.flatMap(unit => [...proofRefs(unit), ...refs(unit.en), ...refs(unit.ko),
+      ...unit.covered_moves, ...(unit.required_moves ?? []), ...(unit.recorded_end_moves ?? []),
+      ...(unit.focus ?? [])]), ...extra].map(ref => ref.line_id)
+      .filter(lineId => !usedPaths.some(path => path.id === lineId)),
+  );
+  const coreWitnesses = witnessIds(result.units),
+    detailWitnesses = witnessIds(result.detail_units ?? [], result.detail_moves),
+    referencedWitnesses = new Set([...coreWitnesses, ...detailWitnesses]);
+  if (coreWitnesses.size > 5 || detailWitnesses.size > 5 ||
+    !sameIds(result.witness_line_ids ?? [], [...referencedWitnesses])) return;
   const text = result.units.map(unit => unit.en.map(part => typeof part === 'string' ? part : (() => {
     const path = summaryPaths.find(path => path.id === part.line_id)!;
     return path.moves[path.occurrenceIds.indexOf(part.occurrence_id)].label;
@@ -1644,8 +1654,7 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     const conditionalDetail = typedAnswer ? (result.detail_units ?? []).flatMap(proofRefs) : [];
     if ((!commonAnswer && result.detail_moves.length) || !delivered(result.units, roots) ||
       summaryPaths.some(path => !witnessed.some(ref => ref.line_id === path.id) &&
-        !((conditionalPaths.has(path.id) || firstPair?.candidates.some(candidate => candidate.line_id === path.id)) &&
-          conditionalDetail.some(ref => ref.line_id === path.id)))) return;
+        !(typedAnswer && conditionalDetail.some(ref => ref.line_id === path.id)))) return;
     return result;
   }
   // Unversioned summaries retain their original motif-specific compatibility checks.
@@ -2100,11 +2109,14 @@ function decodeResponseSearches(
   value: unknown,
   observations: MoveReviewObservations,
   context: CommentaryInquiryContext | undefined,
+  proposals: CommentaryProposal[],
+  rootSearches: CommentaryRootSearch[],
 ): CommentaryResponseSearch[] | undefined {
-  // Two explorations can finish two already linked reserve questions; the
-  // producer may also issue one conflict recheck. Each receipt still needs
-  // its exact legal position, owned pool and completed candidate paths below.
-  if (!Array.isArray(value) || value.length > 5 || !context) return;
+  // This is only a parsing envelope. The ordinary five and generic task's
+  // 24 slots, plus exact declared family dependencies, are checked below.
+  // Each of the at most 600 declarations can license no more than three
+  // physical receipts; aliases never create another declaration or slot.
+  if (!Array.isArray(value) || value.length > 1829 || !context) return;
   const result: CommentaryResponseSearch[] = [];
   for (const raw of value) {
     if (
@@ -2252,6 +2264,10 @@ function decodeResponseSearches(
     new Set(result.map(search => search.execution_key_sha256)).size !== result.length
   )
     return;
+  // A shared physical comparison may also own ordinary inverse/alias
+  // questions. Its exact functional owner grants this slot; all aliases
+  // still pass proposalContainsResponsePool below before selection survives.
+  if (!declaredFamilyReceiptCapacityMatches(result, proposals, rootSearches, observations, context)) return;
   return result;
 }
 
@@ -5344,6 +5360,69 @@ function factSampleMoves(sample: CommentaryFactSample, observations: MoveReviewO
     .moves.slice(0, sample.prefix_ply_count).map(move => move.uci);
 }
 
+function qualifiedPositionFactSources(position: PositionResources): string[] {
+  const suffix = `:evidence:position-occurrence:${position.id}`;
+  if (!position.premise_id.endsWith(suffix)) return [];
+  const namespace = position.premise_id.slice(0, -suffix.length);
+  const rows: [string, string[]][] = [
+    ['geometric_control', position.controls.pieces.flatMap(p => p.source_ids)],
+    ['ray_barrier', position.rays.lines.map(p => p.source_id)],
+    ['legal_move', position.legal_moves.moves.map(p => p.source_id)],
+    ['pawn_file_group', position.pawn_files.files.flatMap(p => p.source_ids)],
+    ['pawn_advance_affordance', position.pawn_advances.paths.map(p => p.source_id)],
+  ];
+  // Pawn-state rows mix several fact kinds and cannot license a typed alias.
+  return rows.flatMap(([kind, refs]) => refs.filter(ref => /^[a-f0-9]{64}$/.test(ref))
+    .map(ref => `${namespace}:evidence:relation:position:${position.id}:${kind}:${ref}`));
+}
+
+function factQualifiedPositionIds(
+  sample: CommentaryFactSample, predicate: CommentaryFactPredicate,
+  path: ObservationPath, observations: MoveReviewObservations,
+): Set<string> {
+  const positions = new Set(path.positionIds?.slice(sample.from_ply, sample.through_ply + 1));
+  if (predicate.kind !== 'direct_support_use' || sample.value !== 'true' || !path.lineSummary?.material)
+    return positions;
+  const providerOrigin = { ...predicate.subject!, position_id: path.positionIds![0] },
+    targetOrigin = { ...predicate.target!, position_id: path.positionIds![0] };
+  const snapshots = new Map<number, CommentaryTrackedPiece[] | undefined>();
+  const at = (count: number) => {
+    if (!snapshots.has(count)) snapshots.set(count, trackedPieces(path, count));
+    return snapshots.get(count);
+  };
+  const current = (original: CommentaryInquiryPiece, count: number) =>
+    at(count)?.find(piece => samePiece(piece.original, original))?.current;
+  const captures = path.lineSummary.material.events.filter(event =>
+    event.capture && event.ply_offset < sample.through_ply);
+  for (const loss of captures) {
+    const target = current(targetOrigin, loss.ply_offset),
+      provider = current(providerOrigin, loss.ply_offset),
+      capturer = at(loss.ply_offset)?.find(piece => piece.current.square === loss.from)?.original;
+    if (!target || !provider || !capturer || loss.capture!.square !== target.square) continue;
+    const takenBy = current(capturer, loss.ply_offset + 1);
+    const lossPosition = observations.positions?.find(position => position.id === path.positionIds![loss.ply_offset]);
+    if (!takenBy || takenBy.square !== target.square || !lossPosition?.controls.complete ||
+        !lossPosition.legal_moves.complete || continuationSupportAt(observations, path, providerOrigin,
+          targetOrigin, loss.ply_offset, at(loss.ply_offset)).state !== 'present') continue;
+    for (const recovery of captures.filter(event => event.ply_offset > loss.ply_offset)) {
+      const actor = at(recovery.ply_offset)?.find(piece => piece.current.square === recovery.from)?.original,
+        victim = at(recovery.ply_offset)?.find(piece => piece.current.square === recovery.capture!.square)?.original;
+      if (!actor || !victim || !samePiece(actor, providerOrigin) || !samePiece(victim, capturer) ||
+          !observations.positions?.find(position => position.id === path.positionIds![recovery.ply_offset])?.legal_moves.complete ||
+          !Array.from({ length: recovery.ply_offset - loss.ply_offset + 1 }, (_, index) => loss.ply_offset + index)
+            .every(count => { const piece = current(providerOrigin, count); return piece &&
+              samePiece(piece, { ...provider, position_id: path.positionIds![count] }); }) ||
+          !Array.from({ length: recovery.ply_offset - loss.ply_offset }, (_, index) => loss.ply_offset + index + 1)
+            .every(count => { const piece = current(capturer, count); return piece &&
+              samePiece(piece, { ...takenBy, position_id: path.positionIds![count] }); })) continue;
+      // A compound use owns its observed support/loss and recapture edges, not the whole earlier history.
+      positions.add(path.positionIds![loss.ply_offset]);
+      positions.add(path.positionIds![recovery.ply_offset]);
+    }
+  }
+  return positions;
+}
+
 function factResultValid(
   value: unknown,
   reading: CommentaryProposalReading,
@@ -5503,6 +5582,10 @@ function factResultValid(
       ])
         sources.add(ref);
     }
+    const qualifiedPositions = factQualifiedPositionIds(sample as unknown as CommentaryFactSample,
+      owner.predicate, path, observations);
+    for (const position of resources.filter(position => qualifiedPositions.has(position.id)))
+      for (const ref of qualifiedPositionFactSources(position)) sources.add(ref);
     if (!sample.source_ids.every(ref => sources.has(ref))) return false;
     if (sampleIndex.has(sample.id)) return false;
     sampleIndex.set(sample.id, sample as unknown as CommentaryFactSample);
@@ -6037,6 +6120,351 @@ export function reserveResponsePoolMatches(
   return expected.size === pool.length && pool.every(move => expected.has(move));
 }
 
+/** Issuing and retaining a functional survey use the same task contract.
+ * A retained survey may still belong to its original seed pair after its
+ * results have selected a different competitor; the receipt is not an answer
+ * to that seed pair. Position/history ownership is checked by the caller. */
+export function functionalResponseSurveyMatches(
+  proposal: CommentaryProposal,
+  reading: CommentaryProposalReading,
+  prefix: string[],
+  rootOccurrenceId: string,
+): boolean {
+  if (proposal.admission !== 'generated' || proposal.origin.question.kind !== 'generator' ||
+      proposal.origin.question.producer !== 'C-reply-function' ||
+      (prefix.length !== 2 && prefix.length !== 3) || reading.kind !== 'compare_moves' ||
+      !reading.id.startsWith('function_value_') ||
+      !factPrefix(prefix, reading.prefix_moves_uci) || reading.prefix_moves_uci.length !== prefix.length)
+    return false;
+  const members = ['function_before', 'function_root_reference', 'function_root_alternative',
+    'function_owned', 'function_changed', 'function_live', 'function_resource'];
+  const task = proposal.requirements.find(row => row.id === 'function_task_context');
+  const root = proposal.requirements.find(row => row.id === 'function_root');
+  const resource = proposal.requirements.find(row => row.id === 'function_resource');
+  if (task?.kind !== 'fact_group' || task.mode !== 'all' || task.state !== 'supported' ||
+      task.members.length !== members.length || !task.members.every((id, index) => id === members[index]) ||
+      !members.every(id => proposal.requirements.some(row => row.id === id && row.state === 'supported')) ||
+      root?.kind !== 'compare_moves' || root.state !== 'answered' || !root.answer ||
+      root.prefix_moves_uci.length !== 0 ||
+      ![root.reference_move, root.alternative_move].includes(prefix[0]) ||
+      (prefix[0] === root.reference_move ? root.answer.reference_occurrence_id :
+        root.answer.alternative_occurrence_id) !== rootOccurrenceId ||
+      resource?.kind !== 'fact' || resource.predicate.kind !== 'legal_move' ||
+      !resource.predicate.subject || !resource.predicate.square) return false;
+  const actor = resource.predicate.subject, square = resource.predicate.square;
+  return proposal.requirements.some(row => row.kind === 'fact' && row.state === 'supported' &&
+    row.at.kind === 'ply' && row.at.ply_count === prefix.length && row.path.source.kind === 'declared' &&
+    row.path.source.moves_uci.length === prefix.length && factPrefix(prefix, row.path.source.moves_uci) &&
+    row.predicate.subject?.side === actor.side && row.predicate.subject?.role === actor.role &&
+    row.predicate.subject?.square === actor.square &&
+    (prefix.length === 2 ? row.id.startsWith('function_value_legal:') &&
+      row.predicate.kind === 'legal_move' && row.predicate.square === square && row.expected === 'legal' :
+      row.id.startsWith('function_value_present:') && row.predicate.kind === 'presence' && row.expected === 'present'));
+}
+
+/** The reserve source owns an exact deferred decision. Its current pawn,
+ * legal action and all context facts must survive before a full survey can
+ * be issued or retained. A later arbitrary generated pair grants no slot. */
+export function anchoredResponseSurveyMatches(
+  proposal: CommentaryProposal,
+  reading: CommentaryProposalReading,
+  prefix: string[],
+  rootOccurrenceId: string,
+): boolean {
+  const family = proposal.origin.question.producer === 'C-reserve-use';
+  if (proposal.admission !== 'generated' || proposal.origin.question.kind !== 'generator' ||
+      (!family && proposal.origin.question.producer !== 'C-reserve-timing') || reading.kind !== 'compare_moves' ||
+      !reading.id.startsWith('anchored_value_') || prefix.length < (family ? 1 : 2) ||
+      prefix.length !== reading.prefix_moves_uci.length || !factPrefix(prefix, reading.prefix_moves_uci)) return false;
+  const root = proposal.requirements.find(row => row.id === 'reserve_root');
+  const timing = proposal.requirements.find(row => row.id === 'reserve_timing');
+  const context = proposal.requirements.find(row => row.id === (family ? 'reserve_context' : 'timing_context'));
+  const before = proposal.requirements.find(row => row.id === 'reserve_before');
+  const rootReply = family && prefix.length === 1 &&
+    ['anchored_value_response:', 'anchored_value_reply:', 'anchored_value_capture:']
+      .some(role => reading.id.startsWith(role));
+  const expected = family ? ['reserve_before', 'reserve_after', 'reserve_kept'] :
+    ['reserve_before', 'reserve_after', 'reserve_kept', 'timing_available',
+      'timing_kept', 'timing_current', 'timing_common_reply'];
+  if (root?.kind !== 'compare_moves' || root.state !== 'answered' || !root.answer ||
+      root.prefix_moves_uci.length || root.answer.evaluation_relation !== 'better' ||
+      root.answer.reference_depth === null || root.answer.reference_depth !== root.answer.alternative_depth ||
+      root.answer.reference_depth < root.answer.required_depth ||
+      (rootReply ? ![root.reference_move, root.alternative_move].includes(prefix[0]) :
+        prefix[0] !== root.alternative_move) ||
+      (rootReply && prefix[0] === root.reference_move ? root.answer.reference_occurrence_id :
+        root.answer.alternative_occurrence_id) !== rootOccurrenceId ||
+      before?.kind !== 'fact' || before.predicate.subject?.role !== 'pawn' ||
+      before.predicate.subject.square !== root.reference_move.slice(0, 2) ||
+      qualityBand(root.answer.reference_evaluation, root.answer.alternative_evaluation,
+        before.predicate.subject.side) !== 'separated' ||
+      (!family && (timing?.kind !== 'compare_moves' || timing.prefix_moves_uci.length !== 2 ||
+        timing.prefix_moves_uci[0] !== root.alternative_move || timing.reference_move !== root.reference_move)) ||
+      context?.kind !== 'fact_group' || context.mode !== 'all' || context.state !== 'supported' ||
+      !sameIds(context.members, expected) ||
+      !expected.every(id => proposal.requirements.some(row => row.id === id && row.state === 'supported')))
+    return false;
+  const samePawn = (a: CommentaryFactPiece, b: CommentaryFactPiece | undefined) =>
+    !!b && a.side === b.side && a.role === b.role && a.square === b.square;
+  const own = family ? reading.id.startsWith('anchored_value_own:') && prefix.length % 2 === 0 :
+    timing?.kind === 'compare_moves' && prefix.length === timing.prefix_moves_uci.length &&
+      factPrefix(prefix, timing.prefix_moves_uci);
+  const prior = family ? prefix.slice(0, -1) : timing?.kind === 'compare_moves' ? timing.prefix_moves_uci : [];
+  const response = rootReply || (prefix.length === prior.length + 1 && prefix.length % 2 === 1 &&
+    factPrefix(prior, prefix) && proposal.requirements.some(row =>
+      row.kind === 'compare_moves' && row.id.startsWith('anchored_value_own:') && row.state === 'answered' &&
+      !!row.answer && row.prefix_moves_uci.length === prior.length &&
+      factPrefix(prior, row.prefix_moves_uci) &&
+      [row.reference_move, row.alternative_move].includes(prefix[prefix.length - 1])));
+  if (!own && !response) return false;
+  return proposal.requirements.some(group => {
+    if (group.kind !== 'fact_group' || !group.id.startsWith('anchored_value_context:') ||
+        group.mode !== 'all' || group.state !== 'supported' || group.members.length !== 3) return false;
+    const facts = group.members.map(id => proposal.requirements.find(row => row.id === id));
+    if (!facts.every(row => row?.kind === 'fact' && row.state === 'supported' && row.at.kind === 'ply' &&
+        row.at.ply_count === prefix.length && row.path.source.kind === 'declared' &&
+        row.path.source.moves_uci.length === prefix.length && factPrefix(prefix, row.path.source.moves_uci)))
+      return false;
+    const presence = facts.find(row => row?.kind === 'fact' && row.id.startsWith('anchored_value_present:'));
+    const location = facts.find(row => row?.kind === 'fact' && row.id.startsWith('anchored_value_location:'));
+    const legal = facts.find(row => row?.kind === 'fact' && row.id.startsWith('anchored_value_legal:'));
+    if (presence?.kind !== 'fact' || presence.predicate.kind !== 'presence' || presence.expected !== 'present' ||
+        presence.predicate.subject?.role !== 'pawn' ||
+        presence.predicate.subject.square !== root.reference_move.slice(0, 2) ||
+        !samePawn(presence.predicate.subject, before.predicate.subject) ||
+        location?.kind !== 'fact' || location.predicate.kind !== 'location' || !location.expected ||
+        !samePawn(presence.predicate.subject, location.predicate.subject) ||
+        legal?.kind !== 'fact' || legal.predicate.kind !== 'legal_move' || legal.expected !== 'legal' ||
+        legal.predicate.square !== reading.reference_move.slice(2, 4) || !legal.predicate.subject) return false;
+    if (rootReply && (location.expected !== (prefix[0] === root.reference_move ?
+        root.reference_move.slice(2, 4) : before.predicate.subject.square) ||
+        legal.predicate.subject.side === before.predicate.subject.side ||
+        legal.predicate.subject.square !== reading.reference_move.slice(0, 2))) return false;
+    return !own || (samePawn(legal.predicate.subject, presence.predicate.subject) &&
+      reading.reference_move === root.reference_move && location.expected === reading.reference_move.slice(0, 2));
+  });
+}
+
+export function ownedChoiceSurveyMatches(proposal: CommentaryProposal, reading: CommentaryProposalReading,
+  prefix: string[], rootOccurrenceId: string): boolean {
+  return functionalResponseSurveyMatches(proposal, reading, prefix, rootOccurrenceId) ||
+    anchoredResponseSurveyMatches(proposal, reading, prefix, rootOccurrenceId);
+}
+
+// A verified divergent child remains a dependency of its two owned parent
+// measurements. This grants a ledger slot, never an earlier numerical value.
+function ownedChoiceConflictReceiptMatches(
+  child: CommentaryResponseSearch,
+  searches: CommentaryResponseSearch[],
+  proposals: CommentaryProposal[],
+  observations: MoveReviewObservations,
+  accept?: (proposal: CommentaryProposal, reading: CommentaryProposalReading,
+    pool: CommentaryResponseSearch, pair: CommentaryResponseSearch) => boolean,
+): boolean {
+  const completedDepth = (search: CommentaryResponseSearch): number | undefined => {
+    const depths = search.candidates.map(candidate => candidate.evaluation.kind === 'engine_search'
+      ? candidate.evaluation.depth : undefined);
+    const first = depths[0];
+    return typeof first === 'number' && depths.every(depth => depth === first) ? first : undefined;
+  };
+  return child.proposal_ownership?.question_refs.some(ref => {
+    const proposal = proposals.find(row => row.id === ref.proposal_id);
+    const reading = proposal?.requirements.find(row => row.id === ref.requirement_id);
+    if (!proposal || proposal.admission !== 'generated' ||
+      proposal.origin.question.kind !== 'generator' ||
+      proposal.origin.question.producer !== 'C-comparison-conflict' ||
+      reading?.kind !== 'compare_moves' || reading.id !== 'resolve_comparison_conflict' ||
+      !['answered', 'supported', 'refuted'].includes(reading.state) ||
+      reading.work_id !== child.work_id || !reading.answer ||
+      reading.answer.work_id !== child.work_id ||
+      reading.answer.execution_key_sha256 !== child.execution_key_sha256 ||
+      child.root_restriction.kind !== 'restricted' ||
+      !sameIds(child.root_restriction.moves_uci, [reading.reference_move, reading.alternative_move]) ||
+      !factPrefix(reading.prefix_moves_uci, responseSearchPrefix(child)) ||
+      reading.prefix_moves_uci.length !== responseSearchPrefix(child).length) return false;
+    const refs = proposal.origin.question.source_refs;
+    if (refs.length !== 2 || new Set(refs).size !== 2 ||
+      ![proposal.origin.candidates, proposal.origin.evidence].every(source =>
+        source.kind === 'generator' && source.producer === 'C-comparison-conflict' &&
+        source.source_refs.length === refs.length && source.source_refs.every((id, index) => id === refs[index])))
+      return false;
+    const sources = refs.map(id => searches.find(search => search.work_id === id));
+    if (!sources.every((search): search is CommentaryResponseSearch => !!search)) return false;
+    if (sources.some(source => Number(source.work_id.slice(5)) >= Number(child.work_id.slice(5)))) return false;
+    const pool = sources.find(search => search.root_restriction.kind === 'unrestricted');
+    const pair = sources.find(search => search.root_restriction.kind === 'restricted');
+    if (!pool || !pair || pair.root_restriction.kind !== 'restricted' ||
+      pair.root_restriction.moves_uci.length !== 2 ||
+      !pair.root_restriction.moves_uci.includes(pool.candidates[0].move_uci)) return false;
+    const pairMoves = pair.root_restriction.moves_uci;
+    const prefix = responseSearchPrefix(pool), level = completedDepth(pool);
+    if (level === undefined || child.required_depth < level ||
+      sources.some(search => search.engine_profile !== child.engine_profile ||
+        search.root_move !== child.root_move || search.root_move_occurrence_id !== child.root_move_occurrence_id ||
+        search.child_position_id !== pool.child_position_id || completedDepth(search) !== level ||
+        responseSearchPrefix(search).length !== prefix.length || !factPrefix(prefix, responseSearchPrefix(search))))
+      return false;
+    const parentOwned = pair.proposal_ownership?.question_refs.some(parentRef => {
+      const parent = proposals.find(row => row.id === parentRef.proposal_id);
+      const question = parent?.requirements.find(row => row.id === parentRef.requirement_id);
+      return !!parent && question?.kind === 'compare_moves' &&
+        sameIds(pairMoves, [question.reference_move, question.alternative_move]) &&
+        ownedChoiceSurveyMatches(parent, question, prefix, pool.root_move_occurrence_id) &&
+        pool.proposal_ownership?.question_refs.some(poolRef => {
+          const seed = parent.requirements.find(row => row.id === poolRef.requirement_id);
+          return poolRef.proposal_id === parent.id && !!seed &&
+            ownedChoiceSurveyMatches(parent, seed, prefix, pool.root_move_occurrence_id);
+        });
+    });
+    if (!parentOwned) return false;
+    const divergent = sources[0].candidates.some(first => {
+      const second = sources[1].candidates.find(candidate => candidate.move_uci === first.move_uci);
+      if (!second || !pairMoves.includes(first.move_uci) ||
+        qualityBand(first.evaluation, second.evaluation, 'white') !== 'separated') return false;
+      const left = observations.paths.find(path => path.id === first.line_id);
+      const right = observations.paths.find(path => path.id === second.line_id);
+      if (!left || !right) return false;
+      let shared = 0;
+      while (shared < Math.min(left.moves.length, right.moves.length) &&
+        left.moves[shared].uci === right.moves[shared].uci) shared++;
+      return shared > prefix.length && shared === reading.prefix_moves_uci.length &&
+        factPrefix(reading.prefix_moves_uci, left.moves.map(move => move.uci)) &&
+        left.occurrenceIds.slice(0, shared).every((id, index) => id === right.occurrenceIds[index]) &&
+        left.positionIds?.[shared] === child.child_position_id &&
+        right.positionIds?.[shared] === child.child_position_id &&
+        left.moves[shared]?.uci === reading.reference_move &&
+        right.moves[shared]?.uci === reading.alternative_move;
+    });
+    return divergent && (!accept || accept(proposal, reading, pool, pair));
+  }) ?? false;
+}
+
+/** Extra capacity is owned by an exact reserve family, not by its name or
+ * the number of aliases. Keep every measurement: a verified divergent
+ * child retains its two historical parents instead of rewriting their
+ * values or pretending they answer the current comparison. */
+function declaredFamilyReceiptCapacityMatches(
+  searches: CommentaryResponseSearch[],
+  proposals: CommentaryProposal[],
+  roots: CommentaryRootSearch[],
+  observations: MoveReviewObservations,
+  context: CommentaryInquiryContext,
+): boolean {
+  const familyKeys = new Map<CommentaryProposal, string | undefined>();
+  const familyKey = (proposal: CommentaryProposal): string | undefined => {
+    if (familyKeys.has(proposal)) return familyKeys.get(proposal);
+    const root = proposal.requirements.find(row => row.id === 'reserve_root');
+    const before = proposal.requirements.find(row => row.id === 'reserve_before');
+    const answer = root?.kind === 'compare_moves' ? root.answer : undefined;
+    const receipt = answer && roots.find(row => row.work_id === answer.work_id &&
+      row.execution_key_sha256 === answer.execution_key_sha256 && row.state === 'completed' &&
+      row.engine_profile === answer.engine_profile && row.required_depth === answer.required_depth);
+    const reference = answer && observations.paths.find(path => path.id === answer.reference_line_id);
+    const alternative = answer && observations.paths.find(path => path.id === answer.alternative_line_id);
+    let key: string | undefined;
+    if (proposal.admission === 'generated' && proposal.origin.question.kind === 'generator' &&
+      proposal.origin.question.producer === 'C-reserve-use' && root?.kind === 'compare_moves' &&
+      root.state === 'answered' && !root.prefix_moves_uci.length && answer && receipt &&
+      before?.kind === 'fact' && before.state === 'supported' && before.at.kind === 'ply' &&
+      before.at.ply_count === 0 && before.path.source.kind === 'declared' &&
+      sameIds(before.path.source.moves_uci, [root.reference_move]) &&
+      before.predicate.kind === 'location' && before.predicate.subject?.role === 'pawn' &&
+      before.expected === before.predicate.subject.square &&
+      reference && alternative && reference.startFen === context.rootFen && alternative.startFen === context.rootFen &&
+      reference.positionIds?.[0] === receipt.root_position_id &&
+      alternative.positionIds?.[0] === receipt.root_position_id &&
+      reference.moves[0]?.uci === root.reference_move && alternative.moves[0]?.uci === root.alternative_move &&
+      reference.occurrenceIds[0] === answer.reference_occurrence_id &&
+      alternative.occurrenceIds[0] === answer.alternative_occurrence_id &&
+      [reference, alternative].every(path => receipt.candidates.some(candidate =>
+        candidate.line_id === path.id && candidate.occurrence_id === path.occurrenceIds[0] &&
+        candidate.move_uci === path.moves[0]?.uci))) {
+      key = JSON.stringify([receipt.work_id, receipt.execution_key_sha256, receipt.root_position_id,
+        root.reference_move, root.alternative_move, answer.reference_occurrence_id,
+        answer.alternative_occurrence_id, before.predicate.subject.side,
+        before.predicate.subject.role, before.predicate.subject.square]);
+    }
+    familyKeys.set(proposal, key);
+    return key;
+  };
+  const owners = new Map<CommentaryResponseSearch, { family: string; question: string }[]>();
+  for (const search of searches) {
+    const prefix = responseSearchPrefix(search);
+    const path = commentarySearchAnchorPath(observations, context.rootFen, search.root_move,
+      search.root_move_occurrence_id, search.child_position_id, prefix);
+    if (!path) return false;
+    const options: { family: string; question: string }[] = [];
+    for (const ref of search.proposal_ownership?.question_refs ?? []) {
+      const proposal = proposals.find(row => row.id === ref.proposal_id);
+      const reading = proposal?.requirements.find(row => row.id === ref.requirement_id);
+      if (proposal?.origin.question.producer !== 'C-reserve-use' || reading?.kind !== 'compare_moves') continue;
+      const family = familyKey(proposal);
+      if (!family || !anchoredResponseSurveyMatches(proposal, reading, prefix,
+        search.root_move_occurrence_id)) return false;
+      // Exact occurrences and positions distinguish a repeated FEN reached
+      // through another history. Inverse aliases share the same physical pair.
+      options.push({ family, question: JSON.stringify([family, prefix,
+        path.occurrenceIds.slice(0, prefix.length), path.positionIds?.slice(0, prefix.length + 1),
+        [reading.reference_move, reading.alternative_move].sort()]) });
+    }
+    owners.set(search, options);
+  }
+  const dependencies = new Set<CommentaryResponseSearch>();
+  const conflictSlots = new Set<string>();
+  for (const child of searches) {
+    const valid = ownedChoiceConflictReceiptMatches(child, searches, proposals, observations,
+      (_proposal, reading, pool, pair) => {
+        if (reading.kind !== 'compare_moves') return false;
+        const common = owners.get(pair)?.find(owner => owners.get(pool)?.some(row => row.family === owner.family));
+        if (!common) return false;
+        const path = commentarySearchAnchorPath(observations, context.rootFen, child.root_move,
+          child.root_move_occurrence_id, child.child_position_id, responseSearchPrefix(child));
+        if (!path) return false;
+        const slot = JSON.stringify([common.family,
+          [pool, pair].map(row => [row.work_id, row.execution_key_sha256]), responseSearchPrefix(child),
+          path.occurrenceIds.slice(0, responseSearchPrefix(child).length),
+          path.positionIds?.slice(0, responseSearchPrefix(child).length + 1),
+          [reading.reference_move, reading.alternative_move].sort()]);
+        if (conflictSlots.has(slot)) return false;
+        conflictSlots.add(slot);
+        dependencies.add(pool); dependencies.add(pair); dependencies.add(child);
+        return true;
+      });
+    if (!valid && child.proposal_ownership?.question_refs.some(ref => {
+      const proposal = proposals.find(row => row.id === ref.proposal_id);
+      return proposal?.origin.question.producer === 'C-comparison-conflict' &&
+        proposal.origin.question.source_refs.some(id => {
+          const source = searches.find(row => row.work_id === id);
+          return !!source && !!owners.get(source)?.length;
+        });
+    })) return false;
+  }
+  const normal = searches.filter(search => !dependencies.has(search) && owners.get(search)!.length);
+  // Match physical rows to declaration slots. This avoids an alias-order
+  // preference while still rejecting a second survey/pair of the same question.
+  const assigned = new Map<string, CommentaryResponseSearch>();
+  const assign = (search: CommentaryResponseSearch, seen: Set<string>): boolean => {
+    for (const owner of owners.get(search)!) {
+      const slot = `${owner.question}/${search.root_restriction.kind}`;
+      if (seen.has(slot)) continue;
+      seen.add(slot);
+      const previous = assigned.get(slot);
+      if (!previous || assign(previous, seen)) { assigned.set(slot, search); return true; }
+    }
+    return false;
+  };
+  if (!normal.every(search => assign(search, new Set()))) return false;
+  const other = searches.filter(search => !dependencies.has(search) && !owners.get(search)!.length);
+  const generic = other.filter(search => search.proposal_ownership?.question_refs.some(ref => {
+    const proposal = proposals.find(row => row.id === ref.proposal_id);
+    const reading = proposal?.requirements.find(row => row.id === ref.requirement_id);
+    return !!proposal && !!reading && ownedChoiceSurveyMatches(proposal, reading,
+      responseSearchPrefix(search), search.root_move_occurrence_id);
+  }) || ownedChoiceConflictReceiptMatches(search, searches, proposals, observations));
+  return generic.length <= 24 && other.length - generic.length <= 5 &&
+    (normal.length > 0 || dependencies.size > 0 || searches.length <= 29);
+}
+
 export function proposalContainsResponsePool(
   proposals: CommentaryProposal[],
   search: CommentaryResponseSearch,
@@ -6045,10 +6473,16 @@ export function proposalContainsResponsePool(
   if (search.root_restriction.kind === 'unrestricted') {
     const ownership = search.proposal_ownership, prefix = responseSearchPrefix(search);
     const position = observations?.positions?.find(position => position.id === search.child_position_id);
+    const choiceOwner = ownership?.question_refs.some(ref => {
+      const proposal = proposals.find(proposal => proposal.id === ref.proposal_id);
+      const reading = proposal?.requirements.find(row => row.id === ref.requirement_id);
+      return !!proposal && !!reading && ownedChoiceSurveyMatches(proposal, reading, prefix,
+        search.root_move_occurrence_id);
+    });
     // A first-reply survey belongs to the issued questions even if its top
     // results omit one named move. That omission cannot answer the pair.
     return !!ownership && ownership.work_id === search.work_id &&
-      ownership.execution_key_sha256 === search.execution_key_sha256 && prefix.length === 1 &&
+      ownership.execution_key_sha256 === search.execution_key_sha256 &&
       !!position?.legal_moves.complete && position.legal_moves.moves.length >= 2 &&
       search.multi_pv === Math.min(3, position.legal_moves.moves.length) &&
       ownership.question_refs.length > 0 &&
@@ -6058,7 +6492,9 @@ export function proposalContainsResponsePool(
         const proposal = proposals.find(proposal => proposal.id === ref.proposal_id);
         const reading = proposal?.requirements.find(reading => reading.id === ref.requirement_id);
         return proposal?.admission === 'generated' && reading?.kind === 'compare_moves' &&
-          sameIds(reading.prefix_moves_uci, prefix) && reading.reference_move !== reading.alternative_move &&
+          reading.prefix_moves_uci.length === prefix.length && factPrefix(prefix, reading.prefix_moves_uci) &&
+          (prefix.length === 1 || choiceOwner) &&
+          reading.reference_move !== reading.alternative_move &&
           [reading.reference_move, reading.alternative_move].every(move =>
             position.legal_moves.moves.some(row => row.uci === move));
       });
@@ -6212,7 +6648,7 @@ export function decodeCommentarySelection(
   }
   if (value.response_searches !== undefined) {
     try {
-      responseSearches = decodeResponseSearches(value.response_searches, observations, context);
+      responseSearches = decodeResponseSearches(value.response_searches, observations, context, proposals ?? [], rootSearches ?? []);
     } catch (_) {
       return;
     }

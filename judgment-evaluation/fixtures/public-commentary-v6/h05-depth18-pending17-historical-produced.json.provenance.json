@@ -1,0 +1,9 @@
+{
+  "source": "C:\\Users\\\uc591\uc790\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\protocolSameDepth20\\pending17-actual.json.gz",
+  "source_sha256": "3911248de36544c8fd1afdf39153a68c88275e28f8900e999de92e9fe3f97f56",
+  "copy": "C:\\Users\\\uc591\uc790\\.codex\\worktrees\\functional-choice-value\\Chesstories\\judgment-evaluation\\fixtures\\public-commentary-v6\\h05-depth18-pending17-historical-produced.json.gz",
+  "copy_sha256": "3911248de36544c8fd1afdf39153a68c88275e28f8900e999de92e9fe3f97f56",
+  "whole_gzip_bytes_equal": true,
+  "actual_original_pending_depth": 20,
+  "test_variants": "Only pending descriptor depth/standard allowance and budget-inclusive exact key changed for18/19 controls; no simulated engine receipt or numerical change"
+}

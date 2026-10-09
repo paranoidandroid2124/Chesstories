@@ -614,7 +614,10 @@ class CommentaryAnswerTest extends munit.FunSuite:
     val root = (MoveWorkProjection.select(packet, paths).json \ "candidates").as[List[JsObject]].find(value =>
       (value \ "detail" \ "type").as[String] == "root_comparison").get
     val text = (root \ "detail" \ "summary").as[String]
-    assert(text.startsWith("In the Re1 line, White loses one rook. After Rxe1#, Black wins by checkmate."), text)
+    val loss = text.indexOf("In the Re1 line, White loses one rook.")
+    val mate = text.indexOf("After Rxe1#, Black wins by checkmate.")
+    val alternative = text.indexOf("In the Ra1 line")
+    assert(loss >= 0 && mate > loss && alternative > mate, text)
     assertEquals(text.sliding("Black wins by checkmate".length).count(_ == "Black wins by checkmate"), 1)
     assert(text.contains("Ra1"), text)
 
