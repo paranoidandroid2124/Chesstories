@@ -159,6 +159,12 @@ def main():
     completion = load(args.completion_audit)
     review = load(args.final_review)
     source_full, completion_costs = verify_final_inputs(args, source_human, completion, review)
+    conflict_audit_path = HERE / 'h05-five-conflict-cycles-qualitative-scope-audit10s.json'
+    assert digest(conflict_audit_path) == '04b6f465dfd5667051df0f8bf40cf67a575ab19a4c562b30f7647ebac730d4a7'
+    conflict_audit = load(conflict_audit_path)
+    assert len(conflict_audit['cycles']) == 5
+    assert all(c['required_depth'] == c['completed_depth'] == 16 and c['g4_named_quality_band'] == 'separated' and c['all_returned_king_choices_close'] for c in conflict_audit['cycles'])
+    assert conflict_audit['new_engine_queries'] == conflict_audit['runtime_replays'] == 0
     firstpass = load(HERE / 'fresh-native-two-case10s-basic-human-firstpass.json')
     fresh = ROOT / 'target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run'
     manifest = load(fresh / 'manifest.json')
@@ -194,6 +200,8 @@ def main():
         (HERE / 'h05-fresh10s-nominal16-plan-metadata-correction.json', '별도 조사 계획의 표시 오류와 실제 실행 범위 정정'),
         (args.final_review, '최종 연결 코드·범위 독립 검토'),
         (HERE / 'current10s-rpc-certificate-cost-readonly-audit.json', '현재 공개 근거의 크기·처리 비용·줄일 때 지켜야 할 의존 관계'),
+        (conflict_audit_path, '깊이16에서 다섯 번 반복한 비교의 절대 점수와 상대 판단 구분'),
+        (HERE / 'final-qualitative-conflict-handoff-addendum.json', '마지막 발견과 주장에 따른 유한 재검증 과제'),
         (HERE / 'bounded-medium-goal-partial-outcome-and-depth18-handoff.json', '중기 목표의 미달성 기준과 깊이18 안의 후속 과제')
     ]
     evidence_links = ''.join('<li>' + link(path, label) + '</li>' for path, label in evidences)
@@ -239,6 +247,9 @@ def main():
     <p>추가 이론서의 동일8장면도 최종 코드·깊이18 제한·정상 실행 경로에서 다시 판독했습니다. 부모와 독립 판독 모두 완전한 답 {source_full}/8입니다. 실제 새 검색49회 중47회가 완료됐고, 두 검색의 시간·노드 한도 실패는 그대로 남겼습니다. 모든 검색이 완료된 나머지 여섯 장면도 필요한 목적·판단 연결을 충분히 설명하지 못했습니다. 이 결함을 검색 한도만의 문제로 볼 수 없습니다.</p>
     <p>평범한 Rd3에서는 c3 압박과 대체 룩의 e2 보호를 읽을 수 있지만, Rd2를 이어가는 압박의 목적이 흩어져 있습니다. 이 대체 보호 사실은 이전8b 출력에도 있었으므로 새10s 의미 개선으로 세지 않았습니다. 일반 목적 설명에 유일한 최선 수나 평가 차이의 완전한 원인을 요구하지 않았습니다.</p>
     <p>과거0/8과 최종 결과는 기록에서 구분하고, 이미 본 사례를 새 검증 자료로 부르지 않습니다. 공개 판정의 수순 배열에 노출된 사실을 밝히고, 본문에 없는 내용은 설명 성공으로 계산하지 않았습니다.</p>{link(args.source_human, '8장면의 실제 기본 해설 판독 보기')}</section>
+    <section><h2>깊이16에서도 반복한 이유: 점수 변화와 판단 변화의 구분</h2><p>보존된 H05의 다섯 갱신은 모두 깊이16이었습니다. 각 직접 비교 안에서는 g4가 비교한 왕 수보다195·259·195·235·217센티폰 낮았고, 현재 정책에서도 다섯 번 모두 유의하게 분리됐습니다. 전체 후보 조사에 돌아온 Kf4·Kf3·Kd2는 매번 서로 가까운 평가 그룹이었습니다. 선두가 Kf4에서Kf3로 바뀐 것을 g4와 왕 수의 우열이 뒤집힌 것으로 읽으면 안 됩니다.</p>
+    <p>그러나 같은 왕 수의 절대 점수가 전체 조사와 제한 비교 사이에서188~283센티폰 달라졌습니다. 현재 충돌 검사는 이 차이만으로도 선택 증명을 무효화합니다. 전체 조사를 갱신하면 새 비교가 다시 필요해져, 같은 깊이의 반복이 생겼습니다. 이 기록은 깊이가 증가한 기록과 구분해야 합니다.</p>
+    <p>다음 구현은 먼저 주장에 필요한 증명을 정해야 합니다. 같은 현재 위치의 직접 비교로 ‘확인한 이 대안보다 약하다’를 입증하는 일과, 정확한 최선 수·점수·전체 방어·원래 판단의 원인을 입증하는 일에는 다른 의무가 있습니다. 이 구분은 아직 구현하지 않은 설계 과제입니다. 다른 위치의 후속 값이나 서로 다른 검색의 절대 점수를 합치지 않고, 깊이18 안의 유한 재검증 뒤에도 필요한 이유가 미확인이면 그대로 남겨야 합니다. 상대적인 우열이 일관됐다는 사실만으로 전략적 이유까지 확인됐다고 세지 않습니다.</p>{link(conflict_audit_path, '다섯 비교의 정확한 범위와 코드 검토 보기')}</section>
     <section><h2>이후 작업의 기준</h2><p>새로운 깊이 증가보다 필요한 질문의 완료와 반박 조건이 우선입니다. 같은 깊이에서도 필요한 비교가 끝나지 못하는 이유를 먼저 없애고, 현재의 강한 방어 아래 어떤 기능이나 계획이 남는지를 작은 판단 답으로 연결해야 합니다.</p>
     <p>그 판단이 다른 주요 응수에서도 성립하는지, 필요한 대가가 같은 설명 안에 남는지, 평범한 수는 짧은 목적 설명으로 충분한지를 기본 출력만 읽고 평가해야 합니다. 더 많은 관계나 더 긴 수순을 출력하는 것으로 진척을 세지 않습니다.</p></section>
     <section><h2>깊이를 늘리기 전에 줄일 수 있는 처리 비용</h2><p>NB1의 새 실행은192.274초였고, 엔진이 기록한 시간은25.985초, Java 요청 처리 합계는104.480초였습니다. 전달하는 상태의 크기도 약92KB에서21.3MB로 늘었습니다. 여덟 이론서 장면은 전체399.620초 중 Java 요청 처리212.774초, 엔진 어댑터93.217초가 기록됐습니다.</p>

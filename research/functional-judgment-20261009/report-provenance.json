@@ -1,6 +1,6 @@
 {
-  "generated_utc": "2026-10-09T06:48:14.085452+00:00",
-  "report_sha256": "3dd665f65fd4b0c54d38c6732db2caddf5c58810071b8578fa9fdd68b32e1ea5",
+  "generated_utc": "2026-10-09T07:17:10.427440+00:00",
+  "report_sha256": "9b83a1c93284da5df2df36adfd505bb272e074d6ef6a9ec784f1c1a5cd49018c",
   "test_count": 210,
   "source_sha256": {
     "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/result.json": "f6e48948dc37843f48050b7dc26b4af45b731c06815ec9f73d0f65edd6e3e020",
@@ -23,6 +23,8 @@
     "research/functional-judgment-20261009/source-scene-current10s-normal21-concise-execution-index.json": "d003e3b4342d53819b90819ee7d7d058a21a587618788c6020f49e09188669d9",
     "research/functional-judgment-20261009/h05-fresh10s-nominal16-plan-metadata-correction.json": "165f714f218ebd7e242383ab5a3d4ffdc3324b3a2a8229d2e0cfb47a0ed2e86e",
     "research/functional-judgment-20261009/current10s-rpc-certificate-cost-readonly-audit.json": "be75dc66269e5f2a39a8804f6160eba144e65067137d953f887e8cddf2e4faaf",
+    "research/functional-judgment-20261009/h05-five-conflict-cycles-qualitative-scope-audit10s.json": "04b6f465dfd5667051df0f8bf40cf67a575ab19a4c562b30f7647ebac730d4a7",
+    "research/functional-judgment-20261009/final-qualitative-conflict-handoff-addendum.json": "ed0996abfdf5099410fe52b1c85d824cca5b404b3b3dfbb5151815c0bc62242f",
     "research/functional-judgment-20261009/bounded-medium-goal-partial-outcome-and-depth18-handoff.json": "a8122a4d650b0d7703a3035acd8fb616bf89752a6dd1902de4c428566f4e440d"
   },
   "fixed_criteria_not_changed": true,

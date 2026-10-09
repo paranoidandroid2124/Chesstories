@@ -1,0 +1,20 @@
+{
+  "recorded_utc": "2026-10-09T07:17:00Z",
+  "product_commit": "ea0232a849",
+  "prior_evidence_commit": "52e6da1b66",
+  "supersedes_original_success_criteria": false,
+  "original_outcome": "partial; fresh original-judgment minimum 0/2, source scenes 0/8, historical four 0/4",
+  "audit": "h05-five-conflict-cycles-qualitative-scope-audit10s.json",
+  "audit_sha256": "04b6f465dfd5667051df0f8bf40cf67a575ab19a4c562b30f7647ebac730d4a7",
+  "implemented_in_product": false,
+  "new_engine_queries": 0,
+  "finding": "All five parent full-pool/named-pair renewals remained nominal depth16. Each named pair independently separated g4 below its tested king alternative. Absolute same-move score disagreement, rather than this relative ordering reversing, invalidated the current selection certificate and required a new pair after a renewed epoch.",
+  "next_design_inference": "Define the claim before its required revalidation. An exact current pair can witness that one legal alternative is stronger; identifying the globally strongest alternative is a different requirement. Positive competitiveness, adequate reply coverage, numerical magnitude and response-sensitive root causality still require their own current coherent evidence.",
+  "required_boundaries": [
+    "Keep nominal depth <=18 and finite refreshes; retain unknown when the required proof remains incomplete.",
+    "Never combine unrestricted leader CP with restricted g4 CP or borrow child-position values for the parent.",
+    "Retain exact full history, position, profile, current ownership and all conditional prices.",
+    "Qualitative pair agreement does not prove strategic function, unique bestness or the original root grade cause.",
+    "Preserve prior immutable seals and original failure records. This addendum records an unimplemented design inference."
+  ]
+}

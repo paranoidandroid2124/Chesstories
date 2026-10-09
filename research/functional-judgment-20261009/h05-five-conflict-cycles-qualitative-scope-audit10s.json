@@ -1,0 +1,524 @@
+{
+  "sealed_utc": "2026-10-09T07:09:47.437504+00:00",
+  "new_engine_queries": 0,
+  "runtime_replays": 0,
+  "product_or_test_mutations": 0,
+  "source_hashes_pre_post_equal": true,
+  "source_sha256": {
+    "research\\functional-judgment-20261009\\h05-10e-five-local-conflict-cycles.json": "48f8bd56de8b7c2feca6fd1f4d64e40d04e6c91e6b65f2e8d88dcf34d9fb4621",
+    "target\\functional-judgment-20261009\\h05-10e-family-required-policy1800-caps250m\\H05Family10eRequiredPolicy1800Caps250m\\stored-reports.jsonl": "92bb4e998560f81074238c155af7e9b8899a2faa89b6d5990693a8eac24a5b38",
+    "target\\functional-judgment-20261009\\h05-10e-family-required-policy1800-caps250m\\H05Family10eRequiredPolicy1800Caps250m\\final-snapshots.jsonl.gz": "3ccdcd6b3913624059105603387676f780ab5930228377aed31c5035da501820",
+    "target\\functional-judgment-20261009\\h05-10e-family-required-policy1800-caps250m\\H05Family10eRequiredPolicy1800Caps250m\\manifest.json": "94641fbe31827a1792a233150feff6e16154b756d83828119f4a313aecc7729f",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryComparisonConflict.scala": "8d10c62e69d6cbc9d4f8d17fff26503efad981aecc63c6d655a98b73a9ffa192",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryChoiceValue.scala": "76c836f6f0d20f5ca0ca06c04aa5529848adb393399d981043469c8247692551",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\PrincipalVariationComparison.scala": "05aca472f02fce53a619e2c531977aaf28d9b3d202831342add172553f9a3c2f",
+    "chesstory-runtime\\src\\main\\scala\\lila\\chessjudgment\\model\\evaluation\\PerspectiveMath.scala": "b874553622470a003a54661926d235d7c2d334dc525d9bb3c8e88d645da33f2b",
+    "chesstory-runtime\\src\\main\\scala\\lila\\chessjudgment\\model\\evaluation\\VerdictThresholdPolicy.scala": "0becb996d8c3babe666e5b2df2769c0130fff27e304d3e4446f365a8a5d5ac7b",
+    "chesstory-runtime\\src\\main\\scala\\lila\\chessjudgment\\model\\evaluation\\JudgmentThresholds.scala": "be318964b6262ae350ec2d0346c671a06f8a6297901958fd18db21d24708eb21"
+  },
+  "policy_projection": "Direct arithmetic transcription of current PerspectiveMath/VerdictThresholdPolicy; not a new product receipt or independent engine confirmation.",
+  "cycles": [
+    {
+      "full_work": "work:6",
+      "named_work": "work:7",
+      "child_work": "work:8",
+      "full_key": "7251829fbc3091025d24a4ab8b91d945a119e4b0340cce51bd5c7dcb4b6163c6",
+      "named_key": "4634a48b6c14656e2cf69e26eaac4fc6ccf7cadc4ef3ab386c9488c7b6f3bae6",
+      "scope": [
+        "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        [
+          "f3e3",
+          "e5e6"
+        ],
+        "8/5p2/4k3/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+        "sf18-smallnet-t2-h16-v1",
+        "f3e3",
+        "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "6ec2904acb419df800f07c23857d80fb212efb75ffec059aa4e5aea1dbb79f58",
+        [
+          "f3e3",
+          "e5e6"
+        ]
+      ],
+      "required_depth": 16,
+      "completed_depth": 16,
+      "same_move": "e3f4",
+      "full_cp": 446,
+      "named_cp": 198,
+      "absolute_same_move_drift_cp": 248,
+      "drift_verdict_under_current_policy": "Mistake",
+      "g4_named_cp": 3,
+      "g4_loss_cp_inside_named_pair": 195,
+      "g4_named_verdict": "Mistake",
+      "g4_named_quality_band": "separated",
+      "all_returned_king_choices_close": true,
+      "returned_king_bands": [
+        {
+          "move": "e3f4",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.0
+        },
+        {
+          "move": "e3d2",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.050089728851688164
+        },
+        {
+          "move": "e3f3",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.050089728851688164
+        }
+      ],
+      "g4_returned_in_full_pool": false,
+      "first_divergent_child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f4",
+        "f7f6"
+      ],
+      "full_pv_child_move": "f4g4",
+      "named_pv_child_move": "f4e3",
+      "child_values": [
+        {
+          "move": "f4g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 481
+          }
+        },
+        {
+          "move": "f4e3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 479
+          }
+        }
+      ],
+      "child_is_separate_position_not_parent_value": true,
+      "search_limits_full": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 3
+      },
+      "search_limits_named": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 2
+      },
+      "source_question_id": "comparison-conflict:ddc1d06f7eeecd9e90242a2318e6090aecde86b7d202f41dc4f5dec97d8976f7"
+    },
+    {
+      "full_work": "work:9",
+      "named_work": "work:10",
+      "child_work": "work:11",
+      "full_key": "c73252f547791fb865363815c01b21c9a20ae4af9b942aa4e0702ba239e52592",
+      "named_key": "1fc3659bc2640325276ee2b135f72f16e126c7da9483778fb5b7f8e11f2c1d57",
+      "scope": [
+        "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        [
+          "f3e3",
+          "e5e6"
+        ],
+        "8/5p2/4k3/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+        "sf18-smallnet-t2-h16-v1",
+        "f3e3",
+        "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "6ec2904acb419df800f07c23857d80fb212efb75ffec059aa4e5aea1dbb79f58",
+        [
+          "f3e3",
+          "e5e6"
+        ]
+      ],
+      "required_depth": 16,
+      "completed_depth": 16,
+      "same_move": "e3f4",
+      "full_cp": 447,
+      "named_cp": 259,
+      "absolute_same_move_drift_cp": 188,
+      "drift_verdict_under_current_policy": "Mistake",
+      "g4_named_cp": 0,
+      "g4_loss_cp_inside_named_pair": 259,
+      "g4_named_verdict": "Blunder",
+      "g4_named_quality_band": "separated",
+      "all_returned_king_choices_close": true,
+      "returned_king_bands": [
+        {
+          "move": "e3f4",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.0
+        },
+        {
+          "move": "e3f3",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.40321398167668576
+        },
+        {
+          "move": "e3d2",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 1.8235972972667582
+        }
+      ],
+      "g4_returned_in_full_pool": false,
+      "first_divergent_child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f4"
+      ],
+      "full_pv_child_move": "e6f6",
+      "named_pv_child_move": "f7f6",
+      "child_values": [
+        {
+          "move": "e6f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 515
+          }
+        },
+        {
+          "move": "f7f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 517
+          }
+        }
+      ],
+      "child_is_separate_position_not_parent_value": true,
+      "search_limits_full": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 3
+      },
+      "search_limits_named": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 2
+      },
+      "source_question_id": "comparison-conflict:292649a184e64ab59eef3dada933ab7c25ad08a6d0212d9fa3c63069c4b36c3d"
+    },
+    {
+      "full_work": "work:12",
+      "named_work": "work:13",
+      "child_work": "work:14",
+      "full_key": "ace29b1632c9b2f1657594a4b02918f991f9ed2735c7638fed00ef93aa582839",
+      "named_key": "df0c81b2c1fd742ae48abfd41130a832d39b0e2925eb94f62986a81b90bfd1ef",
+      "scope": [
+        "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        [
+          "f3e3",
+          "e5e6"
+        ],
+        "8/5p2/4k3/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+        "sf18-smallnet-t2-h16-v1",
+        "f3e3",
+        "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "6ec2904acb419df800f07c23857d80fb212efb75ffec059aa4e5aea1dbb79f58",
+        [
+          "f3e3",
+          "e5e6"
+        ]
+      ],
+      "required_depth": 16,
+      "completed_depth": 16,
+      "same_move": "e3f3",
+      "full_cp": 478,
+      "named_cp": 195,
+      "absolute_same_move_drift_cp": 283,
+      "drift_verdict_under_current_policy": "Mistake",
+      "g4_named_cp": 0,
+      "g4_loss_cp_inside_named_pair": 195,
+      "g4_named_verdict": "Mistake",
+      "g4_named_quality_band": "separated",
+      "all_returned_king_choices_close": true,
+      "returned_king_bands": [
+        {
+          "move": "e3f3",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.0
+        },
+        {
+          "move": "e3f4",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.0
+        },
+        {
+          "move": "e3d2",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.046174335952215984
+        }
+      ],
+      "g4_returned_in_full_pool": false,
+      "first_divergent_child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f3",
+        "e6e5",
+        "f3e3"
+      ],
+      "full_pv_child_move": "e5d6",
+      "named_pv_child_move": "e5e6",
+      "child_values": [
+        {
+          "move": "e5e6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 427
+          }
+        },
+        {
+          "move": "e5d6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 563
+          }
+        }
+      ],
+      "child_is_separate_position_not_parent_value": true,
+      "search_limits_full": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 3
+      },
+      "search_limits_named": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 2
+      },
+      "source_question_id": "comparison-conflict:69bf0206ba018a79a42f91608c39d4e5190e107b0a20c5112f0388002225e1fb"
+    },
+    {
+      "full_work": "work:15",
+      "named_work": "work:16",
+      "child_work": "work:17",
+      "full_key": "79198d52b9d91a44500cac3288a84815bf9f626874aee77d81a1ccdb6d76d8de",
+      "named_key": "eca3fb32d8f20cb8695fc3ac82f8adfcfd2b3e955c362490480247b673f9a554",
+      "scope": [
+        "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        [
+          "f3e3",
+          "e5e6"
+        ],
+        "8/5p2/4k3/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+        "sf18-smallnet-t2-h16-v1",
+        "f3e3",
+        "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "6ec2904acb419df800f07c23857d80fb212efb75ffec059aa4e5aea1dbb79f58",
+        [
+          "f3e3",
+          "e5e6"
+        ]
+      ],
+      "required_depth": 16,
+      "completed_depth": 16,
+      "same_move": "e3f3",
+      "full_cp": 440,
+      "named_cp": 235,
+      "absolute_same_move_drift_cp": 205,
+      "drift_verdict_under_current_policy": "Mistake",
+      "g4_named_cp": 0,
+      "g4_loss_cp_inside_named_pair": 235,
+      "g4_named_verdict": "Blunder",
+      "g4_named_quality_band": "separated",
+      "all_returned_king_choices_close": true,
+      "returned_king_bands": [
+        {
+          "move": "e3f3",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.0
+        },
+        {
+          "move": "e3d2",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 1.2012002238554516
+        },
+        {
+          "move": "e3f4",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 1.2012002238554516
+        }
+      ],
+      "g4_returned_in_full_pool": false,
+      "first_divergent_child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f3",
+        "e6e5",
+        "f3e3",
+        "e5e6",
+        "e3f4"
+      ],
+      "full_pv_child_move": "f7f6",
+      "named_pv_child_move": "e6d6",
+      "child_values": [
+        {
+          "move": "f7f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 392
+          }
+        },
+        {
+          "move": "e6d6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 554
+          }
+        }
+      ],
+      "child_is_separate_position_not_parent_value": true,
+      "search_limits_full": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 3
+      },
+      "search_limits_named": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 2
+      },
+      "source_question_id": "comparison-conflict:0297062463dc42bcbe4131d08bcc69602cd2cb28da0da0a0c767363d08304538"
+    },
+    {
+      "full_work": "work:18",
+      "named_work": "work:19",
+      "child_work": "work:20",
+      "full_key": "8fc54f72c03e5bd9790f280f57a3d84235100bc5dfbbc0b0ee9fb0e350de6733",
+      "named_key": "78bdfa45b612a19a0a14bcaaa6a267d56d9d23a5640018de7a3c9d06259bb710",
+      "scope": [
+        "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        [
+          "f3e3",
+          "e5e6"
+        ],
+        "8/5p2/4k3/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+        "sf18-smallnet-t2-h16-v1",
+        "f3e3",
+        "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "6ec2904acb419df800f07c23857d80fb212efb75ffec059aa4e5aea1dbb79f58",
+        [
+          "f3e3",
+          "e5e6"
+        ]
+      ],
+      "required_depth": 16,
+      "completed_depth": 16,
+      "same_move": "e3f3",
+      "full_cp": 471,
+      "named_cp": 222,
+      "absolute_same_move_drift_cp": 249,
+      "drift_verdict_under_current_policy": "Mistake",
+      "g4_named_cp": 5,
+      "g4_loss_cp_inside_named_pair": 217,
+      "g4_named_verdict": "Mistake",
+      "g4_named_quality_band": "separated",
+      "all_returned_king_choices_close": true,
+      "returned_king_bands": [
+        {
+          "move": "e3f3",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.0
+        },
+        {
+          "move": "e3d2",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.09415770987635597
+        },
+        {
+          "move": "e3f4",
+          "quality_band": "close",
+          "white_win_percent_loss_within_this_pool": 0.718062644477854
+        }
+      ],
+      "g4_returned_in_full_pool": false,
+      "first_divergent_child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f3",
+        "e6e5",
+        "f3e3",
+        "e5e6",
+        "e3f4",
+        "e6d7"
+      ],
+      "full_pv_child_move": "f4f5",
+      "named_pv_child_move": "e4e5",
+      "child_values": [
+        {
+          "move": "f4f5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 539
+          }
+        },
+        {
+          "move": "e4e5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 415
+          }
+        }
+      ],
+      "child_is_separate_position_not_parent_value": true,
+      "search_limits_full": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 3
+      },
+      "search_limits_named": {
+        "depth": 16,
+        "nodes": 250000000,
+        "movetime_ms": 120000,
+        "multi_pv": 2
+      },
+      "source_question_id": "comparison-conflict:4bc8e69f7406bc4fa8572592f679e605103a2b19d89e3a5c719d013029cd60be"
+    }
+  ],
+  "conclusion": {
+    "primary_renewal_trigger": "All five are material absolute evaluation disagreements for the SAME king move across full and restricted receipts. None is a reversal of g4 versus the tested king alternative.",
+    "within_pair_judgment": "Every named receipt independently rates g4 materially below its tested king alternative. Direction stays the same; do not combine pool leader CP with named g4 CP.",
+    "ranking_and_adequacy": "The returned leader changes Kf4 to Kf3, while the exact returned group remains the same three king moves and all three are QualityBand.Close in every pool. No unique best or all-legal adequacy proof.",
+    "functional_continuation": "The common king move has different PV continuations. Their first divergences produce five genuinely different child positions; actual child ordering changes which continuation can be preferred there. This does not reverse the bounded parent g4 relation and cannot supply the parent value.",
+    "current_code_gate": "ComparisonConflict.invalidatesSelection accepts either betweenCurrentValues absolute disagreement OR a separated ranking reversal. ChoiceValue.read is vetoed by selectionConflict even though ChoiceValue.contradicts alone requires a ranking reversal. Full refresh opens a new epoch and requires a new owned named pair, producing repeated renewed16 investigations here.",
+    "scope_correction": "These five renewals all remain depth16; they are repeated epoch investigations, not increasing depth. Later historical depth growth is a separate trace.",
+    "claims_that_need_current_revalidation": [
+      "Current exact numeric level of a move",
+      "Current strongest-returned representative and adequate returned reply group when materially contradicted",
+      "A specific later response/price mechanism claimed as the reason for the earlier choice"
+    ],
+    "bounded_claims_that_can_survive": [
+      "Exact certified legal actions and original-piece identity/control facts, tied to their position and full history",
+      "Literal conditional capture/check/recapture prices on their owned certified paths",
+      "Receipt-scoped fact that g4 was separated below its tested king alternative in each of these five independent named comparisons"
+    ],
+    "bounded_stop_proposal_read_only": "At <=18 retain unknown for the unresolved current cross-scope value certificate; do not automatically renew solely to reconcile absolute CP if the requested claim is only an already witnessed bounded legal/price fact or receipt-scoped comparative direction. A function/value claim requires its own response-sensitive evidence and may not inherit qualitative agreement as causal proof.",
+    "not_established": [
+      "Stable numerical magnitude",
+      "Unique strongest king move",
+      "All legal reply adequacy",
+      "Original root grade causal explanation",
+      "Value or exact prices of a changed PV borrowed from another child/history/profile/epoch"
+    ],
+    "human_full_minimum_unchanged": {
+      "original_four": 0,
+      "eight_source_controls": 0
+    }
+  }
+}
