@@ -1,0 +1,49 @@
+{
+  "goal_started_utc": "2026-10-08T16:19:15+00:00",
+  "maximum_hours": 15,
+  "deadline_utc": "2026-10-09T07:19:15+00:00",
+  "baseline": "valuebase40a",
+  "source_manifest": "target/relationship-delivery-20261004/main-manifest-valuebase40a.json",
+  "fixed_criteria": {
+    "path": "research\\meaning-conditions-20261008\\independent-functional-followup-product-inputs.json",
+    "sha256": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+    "old_full_utility_passed": 0,
+    "total": 4,
+    "criteria_not_relaxed": true
+  },
+  "primary_questions": [
+    "Explain the actual useful choice under current adequate defensive replies, separately from a conditional legal recapture example.",
+    "Track a response-dependent change of functional provider or plan; preserve necessary conditions and physical prices rather than insisting on one SAN/PV."
+  ],
+  "phases": [
+    "Audit current callers, stored first failures and unchanged human questions before changes.",
+    "Define exact claim, owned position, required strongest/near-best response coverage and falsifier.",
+    "Complete needed actual comparisons; record profiles, failed efforts and scopes.",
+    "Strengthen the existing common product path and selected answer without case/SAN branches.",
+    "Verify automatic default prose, negative controls, ownership/prices and existing regressions after a source freeze."
+  ],
+  "success_requirements": [
+    "At least one new automatically delivered useful-choice/judgment connection beyond the old conditional mechanism, validated against fixed criteria.",
+    "A changed adequate reply must yield its own checked useful route or explicit refutation/unknown; no borrowed child value.",
+    "Important observed costs of the selected function remain represented.",
+    "Existing function and current-reply regressions preserve behavior."
+  ],
+  "measure_separately": [
+    "legal availability",
+    "conditional price/function",
+    "useful choice against adequate resistance",
+    "original root judgment",
+    "basic-only reading",
+    "unnecessary excess",
+    "missing prices",
+    "completed and failed actual cost"
+  ],
+  "roles": {
+    "root": "All product edits and integration",
+    "functional_condition_audit": "Read-only connected-code audit and negative controls",
+    "counter_completion_and_scope": "Comparison scope, completion and receipt audit",
+    "deep_theory_scenes": "Independent theory scenes and fixed basic-reading criteria"
+  },
+  "historical_records_are_immutable": true,
+  "baseline_owner_copy": "The previous checkout belongs to another task; only its verified read-only source/records were copied here."
+}

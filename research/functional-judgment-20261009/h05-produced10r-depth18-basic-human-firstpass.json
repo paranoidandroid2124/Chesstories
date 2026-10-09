@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-09T04:57:36+00:00",
+  "reader": "parent agent; BASIC before recovered private boundary, selection and price audits",
+  "basic_path": "target/functional-judgment-20261009/h05-10r-bounded18-ui21b/cleanup-failure-recovery/basic-only.json",
+  "basic_sha256": "1aa070f5135184d99fee8c180e076812386304266d35954373b27c8cf186709a",
+  "prior_outputs_and_standalone_study_known": true,
+  "not_a_blind_holdout": true,
+  "criteria_unchanged": [
+    "research/meaning-conditions-20261008/h05-original-root-human-precomparison-criteria.json",
+    "research/functional-judgment-20261009/h05-minimum-response-sensitive-function-value-chain.json"
+  ],
+  "recoverable_from_basic": [
+    "g4 spends the original g3 pawn advance whereas Ke3 keeps it available",
+    "after Ke3 f6, the tested Kf3 evaluates above an immediate g4",
+    "the witnessed Kf3 Kd6 Ke2 Ke5 Ke3 manoeuvre restores the same piece placement with the opponent to move without spending g4"
+  ],
+  "not_recoverable_from_basic": [
+    "which effective resistance makes retaining the pawn useful at the current board",
+    "how the own plan and needed function change under another adequate reply",
+    "the connected queenside/central conversion and its required original pawn losses",
+    "a bounded complete reasoning chain from resistance and conversion back to the original move verdict"
+  ],
+  "status": "partial factual and conditional answer; not full H05 root-judgment explanation",
+  "full_old_cases_passed": 0,
+  "full_fixed_source_cases_passed": 0,
+  "failure_semantics": "The automatic text is assessed independently from completed standalone18 queries. Cap termination and a useful king cycle do not count as a complete root-value explanation."
+}

@@ -1,0 +1,1136 @@
+{
+  "recorded_utc": "2026-10-08T17:45:38.777450+00:00",
+  "execution_audit_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\source-scene-before40a-execution-audit.json",
+  "execution_audit_sha256": "5abf96e6181a03c2144bda958c41b2f1888c486e26788f92f288754da9db1f8b",
+  "actual_new_queries": 43,
+  "replayed_queries": 0,
+  "completed_queries": 43,
+  "failed_queries": 0,
+  "all_h16_threads2_clear_hash_profiles_verified": true,
+  "requested_product_depths": [
+    8,
+    16,
+    17
+  ],
+  "total_product_job_elapsed_ms": 124653,
+  "total_engine_cost": {
+    "frontend_execution_elapsed_ms": 29901,
+    "executor_elapsed_ms": 29861,
+    "engine_reported_ms": 23553,
+    "nodes": 37491486
+  },
+  "cases": [
+    {
+      "game_id": "FJ-SG35-ROOT-NG8",
+      "product_job_elapsed_ms": 18820,
+      "actual_queries": 4,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 3309,
+        "executor_elapsed_ms": 3297,
+        "engine_reported_ms": 2657,
+        "nodes": 3972209
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "3cd7d4dbfbdf63c9cc2ea736599ad8f080276ed09c31b0d9656dec230043e188",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 153,
+            "executor_elapsed_ms": 148,
+            "engine_reported_ms": 53,
+            "nodes": 33148
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "1b007fdc8f9506340ad754325b56a61f27f4806d37004d6689cc251452dc3ce0",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1061,
+            "executor_elapsed_ms": 1058,
+            "engine_reported_ms": 1004,
+            "nodes": 1524429
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "eed06609c27855413985ed3ef645c4eec4be46d51be6a75c9171134bcac0b0f7",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1402,
+            "executor_elapsed_ms": 1400,
+            "engine_reported_ms": 1206,
+            "nodes": 1789770
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "5775d7b5e120581c48900596f9da0c64f9c8bb52921c07785fd4a5070db94b66",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 693,
+            "executor_elapsed_ms": 691,
+            "engine_reported_ms": 394,
+            "nodes": 624862
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG35-ROOT-ND6",
+      "product_job_elapsed_ms": 14578,
+      "actual_queries": 6,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 6509,
+        "executor_elapsed_ms": 6492,
+        "engine_reported_ms": 5017,
+        "nodes": 7724540
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "3cd7d4dbfbdf63c9cc2ea736599ad8f080276ed09c31b0d9656dec230043e188",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 35,
+            "executor_elapsed_ms": 34,
+            "engine_reported_ms": 16,
+            "nodes": 23392
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "14624fae827b218c0d68ef27b878909012a543a1e85c825ed22ff24123319c4a",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "e7g8",
+              "c4d6"
+            ]
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500 searchmoves e7g8 c4d6",
+          "cost": {
+            "frontend_execution_elapsed_ms": 37,
+            "executor_elapsed_ms": 36,
+            "engine_reported_ms": 6,
+            "nodes": 6781
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "ef37ac168596ea5aa63ac1bab58391f640afd0e0e5aa134614de6d5d4cae6e6c",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1034,
+            "executor_elapsed_ms": 1033,
+            "engine_reported_ms": 994,
+            "nodes": 1531638
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "bf707a5c5e6ae428c0e4f861f26a24195241756e2449262d142fb6e86fd982da",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "e7g8",
+              "c4d6"
+            ]
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500 searchmoves e7g8 c4d6",
+          "cost": {
+            "frontend_execution_elapsed_ms": 423,
+            "executor_elapsed_ms": 423,
+            "engine_reported_ms": 347,
+            "nodes": 493156
+          }
+        },
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "e4497299a854cf378fa0e1efe11a16b14bcd905348b086df858adb1398b86238",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "b3b6",
+              "a4a5"
+            ]
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500 searchmoves b3b6 a4a5",
+          "cost": {
+            "frontend_execution_elapsed_ms": 659,
+            "executor_elapsed_ms": 658,
+            "engine_reported_ms": 334,
+            "nodes": 523128
+          }
+        },
+        {
+          "work_id": "work:5",
+          "execution_key_sha256": "be79a87832f860df4bdb5986225d48f4e9f92f5200a5165004c238a949fc3713",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1012,
+            "executor_elapsed_ms": 1011,
+            "engine_reported_ms": 663,
+            "nodes": 1174236
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG35-LATE-ND6",
+      "product_job_elapsed_ms": 11420,
+      "actual_queries": 4,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 9682,
+        "executor_elapsed_ms": 9659,
+        "engine_reported_ms": 7670,
+        "nodes": 12068824
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "8a47cab99494ca3d3e8f852b14d19f3be9964a2e1c4bbf9282ec7d36f0d15cd7",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 28,
+            "executor_elapsed_ms": 27,
+            "engine_reported_ms": 11,
+            "nodes": 16034
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "f54c5d5af9aa37ca0a2c14dcd3d76afa392496db188f08aa2f9466122e70792b",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 924,
+            "executor_elapsed_ms": 923,
+            "engine_reported_ms": 891,
+            "nodes": 1327063
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "a64a07b16617b3e55465baecd06139eb0af57b35c778dcdaca8bcd489d71573e",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1094,
+            "executor_elapsed_ms": 1092,
+            "engine_reported_ms": 877,
+            "nodes": 1386943
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "3b736fabb4890b4f73844f4819d6b8699151bbfef61e39f792e1e97f3539ad9e",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1127,
+            "executor_elapsed_ms": 1125,
+            "engine_reported_ms": 874,
+            "nodes": 1614244
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG35-LATE-NE4",
+      "product_job_elapsed_ms": 34181,
+      "actual_queries": 10,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 18605,
+        "executor_elapsed_ms": 18574,
+        "engine_reported_ms": 14701,
+        "nodes": 23006410
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "8a47cab99494ca3d3e8f852b14d19f3be9964a2e1c4bbf9282ec7d36f0d15cd7",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 31,
+            "executor_elapsed_ms": 30,
+            "engine_reported_ms": 12,
+            "nodes": 17321
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "2178385871cdbecc420abac6a446e17334144fa83c9c81d2ad425adafce20ea6",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "c4a5",
+              "f6e4"
+            ]
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500 searchmoves c4a5 f6e4",
+          "cost": {
+            "frontend_execution_elapsed_ms": 45,
+            "executor_elapsed_ms": 44,
+            "engine_reported_ms": 12,
+            "nodes": 15175
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "7c037ca8651d055ce82d2ccd4dc87327b45602ac1533ea8f40ec35edcc36fbf5",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 970,
+            "executor_elapsed_ms": 969,
+            "engine_reported_ms": 925,
+            "nodes": 1395316
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "c1cc9c769b94ec62d76d7b6dfb37775a8f5ac5fad54ac61575036e9de693bffb",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "c4d6",
+              "f6e4"
+            ]
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500 searchmoves c4d6 f6e4",
+          "cost": {
+            "frontend_execution_elapsed_ms": 635,
+            "executor_elapsed_ms": 634,
+            "engine_reported_ms": 553,
+            "nodes": 837933
+          }
+        },
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "a68b68bc79f54da457ddfb5cebf11293e8b6607eef5d3864ee257ccb021b2d61",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 20000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1252,
+            "executor_elapsed_ms": 1251,
+            "engine_reported_ms": 999,
+            "nodes": 1621043
+          }
+        },
+        {
+          "work_id": "work:5",
+          "execution_key_sha256": "cea969905ea93bfe045c58a11f3765fa6ab705342fb4f4f6bb8e0a7e72379db6",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 17,
+          "completed_depth": 17,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 17 nodes 250000000 movetime 120000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1843,
+            "executor_elapsed_ms": 1842,
+            "engine_reported_ms": 1588,
+            "nodes": 2424345
+          }
+        },
+        {
+          "work_id": "work:6",
+          "execution_key_sha256": "00bd44ce9651f9f8f8a1b31a5f1b6310f7b0f3202c4361732b5f5c01c5df5515",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 17,
+          "completed_depth": 17,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "c4d6",
+              "f6e4"
+            ]
+          },
+          "go": "go depth 17 nodes 2000000 movetime 2500 searchmoves c4d6 f6e4",
+          "cost": {
+            "frontend_execution_elapsed_ms": 959,
+            "executor_elapsed_ms": 958,
+            "engine_reported_ms": 736,
+            "nodes": 1139975
+          }
+        },
+        {
+          "work_id": "work:7",
+          "execution_key_sha256": "0d65033066b9dbb08cc4d7806504e2781ab5f78301fab2f2c0db847807887327",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 17,
+          "completed_depth": 17,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "g3e4",
+              "a4a5"
+            ]
+          },
+          "go": "go depth 17 nodes 40000000 movetime 8000 searchmoves g3e4 a4a5",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1151,
+            "executor_elapsed_ms": 1151,
+            "engine_reported_ms": 885,
+            "nodes": 1376610
+          }
+        },
+        {
+          "work_id": "work:8",
+          "execution_key_sha256": "e658b53c7930a62656b7686d33df398fe3d3fb7566072e70a705ece6130de95e",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 17,
+          "completed_depth": 17,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "g3e4",
+              "d3b1"
+            ]
+          },
+          "go": "go depth 17 nodes 40000000 movetime 8000 searchmoves g3e4 d3b1",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1031,
+            "executor_elapsed_ms": 1031,
+            "engine_reported_ms": 686,
+            "nodes": 1095725
+          }
+        },
+        {
+          "work_id": "work:9",
+          "execution_key_sha256": "c22b86de199fe7e83d73fb51e810ebd1ed3f51a4e38a5464d2f17334218d5f14",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 17,
+          "completed_depth": 17,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "g3e4",
+              "d3c3"
+            ]
+          },
+          "go": "go depth 17 nodes 40000000 movetime 8000 searchmoves g3e4 d3c3",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1006,
+            "executor_elapsed_ms": 1005,
+            "engine_reported_ms": 635,
+            "nodes": 1014143
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG42-RD3",
+      "product_job_elapsed_ms": 7413,
+      "actual_queries": 4,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 20250,
+        "executor_elapsed_ms": 20219,
+        "engine_reported_ms": 15937,
+        "nodes": 25177465
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "4e1e9036a2b0dd45ee68184ab3c4f8b53dd8aa2250b36f4625d22926636629cf",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 19,
+            "executor_elapsed_ms": 19,
+            "engine_reported_ms": 5,
+            "nodes": 7296
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "deec5534f35d05b7bee0a84dc37a4873e38d0cdb6b1054b6b3e3be6a6fffdce7",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 315,
+            "executor_elapsed_ms": 315,
+            "engine_reported_ms": 284,
+            "nodes": 477981
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "f658ad5f33b5b90996b3915bc1e86680bb18b9f6185428c338639371460f24e2",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 20000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 746,
+            "executor_elapsed_ms": 746,
+            "engine_reported_ms": 576,
+            "nodes": 1001736
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "e239388d909ab62d89d45b78e0247ae2a7a6e7f207bff425705f40159df88546",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "g2g4",
+              "b3d1"
+            ]
+          },
+          "go": "go depth 16 nodes 40000000 movetime 8000 searchmoves g2g4 b3d1",
+          "cost": {
+            "frontend_execution_elapsed_ms": 565,
+            "executor_elapsed_ms": 565,
+            "engine_reported_ms": 371,
+            "nodes": 684042
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG42-BD3",
+      "product_job_elapsed_ms": 6839,
+      "actual_queries": 4,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 22149,
+        "executor_elapsed_ms": 22114,
+        "engine_reported_ms": 17483,
+        "nodes": 27992258
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "4e1e9036a2b0dd45ee68184ab3c4f8b53dd8aa2250b36f4625d22926636629cf",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 24,
+            "executor_elapsed_ms": 23,
+            "engine_reported_ms": 10,
+            "nodes": 15049
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "deec5534f35d05b7bee0a84dc37a4873e38d0cdb6b1054b6b3e3be6a6fffdce7",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 400,
+            "executor_elapsed_ms": 399,
+            "engine_reported_ms": 373,
+            "nodes": 617182
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "32c7af0aad70fa19ef60d0dfd3479b1dea7ad6394a0cb1e744a047910f59179b",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 999,
+            "executor_elapsed_ms": 998,
+            "engine_reported_ms": 853,
+            "nodes": 1554835
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "9982729ff76751ef0907f9da4e7336966d2af569b7dc957094b136478353bb12",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "a2b1",
+              "a2b3",
+              "c4d5"
+            ]
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500 searchmoves a2b1 a2b3 c4d5",
+          "cost": {
+            "frontend_execution_elapsed_ms": 476,
+            "executor_elapsed_ms": 475,
+            "engine_reported_ms": 310,
+            "nodes": 627727
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG17-BXF4",
+      "product_job_elapsed_ms": 14739,
+      "actual_queries": 5,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 25726,
+        "executor_elapsed_ms": 25689,
+        "engine_reported_ms": 20247,
+        "nodes": 32416185
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "abf5f79f9dfe2bc05790b344b85c26c32726f604214e6865a7d2a0a5684d7b73",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 23,
+            "executor_elapsed_ms": 23,
+            "engine_reported_ms": 8,
+            "nodes": 15702
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "5b42601b05e7ead3a1002e21a6050d03c9dfa4734258602c6c11fab6a38554df",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 334,
+            "executor_elapsed_ms": 333,
+            "engine_reported_ms": 303,
+            "nodes": 498878
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "001c99a7c6aaa6fe0fa1a0679bda0e404ce9679e2d5d6fc9c8a8a404497f9221",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 20000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1204,
+            "executor_elapsed_ms": 1204,
+            "engine_reported_ms": 1024,
+            "nodes": 1672525
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "5bc7b391ab821475a435e1a370330eeaf8a945b79b1af9cd36dfcb74c1147f45",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1397,
+            "executor_elapsed_ms": 1396,
+            "engine_reported_ms": 1164,
+            "nodes": 1762956
+          }
+        },
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "59ddf4aeb5242a025f087fc2fa6436e6d417bbd3596f33ec3cc86faaec47716f",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "d7d4",
+              "g3f4"
+            ]
+          },
+          "go": "go depth 16 nodes 40000000 movetime 8000 searchmoves d7d4 g3f4",
+          "cost": {
+            "frontend_execution_elapsed_ms": 619,
+            "executor_elapsed_ms": 619,
+            "engine_reported_ms": 265,
+            "nodes": 473866
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "FJ-SG17-QXD7",
+      "product_job_elapsed_ms": 16663,
+      "actual_queries": 6,
+      "engine_cost": {
+        "frontend_execution_elapsed_ms": 29901,
+        "executor_elapsed_ms": 29861,
+        "engine_reported_ms": 23553,
+        "nodes": 37491486
+      },
+      "queries": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "abf5f79f9dfe2bc05790b344b85c26c32726f604214e6865a7d2a0a5684d7b73",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 8,
+          "completed_depth": 8,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 8 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 30,
+            "executor_elapsed_ms": 30,
+            "engine_reported_ms": 13,
+            "nodes": 26935
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "5b42601b05e7ead3a1002e21a6050d03c9dfa4734258602c6c11fab6a38554df",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 5000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 861,
+            "executor_elapsed_ms": 861,
+            "engine_reported_ms": 821,
+            "nodes": 1248261
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "39a3f91100326ed4a9f5ddbbf012aee137c77b09ff7dda2a863bd994298f35d3",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500",
+          "cost": {
+            "frontend_execution_elapsed_ms": 1214,
+            "executor_elapsed_ms": 1213,
+            "engine_reported_ms": 1070,
+            "nodes": 1536087
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "f59805d458b0ce82bf0df021ea44fd47d0dbcebad596c3898c88f9d88b01ece1",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 2,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "d4f2",
+              "g8g5"
+            ]
+          },
+          "go": "go depth 16 nodes 2000000 movetime 2500 searchmoves d4f2 g8g5",
+          "cost": {
+            "frontend_execution_elapsed_ms": 628,
+            "executor_elapsed_ms": 627,
+            "engine_reported_ms": 442,
+            "nodes": 718370
+          }
+        },
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "1286bb2663f3e87f4feae05cf70462913561360f1a55efbd67ca92a1d01c65eb",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 16,
+          "completed_depth": 16,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 16 nodes 20000000 movetime 5000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 552,
+            "executor_elapsed_ms": 552,
+            "engine_reported_ms": 316,
+            "nodes": 486181
+          }
+        },
+        {
+          "work_id": "work:5",
+          "execution_key_sha256": "c172fd4c8fa7e6c2805f3bef3d22d0595ebae42844bd58c8aeeda6a86dc3ebb6",
+          "profile": "sf18-smallnet-t2-h16-v1",
+          "threads": 2,
+          "hash_mb": 16,
+          "clear_hash_once": true,
+          "fresh_game_once": true,
+          "requested_depth": 17,
+          "completed_depth": 17,
+          "multi_pv": 3,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "go": "go depth 17 nodes 250000000 movetime 120000",
+          "cost": {
+            "frontend_execution_elapsed_ms": 890,
+            "executor_elapsed_ms": 889,
+            "engine_reported_ms": 644,
+            "nodes": 1059467
+          }
+        }
+      ]
+    }
+  ],
+  "scope": "Eight exposed control BEFORE public jobs; the original independent 28-query research study is separate and unchanged.",
+  "limitations": [
+    "The 124.653-second sum is public job elapsed time, not session wall time or engine-only time.",
+    "The engine executor completed its issued bounded 8/16/17-depth product work; this is not a depth24 research result.",
+    "Threads2/Hash16 and Clear Hash do not prove deterministic scores or timings.",
+    "The unchanged public executor sends option changes only when needed; cumulative option state and each separate Clear Hash/ucinewgame were audited.",
+    "No profile values were borrowed from other jobs or supplied to the product.",
+    "Human basic-only utility reading remains independent of all cost and completion measurements."
+  ]
+}

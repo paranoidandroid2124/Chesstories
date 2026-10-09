@@ -1,0 +1,168 @@
+{
+  "sealed_utc": "2026-10-09T06:15:42.479293+00:00",
+  "epoch": "10s",
+  "reader": "Parent literal BASIC text first pass before private source8 audit",
+  "basic_path": "research/functional-judgment-20261009/source-scene-current10s-normal21-basic-text-only.json",
+  "basic_sha256": "d019408f255d78372220f236a9dd18a4c1de6016100df7f0d3d501af139038c1",
+  "original_basic_path": "research/functional-judgment-20261009/source-scene-current10s-normal21-basic.json",
+  "original_basic_sha256": "1002bff3864444fb7f1aca57d3fd7830eebb2d2a311c0209616663b2dce9d53d",
+  "criteria_path": "research/functional-judgment-20261009/human-criteria-and-scenes.json",
+  "criteria_sha256": "4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4",
+  "criteria_unchanged": true,
+  "private_trace_read_before_seal": false,
+  "public_endpoint_exposure": "Parent already viewed original public primary endpoint move arrays before the corrected text-only view. Earlier products/book controls were also known. This is not a blinded or strictly text-only exposure. Judgments above count only the literal body; nothing recoverable solely from endpoint paths is credited.",
+  "counts": {
+    "cases": 8,
+    "full_minimum_basic_answers_complete": 0,
+    "partial": 8
+  },
+  "historical_counts_not_changed": {
+    "old_four": "0/4",
+    "source_after8b": "0/8"
+  },
+  "cases": [
+    {
+      "id": "FJ-SG35-ROOT-NG8",
+      "recoverable": [
+        "The original e7 knight returns via g8 to f6 and restores d5 support.",
+        "Temporary support losses, replacement queen protection of c6, and recorded rook/queen trades are described."
+      ],
+      "missing": [
+        "The positive improvement beyond restoring a support role it already had on e7.",
+        "A compact purpose explaining the underemployed knight and retained useful central/kingside choices."
+      ],
+      "excess": "Support-loss comparisons and later queen/rook/capture events compete with the rerouting purpose.",
+      "criterion_boundary": "A concrete improving purpose suffices; no whole attack or unique numerical cause is required. Mere route and restored old support do not yet convey that improvement.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "b5eb636190748c05635bfd8eec18bbe7aa981155e27ce2e7a567d582096990f4",
+      "basic_text_characters": 1338,
+      "default_question": "selected_comparison",
+      "verdict_code": "best_choice"
+    },
+    {
+      "id": "FJ-SG35-ROOT-ND6",
+      "recoverable": [
+        "The explicitly conditional Rxb6/Rxb6/Qxc4 geometry and b6 pawn capture."
+      ],
+      "missing": [
+        "The consequence of committing the c4 knight early: b6 loss and useful White a-pawn progress.",
+        "The actual consequential response and price instead of the incidental conditional queen capture."
+      ],
+      "excess": "The conditional same-queen capture dominates the lead.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "83bce60db3a44a60a6689bddf502191097d1a070d32ae98dcea9a63886dfea67",
+      "basic_text_characters": 481,
+      "default_question": "functional_response",
+      "verdict_code": "mistake"
+    },
+    {
+      "id": "FJ-SG35-LATE-ND6",
+      "recoverable": [
+        "Nd6 evades the queen attack, supports f5, and the later c4-knight exchange leaves the f6 knight.",
+        "The two exact e4 exchanges are visible in their own branches."
+      ],
+      "missing": [
+        "Why keeping the choice of which knight enters e4 is useful at this later decision.",
+        "The surviving knight’s ready d5 role and continuing pressure, without requiring the author’s exact PV."
+      ],
+      "excess": "Repeated survival/attack events compete with the option-preservation judgment.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "72a9854855da605146bb942bf36196090d739e95ac08ff1255da4af1329f959c",
+      "basic_text_characters": 1438,
+      "default_question": "selected_comparison",
+      "verdict_code": "best_choice"
+    },
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "recoverable": [
+        "Ne4 attacks Ng3; both Bxe4/fxe4 and Nxe4/dxe4 exchange prices are explicit."
+      ],
+      "missing": [
+        "Why this immediate f6-knight commitment reduces useful pressure or options compared with delayed Nd6.",
+        "The functional difference after the exchange, rather than just its material sequence."
+      ],
+      "excess": "Several reference-line rook and queen attacks obscure the actual early-commitment issue.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "b6a00b0281f02cadebaffee9da56b8b03ed89474c389a912fda259bf23a51402",
+      "basic_text_characters": 1146,
+      "default_question": "first_target_response",
+      "verdict_code": "inaccuracy"
+    },
+    {
+      "id": "FJ-SG42-RD3",
+      "recoverable": [
+        "c3/Bb3 alignment, c3 pressure, the same rook’s Rd2 continuation, and current Re8 replacement support of e2.",
+        "The observed d4 capture and the separate pawn exchange are stated."
+      ],
+      "missing": [
+        "A centered purpose connecting rook activation and bishop restriction with maintaining the passed-pawn clamp.",
+        "How the described Rd2/Rd4 change performs the continuing conversion task; the facts are scattered and repeatedly described as lost attacks."
+      ],
+      "excess": "Lost-support and broken-alignment comparisons bury the useful purpose.",
+      "purpose_components_present": true,
+      "criterion_boundary": "No free c3 win, exact b2 route, permanent original defender, or sole small-score cause is required. This is an organization/task-connection failure, not a demand for every legal reply.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "1f4f54813bedc7b770b2cc6ce5f76955a8d3d03f10b64a01e2a72dd59d45d698",
+      "basic_text_characters": 1310,
+      "default_question": "selected_comparison",
+      "verdict_code": "playable_loss"
+    },
+    {
+      "id": "FJ-SG42-BD3",
+      "recoverable": [
+        "Bd3 supplies e2 support and the later Bf5/Ra3 line attacks the White bishop."
+      ],
+      "missing": [
+        "Why strengthening the clamp helps the continuing rook conversion when the bishop and rook roles change.",
+        "A centered purpose for this sound alternative instead of an unconnected Rf8 contrast."
+      ],
+      "excess": "Pawn exchanges, bishop evasions and the Rf8 branch lead before the useful purpose.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "290843e25dd2e56f6787316a47af099004bbda6c81839ff1fc39eef830da3071",
+      "basic_text_characters": 1027,
+      "default_question": "selected_comparison",
+      "verdict_code": "best_choice"
+    },
+    {
+      "id": "FJ-SG17-BXF4",
+      "recoverable": [
+        "Bxf4 takes the knight and evades a queen attack.",
+        "The actual Rxb7+ discovered check and Bd7 block are explicit, with recorded queen/rook trades."
+      ],
+      "missing": [
+        "A compact missed-defense judgment explaining the checking temptation and its consequence.",
+        "The consequential g-file cost/constraint and value under stronger resistance; surviving pieces alone do not establish it."
+      ],
+      "excess": "A long parallel exchange and king/check history obscures the main refutation and its scope.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "28c420869bee011418ebb32626877c81ef2c231f468c549d04307b34fecd66a7",
+      "basic_text_characters": 2870,
+      "default_question": "selected_comparison",
+      "verdict_code": "best_choice"
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "recoverable": [
+        "Qxd7 takes the rook, Qxe5 takes the loose bishop, and Bxf4 would take the knight."
+      ],
+      "missing": [
+        "Why White’s safety, active bishop and compensation change the judgment of the exchange gain.",
+        "The missed defensive resource organized as the comparison answer, with the relevant consequential resistance."
+      ],
+      "excess": "Queen attacks, routine rook support and recorded continuation labels replace the compensation judgment.",
+      "minimum_answer_complete": false,
+      "status": "partial",
+      "basic_text_sha256": "46dd5631ea35d480acdfba4b7d5aaf3e6e049130f30e842a6e73a316a1bec41f",
+      "basic_text_characters": 765,
+      "default_question": "first_target_response",
+      "verdict_code": "blunder"
+    }
+  ]
+}

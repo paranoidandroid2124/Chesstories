@@ -1,0 +1,1688 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T22:00:02.861188+00:00",
+  "phase": "Independent human functional-predicate audit of sealed H05 actual held10b forecasts, after BASIC-first seals; future10c and new NB1 receipts excluded",
+  "limits": {
+    "engines_run": 0,
+    "product_test_ui_runner_edits": 0,
+    "criteria_changed": false,
+    "old_four_case_full_utility": "0/4 unchanged",
+    "eight_source_full_utility": "0/8 unchanged",
+    "H05_added_to_old_cohort": false,
+    "production10c_success_claimed": false
+  },
+  "preserved_sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json",
+      "sha256": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-functional-root-value-human-contract-supplement-20261009.json",
+      "sha256": "194934ce44a158d83356246d32be3257133f56bc032c3dbb83f86a62dde2ab30",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+      "sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-response-value-evidence-and-human-connection-supplement.json",
+      "sha256": "84e529181ba52d35d2f2457cb1743aff0aaa1b9ee961b42ad47a4c97e065fd13",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-minimum-response-sensitive-function-value-chain.json",
+      "sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\final-theory-functional-synthesis.json",
+      "sha256": "0965ddb81ca0132614c9451b72d149b32dd5809a6d933285d840ca8c0248c1b3",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\sg45-function-plan-user-supplemental-reading-contract.json",
+      "sha256": "6539099e94aae5a1db86b7dc76e110da6cd65e5856d605fce971b80a4529c68a",
+      "unchanged": true
+    }
+  ],
+  "book_recheck": {
+    "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\100 Endgame Patterns.pdf",
+    "sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3",
+    "reading_pages_read": [
+      60,
+      61,
+      62
+    ],
+    "reading_pages_rendered_and_viewed": [
+      60,
+      61
+    ],
+    "source_footer_pages": "94–99",
+    "game": "Borja Zamarbide–Martin Benitez, La Roda 2005",
+    "scope": "This local chapter and diagrams; no whole-book completion claim",
+    "render_directory": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\h05-chain"
+  },
+  "root": {
+    "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "original_actors": "White Kf3/Pa3/Pb2/Pc3/Pe4/Pg3; Black Ke5/Pa4/Pb4/Pc4/Pc5/Pf7",
+    "ownership": "Same placement after different histories is a comparison fact, not permission to rekey an owned receipt."
+  },
+  "generic_functional_predicates": [
+    {
+      "name": "owned_current_task_state",
+      "meaning": "Exact root, whole history, current mover/time and original/current actors are known. The task is a current role: meeting a breakthrough, denying entry, producing an escorted passer, or preserving a usable reserve action.",
+      "verification": "Canonical legal replay and current relation/attack state. Named squares/actor identity alone do not establish the task."
+    },
+    {
+      "name": "action_currently_legal",
+      "meaning": "The current action is legal with exact capture/check/promotion semantics.",
+      "limit": "This supports a factual choice, not adequate defense, safety, usefulness or root causation."
+    },
+    {
+      "name": "current_adequate_opponent_resource",
+      "meaning": "Inventory current resources which can meet the task, including pawn breaks, checks, safe interception, cheaper capture and accepted exchanges.",
+      "verification": "Complete current legal inventory plus exact owned comparison for value-sensitive ranking. Unknown or unscored replies are not empty; MultiPV3 is not separately valued proof for every legal reply."
+    },
+    {
+      "name": "timed_task_performance",
+      "meaning": "At the moment the counter matters, a current actor can legally perform the task before the harmful result.",
+      "verification": "Priced legal continuation respecting turns, controlled squares, checks, occupied squares and intermediate captures. Mere king distance or a retained pawn/cycle is insufficient."
+    },
+    {
+      "name": "priced_transition_with_alternatives",
+      "meaning": "Keep consequential captures/checks/promotions with original actors. At critical states, retain every immediate legal capture/recapture and alternative checking counter.",
+      "verification": "Canonical legal inventory and short exact histories. Material can be conceded when conversion survives; nominal balance alone is not compensation or safety. A representative line stays conditional."
+    },
+    {
+      "name": "response_sensitive_role_transfer",
+      "meaning": "A different surviving actor/plan can carry the task after a response if it performs that task under current resistance.",
+      "verification": "Identify old role, its loss/price, new role/current actor and opponent resources. Old provider/route survival is not required, but a changed PV is not automatic validation or withdrawal."
+    },
+    {
+      "name": "bounded_useful_result",
+      "meaning": "A local choice performs a concrete task and its strongest completed resistance remains adequate within the declared current scope.",
+      "verification": "Owned same-position action/best-other and resistance comparisons plus board consequences. No whole-root score reused as proof of one causal feature."
+    },
+    {
+      "name": "root_judgment_connection",
+      "meaning": "Connect a local function to the original assessment only as far as matched opposing replies, alternative good plans and original adequate defense scope support it.",
+      "limit": "Different leading reply groups are not a matched dependency counterfactual. One favorable continuation is not a sole numerical cause or all-defense winning proof."
+    }
+  ],
+  "three_current_readings": [
+    {
+      "id": "A-KD6-QUEENSIDE-PREPARATION",
+      "owned_scope": "Actual held10b work4 after Ke3 f6 Kf3, unrestricted d16 MultiPV3; Kd6/f5 tied returned leaders, Ke6 also returned.",
+      "minimum_facts": [
+        "Pc3xb4 is already legal before and after preparation; pawn recapture b2xc3 is also not newly legal.",
+        "cxb4/cxb4/axb4 removes original Black Pb4/Pc5 and White Pc3, transforming original Pa3 into a b-file passer. Original Black Pc4/Pa4 can then break on c3/a3.",
+        "Ke2/Kd2/Kc2 places the current king in time to meet the outside counter in the witnessed continuation; Pe4 may be conceded.",
+        "The useful condition is timed interception with checks/counterplay priced, not exact Kd2 or King cycle recurrence."
+      ],
+      "actual_price": [
+        "After ...c3, bxc3+ removes original Black Pc4 and checks Black Kd4.",
+        "The forecast accepts ...Kxe4; Kb2 ...a3+ Kxa3 removes original Black Pa4."
+      ],
+      "falsifiers_and_unknown_closure": [
+        "After first cxb4, ...c3+ and ...Kxe4 are legal alternatives to ...cxb4: the exchange is not forced.",
+        "After bxc3+, Kc4/Ke3/Kxe4/Ke5 are legal. Only Kxe4 is this owned forecast.",
+        "A different adequate king placement/checking breakthrough may make interception late or change the required price."
+      ],
+      "bounded_comment": "In this tested ...Kd6 continuation, king preparation makes the available queenside exchange usable by putting the king in time to meet the ensuing breakthrough; conceding the e-pawn can be part of that conversion.",
+      "not_proved": "Forced exchange, all four later king replies losing, unique Kd2 route, or sole cause of original root judgment."
+    },
+    {
+      "id": "B-F5-PASSER-CHECK-ROLE-TRANSFER",
+      "owned_scope": "Actual held10b work4 ...f5 is a tied returned leader, not a weak off-main reply.",
+      "minimum_facts": [
+        "Original Pf7 goes to f5 and is captured by original Pe4. ...Kxf5 removes original Pe4.",
+        "Retained Pg3 can now advance with check on Black Kf5. The opposing f-pawn has gone, so this pawn becomes a passer; king escort/current resistance still matter.",
+        "Old Pe4 survival and the old waiting cycle are not invariants. The king and g-pawn take over the useful task."
+      ],
+      "actual_price": "...f5 exf5 Kxf5 g4+ Kg5 Kg3 ... followed by king activity/g5/Kxc5. Pe4/Pf7 exchange is an actual price.",
+      "falsifiers_and_unknown_closure": [
+        "After g4+, Ke5/Ke6/Kf6/Kg5/Kg6 are legal. Only Kg5 is this forecast.",
+        "Check forces an evasion but neither one retreat nor a forced win. A central king reply may change escort timing/queenside activity.",
+        "If Pg3 is unavailable or the current opponent can stop the passer/king task on better terms, narrow or withdraw this interpretation."
+      ],
+      "bounded_comment": "If Black resolves the central tension with ...f5, White can trade the e-pawn for that pawn and use the saved g-pawn as a checking passer, changing the earlier preparation plan.",
+      "not_proved": "All five check evasions losing, saving Pg3 universally winning, Pe4 survival necessary, or complete original root causation."
+    },
+    {
+      "id": "C-EARLY-G4-B3-BLOCKADE",
+      "owned_scope": "Actual held10b work5 after Ke3 f6 g4; Ke6/b3/Kd6 tied returned leaders at0. Placement transposes to original g4 f6 Ke3; native owner stays separate.",
+      "minimum_facts": [
+        "Pb4-b3 removes the immediate b4 capture target and locks the queenside. White a3/c3 forward squares and b2 advance are occupied. Black b3 is guarded by Pa4/Pc4.",
+        "Pg3 is already g4; g3-g4 cannot be spent again. Survival does not mean the reserve action remains available.",
+        "In the later witness White Kf4 faces Black Ke6/Pf6: Kf5 is illegal through king opposition; g5 can be met by the f-pawn, and e5 permits ...fxe5+."
+      ],
+      "actual_price": "e5 ...fxe5+ removes original Pe4 and produces opposing passed-pawn counterplay; this forecast does not demonstrate White winning conversion.",
+      "falsifiers_and_unknown_closure": [
+        "b3 is not uniquely strongest: Ke6/Kd6 also return0 with different timings.",
+        "A changed king placement or later justified exchange can alter the pawn task, so do not infer perpetual blockade from the move label.",
+        "When legal, remaining ...f5 must be considered; noPawnMovesLeft is not a general requirement."
+      ],
+      "bounded_comment": "In the tested ...b3 defense the early advance leaves no second g3-g4 tempo, while the queenside stays locked; the central break costs the e-pawn and leaves counterplay.",
+      "not_proved": "g4 useless against every reply, b3 uniquely strongest, every king entry impossible, or lack of one spare pawn move alone proving a draw."
+    }
+  ],
+  "non_king_control": {
+    "scene": "SG45 already exposed source/development scene",
+    "reading_pages": [
+      440,
+      441,
+      442,
+      443,
+      444,
+      445,
+      446
+    ],
+    "source_footer_pages": "526–534",
+    "initial_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+    "shared_function": "Nc4 controls d6 under both Nef6 and Qc7; same Rd6 remains legal.",
+    "conditional_favorable_price": "Nc4 Nef6 Rd6 Qxd6 Nxd6: knight recaptures the queen after queen takes rook.",
+    "counter_to_support_equals_safety": "Nc4 Qc7 Rd6 Nxd6 Nxd6 Qxd6: retained Black Ne8 takes the rook cheaply; White knight is then lost. Same White support, different adequate opponent capture and transaction.",
+    "common_lesson": "A geometric support/available action is only one mechanism condition. Current opponent resources, check timing and full relevant price decide whether the task is usable. Conversely old-provider loss is acceptable when a verified current plan performs the task.",
+    "limits": "These are legal price witnesses, not new strongest-response searches, all-defense proof, root ranking proof or independent new success."
+  },
+  "legal_controls": [
+    {
+      "id": "CURRENT-EXCHANGE-READY",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke6",
+        "Kd2",
+        "Ke5"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e6",
+        "e2d2",
+        "e6e5"
+      ],
+      "resulting_fen": "8/8/5p2/2p1k3/ppp1P3/P1P3P1/1P1K4/8 w - - 6 39",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [],
+      "complete_current_legal_moves": [
+        {
+          "uci": "a3b4",
+          "san": "axb4"
+        },
+        {
+          "uci": "b2b3",
+          "san": "b3"
+        },
+        {
+          "uci": "c3b4",
+          "san": "cxb4"
+        },
+        {
+          "uci": "d2c1",
+          "san": "Kc1"
+        },
+        {
+          "uci": "d2c2",
+          "san": "Kc2"
+        },
+        {
+          "uci": "d2d1",
+          "san": "Kd1"
+        },
+        {
+          "uci": "d2e1",
+          "san": "Ke1"
+        },
+        {
+          "uci": "d2e2",
+          "san": "Ke2"
+        },
+        {
+          "uci": "d2e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "g3g4",
+          "san": "g4"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-FIRST-EXCHANGE-COUNTERS",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke6",
+        "Kd2",
+        "Ke5",
+        "cxb4"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e6",
+        "e2d2",
+        "e6e5",
+        "c3b4"
+      ],
+      "resulting_fen": "8/8/5p2/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 39",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "cxb4",
+          "uci": "c3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "b4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 39"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "c4c3",
+          "san": "c3+"
+        },
+        {
+          "uci": "c5b4",
+          "san": "cxb4"
+        },
+        {
+          "uci": "e5d4",
+          "san": "Kd4"
+        },
+        {
+          "uci": "e5d6",
+          "san": "Kd6"
+        },
+        {
+          "uci": "e5e4",
+          "san": "Kxe4"
+        },
+        {
+          "uci": "e5e6",
+          "san": "Ke6"
+        },
+        {
+          "uci": "f6f5",
+          "san": "f5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-THREE-PAWN-EXCHANGE",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke6",
+        "Kd2",
+        "Ke5",
+        "cxb4",
+        "cxb4",
+        "axb4"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e6",
+        "e2d2",
+        "e6e5",
+        "c3b4",
+        "c5b4",
+        "a3b4"
+      ],
+      "resulting_fen": "8/8/5p2/4k3/pPp1P3/6P1/1P1K4/8 b - - 0 40",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "cxb4",
+          "uci": "c3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "b4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 39"
+        },
+        {
+          "san": "cxb4",
+          "uci": "c5b4",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/ppp1P3/P5P1/1P1K4/8 w - - 0 40"
+        },
+        {
+          "san": "axb4",
+          "uci": "a3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "a3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/pPp1P3/6P1/1P1K4/8 b - - 0 40"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "a4a3",
+          "san": "a3"
+        },
+        {
+          "uci": "c4c3",
+          "san": "c3+"
+        },
+        {
+          "uci": "e5d4",
+          "san": "Kd4"
+        },
+        {
+          "uci": "e5d6",
+          "san": "Kd6"
+        },
+        {
+          "uci": "e5e4",
+          "san": "Kxe4"
+        },
+        {
+          "uci": "e5e6",
+          "san": "Ke6"
+        },
+        {
+          "uci": "f6f5",
+          "san": "f5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-BXC3-CHECK-ALL-EVASIONS",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke6",
+        "Kd2",
+        "Ke5",
+        "cxb4",
+        "cxb4",
+        "axb4",
+        "Kd4",
+        "Kc2",
+        "c3",
+        "bxc3+"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e6",
+        "e2d2",
+        "e6e5",
+        "c3b4",
+        "c5b4",
+        "a3b4",
+        "e5d4",
+        "d2c2",
+        "c4c3",
+        "b2c3"
+      ],
+      "resulting_fen": "8/8/5p2/8/pP1kP3/2P3P1/2K5/8 b - - 0 42",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "cxb4",
+          "uci": "c3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "b4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 39"
+        },
+        {
+          "san": "cxb4",
+          "uci": "c5b4",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/ppp1P3/P5P1/1P1K4/8 w - - 0 40"
+        },
+        {
+          "san": "axb4",
+          "uci": "a3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "a3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/pPp1P3/6P1/1P1K4/8 b - - 0 40"
+        },
+        {
+          "san": "bxc3+",
+          "uci": "b2c3",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "b2"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c4"
+          },
+          "promotion": null,
+          "check": true,
+          "after_fen": "8/8/5p2/8/pP1kP3/2P3P1/2K5/8 b - - 0 42"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "d4c4",
+          "san": "Kc4"
+        },
+        {
+          "uci": "d4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "d4e4",
+          "san": "Kxe4"
+        },
+        {
+          "uci": "d4e5",
+          "san": "Ke5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-F5-ROLE-TRANSFER-ALL-EVASIONS",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "f5",
+        "exf5",
+        "Kxf5",
+        "g4+"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "f6f5",
+        "e4f5",
+        "e5f5",
+        "g3g4"
+      ],
+      "resulting_fen": "8/8/8/2p2k2/ppp3P1/P1P2K2/1P6/8 b - - 0 38",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "exf5",
+          "uci": "e4f5",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "e4"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "f7"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/8/2p1kP2/ppp5/P1P2KP1/1P6/8 b - - 0 37"
+        },
+        {
+          "san": "Kxf5",
+          "uci": "e5f5",
+          "actor": {
+            "side": "black",
+            "root_role": "k",
+            "root_square": "e5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "e4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/8/2p2k2/ppp5/P1P2KP1/1P6/8 w - - 0 38"
+        },
+        {
+          "san": "g4+",
+          "uci": "g3g4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "g3"
+          },
+          "victim": null,
+          "promotion": null,
+          "check": true,
+          "after_fen": "8/8/8/2p2k2/ppp3P1/P1P2K2/1P6/8 b - - 0 38"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "f5e5",
+          "san": "Ke5"
+        },
+        {
+          "uci": "f5e6",
+          "san": "Ke6"
+        },
+        {
+          "uci": "f5f6",
+          "san": "Kf6"
+        },
+        {
+          "uci": "f5g5",
+          "san": "Kg5"
+        },
+        {
+          "uci": "f5g6",
+          "san": "Kg6"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-SPENT-AFTER-B3",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "g4",
+        "b3"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4",
+        "b4b3"
+      ],
+      "resulting_fen": "8/8/5p2/2p1k3/p1p1P1P1/PpP1K3/1P6/8 w - - 0 37",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [],
+      "complete_current_legal_moves": [
+        {
+          "uci": "e3d2",
+          "san": "Kd2"
+        },
+        {
+          "uci": "e3e2",
+          "san": "Ke2"
+        },
+        {
+          "uci": "e3f2",
+          "san": "Kf2"
+        },
+        {
+          "uci": "e3f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-SPENT-LATER-BLOCKADE",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "g4",
+        "b3",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Ke6",
+        "Kg3",
+        "Ke7",
+        "Kf4",
+        "Ke6"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4",
+        "b4b3",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6e6",
+        "f2g3",
+        "e6e7",
+        "g3f4",
+        "e7e6"
+      ],
+      "resulting_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 w - - 8 41",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [],
+      "complete_current_legal_moves": [
+        {
+          "uci": "e4e5",
+          "san": "e5"
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "CURRENT-SPENT-BREAK-PRICE",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "g4",
+        "b3",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Ke6",
+        "Kg3",
+        "Ke7",
+        "Kf4",
+        "Ke6",
+        "e5",
+        "fxe5+"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4",
+        "b4b3",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6e6",
+        "f2g3",
+        "e6e7",
+        "g3f4",
+        "e7e6",
+        "e4e5",
+        "f6e5"
+      ],
+      "resulting_fen": "8/8/4k3/2p1p3/p1p2KP1/PpP5/1P6/8 w - - 0 42",
+      "kind": "Legal factual current-state control; no value proof",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "fxe5+",
+          "uci": "f6e5",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "f7"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "e4"
+          },
+          "promotion": null,
+          "check": true,
+          "after_fen": "8/8/4k3/2p1p3/p1p2KP1/PpP5/1P6/8 w - - 0 42"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4e4",
+          "san": "Ke4"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "f4g5",
+          "san": "Kg5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "BOOK-UNPREPARED-EXCHANGE-READY",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke5",
+        "Ke3",
+        "Kd6"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e5",
+        "e2e3",
+        "e5d6"
+      ],
+      "resulting_fen": "8/8/3k1p2/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 6 39",
+      "kind": "Book preparation position exact legal replay",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [],
+      "complete_current_legal_moves": [
+        {
+          "uci": "a3b4",
+          "san": "axb4"
+        },
+        {
+          "uci": "b2b3",
+          "san": "b3"
+        },
+        {
+          "uci": "c3b4",
+          "san": "cxb4"
+        },
+        {
+          "uci": "e3d2",
+          "san": "Kd2"
+        },
+        {
+          "uci": "e3e2",
+          "san": "Ke2"
+        },
+        {
+          "uci": "e3f2",
+          "san": "Kf2"
+        },
+        {
+          "uci": "e3f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "e3f4",
+          "san": "Kf4"
+        },
+        {
+          "uci": "e4e5",
+          "san": "e5+"
+        },
+        {
+          "uci": "g3g4",
+          "san": "g4"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "ILLUSTRATION-UNPREPARED-OUTSIDE-PROMOTION",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke5",
+        "Ke3",
+        "Kd6",
+        "cxb4",
+        "cxb4",
+        "axb4",
+        "c3",
+        "bxc3",
+        "a3",
+        "Kd3",
+        "a2",
+        "Kc2",
+        "a1=Q"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e5",
+        "e2e3",
+        "e5d6",
+        "c3b4",
+        "c5b4",
+        "a3b4",
+        "c4c3",
+        "b2c3",
+        "a4a3",
+        "e3d3",
+        "a3a2",
+        "d3c2",
+        "a2a1q"
+      ],
+      "resulting_fen": "8/8/3k1p2/8/1P2P3/2P3P1/2K5/q7 w - - 0 44",
+      "kind": "New legal illustration only: not exact author line, best defense or evaluation evidence",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "cxb4",
+          "uci": "c3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "b4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/3k1p2/2p5/pPp1P3/P3K1P1/1P6/8 b - - 0 39"
+        },
+        {
+          "san": "cxb4",
+          "uci": "c5b4",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/3k1p2/8/ppp1P3/P3K1P1/1P6/8 w - - 0 40"
+        },
+        {
+          "san": "axb4",
+          "uci": "a3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "a3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/3k1p2/8/pPp1P3/4K1P1/1P6/8 b - - 0 40"
+        },
+        {
+          "san": "bxc3",
+          "uci": "b2c3",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "b2"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/3k1p2/8/pP2P3/2P1K1P1/8/8 b - - 0 41"
+        },
+        {
+          "san": "a1=Q",
+          "uci": "a2a1q",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "a4"
+          },
+          "victim": null,
+          "promotion": "queen",
+          "check": false,
+          "after_fen": "8/8/3k1p2/8/1P2P3/2P3P1/2K5/q7 w - - 0 44"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "b4b5",
+          "san": "b5"
+        },
+        {
+          "uci": "c2b3",
+          "san": "Kb3"
+        },
+        {
+          "uci": "c2d2",
+          "san": "Kd2"
+        },
+        {
+          "uci": "c2d3",
+          "san": "Kd3"
+        },
+        {
+          "uci": "c3c4",
+          "san": "c4"
+        },
+        {
+          "uci": "e4e5",
+          "san": "e5+"
+        },
+        {
+          "uci": "g3g4",
+          "san": "g4"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "ILLUSTRATION-PREPARED-OUTSIDE-INTERCEPTION",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke5",
+        "Ke3",
+        "Kd6",
+        "Kd2",
+        "Ke5",
+        "cxb4",
+        "cxb4",
+        "axb4",
+        "c3",
+        "bxc3",
+        "a3",
+        "Kc2",
+        "a2",
+        "Kb2",
+        "a1=Q+",
+        "Kxa1"
+      ],
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e5",
+        "e2e3",
+        "e5d6",
+        "e3d2",
+        "d6e5",
+        "c3b4",
+        "c5b4",
+        "a3b4",
+        "c4c3",
+        "b2c3",
+        "a4a3",
+        "d2c2",
+        "a3a2",
+        "c2b2",
+        "a2a1q",
+        "b2a1"
+      ],
+      "resulting_fen": "8/8/5p2/4k3/1P2P3/2P3P1/8/K7 b - - 0 45",
+      "kind": "New legal illustration only: not exact author line, best defense or evaluation evidence",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "cxb4",
+          "uci": "c3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "b4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 40"
+        },
+        {
+          "san": "cxb4",
+          "uci": "c5b4",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "c3"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/ppp1P3/P5P1/1P1K4/8 w - - 0 41"
+        },
+        {
+          "san": "axb4",
+          "uci": "a3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "a3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c5"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/pPp1P3/6P1/1P1K4/8 b - - 0 41"
+        },
+        {
+          "san": "c3+",
+          "uci": "c4c3",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c4"
+          },
+          "victim": null,
+          "promotion": null,
+          "check": true,
+          "after_fen": "8/8/5p2/4k3/pP2P3/2p3P1/1P1K4/8 w - - 0 42"
+        },
+        {
+          "san": "bxc3",
+          "uci": "b2c3",
+          "actor": {
+            "side": "white",
+            "root_role": "p",
+            "root_square": "b2"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "c4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/pP2P3/2P3P1/3K4/8 b - - 0 42"
+        },
+        {
+          "san": "a1=Q+",
+          "uci": "a2a1q",
+          "actor": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "a4"
+          },
+          "victim": null,
+          "promotion": "queen",
+          "check": true,
+          "after_fen": "8/8/5p2/4k3/1P2P3/2P3P1/1K6/q7 w - - 0 45"
+        },
+        {
+          "san": "Kxa1",
+          "uci": "b2a1",
+          "actor": {
+            "side": "white",
+            "root_role": "k",
+            "root_square": "f3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "p",
+            "root_square": "a4"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "8/8/5p2/4k3/1P2P3/2P3P1/8/K7 b - - 0 45"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "e5d6",
+          "san": "Kd6"
+        },
+        {
+          "uci": "e5e4",
+          "san": "Kxe4"
+        },
+        {
+          "uci": "e5e6",
+          "san": "Ke6"
+        },
+        {
+          "uci": "f6f5",
+          "san": "f5"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "SG45-FAVORABLE-QUEEN-PRICE",
+      "initial_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+      "prefix_san": [
+        "Nc4",
+        "Nef6",
+        "Rd6",
+        "Qxd6",
+        "Nxd6"
+      ],
+      "prefix_uci": [
+        "d2c4",
+        "e8f6",
+        "d1d6",
+        "c6d6",
+        "c4d6"
+      ],
+      "resulting_fen": "3r1rk1/3n1pbp/1p1N1np1/2p1p3/4P3/4B1PP/1PP1QPB1/R5K1 b - - 0 21",
+      "kind": "Exposed source/development legal price control",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "Qxd6",
+          "uci": "c6d6",
+          "actor": {
+            "side": "black",
+            "root_role": "q",
+            "root_square": "c6"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "r",
+            "root_square": "d1"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "3r1rk1/3n1pbp/1p1q1np1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R5K1 w - - 0 21"
+        },
+        {
+          "san": "Nxd6",
+          "uci": "c4d6",
+          "actor": {
+            "side": "white",
+            "root_role": "n",
+            "root_square": "d2"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "q",
+            "root_square": "c6"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "3r1rk1/3n1pbp/1p1N1np1/2p1p3/4P3/4B1PP/1PP1QPB1/R5K1 b - - 0 21"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "b6b5",
+          "san": "b5"
+        },
+        {
+          "uci": "c5c4",
+          "san": "c4"
+        },
+        {
+          "uci": "d7b8",
+          "san": "Nb8"
+        },
+        {
+          "uci": "d8a8",
+          "san": "Ra8"
+        },
+        {
+          "uci": "d8b8",
+          "san": "Rb8"
+        },
+        {
+          "uci": "d8c8",
+          "san": "Rc8"
+        },
+        {
+          "uci": "d8e8",
+          "san": "Rde8"
+        },
+        {
+          "uci": "f6d5",
+          "san": "Nd5"
+        },
+        {
+          "uci": "f6e4",
+          "san": "Nxe4"
+        },
+        {
+          "uci": "f6e8",
+          "san": "Ne8"
+        },
+        {
+          "uci": "f6g4",
+          "san": "Ng4"
+        },
+        {
+          "uci": "f6h5",
+          "san": "Nh5"
+        },
+        {
+          "uci": "f8e8",
+          "san": "Rfe8"
+        },
+        {
+          "uci": "g6g5",
+          "san": "g5"
+        },
+        {
+          "uci": "g7h6",
+          "san": "Bh6"
+        },
+        {
+          "uci": "g7h8",
+          "san": "Bh8"
+        },
+        {
+          "uci": "g8h8",
+          "san": "Kh8"
+        },
+        {
+          "uci": "h7h5",
+          "san": "h5"
+        },
+        {
+          "uci": "h7h6",
+          "san": "h6"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    },
+    {
+      "id": "SG45-RETAINED-ENEMY-KNIGHT-PRICE",
+      "initial_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+      "prefix_san": [
+        "Nc4",
+        "Qc7",
+        "Rd6",
+        "Nxd6",
+        "Nxd6",
+        "Qxd6"
+      ],
+      "prefix_uci": [
+        "d2c4",
+        "c6c7",
+        "d1d6",
+        "e8d6",
+        "c4d6",
+        "c7d6"
+      ],
+      "resulting_fen": "3r1rk1/3n1pbp/1p1q2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R5K1 w - - 0 22",
+      "kind": "Exposed source/development legal price control",
+      "identity_scope": "Original actors anchored at initial_fen and tracked through the exact whole prefix",
+      "capture_check_promotion_events": [
+        {
+          "san": "Nxd6",
+          "uci": "e8d6",
+          "actor": {
+            "side": "black",
+            "root_role": "n",
+            "root_square": "e8"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "r",
+            "root_square": "d1"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R5K1 w - - 0 21"
+        },
+        {
+          "san": "Nxd6",
+          "uci": "c4d6",
+          "actor": {
+            "side": "white",
+            "root_role": "n",
+            "root_square": "d2"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "n",
+            "root_square": "e8"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "3r1rk1/2qn1pbp/1p1N2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R5K1 b - - 0 21"
+        },
+        {
+          "san": "Qxd6",
+          "uci": "c7d6",
+          "actor": {
+            "side": "black",
+            "root_role": "q",
+            "root_square": "c6"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "n",
+            "root_square": "d2"
+          },
+          "promotion": null,
+          "check": false,
+          "after_fen": "3r1rk1/3n1pbp/1p1q2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R5K1 w - - 0 22"
+        }
+      ],
+      "complete_current_legal_moves": [
+        {
+          "uci": "a1a2",
+          "san": "Ra2"
+        },
+        {
+          "uci": "a1a3",
+          "san": "Ra3"
+        },
+        {
+          "uci": "a1a4",
+          "san": "Ra4"
+        },
+        {
+          "uci": "a1a5",
+          "san": "Ra5"
+        },
+        {
+          "uci": "a1a6",
+          "san": "Ra6"
+        },
+        {
+          "uci": "a1a7",
+          "san": "Ra7"
+        },
+        {
+          "uci": "a1a8",
+          "san": "Ra8"
+        },
+        {
+          "uci": "a1b1",
+          "san": "Rb1"
+        },
+        {
+          "uci": "a1c1",
+          "san": "Rc1"
+        },
+        {
+          "uci": "a1d1",
+          "san": "Rd1"
+        },
+        {
+          "uci": "a1e1",
+          "san": "Re1"
+        },
+        {
+          "uci": "a1f1",
+          "san": "Rf1"
+        },
+        {
+          "uci": "b2b3",
+          "san": "b3"
+        },
+        {
+          "uci": "b2b4",
+          "san": "b4"
+        },
+        {
+          "uci": "c2c3",
+          "san": "c3"
+        },
+        {
+          "uci": "c2c4",
+          "san": "c4"
+        },
+        {
+          "uci": "e2a6",
+          "san": "Qa6"
+        },
+        {
+          "uci": "e2b5",
+          "san": "Qb5"
+        },
+        {
+          "uci": "e2c4",
+          "san": "Qc4"
+        },
+        {
+          "uci": "e2d1",
+          "san": "Qd1"
+        },
+        {
+          "uci": "e2d2",
+          "san": "Qd2"
+        },
+        {
+          "uci": "e2d3",
+          "san": "Qd3"
+        },
+        {
+          "uci": "e2e1",
+          "san": "Qe1"
+        },
+        {
+          "uci": "e2f1",
+          "san": "Qf1"
+        },
+        {
+          "uci": "e2f3",
+          "san": "Qf3"
+        },
+        {
+          "uci": "e2g4",
+          "san": "Qg4"
+        },
+        {
+          "uci": "e2h5",
+          "san": "Qh5"
+        },
+        {
+          "uci": "e3c1",
+          "san": "Bc1"
+        },
+        {
+          "uci": "e3c5",
+          "san": "Bxc5"
+        },
+        {
+          "uci": "e3d2",
+          "san": "Bd2"
+        },
+        {
+          "uci": "e3d4",
+          "san": "Bd4"
+        },
+        {
+          "uci": "e3f4",
+          "san": "Bf4"
+        },
+        {
+          "uci": "e3g5",
+          "san": "Bg5"
+        },
+        {
+          "uci": "e3h6",
+          "san": "Bh6"
+        },
+        {
+          "uci": "f2f3",
+          "san": "f3"
+        },
+        {
+          "uci": "f2f4",
+          "san": "f4"
+        },
+        {
+          "uci": "g1f1",
+          "san": "Kf1"
+        },
+        {
+          "uci": "g1h1",
+          "san": "Kh1"
+        },
+        {
+          "uci": "g1h2",
+          "san": "Kh2"
+        },
+        {
+          "uci": "g2f1",
+          "san": "Bf1"
+        },
+        {
+          "uci": "g2f3",
+          "san": "Bf3"
+        },
+        {
+          "uci": "g2h1",
+          "san": "Bh1"
+        },
+        {
+          "uci": "g3g4",
+          "san": "g4"
+        },
+        {
+          "uci": "h3h4",
+          "san": "h4"
+        }
+      ],
+      "best_reply_or_value_certified_here": false
+    }
+  ],
+  "correlation_only": [
+    "Exact Ke2/Ke6/Kd2/Ke5 order, later ...Kxe4/...Kg5 and the recorded King cycle are witnessed realization choices, not necessary semantic conditions.",
+    "Conditional d16 values do not identify a sole feature causing the original root score.",
+    "The new promotion races illustrate interception timing legally; they are not author best-play/evaluation evidence."
+  ],
+  "remaining_gaps": [
+    "Current held10b lacks original first-Black unrestricted pools after both original roots and a matched function-dependency counterfactual.",
+    "Later critical checking/king alternatives require owned continuation comparisons before all-reply winning claims.",
+    "Minimum basic should state actual choice/task, current adequate reply, changed role/price and verified scope; pawn location, evaluated preference or route alone leave the original human judgment incomplete."
+  ]
+}

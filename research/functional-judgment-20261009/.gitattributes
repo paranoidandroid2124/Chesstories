@@ -1,0 +1,2 @@
+# Preserve the byte hashes of sealed study records, helpers and raw logs.
+* -text whitespace=cr-at-eol,-blank-at-eof

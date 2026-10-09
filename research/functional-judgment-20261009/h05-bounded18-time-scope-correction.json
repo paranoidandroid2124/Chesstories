@@ -1,0 +1,21 @@
+{
+  "kind": "Precision addendum; original audits and raw receipts are preserved",
+  "source_review": "h05-bounded18-response-function-independent-review.json",
+  "source_review_sha256": "b9b46847e3e3085e268ca3a778a4125df932dc6da488d2874ebd7d13d08c5b46",
+  "source_audit": "h05-bounded18-response-function-and-price-audit-v2.json",
+  "source_audit_sha256": "d36fb6ebff1afdaab134109ccb652d5e54a3fca71780770c57a70eeac333d4b0",
+  "correction": "The earlier sum_uci_elapsed_ms field137507 measures the execution-wrapper/UCI-call interval. It is not the engine's own final-info time. Use the scoped values below; do not add nested intervals.",
+  "execution_wrapper_sum_ms": 137507,
+  "executor_elapsed_sum_ms": 137440,
+  "final_engine_info_time_sum_ms": 136707,
+  "adapter_query_wall_sum_ms": 137628,
+  "session_wall_sum_ms": 979037,
+  "calendar_study_wall_ms": 1264101,
+  "physical_engine_processes": 2,
+  "processes_sequential": true,
+  "maximum_requested_completed_and_intermediate_nominal_depth": 18,
+  "maximum_engine_selective_depth": 98,
+  "depth_definition": "Depth18 limits the requested and nominal completed search depth. Engine selective extensions and returned PV lengths can exceed18. No new separately issued comparison exceeded18.",
+  "new_engine_queries_in_addendum": 0,
+  "automatic_human_success_increment": 0
+}

@@ -1,0 +1,40 @@
+{
+  "sealed_utc": "2026-10-09T05:50:32.761047+00:00",
+  "kind": "Preparation review and runtime-risk rationale; no engine dispatch",
+  "plan_sha256": "918fd3b97ecc61952017eccb533ebd8cc6444268d078215c17088e25dc24d14c",
+  "driver_sha256": "4057b773cc1a0b96cbb7cc838fa5aa6351c17d7cc627e6518ea850e2a644bb83",
+  "freeze_sha256": "929d0160090a06ccfba3e58374c11cde8887e687e9686971d525482a020e34ad",
+  "same_eight_request_bytes": true,
+  "transport_class_or_tasty_files": 4,
+  "transport_source_unmodified": true,
+  "transport_reuse_only": "Already compiled against the exact10s main manifest; copies match parent transport hashes. No compiler or engine started by this preparation.",
+  "six_engine_assets": {
+    "target/annotated-games-20261003/engine/nn-4ca89e4b3abf.nnue": "4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94",
+    "target/annotated-games-20261003/engine/package.json": "9171ec6654d6f09e78101402a9bfb120b8915415dd8ddd89ef9515b7132be307",
+    "target/annotated-games-20261003/engine/README.md": "261c2a3649bb60a45ff74a1ed0507e6100f1d5784189131186d64a1ebda15ffb",
+    "target/annotated-games-20261003/engine/sf_18_smallnet.js": "0eebbd7d5108348cbf51b868adf4af0d33a866ef68217b2d6d9259c7573d8287",
+    "target/annotated-games-20261003/engine/sf_18_smallnet.wasm": "7a759da6e6a19b86853e107f3212b070298e9e1515ed6959783a89c65e88a195",
+    "target/annotated-games-20261003/engine/uci.mjs": "a07d19f326574047553949cf2fcd33bb734cf3416132bd4a9a88f1eed17ea706"
+  },
+  "meaningful_runtime_risk": [
+    {
+      "observation_source": "Parent message after its new normal two-case run; this agent did not open those private outputs",
+      "risk": "Changed root PV and short finite-search followup failures can leave the useful ordinary purpose or response-sensitive plan unexplained despite the hard depth18 cap."
+    },
+    {
+      "observation_source": "Already sealed eight-source before/after basic readings and read-only baseline attribution",
+      "risk": "Typed local value/price/closure repairs plus agenda changes may affect selected explanation and actual costs on the same source positions. Inherited first-assertion agenda failures alone do not establish downstream response or price preservation."
+    }
+  ],
+  "frozen_reading_requirements": [
+    "Keep three source-scene human questions and eight individual fixed request scopes unchanged.",
+    "For quiet Ng8, concrete ordinary purpose can be sufficient; do not invent a unique score cause or require an unrelated long contrast.",
+    "For premature/immediate Nd6 or Ne4 and tactical Bxf4/Qxd7, retain the actual adequate counter, material price and value/plan boundary.",
+    "For SG42, changed adequate provider/plan does not require the same PV or original provider. Legal geometry alone is not usefulness.",
+    "Record necessary omissions, excessive relations, unsupported causal claims and cost/deadline failures separately.",
+    "Existing old0/4 and source0/8 remain unchanged until new BASIC-only seal; these are exposed controls, not novel blind holdouts."
+  ],
+  "execution_hold": "Parent210 compiler/JUnit still active; do not dispatch before explicit release.",
+  "new_engine_queries": 0,
+  "working_product_test_or_ui_edits": false
+}

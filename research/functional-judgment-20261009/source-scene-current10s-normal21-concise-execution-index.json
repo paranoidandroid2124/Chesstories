@@ -1,0 +1,628 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-09T06:33:42.101653+00:00",
+  "full_audit_path": "research\\functional-judgment-20261009\\source-scene-current10s-normal21-execution-delivery-and-cost-audit.json",
+  "full_audit_sha256": "1ffdce7305edbbcac422d653270f5e4f2d534e5323cd734e87a2418d6d2224fe",
+  "full_audit_unchanged": true,
+  "purpose": "Concise derived receipt/cost index. The full audit intentionally retained the public structured summary object in summary_question; this index extracts its literal question field only.",
+  "overall": {
+    "actual_wall_ms": 399620,
+    "initialization_ms": 3878,
+    "actual_go_count": 49,
+    "dispatches": 49,
+    "native_execution_rows": 49,
+    "outcomes": {
+      "completed": 47,
+      "executor_failed": 2
+    },
+    "issued_depths": [
+      8,
+      16,
+      17
+    ],
+    "all_issued_depths_at_most18": true,
+    "all_native_report_owners_exact": true,
+    "all_returned_native_paths_legally_replayed": true,
+    "shipped_schema_error_count": 0,
+    "all_finished_with_current_assessment": true,
+    "engine_processes_closed": {
+      "node": {
+        "exit_code": 0,
+        "adapter_forced_kill": false
+      },
+      "java": {
+        "exit_code": 0,
+        "adapter_forced_kill": false
+      }
+    },
+    "post_run_asset_identity": "unchanged",
+    "new_queries_for_this_audit": 0,
+    "completed_public_jobs_not_full_human_success": true
+  },
+  "total_rpc_ms": 212774,
+  "total_engine_adapter_ms": 93217,
+  "cases": [
+    {
+      "id": "FJ-SG35-ROOT-NG8",
+      "summary_question": "selected_comparison",
+      "elapsed_ms": 63312,
+      "rpc_ms": 46936,
+      "engine_adapter_ms": 9162,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG35-ROOT-ND6",
+      "summary_question": "functional_response",
+      "elapsed_ms": 50998,
+      "rpc_ms": 24790,
+      "engine_adapter_ms": 14839,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 8,
+          "purpose": "focus_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "focus_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "executor_failed",
+          "reason": null,
+          "physical_failure": {
+            "kind": "executor_failed",
+            "failureCode": "search_budget_exhausted",
+            "executorElapsedMs": 3725,
+            "observedNodes": 1543949,
+            "engineTimeMs": 2502,
+            "diagnostic": "{\"lastDepth\":15,\"pvDepths\":[15,15,15],\"bounds\":[null,null,null],\"nodesOver\":false,\"timeOver\":true,\"leaseExpired\":false}"
+          }
+        },
+        {
+          "id": "work:5",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:6",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG35-LATE-ND6",
+      "summary_question": "selected_comparison",
+      "elapsed_ms": 34339,
+      "rpc_ms": 18214,
+      "engine_adapter_ms": 8535,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 8,
+          "purpose": "focus_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "summary_question": "first_target_response",
+      "elapsed_ms": 74029,
+      "rpc_ms": 41151,
+      "engine_adapter_ms": 17868,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 8,
+          "purpose": "focus_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "focus_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:5",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:6",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:7",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG42-RD3",
+      "summary_question": "selected_comparison",
+      "elapsed_ms": 41626,
+      "rpc_ms": 20341,
+      "engine_adapter_ms": 11328,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:5",
+          "depth": 17,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:6",
+          "depth": 17,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 17,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:4"
+        ],
+        "completed_depth": 17,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG42-BD3",
+      "summary_question": "selected_comparison",
+      "elapsed_ms": 21390,
+      "rpc_ms": 9426,
+      "engine_adapter_ms": 6418,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "investigation_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "executor_failed",
+          "reason": null,
+          "physical_failure": {
+            "kind": "executor_failed",
+            "failureCode": "search_budget_exhausted",
+            "executorElapsedMs": 2971,
+            "observedNodes": 2001198,
+            "engineTimeMs": 2163,
+            "diagnostic": "{\"lastDepth\":15,\"pvDepths\":[15,15,15],\"bounds\":[null,null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+          }
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG17-BXF4",
+      "summary_question": "selected_comparison",
+      "elapsed_ms": 57161,
+      "rpc_ms": 28533,
+      "engine_adapter_ms": 14939,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:5",
+          "depth": 17,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:6",
+          "depth": 17,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 17,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:4"
+        ],
+        "completed_depth": 17,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "summary_question": "first_target_response",
+      "elapsed_ms": 44148,
+      "rpc_ms": 23383,
+      "engine_adapter_ms": 10128,
+      "physical_outcomes": [
+        {
+          "id": "work:0",
+          "depth": 8,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:1",
+          "depth": 16,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:2",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:3",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:4",
+          "depth": 16,
+          "purpose": "response_comparison",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        },
+        {
+          "id": "work:5",
+          "depth": 17,
+          "purpose": "root_search",
+          "outcome": "completed",
+          "reason": null,
+          "physical_failure": null
+        }
+      ],
+      "schema_errors": 0,
+      "owner_errors": 0,
+      "legal_errors": 0,
+      "final_verification": {
+        "state": "complete",
+        "target_depth": 17,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:4"
+        ],
+        "completed_depth": 17,
+        "stop_reason": null
+      },
+      "assessment_state": "current"
+    }
+  ],
+  "human_reading_unchanged": true,
+  "new_engine_queries": 0
+}

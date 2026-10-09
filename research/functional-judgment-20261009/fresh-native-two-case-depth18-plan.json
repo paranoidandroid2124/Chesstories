@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "purpose": "One finite fresh current-production check after10s semantic-anchor and precise fact-cap repairs; keep original numeric grade ownership, needed prices and strict depth18 execution boundary.",
+  "cases_in_fixed_order": ["FC-SG45-NB1", "H05"],
+  "source_inputs": [
+    "judgment-evaluation/fixtures/public-commentary-v6/functional-choice-v8b-original-request-produced.json",
+    "target/functional-judgment-20261009/h05-10r-bounded18-ui21b/fixed-requests.json"
+  ],
+  "input_scope": "Exact original initial FEN/history/focus/profile; no hand-built evidence, reports, proposals or source-specific move rules.",
+  "production": "Fresh10s main plus unmodified source FullGameProbe transport, and frozen normalUI21 bridge. No reducer budget overlay, engine lease overlay, receipt-capacity overlay or report mutation.",
+  "request_budget_ms_per_job": 180000,
+  "maximum_nominal_requested_depth": 18,
+  "root_nominal_depth": 16,
+  "preview_nominal_depth": 8,
+  "deadline": "Actual per-job public deadline including reducer, serialization, bridge and engine elapsed time; do not reset the clock on failed or changing comparisons.",
+  "independent_adapter_guard_works_per_case": 200,
+  "adapter_guard_scope": "Escape guard only; does not increase production limits. Pending work and failure remain visible if hit.",
+  "no_replayed_or_synthetic_reports": true,
+  "read_order": "BASIC-only export and parent human first-pass seal before private selection/proof/price diagnosis. Exact numerical and work receipts checked separately after the seal.",
+  "criteria_unchanged": true,
+  "previous_outputs_known": true,
+  "not_new_blind_holdouts": true,
+  "not_full_success_from_cap_stop_or_test_pass": true,
+  "dependent_dispatch_requires_compiled10s_source_class_freeze": true,
+  "new_engine_queries_at_plan": 0,
+  "no_automatic_recursive_followup_or_retry": true
+}

@@ -1,0 +1,155 @@
+{
+  "sealed_utc": "2026-10-09T06:16:26.335881+00:00",
+  "kind": "Immutable research-plan descriptive metadata correction; no executed work or result changes",
+  "original_plan_sha256": "98d9b028df401252b6be6bda1eeee221465470aa0bd504c84d2fc3a74f6ed304",
+  "original_stage_sha256": "662786fac4844f89a50aaa37722729595e7c6ed81de5d3c585a9f5d6ee7a08bb",
+  "original_results_sha256": "2c5de26d7a2011e4a45d893ad2b46434041642c8eec4b6bccd68cc64a0d3bef7",
+  "original_manifest_sha256": "9ae02af84662eae5ebac2cfeced6324c0efaf5251c0bb719d151c58633b1ad2e",
+  "cause": "The preparation copied the runtime plan dictionary too broadly, retaining old descriptive scope/phase fields. These fields were not read for physical query dispatch, scope validation, or numerical interpretation.",
+  "unused_stale_fields": {
+    "depth_scope": "All new physical queries nominal depth18 only. Historical16/24 remain distinct. No product receipt or numerical judgment graft.",
+    "original_reports_sha256": "a95f3a5dea36691facd07a1b5e07b138778e5ef1d4ea521f40e213589da31586",
+    "relative_prefix": [
+      "f3e3",
+      "e5e6",
+      "e3d2",
+      "e6e5"
+    ],
+    "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P3P1/1P1K4/8 w - - 4 37",
+    "phases": [
+      "root-pair-and-root-resistance18",
+      "current-White-pool18",
+      "current-own-pair18",
+      "current-Black-pools18",
+      "named-current-reply-pairs18"
+    ],
+    "adaptive_selection": {
+      "White": "Full legal pool selects the actual strongest returned other move. Always seal a named g4/that-other pair; no arbitrary quiet seed or historical work11 rank.",
+      "Black": "Full legal pools after both choices. When Kf4 is legal, named Kf4 versus actual returned leader (or best other if Kf4 leads); when illegal, a named current leader/runner-up pair plus the full legal inventory documents its absence.",
+      "same_epoch_conflict": "Preserve different survey/pair values. If the pair materially refutes the surveyed representative, do not graft or claim a checked best; register a separately sealed coherent revalidation/deeper epoch before interpretation.",
+      "failures": "Preserve BudgetExhausted/lease/partial depths. Any necessary larger retry has a new sealed exact descriptor/key and explicit retry_of; never fabricate completed outcomes."
+    },
+    "falsifiers": [
+      "g4 is equal or better in the exact current named pair: retained f4 denial is not established as necessary utility here.",
+      "Kf4 is weaker than another adequate Black reply: its geometry alone does not explain the move value.",
+      "Retaining Pg3 still permits another capture/invasion or loses the resource: no blanket safety/permanent availability claim.",
+      "Different sufficient plans or material conversions survive: no fixed PV/SAN event or sole numerical-cause claim."
+    ]
+  },
+  "background_only_prior_documents_not_runtime_sources": {
+    "criteria": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-minimum-response-sensitive-function-value-chain.json",
+      "sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94"
+    },
+    "pre_result_hypothesis": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-actual43-retained-pawn-opponent-denial-audit.json",
+      "sha256": "7310c3014b830cccfb723058d13b4dc031190f7878b7b60f0b83996a74589a78"
+    }
+  },
+  "actual_dispatch_authority": {
+    "allowed_depths": [
+      16
+    ],
+    "maximum_requested_depth": 16,
+    "maximum_queries": 3,
+    "retries_allowed": 0,
+    "research_policy_ms": 210000,
+    "per_query_limits": {
+      "depth": 16,
+      "nodes": 200000000,
+      "movetime_ms": 60000,
+      "max_search_elapsed_ms": 62000
+    },
+    "stage_depth": 16,
+    "actual_queries": [
+      {
+        "id": "H05-fresh10s-failed-comparisons-nominal16-20261009-Ke3-Kd6-versus-f6",
+        "original_failed_work_id": "work:2",
+        "original_failed_execution_key": "79bbcda06774062d1880c0f21e793ee7049acd3041871eb885cd15abedc5e387",
+        "whole_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "whole_history": [
+          "f3e3"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "restriction": {
+          "kind": "restricted",
+          "movesUci": [
+            "e5d6",
+            "f7f6"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 200000000,
+          "movetimeMs": 60000,
+          "multiPv": 2
+        },
+        "maximum_wall_ms": 62000
+      },
+      {
+        "id": "H05-fresh10s-failed-comparisons-nominal16-20261009-g4-first-Black-pool",
+        "original_failed_work_id": "work:3",
+        "original_failed_execution_key": "2e3ac4c775e060c0caa243cff8c1def3bb5b1acfe1c394dd76e531c84d872663",
+        "whole_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "whole_history": [
+          "g3g4"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+        "restriction": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 200000000,
+          "movetimeMs": 60000,
+          "multiPv": 3
+        },
+        "maximum_wall_ms": 62000
+      },
+      {
+        "id": "H05-fresh10s-failed-comparisons-nominal16-20261009-Ke3-first-Black-pool",
+        "original_failed_work_id": "work:4",
+        "original_failed_execution_key": "f6d291e65ba1bcd60a7ae1ff37d14f4d57de73eae07d20e3dba7332ccc7f787e",
+        "whole_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "whole_history": [
+          "f3e3"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "restriction": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 200000000,
+          "movetimeMs": 60000,
+          "multiPv": 3
+        },
+        "maximum_wall_ms": 62000
+      }
+    ]
+  },
+  "actual_source_owner": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\fresh-native-two-case-10s-normal21-depth18\\actual-fresh-run\\H05-case-record.json",
+    "sha256": "5d6212023bf9f3c41ffa436b791001eb2c0d81fc7e01fafffd364de63e59841b",
+    "manifest_sha256": "f6746e053c64f11acaeb552fe09740e5d30daaff6f1af76c0e520d7a55b3cab5"
+  },
+  "before_result_questions_unchanged": [
+    "Does the exact named Ke3 child Kd6/f6 comparison reach nominal16 within the declared relaxed resources?",
+    "Which Black replies lead the exact g4 and Ke3 unrestricted nominal16 MPV3 pools?",
+    "Does raw same-depth coherent unbounded batch plus preceding15 and bestmove satisfy the unchanged result-assembly checks?"
+  ],
+  "interpretation_limits_unchanged": [
+    "This study never changes failed product work2/3/4 or the original root numerical owner.",
+    "Returned MPV3 is not a value for every legal reply. Named MPV2 is not the strongest unrestricted reply survey.",
+    "No query above16, no additional retries, no old18/24/h128 values or report graft.",
+    "Completion can measure missing finite evidence; it cannot alone prove a causal human explanation or a production solution."
+  ],
+  "actual_queries_or_results_modified": 0,
+  "product_queries_or_reports_modified": 0,
+  "new_engine_queries": 0,
+  "new_replays": 0,
+  "nominal18_or24_queries_in_this_study": 0,
+  "all_three_actual16_scopes_completed": true,
+  "original_human_criteria_or_root_grade_changed": false,
+  "not_a_new_receipt_or_retrospective_query_plan": true
+}

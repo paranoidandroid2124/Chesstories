@@ -1,0 +1,139 @@
+{
+  "archived_utc": "2026-10-09T06:00:07.237248+00:00",
+  "scope": "Selected exact compilation,210 current tests, actual fresh15 queries and final public snapshots. No value/descriptor/report reinterpretation.",
+  "files": [
+    {
+      "source": "target/relationship-delivery-20261004/main-manifest-10s.json",
+      "archive": "final10s-evidence/compile/main-manifest-10s.json",
+      "sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690",
+      "bytes": 296152,
+      "byte_exact": true
+    },
+    {
+      "source": "target/relationship-delivery-20261004/test-manifest-10s.json",
+      "archive": "final10s-evidence/compile/test-manifest-10s.json",
+      "sha256": "9cd93684072047f4994a281b1108d1b6482e6ea4f843c1c52fcc3f3a04844082",
+      "bytes": 92134,
+      "byte_exact": true
+    },
+    {
+      "source": "target/relationship-delivery-20261004/classpath-10s.json",
+      "archive": "final10s-evidence/compile/classpath-10s.json",
+      "sha256": "f60d3160b930cbb3de525deda5447bb55615357dc0d122fa0cb83878484acb98",
+      "bytes": 11189,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/plan.json",
+      "archive": "final10s-evidence/runtime210/plan.json",
+      "sha256": "35d7233866b7165aee37adf99fb98ee39a672978db0a4b8c8bae0d026023eafc",
+      "bytes": 11957,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/compile.log",
+      "archive": "final10s-evidence/runtime210/compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/run.log",
+      "archive": "final10s-evidence/runtime210/run.log",
+      "sha256": "f02f10e8bbc17ed53731e43645076315628b62ba086f9953020aa9613a79f8f9",
+      "bytes": 269,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/result.json",
+      "archive": "final10s-evidence/runtime210/result.json",
+      "sha256": "f6e48948dc37843f48050b7dc26b4af45b731c06815ec9f73d0f65edd6e3e020",
+      "bytes": 21164,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/pre-dispatch-freeze.json",
+      "archive": "final10s-evidence/fresh-normal15/pre-dispatch-freeze.json",
+      "sha256": "5bce2d71a847fa0f9f99348683843955440f22df8f2a7d503e1256ec17f918ea",
+      "bytes": 298130,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/fixed-requests.json",
+      "archive": "final10s-evidence/fresh-normal15/fixed-requests.json",
+      "sha256": "f2dd14fed12659ff412b86ab79464d4e03326294ebf19bfd85e5a793e59e794a",
+      "bytes": 1965,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/manifest.json",
+      "archive": "final10s-evidence/fresh-normal15/manifest.json",
+      "sha256": "f6746e053c64f11acaeb552fe09740e5d30daaff6f1af76c0e520d7a55b3cab5",
+      "bytes": 4735,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/FC-SG45-NB1-basic-only.json",
+      "archive": "final10s-evidence/fresh-normal15/FC-SG45-NB1-basic-only.json",
+      "sha256": "9c0156f49fd5e5a90b4101f941f85fa1bf37415acbece6781a759d4d90a23e06",
+      "bytes": 3882,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/FC-SG45-NB1-final-snapshot.json.gz",
+      "archive": "final10s-evidence/fresh-normal15/FC-SG45-NB1-final-snapshot.json.gz",
+      "sha256": "e77dc4a87204b9742fef1e143329a4e793e3352ce2ea50c700b24e1bb8420d55",
+      "bytes": 2884552,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/FC-SG45-NB1-journal.jsonl.gz",
+      "source_gzip_sha256": "a4eda0f5bfc9486dbf99e3ab77210d14c5ac5571f6eac576929e0b2b34861f63",
+      "archive": "final10s-evidence/fresh-normal15/FC-SG45-NB1-execution-lines.jsonl.gz",
+      "sha256": "800330892f6fabf8cc92b4fae7e2bafcbf7e63a2f8f182213e4e49f7b6d2dad4",
+      "bytes": 22054,
+      "execution_records": 10,
+      "selection_rule": "Every original issued_work+execution line, byte-exact uncompressed line, in original order. Repeated public snapshots are omitted; final full snapshot is archived separately."
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/H05-basic-only.json",
+      "archive": "final10s-evidence/fresh-normal15/H05-basic-only.json",
+      "sha256": "5ad221674cefb66f0a91401736e2f730b8b5ea1639aa821b0214f9fb235ea734",
+      "bytes": 1896,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/H05-final-snapshot.json.gz",
+      "archive": "final10s-evidence/fresh-normal15/H05-final-snapshot.json.gz",
+      "sha256": "9cf617921bbe42708c3d4eb0be7ff65466cf71c1eeb5ea35ecf0ef22700f29ca",
+      "bytes": 170389,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/H05-journal.jsonl.gz",
+      "source_gzip_sha256": "d588cb14286a9b5c88838f2b4c98a92f98c38a9bede7b9dabce9a759ded4be5d",
+      "archive": "final10s-evidence/fresh-normal15/H05-execution-lines.jsonl.gz",
+      "sha256": "0775e2e44fe64ede3f9b54d1ff349134109c57b03b546ee6dab4441761462026",
+      "bytes": 9664,
+      "execution_records": 5,
+      "selection_rule": "Every original issued_work+execution line, byte-exact uncompressed line, in original order. Repeated public snapshots are omitted; final full snapshot is archived separately."
+    },
+    {
+      "source": "target/annotated-games-20261003/FullGameProbe.scala",
+      "archive": "final10s-evidence/support-sources/FullGameProbe.scala",
+      "sha256": "543dba10c7caca77be964b4b818ac8c578994e013da91d57024b25114d2a87c7",
+      "bytes": 4598,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/native-choice-produced-export10s/final-current-postcheck.json",
+      "archive": "final10s-evidence/native26/final-current-postcheck.json",
+      "sha256": "0bdc69c9cc0106418fe3c650415fea5420446757f2800fbef1220b72388eb136",
+      "bytes": 1638,
+      "byte_exact": true
+    }
+  ],
+  "new_engine_queries": 0,
+  "product_changes": 0,
+  "original_target_files_preserved": true
+}

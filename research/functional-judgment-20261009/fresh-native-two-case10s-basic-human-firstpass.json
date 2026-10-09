@@ -1,0 +1,165 @@
+{
+  "sealed_utc": "2026-10-09T05:42:17.891970+00:00",
+  "reader": "Parent; only the two BASIC-only exports read before sealing",
+  "prior_outputs_known": true,
+  "not_a_blind_holdout": true,
+  "criteria_unchanged": true,
+  "private_trace_read_before_seal": false,
+  "old_four_full_utility_passed": 0,
+  "fixed_eight_source_full_passed": 0,
+  "new_two_case_full_minimum_answers": 0,
+  "fresh_numeric_scope": "Each fresh root verdict belongs to its own new normal-engine receipt. It is not required to equal an older analysis. Child interpretations must preserve this current root verdict.",
+  "cases": [
+    {
+      "game_id": "FC-SG45-NB1",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Nc4 gives the original knight d6 control; Nb1 lacks the same immediate Nxd6 recapture in the explicitly conditional Nef6/Rd6/Qxd6 line.",
+        "Qc7 evades the rook attack; later Rad1 supplies current rook support.",
+        "The displayed current queen exchange and subsequent e4 pawn capture are readable in their recorded branch."
+      ],
+      "missing": [
+        "A checked comparison of the useful own plans under the relevant current defenses.",
+        "Why the conditional d6 option changes the original judgment rather than merely being legally available.",
+        "How later loss of the original provider and changed support alter the current choice value."
+      ],
+      "excess": "A long relation and event tail competes with the conditional lead.",
+      "assessment": "Partial conditional geometry and recorded price explanation; no complete root-value answer.",
+      "basic_path": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/FC-SG45-NB1-basic-only.json",
+      "basic_sha256": "9c0156f49fd5e5a90b4101f941f85fa1bf37415acbece6781a759d4d90a23e06",
+      "body_characters": 1635,
+      "default_question": "functional_response",
+      "fresh_verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:candidate-comparison:79065ac467d87c53a9df9de3bd3f22c3bec44b54cdee7bf262b1ac7b3a952eae",
+        "verdict_code": "inaccuracy",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -3.678606445222087,
+          "kind": "engine_evaluation"
+        },
+        "reference_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "d2c4",
+            "e8f6",
+            "d1d6",
+            "c6c7",
+            "a1d1",
+            "b6b5",
+            "c4a3",
+            "b5b4",
+            "a3b5",
+            "c7b7",
+            "d6d2",
+            "b7c6",
+            "e2c4",
+            "d8b8",
+            "g2f1",
+            "d7b6",
+            "c4c5",
+            "c6c5",
+            "e3c5",
+            "f6e4",
+            "c5f8",
+            "e4d2",
+            "f8g7",
+            "b6c4",
+            "g7f6",
+            "b8b5"
+          ],
+          "win_percent_for_mover": 65.07349938882695,
+          "depth": 16
+        },
+        "played_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "d2b1",
+            "e8c7",
+            "e2d2",
+            "c7e6",
+            "b1c3",
+            "d7f6",
+            "c3d5",
+            "c6b7",
+            "c2c3",
+            "h7h5",
+            "d2e2",
+            "e6c7",
+            "e3g5",
+            "c7d5",
+            "e4d5",
+            "e5e4",
+            "g2e4"
+          ],
+          "win_percent_for_mover": 61.39489294360486,
+          "depth": 16
+        }
+      },
+      "pending": false
+    },
+    {
+      "game_id": "H05",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "The two displayed finite forecasts contain no material loss or promotion through their stated endpoints."
+      ],
+      "missing": [
+        "Why spending g4 immediately is inferior to preparing king progress.",
+        "The role of retained waiting resources, effective f6 resistance and the opportunity to execute a useful queenside exchange.",
+        "How the useful plan changes when the opponent chooses another relevant defense."
+      ],
+      "excess": "The material-neutral summary alone gives no mover-purpose explanation.",
+      "assessment": "Incomplete ordinary-purpose and comparison answer. The fresh root forecast differs from the historical native replay; no reason for that difference is inferred from BASIC.",
+      "basic_path": "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/H05-basic-only.json",
+      "basic_sha256": "5ad221674cefb66f0a91401736e2f730b8b5ea1639aa821b0214f9fb235ea734",
+      "body_characters": 138,
+      "default_question": "selected_comparison",
+      "fresh_verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:candidate-comparison:22c39cf0c65a8209f2279142141d129215083f45131e064c5542898e23601647",
+        "verdict_code": "mistake",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -17.216768549748025,
+          "kind": "engine_evaluation"
+        },
+        "reference_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "f3e3",
+            "e5d6",
+            "e3f4",
+            "d6c6",
+            "f4f5",
+            "c6b6",
+            "e4e5",
+            "b6b5",
+            "g3g4",
+            "b5b6"
+          ],
+          "win_percent_for_mover": 67.21676854974802,
+          "depth": 16
+        },
+        "played_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "g3g4",
+            "f7f6",
+            "f3e3",
+            "b4b3",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6e5"
+          ],
+          "win_percent_for_mover": 50,
+          "depth": 16
+        }
+      },
+      "pending": false
+    }
+  ]
+}

@@ -1,0 +1,250 @@
+{
+  "scope": "Test/research fixture from genuine native reports; only request + whole issued_work/report objects retained; no synthetic engine report, numeric rebinding, or independent-study graft",
+  "original_source": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\nb1-10b-policy600000\\NB1Version10bPolicy600000\\stored-reports.jsonl",
+  "original_source_sha256": "29c7d5b604f1fd2ebab95fa5b518ba0a3f700774a2bb68afae4dba2d87440bc0",
+  "compact_fixture": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\nb1-10b-matched-core-rebase-experiment\\nb1-native26-request-issued-reports.json.gz",
+  "compact_fixture_sha256": "5d0595d782c0f47499e17d8d3193b8e0598d34f94c122fb0b77d2a55ad6c8b2d",
+  "compressed_bytes": 6100,
+  "whole_request_equal": true,
+  "whole_request_canonical_sha256": "2200072b25f1efa78dd3c28d91f0c4cae4caf386b2c3c2c954b7d466f7880550",
+  "report_count": 26,
+  "normalization": "JSON envelope whitespace/compression changed; all original request/issued-work/report byte-valued fields and parsed whole objects unchanged",
+  "new_engine_queries_in_fixture_creation": 0,
+  "actual_reports_not_all_fresh": "The source native run replayed22 exact reports and executed4 additional queries; fixture creation/replay itself executes no engine",
+  "checks": [
+    {
+      "index": 0,
+      "work_id": "work:0",
+      "execution_key_sha256": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "88963a1cd5e338f534d9efa38ae05275504f6efd6317fe5f1ec5f264dcda49c4",
+      "report_canonical_sha256": "deaee5d62cc1f04feb8e0f4eed1ba179539bb30c0405778848e4319b1fee6a0f"
+    },
+    {
+      "index": 1,
+      "work_id": "work:1",
+      "execution_key_sha256": "e95ecf9a071cbb97cf3df975d42b256f399e5da6ef2d573f71ffb79465f11147",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "0d10203ae1d75242a433f8927ef6d47ff51d75f5afab04507ef1dad8624a0d5d",
+      "report_canonical_sha256": "4774379bb1e49c5ba2bf9f7fe3f8041e6114a9e9cb18799e19ae3bdeb8fc341e"
+    },
+    {
+      "index": 2,
+      "work_id": "work:2",
+      "execution_key_sha256": "f2b60ff6a043918e296b82c114f0dfd1d0c293edbdfc8787055033a456706ece",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "011bfc684a13d3292337b384ecd7e29d12c331863cbd16aff2032360f4980041",
+      "report_canonical_sha256": "58d69ef9c7d346459cc5148d973d9cafa47496e362560bd52737ca8aa1ea5142"
+    },
+    {
+      "index": 3,
+      "work_id": "work:3",
+      "execution_key_sha256": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "dddc6d54bb02f94674fa95fdd2c92dc880d3be04572560727fda0f36f6820e5a",
+      "report_canonical_sha256": "cc5174d1ed9e4a289bc70e4130fe26a417841f808cd3e5fd7a4cf64f9d9e95ce"
+    },
+    {
+      "index": 4,
+      "work_id": "work:4",
+      "execution_key_sha256": "d1222b9f06d2b81a6fa5c6d1c1ee399394204a031baf03c9ad614cfeab179d35",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "43242b7939cc7f77c14e3d2f9fd89b1573b757ef2695e193261cbe96b5fddd46",
+      "report_canonical_sha256": "d3a0b54a1badb59528b7ec907ee1ec6ba27994a4fa946f73ca6c07d5bf932820"
+    },
+    {
+      "index": 5,
+      "work_id": "work:5",
+      "execution_key_sha256": "1c2dbdad64de930c10eaaf056babc4a0cff8d59ccde6ecbe991489290e2224b6",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "ecceb70ee3848b16045b7eaf6cd1af1a4e4ec61db6a3de355a178b4a66b4b40a",
+      "report_canonical_sha256": "70f46fb49aa763bbb1ce684a20a1feee648c31378156dfbe1413a0f1b73cc678"
+    },
+    {
+      "index": 6,
+      "work_id": "work:6",
+      "execution_key_sha256": "bac4d81ea451512738bc86b288fbaafa88c413f59a5b7e7b6163471dea317e57",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "9208830e62153f7dfa38ee907adcfe1f706ba246f80ae048abd96b82b6cbb5a3",
+      "report_canonical_sha256": "7b95e6e58a93b6eedfeb1bb511cb0c3b30d5955146772849db68803a754ac629"
+    },
+    {
+      "index": 7,
+      "work_id": "work:7",
+      "execution_key_sha256": "e88c1d6ba45c7fd997e99634ba921c31cb288f6899dd5502fc56196ed25245b5",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "6c54762f842be9d7577c9803314fdb67955a70272c5b693b883594786c19dfaa",
+      "report_canonical_sha256": "ed4ad7ed40fe5980a7faed11a576390cf92c168b795a1902e141112189a50d3b"
+    },
+    {
+      "index": 8,
+      "work_id": "work:8",
+      "execution_key_sha256": "eb73456431abc2fa56b5b73d1120df08412b9608df939981a3259eef69bdf4d8",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "e97edd4b67b10ea85839aeb54f0de275ba5423b35585a1c42ec345321133c3d0",
+      "report_canonical_sha256": "00735bcf8ac01c4498f5043e8e73ee13dcf1a3491ae2640eab16565c4720e1a3"
+    },
+    {
+      "index": 9,
+      "work_id": "work:9",
+      "execution_key_sha256": "8106ac1b690f404efbfeddda914bf1001491747296eb91438d97c6ca1175f26e",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "7bd49f8086ef41e4fbe8992b4e7865604eb3254d3a5d79f59f9e8d320c7d95d0",
+      "report_canonical_sha256": "788ed0ac64d0fdec41deaaf8c4dab5c5741d0ded08c55d0176244738cb2e4385"
+    },
+    {
+      "index": 10,
+      "work_id": "work:10",
+      "execution_key_sha256": "9b9321752d27150fbbb08f5e3ef2fefd8029d0db3835014df3e5fcc855aff0ba",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "385dee03938ab782a7486f9aa420582413e9fcdae92f1ba2b1126b84313fc559",
+      "report_canonical_sha256": "3dfb231273cd3501ca0ff39c8983b8ab225325dba8522136992314462da06995"
+    },
+    {
+      "index": 11,
+      "work_id": "work:11",
+      "execution_key_sha256": "884b4cc461394cf07df7041e269221327382f489ea16a53129a4af0d94d9bf2f",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "9ac58e39502d2f82429cd1c5c973b87e26d48dff6b4b64e8838a15ffcd2edfee",
+      "report_canonical_sha256": "2b6105ee524ba8e1f469cae6b581d9aa77c6673259f5b04c193a82ef410669ed"
+    },
+    {
+      "index": 12,
+      "work_id": "work:12",
+      "execution_key_sha256": "6033fae85640d9dae5a1507a163e0e50f22bc0b68387813cfb60b435b1e09ae7",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "e790dc0023c72dd2cbd0d260556a087a5e9b7d853783ca859aa15d03ae003dcc",
+      "report_canonical_sha256": "b40fcd5f37ddaa4d1f55880eb6f3b0ca6a57720419a224abdf22adf3faf0dec6"
+    },
+    {
+      "index": 13,
+      "work_id": "work:13",
+      "execution_key_sha256": "2410803b35d01c53288e211134b615547ab8aff503103f43ac6c54f1328f8c40",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "7c4066d3cbb89d5d5ae9a13ea85a0db83ce85899daeece3b96690465114cb5ff",
+      "report_canonical_sha256": "14ad5dfdfe1d1720caa93f9f759c0224c4baf626a623c1174ba6781d9e28709a"
+    },
+    {
+      "index": 14,
+      "work_id": "work:14",
+      "execution_key_sha256": "378c293ce9b3eb5382dc7c13d36620619ed28d035c8b44af62aa77d13edcba47",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "f4704b58011f566639be296df121fe09baf29b3158c26845a7885cf928f79d2d",
+      "report_canonical_sha256": "ffe397db2ccf1a48f47609526a66d919b00d8f61634d2a080930576b9b522b49"
+    },
+    {
+      "index": 15,
+      "work_id": "work:15",
+      "execution_key_sha256": "fcc955636e2bb4aca2a50fec8710689ff347a10973ef82de114bdcd3287ebe57",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "5a8fd2dac4d686e19dc5ed7f75cc74fb5f7644d0a58314519f627fdd47d3d251",
+      "report_canonical_sha256": "d24b28bc7876cc608839b3b3a63e327a59e42baad3d869ec71471c75944bd71e"
+    },
+    {
+      "index": 16,
+      "work_id": "work:16",
+      "execution_key_sha256": "cfac8f63cc2d6930055d62ffb884bce1246c6d5474b7d7f5c45f4c8e7b5cb18e",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "28f282eb85b31fdd4a0b2b2fda59e5948e6a9c3ff744f58c44c0080945801215",
+      "report_canonical_sha256": "131bb6c1620f541b9b537306b7067cd36f66dd1d198c7c9fc3bb7dab6fcc08d9"
+    },
+    {
+      "index": 17,
+      "work_id": "work:17",
+      "execution_key_sha256": "321dd99b4db267e02392141395e637c8af71cfe80bad312fdcc50b73a9f7055d",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "e1ffe18f15760d1f506d09dd48e0ca3a250368b310158b633a8e5bfa8cb713aa",
+      "report_canonical_sha256": "bbda7c5e437e378797964c97cc4582c913b2133de0fea5d9ea6fd3aba18136d7"
+    },
+    {
+      "index": 18,
+      "work_id": "work:18",
+      "execution_key_sha256": "2bef56eac52af9c7191afc7bcfd46f8afea22f08f28a8447f24fa8cbf1f9acd7",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "54222af2c6dc019a99ee07862cd9be9a17f6dd21a16804d232b4e6ccfb2e9331",
+      "report_canonical_sha256": "35ab6ef1dc63cf89b558ff5432d04693c0b93c75b5bd7abe90959a274d4043ef"
+    },
+    {
+      "index": 19,
+      "work_id": "work:19",
+      "execution_key_sha256": "e6ba8db442c30fab7f4fe60bf863df31c1ad9347f4e8759c2d0c0b37822c390d",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "fcce29256981097124c3bf7bc95a1adf9d114351d7d3b4fffa733aec3919c8b0",
+      "report_canonical_sha256": "8a5764c6b2f05358091b12775c4c4f2028aa429d24e1e51ba4919690666108cc"
+    },
+    {
+      "index": 20,
+      "work_id": "work:20",
+      "execution_key_sha256": "c8e321a38f61e52c3985105a0822d1fe32740defe1cb376d1f844eed1f5d5039",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "c33510aec79aedb3181bf3e30340d3bd4e3669b296bb1d84178c9e3c9206f41c",
+      "report_canonical_sha256": "9ca79d5c52849876467e3f3659651d5bb41cc9c4cb3ffe4f1c9e21593a7eabd2"
+    },
+    {
+      "index": 21,
+      "work_id": "work:21",
+      "execution_key_sha256": "941a5c066e2886a62482ea999b37471246cd8b4d0d2fca9894e782a4bfaad983",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "9b3faf7712ffb165713af59b35145cc4a2732a48545a0031905d124b1ca4dd47",
+      "report_canonical_sha256": "43e29263a325944bb237a811be3ed9b200713528cb1f1e997231374d1184baeb"
+    },
+    {
+      "index": 22,
+      "work_id": "work:22",
+      "execution_key_sha256": "732f024881165d684ad3274ac2f3d0fac82e723ad6f25736295103c158bc2c74",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "17e928caaf0ff905b4d9f417a4118a6ba3c81cb90dfc248a9b66573e8ae91967",
+      "report_canonical_sha256": "632015cbd49dbf95083eb97083da56439a1ad93b0ccb18868302f9ebcbb07a00"
+    },
+    {
+      "index": 23,
+      "work_id": "work:23",
+      "execution_key_sha256": "6fbb0c08ba53378aee85f28fd8c270c153ee77f9182141972bee24e8330a23a9",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "eac5f00b77479c09b87171702fb1e0c2cba450f7fc8f9ad66f6d141e904cc943",
+      "report_canonical_sha256": "0bd9d973f8bc15e6641f20a58de20a86116d08872302864831038524ae238eb8"
+    },
+    {
+      "index": 24,
+      "work_id": "work:24",
+      "execution_key_sha256": "24c90c2e2f67718a899a8052ecf3e284845b8e2bbf66c5cdae918f2fe550ce63",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "bdd2ce99a2d08ba66cd31d017f355273d3088dd432bcb520753224622a56ee2e",
+      "report_canonical_sha256": "531d2f81a51baf0e40d9c24eed3f6a092f2ab05780e8c9e38d13169ae8f6ff1d"
+    },
+    {
+      "index": 25,
+      "work_id": "work:25",
+      "execution_key_sha256": "bc375f7df817f707c51140653257386e9216639f477a330f07dd9c22e185b377",
+      "whole_issued_work_equal": true,
+      "whole_report_equal": true,
+      "issued_work_canonical_sha256": "82e3ffc2d2f8325fe649dc229159dc77250b048e22c5239a52f0bbeeef795ca1",
+      "report_canonical_sha256": "46d4f0af35817e862320de2156f3ba680e4c2e86e1d6643c0182acbd98fd5efa"
+    }
+  ]
+}

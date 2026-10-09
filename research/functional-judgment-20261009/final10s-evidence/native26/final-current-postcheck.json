@@ -1,0 +1,35 @@
+{
+  "sealed_utc": "2026-10-09T05:49:13.337030+00:00",
+  "scope": "Current10s exact26 public projection+private scope after its own BASIC-first reading+normalUI21/19negative/schema checks, all immutable and working product bytes verified before release.",
+  "private_audit_plan_sha256": "5ab07a7fc2d18447af1f3f42e00b5908d6709079dd98a6b3f07ae0dca401d5e0",
+  "steps": [
+    {
+      "name": "audit_current_projection.py",
+      "exit_code": 0,
+      "seconds": 9.165,
+      "log_sha256": "3eb69f993c545384157ffc1706eb1a5a161e51e51757a7f941a0e55fdd5a3f50"
+    },
+    {
+      "name": "semantic_scope_addendum.py",
+      "exit_code": 0,
+      "seconds": 5.587,
+      "log_sha256": "eb0e36c98847609b2fd235dd7775367990cd893494d4efc30ce807ad769f3497"
+    }
+  ],
+  "current_main_sources": 79,
+  "current_main_classes": 1913,
+  "working_main_source_drift": {},
+  "working_main_class_drift": {},
+  "working_UI_source_drift": {},
+  "working_schema_drift": {},
+  "immutable_assets_unchanged": true,
+  "decoder_validation_sha256": "6986657f0052a3dd92decfbb62110f03a0e6e6db758b1c13f38323fe1b37fea9",
+  "schema_validation_sha256": "f51ebdc32f1a0448ac5171cbdefabb90753c2af096d723ba35d0c1a72842cbc4",
+  "audit_sha256": "9c6834a9f2765425e6d825d3cd3171a0894f7973820fa6207e0eb94d28e2e82e",
+  "semantic_addendum_sha256": "53332e138ad17a955a4e4eb22034bf2bb00492ce5ebd4e5c62c277babaafd190",
+  "actual_response_sha256": "180aa43f8305f60c0b817ac3502c5c0ef764e1a7dbde66a82c21e98ec89228ea",
+  "new_engine_queries": 0,
+  "criteria_relaxed": false,
+  "full_human_success": "0/4 and0/8 unchanged",
+  "new_BASIC_progress_vs10p": false
+}

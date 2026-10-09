@@ -1,0 +1,222 @@
+{
+  "sealed_utc": "2026-10-09T02:25:00.014737+00:00",
+  "scope": "Genuine standalone current-board research; no product43 report submitted, no parent/root score graft, no revised fixed acceptance criteria.",
+  "sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\study-plan.json",
+      "sha256": "a99dd83e97126cfcce72a257d2af0d69b2e6d1736cdfd7002e6cc4ad4e59424f"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\depth24-completion\\study-plan.json",
+      "sha256": "25c8d09610dfb39faa7da1c9418afbae0d5f844e513f15c704fbce2706f4f844"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\execution\\manifest.json",
+      "sha256": "551608f2c55f4763830928d42c7b27b1735983f97ae96634946561a6ffc2abd7"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\depth24-completion\\execution\\manifest.json",
+      "sha256": "a1dcab637081a96ec6abb096d65bad68d47ff5225cb4767265d5d03d569255c5"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\execution\\results.json",
+      "sha256": "704a3ae053be12abd8b4c09e865e26718b0072d8ccf13bc604b4c003df4c3888"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\depth24-completion\\execution\\results.json",
+      "sha256": "8c6b5367124a6279c8167d02eb7eb1f226b8222dde998bf25810f58451afdbab"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\independent-query-price-and-identity-ledger.json",
+      "sha256": "729a1b06be102a0d233fe7d04838c03690440c677287d5a82f8a2d335ddd3dc8"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\depth24-completion\\independent-query-price-and-identity-ledger.json",
+      "sha256": "7fda7afdb6c7d1cc1901d310f341406dca4eb68cca9f84339a5fd57c3b9bc0f7"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-west-choice-d16-first-refutation.json",
+      "sha256": "707a1e6dcfcdbcc5c54ea4408ab7fb7a0b1f56b46e8d272a8543888c0d1e20dd"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-root-defense-epoch-terminology-correction.json",
+      "sha256": "963de7b68df18419f39f65e6d3d8946f02f39fa12fe1835a628a5a9651a17399"
+    }
+  ],
+  "fixed_criteria": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-minimum-response-sensitive-function-value-chain.json",
+    "sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94"
+  },
+  "current_prefix": [
+    "f3e3",
+    "e5e6",
+    "e3d2",
+    "e6e5"
+  ],
+  "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P3P1/1P1K4/8 w - - 4 37",
+  "engine_profile": "sf18-smallnet-t2-h16-v1",
+  "completed_current_comparisons": {
+    "d16": {
+      "unrestricted_White_returned": [
+        [
+          "cxb4",
+          508
+        ],
+        [
+          "axb4",
+          338
+        ],
+        [
+          "Ke3",
+          194
+        ]
+      ],
+      "same_own_pair_White_cp": {
+        "cxb4": 347,
+        "g4": -927
+      },
+      "after_cxb4_pool_White_cp": {
+        "cxb4": 626,
+        "Kxe4": 637,
+        "c3+": 714
+      },
+      "after_g4_pool_White_cp": {
+        "bxa3": -668,
+        "bxc3+": -11,
+        "b3": 0
+      },
+      "after_cxb4_named_same_query_White_cp": {
+        "Kxe4": 549,
+        "cxb4": 600
+      },
+      "after_g4_named_same_query_White_cp": {
+        "bxa3": -860,
+        "Kf4": 593
+      },
+      "all_six_required_queries_completed": true
+    },
+    "d24": {
+      "same_named_physical_own_candidates_White_cp": {
+        "cxb4": 482,
+        "g4": -7643
+      },
+      "subject_selection_source_depth": 16,
+      "values_from_current_completed_depth24_pair_only": true,
+      "unrestricted_White_best_depth24_certified": false,
+      "Black_response_depth24_stability_certified": false
+    }
+  },
+  "refuted_main_function_hypothesis": {
+    "verdict": "Retained Pg3 denying immediate Black Kf4 is not established as the principal current choice value; the d16 named counter refutes that explanation here.",
+    "geometry_survives": "After cxb4 original Pg3 is the sole f4 controller and Kf4 is illegal; after g4 Kf4 is legal. Kxe4 is legal after both choices.",
+    "counter": "At d16 Black bxa3 is far stronger than Kf4 after g4; cxb4 remains advantageous when Black immediately captures original e4.",
+    "no_e4_safety_claim": true,
+    "no_general_irrelevance_claim_in_other_positions": true
+  },
+  "current_plan_function_and_prices": {
+    "cxb4": [
+      "Original White Pc3 captures original Black Pb4 immediately, preserving original White Pa3 as an exchange resource.",
+      "In the ...cxb4 arm, original Pa3 recaptures on b4; it is then a passed pawn. Black original Pc4 may advance c3 and be removed by original Pb2, with checks and subsequent passer losses retained.",
+      "In the ...Kxe4 arm, original Pe4 is deliberately lost. At d24 original Pc3 advances on b-file and is captured by Kxb7 while the White King captures original Black Pc4, Pc5 and Pa4. Original White Pb2 becomes a separate b-passer and promotes.",
+      "Original Pg3 advances later and is captured in these finite conversion lines. No permanent reserve or free gain is claimed."
+    ],
+    "g4": [
+      "The move does not remove Black Pb4. Black bxa3 captures original White Pa3; original Pb2 can recapture that original Black Pb4 but lands a3 behind Black Pa4, while original Pc3 remains blocked by Black Pc4.",
+      "The returned stronger resistance includes Kxe4 and the loss of original Pg3 after g5. Black original Pf7 has a passed-pawn conversion path in returned d16 lines.",
+      "The current d24 named own line remains losing for White but does not itself reach a promotion; a d16 promotion event is not transplanted as a forced d24 event."
+    ],
+    "claim_level": "The exact actions and finite state changes explain the tested current contrast. A single returned route is neither forced nor a whole root-cause proof."
+  },
+  "original_root_followup_study": {
+    "original_product_owner": "work:1",
+    "original_product_root_White_cp": {
+      "Ke3": 275,
+      "g4": 0
+    },
+    "original43_retained_fullpool_d16_White_cp": {
+      "Ke6": 538,
+      "f6": 538,
+      "b3": 564
+    },
+    "new_named_root_d24_White_cp": {
+      "Ke3": 621,
+      "g4": 0
+    },
+    "new_named_root_Ke3_first_returned_Black": "Kf6",
+    "current_retained_Black_unrestricted_d24_completed": false,
+    "current_stronger_f6_vs_Ke6_depth24": "unknown",
+    "new_root_PV_function_counterexample": "The winning returned Ke3 line never uses g4: original Pg3 is captured on g3, while original Pe4 advances and promotes. Retained pawn use/check is not a necessary event of every useful root realization.",
+    "ownership_limit": "Neither +621 nor any standalone local value replaces original43 work1, work3, work4 or the live product Family source."
+  },
+  "uncompleted_required_robustness": [
+    {
+      "query": "prefix4 unrestricted White d24,250m",
+      "elapsed_ms": 68342,
+      "nodes": 250000429,
+      "failure": "search_budget_exhausted",
+      "all_three_PV_headers_depth": 24,
+      "diagnostic": "all3 boundsnull/heads24, but hard nodesOver true; executor did not return completed and no value used."
+    },
+    {
+      "query": "same prefix4 full White d24 larger retry",
+      "elapsed_ms": 283681,
+      "nodes": 1000000649,
+      "failure": "search_budget_exhausted",
+      "last_depth": 23
+    },
+    {
+      "query": "original Ke3 full Black d24",
+      "elapsed_ms": 245848,
+      "nodes": 1000000871,
+      "failure": "search_budget_exhausted",
+      "last_depth": 23
+    },
+    {
+      "query": "after prefix4 cxb4 named Black d24",
+      "elapsed_ms": 218330,
+      "nodes": 860642962,
+      "failure": "lease_expired_at_total_study_deadline",
+      "last_depth": 21
+    },
+    {
+      "query": "after prefix4 g4 named Black d24",
+      "issued": false,
+      "reason": "absolute 30-minute research deadline reached before next query"
+    }
+  ],
+  "cost": {
+    "absolute_study_budget_ms": 1800000,
+    "first_started_utc": "2026-10-09T01:51:56.619148+00:00",
+    "hard_deadline_utc": "2026-10-09T02:21:56.619148+00:00",
+    "last_finished_utc": "2026-10-09T02:21:58.922919+00:00",
+    "wall_including_shutdown_ms": 1802304,
+    "shutdown_after_deadline_ms": 2304,
+    "sum_executor_elapsed_ms": 891915,
+    "sum_nodes": 3339727736,
+    "primary_d16_executor_elapsed_ms": 16978,
+    "new_engine_queries": 12,
+    "completed_queries": 8,
+    "failed_queries": 4,
+    "unissued_predeclared_query_count": 1,
+    "interactive_sealing_preparation_and_transport_wall_not_equal_engine_ms": 910389,
+    "concurrent_CPU_limit": "Parent main-only10j compiler overlapped roughly the initial minute of retry. No competing engine was authorized. Isolated speed is not claimed.",
+    "both_engine_shutdown_exit_zero": true,
+    "forced_kills": false,
+    "frozen_runtime_hashes_before_after_all_pass": true
+  },
+  "minimal_product_contract_implications": [
+    "The current legal original advance must remain an investigable option when absent from an owned reply PV; its own current survey/pair and both resistance duties decide useful/refuted.",
+    "A refuted g4 option must leave its legal facts and independently valued best other current plan intact. It cannot borrow that other plan's pawn purpose.",
+    "A true control/denial fact must not become the main value reason without the adequate countercomparison. Here the important verified resistance is a queenside capture, not the newly legal Kf4.",
+    "Changed near-leading plan/actor conversion must retain original identities and its own actual prices; do not require a common g4/check/King-entry event across all responses.",
+    "The independent study does not bypass the product's certificate/conflict/price closure. It proves no completed UI or end-user full utility change."
+  ],
+  "full_product_utility_success_unchanged": {
+    "original_four": "0/4",
+    "original_eight": "0/8"
+  },
+  "new_engine_after_study": false,
+  "product_sources_changed_by_study": false,
+  "product_reports_submitted": 0,
+  "fixed_criteria_changed": false
+}

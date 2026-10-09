@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T19:40:54.373650+00:00",
+  "phase": "Eight-source AFTER independent BASIC-only first pass, with visible BEFORE comparison",
+  "input": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\source-scene-after8b-basic.json",
+    "sha256": "a01bec697132c6a422b7cbefac93947f36cbda0fb4449f9e8f3c769e10ca8678",
+    "exported_snapshot_source_sha256": "47c832a3a12491d04b7cfe46fc05de67f86306c0a3d2fd379fd5e65df3a0fc21"
+  },
+  "before": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\source-scene-before40a-basic.json",
+    "sha256": "b0527aab26925d3457bf4478fd78c136922f865c3c65f1006a53b37c7d33f615",
+    "preserved_reading_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\source-scene-before40a-human-firstpass.json",
+    "preserved_reading_sha256": "e85ae7f013b53a52332f28c4178eefb01fa5ebf0bcd4359c6e9b4bc3486789a7"
+  },
+  "criteria": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\human-criteria-and-scenes.json",
+    "sha256": "4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4",
+    "changed": false,
+    "standard": "Exact legal/price facts, evaluated functional usefulness, root judgment and sole numerical cause remain separate. A normal purpose can suffice; a changed good realization is allowed. No book PV or optional event is imposed."
+  },
+  "input_match": "The same eight ids, current FENs and played moves exactly match BEFORE and the frozen scene controls.",
+  "counts": {
+    "cases": 8,
+    "full_minimum_basic_answers_complete": 0,
+    "partial": 8,
+    "new_full_quality_passes": 0,
+    "explicit_unsupported_causal_claims": 0,
+    "before_unclear_material_summary": 1,
+    "after_same_unclear_material_summary": 0,
+    "after_excess_topic_groups": 16,
+    "after_essential_omission_topic_groups": 19,
+    "text_identical_cases": 0
+  },
+  "count_scope": "Topic groups are descriptive per-answer categories, not a causal progress score; their decomposition can change with valid forecasts. No numerical accuracy or hidden proof assessment is inferred. Zero complete answers does not mean zero correct facts.",
+  "positive_bounded_changes": [
+    "SG42 Rd3 now conveys c3 pressure, same-rook d2 trajectory and replacement Re8 protection; before lacked the actual current guard.",
+    "SG17 Bxf4 now conveys source-resilient Rxb7+ and Bd7 blocking the discovered queen check.",
+    "SG42 Bd3 moves its already known actual support purpose to the lead.",
+    "SG35 root Ng8 removes the earlier internally conflicting alternative-line material summary."
+  ],
+  "overall_reading": "Facts and local organization improve in some places, but none completes the frozen main human judgment. Later Nd6 and the Bd3 comparator add substantial unrelated event lists. Required current price is still missing or unorganized in several answers; no clear newly lost essential historical transaction is established because valid current forecasts differ and old peripheral branches were not mandatory.",
+  "price_boundary": "The first Ne4 exchange pairs and actual Qxd7/Qxe5 counter remain visible. Root Nd6 b6 price and Bxf4 g-file cost remain missing from both versions. Changed valid material transactions are recorded rather than called equivalent, forced or lost by default.",
+  "cases": [
+    {
+      "id": "FJ-SG35-ROOT-NG8",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Same original knight proceeds g8–f6 and regains d5 support.",
+        "Rf1/Bh4 evasion and Bxe1/Rxe1 bishop exchange are readable."
+      ],
+      "new_bounded_gain": [
+        "The old internally conflicting Kh7 material summary is absent. The selected current bishop exchange is shorter and clear."
+      ],
+      "unchanged_essential_omissions": [
+        "Why improve this underemployed knight and what useful e4/g4 choices the maneuver retains.",
+        "A coherent basic purpose tying temporary support reduction and restoration to useful activity; no need for a sole numerical cause."
+      ],
+      "after_excess_groups": [
+        "Two support-loss comparisons still lead without their positive purpose.",
+        "Kh7-line bishop threats, pawn-survival and Qxh3 events remain unorganized relative to the actual knight task."
+      ],
+      "price_comparison": "Old Bxg1/Kxg1 and long alternative capture story are replaced by Bxe1/Rxe1. Both local exchanges are recoverable in their own forecasts; the old branch is not imposed on the new one. The prior unclear queen/knight summary is removed.",
+      "essential_price_regression": "none_established_from_basic",
+      "organization_change": "Shorter and less confusing price, but not a complete mover-purpose answer.",
+      "same_input_needed": "Make the maneuver’s useful purpose/options recoverable while retaining current support and bishop-exchange facts.",
+      "before_text_sha256": "26e349618b3f5f28f8a3b7fa6c3d56271247dba45acc51eac52b99bf6a15e9f5",
+      "after_text_sha256": "5e3d1aaf20cd15f988fc5176e4e704e3832667cb709aeaba287fa877d56f0d66",
+      "before_text_characters": 1382,
+      "after_text_characters": 946,
+      "text_identical": false,
+      "before_verdict_code": "best_choice",
+      "after_verdict_code": "best_choice",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -3.2724407355544898,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -1.935288941196525,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 2,
+      "after_essential_omission_group_count": 2
+    },
+    {
+      "id": "FJ-SG35-ROOT-ND6",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "The same conditional queen-capture avoidance fact.",
+        "Rxb6 captures the b6 pawn."
+      ],
+      "new_bounded_gain": [],
+      "unchanged_essential_omissions": [
+        "Why the early c4–d6 commitment is premature despite its displayed local benefit.",
+        "The consequential b6 recapture price and importance of the extra a-pawn.",
+        "Ng8’s useful improvement as an adequate alternative rather than repeated continuation names."
+      ],
+      "after_excess_groups": [
+        "The conditional benefit remains the lead for a move labelled mistaken.",
+        "Repeated recorded-continuation fragments have no causal organization."
+      ],
+      "price_comparison": "The actual needed b6 price is still absent. The removed later Rxc1+/Nxc1 price was classified as peripheral in the frozen BEFORE reading, so its removal is not now reclassified as essential price loss.",
+      "essential_price_regression": "none_established; important_b6_price_missing_both",
+      "organization_change": "Fewer peripheral facts but the misleading focus and central omission remain.",
+      "same_input_needed": "Explain the b6 consequence and early price; preserve the conditional scope and do not condemn all later Nd6 uses.",
+      "before_text_sha256": "27c0385fef279695d041b8ad86101ecba3f6651017d02cbe30b79b27f21447f3",
+      "after_text_sha256": "83bce60db3a44a60a6689bddf502191097d1a070d32ae98dcea9a63886dfea67",
+      "before_text_characters": 788,
+      "after_text_characters": 481,
+      "text_identical": false,
+      "before_verdict_code": "mistake",
+      "after_verdict_code": "mistake",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -16.050072047229875,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -16.515520005743483,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 2,
+      "after_essential_omission_group_count": 3
+    },
+    {
+      "id": "FJ-SG35-LATE-ND6",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Current f5 support and escape from Qd3.",
+        "Qb1 is named.",
+        "The c4-origin knight is captured by Bxe4 and the f5 pawn recaptures with fxe4; other pawn/knight/queen exchanges are stated."
+      ],
+      "new_bounded_gain": [],
+      "unchanged_essential_omissions": [
+        "Useful choice of which original knight later realizes the central exchange, or another adequately explained retained function.",
+        "How the other knight remains useful rather than merely present or captured in a different line.",
+        "Why the same c4–d6 action becomes appropriate later rather than early; the matched b6 price change is not explained."
+      ],
+      "after_excess_groups": [
+        "Long g6-line knight/queen attack-evasion sequence and queen exchange.",
+        "Remote actor-survival/location facts mixed with earlier captures without decision-time organization.",
+        "Vacancy and later Rc1/Kg7 facts without a root value connection."
+      ],
+      "price_comparison": "The previous Nde4/Nxe4/dxe4 realization is replaced by a Bxe4/fxe4 realization, with other complete local exchanges. A different valid capture/plan is allowed by the fixed criterion. The loss is in interpretability of the function, not a proven omitted currently required historical exchange.",
+      "essential_price_regression": "not_established; changed_transactions_not_assumed_equivalent_or_mandatory",
+      "organization_change": "Longer and harder to organize. The unchanged f5-support fact does not explain the reserved knight choice.",
+      "same_input_needed": "Connect whichever current realization is used to a retained useful function and relevant price; avoid requiring the author’s exact knight exchange.",
+      "before_text_sha256": "7d7ee59923cad5259351ad6357ec166cd1c0bddc1a2eab5abadfab0320769abe",
+      "after_text_sha256": "36b7988a1a106b1e8aa91b28be80ae37577cb2355f04ae2ccaa94e112c55fcb5",
+      "before_text_characters": 2182,
+      "after_text_characters": 3168,
+      "text_identical": false,
+      "before_verdict_code": "best_choice",
+      "after_verdict_code": "best_choice",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -0.437618850835527,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -2.165453452280957,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 3,
+      "after_essential_omission_group_count": 3
+    },
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Actual Bxe4/fxe4 and Nxe4/dxe4 immediate exchange alternatives remain.",
+        "The Nd6 comparator clears c4 for Rc3 pressure on a3/e3."
+      ],
+      "new_bounded_gain": [
+        "A concrete alternative c-file activity is now visible; it is potentially relevant to e3 pressure."
+      ],
+      "unchanged_essential_omissions": [
+        "Why the actual Ne4 commitment is premature and how its exchange changes the useful choices/pressure.",
+        "A comparison explaining the value of retaining the alternative rather than simply appending a legal rook route."
+      ],
+      "after_excess_groups": [
+        "Attack/support enumeration still lacks judgment.",
+        "Added Rc3 activity is an unjoined second mechanism."
+      ],
+      "price_comparison": "Both immediate exchange/recapture pairs are retained. There is no visible loss of the current first-response price.",
+      "essential_price_regression": "none",
+      "organization_change": "Some relevant alternative activity added, but immediate trade facts remain unconnected to the changed grade.",
+      "same_input_needed": "Explain why the current exchange consumes a useful option; a verified alternative Rc3 realization may count without forcing the exact book Nd5 route.",
+      "before_text_sha256": "5a709b8a2ef44ff47e5ad7fa4f607b133838b250065e13c6e4862e0210b82037",
+      "after_text_sha256": "8f650cfb50e968c6e8686873c3a9404845ca99b2456221c81e56798dcf151702",
+      "before_text_characters": 600,
+      "after_text_characters": 751,
+      "text_identical": false,
+      "before_verdict_code": "mistake",
+      "after_verdict_code": "inaccuracy",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -5.159609340783092,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -4.346146488049172,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 2,
+      "after_essential_omission_group_count": 2
+    },
+    {
+      "id": "FJ-SG42-RD3",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Rd3 attacks c3 and lines up with Bb3 behind that pawn.",
+        "The same rook moves to d2 and supports e2, then toward b2.",
+        "Re8 is explicitly the replacement defender of e2 after Re3 leaves.",
+        "Later pawn trades and alternative Bd3/check activity are described."
+      ],
+      "new_bounded_gain": [
+        "Actual rook pressure/trajectory and current replacement guard are now recoverable, unlike BEFORE.",
+        "The answer begins with the actual Rd3 relation rather than an unrelated Bd3 branch."
+      ],
+      "unchanged_essential_omissions": [
+        "Why Rd2/b2 restricts the bishop or how another adequate conversion fulfills the invasion goal. The prose instead stresses attacks/alignment that end as the rook moves.",
+        "An organized continued clamp/conversion purpose and its relevant current cost. Exact Re1xe2/Re8xe2 price is not printed; it becomes necessary if a stronger safety/capture claim is made."
+      ],
+      "after_excess_groups": [
+        "Negative ending-of-attack/alignment descriptions, pawn-survival and root-comparator relations.",
+        "Long Bd3-line rook/king checks and evasions obscure the short actual Rd3 purpose."
+      ],
+      "price_comparison": "The new Re8 support fact is a useful guard-transfer fact, not itself a completed explicit capture/recapture ledger. Later pawn exchanges are clear. The old late pawn-removal/bishop-exchange branches are replaced; they are not demanded unchanged.",
+      "essential_price_regression": "none_established; initial_price_not_explicit_both",
+      "organization_change": "The clearest bounded improvement in the cohort: current pressure and guard transfer. Full practical conversion is still not assembled.",
+      "same_input_needed": "Turn the current correct pressure/guard ingredients into a concise invasion purpose; do not claim c3 is immediately won.",
+      "before_text_sha256": "09913b3d985fdcf6e2662544ab503d30c675cef1f30a054366316b11ccdba034",
+      "after_text_sha256": "257e81904fa3c6f62690077fd913667e859549636cc1b0246e74fed5b02a47ea",
+      "before_text_characters": 1461,
+      "after_text_characters": 2204,
+      "text_identical": false,
+      "before_verdict_code": "playable_loss",
+      "after_verdict_code": "playable_loss",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -0.5031161204379373,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -1.311853755897431,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 2,
+      "after_essential_omission_group_count": 2
+    },
+    {
+      "id": "FJ-SG42-BD3",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Actual Bd3 support of e2 is now the lead.",
+        "The Rf3 comparator exposes a rook to gxf3; its e3 vacancy gives Re8 support of e2.",
+        "Further rook/pawn/bishop transactions and checks are stated."
+      ],
+      "new_bounded_gain": [
+        "Better lead organization for the already known e2-support fact.",
+        "The comparator’s immediate gxf3 rook capture is visible."
+      ],
+      "unchanged_essential_omissions": [
+        "How Bd3’s added support serves the continuing useful rook/king conversion, not merely another attack count.",
+        "Current value/cost of the actual plan and an adequately defended continuation; the long Rf3 comparison cannot replace that purpose."
+      ],
+      "after_excess_groups": [
+        "Long Rf3-line rook/bishop/king chase and exchange chain.",
+        "Multiple alignment/vacancy facts and a material summary without an organized relative judgment."
+      ],
+      "price_comparison": "Comparator changed from source-good Rd3 to engine-displayed bad Rf3. This is allowed; the new queenless rook loss and later exchanges cannot be silently equated with old Rd3 price. The body shows gxf3 but does not organize its full value. No numerical score accuracy judgment is made.",
+      "essential_price_regression": "not_established; current_comparator_price_value_unorganized",
+      "organization_change": "Actual support moved to the first sentence, but the body still lacks the conversion function and remains overlong.",
+      "same_input_needed": "Explain overprotection’s useful mobility/conversion role; do not insist on the old comparator or claim Rf8 becomes newly legal.",
+      "before_text_sha256": "3e8ca65e7ccadda41247cf14552ab6736a588705cad97946a20b93f49414e01c",
+      "after_text_sha256": "511a50320109029796e89d1fca8076f6b20fd180c3b592ca17da73d620839241",
+      "before_text_characters": 2180,
+      "after_text_characters": 1905,
+      "text_identical": false,
+      "before_verdict_code": "best_choice",
+      "after_verdict_code": "best_choice",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -2.662172752882043,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -53.68027419536473,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 2,
+      "after_essential_omission_group_count": 2
+    },
+    {
+      "id": "FJ-SG17-BXF4",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Bxf4 captures Nf4.",
+        "Source-resilient Rxb7+ now explicitly opens White’s queen check and Bd7 blocks it.",
+        "Qc6 is the new comparator, with Qxe5, rook exchange and Nxe6+/Qxe6 price facts."
+      ],
+      "new_bounded_gain": [
+        "The stronger White fighting response and its actual interposition are substantially clearer than BEFORE."
+      ],
+      "unchanged_essential_omissions": [
+        "What the capture and adequate defense establish about the move judgment, beyond a first check block.",
+        "The legal gxf4 price/relative constraint exposing Bg2 to Rxg2.",
+        "Meaningful continued defense/cost against the stronger White resistance before any broad winning claim."
+      ],
+      "not_mandatory_for_this_new_realization": "Literal Rc7+/e5/d2-control events are not forced into a current Rxb7 realization. An adequate alternative can satisfy the function, but its value and necessary price must be explained.",
+      "after_excess_groups": [
+        "Long Qc6 alternative rook/king/knight trade chain while the actual undefended-bishop price remains unexplained."
+      ],
+      "price_comparison": "The actual initial knight capture and Rxb7 pawn capture are visible. The g-file price remains absent. New comparator exchanges are locally stated; source Qxd7 PV matching is not mandatory.",
+      "essential_price_regression": "none_established; relative_pin_price_missing_both",
+      "organization_change": "Better actual strongest-source response, but the lead still suggests an unexplained loose bishop and full judgment remains partial.",
+      "same_input_needed": "Explain why the current adequate defense succeeds and why legal gxf4 is costly; do not force the tempting Rc7 line as White’s reply.",
+      "before_text_sha256": "64342bc05f22777378275ced24b1aa4bf09deabe171d5c944e2052bef5349d2e",
+      "after_text_sha256": "e3c9860c5693ef1f292745be13da3c4bbbf4853a349117eb31e8a333aa8b9e58",
+      "before_text_characters": 639,
+      "after_text_characters": 1256,
+      "text_identical": false,
+      "before_verdict_code": "best_choice",
+      "after_verdict_code": "best_choice",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -24.107339140646957,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -26.060000499319948,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 1,
+      "after_essential_omission_group_count": 3
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "core_status": "partial",
+      "minimum_answer_complete": false,
+      "recoverable": [
+        "Actual Qxd7 rook capture and Qxe5 counter.",
+        "Alternative Bxf4 and source-resilient Rxb7+/Bd7."
+      ],
+      "new_bounded_gain": [],
+      "unchanged_essential_omissions": [
+        "White’s active bishop, safe castling and pawn compensation as the reason the exchange count misleads.",
+        "A scoped interpretation of Bxf4’s better defense and the stronger White resistance."
+      ],
+      "after_excess_groups": [
+        "Mutual queen attacks/support/evasion description.",
+        "c8 vacancy for Rd8 remains peripheral to the main compensation judgment."
+      ],
+      "price_comparison": "The same important first Qxe5 counter and actual rook capture are preserved. A final peripheral Bc8 vacancy/evasion is removed. The whole compensation still is not conveyed.",
+      "essential_price_regression": "none",
+      "organization_change": "Slightly shorter; no new judgment organization.",
+      "same_input_needed": "Make the compensation/king-safety reason recoverable without a raw exchange arithmetic shortcut.",
+      "before_text_sha256": "0af287b49f6dfe3d1edd164d1400872fbbd922f21dad3c63762c34cb0b34d70a",
+      "after_text_sha256": "a9137b489dc8d59964787cb5a45c9edc0343a2fbd6aa48ea8d9debf88d203463",
+      "before_text_characters": 864,
+      "after_text_characters": 803,
+      "text_identical": false,
+      "before_verdict_code": "blunder",
+      "after_verdict_code": "blunder",
+      "before_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -27.21323148185529,
+        "kind": "engine_evaluation"
+      },
+      "after_numeric_delta": {
+        "candidate_win_percent_delta_for_mover": -25.034641499369975,
+        "kind": "engine_evaluation"
+      },
+      "numeric_accuracy_verified": false,
+      "unsupported_causal_claim_count": 0,
+      "after_excess_group_count": 2,
+      "after_essential_omission_group_count": 2
+    }
+  ],
+  "preserved_old_results": {
+    "old_four_full_utility": "0/4 unchanged",
+    "eight_source_BEFORE": "0 complete / 8 partial unchanged",
+    "NB1_current_readings": "Separate records; not folded into this source cohort."
+  },
+  "not_inspected": [
+    "AFTER raw Task/state/receipt data",
+    "AFTER engine/PV audits",
+    "Current product or runner source",
+    "Any hidden gate/proof used to fill a missing sentence"
+  ],
+  "firstpass_limit": "This evaluates natural-language recovery only. Fresh execution/receipt legality asserted by the parent is separate from basic quality. Any evidence-only supplement must preserve this first reading."
+}

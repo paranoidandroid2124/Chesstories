@@ -1,0 +1,75 @@
+[
+  {
+    "game_id": "FC-SG45-NB1",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "human-evaluation-FC-SG45-NB1",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c6",
+        "d2d3",
+        "d7d5",
+        "b1d2",
+        "g7g6",
+        "g1f3",
+        "f8g7",
+        "g2g3",
+        "g8f6",
+        "f1g2",
+        "e8g8",
+        "e1g1",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "b8d7",
+        "f3e2",
+        "d5e4",
+        "d3e4",
+        "d8c7",
+        "a2a4",
+        "a8d8",
+        "d2b3",
+        "b7b6",
+        "c1e3",
+        "c6c5",
+        "a4a5",
+        "e7e5",
+        "b3d2",
+        "f6e8",
+        "a5b6",
+        "a7b6",
+        "f1d1",
+        "c7c6"
+      ],
+      "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "d2b1",
+        "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 180000
+    }
+  },
+  {
+    "game_id": "H05",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "human-evaluation-H05",
+      "variant": "standard",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [],
+      "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "g3g4",
+        "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 180000
+    }
+  }
+]

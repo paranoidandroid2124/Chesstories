@@ -1,0 +1,112 @@
+{
+  "archived_utc": "2026-10-09T06:26:32.917951+00:00",
+  "scope": "Exactly three separately authorized actual H05 nominal16 research comparisons; original failures, public grade and plan-copy metadata mistake are not rewritten.",
+  "new_engine_queries": 0,
+  "product_changes": 0,
+  "metadata_correction": {
+    "path": "h05-fresh10s-nominal16-plan-metadata-correction.json",
+    "sha256": "165f714f218ebd7e242383ab5a3d4ffdc3324b3a2a8229d2e0cfb47a0ed2e86e"
+  },
+  "files": [
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/study-plan.json",
+      "archive": "nominal16-completion-evidence/study-plan.json.gz",
+      "original_sha256": "98d9b028df401252b6be6bda1eeee221465470aa0bd504c84d2fc3a74f6ed304",
+      "gzip_sha256": "3b997d84043887d882de7d688339d0a43b3ec98570a0bd820acb5dd425299343",
+      "original_bytes": 535365,
+      "gzip_bytes": 96277,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/stage1.json",
+      "archive": "nominal16-completion-evidence/stage1.json.gz",
+      "original_sha256": "662786fac4844f89a50aaa37722729595e7c6ed81de5d3c585a9f5d6ee7a08bb",
+      "gzip_sha256": "a7403a9a253320ce2e068f0eb10c7846b73fa7cb567df3d8bd482e3291e5de30",
+      "original_bytes": 12730,
+      "gzip_bytes": 1816,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/prepare-manifest.json",
+      "archive": "nominal16-completion-evidence/prepare-manifest.json.gz",
+      "original_sha256": "350837f6bf45db7745c80c4a835738385de928838802090d19ffbb8524367356",
+      "gzip_sha256": "ca0bb67106de31d35340724be669473b7b43112426871bd894523db508bfa828",
+      "original_bytes": 530108,
+      "gzip_bytes": 93706,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/session.py",
+      "archive": "nominal16-completion-evidence/session.py.gz",
+      "original_sha256": "ccf8edfb2e28397ffd1306be793bc39052b651ae2d0cb83862e4d76b4d887293",
+      "gzip_sha256": "dbe34ff37b9ad5371e70c0b5ab694094b5601bb5ef4a12ba21645714dd4a3e05",
+      "original_bytes": 10370,
+      "gzip_bytes": 3184,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/execution/boot.json",
+      "archive": "nominal16-completion-evidence/execution/boot.json.gz",
+      "original_sha256": "405bbe9cc757f61240aa8b322ea84daecfb8a66928c8b9d9e56b28b6997ef5ae",
+      "gzip_sha256": "cbbf3c8618b48ed96bab630957f39c9d938d0ebcac0256c07d59607ec60bae6c",
+      "original_bytes": 2658,
+      "gzip_bytes": 605,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/execution/manifest.json",
+      "archive": "nominal16-completion-evidence/execution/manifest.json.gz",
+      "original_sha256": "9ae02af84662eae5ebac2cfeced6324c0efaf5251c0bb719d151c58633b1ad2e",
+      "gzip_sha256": "86c63e53b45bbef9975b203b7c41b07c2dd4cb4920d97982b32a329454d3f838",
+      "original_bytes": 1358,
+      "gzip_bytes": 699,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/execution/results.json",
+      "archive": "nominal16-completion-evidence/execution/results.json.gz",
+      "original_sha256": "2c5de26d7a2011e4a45d893ad2b46434041642c8eec4b6bccd68cc64a0d3bef7",
+      "gzip_sha256": "916f83b149957ecdf6d1a2d48b19afa5607d2c9f6087baeccaf3ac7f47dcd4b1",
+      "original_bytes": 121523,
+      "gzip_bytes": 13088,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/execution/summary.json",
+      "archive": "nominal16-completion-evidence/execution/summary.json.gz",
+      "original_sha256": "dd984027bd26e6f595819ae95999a23f27b25014c1f548350a2d5ea8c4adc290",
+      "gzip_sha256": "a00d2cc3e9c0651bc965f365a4ef0d08bc72e7ac46afb967513ebd40617a017b",
+      "original_bytes": 8914,
+      "gzip_bytes": 1316,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/execution/sealed-stage-01.json",
+      "archive": "nominal16-completion-evidence/execution/sealed-stage-01.json.gz",
+      "original_sha256": "662786fac4844f89a50aaa37722729595e7c6ed81de5d3c585a9f5d6ee7a08bb",
+      "gzip_sha256": "a7403a9a253320ce2e068f0eb10c7846b73fa7cb567df3d8bd482e3291e5de30",
+      "original_bytes": 12730,
+      "gzip_bytes": 1816,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/runtime/bridge-manifest.json",
+      "archive": "nominal16-completion-evidence/runtime/bridge-manifest.json.gz",
+      "original_sha256": "61913df295d480189400b79a2d59b3649e028a3265b215f80d779c201420e209",
+      "gzip_sha256": "325ae056d5c605392e2bee29f91f32387bfd2b729da8237ee971f9f22769a15a",
+      "original_bytes": 4850,
+      "gzip_bytes": 1929,
+      "uncompressed_byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/h05-fresh10s-failed-comparisons-nominal16-completion/runtime/direct-bridge.ts",
+      "archive": "nominal16-completion-evidence/runtime/direct-bridge.ts.gz",
+      "original_sha256": "b5d21a28aaa95394f3d080ef72d97acaab516b81a8b4c0f9953b58c29e3ab3b9",
+      "gzip_sha256": "1b6916e23ce19560ad7247a5ab9f7fe98fc1d8cf64e624f2308d11fef0ec30ef",
+      "original_bytes": 6636,
+      "gzip_bytes": 2440,
+      "uncompressed_byte_exact": true
+    }
+  ],
+  "engine_assets_not_embedded": "Exact asset hashes are retained in the original preparation manifest; bundled executable assets and trained network are not duplicated here."
+}

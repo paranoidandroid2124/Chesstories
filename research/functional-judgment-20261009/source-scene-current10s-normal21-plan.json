@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-09T05:45:18.183362+00:00",
+  "purpose": "Finite exposed same-input regression recheck after current10s ownership, conditional-function value, price/closure and depth18 changes. New main can change producer agenda and visible explanation even with original requests, so source-scene preservation and remaining gaps need one normal actual run.",
+  "not_novel_blind_holdouts": true,
+  "previous_outputs_known": true,
+  "cases_in_fixed_order": [
+    "FJ-SG35-ROOT-NG8",
+    "FJ-SG35-ROOT-ND6",
+    "FJ-SG35-LATE-ND6",
+    "FJ-SG35-LATE-NE4",
+    "FJ-SG42-RD3",
+    "FJ-SG42-BD3",
+    "FJ-SG17-BXF4",
+    "FJ-SG17-QXD7"
+  ],
+  "source_inputs": [
+    "target/functional-judgment-20261009/source-scene-before40a/fixed-requests.json"
+  ],
+  "original_fixed_requests_sha256": "ff975cc210db728f8025aa679faad54f6831265c5969f4dac1379759c3ac6d03",
+  "request_count": 8,
+  "request_budget_ms_per_job": 180000,
+  "input_scope": "Byte-identical original eight request rows: exact initial FEN/history/current FEN/focus/resulting FEN/profile. No proposals, input lines, future PV, book hypotheses or engine/report replay.",
+  "production": "Frozen compiled current10s and exact unmodified FullGameProbe transport; frozen normalUI21 direct bridge and all six original engine assets.",
+  "product_main_manifest": {
+    "path": "target/relationship-delivery-20261004/main-manifest-10s.json",
+    "sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690"
+  },
+  "product_classpath": {
+    "path": "target/relationship-delivery-20261004/classpath-10s.json",
+    "sha256": "f60d3160b930cbb3de525deda5447bb55615357dc0d122fa0cb83878484acb98"
+  },
+  "normal21_manifest": {
+    "path": "target/functional-judgment-20261009/product-bridge-v21/bridge-manifest.json",
+    "sha256": "7cbaab5ddb51165cbd9be49a3a7982b048db6e19d5209a9a3d980af2bf60a273"
+  },
+  "root_nominal_depth": 16,
+  "preview_nominal_depth": 8,
+  "maximum_nominal_requested_depth": 18,
+  "engine_profile": "sf18-smallnet-t2-h16-v1",
+  "engine_workers_simultaneously": 1,
+  "deadline": "Original public180000ms deadline including reducer, serialization, bridge and engine; never reset deadline on a changed/failed comparison.",
+  "batch_outer_work_seconds": 1440,
+  "batch_guard_scope": "Additional fail-closed adapter wall boundary after engine initialization. RPC wait is bounded by remaining batch wall time; it cannot increase any product or per-work allowance. Owned shutdown up to40s is recorded separately.",
+  "independent_adapter_guard_works_per_case": 200,
+  "adapter_guard_scope": "Escape guard only; not a production budget increase. Pending/failure visible if hit.",
+  "no_replayed_or_synthetic_reports": true,
+  "no_automatic_retry": true,
+  "rpc_failure": "Poison the failed owned RPC instance; preserve final pending frame and stop remaining cohort. Do not consume a late result under another case.",
+  "actual_engine_queries": "Count actual go commands in returned normal executor transcript separately from dispatch_attempts. Lost RPC makes count explicitly a lower bound.",
+  "read_order": "Immutable BASIC-only case/aggregate export before private state/receipt/price audit. Compare text under frozen source criteria without changing old0/4 or source0/8 until actual reading.",
+  "fixed_human_artifacts": [
+    {
+      "path": "research/functional-judgment-20261009/human-criteria-and-scenes.json",
+      "sha256": "4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4"
+    },
+    {
+      "path": "research/functional-judgment-20261009/source-scene-before40a-human-firstpass.json",
+      "sha256": "e85ae7f013b53a52332f28c4178eefb01fa5ebf0bcd4359c6e9b4bc3486789a7"
+    },
+    {
+      "path": "research/functional-judgment-20261009/source-scene-after8b-human-firstpass.json",
+      "sha256": "d52ce35ee83425e7e5b5a665deddad8677fbe9d28b0db5f48f3a712c7cd84ea6"
+    },
+    {
+      "path": "research/functional-judgment-20261009/source-scene-before40a-basic.json",
+      "sha256": "b0527aab26925d3457bf4478fd78c136922f865c3c65f1006a53b37c7d33f615"
+    },
+    {
+      "path": "research/functional-judgment-20261009/source-scene-after8b-basic.json",
+      "sha256": "a01bec697132c6a422b7cbefac93947f36cbda0fb4449f9e8f3c769e10ca8678"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/independent-functional-followup-product-inputs.json",
+      "sha256": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/final-theory-functional-synthesis.json",
+      "sha256": "0965ddb81ca0132614c9451b72d149b32dd5809a6d933285d840ca8c0248c1b3"
+    }
+  ],
+  "human_outcomes_not_from_liveness": "Completion, longer text, test passes or a budget stop do not establish functional or original-root explanatory success.",
+  "dispatch_permission": "No engine until parent fresh NB1/H05 and210 JUnit completed and parent releases dispatch, earliest about05:55UTC.",
+  "goal_deadline_utc": "2026-10-09T07:19:15Z",
+  "new_engine_queries_at_plan": 0
+}

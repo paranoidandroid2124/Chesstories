@@ -1,0 +1,77 @@
+{
+  "sealed_utc": "2026-10-09T04:30:58.622466+00:00",
+  "maximum_new_pending_depth": 18,
+  "production_change": {
+    "file": "C:\\Users\\\uc591\uc790\\.codex\\worktrees\\functional-choice-value\\Chesstories\\lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReview.ts",
+    "only_pending_depth_upper_bound100_to18": true,
+    "sha256": "0aa86f625888fffdad07c6f1d841abb176453c3db88821ebcb4b35401c4654f5",
+    "line": 1947
+  },
+  "Selection_historical_depth1_to100_unchanged": true,
+  "all_other32_bridge_sources_unchanged": true,
+  "normal_bundle_byte_exact_UI20_except_one_depth_literal": true,
+  "research_lease_body_exact_previous_UI20_except_same_shared_depth18_cap": true,
+  "research_lease_reversal_exact_normal21": true,
+  "existing_receipt_capacity_qualified_sources_price_proof_grade_functions_unchanged": true,
+  "old_UI20_bundle_and_seals_preserved": true,
+  "semantic_RED": {
+    "pass": 2,
+    "fail": 1,
+    "result": {
+      "exit_code": 1,
+      "elapsed_ms": 10019,
+      "log_sha256": "b68f8e5bc1a518f8cf5e80aa275a1d0535ac65063e9e001f4be181ca25a64dfe",
+      "new_engine_queries": 0
+    }
+  },
+  "GREEN_pending_boundary": {
+    "pass": 3,
+    "fail": 0,
+    "result": {
+      "exit_code": 0,
+      "elapsed_ms": 8640,
+      "log_sha256": "6e59534aaa741b1de0aaa17af90a8b86d1307bcc92e121a5793472579de900f4",
+      "new_engine_queries": 0
+    }
+  },
+  "GREEN_normal_unchanged_controls": {
+    "pass": 36,
+    "fail": 0,
+    "suites": "family capacity15 + qualified sources8 + exact conflict dependencies13"
+  },
+  "GREEN_research_lease_controls": {
+    "pass": 33,
+    "fail": 0,
+    "checks": "existing same-owner/limits/capacity20 + exact conflict9 + family/child18accept19reject4"
+  },
+  "total_GREEN_checks": 72,
+  "current33_sources_verified_after_controls": true,
+  "new_engine_queries": 0,
+  "new_public_projection_calls": 0,
+  "JVM_compiles": 0,
+  "TSC_validation": "Not performed; esbuild transpilation plus actual held-bundle Node tests only",
+  "earlier_setup_failure_and_unbounded_assertion_render_failure_preserved": true,
+  "build_recipe_alignment": "Matched heldUI20 alwaysStrict/useDefineForClassFields options and alias map; failed unsealed builds preserved/rejected before acceptance",
+  "no_human_utility_or_depth18_investigation_completion_claim": true,
+  "files": {
+    "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReview.ts": "0aa86f625888fffdad07c6f1d841abb176453c3db88821ebcb4b35401c4654f5",
+    "lila-docker\\repos\\lila\\ui\\analyse\\tests\\moveReviewPendingDepthBoundary.test.ts": "494dd1cb79e5e686a07c44bf58ed44791d5d21cbddbd9782d71427dd7602e749",
+    "judgment-evaluation\\fixtures\\public-commentary-v6\\h05-depth18-pending17-historical-produced.json.gz": "3911248de36544c8fd1afdf39153a68c88275e28f8900e999de92e9fe3f97f56",
+    "target\\functional-judgment-20261009\\product-bridge-v21\\bridge-manifest.json": "7cbaab5ddb51165cbd9be49a3a7982b048db6e19d5209a9a3d980af2bf60a273",
+    "target\\functional-judgment-20261009\\product-bridge-v21\\fresh-bridge.bundle.mjs": "3dd7eb3ec5b56413792b84c9e59aa347e8858b7f73c427edd5d98c5365bcd82e",
+    "target\\functional-judgment-20261009\\product-bridge-v21\\research-family-lease\\bridge-manifest.json": "e6352ba5c4846acf784e3e25a33df7ff9d6928b7ee3e581d9c51389602e8afcf",
+    "target\\functional-judgment-20261009\\product-bridge-v21\\research-family-lease\\fresh-bridge.bundle.mjs": "0c24e83f63599504b752b072df9aae0a131a6ea534b8c8c6c9d9e36c326731b0",
+    "target\\functional-judgment-20261009\\product-bridge-v21\\research-family-lease\\issued-work-lease.diff": "3ad97e08e000b54eb471102aa4b2f1c330a77e755123741e2dbbf619c9de0309",
+    "target\\functional-judgment-20261009\\product-bridge-v21\\research-family-lease\\controls-run-manifest.json": "987cc3b46c5ca8e11d0915ebd8ea258390ee9726197370145bdebd6c5a3d9c77",
+    "target\\functional-judgment-20261009\\uiDepth18Red20c\\result.json": "82394a4cc635423916ab9cf799183d3b9d2739be599509a81e41b3c620b4e029",
+    "target\\functional-judgment-20261009\\uiDepth18Green21\\result.json": "d1f6297fe434588f9962577f200423e0a854c92fa69506bebe85ce5c81f6122f",
+    "target\\functional-judgment-20261009\\uiDepth18NormalRegression21\\result.json": "976dae95e337c323ff049ba5d46702e813de4f591f37b64d55d5e2a29afbd14c",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\pre-edit-plan.json": "2467255f618c95be75e63b989587e8432e6824a72ebf99e0ae9e670c00133126",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\test-setup-failure.json": "af150de11f6e580a750499a753854dc20cb837f48ce32df91e57106efc489d68",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\test-failure-output-correction.json": "6c64731256d05deb48c63a6bf4187b5181baea4e64f8747caab2252bc13a3361",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\line-ending-preflight-failure.json": "c4a449bea7ee426edabf5a29cdb45f7d8412ef223696c5d12b71dc024108cff6",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\build-strict-preflight-failure.json": "0b3f5ed5de6c49fce846f78989e106872f565b40d800a37c9c4eda17634e9308",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\build-normal21.mjs": "02c52ef4c1c55c642d89020c9e89b0e1c309b16101f2774f8598c274f1e8fbcd",
+    "target\\functional-judgment-20261009\\uiDepth18Boundary21\\build-lease21.py": "a340c40a24097240b0dbe9bb66ce74be8b7215f7d145b624110acbac47b15f30"
+  }
+}

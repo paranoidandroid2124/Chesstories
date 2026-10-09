@@ -1,0 +1,62 @@
+{
+  "export_kind": "Actual fresh current-production BASIC; private trace omitted",
+  "game_id": "H05",
+  "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+  "focus": {
+    "kind": "played_move",
+    "played_move_uci": "g3g4",
+    "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+  },
+  "body": "In the Ke3 line through Kb6, neither side loses material or promotes. In the g4 line through Ke5, neither side loses material or promotes.",
+  "default_question": "selected_comparison",
+  "verdict": {
+    "kind": "move_verdict",
+    "comparison_evidence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:candidate-comparison:22c39cf0c65a8209f2279142141d129215083f45131e064c5542898e23601647",
+    "verdict_code": "mistake",
+    "verdict_confidence": "engine_backed",
+    "mover": "white",
+    "delta": {
+      "candidate_win_percent_delta_for_mover": -17.216768549748025,
+      "kind": "engine_evaluation"
+    },
+    "reference_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "f3e3",
+        "e5d6",
+        "e3f4",
+        "d6c6",
+        "f4f5",
+        "c6b6",
+        "e4e5",
+        "b6b5",
+        "g3g4",
+        "b5b6"
+      ],
+      "win_percent_for_mover": 67.21676854974802,
+      "depth": 16
+    },
+    "played_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "g3g4",
+        "f7f6",
+        "f3e3",
+        "b4b3",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e5"
+      ],
+      "win_percent_for_mover": 50,
+      "depth": 16
+    }
+  },
+  "new_engine_queries": 5,
+  "job_elapsed_ms": 29407,
+  "dispatch_attempts": 5,
+  "query_count_is_lower_bound": false,
+  "pending": false,
+  "adapter_error": null,
+  "snapshot_sha256": "9cf617921bbe42708c3d4eb0be7ff65466cf71c1eeb5ea35ecf0ef22700f29ca"
+}

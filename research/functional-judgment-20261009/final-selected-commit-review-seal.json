@@ -1,0 +1,15 @@
+{
+  "sealed_utc": "2026-10-09T06:52:16.382017+00:00",
+  "product_commit": "ea0232a849c93b40f558780a08f0b5a40f830ab4",
+  "selected_evidence_files": 127,
+  "all_goal_staged_files_byte_exact": true,
+  "raw_log_CRLF_and_terminal_newlines_preserved_by_local_attributes": true,
+  "code_whitespace_check_pre_product_commit": "passed",
+  "selected_evidence_whitespace_check": "passed with explicit raw-evidence CRLF and EOF attributes",
+  "new_engine_queries": 0,
+  "source_or_test_changes_since_frozen10s": false,
+  "current_report_sha256": "3dd665f65fd4b0c54d38c6732db2caddf5c58810071b8578fa9fdd68b32e1ea5",
+  "report_provenance_sha256": "56d45810552a88f826db4b7119ddbdc7c055914636cc408158f5b5b884a8f4dd",
+  "first_success_requirement_not_relaxed": true,
+  "full_original_judgment_still_partial": true
+}

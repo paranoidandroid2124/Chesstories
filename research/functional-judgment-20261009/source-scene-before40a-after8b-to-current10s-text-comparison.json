@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-09T06:32:48.306021+00:00",
+  "scope": "Separate literal-body comparison AFTER sealed current human text reading. No original criterion changes or hindsight rescore.",
+  "current_human_seal_sha256": "5661bb9b430e7dbf1d6b7dcb4c51da064cea4b57468f4891117e6d0a8c9942de",
+  "inputs": {
+    "source-scene-before40a-basic.json": "b0527aab26925d3457bf4478fd78c136922f865c3c65f1006a53b37c7d33f615",
+    "source-scene-after8b-basic.json": "a01bec697132c6a422b7cbefac93947f36cbda0fb4449f9e8f3c769e10ca8678",
+    "source-scene-current10s-normal21-basic-text-only.json": "d019408f255d78372220f236a9dd18a4c1de6016100df7f0d3d501af139038c1"
+  },
+  "criteria_sha256": "4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4",
+  "fixed_results": {
+    "original_four": "0/4 unchanged",
+    "source_before40a": "0/8 unchanged",
+    "source_after8b": "0/8 unchanged",
+    "source_current10s": "0/8 full minimum"
+  },
+  "disclosure": "All eight are exposed development controls; public endpoint arrays were previously seen but do not count as explanatory content.",
+  "cases": [
+    {
+      "id": "FJ-SG35-ROOT-NG8",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 1382,
+        "after8b": 946,
+        "current10s": 1338
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "The replacement queen guard and its capture/recovery are newly visible relative to the 8b text. The g8-f6 route/d5 support and omission of positive improvement remain. Changed later trades are not evidence that the original assessment is explained.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "inaccuracy",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -3.2724407355544898,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "playable_loss",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -1.935288941196525,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "inaccuracy",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -3.0978987913911453,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG35-ROOT-ND6",
+      "text_equal_before40a": false,
+      "text_equal_after8b": true,
+      "text_chars": {
+        "before40a": 788,
+        "after8b": 481,
+        "current10s": 481
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "Literal body is exactly unchanged from 8b; the same optional capture-escape contrast still displaces the immediate mistake reason.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "move_verdict",
+          "verdict_code": "mistake",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -16.050072047229875,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "move_verdict",
+          "verdict_code": "mistake",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -16.515520005743483,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "move_verdict",
+          "verdict_code": "mistake",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -14.94622858240298,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG35-LATE-ND6",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 2182,
+        "after8b": 3168,
+        "current10s": 1438
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "Different e4 capturers and surviving actor positions are visible in new forecasts, with fewer late tail events than 8b. Neither surviving f6-knight purpose nor timing flexibility is explained.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "playable_loss",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -0.437618850835527,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "playable_loss",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -2.165453452280957,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "inaccuracy",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -2.8477566372337364,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 600,
+        "after8b": 751,
+        "current10s": 1146
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "The alternative clearance destination/trade sequence changed; the actual e4 exchange facts and missing premature-choice/pressure reason remain.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "move_verdict",
+          "verdict_code": "mistake",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -5.159609340783092,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "move_verdict",
+          "verdict_code": "inaccuracy",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -4.346146488049172,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "move_verdict",
+          "verdict_code": "inaccuracy",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -3.546415610595986,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG42-RD3",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 1461,
+        "after8b": 2204,
+        "current10s": 1310
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "Re8 guard replacement and c3/Bb3 pressure were already visible in 8b. This run preserves them with different priced pawn continuations and a shorter body. It is not a new 10s replacement-provider human success. The continuing Rd2 squeeze remains absent.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "move_verdict",
+          "verdict_code": "playable_loss",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -0.5031161204379373,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "move_verdict",
+          "verdict_code": "playable_loss",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -1.311853755897431,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "move_verdict",
+          "verdict_code": "playable_loss",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -0.29716925473830713,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG42-BD3",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 2180,
+        "after8b": 1905,
+        "current10s": 1027
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "The root reinforcement is retained; the current comparison changes from Rf3 to Rf8 and changes the later bishop/rook sequence. This is legitimate forecast variation, not proof of the fixed conversion purpose.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "inaccuracy",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -2.662172752882043,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "blunder",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -53.68027419536473,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "mistake",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -6.772396821291139,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG17-BXF4",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 639,
+        "after8b": 1256,
+        "current10s": 2870
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "The new comparison includes actual Qxd7 and a longer priced strongest-fighting Rxb7+/Bd7 chain. 8b already showed the initial Rxb7+/Bd7 interposition. The missed resource/compensation judgment remains missing and the text becomes much longer.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "blunder",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -24.107339140646957,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "blunder",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -26.060000499319948,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "best_choice",
+          "verdict_code": null,
+          "runner_up_verdict_code": "blunder",
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -28.04653309759278,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "text_equal_before40a": false,
+      "text_equal_after8b": false,
+      "text_chars": {
+        "before40a": 864,
+        "after8b": 803,
+        "current10s": 765
+      },
+      "current_fixed_minimum": "partial; not complete",
+      "meaning_comparison": "The primary capture/Qxe5 and missed Bxf4 labels remain; Rxb7+ fragments are replaced by Rd1+ and extra cleared-square tails disappear. Compensation and king safety remain absent.",
+      "verdict_summary": {
+        "before40a": {
+          "kind": "move_verdict",
+          "verdict_code": "blunder",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -27.21323148185529,
+            "kind": "engine_evaluation"
+          }
+        },
+        "after8b": {
+          "kind": "move_verdict",
+          "verdict_code": "blunder",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -25.034641499369975,
+            "kind": "engine_evaluation"
+          }
+        },
+        "current10s": {
+          "kind": "move_verdict",
+          "verdict_code": "blunder",
+          "runner_up_verdict_code": null,
+          "delta": {
+            "candidate_win_percent_delta_for_mover": -26.635833028612637,
+            "kind": "engine_evaluation"
+          }
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Different actual engine forecasts/grades are not automatically code regressions or successes.",
+    "Body length or number of priced events is not a usefulness score.",
+    "The Rd3 immediate-purpose component is credited separately from the fixed continuing-plan answer."
+  ]
+}

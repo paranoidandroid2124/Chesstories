@@ -1,0 +1,758 @@
+{
+  "sealed_utc": "2026-10-09T05:22:59.981769+00:00",
+  "kind": "Independent read-only validation and scope review of existing thirteen depth18 queries",
+  "source_audit_sha256": "d36fb6ebff1afdaab134109ccb652d5e54a3fca71780770c57a70eeac333d4b0",
+  "source_receipts_sha256": {
+    "target/functional-judgment-20261009/h05-response-plan-bounded18-ui21b/execution/results.json": "dba8d751482e1657c1c47b1628e4fb6454a322533f2c3edf62e1fa02b2e15233",
+    "target/functional-judgment-20261009/h05-response-plan-bounded18-ui21b/execution/summary.json": "f9eeed2135f926eedc78d949c2e9223da64c7c5e531b39fdf2a9523fb1b7f061",
+    "target/functional-judgment-20261009/h05-response-plan-bounded18-ui21b/execution/manifest.json": "54c18d0fd539462a6ad6f6a3dd95de61dd2f07fc3bb6fe5ff480a592e70df277",
+    "target/functional-judgment-20261009/h05-response-plan-bounded18-ui21b/execution-phase2/results.json": "58fad7b21cd54ae0eabbae19cc71ef840b90db1e0a6cf9c64fdfd94a564aec40",
+    "target/functional-judgment-20261009/h05-response-plan-bounded18-ui21b/execution-phase2/summary.json": "099cce22eb78a31186ff32e0403c0921fc94c156881106fc454c8d74baba0891",
+    "target/functional-judgment-20261009/h05-response-plan-bounded18-ui21b/execution-phase2/manifest.json": "372d6efe969dcb18063e5c7aa10c7c19e43fe6c99ab4a9168c679e8f69576c91"
+  },
+  "plans_sha256": {
+    "target\\functional-judgment-20261009\\h05-response-plan-bounded18-ui21b\\study-plan.json": "e55c9cb13633c655e24fdeced4b0bec474eecd47038c61b32aced37adebf4550",
+    "target\\functional-judgment-20261009\\h05-response-plan-bounded18-ui21b\\phase2-continuation-study-plan.json": "8e47db79d8115666c540a0814ad038030d396db575b1955ff2417bf4e295752f"
+  },
+  "new_engine_queries": 0,
+  "new_product_reports": 0,
+  "existing_queries_verified": 13,
+  "all_request_and_whole_stage_work_objects_equal": true,
+  "actual_profile_per_query_verified": "Threads2 Hash16 and current MultiPV tracked separately in each sequential process; ClearHash ucinewgame each query, nominal requested/completed18",
+  "complete_legal_root_inventories_and_all_returned_pvs_independently_replayed": true,
+  "all_original_actor_victim_capture_check_promotion_ledgers_equal": true,
+  "epoch_note": "Both sequential processes retain the sealed study epoch UUID. Each query clears hash and starts ucinewgame; this is not one uninterrupted engine process.",
+  "cost": {
+    "uci_ms": 137507,
+    "adapter_query_ms": 137628,
+    "session_ms": 979037,
+    "calendar_ms": 1264101,
+    "nodes": 286469730,
+    "nested_do_not_sum": true
+  },
+  "scope_findings": [
+    "The root Ke3/g4 named receipt supports its finite local ordering only; it is not a global root-best proof or a reason for the untouched product grade.",
+    "Ke3 f6: Kf3/g4 455/0 belongs to the named pair. The separate full pool 446/0 must remain distinct. The winning-valued Kf3 line itself later uses g4, refuting permanent preservation as a necessary explanation.",
+    "Ke3 Kf6: pool Kf4/g4 556/551 and pair 558/483 show another positive-valued g4 plan. Their margins must not be mixed, and positive cp is not a solved win or unique necessity.",
+    "Ke3 Ke6 Kd2 Ke5: the current own pair cxb4/g4 463/-898 supports a queenside task at this exact conditional position. The earlier full pool 538/517/182 is a separate measurement.",
+    "After cxb4, exact lines can lose original Pe4 and still retain favourable bounded values. Their whole physical ledgers include subsequent captures/checks/promotions; e4 survival alone cannot be the necessary function.",
+    "After g4, the same named Black receipt gives bxa3 -790, Kxe4 +627, Kf4 +689 in White cp. Among those tested replies bxa3 is strongest; a primary e4-capture or f4-control explanation is refuted at that stage.",
+    "Returned unrestricted MultiPV3 is not an all-legal-reply value inventory. Same-query ranks are owned; missing replies and root causation remain unknown.",
+    "Nominal18 is enforced in all intermediate received depth fields; selective extensions up to98 and longer PVs do not establish an exhaustive eighteen-ply solution."
+  ],
+  "automatic_Basic_full_success": 0,
+  "fixed_old_full": "0/4 unchanged",
+  "fixed_source_full": "0/8 unchanged",
+  "criteria_modified": false,
+  "query_checks": [
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-g4-pair18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-g4-pair18",
+      "execution_key": "ede17534b14ae2751fa695781adf3b38e988fea40cddd4563ce8115bc430b95b",
+      "history": [],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "restriction": {
+        "kind": "restricted",
+        "movesUci": [
+          "f3e3",
+          "g3g4"
+        ]
+      },
+      "legal_count": 9,
+      "nominal_depth": 18,
+      "selective_depth": 53,
+      "uci_elapsed_ms": 5258,
+      "adapter_wall_ms": 5264,
+      "nodes": 9363491,
+      "same_query_values": [
+        {
+          "move_uci": "f3e3",
+          "san": "Ke3",
+          "white_score": {
+            "kind": "cp",
+            "value": 483
+          },
+          "capture_promotion_events": 5,
+          "final_fen": "8/5p2/3k4/1K6/p1P5/P5P1/8/8 w - - 1 45",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "g3g4",
+          "san": "g4",
+          "white_score": {
+            "kind": "cp",
+            "value": 3
+          },
+          "capture_promotion_events": 4,
+          "final_fen": "8/8/8/8/pKp2k2/PpP5/1P6/8 b - - 2 48",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-Black-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-Black-full18",
+      "execution_key": "3f98349e17d758b45e17f4df3e331952ec39f30c8c644814554063c36a837074",
+      "history": [
+        "f3e3"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 8,
+      "nominal_depth": 18,
+      "selective_depth": 71,
+      "uci_elapsed_ms": 38878,
+      "adapter_wall_ms": 38884,
+      "nodes": 77685288,
+      "same_query_values": [
+        {
+          "move_uci": "e5e6",
+          "san": "Ke6",
+          "white_score": {
+            "kind": "cp",
+            "value": 627
+          },
+          "capture_promotion_events": 5,
+          "final_fen": "k7/8/5p2/2K5/p5P1/P7/1P6/8 w - - 1 45",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "f7f6",
+          "san": "f6",
+          "white_score": {
+            "kind": "cp",
+            "value": 639
+          },
+          "capture_promotion_events": 2,
+          "final_fen": "4k3/8/5p2/2p5/p1p1PK2/P1P3P1/8/8 w - - 5 44",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5f6",
+          "san": "Kf6",
+          "white_score": {
+            "kind": "cp",
+            "value": 639
+          },
+          "capture_promotion_events": 3,
+          "final_fen": "3k4/5p2/8/2p1P3/p1K3P1/P1P5/8/8 w - - 1 45",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-g4-Black-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-g4-Black-full18",
+      "execution_key": "1fe26bc5c9aed44bd3fa1ef0eeade5dbe915fa9403eed7226a4eb72d60255439",
+      "history": [
+        "g3g4"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 8,
+      "nominal_depth": 18,
+      "selective_depth": 58,
+      "uci_elapsed_ms": 18491,
+      "adapter_wall_ms": 18493,
+      "nodes": 45506628,
+      "same_query_values": [
+        {
+          "move_uci": "f7f6",
+          "san": "f6",
+          "white_score": {
+            "kind": "cp",
+            "value": 4
+          },
+          "capture_promotion_events": 4,
+          "final_fen": "8/8/8/2K5/p1p2k2/PpP5/1P6/8 w - - 1 48",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5e6",
+          "san": "Ke6",
+          "white_score": {
+            "kind": "cp",
+            "value": 771
+          },
+          "capture_promotion_events": 1,
+          "final_fen": "6k1/8/6P1/2p1pK2/ppp5/P1P5/1P6/8 w - - 1 44",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5f6",
+          "san": "Kf6",
+          "white_score": {
+            "kind": "cp",
+            "value": 771
+          },
+          "capture_promotion_events": 6,
+          "final_fen": "8/8/8/8/K3k1P1/P1P5/1P6/8 b - - 0 44",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-White-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-White-full18",
+      "execution_key": "d04f68bafb0f28ca3ed4ae6046581c0f54562b1fb76d54df7ef205f9b461b9e9",
+      "history": [
+        "f3e3",
+        "e5e6",
+        "e3d2",
+        "e6e5"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P3P1/1P1K4/8 w - - 4 37",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 10,
+      "nominal_depth": 18,
+      "selective_depth": 51,
+      "uci_elapsed_ms": 4988,
+      "adapter_wall_ms": 4990,
+      "nodes": 11024387,
+      "same_query_values": [
+        {
+          "move_uci": "c3b4",
+          "san": "cxb4",
+          "white_score": {
+            "kind": "cp",
+            "value": 538
+          },
+          "capture_promotion_events": 3,
+          "final_fen": "8/2k5/5p2/1P6/p1K1P1P1/P7/1P6/8 b - - 2 43",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "a3b4",
+          "san": "axb4",
+          "white_score": {
+            "kind": "cp",
+            "value": 517
+          },
+          "capture_promotion_events": 4,
+          "final_fen": "8/5p2/8/1P2k3/2p1P1P1/P1K5/8/8 b - - 0 43",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "d2e3",
+          "san": "Ke3",
+          "white_score": {
+            "kind": "cp",
+            "value": 182
+          },
+          "capture_promotion_events": 2,
+          "final_fen": "8/8/5k2/2p5/p1p1K1P1/PpP5/1P6/8 b - - 6 43",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-own-pair18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-own-pair18",
+      "execution_key": "8e2166e360c96e9c419420cdb322682d7cda4fbea7a7f82fca61b2016f2fb555",
+      "history": [
+        "f3e3",
+        "e5e6",
+        "e3d2",
+        "e6e5"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P3P1/1P1K4/8 w - - 4 37",
+      "restriction": {
+        "kind": "restricted",
+        "movesUci": [
+          "g3g4",
+          "c3b4"
+        ]
+      },
+      "legal_count": 10,
+      "nominal_depth": 18,
+      "selective_depth": 46,
+      "uci_elapsed_ms": 3371,
+      "adapter_wall_ms": 3377,
+      "nodes": 5720952,
+      "same_query_values": [
+        {
+          "move_uci": "c3b4",
+          "san": "cxb4",
+          "white_score": {
+            "kind": "cp",
+            "value": 463
+          },
+          "capture_promotion_events": 7,
+          "final_fen": "8/8/2k2p2/8/KP4P1/8/8/8 w - - 1 48",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "g3g4",
+          "san": "g4",
+          "white_score": {
+            "kind": "cp",
+            "value": -898
+          },
+          "capture_promotion_events": 8,
+          "final_fen": "8/8/5Kp1/8/p7/qk6/8/8 b - - 1 49",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-other-Black-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-other-Black-full18",
+      "execution_key": "65754d4409bb3f926df0cca9444eadecbf896febcf12b220496bd9917214c813",
+      "history": [
+        "f3e3",
+        "e5e6",
+        "e3d2",
+        "e6e5",
+        "c3b4"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 37",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 9,
+      "nominal_depth": 18,
+      "selective_depth": 78,
+      "uci_elapsed_ms": 11350,
+      "adapter_wall_ms": 11352,
+      "nodes": 26765891,
+      "same_query_values": [
+        {
+          "move_uci": "c5b4",
+          "san": "cxb4",
+          "white_score": {
+            "kind": "cp",
+            "value": 593
+          },
+          "capture_promotion_events": 7,
+          "final_fen": "8/1k6/5p2/8/1K4P1/8/1P6/8 w - - 3 49",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5e4",
+          "san": "Kxe4",
+          "white_score": {
+            "kind": "cp",
+            "value": 631
+          },
+          "capture_promotion_events": 5,
+          "final_fen": "8/1k6/5p2/K7/p5P1/P7/1P6/8 b - - 4 46",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "c4c3",
+          "san": "c3+",
+          "white_score": {
+            "kind": "cp",
+            "value": 672
+          },
+          "capture_promotion_events": 5,
+          "final_fen": "2k5/8/1P3p2/2K5/p5P1/8/1P6/8 b - - 1 45",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-g4-Black-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-g4-Black-full18",
+      "execution_key": "e89c4e91d1d7060aa32f6511a312a8ef3d37e148820ec649dc65f42172fe22bb",
+      "history": [
+        "f3e3",
+        "e5e6",
+        "e3d2",
+        "e6e5",
+        "g3g4"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P5/1P1K4/8 b - - 0 37",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 10,
+      "nominal_depth": 18,
+      "selective_depth": 47,
+      "uci_elapsed_ms": 395,
+      "adapter_wall_ms": 397,
+      "nodes": 705429,
+      "same_query_values": [
+        {
+          "move_uci": "b4a3",
+          "san": "bxa3",
+          "white_score": {
+            "kind": "cp",
+            "value": -653
+          },
+          "capture_promotion_events": 7,
+          "final_fen": "8/8/8/K7/p5k1/P1Pq4/8/8 b - - 3 48",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "b4c3",
+          "san": "bxc3+",
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "capture_promotion_events": 4,
+          "final_fen": "8/8/5p2/2p5/p1K1k1P1/P7/1P6/8 w - - 4 42",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "b4b3",
+          "san": "b3",
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "capture_promotion_events": 0,
+          "final_fen": "8/8/3k1p2/2p5/p1p1P1P1/PpP5/1P3K2/8 w - - 6 42",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-other-Black-named18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-other-Black-named18",
+      "execution_key": "542876f53f8a481defa178d8db9b6e90759e7d8eca67ec95ac493a2136dff140",
+      "history": [
+        "f3e3",
+        "e5e6",
+        "e3d2",
+        "e6e5",
+        "c3b4"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/pPp1P3/P5P1/1P1K4/8 b - - 0 37",
+      "restriction": {
+        "kind": "restricted",
+        "movesUci": [
+          "c5b4",
+          "e5e4"
+        ]
+      },
+      "legal_count": 9,
+      "nominal_depth": 18,
+      "selective_depth": 98,
+      "uci_elapsed_ms": 13876,
+      "adapter_wall_ms": 13878,
+      "nodes": 35332532,
+      "same_query_values": [
+        {
+          "move_uci": "c5b4",
+          "san": "cxb4",
+          "white_score": {
+            "kind": "cp",
+            "value": 613
+          },
+          "capture_promotion_events": 6,
+          "final_fen": "8/5p2/8/4P3/1P4P1/2P5/K2k4/8 w - - 3 46",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5e4",
+          "san": "Kxe4",
+          "white_score": {
+            "kind": "cp",
+            "value": 709
+          },
+          "capture_promotion_events": 7,
+          "final_fen": "8/1P6/8/5p2/8/K5P1/2k5/8 w - - 1 46",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-g4-Black-named18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-prefix4-g4-Black-named18",
+      "execution_key": "3bf5cc7b204c5861a52feec6f33cc8c4ed520cf3ed6eb3d93466cb468742c20c",
+      "history": [
+        "f3e3",
+        "e5e6",
+        "e3d2",
+        "e6e5",
+        "g3g4"
+      ],
+      "search_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P5/1P1K4/8 b - - 0 37",
+      "restriction": {
+        "kind": "restricted",
+        "movesUci": [
+          "b4a3",
+          "e5f4",
+          "e5e4"
+        ]
+      },
+      "legal_count": 10,
+      "nominal_depth": 18,
+      "selective_depth": 55,
+      "uci_elapsed_ms": 10566,
+      "adapter_wall_ms": 10570,
+      "nodes": 24219797,
+      "same_query_values": [
+        {
+          "move_uci": "b4a3",
+          "san": "bxa3",
+          "white_score": {
+            "kind": "cp",
+            "value": -790
+          },
+          "capture_promotion_events": 4,
+          "final_fen": "8/8/8/2p5/p1p5/P1Pk1p2/8/5K2 w - - 2 49",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5e4",
+          "san": "Kxe4",
+          "white_score": {
+            "kind": "cp",
+            "value": 627
+          },
+          "capture_promotion_events": 7,
+          "final_fen": "8/5p2/8/KP4P1/8/8/8/3k4 w - - 3 50",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e5f4",
+          "san": "Kf4",
+          "white_score": {
+            "kind": "cp",
+            "value": 689
+          },
+          "capture_promotion_events": 6,
+          "final_fen": "8/1k6/5p2/1P6/2K1P3/8/1P6/8 w - - 2 47",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-f7f6-White-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-f7f6-White-full18",
+      "execution_key": "358144e161b74179ba7868ee41400c339ed8f2f6ec83897fb7653fd761627ee5",
+      "history": [
+        "f3e3",
+        "f7f6"
+      ],
+      "search_fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 8,
+      "nominal_depth": 18,
+      "selective_depth": 38,
+      "uci_elapsed_ms": 1902,
+      "adapter_wall_ms": 1906,
+      "nodes": 4030710,
+      "same_query_values": [
+        {
+          "move_uci": "e3f3",
+          "san": "Kf3",
+          "white_score": {
+            "kind": "cp",
+            "value": 446
+          },
+          "capture_promotion_events": 2,
+          "final_fen": "5k2/8/8/2p1K3/ppp5/P1P3P1/1P6/8 w - - 1 43",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "g3g4",
+          "san": "g4",
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "capture_promotion_events": 0,
+          "final_fen": "8/8/4kp2/2p5/p1p1P1P1/PpP1K3/1P6/8 b - - 5 39",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "a3b4",
+          "san": "axb4",
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "capture_promotion_events": 5,
+          "final_fen": "8/2k3P1/1P6/8/8/4p3/ppK5/8 b - - 0 46",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-e5f6-White-full18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-e5f6-White-full18",
+      "execution_key": "c7899a9c1969efd0e8470ec25b9149aaf748eb07aa560e5d47f1ec652ccb3706",
+      "history": [
+        "f3e3",
+        "e5f6"
+      ],
+      "search_fen": "8/5p2/5k2/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "legal_count": 10,
+      "nominal_depth": 18,
+      "selective_depth": 65,
+      "uci_elapsed_ms": 11339,
+      "adapter_wall_ms": 11344,
+      "nodes": 21956817,
+      "same_query_values": [
+        {
+          "move_uci": "e3f4",
+          "san": "Kf4",
+          "white_score": {
+            "kind": "cp",
+            "value": 556
+          },
+          "capture_promotion_events": 1,
+          "final_fen": "5k2/8/4pK2/2p3P1/p1p5/PpP5/1P6/8 b - - 1 44",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "g3g4",
+          "san": "g4",
+          "white_score": {
+            "kind": "cp",
+            "value": 551
+          },
+          "capture_promotion_events": 4,
+          "final_fen": "8/5pk1/8/2K1P1P1/p7/P1P5/8/8 w - - 3 49",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "e3d2",
+          "san": "Kd2",
+          "white_score": {
+            "kind": "cp",
+            "value": 517
+          },
+          "capture_promotion_events": 3,
+          "final_fen": "8/4kp2/8/1PK1P3/p7/P5P1/1P6/8 w - - 1 43",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-f7f6-g4-current-other-pair18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-f7f6-g4-current-other-pair18",
+      "execution_key": "47d0127fdfda06c156875a94a9330c7a022f677e87dfe21ce3ae24e11f92a4c9",
+      "history": [
+        "f3e3",
+        "f7f6"
+      ],
+      "search_fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+      "restriction": {
+        "kind": "restricted",
+        "movesUci": [
+          "g3g4",
+          "e3f3"
+        ]
+      },
+      "legal_count": 8,
+      "nominal_depth": 18,
+      "selective_depth": 35,
+      "uci_elapsed_ms": 4372,
+      "adapter_wall_ms": 4441,
+      "nodes": 5118294,
+      "same_query_values": [
+        {
+          "move_uci": "e3f3",
+          "san": "Kf3",
+          "white_score": {
+            "kind": "cp",
+            "value": 455
+          },
+          "capture_promotion_events": 3,
+          "final_fen": "8/3k4/8/2p5/ppK3P1/P1P5/1P6/8 b - - 0 45",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "g3g4",
+          "san": "g4",
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "capture_promotion_events": 0,
+          "final_fen": "8/8/3k1p2/2p5/p1p1P1P1/PpP1K3/1P6/8 w - - 6 40",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    },
+    {
+      "query_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-e5f6-g4-current-other-pair18",
+      "work_id": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-e5f6-g4-current-other-pair18",
+      "execution_key": "c3fae4233cb57735a4939d9b236d312fb8df5b7b063baba7778fc78c813629ce",
+      "history": [
+        "f3e3",
+        "e5f6"
+      ],
+      "search_fen": "8/5p2/5k2/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+      "restriction": {
+        "kind": "restricted",
+        "movesUci": [
+          "g3g4",
+          "e3f4"
+        ]
+      },
+      "legal_count": 10,
+      "nominal_depth": 18,
+      "selective_depth": 41,
+      "uci_elapsed_ms": 12721,
+      "adapter_wall_ms": 12732,
+      "nodes": 19039514,
+      "same_query_values": [
+        {
+          "move_uci": "e3f4",
+          "san": "Kf4",
+          "white_score": {
+            "kind": "cp",
+            "value": 558
+          },
+          "capture_promotion_events": 3,
+          "final_fen": "5k2/8/8/2K5/ppp3P1/P1P5/1P6/8 w - - 1 45",
+          "terminal_status": "nonterminal"
+        },
+        {
+          "move_uci": "g3g4",
+          "san": "g4",
+          "white_score": {
+            "kind": "cp",
+            "value": 483
+          },
+          "capture_promotion_events": 2,
+          "final_fen": "8/2k2p2/8/1Pp5/p1P1PKP1/P7/8/8 b - - 0 43",
+          "terminal_status": "nonterminal"
+        }
+      ],
+      "whole_stage_query_equality": true,
+      "exact_physical_price_ledger_equality": true
+    }
+  ]
+}

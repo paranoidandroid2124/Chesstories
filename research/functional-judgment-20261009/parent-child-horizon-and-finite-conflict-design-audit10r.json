@@ -1,0 +1,171 @@
+{
+  "kind": "read-only-parent-child-horizon-versus-current-epoch-ownership-audit",
+  "scope": "Current source and preserved10p/10r historical evidence only. No implementation, compiler, engines, report replacement or changes to criteria.",
+  "sources": {
+    "CommentaryComparisonConflict.scala": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryComparisonConflict.scala",
+      "sha256": "e07ff9cdb2a17b9c22a83740b35774691e9d198f262f449f9c81911bc5538368",
+      "locations": [
+        {
+          "term": "def betweenCurrentValues",
+          "lines": [
+            51
+          ]
+        },
+        {
+          "term": "val shared",
+          "lines": [
+            59
+          ]
+        },
+        {
+          "term": "def invalidatesSelection",
+          "lines": [
+            69
+          ]
+        },
+        {
+          "term": "def current",
+          "lines": []
+        },
+        {
+          "term": "completeDepth",
+          "lines": []
+        }
+      ]
+    },
+    "CommentaryJobReducer.scala": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryJobReducer.scala",
+      "sha256": "87e62489ab11df88acc95d0d169751ebc3a60c614bcca80a04dab12fa02d5da7",
+      "locations": [
+        {
+          "term": "private def investigationDepth",
+          "lines": [
+            1365
+          ]
+        },
+        {
+          "term": "private def currentAnswer",
+          "lines": [
+            1373
+          ]
+        },
+        {
+          "term": "private def revalidateChoice",
+          "lines": [
+            1888
+          ]
+        },
+        {
+          "term": "val needed = value.depth",
+          "lines": [
+            3081
+          ]
+        },
+        {
+          "term": "val targetDepth = math.max(valueDepth",
+          "lines": [
+            2269
+          ]
+        },
+        {
+          "term": "value.depth >= conflict.depth",
+          "lines": []
+        }
+      ]
+    },
+    "CommentaryChoiceValue.scala": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryChoiceValue.scala",
+      "sha256": "140605629d7d7e32dc87f7c99bcef5fa0194d9111ccc38037d04fbd905480568",
+      "locations": [
+        {
+          "term": "def selectionDepth",
+          "lines": [
+            56
+          ]
+        },
+        {
+          "term": "def pairDepth",
+          "lines": [
+            48
+          ]
+        },
+        {
+          "term": "def read(",
+          "lines": [
+            130
+          ]
+        },
+        {
+          "term": "selectionConflict",
+          "lines": [
+            134,
+            143
+          ]
+        }
+      ]
+    },
+    "CommentaryProposal.scala": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryProposal.scala",
+      "sha256": "5754bdf78ec99baaa1f633c44f0308bf7216ca9f4154d2e2e1709c8261a1252a",
+      "locations": [
+        {
+          "term": "def finish(",
+          "lines": [
+            180
+          ]
+        }
+      ]
+    }
+  },
+  "central_finding": {
+    "status": "schedule-level-design-limitation-confirmed",
+    "meaning": "A child located k plies beyond a parent receives the full nominal parent conflict depth D; a completed child then triggers parent D+1. The next conflict requires a child at least at the new D and temporally after the new conflicting parent work. The loop can keep escalating even if the previous child nominally searched as far as the new parent. This is not by itself proof that either evaluation is correct or that a child score can replace a parent score."
+  },
+  "exact_dependency": {
+    "construction": "child prefix = parent comparison prefix ++ the longest common returned PV prefix; k = shared prefix length, not universally one.",
+    "one_ply_example": "parent16, child16 at distance1 have nominal parent frontier17. The old child16 cannot answer a new parent17 conflict under current depth>=17 and post-conflict owner/receipt rules.",
+    "fixed_synthetic_example": "At f3e3/e5e6, the shared comparison continuation is e3f2/e6f6/f2e3/f6e5/e3f3. Distance k=5. Child16 nominally reaches parent-relative21, while renewed parent17 is a different shallower nominal frontier. Blind D-1 would not match this case.",
+    "not_exact_search_horizon": "Nominal depth does not identify an exhaustive equal subtree: selective extensions/reductions, quiescence, TT/root restrictions, MPV count and finite node/wall budgets can change the searched set."
+  },
+  "current_owner_rules": [
+    {
+      "rule": "both compared lines require homogeneous achieved depth; full pool/pair material disagreement at the same completed depth creates an owned conflict",
+      "why_keep": "Avoid combining values from unrelated depths or independent works."
+    },
+    {
+      "rule": "fresh child receipt must occur after the work IDs of the current conflict and have exact packet, position, history, proposal/work/key and pair owner",
+      "why_keep": "A prior answer must not silently answer a newly conflicting epoch."
+    },
+    {
+      "rule": "completed child triggers new full parent at D+1",
+      "limitation": "Not a matched-frontier relation for arbitrary k, and the subsequent new conflict makes the old child inadequate by construction."
+    },
+    {
+      "rule": "issueProposalComparison target is max(valueDepth, minimumDepth); most nonfunctional current answers also require both depths >= investigationDepth",
+      "limitation": "Changing only minimumDepth to D-1 may still issue D, or leave a legitimately smaller child unable to satisfy the reader. A dependency role must be explicit."
+    },
+    {
+      "rule": "root childChallenge needed = childDepth + root-relative anchor length",
+      "interpretation": "An existing explicit distance relation requests root re-verification. It does not certify equality of parent/child evaluations or transfer the child score."
+    }
+  ],
+  "bounded_design_candidate": {
+    "not_authorized_or_implemented": true,
+    "typed_relation": "A nominal-horizon dependency certificate must retain parent work IDs/current conflict epoch, exact canonical parent and child prefix/position, k, achieved parent/child depths, completed receipt ownership and requested scope. It can support a structural check; it cannot manufacture a parent numerical receipt.",
+    "finite_retry": "After one genuinely fresh owned same-frontier dependency check and coherent parent/pair revalidation, retain unresolved value as unknown if material disagreement persists. Keep independently certified factual functions and prices, without claiming useful/refuted/best or root cause.",
+    "count_scope": "A retry allowance should belong to the semantic decision/dependency chain, rather than resetting whenever a new work ID or conflict depth changes. Existing root childRechecks is not automatically the retry count for every local pair conflict.",
+    "historical_child": "Old child evidence may remain a clearly historical structural witness. It does not become a current conflict answer through rekeying, owner mutation or score downcasting.",
+    "full_parent": "A new parent score/grade requires the actually issued owned full parent pool and any required current named pair. A child score cannot be copied into it."
+  },
+  "minimal_meaningful_controls": [
+    "k=1 and k>1 matching frontier calculation, with same position/history and correct distance.",
+    "Old pre-conflict child versus genuinely fresh post-conflict child at the same nominal frontier; only the latter may answer the new epoch.",
+    "Same FEN but foreign history/work/proposal rejection; line and packet ownership unchanged.",
+    "Persistent material disagreement returns finite unknown and no useful/best/grade-cause claim, while exact required capture/recovery/check prices remain.",
+    "Shared-prefix forecast changes without changing the actual semantic decision; retry count does not reset or borrow another branch.",
+    "Depth18 boundary retains requested19 metadata as unmet and issues no19 work; no16/17 value is relabeled as18."
+  ],
+  "human_scope": "A finite unknown is honest explanation scope, not chess success. Previously fixed full minimum criteria and old0/4/eight0/8 remain unchanged.",
+  "engine_queries": 0
+}

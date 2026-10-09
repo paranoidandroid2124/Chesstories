@@ -1,0 +1,31 @@
+{
+  "generated_utc": "2026-10-09T06:48:14.085452+00:00",
+  "report_sha256": "3dd665f65fd4b0c54d38c6732db2caddf5c58810071b8578fa9fdd68b32e1ea5",
+  "test_count": 210,
+  "source_sha256": {
+    "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/result.json": "f6e48948dc37843f48050b7dc26b4af45b731c06815ec9f73d0f65edd6e3e020",
+    "target/functional-judgment-20261009/final-choice-price-scope-depth18-withdeps10s/run.log": "f02f10e8bbc17ed53731e43645076315628b62ba086f9953020aa9613a79f8f9",
+    "research/functional-judgment-20261009/source-scene-current10s-normal21-basic-human-firstpass.json": "644c6b5f54bd1ae34e329dfdd0bf9c407b9b02623a276cfa76a9fc9da1135664",
+    "research/functional-judgment-20261009/h05-fresh10s-nominal16-completion-audit.json": "c45d8b57cc824235ced017939e7f05ee60bb115161134013f28bc4fe7a149269",
+    "research/functional-judgment-20261009/final-connected-choice-price-depth18-review10s.json": "d18c1d86dcf4b3c8f008046ecd6b04d5a0c8408d8a8b243904cede8af0a7a056",
+    "research/functional-judgment-20261009/fresh-native-two-case10s-basic-human-firstpass.json": "58fdf26a9cd4555f9df1acb34f42da791093ff7dbde9faf189558d58d2414e20",
+    "target/functional-judgment-20261009/fresh-native-two-case-10s-normal21-depth18/actual-fresh-run/manifest.json": "f6746e053c64f11acaeb552fe09740e5d30daaff6f1af76c0e520d7a55b3cab5",
+    "research/functional-judgment-20261009/h05-same-placement-different-turn-function-audit.json": "92ff013a231e5bbabbcc8974a2b80019f6f9a9925bdda97ae3bc4606406048c8",
+    "research/functional-judgment-20261009/nb1-produced10s-basic-human-firstpass.json": "dd164aebc3fb82e82205444f2885c2b01b2776ba7a48984bc32a3266ed52a63c",
+    "research/functional-judgment-20261009/nb1-produced10s-delivery-and-price-audit.json": "9c6834a9f2765425e6d825d3cd3171a0894f7973820fa6207e0eb94d28e2e82e",
+    "research/functional-judgment-20261009/h05-bounded18-response-function-and-price-audit-v2.json": "d36fb6ebff1afdaab134109ccb652d5e54a3fca71780770c57a70eeac333d4b0",
+    "research/functional-judgment-20261009/h05-bounded18-response-function-independent-review.json": "b9b46847e3e3085e268ca3a778a4125df932dc6da488d2874ebd7d13d08c5b46",
+    "research/functional-judgment-20261009/h05-bounded18-time-scope-correction.json": "960b2bc9148c15128a4dd1d61425517c1c2c68fa328fd5b8d91e3d1b59b0cf11",
+    "research/functional-judgment-20261009/coordinated-cap-and-mixed-anchor-repair10s-final-seal.json": "d9ad88a124d4c10ccd02599fb88c7e469aa54a828e04b70eb6761ece71710f53",
+    "research/functional-judgment-20261009/depth18-runtime-failure-attribution-head40a-to10s.json": "89ae192f744daba3d91e527cb9ae89c06c8f29ada5bf7bbe2af5862d40c30a5e",
+    "research/functional-judgment-20261009/ui-depth18-execution-boundary-final-seal.json": "87a4bc6190bbfdeb921b5b8b2f043a40df93c968b45102eeb7a0b9cafc03d6ad",
+    "research/functional-judgment-20261009/source-scene-current10s-normal21-human-text-reading.json": "5661bb9b430e7dbf1d6b7dcb4c51da064cea4b57468f4891117e6d0a8c9942de",
+    "research/functional-judgment-20261009/source-scene-current10s-normal21-concise-execution-index.json": "d003e3b4342d53819b90819ee7d7d058a21a587618788c6020f49e09188669d9",
+    "research/functional-judgment-20261009/h05-fresh10s-nominal16-plan-metadata-correction.json": "165f714f218ebd7e242383ab5a3d4ffdc3324b3a2a8229d2e0cfb47a0ed2e86e",
+    "research/functional-judgment-20261009/current10s-rpc-certificate-cost-readonly-audit.json": "be75dc66269e5f2a39a8804f6160eba144e65067137d953f887e8cddf2e4faaf",
+    "research/functional-judgment-20261009/bounded-medium-goal-partial-outcome-and-depth18-handoff.json": "a8122a4d650b0d7703a3035acd8fb616bf89752a6dd1902de4c428566f4e440d"
+  },
+  "fixed_criteria_not_changed": true,
+  "new_engine_queries": 0,
+  "automatic_full_success_not_inferred_from_test_pass": true
+}

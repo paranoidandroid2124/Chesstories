@@ -1,0 +1,87 @@
+{
+  "export_kind": "Actual fresh current-production BASIC; private trace omitted",
+  "game_id": "FC-SG45-NB1",
+  "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+  "focus": {
+    "kind": "played_move",
+    "played_move_uci": "d2b1",
+    "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19"
+  },
+  "body": "Nc4 adds knight control of d6. In the legal variation Nc4 Nef6 Rd6 Qxd6, White can recapture with Nxd6. After Nb1 Nef6 Rd6 Qxd6, that capture with the same knight is unavailable. The recorded continuation is Nc4. The recorded continuation is Nb1. The compared root choices are Nc4 and Nb1. Nb1 clears d2; Qd2 later occupies that square in this line. After Qd2, White's queen on d2 now targets Black's knight on d7. In the Nc4 line: After Rd6, White's rook on d6 now targets Black's queen on c6 and Black's knight on f6, and keeps targeting Black's knight on d7. Nc4 clears d2; later Rd6 passes through that square in this line. Qc7 moves the queen out of the attack from White's rook on d6. After Nb5, White's knight on b5 now targets Black's queen on c7. Qb7 moves the queen out of the attack from White's knight on b5. R6d2 moves the rook from d6 to d2, ending its attack on Black's knight on f6. After Rxb5, the black knight originally on e8 is still present on d2. After Nb6, Black's knight on b6 now targets White's queen on c4. Qxc5 moves the queen out of the attack from Black's knight on b6. Qxc5 captures the black pawn on c5. Qxc5 recaptures the white queen on c5. With Bxc5, the white bishop originally on e3 recaptures the black queen originally on c6. With Nxe4, the black knight originally on e8 captures the white pawn originally on e4. In the Nc4 line: Rd6 clears d1; Rad1 later occupies that square in this line. Nc4 clears d2; later Rad1 uses the cleared line to target White's rook on d6 in this line. After Rad1, White's rook on d1 adds support to White's rook on d6, which is under attack from Black's queen on c7.",
+  "default_question": "functional_response",
+  "verdict": {
+    "kind": "move_verdict",
+    "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:candidate-comparison:79065ac467d87c53a9df9de3bd3f22c3bec44b54cdee7bf262b1ac7b3a952eae",
+    "verdict_code": "inaccuracy",
+    "verdict_confidence": "engine_backed",
+    "mover": "white",
+    "delta": {
+      "candidate_win_percent_delta_for_mover": -3.678606445222087,
+      "kind": "engine_evaluation"
+    },
+    "reference_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "d2c4",
+        "e8f6",
+        "d1d6",
+        "c6c7",
+        "a1d1",
+        "b6b5",
+        "c4a3",
+        "b5b4",
+        "a3b5",
+        "c7b7",
+        "d6d2",
+        "b7c6",
+        "e2c4",
+        "d8b8",
+        "g2f1",
+        "d7b6",
+        "c4c5",
+        "c6c5",
+        "e3c5",
+        "f6e4",
+        "c5f8",
+        "e4d2",
+        "f8g7",
+        "b6c4",
+        "g7f6",
+        "b8b5"
+      ],
+      "win_percent_for_mover": 65.07349938882695,
+      "depth": 16
+    },
+    "played_endpoint": {
+      "kind": "engine_search",
+      "moves": [
+        "d2b1",
+        "e8c7",
+        "e2d2",
+        "c7e6",
+        "b1c3",
+        "d7f6",
+        "c3d5",
+        "c6b7",
+        "c2c3",
+        "h7h5",
+        "d2e2",
+        "e6c7",
+        "e3g5",
+        "c7d5",
+        "e4d5",
+        "e5e4",
+        "g2e4"
+      ],
+      "win_percent_for_mover": 61.39489294360486,
+      "depth": 16
+    }
+  },
+  "new_engine_queries": 10,
+  "job_elapsed_ms": 192274,
+  "dispatch_attempts": 10,
+  "query_count_is_lower_bound": false,
+  "pending": false,
+  "adapter_error": null,
+  "snapshot_sha256": "e77dc4a87204b9742fef1e143329a4e793e3352ce2ea50c700b24e1bb8420d55"
+}

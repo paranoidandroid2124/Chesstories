@@ -1,0 +1,105 @@
+{
+  "sealed_utc": "2026-10-09T06:14:44.505548+00:00",
+  "review_scope": "Connected current10s choice/value/conflict, price expression, depth18 producer/pending UI, actual fresh receipts and separately bounded study.",
+  "source_sha256": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryChoiceValue.scala": "76c836f6f0d20f5ca0ca06c04aa5529848adb393399d981043469c8247692551",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryComparisonConflict.scala": "8d10c62e69d6cbc9d4f8d17fff26503efad981aecc63c6d655a98b73a9ffa192",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala": "76d3257d9f2bd0aabd244f19af21c6fd244f8fadd272cd69f20ebeb153c0f7f4",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalChoiceReading.scala": "79612e0c70d5f80ded2cbc9811da63131c3378dedf75ba3885a88058176ccfaa",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/AnchoredChoiceReading.scala": "3439af37e0dcd5a620205899b64ec60be9806e678c23c9040ada11f15749b37c",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/AnchoredChoiceAnswer.scala": "d89016021715f56b182667f9305ade57b6dc18a43bc954c2a0fed8c02fd5c21d",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": "75ae7410fa0b004febca22f014db5302fe4508a62296a2e05a4f7832abbd1d29",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala": "1730a58e091f15fa93478fd702ace5951b0560290a3d1e6f82d25dd368ebd3c2",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala": "0fc604be92c064ee7d72b4ff4c0d39deb398064ac2a17be2a325b799b75f52c9",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": "0c51844b1b9b0a5c6ea46a3e086af7403db60f56e398dc4ce91df6c4000c9c1e",
+    "lila-docker/repos/lila/ui/analyse/src/moveReview.ts": "0aa86f625888fffdad07c6f1d841abb176453c3db88821ebcb4b35401c4654f5",
+    "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts": "3ab1a068dd70dfaa952ab0f5be54c70911b5196548271776cbb9672a446c498f",
+    "lila-docker/repos/lila/ui/lib/src/ceval/protocol.ts": "5bc9bc9eefb26213d47bb6c123aa0a079c4461864952ec35682f583bbc46c05d"
+  },
+  "compiled_main_manifest_sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690",
+  "compiled_main_classes": 1913,
+  "linked_records_sha256": {
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\fresh-native-two-case10s-receipt-cost-scope-audit.json": "4f43f59f80f63534a55858458326ab743b9e9a3ba812fd62a6e2329343c09a29",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-fresh10s-nominal16-completion-audit.json": "c45d8b57cc824235ced017939e7f05ee60bb115161134013f28bc4fe7a149269",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\final-choice-price-scope-depth18-withdeps10s\\plan.json": "35d7233866b7165aee37adf99fb98ee39a672978db0a4b8c8bae0d026023eafc",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\final-choice-price-scope-depth18-withdeps10s\\result.json": "f6e48948dc37843f48050b7dc26b4af45b731c06815ec9f73d0f65edd6e3e020",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\final-choice-price-scope-depth18-withdeps10s\\run.log": "f02f10e8bbc17ed53731e43645076315628b62ba086f9953020aa9613a79f8f9"
+  },
+  "final_targeted_runtime_checks": {
+    "tests": 210,
+    "all_passed": true,
+    "JUnit_seconds": 581.875,
+    "compile_and_run_wall_seconds": 649.112,
+    "run_log_sha256": "f02f10e8bbc17ed53731e43645076315628b62ba086f9953020aa9613a79f8f9",
+    "source_test_files": 24,
+    "not_whole_repository_or_full_human_utility_claim": true
+  },
+  "earlier_checks_retained": {
+    "mixed_anchor_and_cap": 30,
+    "passed": 30,
+    "normal21_scope_UI_tests": 72,
+    "normal21_scope_UI_passed": 72,
+    "actual_fresh_final_decoder_cases": 2,
+    "actual_fresh_final_decoder_passed": 2,
+    "shipped_schema_cases": 2,
+    "shipped_schema_errors": 0
+  },
+  "connected_findings": [
+    {
+      "area": "Canonical value scope and current epoch",
+      "result": "The confirmed mixed default/explicit first-root anchor defect is repaired.",
+      "evidence": "ChoiceValue rawCandidate/contradicts and ComparisonConflict samePosition/grouping compare scopeKey; it retains rootMove, exact root occurrence, exact position, and effective whole prefix. Execution keys/descriptor JSON/raw case equality are unchanged.",
+      "guards": "Search.belongsTo, full initial/history/searchFen/profile, achieved equal pool/pair depth, current selection epoch, certified selected path and exact canonical identities remain required. A child counter never becomes its parent numerical value.",
+      "limits": "Same prefix alone is not sufficient. Genuine scope negatives and later-refutation/omitted-candidate cases passed; no new production result is inferred from independent research."
+    },
+    {
+      "area": "Bounded conflict renewal",
+      "result": "New physical investigation and UI execution stop at nominal18; unknown is preserved when a required renewal needs19.",
+      "evidence": "Reducer MaximumAnalysisDepth18 guards initial policy/verification, current conflict, investigation, response/continuation refresh and common issuance. moveReview.ts1947 admits pending depth1..18. EngineLineAdmission historical1..100 is retained as historical data acceptance, not new issuance.",
+      "guards": "Current owned requirement/actual first reply permits work; stale/answered historic aliases cannot issue anonymous new work. No completed child or lower-depth response closes an unresolved parent.",
+      "limits": "Selective depth can exceed18 under normal engine extensions. It is not a higher nominal query. Fresh15 requested only8/16; their failures were time/wall/deadline contracts, not the18cap."
+    },
+    {
+      "area": "Selected price expression and original resources",
+      "result": "The reviewed closure retains exact original use duties and rejects removal of required expressed prices.",
+      "evidence": "RootQuestionSummary.realize checks all required references in expressed core before/after physical statement dedup, and AnchoredChoiceAnswer.pricesExpressed separately for CORE and DETAIL before display packing. fromUnits independently validates capture coverage, immediate exchange partners, check replies/end boundaries, canonical references, languages, and per-layer witness budgets.",
+      "guards": "Original completionSources freeze selected ideas; computed prices/context-only statements cannot seed lifetime price growth. Ordinary exact PieceExchange may express its owned physical capture; promoted pawn/changed current role must remain explicit MaterialEvents. Independent root uses/support-user losses and selected first-enemy clearance prices are retained or fall back by episode.",
+      "limits": "Synthetic and saved regression coverage does not establish that every human-important price in every future position is discovered. Fresh H05 root forecasts have no material/check events, so its neutral fallback does not establish priced conversion."
+    },
+    {
+      "area": "Scoped functional organization and root cause",
+      "result": "The bounded local choice selector is honest about its owners and fallback.",
+      "evidence": "Functional Task.complete requires both original root surveys, the whole retained finite expected reply group, and each branch use/use-refutation plus its response certificate. Grouped matched-response CORE keeps current leader/refusal and exact conditional capture transaction; independently completed different leader branch is DETAIL. Mechanical proof rebase checks canonical prefix/resources/positions; its numerical owner is not copied.",
+      "guards": "Current exact response geometry distinguishes retained Attack(gained=false) from newly gained attack; inherited prices are labeled through their first real prefix divergence with position-only RecordedContext, not new action seeds. Existing wider complete answer remains fallback if the bounded candidate fails normal realization.",
+      "limits": "Useful immediate Rd6 is not the whole Nb1/Nc4 root reason. Nb1/Nc7 Qd3 can realize a later different-provider Rd6, but no original mechanical support cause or current value is inherited across that change. Original H05 temporal function still lacks automatic full judgement."
+    }
+  ],
+  "remaining_observed_constraints": [
+    {
+      "kind": "Finite per-work acceptance policy",
+      "severity": "Known policy boundary; no untested code change proposed in this review",
+      "actual": "H05 named work2 had coherent nominal16/unbounded batch and wall8341<9000, but engine8001>8000 by1ms. Ordinary full pools ended13/12 after5000. Separate nominal16 study completed allthree, while preserving failed product reports.",
+      "implication": "The1ms literal rejection is measurable. Whether to allow reported engine-stop jitter is a separate precise policy/test decision; completion is not silently relabeled."
+    },
+    {
+      "kind": "Observed public projection/transport cost",
+      "severity": "Material performance limitation with measured bounds",
+      "actual": "NB1: raw engine25.985s; Node wrapper40.055s; JavaRPC104.480s; unallocated journal/transport loop47.739s; case192.274s. Wire journal snapshot grows92240→21334722 UTF8bytes, with paths2→38, positions2→335, proposals0→44, requirements0→574.",
+      "implication": "Repeated public projection/serialization/validation can consume the original job deadline and even a per-work executor wall budget. These aggregates do not isolate one function or justify dropping proofs/prices.",
+      "next_read_only_design_boundary": "A current-certificate public projection could be measured while retaining full private history, original root/focus grade, exact required parent/current owners and every selected price/source dependency. Do not prune by age, alias count, same FEN, or a generic low row cap."
+    }
+  ],
+  "additional_correctness_defects_found_in_reviewed_connected_paths": [],
+  "human_utility_scope": {
+    "fresh_NB1_full": false,
+    "fresh_H05_full": false,
+    "prior_four_full_successes": 0,
+    "prior_eight_source_full_successes": 0,
+    "criteria_not_changed": true
+  },
+  "new_engine_queries_by_this_review": 0,
+  "new_compilers_or_test_runs_by_this_review": 0,
+  "separate_authorized_nominal16_study_queries": 3,
+  "fresh_public_product_queries": 15,
+  "product_source_edits_by_this_review": 0
+}

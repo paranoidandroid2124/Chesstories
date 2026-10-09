@@ -1,0 +1,183 @@
+{
+  "source_sha256": "47c832a3a12491d04b7cfe46fc05de67f86306c0a3d2fd379fd5e65df3a0fc21",
+  "run": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\source-scene-after8b\\AfterSource8",
+  "internal_traces_omitted": true,
+  "cases": [
+    {
+      "id": "FJ-SG35-ROOT-NG8",
+      "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e7g8",
+        "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+      },
+      "verdict": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:evidence:candidate-comparison:8aa9ec66a8778100f4aca2a6ad6cbd2d01619a89be33da5e46c31fe877927aa1",
+        "runner_up_verdict_code": "playable_loss",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -1.935288941196525,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "In the provided Ng8 line, the same knight next moves with Nf6 to f6. After Ng8, Black's knight on g8 does not support Black's pawn on d5; after Kh7, Black's knight on e7 supports Black's pawn on d5. After Ng8, Black's knight on g8 does not support Black's pawn on f5; after Kh7, Black's knight on e7 supports Black's pawn on f5. In the Ng8 line: After Nf6, Black's knight on f6 adds support to Black's pawn on d5, which is under attack from White's bishop on g2. In the Ng8 line: After Rf1, White's rook on f1 now targets Black's bishop on f2. Bh4 moves the bishop out of the attack from White's rook on f1. Bxe1 captures the white bishop on e1. Rxe1 recaptures the black bishop on e1. In the Kh7 line: After Bh3, White's bishop on h3 now targets Black's pawn on f5. The black pawn originally on f5 is still present on f5 after Qxh3 and after Qxd2. After Qxh3, White's queen on d3 attacks Black's pawn on f5. Qxh3 captures the white bishop on h3.",
+      "default_question": "selected_comparison"
+    },
+    {
+      "id": "FJ-SG35-ROOT-ND6",
+      "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "c4d6",
+        "resulting_fen": "2r4k/4n1p1/1prnq2p/3p1p2/P2P1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+      },
+      "verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:c4d6:evidence:candidate-comparison:ac9afafa8800ceca4eed52479b6f5c0ad85b21f1304246ff6c56c48b90458175",
+        "verdict_code": "mistake",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -16.515520005743483,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "Nd6 moves the knight away from the later capture. In the legal variation Nd6 Rf1 Bh4 Rxb6 Rxb6, that knight cannot be captured by the same queen. After Ng8 Rf1 Bh4 Rxb6 Rxb6, that same central capture is legal, but White can take the knight with Qxc4. This is a conditional difference; the central capture need not be chosen. In the Nd6 line: The recorded continuation is Rxb6. The recorded continuation is Ng8. The recorded continuation is Nd6. Rxb6 captures the black pawn on b6.",
+      "default_question": "functional_response"
+    },
+    {
+      "id": "FJ-SG35-LATE-ND6",
+      "current_fen": "2r4k/6p1/1pr1qn1p/3p1p2/P1nP1P2/PR1QP1N1/6BP/4R2K b - - 2 40",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "c4d6",
+        "resulting_fen": "2r4k/6p1/1prnqn1p/3p1p2/P2P1P2/PR1QP1N1/6BP/4R2K w - - 3 41"
+      },
+      "verdict": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:f17ca0355aa6421f25e81f52623074e82b16bbb645f458c6c4635f9d3058d3d3:79:c4d6:evidence:candidate-comparison:8dd38547b0fedcb6292021da544fe808e075963d3a02623b9bc84bc66949e1d8",
+        "runner_up_verdict_code": "playable_loss",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -2.165453452280957,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "Compare what happens to the black knight originally on c4 and the black pawn originally on f5 in the recorded Nd6 and g6 lines. After Nd6, Black's knight on d6 adds support to Black's pawn on f5, which is under attack from White's queen on d3, White's knight on g3. Nd6 moves the knight out of the attack from White's queen on d3. The recorded continuation is Qb1. With Bxe4, the white bishop originally on g2 captures the black knight originally on c4. After Bxe4, White's bishop on e4 now targets Black's pawn on f5. With fxe4, the black pawn originally on f5 recaptures the attacking white bishop originally on g2. After h4, Black's pawn on h4 now targets White's knight on g3. Nf1 moves the knight out of the attack from Black's pawn on h4. With bxa5, the black pawn originally on b6 captures the white pawn originally on a4; with Qxa5, the white queen originally on d3 recaptures that pawn. After Rb8, the white queen originally on d3 is still present on e6. After Rb8, the black pawn originally on d5 is still present on d5. After Rb8, the black queen originally on e6 is still present on h5. After Rb8, the black pawn originally on f5 is still present on e4. After g6, Black's pawn on g6 adds support to Black's pawn on f5, which is under attack from White's queen on d3, White's knight on g3. The recorded continuation is Nf1. With Nxb1, the black knight originally on f6 captures the white rook originally on e1; with Qxb1, the white queen originally on d3 captures that knight. With Qxa6, the black queen originally on e6 captures the white pawn originally on a4. After Qxa6, Black's queen on a6 does not support Black's pawn on d5. Nc3 clears e4; later Bxd5 passes through that square in this line. With Bxd5, the white bishop originally on g2 captures the black pawn originally on d5. After Bxd5, White's bishop on d5 now targets Black's knight on c4. After Qb6, Black's queen on b6 now targets White's queen on b1. Qd3 moves the queen out of the attack from Black's queen on b6. After Qd3, White's queen on d3 now targets Black's knight on c4. After Nb2, Black's knight on b2 now targets White's queen on d3. Nb2 moves the knight out of the attacks from White's bishop on d5 and White's queen on d3. Qd2 moves the queen out of the attack from Black's knight on b2. After Qd2, White's queen on d2 now targets Black's knight on b2. After Nc4, Black's knight on c4 now targets White's queen on d2 and White's pawn on a3. Nc4 moves the knight out of the attack from White's queen on d2. Qb4 moves the queen out of the attack from Black's knight on c4. axb4 moves the pawn out of the attack from Black's knight on c4. With Qxb4, the black queen originally on e6 captures the white queen originally on d3; with axb4, the white pawn originally on a3 recaptures that queen. After Nd6, the black knight originally on c4 is still present on d6. After Nd6, the black pawn originally on f5 is still present on f5. The compared root choices are Nd6 and g6. Nd6 clears c4; later Rc1 passes through that square in this line. After Rc1, Black's rook on c1 now targets White's rook on b1 and White's knight on f1. g6 clears g7; Kg7 later occupies that square in this line.",
+      "default_question": "selected_comparison"
+    },
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "current_fen": "2r4k/6p1/1pr1qn1p/3p1p2/P1nP1P2/PR1QP1N1/6BP/4R2K b - - 2 40",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "f6e4",
+        "resulting_fen": "2r4k/6p1/1pr1q2p/3p1p2/P1nPnP2/PR1QP1N1/6BP/4R2K w - - 3 41"
+      },
+      "verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:f17ca0355aa6421f25e81f52623074e82b16bbb645f458c6c4635f9d3058d3d3:79:f6e4:evidence:candidate-comparison:1401fa68d41a562cb8c1e12d61bb9bc59c9ba77f708c11289d5c28c40a9839ae",
+        "verdict_code": "inaccuracy",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -4.346146488049172,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "After Ne4, Black's knight on e4 now targets White's knight on g3. After Ne4, Black's knight on e4 is under attack from White's queen on d3 and White's bishop on g2 and White's knight on g3; it is supported by Black's pawn on d5 and Black's queen on e6 and Black's pawn on f5. In the Ne4 line: The recorded continuation is Bxe4 fxe4. Bxe4 captures the black knight on e4. fxe4 recaptures the white bishop on e4. In the Ne4 line: The recorded continuation is Nxe4. In the Ne4 line: Nxe4 captures the black knight on e4. dxe4 recaptures the white knight on e4. The compared root choices are Nd6 and Ne4. Nd6 clears c4; later Rc3 passes through that square in this line. After Rc3, Black's rook on c3 now targets White's pawn on a3 and White's pawn on e3.",
+      "default_question": "first_target_response"
+    },
+    {
+      "id": "FJ-SG42-RD3",
+      "current_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e3d3",
+        "resulting_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BPr4/4p1PP/2R1R2K w - - 1 2"
+      },
+      "verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:129586d8b2c573879057a030f74c118d6da7613d54fb2df750d6bcd444323224:1:e3d3:evidence:candidate-comparison:fb0831724b3bf22dacdf600ab2b1c854234f54df31e3c9ee2e2e668ff9975533",
+        "verdict_code": "playable_loss",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -1.311853755897431,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "Rd3 lines up Black's rook on d3 with White's bishop on b3 through White's pawn on c3; the pawn screens the bishop. Rd2 breaks that alignment in this line. After Rd3, Black's rook on d3 does not support Black's pawn on e2; after Bd3, Black's rook on e3 supports Black's pawn on e2. After Rd3, Black's rook on d3 keeps targeting White's pawn on c3. Rd2 moves the rook from d3 to d2, ending its attack on White's pawn on c3. After Kg6, the white pawn originally on c3 is still present on d5. In the provided Rd3 line, the same rook next moves with Rd2 to d2. After Rd2, Black's rook on d2 adds support to Black's pawn on e2, which is under attack from White's rook on e1. After Rd3, Black's rook on d3 now targets White's pawn on d4. Rb2 moves the rook from d2 to b2, ending its attack on White's pawn on d4. After Kg6, the white pawn originally on d4 is still present on d4. In the Rd3 line: After b5, White's pawn on b5 now targets Black's pawn on c6. bxc6 captures the black pawn on c6. bxc6 recaptures the white pawn on c6. After Rd3, Black's rook on e8 adds support to Black's pawn on e2, which is under attack from White's rook on e1. In the provided Bd3 line, the same bishop next moves with Be4+ to e4. After Bd3, Black's rook on e3 does not attack White's pawn on c3; after Rd3, Black's rook on d3 attacks White's pawn on c3. In the Bd3 line: After Be4+, Black's bishop on e4 adds support to Black's pawn on d5, which is under attack from White's bishop on a2. In the provided Bd3 line: Be4+ gives check to the White king on g2 with Black's bishop on e4. Kg3 moves the king to g3. After Rf1, White's rook on e1 now targets Black's rook on f1. Rf3+ moves the rook out of the attack from White's rook on e1. Rf3+ gives check to the White king on g3 with Black's rook on f3. Kg2 moves the king to g2. After Rf3+, White's king on g3 now targets Black's rook on f3. Rxc3+ moves the rook out of the attack from White's king on g2. Rxc3+ opens Black's bishop on e4's line, giving check to the White king on g2. Kf2 moves the king to f2. After Bd3, Black's bishop on d3 adds support to Black's pawn on e2, which is under attack from White's rook on e1. In the Bd3 line: Rxc3+ captures the white pawn on c3.",
+      "default_question": "selected_comparison"
+    },
+    {
+      "id": "FJ-SG42-BD3",
+      "current_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "f5d3",
+        "resulting_fen": "4r3/pp6/2p2k2/3p2p1/PP1P4/1BPbr3/4p1PP/2R1R2K w - - 1 2"
+      },
+      "verdict": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:129586d8b2c573879057a030f74c118d6da7613d54fb2df750d6bcd444323224:1:f5d3:evidence:candidate-comparison:877feedf0ef3b3f08cbf7b8844434efd378bc04d8e74618cd9a59c7e8884baa6",
+        "runner_up_verdict_code": "blunder",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -53.68027419536473,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "After Bd3, Black's bishop on d3 adds support to Black's pawn on e2, which is under attack from White's rook on e1. After Bd3, Black's rook on e3 does not attack White's pawn on c3; after Rf3, Black's rook on f3 attacks White's pawn on c3. Rf3 lines up Black's rook on f3 with White's bishop on b3 through White's pawn on c3; the pawn screens the bishop. gxf3 breaks that alignment in this line. After Rf3, Black's rook on f3 does not support Black's pawn on e2; after Bd3, Black's rook on e3 supports Black's pawn on e2. After Rf3, Black's rook on f3 keeps targeting White's pawn on c3. After gxf3, the white pawn originally on c3 is still present on c3. gxf3 captures the black rook on f3. After Bc2, White's bishop on c2 now targets Black's rook on d3. Rxc3 moves the rook out of the attack from White's bishop on c2. In the provided Rf3 line: Rxg4+ gives check to the Black king on h4 with White's rook on g4. Kxg4 moves the king to g4 and captures the checking rook on g4. After Rxc3, Black's rook on c3 now targets White's bishop on c2. Bxg4 clears f5; Bf5+ later occupies that square in this line. Bf5+ moves the bishop out of the attack from Black's rook on c3. Bf5+ gives check to the Black king on g4 with White's bishop on f5. Kf4 moves the king to f4. Bf5+ clears c2; later Rxc3 passes through that square in this line. Rf3 clears e3; Re3 later occupies that square in this line. After Re3, Black's rook on e3 now targets White's pawn on c3 and White's pawn on f3. fxg4 moves the pawn out of the attack from Black's rook on e3. fxg4 captures the black pawn on g4. Bxg4 recaptures the white pawn on g4. In the provided Re3 line: Rxg4+ gives check to the Black king on h4 with White's rook on g4. In the Rf3 line, both sides exchange one rook; White gives up one pawn for one bishop. After Rf3, Black's rook on e8 adds support to Black's pawn on e2, which is under attack from White's rook on e1.",
+      "default_question": "selected_comparison"
+    },
+    {
+      "id": "FJ-SG17-BXF4",
+      "current_fen": "r1q1k1r1/pp1R1p2/4b2p/1Q2b3/4pN2/6P1/PP2PPBP/4K2R b Kq - 0 19",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e5f4",
+        "resulting_fen": "r1q1k1r1/pp1R1p2/4b2p/1Q6/4pb2/6P1/PP2PPBP/4K2R w Kq - 0 20"
+      },
+      "verdict": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:ee9cd7127dc28e7b1efcac91d00e363ca612e5999c09ed57d1dc47918cc171f2:37:e5f4:evidence:candidate-comparison:35aafb6e95e5d2549034db25e00447e1b178202a70772b0d71fcc696f4f93f2f",
+        "runner_up_verdict_code": "blunder",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -26.060000499319948,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "After Bxf4, Black's bishop on f4 now targets White's pawn on g3. After Bxf4, Black's bishop on f4 is under attack from White's pawn on g3 and has no defender. In the Bxf4 line: Rxb7+ moves the rook out of the attacks from Black's king on e8 and Black's bishop on e6. In the provided Rxb7+ line: Rxb7+ opens White's queen on b5's line, giving check to the Black king on e8; Bd7 blocks the check on d7. The recorded continuation is Rxb7+ Bd7. Rxb7+ captures the black pawn on b7. In the Qc6 line: The recorded continuation is Qxe5. In the Qc6 line: Qxe5 captures the black bishop on e5. The compared root choices are Bxf4 and Qc6. Qc6 clears c8; later Rd8 passes through that square in this line. After Rd8, Black's rook on d8 adds support to Black's bishop on d7, which is under attack from White's queen on d4. Bxf4 captures the white knight on f4. In the Qc6 line: Rxd8+ captures the black rook on d8. In the provided Rxd8+ line: Rxd8+ gives check to the Black king on e8 with White's rook on d8. Kxd8 recaptures the white rook on d8. Kxd8 moves the king to d8 and captures the checking rook on d8. Nxe6+ captures the black bishop on e6. Nxe6+ gives check to the Black king on d8 with White's knight on e6. Qxe6 recaptures the checking white knight on e6.",
+      "default_question": "first_target_response"
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "current_fen": "r1q1k1r1/pp1R1p2/4b2p/1Q2b3/4pN2/6P1/PP2PPBP/4K2R b Kq - 0 19",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "c8d7",
+        "resulting_fen": "r3k1r1/pp1q1p2/4b2p/1Q2b3/4pN2/6P1/PP2PPBP/4K2R w Kq - 0 20"
+      },
+      "verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:ee9cd7127dc28e7b1efcac91d00e363ca612e5999c09ed57d1dc47918cc171f2:37:c8d7:evidence:candidate-comparison:e7a33ac88b4930578e25151c80fe5b2686db8fd3171609652cf161c50994942f",
+        "verdict_code": "blunder",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -25.034641499369975,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "After Qxd7, Black's queen on d7 now targets White's queen on b5. After Qxd7, Black's queen on d7 is under attack from White's queen on b5; it is supported by Black's bishop on e6 and Black's king on e8. In the Qxd7 line: Qxe5 moves the queen out of the attack from Black's queen on d7. The recorded continuation is Qxe5 Rd8. Qxe5 captures the black bishop on e5. After Rd8, Black's rook on d8 supports Black's queen on d7. With Qxd7, the black queen originally on c8 recaptures the white rook originally on d7. In the Bxf4 line: The recorded continuation is Rxb7+. In the Bxf4 line: The recorded continuation is Bd7. Rxb7+ captures the black pawn on b7. The compared root choices are Bxf4 and Qxd7. Qxd7 clears c8; later Rd8 passes through that square in this line. Bxf4 captures the white knight on f4.",
+      "default_question": "first_target_response"
+    }
+  ]
+}

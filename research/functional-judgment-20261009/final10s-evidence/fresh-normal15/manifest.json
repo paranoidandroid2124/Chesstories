@@ -1,0 +1,157 @@
+{
+  "started_utc": "2026-10-09T05:36:40.195845+00:00",
+  "status": "finished",
+  "freeze_sha256": "5bce2d71a847fa0f9f99348683843955440f22df8f2a7d503e1256ec17f918ea",
+  "version": "10s",
+  "normal_UI": 21,
+  "maximum_pending_depth": 18,
+  "production_budget_overlay": false,
+  "engine_lease_overlay": false,
+  "replayed_reports": 0,
+  "new_queries": 15,
+  "dispatch_attempts": 15,
+  "query_count_is_lower_bound": false,
+  "cases": [
+    {
+      "game_id": "FC-SG45-NB1",
+      "new_queries": 10,
+      "dispatch_attempts": 10,
+      "query_count_is_lower_bound": false,
+      "elapsed_ms": 192274,
+      "error": null,
+      "pending": false,
+      "basic_only_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\fresh-native-two-case-10s-normal21-depth18\\actual-fresh-run\\FC-SG45-NB1-basic-only.json",
+      "basic_only_sha256": "9c0156f49fd5e5a90b4101f941f85fa1bf37415acbece6781a759d4d90a23e06"
+    },
+    {
+      "game_id": "H05",
+      "new_queries": 5,
+      "dispatch_attempts": 5,
+      "query_count_is_lower_bound": false,
+      "elapsed_ms": 29407,
+      "error": null,
+      "pending": false,
+      "basic_only_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\fresh-native-two-case-10s-normal21-depth18\\actual-fresh-run\\H05-basic-only.json",
+      "basic_only_sha256": "5ad221674cefb66f0a91401736e2f730b8b5ea1639aa821b0214f9fb235ea734"
+    }
+  ],
+  "post_identity_check": "unchanged",
+  "engine_ready": {
+    "ready": true,
+    "engine_name": "Stockfish 18",
+    "engine_startup_ms": 1783,
+    "boot": [
+      {
+        "sent": "uci"
+      },
+      {
+        "received": "Stockfish 18 by the Stockfish developers (see AUTHORS file)"
+      },
+      {
+        "received": "id name Stockfish 18"
+      },
+      {
+        "received": "id author the Stockfish developers (see AUTHORS file)"
+      },
+      {
+        "received": ""
+      },
+      {
+        "received": "option name Debug Log File type string default <empty>"
+      },
+      {
+        "received": "option name NumaPolicy type string default auto"
+      },
+      {
+        "received": "option name Threads type spin default 1 min 1 max 1024"
+      },
+      {
+        "received": "option name Hash type spin default 16 min 1 max 2048"
+      },
+      {
+        "received": "option name Clear Hash type button"
+      },
+      {
+        "received": "option name Ponder type check default false"
+      },
+      {
+        "received": "option name MultiPV type spin default 1 min 1 max 256"
+      },
+      {
+        "received": "option name Skill Level type spin default 20 min 0 max 20"
+      },
+      {
+        "received": "option name Move Overhead type spin default 10 min 0 max 5000"
+      },
+      {
+        "received": "option name nodestime type spin default 0 min 0 max 10000"
+      },
+      {
+        "received": "option name UCI_Chess960 type check default false"
+      },
+      {
+        "received": "option name UCI_LimitStrength type check default false"
+      },
+      {
+        "received": "option name UCI_Elo type spin default 1320 min 1320 max 3190"
+      },
+      {
+        "received": "option name UCI_ShowWDL type check default false"
+      },
+      {
+        "received": "option name SyzygyPath type string default <empty>"
+      },
+      {
+        "received": "option name SyzygyProbeDepth type spin default 1 min 1 max 100"
+      },
+      {
+        "received": "option name Syzygy50MoveRule type check default true"
+      },
+      {
+        "received": "option name SyzygyProbeLimit type spin default 7 min 0 max 7"
+      },
+      {
+        "received": "option name EvalFile type string default nn-4ca89e4b3abf.nnue"
+      },
+      {
+        "received": "uciok"
+      },
+      {
+        "sent": "setoption name UCI_AnalyseMode value true"
+      },
+      {
+        "sent": "setoption name Analysis Contempt value Off"
+      },
+      {
+        "sent": "setoption name UCI_Chess960 value true"
+      },
+      {
+        "sent": "ucinewgame"
+      },
+      {
+        "sent": "isready"
+      },
+      {
+        "received": "No such option: UCI_AnalyseMode"
+      },
+      {
+        "received": "No such option: Analysis Contempt"
+      },
+      {
+        "received": "readyok"
+      }
+    ]
+  },
+  "shutdown": {
+    "node": {
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    },
+    "java": {
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    }
+  },
+  "elapsed_ms": 235443,
+  "finished_utc": "2026-10-09T05:40:35.638587+00:00"
+}

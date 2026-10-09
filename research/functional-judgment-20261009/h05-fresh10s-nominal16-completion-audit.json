@@ -1,0 +1,625 @@
+{
+  "sealed_utc": "2026-10-09T06:08:31.346489+00:00",
+  "study_id": "H05-fresh10s-failed-comparisons-nominal16-20261009",
+  "coherent_epoch_id": "3a8a3460-3e96-48a3-b044-f2ee335f4287",
+  "nominal_depth": 16,
+  "profile": "sf18-smallnet-t2-h16-v1",
+  "actual_Threads": 2,
+  "actual_Hash_MB": 16,
+  "ClearHash_and_ucinewgame_before_each_query": true,
+  "study_plan_sha256": "98d9b028df401252b6be6bda1eeee221465470aa0bd504c84d2fc3a74f6ed304",
+  "stage1_sha256": "662786fac4844f89a50aaa37722729595e7c6ed81de5d3c585a9f5d6ee7a08bb",
+  "source_sha256": {
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-fresh10s-failed-comparisons-nominal16-completion\\session.py": "ccf8edfb2e28397ffd1306be793bc39052b651ae2d0cb83862e4d76b4d887293",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-fresh10s-failed-comparisons-nominal16-completion\\execution\\results.json": "2c5de26d7a2011e4a45d893ad2b46434041642c8eec4b6bccd68cc64a0d3bef7",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-fresh10s-failed-comparisons-nominal16-completion\\execution\\summary.json": "dd984027bd26e6f595819ae95999a23f27b25014c1f548350a2d5ea8c4adc290",
+    "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-fresh10s-failed-comparisons-nominal16-completion\\execution\\manifest.json": "9ae02af84662eae5ebac2cfeced6324c0efaf5251c0bb719d151c58633b1ad2e"
+  },
+  "original_failed_reports_preserved": true,
+  "original_product_primary_unchanged": true,
+  "new_actual_research_queries": 3,
+  "retries": 0,
+  "all_completed16": true,
+  "product_reports_submitted": 0,
+  "queries": [
+    {
+      "study_query_id": "H05-fresh10s-failed-comparisons-nominal16-20261009-Ke3-Kd6-versus-f6",
+      "research_execution_key": "0992801608bb6c8028b4bf499e0f4bd87d16ccc35260ffa6a2156846bc25a20a",
+      "original_failed_work_id": "work:2",
+      "original_failed_execution_key": "79bbcda06774062d1880c0f21e793ee7049acd3041871eb885cd15abedc5e387",
+      "original_full_anchor": {
+        "root_move": "f3e3",
+        "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+        "prefix_moves_uci": [
+          "f3e3"
+        ]
+      },
+      "scope": {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "79bbcda06774062d1880c0f21e793ee7049acd3041871eb885cd15abedc5e387",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "f7f6"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 40000000,
+          "movetime_ms": 8000,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 9000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+          "prefix_moves_uci": [
+            "f3e3"
+          ]
+        }
+      },
+      "same_full_history_position_restriction_MPV_and_h16": true,
+      "all_legal_root_uci": [
+        "b4a3",
+        "b4b3",
+        "b4c3",
+        "e5d6",
+        "e5e6",
+        "e5f6",
+        "f7f5",
+        "f7f6"
+      ],
+      "actual_go": "go depth 16 nodes 200000000 movetime 60000 searchmoves e5d6 f7f6",
+      "actual_completed_outcome": {
+        "kind": "completed",
+        "completedDepth": 16,
+        "selectiveDepth": 54,
+        "nodes": 18308501,
+        "engineTimeMs": 7914,
+        "executorElapsedMs": 8038,
+        "bestmoveUci": "e5d6"
+      },
+      "values": [
+        {
+          "root_uci": "e5d6",
+          "root_san": "Kd6",
+          "white_score": {
+            "kind": "cp",
+            "value": 505
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "e5d6",
+            "e3f4",
+            "d6e7",
+            "f4f5",
+            "e7f8",
+            "f5f6",
+            "f8g8",
+            "e4e5",
+            "g8f8",
+            "g3g4",
+            "f8e8",
+            "g4g5",
+            "e8d8"
+          ]
+        },
+        {
+          "root_uci": "f7f6",
+          "root_san": "f6",
+          "white_score": {
+            "kind": "cp",
+            "value": 555
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6e5",
+            "e2e3",
+            "e5d6",
+            "e3d2",
+            "b4a3",
+            "b2a3",
+            "d6e7",
+            "d2e3",
+            "e7f8",
+            "e3f4",
+            "f8f7",
+            "f4f5",
+            "f7g7",
+            "g3g4",
+            "g7h8"
+          ]
+        }
+      ],
+      "final_batch_checks": {
+        "exact_fen": true,
+        "nominal_depth": 16,
+        "all_required_pvs_present": true,
+        "pv_depths": [
+          16,
+          16
+        ],
+        "exact_pv_depths": true,
+        "unbounded": true,
+        "distinct_roots": true,
+        "restricted_roots_respected": true,
+        "all_pvs_legally_replayed": true,
+        "bestmove": "e5d6",
+        "bestmove_matches_leader": true
+      },
+      "preceding15_checks": {
+        "exact_fen": true,
+        "nominal_depth": 15,
+        "all_required_pvs_present": true,
+        "pv_depths": [
+          15,
+          15
+        ],
+        "exact_pv_depths": true,
+        "unbounded": true,
+        "distinct_roots": true,
+        "restricted_roots_respected": true,
+        "all_pvs_legally_replayed": true,
+        "bestmove": null,
+        "bestmove_matches_leader": false
+      },
+      "query_wrapper_elapsed_ms": 8048,
+      "would_fit_old_limits_for_this_new_actual_batch_only": {
+        "nodes": true,
+        "engine_time": true,
+        "executor_elapsed": true
+      },
+      "not_submitted_as_product_report": true
+    },
+    {
+      "study_query_id": "H05-fresh10s-failed-comparisons-nominal16-20261009-g4-first-Black-pool",
+      "research_execution_key": "c548a811ee8577ef57ea67114d003cc0469fff9d06aed5479238bac3d39093b7",
+      "original_failed_work_id": "work:3",
+      "original_failed_execution_key": "2e3ac4c775e060c0caa243cff8c1def3bb5b1acfe1c394dd76e531c84d872663",
+      "original_full_anchor": {
+        "root_move": "g3g4",
+        "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:7d9eee1a01a72dce77af72ddf9d3cabfe37a3cfa7ede0ad5decce38ae2019166",
+        "position_id": "ea3c9db6288b03832b0f22267e0d10bf1be8acd386ef7e108f3a15784c9b8758",
+        "prefix_moves_uci": [
+          "g3g4"
+        ]
+      },
+      "scope": {
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "2e3ac4c775e060c0caa243cff8c1def3bb5b1acfe1c394dd76e531c84d872663",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "g3g4"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000,
+        "search_anchor": {
+          "root_move": "g3g4",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:7d9eee1a01a72dce77af72ddf9d3cabfe37a3cfa7ede0ad5decce38ae2019166",
+          "position_id": "ea3c9db6288b03832b0f22267e0d10bf1be8acd386ef7e108f3a15784c9b8758",
+          "prefix_moves_uci": [
+            "g3g4"
+          ]
+        }
+      },
+      "same_full_history_position_restriction_MPV_and_h16": true,
+      "all_legal_root_uci": [
+        "b4a3",
+        "b4b3",
+        "b4c3",
+        "e5d6",
+        "e5e6",
+        "e5f6",
+        "f7f5",
+        "f7f6"
+      ],
+      "actual_go": "go depth 16 nodes 200000000 movetime 60000",
+      "actual_completed_outcome": {
+        "kind": "completed",
+        "completedDepth": 16,
+        "selectiveDepth": 56,
+        "nodes": 15751440,
+        "engineTimeMs": 7567,
+        "executorElapsedMs": 7588,
+        "bestmoveUci": "f7f6"
+      },
+      "values": [
+        {
+          "root_uci": "f7f6",
+          "root_san": "f6",
+          "white_score": {
+            "kind": "cp",
+            "value": 10
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "f7f6",
+            "f3e3",
+            "b4b3",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6e6",
+            "e2f2",
+            "e6d6",
+            "e4e5",
+            "d6e5",
+            "f2f3",
+            "f6f5",
+            "g4g5",
+            "f5f4",
+            "f3g4"
+          ]
+        },
+        {
+          "root_uci": "e5d6",
+          "root_san": "Kd6",
+          "white_score": {
+            "kind": "cp",
+            "value": 558
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "e5d6",
+            "g4g5",
+            "d6e5",
+            "f3e3",
+            "e5e6",
+            "e3f4",
+            "b4b3",
+            "e4e5",
+            "e6d7",
+            "f4e3",
+            "d7e7",
+            "e3f3",
+            "e7d8",
+            "f3e4",
+            "d8d7",
+            "e4d5",
+            "d7e7",
+            "d5c4",
+            "e7d7",
+            "c4b5",
+            "d7d8"
+          ]
+        },
+        {
+          "root_uci": "e5e6",
+          "root_san": "Ke6",
+          "white_score": {
+            "kind": "cp",
+            "value": 561
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "e5e6",
+            "g4g5",
+            "e6e5",
+            "f3e3",
+            "e5e6",
+            "e3f4",
+            "b4b3",
+            "e4e5",
+            "e6d7",
+            "f4f3",
+            "d7e7",
+            "f3e3",
+            "e7d7",
+            "e3f4",
+            "d7c6"
+          ]
+        }
+      ],
+      "final_batch_checks": {
+        "exact_fen": true,
+        "nominal_depth": 16,
+        "all_required_pvs_present": true,
+        "pv_depths": [
+          16,
+          16,
+          16
+        ],
+        "exact_pv_depths": true,
+        "unbounded": true,
+        "distinct_roots": true,
+        "restricted_roots_respected": true,
+        "all_pvs_legally_replayed": true,
+        "bestmove": "f7f6",
+        "bestmove_matches_leader": true
+      },
+      "preceding15_checks": {
+        "exact_fen": true,
+        "nominal_depth": 15,
+        "all_required_pvs_present": true,
+        "pv_depths": [
+          15,
+          15,
+          15
+        ],
+        "exact_pv_depths": true,
+        "unbounded": true,
+        "distinct_roots": true,
+        "restricted_roots_respected": true,
+        "all_pvs_legally_replayed": true,
+        "bestmove": null,
+        "bestmove_matches_leader": false
+      },
+      "query_wrapper_elapsed_ms": 7596,
+      "would_fit_old_limits_for_this_new_actual_batch_only": {
+        "nodes": true,
+        "engine_time": false,
+        "executor_elapsed": false
+      },
+      "not_submitted_as_product_report": true
+    },
+    {
+      "study_query_id": "H05-fresh10s-failed-comparisons-nominal16-20261009-Ke3-first-Black-pool",
+      "research_execution_key": "59da3024288868d1b2e7a065df041e75208aef5dcedb3301be448037e9952105",
+      "original_failed_work_id": "work:4",
+      "original_failed_execution_key": "f6d291e65ba1bcd60a7ae1ff37d14f4d57de73eae07d20e3dba7332ccc7f787e",
+      "original_full_anchor": {
+        "root_move": "f3e3",
+        "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+        "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+        "prefix_moves_uci": [
+          "f3e3"
+        ]
+      },
+      "scope": {
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "f6d291e65ba1bcd60a7ae1ff37d14f4d57de73eae07d20e3dba7332ccc7f787e",
+        "variant": "standard",
+        "engine_position_initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "engine_position_moves_uci": [
+          "f3e3"
+        ],
+        "search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "max_search_elapsed_ms": 6000,
+        "search_anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+          "prefix_moves_uci": [
+            "f3e3"
+          ]
+        }
+      },
+      "same_full_history_position_restriction_MPV_and_h16": true,
+      "all_legal_root_uci": [
+        "b4a3",
+        "b4b3",
+        "b4c3",
+        "e5d6",
+        "e5e6",
+        "e5f6",
+        "f7f5",
+        "f7f6"
+      ],
+      "actual_go": "go depth 16 nodes 200000000 movetime 60000",
+      "actual_completed_outcome": {
+        "kind": "completed",
+        "completedDepth": 16,
+        "selectiveDepth": 39,
+        "nodes": 12645081,
+        "engineTimeMs": 5269,
+        "executorElapsedMs": 5296,
+        "bestmoveUci": "e5d6"
+      },
+      "values": [
+        {
+          "root_uci": "e5d6",
+          "root_san": "Kd6",
+          "white_score": {
+            "kind": "cp",
+            "value": 464
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "e5d6",
+            "e3d2",
+            "d6e5",
+            "c3b4",
+            "e5e4",
+            "d2c3",
+            "e4d5",
+            "g3g4",
+            "c5b4",
+            "a3b4",
+            "f7f6",
+            "b4b5",
+            "d5c5",
+            "b5b6",
+            "c5b6",
+            "c3c4",
+            "b6c7",
+            "c4b5",
+            "c7c8",
+            "b5a4",
+            "c8b7"
+          ]
+        },
+        {
+          "root_uci": "e5e6",
+          "root_san": "Ke6",
+          "white_score": {
+            "kind": "cp",
+            "value": 466
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "e5e6",
+            "e3d2",
+            "e6e5",
+            "c3b4",
+            "e5e4",
+            "d2c3",
+            "e4d5",
+            "g3g4",
+            "c5b4",
+            "a3b4",
+            "d5e6",
+            "c3c4",
+            "e6d7",
+            "c4b5",
+            "d7d8",
+            "b5c5"
+          ]
+        },
+        {
+          "root_uci": "e5f6",
+          "root_san": "Kf6",
+          "white_score": {
+            "kind": "cp",
+            "value": 496
+          },
+          "nominal_depth": 16,
+          "moves": [
+            "e5f6",
+            "e3f4",
+            "f6g6",
+            "f4e5",
+            "g6g5",
+            "e5d5",
+            "g5g6",
+            "d5c4",
+            "g6f6",
+            "c4d5",
+            "f6g5",
+            "d5c5",
+            "f7f5"
+          ]
+        }
+      ],
+      "final_batch_checks": {
+        "exact_fen": true,
+        "nominal_depth": 16,
+        "all_required_pvs_present": true,
+        "pv_depths": [
+          16,
+          16,
+          16
+        ],
+        "exact_pv_depths": true,
+        "unbounded": true,
+        "distinct_roots": true,
+        "restricted_roots_respected": true,
+        "all_pvs_legally_replayed": true,
+        "bestmove": "e5d6",
+        "bestmove_matches_leader": true
+      },
+      "preceding15_checks": {
+        "exact_fen": true,
+        "nominal_depth": 15,
+        "all_required_pvs_present": true,
+        "pv_depths": [
+          15,
+          15,
+          15
+        ],
+        "exact_pv_depths": true,
+        "unbounded": true,
+        "distinct_roots": true,
+        "restricted_roots_respected": true,
+        "all_pvs_legally_replayed": true,
+        "bestmove": null,
+        "bestmove_matches_leader": false
+      },
+      "query_wrapper_elapsed_ms": 5302,
+      "would_fit_old_limits_for_this_new_actual_batch_only": {
+        "nodes": true,
+        "engine_time": false,
+        "executor_elapsed": true
+      },
+      "not_submitted_as_product_report": true
+    }
+  ],
+  "session_manifest": {
+    "study_id": "H05-fresh10s-failed-comparisons-nominal16-20261009",
+    "epoch_id": "3a8a3460-3e96-48a3-b044-f2ee335f4287",
+    "started_utc": "2026-10-09T05:56:18.986876+00:00",
+    "finished_utc": "2026-10-09T05:56:50.844598+00:00",
+    "session_wall_ms": 31858,
+    "engine_processes": 1,
+    "new_engine_queries": 3,
+    "product_reports_submitted": 0,
+    "stages": [
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-fresh10s-failed-comparisons-nominal16-completion\\stage1.json",
+        "sha256": "662786fac4844f89a50aaa37722729595e7c6ed81de5d3c585a9f5d6ee7a08bb",
+        "phase": "exact-failed-product-scopes-completion-once",
+        "query_ids": [
+          "H05-fresh10s-failed-comparisons-nominal16-20261009-Ke3-Kd6-versus-f6",
+          "H05-fresh10s-failed-comparisons-nominal16-20261009-g4-first-Black-pool",
+          "H05-fresh10s-failed-comparisons-nominal16-20261009-Ke3-first-Black-pool"
+        ]
+      }
+    ],
+    "study_sha256": "98d9b028df401252b6be6bda1eeee221465470aa0bd504c84d2fc3a74f6ed304",
+    "runner_sha256": "ccf8edfb2e28397ffd1306be793bc39052b651ae2d0cb83862e4d76b4d887293",
+    "frozen_runtime_hashes_passed_before_and_after": true,
+    "changed_frozen_inputs": [],
+    "shutdown": {
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    }
+  },
+  "costs": {
+    "session_wall_ms": 31858,
+    "raw_engine_time_sum_ms": 20750,
+    "executor_elapsed_sum_ms": 20922,
+    "query_wrapper_elapsed_sum_ms": 20946,
+    "actual_nodes_sum": 46705022,
+    "original_failed_H05_job_cost_ms": 29407,
+    "research_cost_separate_not_ordinary_product_success": true
+  },
+  "finite_findings": [
+    "The nominal16 queries can complete without increasing depth. The recorded named Ke3 Kd6/f6 pair favors Kd6 for Black505/555.",
+    "The g4 unrestricted returned leader is f6+10 for White; Kd6+558 and Ke6+561 are the other returned lines.",
+    "The Ke3 unrestricted returned leader is Kd6+464, with Ke6+466 close and Kf6+496 next; no stable uniqueness is established.",
+    "Named pair505/555 and full pool464/466/496 are separate owned queries; their centipawns cannot be combined as one certificate.",
+    "The new named pair7914ms would fit its original8000ms cap, whereas the original8001ms batch was rejected. Timing variation and multithreading are uncontrolled.",
+    "Both new full pools exceed the old5000ms engine cap while using fewer than20M nodes. This is finite completion evidence, not an isolated cap-performance causality claim.",
+    "Later conversion/material lines are legally retained as these conditional research forecasts; no original-grade cause or automatic BASIC utility is proved."
+  ],
+  "full_original_human_judgment_remains_partial": true,
+  "old_four_full_successes": 0,
+  "old_eight_source_full_successes": 0
+}

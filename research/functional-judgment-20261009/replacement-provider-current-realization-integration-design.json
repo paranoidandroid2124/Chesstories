@@ -1,0 +1,509 @@
+{
+  "schema": "observed_function_realization_integration_design_v1",
+  "sealed_utc": "2026-10-09T00:07:01.773197+00:00",
+  "mode": "Read-only code integration design using already sealed human criteria and genuine26 legal evidence. No product/test edits, compilers, runs or engine queries for this design.",
+  "criteria_unchanged": {
+    "original_four_case_full_utility": "0/4",
+    "eight_source_scene_full_utility": "0/8",
+    "this_design_does_not_rescore": true
+  },
+  "sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\nb1-delayed-d6-canonical-legal-evidence.json",
+      "sha256": "fe3f11df1f9304b2def3e6b4c15f3478a2fce5ae502539495cab22d087b07ed2"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\nb1-delayed-d6-replacement-provider-human-audit.json",
+      "sha256": "74ac55be34263f442fce55a32efb21ce3e5629878e1ca978a64f967ae2900ab3"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\human-criteria-and-scenes.json",
+      "sha256": "4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\sg45-function-plan-user-supplemental-reading-contract.json",
+      "sha256": "6539099e94aae5a1db86b7dc76e110da6cd65e5856d605fce971b80a4529c68a"
+    }
+  ],
+  "current_source_sha256": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalReplyReading.scala": "b9b7349fd5175be098c97f576e54e02f484958726113b9d6e1d2ccdc9ed269be",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalChoiceReading.scala": "949f4b7d0337432fe9cd6b650135e3651861760d573c08918c02a8fe69db434c",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryChoiceValue.scala": "140605629d7d7e32dc87f7c99bcef5fa0194d9111ccc38037d04fbd905480568",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala": "d9ca30085fc926f090c4531e3d3c4affda8dbbae84d44d2016689ef0c4e17286",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala": "968bd8552e1fa9f8127bfa646f5c97883a545e17903e91d7417edd123a08de58",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": "a50e1e6de2fa04c9fb94329197ed256f9ac95becbe00300f52191703147baca2",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala": "8b5ca55341ee0ab452a26cda9f89cef66a70b17fdd1c43794d1657a5b6826eb9",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": "45520b07aca3fbdf31599f880022ef5c0a6b1b21653e5a8e8c9c167ebfa5e0d4",
+    "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts": "922299e6a539a82cfb6aaa9915e8dc6ab28af8fa6a2c71f49262dc88322a7cdf",
+    "lila-docker/repos/lila/ui/analyse/src/moveReview.ts": "e0d434e3a7a68ca1366a67d5f436781d726707cfffb4a065216f43fc2003d4cd"
+  },
+  "first_missing_common_operation": {
+    "finding": "Represent and verify a separately owned later realization of the same original action/destination at its actual observed prefix, with current access/provider/transaction evidence, before assigning any local value.",
+    "why_not_rebase": "FunctionalReplyReading.rebase297 only substitutes current owned paths retaining every exact represented prefix/occurrence/position and the old predicate. A different provider is a new board witness, not a rebase of the Nd2-control proof.",
+    "why_not_same_pv": "The owned full Qd3 pool work6 has a different plan with no Rd6, while the work7 named comparison includes a late Rd6. Both retain their own numerical owners. Neither the old event sequence nor late Rd6 is necessary to all useful Qd3 realizations.",
+    "why_not_replace_root_condition": "Root condition Nd2 control d6 is still the honest original comparison. At the late Nb1 line the original knight is captured; a new queen proof may explain one realization but cannot certify that the root retained its knight support.",
+    "why_not_a_new_san_pattern": "The operation depends on exact canonical original actor, destination, current legal catalogue and complete current transaction inventory, with no book identifier or SAN branch."
+  },
+  "existing_reusable_operations": [
+    {
+      "path": "FunctionalReplyReading.scala:135",
+      "operation": "conditionAt",
+      "reuse": "Read new current provider control/presence/location and legal capture predicates at the current prefix. Do not mutate the original provider predicate."
+    },
+    {
+      "path": "FunctionalChoiceReading.scala:338",
+      "operation": "originalRow",
+      "reuse": "Track the same original actor at arbitrary stage prefix and find its actual legal move to the function destination, including capture/promotion conditions."
+    },
+    {
+      "path": "CommentaryChoiceValue.scala:130",
+      "operation": "read/survey/strongestOther",
+      "reuse": "These are already prefix-agnostic, profile/depth/current epoch/whole-work owned. They provide local value without importing root cp."
+    },
+    {
+      "path": "TargetResponseInvestigation.scala:87",
+      "operation": "readSearch",
+      "reuse": "Canonical complete response search has exact original root occurrence and full prefix/current history/position ownership."
+    },
+    {
+      "path": "RootQuestionSummary.scala:626",
+      "operation": "realize/completePairAnswer and existing material statements",
+      "reuse": "Close represented current capture/check/recovery prices under the unchanged delivery and witness bounds; retain separately selected old root prices."
+    }
+  ],
+  "present_hard_coded_scope": [
+    "Resource records one witnessed actor/action but its condition permanently names the initial provider. resources31 requires the root-owned task facts, same-side provider distinct from actor, and witness starting reference root.",
+    "FunctionalChoiceReading.Task384 only enumerates prefix [rootMove, firstReply]. Branch/Decision fields and sequence indexes0..3 assume this first own decision.",
+    "selectedReplyRoles47 reads before/after positions3/4; decision107 reads actor/provider at2; root and other choice renderers use offset2. These must receive a stage offset if a later decision is genuinely supported.",
+    "selected346 chooses the earliest witnessed resource and groups by original condition/square; it does not discover later realizations of the strongest other own plan.",
+    "UI functionalResponseSurveyMatches6065 permits only prefix2 or3 and expects the original resource context. Allowing any longer prefix without a stage certificate would accept arbitrary unrelated generated work."
+  ],
+  "minimal_extension_contract": {
+    "preserve": "Keep the original Resource, RootOwner, root condition, old LegalReplyOption proof validation and current finite Task complete semantics unchanged.",
+    "function_identity": "For this initial bounded scope, key by existing resource owner, canonically tracked original user, action/destination and purpose relation. Do not require the original provider, a permanent role label, or exact future event route. Different-user realizations remain a separate later scope rather than being silently merged.",
+    "new_scoped_realization": "A private checked realization contains original Resource owner; source Checked own-choice certificate or exact admitted returned source; full observed prefix plus occurrence/position identity; same original user/current row; current provider originals; complete legal capture/recovery/second-recapture snapshot; admitted display/price paths. Each has explicit packet/prepared owner.",
+    "candidate_source": "Inspect only an existing owned useful alternative or selected response path that actually contains the same original user/destination later. A local probe is not a new evaluated plan. Start with one earliest eligible observed realization per source/function; unexplored later uses stay explicit unknown.",
+    "factual_validation": "Require complete legal rows at current decision and each transaction position, exact original actor surviving to arrival, exact action row including capture/promotion/check and destination, actual new provider identity, source references at actual positions. Unknown is not Some(Nil). The snapshot must equal freshly reread canonical sorted/distinct complete inventory.",
+    "price_snapshot": "For every currently legal opposing capture of the arriving user, retain every immediate legal own recapture, and every immediate opponent capture of each recapturer. Include check-response constraints and any selected deeper price needed by a claimed conclusion. A complete shallow snapshot is factual; it cannot label a square safe, a sacrifice unsound or a plan useful.",
+    "factual_display": "Use existing ControlState/PieceAbsence/PieceRoute/Continuation/material statements for primitive observed facts and closed prices. If a sentence explicitly claims the recapture mechanism or complete capture set, add one small typed current-realization statement with a private checked constructor; do not loosen LegalReplyOption two-root proof requirements to encode a one-arm late fact.",
+    "value_stage": "A separate optional local stage owns CompareMoves at this exact prefix, an unrestricted full current own pool selecting strongestOther, an exact same-profile/depth current pair if the full pool cannot itself answer it, and completed full opponent resistance after both selected action and preferred/competitive other when the comparison sentence relies on both plans. Known legal capture counters absent from a top3 pool retain their own comparison/refutation obligations.",
+    "not_global_completion": "Late optional stage completion is separate from original Task.complete/root assessment. Factual realization may remain in detail while value is pending. Current Task.complete does not certify every future realization, every legal reply or whole original score cause.",
+    "renderer": "Decision must use stage.prefix.size rather than literal2/3. State the exact local phase, current provider, selected/refuted action, useful alternative, actual leading resistance and separately conditional capture price. Original root judgment remains unchanged; avoid replaying a long path as though forced.",
+    "caller_and_ui": "Reducer withQuestions/pendingChoiceTask and RuntimeProtocol context transport can reuse current comparison receipts. Add supported immutable stage FactGroup/facts identifying exact prefix/user/destination/current context before granting whole survey ownership. UI must require those facts, root answer/current owner, complete legal position and exact work/proposalRefs; merely removing prefix2/3 checks is insufficient.",
+    "provenance_boundary": "Compact Source provenance should name existing proposal/context/fact IDs and exact current work IDs/keys. Public FactReader results and answer evidence keep their full eligible occurrence refs separately. Do not filter or truncate exact proof refs to fit Source256.",
+    "bounded_root_connection": "A local late value is conditional on its prefix. Attributing it to Nc4/Nb1 or Rfd1 requires matched root/reply scopes or independently completed original adequate defense families and other own plans; no sole cp explanation or study-score graft."
+  },
+  "native26_scope": {
+    "earlier_own_question": "Nb1/Nc7 work7 Qd3 +118 versus immediate Rd6 -435, selected by genuine work6 full pool; only the early choice is valued.",
+    "late_exact_stage": {
+      "fen": "r5k1/5pbp/1pq1n1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/3R2K1 w - - 4 27",
+      "prefix_moves_uci": [
+        "d2b1",
+        "e8c7",
+        "e2d3",
+        "c5c4",
+        "d3d2",
+        "c7b5",
+        "b1c3",
+        "b5c3",
+        "d2c3",
+        "d8a8",
+        "a1a8",
+        "f8a8",
+        "c3d2",
+        "d7c5",
+        "d2b4",
+        "c5e6"
+      ],
+      "ply_offset": 16,
+      "current_mover": "white",
+      "legal_move_count": 46
+    },
+    "original_game_actor": "WhiteRh1; review root actor Rd1",
+    "replacement_provider": "White originalQd1; review-rootQe2; currentQb4",
+    "original_provider": "review-rootNd2/gameNb1 captured at offset7; cannot supply late control",
+    "after_arrival": {
+      "arrival": {
+        "uci": "d1d6",
+        "san": "Rd6",
+        "actor": "white_rook_game_h1",
+        "victim": null,
+        "capture_square": null,
+        "check": false,
+        "before_in_check": false
+      },
+      "after_arrival_fen": "r5k1/5pbp/1pqRn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 5 27",
+      "all_legal_black_captures_of_d6_rook": [
+        {
+          "uci": "c6d6",
+          "san": "Qxd6",
+          "actor": "black_queen_game_d8",
+          "actor_review_root_square": "c6",
+          "captured_original": "white_rook_game_h1",
+          "after_fen": "r5k1/5pbp/1p1qn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 w - - 0 28",
+          "all_immediate_white_recaptures_on_d6": [
+            {
+              "uci": "b4d6",
+              "san": "Qxd6",
+              "actor": "white_queen_game_d1",
+              "actor_review_root_square": "e2",
+              "captured_original": "black_queen_game_d8",
+              "after_fen": "r5k1/5pbp/1p1Qn1p1/4p3/2p1P3/4B1PP/1PP2PB1/6K1 b - - 0 28",
+              "all_immediate_opponent_recaptures_on_d6": []
+            }
+          ]
+        }
+      ],
+      "other_legal_black_replies_uci": [
+        "g8h8",
+        "g8f8",
+        "a8f8",
+        "a8e8",
+        "a8d8",
+        "a8c8",
+        "a8b8",
+        "a8a7",
+        "a8a6",
+        "a8a5",
+        "a8a4",
+        "a8a3",
+        "a8a2",
+        "a8a1",
+        "g7h8",
+        "g7f8",
+        "g7h6",
+        "g7f6",
+        "e6f8",
+        "e6d8",
+        "e6c7",
+        "e6g5",
+        "e6c5",
+        "e6f4",
+        "e6d4",
+        "c6e8",
+        "c6c8",
+        "c6d7",
+        "c6c7",
+        "c6b7",
+        "c6d5",
+        "c6c5",
+        "c6b5",
+        "c6e4",
+        "c6a4",
+        "h7h6",
+        "f7f6",
+        "g6g5",
+        "b6b5",
+        "c4c3",
+        "h7h5",
+        "f7f5"
+      ],
+      "in_check": false
+    },
+    "actual_decline": "Qc6-c8 at root offset17 followed by original rook d6xb6 at18 is observed; it is not a completed strongest local resistance survey.",
+    "receipts_missing": "No genuine26 issued descriptor owns prefix16 or17. No late full own pool, late Rd6-versus-best-other pair, or late Black full pool exists. All proposed late values are pending."
+  },
+  "proposed_exact_queries_not_executed": [
+    {
+      "phase": 0,
+      "id": "late-own-whole-pool",
+      "position": {
+        "fen": "r5k1/5pbp/1pq1n1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/3R2K1 w - - 4 27",
+        "prefix_moves_uci": [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7b5",
+          "b1c3",
+          "b5c3",
+          "d2c3",
+          "d8a8",
+          "a1a8",
+          "f8a8",
+          "c3d2",
+          "d7c5",
+          "d2b4",
+          "c5e6"
+        ],
+        "ply_offset": 16,
+        "current_mover": "white",
+        "legal_move_count": 46
+      },
+      "purpose": "response_comparison",
+      "root_restriction": "unrestricted all legal roots; returned MultiPV min(3,legal_count)",
+      "query": "Select the strongest current White competitor to original Rd1-d6; do not choose it from the old Qd3 receipt or book line."
+    },
+    {
+      "phase": 1,
+      "id": "late-selected-own-pair",
+      "prefix_moves_uci": [
+        "d2b1",
+        "e8c7",
+        "e2d3",
+        "c5c4",
+        "d3d2",
+        "c7b5",
+        "b1c3",
+        "b5c3",
+        "d2c3",
+        "d8a8",
+        "a1a8",
+        "f8a8",
+        "c3d2",
+        "d7c5",
+        "d2b4",
+        "c5e6"
+      ],
+      "root_restriction": [
+        "d1d6",
+        "strongestOther from completed phase0"
+      ],
+      "query": "Answer late Rd6 versus that current competitor using exact same depth/profile/epoch; reuse completed pool itself only if it returns both exact current values."
+    },
+    {
+      "phase": 2,
+      "id": "late-black-after-Rd6-whole-pool",
+      "position": {
+        "fen": "r5k1/5pbp/1pqRn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 5 27",
+        "prefix_moves_uci": [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7b5",
+          "b1c3",
+          "b5c3",
+          "d2c3",
+          "d8a8",
+          "a1a8",
+          "f8a8",
+          "c3d2",
+          "d7c5",
+          "d2b4",
+          "c5e6",
+          "d1d6"
+        ],
+        "ply_offset": 17,
+        "current_mover": "black",
+        "legal_move_count": 43
+      },
+      "root_restriction": "unrestricted all legal Black roots",
+      "query": "Test actual strongest late refusal/counter; Qc8 is a witnessed candidate, not predefined best."
+    },
+    {
+      "phase": 2,
+      "id": "late-black-after-other-whole-pool",
+      "prefix_moves_uci": [
+        "d2b1",
+        "e8c7",
+        "e2d3",
+        "c5c4",
+        "d3d2",
+        "c7b5",
+        "b1c3",
+        "b5c3",
+        "d2c3",
+        "d8a8",
+        "a1a8",
+        "f8a8",
+        "c3d2",
+        "d7c5",
+        "d2b4",
+        "c5e6",
+        "strongestOther from phase0"
+      ],
+      "root_restriction": "unrestricted",
+      "query": "Own the adequate resistance to the alternative plan when prefer/competitive comparison relies on that plan."
+    },
+    {
+      "phase": 3,
+      "id": "late-known-capture-vs-current-leader-if-omitted",
+      "prefix_moves_uci": [
+        "d2b1",
+        "e8c7",
+        "e2d3",
+        "c5c4",
+        "d3d2",
+        "c7b5",
+        "b1c3",
+        "b5c3",
+        "d2c3",
+        "d8a8",
+        "a1a8",
+        "f8a8",
+        "c3d2",
+        "d7c5",
+        "d2b4",
+        "c5e6",
+        "d1d6"
+      ],
+      "root_restriction": [
+        "c6d6",
+        "actual leading Black move from phase2"
+      ],
+      "query": "Known Qxd6 is not erased if absent from top3. Exact conditional Qxd6 Qb4xd6 price is legal-witness evidence; a numerical capture-versus-refusal claim needs its own current answer and conflict closure."
+    }
+  ],
+  "query_policy": "Future product-owned canonical work only. Inherit current profile and dynamically required minimum/selection depth from source owner and common choice/conflict policy; no fixed author cp, no declared best reply, no execution-key relabeling. Exact initialFEN/full36move history plus each listed prefix is retained. Requested completion and budget extensions must be separately reported if needed.",
+  "meaningful_controls_before_any_implementation": [
+    {
+      "id": "actual-late-Rd6-Qc8",
+      "input": {
+        "fen": "r5k1/5pbp/1pq1n1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/3R2K1 w - - 4 27",
+        "prefix_moves_uci": [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7b5",
+          "b1c3",
+          "b5c3",
+          "d2c3",
+          "d8a8",
+          "a1a8",
+          "f8a8",
+          "c3d2",
+          "d7c5",
+          "d2b4",
+          "c5e6"
+        ],
+        "ply_offset": 16,
+        "current_mover": "white",
+        "legal_move_count": 46
+      },
+      "expectation": "Same original rook/d6 function factual witness with original knight absent and current original queen recovery. Current conditional Qxd6/Qxd6 exact price admitted; actual Qc8/Rxb6 kept distinct. Value remains unavailable without late-owned receipts."
+    },
+    {
+      "id": "geometric-controller-but-blocked-access",
+      "prefixes": [
+        [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4"
+        ],
+        [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7b5",
+          "b1c3",
+          "b5c3",
+          "d2c3",
+          "d8a8",
+          "a1a8",
+          "f8a8",
+          "c3d2",
+          "d7c5"
+        ]
+      ],
+      "expectation": "Qd3/Qd2 controls d6 but blocks d1 route; no current legal-use stage, no support-to-access promotion."
+    },
+    {
+      "id": "Qb4-Nc5-still-held",
+      "position": {
+        "fen": "r5k1/5pb1/1pq3p1/2n1p2p/1Qp1P3/4B1PP/1PP2PB1/3R2K1 w - - 0 27",
+        "prefix_moves_uci": [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7b5",
+          "b1c3",
+          "b5c3",
+          "d2c3",
+          "d8a8",
+          "a1a8",
+          "f8a8",
+          "c3d2",
+          "d7c5",
+          "d2b4",
+          "h7h5"
+        ],
+        "ply_offset": 16,
+        "current_mover": "white",
+        "legal_move_count": 42
+      },
+      "expectation": "Original Rd6 legal but Qb4xd6 recovery unavailable because Nc5 remains. Complete empty immediate-recovery inventory; factual failure of that mechanism only, not engine evaluation or unsound-sacrifice verdict."
+    },
+    {
+      "id": "retained-Rd8",
+      "position": {
+        "fen": "3r1rk1/5pbp/1pq1nnp1/4p3/1Qp1P3/4B1PP/1PP2PB1/RN1R2K1 w - - 4 23",
+        "prefix_moves_uci": [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7e6",
+          "d2b4",
+          "d7f6"
+        ],
+        "ply_offset": 8,
+        "current_mover": "white",
+        "legal_move_count": 54
+      },
+      "expectation": "Both Rxd6/Qxd6 legal, Qb4 recapture legal but remaining other Black capturer takes that queen. A mere immediate recapturer must not certify adequacy/usefulness; both full transactions are closed."
+    },
+    {
+      "id": "same-valuable-Qd3-different-route",
+      "source": "actual work6 Qd3 path has no Rd6",
+      "expectation": "Earlier Qd3 usefulness remains; specific late witness absent rather than falsely refuted original good-choice certificate."
+    },
+    {
+      "id": "stale-provider-prefix-foreign-owner",
+      "expectation": "Old Nd2 control, same FEN via another history, foreign packet/prepared path, wrong prefix or moved/removed queen cannot authorize the new current realization."
+    },
+    {
+      "id": "incomplete-price-unknown-not-empty",
+      "expectation": "Missing legal inventory, omitted one capturer, omitted best immediate own recapture, omitted second recapture or unresolved check-response blocks complete factual mechanism and any value promotion; retain known facts as partial."
+    },
+    {
+      "id": "named-only-depth-profile-root-score",
+      "expectation": "A named late pair without full own pool, omitted actual stronger Black counter, old Qd3 score, different depth/profile/epoch and root score cannot certify useful late Rd6."
+    },
+    {
+      "id": "sound-sacrifice-or-forced-check",
+      "source": "already read SG48 mating compensation / SG02 sound exchange-sacrifice controls",
+      "expectation": "Expensive/no immediate recovery alone is not a refuted value. Existing complete competing choice and strongest response certificates determine value; required check continuations/prices remain."
+    },
+    {
+      "id": "SG42-independent-provider-transfer",
+      "source_pages": "Think Like a Super-GM Reading Edition419,422–426, already frozen before product output",
+      "fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "legal_control_paths": [
+        [
+          "e3d3",
+          "e1e2",
+          "e8e2"
+        ],
+        [
+          "f5d3",
+          "e1e2",
+          "e3e2"
+        ]
+      ],
+      "expectation": "Same original opposing Re1xe2 and Pe2 target, recovery provider changes BlackRe3 to BlackRe8 after Rd3; neither White immediate recapture exists. This is a replacement denial-provider function, not same-side rook support and not proof that Rd3 uniquely outranks other strong plans. An initial implementation limited to same-side support must report this source scope uncovered rather than invent success."
+    }
+  ],
+  "implementation_order": [
+    "First add canonical checked current realization + factual closed detail; run unchanged old provider/root/price/ownership tests and meaningful negatives.",
+    "Then add exact optional arbitrary-prefix local value obligations with existing choice primitive and stage certificate + UI transport tests before any actual extended query.",
+    "Then complete actually needed new work and read BASIC independently against frozen criteria, separating bounded local insight from whole original judgment."
+  ],
+  "final_limits": [
+    "No new code or engine run for this integration design.",
+    "Existing actual26 does not contain late value evidence.",
+    "Old human full-utility criteria and counts remain unchanged.",
+    "Complete legal immediate prices are necessary factual context, not a full strategic/tactical value proof.",
+    "SG42 analogue broadens the functional insight but not the delivered product success scope."
+  ]
+}

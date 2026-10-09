@@ -1,0 +1,107 @@
+{
+  "record_kind": "sealed_read_only_design_before_new_adapter_implementation",
+  "recorded_at_utc": "2026-10-08 20:11:49 UTC",
+  "reviewer": "/root/functional_condition_audit",
+  "workspace": "C:/Users/양자/.codex/worktrees/functional-choice-value/Chesstories",
+  "scope": {
+    "product_and_test_changes_during_design": false,
+    "engine_or_compiler_execution": false,
+    "new_adapter_authorization_received_after_reads": "Only NEW AnchoredChoiceReading.scala and AnchoredChoiceReadingTest.scala; parent owns all reducer, consumer, UI and schema integration.",
+    "existing_full_utility_criteria": "Original four cases remain 0/4. H05 local studies and SG42 source reading are separate; no acceptance criterion is rewritten."
+  },
+  "answer": "A shallow adapter of an already owned CompareMoves decision can reuse CommentaryChoiceValue at its exact current anchor. It need not become another original-actor/same-destination prefix-two resource Task. ReserveTiming already exists before a full king-cycle realization or local comparison completion; a current declared stage context and whole-position selection certificate must remain independent of that later realization.",
+  "proof_creation_before_cycle": {
+    "source": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala:116-143",
+    "positive": "reserveTimings returns ReserveTiming with answer=None when the root receipt, supported timing_context, generated-arm heads and exact test/source binding are present. It does not call validReserveTempo or require five-plus plies of king cycling.",
+    "later_specific_realization": "RootSubjectComparison.scala:149-200 checks the same-placement quiet king cycle; withReserveTempo:222-225 searches a complete route. Those remain claims about that particular realization, not prerequisites for selecting the immediate decision to investigate.",
+    "limited_discovery_origin": "CommentaryDiscovery.scala:1536-1567 currently discovers this seed from a witnessed third quiet king action, the current original pawn and a common opposing reply. This first adapter does not claim to discover every quiet plan or SG42 automatically.",
+    "important_scope_split": "The new stage is current declared prefix + original-pawn state + legal reference action. The original timing_current event/king action and common-reply observation remain unchanged historical requirements; their old later event cannot be silently rewritten into the new strongest-other question. A subsequent different valid realization must not be certified merely by weakening the original fact group."
+  },
+  "actual_native_h05_evidence": {
+    "source_directory": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/decision-timing-20261006/mcH05Current35",
+    "profile": "sf18-smallnet-t2-h16-v1",
+    "original_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "timing_proposal_id": "discovery:75a4dff720049d2d12f87f978de61cf23c2b3d311100987c5dc7c30fa572aac4",
+    "rows": [
+      {"work_id":"work:1","kind":"unrestricted White ROOT pool","prefix":[],"returned_depth":16,"meaning":"Owns original g4/Ke3 values; f6 in these PVs is not an unrestricted Black first-reply survey.","key":"b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d"},
+      {"work_id":"work:2","kind":"restricted same-position White named pair","prefix":["f3e3","f7f6"],"restriction":["g3g4","e3f3"],"returned_depth":16,"meaning":"Owns immediate g4 versus Kf3 after Ke3 f6. It does not select the strongest other White move from all legal moves.","key":"c3318ca10f11c579fecc812a3795c013fcf323a3b784c421b3af35679b58530c"},
+      {"work_id":"work:3","kind":"restricted pawn wait plus all current own king moves","restriction":["g3g4","f4e3","f4f3","f4g4"],"returned_depth":16,"meaning":"Class-complete within its issued scope, not a full unrestricted White legal pool.","key":"a2e2d8f72bd805fc72f2916845426cd1a546184fb572b54154bfc52fd4ba1821"},
+      {"work_id":"work:4","kind":"restricted king seed plus all current opposing pawn moves","restriction":["e6d7","f6f5"],"returned_depth":16,"meaning":"Owns the Kd7/f5 counter comparison, not the strongest of all legal Black replies.","key":"5817a489020bafd12cb3e93f218425681823246c1975ca9508bea9b118808a6f"}
+    ],
+    "timing_anchor": {"prefix":["f3e3","f7f6"],"position_id":"00c05612130864f6080fbf27b03f044ce8e4beb5558d815b92047a7f414fb158","root_occurrence_id":"move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60"},
+    "stage_facts": "timing_available is current legal original Pawn(g3)->g4 at Ply(2). timing_kept proves original g3 pawn stays on g3 only across the explicitly declared Kf3 move, counts 2..3. timing_current binds the observed Kf3 to its original comparison source. These are separate propositions.",
+    "ke6_limit": "Ke3 Ke6 Kd2 is not supplied by these five native current reports. The h128/d24 book/research studies cannot supply a current h16 product receipt. It requires a new exact current Black first-pool source and a separately owned same-profile White choice survey/comparison at [Ke3,Ke6].",
+    "late_path_identity": "The native later descendant includes bxc3 and bxc3. The current white c3 pawn is originally b2; it must not be merged with the book's b3 route or original white c3 pawn."
+  },
+  "derived_stage_fields": {
+    "not_a_new_persistent_general_state_framework": true,
+    "owner": "Existing reserve proposal ID, unchanged reserve_root comparison/answer, current root physical condition and any already required exact source/ancestor bindings.",
+    "anchor": "The prepared owned path, question prefix, complete transition IDs and position IDs through that prefix; EngineSearchAnchor root move/root occurrence/child position. A same-FEN transposition is insufficient.",
+    "reference_action": "Current legal UCI from the existing reserve test, current legal row and original pawn identity. No fixed prefix length or future destination is required by the certificate.",
+    "stage_state": "Separate Declared(prefix), Ply(prefix.length) original-pawn presence/location, and legal reference action facts; one all-stage fact group. This states the resource at this decision, not at every later position.",
+    "selection": "Current same-profile unrestricted pool at this anchor, homogeneous actual returned depth. The strongest other returned legal move selects the named comparison. Old seed question and receipt stay immutable.",
+    "value": "CommentaryChoiceValue.Checked for both exact current actions at the pool's actual depth and same canonical prefix. No current best-other purpose is inherited from the old resource title.",
+    "resistance": "For each of the resource action and current best other own plan, a separately owned after-choice unrestricted opposing survey plus exact named comparison for a known omitted still-legal capture/reply. Old PV reply scores are not inherited.",
+    "state_language": ["g4 consumes this reserve advance; it does not remove the pawn.","Kf3 leaves the original pawn on g3 here; later availability is a separate fact.","An absent/removed/temporarily illegal original action cannot receive a fake numeric value. Already proved legal facts at older exact contexts remain facts.","A pawn may later be converted, exchanged or sacrificed in an independently priced successful plan; the original pawn need not live forever."]
+  },
+  "minimal_reducer_changes_for_parent": [
+    {"source":"CommentaryJobReducer.scala:1849-1850,1896-1910","change":"Combine ready anchored reserve obligations with current functional obligations before priority/cap selection. Preserve exact stage ownership and stop superseded new value IDs only; do not make every historical reserve comparison current."},
+    {"source":"CommentaryJobReducer.scala:1904-1907","change":"The presence of timingDependencies currently suppresses reserve first-reply dependencies. A completed named timing test is not evidence that both Black first-defense pools exist. Keep separately required exact first-defense survey obligations when their current pool is missing."},
+    {"source":"CommentaryJobReducer.scala:1946-1953","change":"A completed named pair cannot mark the missing full-pool selection obligation tried. Keep its old receipt; exempt only exact current anchored obligations from the named-pair tried shortcut."},
+    {"source":"CommentaryJobReducer.scala:1998-2015","change":"Reuse the existing full-survey issuance for an eligible anchored value obligation at proof.test.prefix. ChoiceValue.survey/pairDepth/selectionDepth determine missing selection or coherent alignment; no SAN or case branch."},
+    {"source":"CommentaryJobReducer.scala:2046-2070,2103-2126","change":"Use observedPrefix/historyAt and exact EngineSearchAnchor, current legal named moves, source question ownership, same profile and returned-depth alignment. Use the existing unrestricted restriction, min(3, full legal count), budget and lease shapes. Preserve issued keys and prior proposalRefs exactly."},
+    {"source":"FunctionalChoiceReading.scala:267-307","change":"Reuse the immutable generated-requirement pattern, with separate new declared stage facts, all-stage context and current selected-other CompareMoves. Do not modify reserve_timing/context or attach a new owner to an old issued descriptor."}
+  ],
+  "minimal_frontend_changes_for_parent": [
+    {"source":"moveReview.ts:2012-2024","current":"Deep full pool issuance is C-reply-function at prefix lengths 2/3 only.","change":"Use a shared exact anchored-stage owner helper that recognizes the new generated stage context, answered root source, current original-pawn legal declaration and exact awaiting CompareMoves/work/prefix. Keep full legal catalogue, min(3, legal count), position/history/key/profile/depth/lease checks."},
+    {"source":"moveReviewSelection.ts:6065-6101,6103-6129","change":"Use the same helper for retained full-pool receipts. A retained selection survey can belong to the original seed question even after it selected a different competitor; it is not automatically an answer to the seed. Keep every alias independently validated."},
+    {"source":"moveReviewSelection.ts:2266-2275 and moveReview.ts:1851-1855","change":"Current bounded functional ledger/progress classification must count only exact eligible anchored receipts too. No blanket union of all downstream CompareMoves and no arbitrary cap rise. This first adapter's finite required work can fit the current allowance; repeated depth-alignment history still needs explicit failure rather than an assumed three-receipt theorem."}
+  ],
+  "minimum_new_work_for_the_h05_question": [
+    "A current unrestricted same-profile Black first-reply pool at [g4] and [Ke3] if claims concern adequate first resistance to the ORIGINAL root choice. Root White pool work:1 is insufficient. Finite top-three coverage must be named as finite; a known omitted f6/Ke6 must receive its own exact current named test when required and legal.",
+    "A full current unrestricted White legal survey at [Ke3,f6]. If its selected strongest-other action equals Kf3 and actual levels match, current work:2 can supply the exact pair; otherwise append the newly selected-other question and obtain the correct current pair. No compulsory re-search when one owned current pool already returns both values.",
+    "A current unrestricted Black response survey after each selected White action, [Ke3,f6,g4] and [Ke3,f6,bestOther]. Test any omitted currently owned legal capture/reply seed at this same board, level and profile. Do not recursively investigate unrelated next plans.",
+    "A separate [Ke3,Ke6] White stage only when its current first-defense ownership exists. It may select a different king route such as Kd2; no fixed Kf4/f5 endpoint is necessary. This is additional coverage, not a transplanted result from old h128 studies."
+  ],
+  "consumer_and_root_judgment_contract": {
+    "seams": ["RuntimeProtocol.scala:457-503 already has exact reserve readers and responseSearches, then binds contexts to the root numerical carrier.","MoveWorkProjection.scala:3022-3031 invokes reserve consumers before final selected-condition closure/simplification.","CommentaryAnswer.scala:225-233 and CommentaryEnglish.scala:327-334 currently describe one specific king-cycle realization; that extra story remains gated by its original strict physical proof."],
+    "smallest_consumption": "An optional privately certified anchored decision beside the existing reserve proof can provide immediate spending-versus-keeping state and exact local value/resistance, without using a full-cycle ReserveTempo as its existence condition. A separately selected other plan is an independent current own continuation, not the original entry's title or meaning.",
+    "allowable_center": "The original root numerical judgment remains unchanged. Explain the tested same-defense timing failure: at this exact Ke3 f6 position, the current comparison rejects spending g4 now in favor of the current owned other move, which leaves the original g3 pawn here. State the current next king route only from its own prepared path and current prices. Qualify this as a bounded demonstrated reason; local values are not the whole root score cause or a unique reason.",
+    "not_required": ["Exact future Kf4/f5", "the old full king cycle", "eternal g4 legality", "the original e4 guard surviving", "all replies following one PV", "same defender forever"],
+    "mandatory": "Keep original completionSources and prior root-use/capture/check duties; add new fresh explicitly selected paths only for their own material/check closure. Do not use generated prices/future episodes as completion seeds. Preserve 5 witnessed paths, 8 delivered units, 80 parts and 4000 characters. An undisplayed necessary counter cannot be counted as a successful full-utility explanation."
+  },
+  "sg42_source_scope": {
+    "source_record":"research/functional-judgment-20261009/human-criteria-and-scenes.json, FJ-SG42",
+    "current_product_receipts_inspected":false,
+    "lesson":"Rd3 transfers e2 defense from original Re3 to original Re8; Bd3 keeps e2 defended while Re8 can go to f8 and original Re3 later to e7. The defended target e2 differs from the selected action's destination f8. Both useful plans are already legal; Rd3/Bd3 can be purpose-only adequate explanations.",
+    "implementation_limit":"Do not relax pawn-root/Separated/quiet-king ReserveTiming gates to force this source into the first adapter. The generic ChoiceValue contract can separately certify a legal anchored Rd3/Bd3/Rf8 decision when a current owned condition/source exists. Defender replacement or a fully priced winning liquidation is a different realization, not automatic proof that the original defender/target survives forever.",
+    "counterexamples":["Rd3 Kg1 Rxc3 permits White Rc1xc3; no free-pawn claim.","Rf8 was already legal before Bd3; no invented legal-enabling explanation.","After Bd3, original Bd3 and Re3 can both recapture Rxe2; no unique-provider necessity.","Winning liquidation may remove e2 and exchange rooks; the fixed original e2 pawn must not be required forever."]
+  },
+  "focused_test_design_before_execution": {
+    "positive":"Use a supplied current owned root/declared [Ke3,f6] prefix and the preserved native timing question with answer absent or present, no full king cycle. A clearly labelled scheduling fixture issues the full current legal same-profile pool, then selects a current strongest-other immutable question and two exact after-choice full pools. Assert original reserve_timing/context/answer and keys unchanged; require actual completed depths match; state distinguishes spent advance from kept pawn here. This supplied fixture is not a new engine or automatic-product success.",
+    "negative":"Same FEN with foreign prefix/transition/root occurrence, a stale/lower-depth or mixed-depth pool, a different profile, a non-leading chosen alternative, or original pawn already spent/removed cannot create Checked/stage value. Missing after-choice pool or omitted still-legal known capture leaves the decision incomplete, with factual legal state preserved.",
+    "specific_scope_control":"A different original pawn arriving on g3 cannot stand in for the original g3 pawn. A later PV dropping old Kf4/f5 or the cycle is not itself a failure of the immediate declared stage. Conversely a lost current original-pawn location/legal action must invalidate that stage, regardless of an old favorable score.",
+    "tests_or_compilers_run":false
+  },
+  "provenance": {
+    "read_hashes_at_201149_utc": {
+      "CommentaryChoiceValue.scala":"1de2357c0ef2e188117b4d329a68f50f0876599c190af30704a68f8a7e6907e5",
+      "CommentaryIdea.scala":"2a34c73aa6dc0a6317e01912f49303cf627b017ed95495135520c0cf5f5e0ba4",
+      "CommentaryJobReducer.scala":"deaaeec03302943c108174b10f9c63b8e4b1cb3a6726aaa66834d3ce116e969e",
+      "CommentaryDiscovery.scala":"1b05894cc35144ea035e50a266c4b59415141613f44890f479774a87340b61d3",
+      "RootSubjectComparison.scala":"1730a58e091f15fa93478fd702ace5951b0560290a3d1e6f82d25dd368ebd3c2",
+      "RuntimeProtocol.scala":"b2ec646d2c46a29e38239b5d3306288abb188bb13538f44768c1734851839f33",
+      "MoveWorkProjection.scala":"659d8c95153383387abefeb4fcfca18e3711a06dde498682cd7ebd772bbd04d3",
+      "CommentaryAnswer.scala":"a7ef7f4035913610e6c8522bc5db89bd71e2b13c53a9667bd055b58b3bd54591",
+      "CommentaryEnglish.scala":"5a96f1b340129f299f12eb9871c43a5d31577ce6fe633cbbdb3031457b4f80a2",
+      "FunctionalChoiceReading.scala":"407f6c07af58879a70a0bba9cf2d6cb03f7191931a81dccf9eb156688dcff379",
+      "TargetResponseInvestigation.scala":"7a52ecbd2084720ea8b9beda56836d59a19dc42b2d7d8a76780a14a75d5dc819",
+      "moveReview.ts":"bff830eacbd6ceba0ecaff3c09f96f949d226672a24c7ff424e2c189229f189b",
+      "moveReviewSelection.ts":"ee381319dac5a2271274e63f34eb912a8052852a142ef3dd9f584343e7e9e25c",
+      "native_h05_stored_reports":"567205374fe6e0fdd29946b7e01b349a71375c54a964ecc1be0555e453c75640",
+      "native_h05_final_gzip":"ebd4b7faab4b2d5dc8013d65d8fd169bbeadada078359e42e1eb003bf484c373",
+      "human_criteria_and_scenes":"4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4"
+    },
+    "parent_parallel_edits_possible":"These are read-version hashes, not a promise that parent-owned files remain frozen after this record. Earlier sealed audits remain unchanged."
+  }
+}

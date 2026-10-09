@@ -1,0 +1,22 @@
+{
+  "archived_utc": "2026-10-09T06:36:33.309616+00:00",
+  "new_engine_queries": 0,
+  "original_target_preserved": true,
+  "selection": "Agent-produced archives with all eight final complete public snapshots, exact original49 issued_work/execution lines, source full-journal hashes and explicit omission of duplicate intermediate public snapshots; independent criteria/audit/normal21/schema supplement.",
+  "files": [
+    {
+      "source": "target/functional-judgment-20261009/source-scene-current10s-normal21-audit/source8-final10s-normal21-portable.zip",
+      "archive": "source8-final10s-evidence/source8-final10s-normal21-portable.zip",
+      "sha256": "bb3bf5748f40cfa30ad1a25c790848c406cb04d426c12caf3d42964fdbb76849",
+      "bytes": 13144670,
+      "byte_exact": true
+    },
+    {
+      "source": "target/functional-judgment-20261009/source-scene-current10s-normal21-audit/source8-final10s-normal21-audit-supplement.zip",
+      "archive": "source8-final10s-evidence/source8-final10s-normal21-audit-supplement.zip",
+      "sha256": "679c7f4ebdc93621232bb34aace7885b007351d4702b948f7c852f6ac1df82cb",
+      "bytes": 194866,
+      "byte_exact": true
+    }
+  ]
+}

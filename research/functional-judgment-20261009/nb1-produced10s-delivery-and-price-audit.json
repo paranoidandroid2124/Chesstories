@@ -1,0 +1,1150 @@
+{
+  "created_utc": "2026-10-09T05:49:00.688387+00:00",
+  "scope": "After parent BASIC-first seal: current10s exact26 zero-engine projection, normalUI21, required-price/source negatives, schema and physical price replay.",
+  "epoch": "Current10s with ordinary analysis cap18; all original26 requested depths<=16. This is zero-engine replay, not a fresh engine or whole-cause success.",
+  "human_firstpass_sha256": "dd164aebc3fb82e82205444f2885c2b01b2776ba7a48984bc32a3266ed52a63c",
+  "human_acceptance": {
+    "old_four_full_utility": "0/4 unchanged",
+    "eight_fixed_scenes": "0/8 unchanged",
+    "criteria_relaxed": false
+  },
+  "main_manifest_sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690",
+  "verified_source_count": 79,
+  "verified_class_count": 1912,
+  "projection_manifest_sha256": "fbafa0af9870c450d4c52916d3ba5591009f400552d4cbf238a5f5dfb271ec77",
+  "actual_response_sha256": "180aa43f8305f60c0b817ac3502c5c0ef764e1a7dbde66a82c21e98ec89228ea",
+  "whole26_descriptors_equal": true,
+  "whole_original_primary_equal": true,
+  "controlled_previous10j_public_gzip_byte_equal": true,
+  "basic_progress": "No new BASIC or public response content versus the actual10j projection. Local price-expression/closure guards do not themselves establish original root causality.",
+  "finite_task": {
+    "count": 1,
+    "complete": true,
+    "branches": 6,
+    "root_comparison": {
+      "id": "function_root",
+      "prefix": [],
+      "reference": "d2c4",
+      "alternative": "d2b1"
+    },
+    "root_answer": {
+      "work_id": "work:3",
+      "execution_key_sha256": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "required_depth": 16,
+      "reference_depth": 16,
+      "alternative_depth": 16,
+      "evaluation_relation": "worse",
+      "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ce3f6252dc09aed0d3b28cc292aeef82fd6781493a6064d859c6be9e987800b3",
+      "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:2f891a04e5bc4376143c450e8d17b476459252e8ecbfa17e881507a07f7bc663",
+      "reference_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:ec92bbb091a38e716c2f7c79e8493383be319ea0b14f069f2f4b369ba2688480",
+      "alternative_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:2c3ceca390d34cd8a61409c2b2d21c81fed1354ddd1182326d7641b902329c74",
+      "reference_evaluation": {
+        "source": "focus_comparison",
+        "kind": "engine_search",
+        "depth": 16,
+        "white_score": {
+          "kind": "cp",
+          "value": 189
+        }
+      },
+      "alternative_evaluation": {
+        "source": "focus_comparison",
+        "kind": "engine_search",
+        "depth": 16,
+        "white_score": {
+          "kind": "cp",
+          "value": 129
+        }
+      }
+    },
+    "original_actor": {
+      "side": "white",
+      "role": "rook",
+      "square": "d1"
+    },
+    "condition": {
+      "kind": "control",
+      "subject": {
+        "side": "white",
+        "role": "knight",
+        "square": "d2"
+      },
+      "square": "d6"
+    },
+    "expected_replies": [
+      {
+        "root": "d2b1",
+        "reply": "e8c7"
+      },
+      {
+        "root": "d2b1",
+        "reply": "e8d6"
+      },
+      {
+        "root": "d2b1",
+        "reply": "e8f6"
+      },
+      {
+        "root": "d2c4",
+        "reply": "c6c7"
+      },
+      {
+        "root": "d2c4",
+        "reply": "d8b8"
+      },
+      {
+        "root": "d2c4",
+        "reply": "e8f6"
+      }
+    ],
+    "branches_and_current_owners": [
+      {
+        "root": "d2c4",
+        "first_reply": "e8f6",
+        "first_pool_work_id": "work:4",
+        "first_pool_key": "d1222b9f06d2b81a6fa5c6d1c1ee399394204a031baf03c9ad614cfeab179d35",
+        "first_pool_leader": "e8f6",
+        "resource_move": "d1d6",
+        "retains_expected_condition": true,
+        "matched_reply": true,
+        "use": {
+          "prefix_moves_uci": [
+            "d2c4",
+            "e8f6"
+          ],
+          "reference_move_uci": "d1d6",
+          "alternative_move_uci": "a1a7",
+          "survey_work_id": "work:16",
+          "survey_execution_key_sha256": "cfac8f63cc2d6930055d62ffb884bce1246c6d5474b7d7f5c45f4c8e7b5cb18e",
+          "comparison_work_id": "work:16",
+          "comparison_execution_key_sha256": "cfac8f63cc2d6930055d62ffb884bce1246c6d5474b7d7f5c45f4c8e7b5cb18e",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "455c349a9549f9720e1822de19e82b33b75d485e4ef2f915abf863dfc3a14188",
+          "useful": true,
+          "refuted": false,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 187
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 168
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:be615c2507f7cbc2fa06882a6da789d687e5b9036b021af3476bbb7b2da12d6f",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:484b16d6e67ffafd8bcb98dbd6f350f65a3b497cabf26b767f7acd7f813329a2"
+        },
+        "resistance": {
+          "prefix_moves_uci": [
+            "d2c4",
+            "e8f6",
+            "d1d6"
+          ],
+          "reference_move_uci": "c6d6",
+          "alternative_move_uci": "c6c7",
+          "survey_work_id": "work:24",
+          "survey_execution_key_sha256": "24c90c2e2f67718a899a8052ecf3e284845b8e2bbf66c5cdae918f2fe550ce63",
+          "comparison_work_id": "work:25",
+          "comparison_execution_key_sha256": "bc375f7df817f707c51140653257386e9216639f477a330f07dd9c22e185b377",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "647a55150016c093ad71496485dc94156a5533fcad752b9bafa76c504598138c",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 470
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 187
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:8826bb02272002b08bdd189993363bd6a47f5a2d45ebad111b182bc5c664c032",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:78b4179e65c4991eea42106b3874183a62afafb9968c75c6e613479740c86c37"
+        }
+      },
+      {
+        "root": "d2c4",
+        "first_reply": "c6c7",
+        "first_pool_work_id": "work:4",
+        "first_pool_key": "d1222b9f06d2b81a6fa5c6d1c1ee399394204a031baf03c9ad614cfeab179d35",
+        "first_pool_leader": "e8f6",
+        "resource_move": "d1d6",
+        "retains_expected_condition": true,
+        "matched_reply": false,
+        "use": {
+          "prefix_moves_uci": [
+            "d2c4",
+            "c6c7"
+          ],
+          "reference_move_uci": "d1d6",
+          "alternative_move_uci": "c2c3",
+          "survey_work_id": "work:12",
+          "survey_execution_key_sha256": "6033fae85640d9dae5a1507a163e0e50f22bc0b68387813cfb60b435b1e09ae7",
+          "comparison_work_id": "work:13",
+          "comparison_execution_key_sha256": "2410803b35d01c53288e211134b615547ab8aff503103f43ac6c54f1328f8c40",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "24d4e82f3e2e17b89fcbc5588a51832a290a3a13ad4c144b857ae10028e69eda",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -407
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 176
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:bccde69e408f12f76ef99d6ad4c651713cfb2e256a5e54a7c9c3a1ce9a4b71a5",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:b9d9fd30143061740eafb0718781a62cf90b59dba6cb799d0e59c49eb9bb9f67"
+        },
+        "resistance": {
+          "prefix_moves_uci": [
+            "d2c4",
+            "c6c7",
+            "d1d6"
+          ],
+          "reference_move_uci": "c7d6",
+          "alternative_move_uci": "e8d6",
+          "survey_work_id": "work:20",
+          "survey_execution_key_sha256": "c8e321a38f61e52c3985105a0822d1fe32740defe1cb376d1f844eed1f5d5039",
+          "comparison_work_id": "work:21",
+          "comparison_execution_key_sha256": "941a5c066e2886a62482ea999b37471246cd8b4d0d2fca9894e782a4bfaad983",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "958d7c22a78859867e204d0b229814932cef0eef7236e940cbd75d7c07a82191",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 293
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -419
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:6e0c17ef25d9890941638ae51bf7f762ec62b1a94de7946d38cb45d95e27efa3",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5624e99946d4ff1f6587de3fedd6ae14e8f0cd6a670adc85acd39536ef84a57d"
+        }
+      },
+      {
+        "root": "d2c4",
+        "first_reply": "d8b8",
+        "first_pool_work_id": "work:4",
+        "first_pool_key": "d1222b9f06d2b81a6fa5c6d1c1ee399394204a031baf03c9ad614cfeab179d35",
+        "first_pool_leader": "e8f6",
+        "resource_move": "d1d6",
+        "retains_expected_condition": true,
+        "matched_reply": false,
+        "use": {
+          "prefix_moves_uci": [
+            "d2c4",
+            "d8b8"
+          ],
+          "reference_move_uci": "d1d6",
+          "alternative_move_uci": "a1a7",
+          "survey_work_id": "work:14",
+          "survey_execution_key_sha256": "378c293ce9b3eb5382dc7c13d36620619ed28d035c8b44af62aa77d13edcba47",
+          "comparison_work_id": "work:15",
+          "comparison_execution_key_sha256": "fcc955636e2bb4aca2a50fec8710689ff347a10973ef82de114bdcd3287ebe57",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "0c03fb5b46a6da6b86ae12b78f24f2d084b8832593ff33f8f332c41caffc6755",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -441
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 184
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:8455a2d5f814b772953bb1d50d213ba96bfd145247c6bebd73f03de32dfe9ff8",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:12923bc7e09d85adeca26a4d8ba1afc9cddc8e1e337b23f7a6c67163a4c9f886"
+        },
+        "resistance": {
+          "prefix_moves_uci": [
+            "d2c4",
+            "d8b8",
+            "d1d6"
+          ],
+          "reference_move_uci": "c6d6",
+          "alternative_move_uci": "e8d6",
+          "survey_work_id": "work:22",
+          "survey_execution_key_sha256": "732f024881165d684ad3274ac2f3d0fac82e723ad6f25736295103c158bc2c74",
+          "comparison_work_id": "work:23",
+          "comparison_execution_key_sha256": "6fbb0c08ba53378aee85f28fd8c270c153ee77f9182141972bee24e8330a23a9",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "55590a2821b6931f599e83ba418316cab46451562043469763d4ab61b1cf4233",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 440
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -443
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:b6852d7707b070aa3ad4707fb820f02f8774b6ce1e2e75661a8439a0938a0137",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:7628bf90433257f4a4329aaef96592571eda4f5be2962fc8eae54bc22d3df6fa"
+        }
+      },
+      {
+        "root": "d2b1",
+        "first_reply": "e8c7",
+        "first_pool_work_id": "work:5",
+        "first_pool_key": "1c2dbdad64de930c10eaaf056babc4a0cff8d59ccde6ecbe991489290e2224b6",
+        "first_pool_leader": "e8c7",
+        "resource_move": "d1d6",
+        "retains_expected_condition": true,
+        "matched_reply": false,
+        "use": {
+          "prefix_moves_uci": [
+            "d2b1",
+            "e8c7"
+          ],
+          "reference_move_uci": "d1d6",
+          "alternative_move_uci": "e2d3",
+          "survey_work_id": "work:6",
+          "survey_execution_key_sha256": "bac4d81ea451512738bc86b288fbaafa88c413f59a5b7e7b6163471dea317e57",
+          "comparison_work_id": "work:7",
+          "comparison_execution_key_sha256": "e88c1d6ba45c7fd997e99634ba921c31cb288f6899dd5502fc56196ed25245b5",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "c772126b4aa6d752b3891d2ec68e2fc4c644e10dd11f3bfbda0beb02cbde6acc",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -435
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 118
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:b3d89fb89f2f8c34103029900422825a328f8e041b6271c86c79ff2c535f8555",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:bf6da9e9d25f82dd98be836107bf9a7339ec55e1378c51263ec7e5fe9fafcc8c"
+        },
+        "resistance": {
+          "prefix_moves_uci": [
+            "d2b1",
+            "e8c7",
+            "d1d6"
+          ],
+          "reference_move_uci": "c6d6",
+          "alternative_move_uci": "c6b7",
+          "survey_work_id": "work:17",
+          "survey_execution_key_sha256": "321dd99b4db267e02392141395e637c8af71cfe80bad312fdcc50b73a9f7055d",
+          "comparison_work_id": "work:17",
+          "comparison_execution_key_sha256": "321dd99b4db267e02392141395e637c8af71cfe80bad312fdcc50b73a9f7055d",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "c2e4f517719f20c6666186768e7aa130b0ca4476b570333bab8cd7a800e11c25",
+          "useful": true,
+          "refuted": false,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -445
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 146
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:e4daab5851df0dc34bb76491f77c073d800024650130df3fb1cec3c02d2689a6",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:db6d85f03d64fbcd3ac4c5365d130319af390924d4227d3d4f1c3e70d9091657"
+        }
+      },
+      {
+        "root": "d2b1",
+        "first_reply": "e8d6",
+        "first_pool_work_id": "work:5",
+        "first_pool_key": "1c2dbdad64de930c10eaaf056babc4a0cff8d59ccde6ecbe991489290e2224b6",
+        "first_pool_leader": "e8c7",
+        "resource_move": "d1d6",
+        "retains_expected_condition": true,
+        "matched_reply": false,
+        "use": {
+          "prefix_moves_uci": [
+            "d2b1",
+            "e8d6"
+          ],
+          "reference_move_uci": "d1d6",
+          "alternative_move_uci": "b1c3",
+          "survey_work_id": "work:8",
+          "survey_execution_key_sha256": "eb73456431abc2fa56b5b73d1120df08412b9608df939981a3259eef69bdf4d8",
+          "comparison_work_id": "work:9",
+          "comparison_execution_key_sha256": "8106ac1b690f404efbfeddda914bf1001491747296eb91438d97c6ca1175f26e",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "e3a8ab2d49c8932bc0aac411a425bdc01c9b47781e3738340a86387c47c79622",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -13
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 141
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ebaf2dfccf155a85980d6fa2d947668683cbe63d1794cd11b57e9f5f3fcea989",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:de8021af944f9e6b878e9eab4303beb7c186d8ef0462aa2fb43bdd510e782edc"
+        },
+        "resistance": {
+          "prefix_moves_uci": [
+            "d2b1",
+            "e8d6",
+            "d1d6"
+          ],
+          "reference_move_uci": "c6d6",
+          "alternative_move_uci": "c6c7",
+          "survey_work_id": "work:18",
+          "survey_execution_key_sha256": "2bef56eac52af9c7191afc7bcfd46f8afea22f08f28a8447f24fa8cbf1f9acd7",
+          "comparison_work_id": "work:18",
+          "comparison_execution_key_sha256": "2bef56eac52af9c7191afc7bcfd46f8afea22f08f28a8447f24fa8cbf1f9acd7",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "e6d68deb5e90d638304360068e48eae06c448a185ad86bee1c8a68274ca5be46",
+          "useful": true,
+          "refuted": false,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -68
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 481
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:d54362408abbd29d0579bf1ed45c098ee9b3f834010f87cb5a8289c8d61355b2",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:d9c6d12404305e1fbe67328423dc1270600ed76e84cafc60e0fd261b1868fb49"
+        }
+      },
+      {
+        "root": "d2b1",
+        "first_reply": "e8f6",
+        "first_pool_work_id": "work:5",
+        "first_pool_key": "1c2dbdad64de930c10eaaf056babc4a0cff8d59ccde6ecbe991489290e2224b6",
+        "first_pool_leader": "e8c7",
+        "resource_move": "d1d6",
+        "retains_expected_condition": true,
+        "matched_reply": true,
+        "use": {
+          "prefix_moves_uci": [
+            "d2b1",
+            "e8f6"
+          ],
+          "reference_move_uci": "d1d6",
+          "alternative_move_uci": "b1c3",
+          "survey_work_id": "work:10",
+          "survey_execution_key_sha256": "9b9321752d27150fbbb08f5e3ef2fefd8029d0db3835014df3e5fcc855aff0ba",
+          "comparison_work_id": "work:11",
+          "comparison_execution_key_sha256": "884b4cc461394cf07df7041e269221327382f489ea16a53129a4af0d94d9bf2f",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "f3fbc11567dfe641b7235a3653719719741e83c8b9e97de66dece1443f9e3f5b",
+          "useful": false,
+          "refuted": true,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -415
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 167
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:b36864289a03f0fb441bb0e8063d512f5a92188cc397ec5f61ae153cd5665523",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:bb3dda456320a2c3b0959844ebcdbc63a6c259b83aebf640aa330696016254d7"
+        },
+        "resistance": {
+          "prefix_moves_uci": [
+            "d2b1",
+            "e8f6",
+            "d1d6"
+          ],
+          "reference_move_uci": "c6d6",
+          "alternative_move_uci": "c6c7",
+          "survey_work_id": "work:19",
+          "survey_execution_key_sha256": "e6ba8db442c30fab7f4fe60bf863df31c1ad9347f4e8759c2d0c0b37822c390d",
+          "comparison_work_id": "work:19",
+          "comparison_execution_key_sha256": "e6ba8db442c30fab7f4fe60bf863df31c1ad9347f4e8759c2d0c0b37822c390d",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "required_depth": 16,
+          "completed_depth": 16,
+          "search_position_id": "f6d71cc37e4c9c2137365b74a52715a9872af2006404d1a4a0ec5b12fb19e8f8",
+          "useful": true,
+          "refuted": false,
+          "reference_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": -429
+            }
+          },
+          "alternative_evaluation": {
+            "source": "response_comparison",
+            "kind": "engine_search",
+            "depth": 16,
+            "white_score": {
+              "kind": "cp",
+              "value": 125
+            }
+          },
+          "reference_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ee0cb5e5c4afbbca6a6dbce3da225fa5843542d6c1c5ed09367ae870c5607308",
+          "alternative_line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:22f010b5ed4e80f702aaff5a3efde5a7cb9dc02d10de9aed0bf30e04e34d443b"
+        }
+      }
+    ],
+    "limit": "One native leading/near-leading finite set at16; not all legal replies, not a depth24 result, not an all-response or whole-root causal certificate."
+  },
+  "original_prices": {
+    "old_CORE_layer_incidences": 4,
+    "old_DETAIL_layer_incidences": 5,
+    "old_total_layer_incidences": 9,
+    "old_unique_capture_events": 7,
+    "all7_exact_capture_events_retained": true,
+    "all9_original_layer_obligations_retained": true,
+    "current_CORE_covered_incidences": 5,
+    "current_DETAIL_covered_incidences": 18,
+    "current_total_layer_incidences": 23,
+    "current_unique_capture_events": 11,
+    "ledger": [
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:2f891a04e5bc4376143c450e8d17b476459252e8ecbfa17e881507a07f7bc663",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:1d8c1988652d7095a57864754bdf2172db63010f58722ce2d7e12e691ce8b025",
+        "offset": 7,
+        "original_layers": [
+          "DETAIL"
+        ],
+        "current_layers": [
+          "DETAIL"
+        ],
+        "certified_material_event": {
+          "ply_offset": 7,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:1d8c1988652d7095a57864754bdf2172db63010f58722ce2d7e12e691ce8b025",
+          "move_uci": "f6d5",
+          "side": "black",
+          "from": "f6",
+          "to": "d5",
+          "before_role": "knight",
+          "after_role": "knight",
+          "promotion_gain_cp": 0,
+          "delta_cp": -300,
+          "balance_cp": -300,
+          "capture": {
+            "role": "knight",
+            "square": "d5",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        "physical_replay": {
+          "offset": 7,
+          "uci": "f6d5",
+          "san": "Nxd5",
+          "original_actor": {
+            "side": "black",
+            "role": "knight",
+            "root_square": "d7"
+          },
+          "original_victim": {
+            "side": "white",
+            "role": "knight",
+            "root_square": "d2"
+          },
+          "before_role": "knight",
+          "after_role": "knight",
+          "capture_square": "d5",
+          "before_fen": "3r1rk1/5pbp/1pq1nnp1/2pNp3/4P3/4B1PP/1PPQ1PB1/R2R2K1 b - - 9 22",
+          "after_fen": "3r1rk1/5pbp/1pq1n1p1/2pnp3/4P3/4B1PP/1PPQ1PB1/R2R2K1 w - - 0 23",
+          "gives_check": false
+        }
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:2f891a04e5bc4376143c450e8d17b476459252e8ecbfa17e881507a07f7bc663",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:2267b666f00cede5ba42da809070ed7589f9bb1ad54866e13c54375d675d3c79",
+        "offset": 8,
+        "original_layers": [
+          "DETAIL"
+        ],
+        "current_layers": [
+          "DETAIL"
+        ],
+        "certified_material_event": {
+          "ply_offset": 8,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:2267b666f00cede5ba42da809070ed7589f9bb1ad54866e13c54375d675d3c79",
+          "move_uci": "e4d5",
+          "side": "white",
+          "from": "e4",
+          "to": "d5",
+          "before_role": "pawn",
+          "after_role": "pawn",
+          "promotion_gain_cp": 0,
+          "delta_cp": 300,
+          "balance_cp": 0,
+          "capture": {
+            "role": "knight",
+            "square": "d5",
+            "value_cp": 300,
+            "recapture": "proven"
+          }
+        },
+        "physical_replay": {
+          "offset": 8,
+          "uci": "e4d5",
+          "san": "exd5",
+          "original_actor": {
+            "side": "white",
+            "role": "pawn",
+            "root_square": "e4"
+          },
+          "original_victim": {
+            "side": "black",
+            "role": "knight",
+            "root_square": "d7"
+          },
+          "before_role": "pawn",
+          "after_role": "pawn",
+          "capture_square": "d5",
+          "before_fen": "3r1rk1/5pbp/1pq1n1p1/2pnp3/4P3/4B1PP/1PPQ1PB1/R2R2K1 w - - 0 23",
+          "after_fen": "3r1rk1/5pbp/1pq1n1p1/2pPp3/8/4B1PP/1PPQ1PB1/R2R2K1 b - - 0 23",
+          "gives_check": false
+        }
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ce3f6252dc09aed0d3b28cc292aeef82fd6781493a6064d859c6be9e987800b3",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:13299a14e6b1062209fecb43398ebef4ecce7524429eeadd60f96b048bcb0df1",
+        "offset": 19,
+        "original_layers": [
+          "DETAIL"
+        ],
+        "current_layers": [
+          "DETAIL"
+        ],
+        "certified_material_event": {
+          "ply_offset": 19,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:13299a14e6b1062209fecb43398ebef4ecce7524429eeadd60f96b048bcb0df1",
+          "move_uci": "f6e4",
+          "side": "black",
+          "from": "f6",
+          "to": "e4",
+          "before_role": "knight",
+          "after_role": "knight",
+          "promotion_gain_cp": 0,
+          "delta_cp": -100,
+          "balance_cp": -100,
+          "capture": {
+            "role": "pawn",
+            "square": "e4",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        "physical_replay": {
+          "offset": 19,
+          "uci": "f6e4",
+          "san": "Nxe4",
+          "original_actor": {
+            "side": "black",
+            "role": "knight",
+            "root_square": "e8"
+          },
+          "original_victim": {
+            "side": "white",
+            "role": "pawn",
+            "root_square": "e4"
+          },
+          "before_role": "knight",
+          "after_role": "knight",
+          "capture_square": "e4",
+          "before_fen": "1r3r2/1q3pbk/1n1R1np1/1Np1p1Bp/1p2P2P/6P1/1PP1QP2/3R1BK1 b - - 5 28",
+          "after_fen": "1r3r2/1q3pbk/1n1R2p1/1Np1p1Bp/1p2n2P/6P1/1PP1QP2/3R1BK1 w - - 0 29",
+          "gives_check": false
+        }
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ce3f6252dc09aed0d3b28cc292aeef82fd6781493a6064d859c6be9e987800b3",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:32aa8ebce0f7c109fecffa861eff07b0c6cb357d8318b06f5ddd185d4b7d7425",
+        "offset": 21,
+        "original_layers": [
+          "CORE",
+          "DETAIL"
+        ],
+        "current_layers": [
+          "CORE",
+          "DETAIL"
+        ],
+        "certified_material_event": {
+          "ply_offset": 21,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:32aa8ebce0f7c109fecffa861eff07b0c6cb357d8318b06f5ddd185d4b7d7425",
+          "move_uci": "e4d6",
+          "side": "black",
+          "from": "e4",
+          "to": "d6",
+          "before_role": "knight",
+          "after_role": "knight",
+          "promotion_gain_cp": 0,
+          "delta_cp": -500,
+          "balance_cp": -600,
+          "capture": {
+            "role": "rook",
+            "square": "d6",
+            "value_cp": 500,
+            "recapture": "excluded"
+          }
+        },
+        "physical_replay": {
+          "offset": 21,
+          "uci": "e4d6",
+          "san": "Nxd6",
+          "original_actor": {
+            "side": "black",
+            "role": "knight",
+            "root_square": "e8"
+          },
+          "original_victim": {
+            "side": "white",
+            "role": "rook",
+            "root_square": "d1"
+          },
+          "before_role": "knight",
+          "after_role": "knight",
+          "capture_square": "d6",
+          "before_fen": "1r3r2/1q3pbk/1n1R2p1/1Np1p1Bp/1p2n2P/6P1/1PP1QPB1/3R2K1 b - - 1 29",
+          "after_fen": "1r3r2/1q3pbk/1n1n2p1/1Np1p1Bp/1p5P/6P1/1PP1QPB1/3R2K1 w - - 0 30",
+          "gives_check": false
+        }
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ce3f6252dc09aed0d3b28cc292aeef82fd6781493a6064d859c6be9e987800b3",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:d6d472ca7be71bb85a7056d132e2401840dc0c1535f601d49677ed1d6b271b06",
+        "offset": 22,
+        "original_layers": [
+          "CORE",
+          "DETAIL"
+        ],
+        "current_layers": [
+          "CORE",
+          "DETAIL"
+        ],
+        "certified_material_event": {
+          "ply_offset": 22,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:d6d472ca7be71bb85a7056d132e2401840dc0c1535f601d49677ed1d6b271b06",
+          "move_uci": "g2b7",
+          "side": "white",
+          "from": "g2",
+          "to": "b7",
+          "before_role": "bishop",
+          "after_role": "bishop",
+          "promotion_gain_cp": 0,
+          "delta_cp": 900,
+          "balance_cp": 300,
+          "capture": {
+            "role": "queen",
+            "square": "b7",
+            "value_cp": 900,
+            "recapture": "excluded"
+          }
+        },
+        "physical_replay": {
+          "offset": 22,
+          "uci": "g2b7",
+          "san": "Bxb7",
+          "original_actor": {
+            "side": "white",
+            "role": "bishop",
+            "root_square": "g2"
+          },
+          "original_victim": {
+            "side": "black",
+            "role": "queen",
+            "root_square": "c6"
+          },
+          "before_role": "bishop",
+          "after_role": "bishop",
+          "capture_square": "b7",
+          "before_fen": "1r3r2/1q3pbk/1n1n2p1/1Np1p1Bp/1p5P/6P1/1PP1QPB1/3R2K1 w - - 0 30",
+          "after_fen": "1r3r2/1B3pbk/1n1n2p1/1Np1p1Bp/1p5P/6P1/1PP1QP2/3R2K1 b - - 0 30",
+          "gives_check": false
+        }
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:e4daab5851df0dc34bb76491f77c073d800024650130df3fb1cec3c02d2689a6",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:4a0faee40581536a11fa53f4ab67ee7746da71891fbf6dd33d58942ed491afcf",
+        "offset": 3,
+        "original_layers": [
+          "CORE"
+        ],
+        "current_layers": [
+          "DETAIL"
+        ],
+        "certified_material_event": {
+          "ply_offset": 3,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:4a0faee40581536a11fa53f4ab67ee7746da71891fbf6dd33d58942ed491afcf",
+          "move_uci": "c6d6",
+          "side": "black",
+          "from": "c6",
+          "to": "d6",
+          "before_role": "queen",
+          "after_role": "queen",
+          "promotion_gain_cp": 0,
+          "delta_cp": -500,
+          "balance_cp": -500,
+          "capture": {
+            "role": "rook",
+            "square": "d6",
+            "value_cp": 500,
+            "recapture": "excluded"
+          }
+        },
+        "physical_replay": {
+          "offset": 3,
+          "uci": "c6d6",
+          "san": "Qxd6",
+          "original_actor": {
+            "side": "black",
+            "role": "queen",
+            "root_square": "c6"
+          },
+          "original_victim": {
+            "side": "white",
+            "role": "rook",
+            "root_square": "d1"
+          },
+          "before_role": "queen",
+          "after_role": "queen",
+          "capture_square": "d6",
+          "before_fen": "3r1rk1/2nn1pbp/1pqR2p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 b - - 5 20",
+          "after_fen": "3r1rk1/2nn1pbp/1p1q2p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 w - - 0 21",
+          "gives_check": false
+        }
+      },
+      {
+        "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ee0cb5e5c4afbbca6a6dbce3da225fa5843542d6c1c5ed09367ae870c5607308",
+        "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:de6b3478af05a5e8e72ebce144f7eb0be055103d13f509150af587796d0e9a4a",
+        "offset": 3,
+        "original_layers": [
+          "CORE"
+        ],
+        "current_layers": [
+          "CORE"
+        ],
+        "certified_material_event": {
+          "ply_offset": 3,
+          "occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:de6b3478af05a5e8e72ebce144f7eb0be055103d13f509150af587796d0e9a4a",
+          "move_uci": "c6d6",
+          "side": "black",
+          "from": "c6",
+          "to": "d6",
+          "before_role": "queen",
+          "after_role": "queen",
+          "promotion_gain_cp": 0,
+          "delta_cp": -500,
+          "balance_cp": -500,
+          "capture": {
+            "role": "rook",
+            "square": "d6",
+            "value_cp": 500,
+            "recapture": "excluded"
+          }
+        },
+        "physical_replay": {
+          "offset": 3,
+          "uci": "c6d6",
+          "san": "Qxd6",
+          "original_actor": {
+            "side": "black",
+            "role": "queen",
+            "root_square": "c6"
+          },
+          "original_victim": {
+            "side": "white",
+            "role": "rook",
+            "root_square": "d1"
+          },
+          "before_role": "queen",
+          "after_role": "queen",
+          "capture_square": "d6",
+          "before_fen": "3r1rk1/3n1pbp/1pqR1np1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 b - - 5 20",
+          "after_fen": "3r1rk1/3n1pbp/1p1q1np1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 w - - 0 21",
+          "gives_check": false
+        }
+      }
+    ]
+  },
+  "late_factual_realization": {
+    "layer": "DETAIL",
+    "unit_index": 0,
+    "path_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:2d61c596f654fb513af065a9571005b5c7fbe285b204dc68f03c50121cff1abb",
+    "arrival_offset": 16,
+    "capture_offsets": [
+      17,
+      18
+    ],
+    "actual_owned_moves": [
+      "d2b1",
+      "e8c7",
+      "e2d3",
+      "c5c4",
+      "d3d2",
+      "c7b5",
+      "b1c3",
+      "b5c3",
+      "d2c3",
+      "d8a8",
+      "a1a8",
+      "f8a8",
+      "c3d2",
+      "d7c5",
+      "d2b4",
+      "c5e6",
+      "d1d6",
+      "c6d6",
+      "b4d6"
+    ],
+    "rendered_unit": "After Nc7, White's knight on b1 does not control d6. After Nb1 Nc7, prefer Qd3 to an immediate Rd6. A leading tested reply to Rd6 is Qxd6. The recorded continuation is Nc4. The recorded continuation is Nb1. In the Nb1 line: Qxd6 captures the white rook on d6. Later in the recorded Nb1 continuation, after Ne6, Rd6 brings the original rook from d1 to d6. White's queen on b4 (originally on e2) provides the current geometric support of that square; the original supporter is not providing it here. The currently legal capturers are Black's queen on c6. If this available capture sequence is played: Qxd6 captures the white rook on d6. Qxd6 recaptures the black queen on d6. No immediate legal recapture follows at its recorded endpoint. ",
+    "current_geometry_FEN": "r5k1/5pbp/1pqRn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 5 27",
+    "white_controller_squares": [
+      "b4"
+    ],
+    "currently_legal_black_captures_of_d6": [
+      "c6d6"
+    ],
+    "original_provider_absent": {
+      "side": "white",
+      "role": "knight",
+      "root_square": "d2"
+    },
+    "replacement_provider": {
+      "side": "white",
+      "role": "queen",
+      "root_square": "e2"
+    },
+    "capture_and_recovery": [
+      {
+        "offset": 17,
+        "uci": "c6d6",
+        "san": "Qxd6",
+        "original_actor": {
+          "side": "black",
+          "role": "queen",
+          "root_square": "c6"
+        },
+        "original_victim": {
+          "side": "white",
+          "role": "rook",
+          "root_square": "d1"
+        },
+        "before_role": "queen",
+        "after_role": "queen",
+        "capture_square": "d6",
+        "before_fen": "r5k1/5pbp/1pqRn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 5 27",
+        "after_fen": "r5k1/5pbp/1p1qn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 w - - 0 28",
+        "gives_check": false
+      },
+      {
+        "offset": 18,
+        "uci": "b4d6",
+        "san": "Qxd6",
+        "original_actor": {
+          "side": "white",
+          "role": "queen",
+          "root_square": "e2"
+        },
+        "original_victim": {
+          "side": "black",
+          "role": "queen",
+          "root_square": "c6"
+        },
+        "before_role": "queen",
+        "after_role": "queen",
+        "capture_square": "d6",
+        "before_fen": "r5k1/5pbp/1p1qn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 w - - 0 28",
+        "after_fen": "r5k1/5pbp/1p1Qn1p1/4p3/2p1P3/4B1PP/1PP2PB1/6K1 b - - 0 28",
+        "gives_check": false
+      }
+    ],
+    "limit": "Current geometric replacement support plus a legal conditional capture/recapture with exact prices. There is no separately completed late strongest-other/resistance utility certificate; geometry and nominal material gain are not its value or the whole original cause."
+  },
+  "delivery_bounds": {
+    "CORE_units": 6,
+    "DETAIL_units": 8,
+    "exact_primary_path_ids": [
+      "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:2f891a04e5bc4376143c450e8d17b476459252e8ecbfa17e881507a07f7bc663",
+      "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:ce3f6252dc09aed0d3b28cc292aeef82fd6781493a6064d859c6be9e987800b3"
+    ],
+    "CORE_foreign_witnesses": 5,
+    "DETAIL_foreign_witnesses": 5,
+    "maximum_parts_by_layer_and_language": {
+      "units": {
+        "en": 67,
+        "ko": 67
+      },
+      "detail_units": {
+        "en": 79,
+        "ko": 79
+      }
+    },
+    "CORE_summary_character_count": 1778,
+    "each_layer_limits": "Actual normalUI21 validates5foreign/8units/80parts/4000core characters; unchanged."
+  },
+  "normalUI21": {
+    "accepted_unchanged": true,
+    "all16_source_negatives_reject": true,
+    "all3_price_proof_part_negatives_reject": true,
+    "independent_grade_retained": true,
+    "decoder_sha256": "a1ab14884e9d7c8d55afc14900aeb5e7a585ccd4c980bedaa0da426a7db40642",
+    "decoder_validation_sha256": "6986657f0052a3dd92decfbb62110f03a0e6e6db758b1c13f38323fe1b37fea9"
+  },
+  "schema": {
+    "passed": true,
+    "error_count": 0,
+    "validator_version": "4.25.1",
+    "validation_sha256": "f51ebdc32f1a0448ac5171cbdefabb90753c2af096d723ba35d0c1a72842cbc4",
+    "held_schema_bytes_unchanged": true
+  },
+  "execution_costs": {
+    "tool_compile_seconds": 25.746,
+    "native_replay_one_projection_seconds": 302.489,
+    "UI21_and19negatives_ms": 23712,
+    "new_engine_queries": 0,
+    "new_engine_processes": 0,
+    "API_budget_ms": 180000,
+    "explicit_zero_engine_replay_policy_ms": 600000,
+    "ordinary_completion_claim": false,
+    "note": "Direct compiled zero-engine replay/projection cost, not a fresh ordinary180s engine job or live RPC cost."
+  },
+  "tracked_inputs_unchanged_after_validation": true,
+  "drift": [],
+  "postcheck_scope": "All presealed immutable10s source/classes/assets and normalUI21/schema bytes match. Working main/UI posthash is checked separately before release; newer epochs require their own validation.",
+  "newer_product_epoch_requires_own_projection": true,
+  "python_chess_version": "1.11.2",
+  "physical_replay_only_no_engine": true
+}

@@ -1,0 +1,37 @@
+{
+  "sealed_utc": "2026-10-09T05:38:35.911381+00:00",
+  "kind": "Read-only acceptance of research-driver accountability repairs; no execution",
+  "original_review_sha256": "7722b208d886a022fdf9c9a86c7af1c71dbc376616cfc9aed7612479336a8b88",
+  "old_driver_sha256": "40c6aa046ef4ffc3cf6d069470088927cf44824c7f9d556ea70bfa066dca8fa2",
+  "new_driver_sha256": "f880a355f0198a1e0b6ef26bdd2973890b45a76b99628dc34a6c4f0be6126bac",
+  "diff_sha256": "7da01392d43f4f4520963e9668e6bdfa08cda31e1f48c6fe976afe98d2ae1ab4",
+  "actual_prepare_freeze_sha256": "5bce2d71a847fa0f9f99348683843955440f22df8f2a7d503e1256ec17f918ea",
+  "actual_prepare_transport_compile_exit_code": 0,
+  "actual_prepare_engine_queries": 0,
+  "all_frozen_identity_inputs_verified": true,
+  "engine_assets_sha256": {
+    "nn-4ca89e4b3abf.nnue": "4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94",
+    "package.json": "9171ec6654d6f09e78101402a9bfb120b8915415dd8ddd89ef9515b7132be307",
+    "README.md": "261c2a3649bb60a45ff74a1ed0507e6100f1d5784189131186d64a1ebda15ffb",
+    "sf_18_smallnet.js": "0eebbd7d5108348cbf51b868adf4af0d33a866ef68217b2d6d9259c7573d8287",
+    "sf_18_smallnet.wasm": "7a759da6e6a19b86853e107f3212b070298e9e1515ed6959783a89c65e88a195",
+    "uci.mjs": "a07d19f326574047553949cf2fcd33bb734cf3416132bd4a9a88f1eed17ea706"
+  },
+  "accepted_repairs": [
+    "All six actual engine asset files, original input JSONs and compiled manifest/classpath are frozen and rechecked",
+    "dispatch_attempts stays separate; new_queries counts returned transcript go commands; lost RPC responses explicitly make this a lower bound",
+    "receive/write failure poisons only the owned RPC instance; run stops after recording the failing case before dispatching another case",
+    "Final identity-check failures retain failed status and diagnostic in terminal manifest"
+  ],
+  "unchanged_execution_semantics": [
+    "Same original request180000 and unmodified FullGameProbe",
+    "Same normalUI21; no engine lease/policy/receipt overlay",
+    "No replay, report/descriptor/key transformation or score graft",
+    "Only pendingdepth<=18 can reach the normal decoder/engine",
+    "Existing owned cleanup close and overwrite guard remain"
+  ],
+  "static_review_only": true,
+  "new_engine_queries_by_reviewer": 0,
+  "code_edits_by_reviewer": false,
+  "not_actual_job_or_Basic_success": true
+}

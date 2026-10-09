@@ -1,0 +1,82 @@
+{
+  "sealed_utc": "2026-10-09T05:27:14.775666+00:00",
+  "kind": "Same physical placement, different exact history and turn; static observation from existing18 receipts",
+  "source_sha256": "d36fb6ebff1afdaab134109ccb652d5e54a3fca71780770c57a70eeac333d4b0",
+  "good_source_query": "H05-response-plan-bounded18-ui21-20261009-root-Ke3-e5f6-g4-current-other-pair18",
+  "good_source_key": "c3fae4233cb57735a4939d9b236d312fb8df5b7b063baba7778fc78c813629ce",
+  "bad_source_query": "H05-response-plan-bounded18-ui21-20261009-prefix4-g4-Black-named18",
+  "bad_source_key": "3bf5cc7b204c5861a52feec6f33cc8c4ed520cf3ed6eb3d93466cb468742c20c",
+  "earlier_g4_after_Kf6": {
+    "prefix_uci": [
+      "f3e3",
+      "e5f6",
+      "g3g4",
+      "f6e6",
+      "e3d2",
+      "e6e5"
+    ],
+    "san": [
+      "Ke3",
+      "Kf6",
+      "g4",
+      "Ke6",
+      "Kd2",
+      "Ke5"
+    ],
+    "fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P5/1P1K4/8 w - - 3 38",
+    "side_to_move": "white",
+    "legal_moves_uci": [
+      "a3b4",
+      "b2b3",
+      "c3b4",
+      "d2c1",
+      "d2c2",
+      "d2d1",
+      "d2e1",
+      "d2e2",
+      "d2e3",
+      "g4g5"
+    ]
+  },
+  "later_g4_after_preparation": {
+    "prefix_uci": [
+      "f3e3",
+      "e5e6",
+      "e3d2",
+      "e6e5",
+      "g3g4"
+    ],
+    "san": [
+      "Ke3",
+      "Ke6",
+      "Kd2",
+      "Ke5",
+      "g4"
+    ],
+    "fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P5/1P1K4/8 b - - 0 37",
+    "side_to_move": "black",
+    "legal_moves_uci": [
+      "b4a3",
+      "b4b3",
+      "b4c3",
+      "e5d6",
+      "e5e4",
+      "e5e6",
+      "e5f4",
+      "e5f6",
+      "f7f5",
+      "f7f6"
+    ]
+  },
+  "physical_piece_placement_equal": true,
+  "side_to_move_equal": false,
+  "whole_history_equal": false,
+  "full_fen_equal": false,
+  "function": "The timing of the useful queenside exchange matters. With White to move, the recorded adequate g4 line continues cxb4 before Black can make the observed bxa3 counter. At the same piece placement with Black to move, bxa3 is the first returned and directly compared strong counter. Keeping the original pawn on g3 permanently is not necessary for every favourable line.",
+  "ownership_consequence": "Canonical turn/full FEN, entire history, occurrence and current work must remain distinct when preserving an idea across changed forecasts. Mixed default/explicit anchor normalization must not turn these two boards into one numerical scope.",
+  "claim_boundary": "The good cxb4 is a legal witnessed continuation in the earlier owned g4 comparison. No fresh best-choice certificate exists at this six-ply later White position; +483 belongs to the earlier g4 pair. The bad bxa3 value belongs to its own exact Black position. No arithmetic combines these values or attributes the whole root difference to this observation.",
+  "criteria_changed": false,
+  "new_engine_queries": 0,
+  "product_reports_submitted": 0,
+  "full_automatic_basic_success_increment": 0
+}

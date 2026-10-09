@@ -1,0 +1,48 @@
+{
+  "sealed_utc": "2026-10-09T05:31:39.895792+00:00",
+  "reviewed_driver_sha256": "40c6aa046ef4ffc3cf6d069470088927cf44824c7f9d556ea70bfa066dca8fa2",
+  "reviewed_driver_copy": "target\\functional-judgment-20261009\\fresh-native-two-case-driver-read-only-review\\reviewed-runner.py",
+  "temporal_audit_sha256": "92ff013a231e5bbabbcc8974a2b80019f6f9a9925bdda97ae3bc4606406048c8",
+  "new_engine_queries": 0,
+  "code_test_product_mutations": 0,
+  "temporal_check": {
+    "independent_legal_replay": true,
+    "complete_legal_inventory_equal_to_source": true,
+    "same_piece_placement": true,
+    "opposite_turn": true,
+    "different_whole_history_and_full_fen": true,
+    "good_current_source": "g4 +483 belongs to its earlier exact owned pair; cxb4 is the later witnessed legal next move, not a new best-choice value",
+    "bad_current_source": "bxa3 -790 belongs to its separate exact Black-to-move named comparison",
+    "scope_overclaim_found": false,
+    "wording_note": "Adequate means positively evaluated recorded finite continuation here, not solved all-defense utility or unique necessity. Root causation unchanged."
+  },
+  "driver_validated_by_reading": [
+    "Unmodified FullGameProbe constructs deadline from original request180000, root16/preview8",
+    "Normal21 direct bundle; no lease/policy/replay/value overlay",
+    "Only original request is submitted, no fixture report/proposal/input-line graft",
+    "Main source/class and normalUI source/bundle hashes checked pre/post",
+    "Existing attempt directories and actual-fresh-run overwrite are rejected",
+    "close() owns only RPC subprocesses; no process enumeration/user-process cleanup",
+    "Depth<=18 asserted before node dispatch; actual bridge retains normal depth/cap/ownership/proof checks"
+  ],
+  "research_driver_repairs_before_dispatch": [
+    {
+      "priority": 1,
+      "issue": "Engine freeze hashes only uci.mjs; dependent js/wasm/NNUE can change independently",
+      "small_fix": "Seal/check all six actual engine assets, both source input JSONs, product manifest and classpath hashes before/after. Do not change execution sources or profile."
+    },
+    {
+      "priority": 2,
+      "issue": "new_queries increments before normal decoder acceptance",
+      "small_fix": "Keep dispatch_attempts and count actual engine go from returned transcript. Decoder rejection with no execution means enginequeries0. Preserve full failures."
+    },
+    {
+      "priority": 2,
+      "issue": "After RPC timeout/EOF the next case can reuse a queue with an outstanding response",
+      "small_fix": "On an RPC timeout/process-end stop the remaining case or create a fresh owned process with separate failure/cost metadata. Do not consume late frames as another case."
+    }
+  ],
+  "other_failure_recording_note": "verify() in finally may fail before final manifest update; preserve identity-check errors in terminal attempt metadata as well as logs/journal. Existing history is not overwritten.",
+  "source_edits_by_reviewer": false,
+  "interpretation_or_success_criteria_modified": false
+}

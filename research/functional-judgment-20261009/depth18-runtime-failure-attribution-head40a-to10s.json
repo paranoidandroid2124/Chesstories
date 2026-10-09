@@ -1,0 +1,209 @@
+{
+  "scope": "Read-only attribution of current10r runtime six-suite RED, before narrowly authorized10s cap-reason repair. Criteria and original test assertions were not relaxed.",
+  "head_commit": "5a6168e75f027bb8a3de5c30dac7ba85888a0977",
+  "current_run": {
+    "path": "target/functional-judgment-20261009/depth18-runtime-flow-current10r/run.log",
+    "sha256": "0908a948bd1ceda6bb5b1f233eed303bddc303dd794ac40bba77793956bd5c0d",
+    "tests": 99,
+    "failures": 17
+  },
+  "baseline10p": {
+    "path": "target/functional-judgment-20261009/depth18-runtime-old10p-comparison/baseline-result.json",
+    "sha256": "55738b4822f4e8d80aa266963862ca31d12b2d8d3593aae2f6f2c346f4669a85",
+    "tests": 99,
+    "failures": 13,
+    "no_engines": true,
+    "no_oom": true
+  },
+  "head40a_identity": {
+    "path": "target/functional-judgment-20261009/depth18-runtime-old10p-comparison/head40a-identity-check.json",
+    "sha256": "cea9a1ed41d58636db15429794172f632e42ecabbe7903e6637741093fb87af6"
+  },
+  "head40a_test_result": {
+    "path": "target/functional-judgment-20261009/depth18-runtime-head40a-comparison/baseline-result.json",
+    "sha256": "f0147bc36d7b9fc337b0d43def77d5d40a29f32f784817fd74da1040e0dc0cf8",
+    "tests": 34,
+    "failures": 12,
+    "deterministic_first_failures_also_current": 11
+  },
+  "classification": [
+    {
+      "current_failure_number": 1,
+      "suite": "ProgressiveCommentaryJobTest",
+      "test": "contradictory shared moves ask their exact divergence before rechecking the root, without importing child scores",
+      "classification": "new_depth18_policy_expectation",
+      "scope": "Historical20/24 reports or renewed work above18 expected by old test. Preserve receipt depth and unknown/stopped state; replace only in-bound synthetic behavior separately."
+    },
+    {
+      "current_failure_number": 2,
+      "suite": "CommentaryInvestigationJobTest",
+      "test": "deeper evidence with the same reference rechecks actual and replaces its verdict and explanation",
+      "classification": "new_depth18_policy_expectation",
+      "scope": "Historical20/24 reports or renewed work above18 expected by old test. Preserve receipt depth and unknown/stopped state; replace only in-bound synthetic behavior separately."
+    },
+    {
+      "current_failure_number": 3,
+      "suite": "CommentaryInvestigationJobTest",
+      "test": "a deeper actual-reference pair cannot be replaced by a later shallower investigation",
+      "classification": "new_depth18_policy_expectation",
+      "scope": "Historical20/24 reports or renewed work above18 expected by old test. Preserve receipt depth and unknown/stopped state; replace only in-bound synthetic behavior separately."
+    },
+    {
+      "current_failure_number": 4,
+      "suite": "CommentaryInvestigationJobTest",
+      "test": "a same-reference best-choice pair refreshes with its runner-up and inherits the assessment depth",
+      "classification": "new_depth18_policy_expectation",
+      "scope": "Historical20/24 reports or renewed work above18 expected by old test. Preserve receipt depth and unknown/stopped state; replace only in-bound synthetic behavior separately."
+    },
+    {
+      "current_failure_number": 5,
+      "suite": "CommentaryInvestigationJobTest",
+      "test": "a submitted alias refreshes a bare automatic pair once and both owners reuse its answer",
+      "classification": "new_depth18_policy_expectation",
+      "scope": "Historical20/24 reports or renewed work above18 expected by old test. Preserve receipt depth and unknown/stopped state; replace only in-bound synthetic behavior separately."
+    },
+    {
+      "current_failure_number": 6,
+      "suite": "TargetResponseJobTest",
+      "test": "a returned reply's new capture exposure shares the parent budget before new root hypotheses",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 7,
+      "suite": "TargetResponseJobTest",
+      "test": "a top-three class omission requests the entire missing class and does not compare scores across searches",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 8,
+      "suite": "LineContinuationJobTest",
+      "test": "one observed king constraint discovers the recapture choice and supplements every omitted recapturer",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 9,
+      "suite": "LineContinuationJobTest",
+      "test": "the remaining slot surveys an unobserved support use at the exact recapture peer frontier",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 10,
+      "suite": "LineContinuationJobTest",
+      "test": "an omitted exposed capture does not consume the survey reserved for the other selected arm",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 11,
+      "suite": "LineContinuationJobTest",
+      "test": "an authored conditional exposure remains evidence without outranking a currently selected exposure",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 12,
+      "suite": "LineContinuationJobTest",
+      "test": "a supplied cooperative support use cannot outrank current replies and a child survey supersedes the old short prefix",
+      "classification": "inherited_first_agenda_assertion_with_unresolved_reference_survey_risk",
+      "scope": "Same assertion fails on held HEAD40a and10p. Shared two-work budget spends the next work at known actual-loss child; downstream reference survey/price assertions are not reached. Do not declare harmless or repair by rekeying old rows."
+    },
+    {
+      "current_failure_number": 13,
+      "suite": "LineContinuationJobTest",
+      "test": "a weak legal recovery proposal on the bad move does not starve the reference response and its actual recapture",
+      "classification": "inherited_first_agenda_assertion_with_unresolved_reference_survey_risk",
+      "scope": "Same assertion fails on held HEAD40a and10p. Shared two-work budget spends the next work at known actual-loss child; downstream reference survey/price assertions are not reached. Do not declare harmless or repair by rekeying old rows."
+    },
+    {
+      "current_failure_number": 14,
+      "suite": "LineContinuationJobTest",
+      "test": "a newly observed current Orton loss precedes the supplied deeper recovery",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 15,
+      "suite": "LineContinuationJobTest",
+      "test": "a supplied support extension is investigated when current premises are absent without washing its provenance",
+      "classification": "inherited_first_agenda_or_pool_comparator_expectation",
+      "scope": "Same first assertion fails on held HEAD40a and10p. Newer required full first-response survey or same-owned whole-pool leader precedes the old authored/deep prefix expectation. Downstream delivery/price assertions remain unverified because test stops here."
+    },
+    {
+      "current_failure_number": 16,
+      "suite": "LineContinuationJobTest",
+      "test": "an omitted eight-move route class uses one complete pool and never mixes the old representative score",
+      "classification": "inherited_runtime_timeout",
+      "scope": "Default30s failed on both held HEAD40a and10r. Separate explicit research120s copies pass unchanged semantic assertions, not a normal30s pass or engine success."
+    },
+    {
+      "current_failure_number": 17,
+      "suite": "FactForcedJobTest",
+      "test": "an explicit fact replays the unique reply only to its horizon and retains a local-cap partial",
+      "classification": "inherited_wrapper_expectation_with_real_stop_cause_loss",
+      "scope": "Wrapper stopped versus underlying Result.partial is intentional vocabulary boundary; lost local_expansion_limit on exact attempted owner is a genuine observability defect repaired separately in10s."
+    }
+  ],
+  "minimal_repair_order": [
+    {
+      "item": "Exact attempted fact local cap cause",
+      "decision": "Genuine missing reason; authorized common operation records each still-needed exact owner, preserving underlying partial/unknown result, grade, price ledger and no added engine work. Three baseline semantic REDs → repaired seven controls PASS.",
+      "plan": {
+        "path": "research/functional-judgment-20261009/forced-fact-cap-reason-repair-plan10s.json",
+        "sha256": "276af9364ac682803a77cbbe0cada58b3a7c031e6bc60f4da8e4424f53ede9fb"
+      },
+      "candidate_tests": {
+        "path": "target/functional-judgment-20261009/forced-fact-cap-reason10s/test-result-v4.json",
+        "sha256": "bb2795944f83c40a75ecf35b988be8973f59f2a80d55b5188c44c9159dd61021"
+      },
+      "applied_sources": {
+        "path": "target/functional-judgment-20261009/forced-fact-cap-reason10s/applied-source-seal.json",
+        "sha256": "753cdabfc33a00cc5ed6099d188d329abac2bcd25fccb47fc5d259a69c7507ca"
+      }
+    },
+    {
+      "item": "Depth18 stale test expectations",
+      "decision": "Separate functional agent updates retain historical higher-depth receipts explicitly and issue only in-bound work; they are not evidence that old20/24 data was answered at18."
+    },
+    {
+      "item": "Top-three missing class comparison",
+      "decision": "Current and HEAD query the complete missing capture class together with the actual returned full-pool leader in one owned comparison. Preserve this anti-cross-search-score operation; revise regression transport to the actual issued descriptor and assert both new rows/price, not old single capture equality."
+    },
+    {
+      "item": "First full response pools versus deep authored prefixes",
+      "decision": "Do not feed old deep-prefix reports into new root-child surveys. A meaningful repair must progress the actual current descriptor sequence while retaining original recapture/support/price endpoints. No changed assertion is yet claimed as downstream success."
+    },
+    {
+      "item": "Reference-arm survey starvation",
+      "decision": "Keep the two specific failures open as budget fairness/required-price risk; baseline attribution only proves they predate this goal, not that the current product answers the reference."
+    },
+    {
+      "item": "Slow omitted route",
+      "decision": "One complete nine-move pool and exact same-owned values are proven by explicit research-only120s copies. Normal30s test remains timeout; no main policy, user budget or engine limits changed."
+    }
+  ],
+  "normal_vs_research_timeout": {
+    "default30s": {
+      "head40a_log_sha256": "4ce32fa3234d995f4c520e410981636f99fbf09a829ef2fe96590a6044754d4a",
+      "current10r_log_sha256": "2af061bd20da6ad297c70646d7ad808804c0902b4c9c4a5808524d2531b95134",
+      "result": "both timeout"
+    },
+    "explicit_research120s": {
+      "head40a_seconds": 68.535,
+      "head40a_log_sha256": "5a82b22b7f8087c14e7f5779dcfee6fe3c44ed02c0850d47829fd43100d6e248",
+      "current10r_seconds": 77.041,
+      "current10r_log_sha256": "2a5d5f239d0b68448cef7feec12562ce2439261c13689eca10b383dc42e6dbc5",
+      "result": "both1/1PASS; only research test timeout/class name changed; original rows, descriptors, assertions unchanged",
+      "limits": "Does not prove ordinary30s runtime compliance, engine completion, performance causality, or human utility."
+    }
+  },
+  "limitations": [
+    "Same first assertion inherited does not establish every downstream assertion still passes.",
+    "Fixed old human0/4 and eight-source0/8 criteria/readings unchanged.",
+    "No new engine search or product score/value graft occurred in this audit.",
+    "Normal150/180-second product performance must be measured separately by parent actual fresh requests."
+  ]
+}

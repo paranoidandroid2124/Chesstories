@@ -1,0 +1,89 @@
+{
+  "recorded_utc": "2026-10-09T06:39:39.685276+00:00",
+  "bounded_medium_goal_started_utc": "2026-10-08T16:19:15+00:00",
+  "maximum_hours": 15,
+  "deadline_utc": "2026-10-09T07:19:15+00:00",
+  "product_commit": "ea0232a849c93b40f558780a08f0b5a40f830ab4",
+  "branch": "codex/functional-choice-value",
+  "status": "partial; original useful-choice/judgment success requirement remains unmet",
+  "no_goal_complete_claim": true,
+  "fixed_criteria_not_relaxed": true,
+  "success_requirements": [
+    {
+      "criterion": "At least one new automatically delivered useful-choice/judgment connection beyond the old conditional mechanism, validated against fixed criteria.",
+      "state": "not_established_under_fixed_full_minimum",
+      "evidence": "fresh two-case0/2, native26 NB1 original judgment still partial, independent source8 full0/8"
+    },
+    {
+      "criterion": "A changed adequate reply must yield its own checked useful route or explicit refutation/unknown; no borrowed child value.",
+      "state": "local_common_path_strengthened; original full plan judgment incomplete",
+      "evidence": "same canonical scope/current owned pool+pair; new response own value/price or refutation/unknown; no transplanted research receipt"
+    },
+    {
+      "criterion": "Important observed costs of the selected function remain represented.",
+      "state": "passed_in_targeted_reviewed_scope",
+      "evidence": "runtime210 GREEN; native26 preserves original unique capture7 and currently selected capture/check/promote paths"
+    },
+    {
+      "criterion": "Existing function and current-reply regressions preserve behavior.",
+      "state": "targeted_green; whole_repository_not_claimed",
+      "evidence": "runtime210/UI72;11 deterministic inherited first failures retained and ordinary30s timeout retained"
+    }
+  ],
+  "depth_policy": {
+    "maximum_new_nominal_requested_depth": 18,
+    "producer_and_pending_UI_enforced": true,
+    "need_above18_retained_unknown_not_downgraded": true,
+    "historical_depths_not_relabelled": true,
+    "selective_extension_and_PV_length_are_not_nominal_requested_depth": true
+  },
+  "actual_execution_scopes": {
+    "fresh_normal_two_cases_queries": 15,
+    "fresh_normal_source8_queries": 49,
+    "separate_depth18_research_queries": 13,
+    "separate_same_failed_nominal16_completions": 3,
+    "new_engine_queries_for_this_record": 0
+  },
+  "human_reading": {
+    "fresh_normal_two_full": 0,
+    "fresh_normal_two_total": 2,
+    "original_four_full": 0,
+    "original_four_total": 4,
+    "source8_parent_full": 0,
+    "source8_independent_full": 0,
+    "source8_total": 8,
+    "ordinary_purpose_can_suffice": true,
+    "not_blind_holdout": true,
+    "public_endpoint_exposure_disclosed": true
+  },
+  "next_finite_work": [
+    {
+      "priority": 1,
+      "problem": "needed comparisons stop within depth16 despite ample total case budget",
+      "boundary": "finish named pair and adequate reply survey at a fixed depth at most18; actual H05 three nominal16 studies completed in20.750s raw engine/31.858s session; retain original failures and new identities",
+      "acceptance": "normal policy can complete required owned comparisons; do not count job finished or budget raised as meaning success"
+    },
+    {
+      "priority": 2,
+      "problem": "parent/child revalidation automatically escalates depth/current epoch",
+      "boundary": "design a finite exact-history/current-owner dependency and retry allowance tied to the decision chain; distance k may exceed1; persistent disagreement ends unknown",
+      "acceptance": "no19 query, no stale child replacing a new parent, no borrowed scores; important factual functions/prices survive honest unknown"
+    },
+    {
+      "priority": 3,
+      "problem": "large repeated public projection and serialization consumes wall time",
+      "boundary": "measure reducer/projection/writer/transport separately; retain complete private lineage and a selected answer dependency closure with required parent/current sources and all prices",
+      "acceptance": "same original grade/selected meaning/price/proof acceptance and foreign-owner rejection; no generic age, FEN or row-count pruning"
+    },
+    {
+      "priority": 4,
+      "problem": "complete searches still produce scattered purposes and no original move judgment",
+      "boundary": "use ordinary short purpose or consequential comparison according to the fixed source criteria; organize current useful function+response+necessary price; do not invent cause of small grade difference",
+      "acceptance": "at least one new automatic basic answer passes the original human minimum; prove transfer to changed relevant reply/negative controls separately from test count"
+    }
+  ],
+  "remaining_unimplemented_design_path": "research/functional-judgment-20261009/parent-child-horizon-and-finite-conflict-design-audit10r.json",
+  "all_fresh_engine_processes_closed": true,
+  "source_hold_after_final10s": true,
+  "scope_warning": "This closes the authorized implementation/evidence pass, not the unsolved original numerical-causal explanation. It does not silently relax the first success requirement."
+}

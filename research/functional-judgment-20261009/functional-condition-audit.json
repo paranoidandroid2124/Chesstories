@@ -1,0 +1,617 @@
+{
+  "schema_version": "functional-judgment.condition-audit.v1",
+  "reviewer": "/root/functional_condition_audit",
+  "scope": "Read-only audit of the sealed meaningv40a model and existing NB1/H05 evidence. This file is the only new artifact written by this reviewer. No product, test, old criterion, old artifact, compiler, engine or private runtime replay was changed or run.",
+  "workspace": "C:/Users/양자/.codex/worktrees/functional-choice-value/Chesstories",
+  "baseline": {
+    "manifest": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/relationship-delivery-20261004/main-manifest-meaningv40a.json",
+    "manifest_sha256": "c452183136b6a9b4c0d5baf889c0b5be70e464d491239e470f3eacb1e0a5af40",
+    "new_workspace_source_count_verified": 74,
+    "new_workspace_source_hash_mismatches": 0,
+    "class_verification": "Parent previously verified 1824 copied class hashes. This reviewer independently rechecked all 74 source hashes against the sealed manifest; it did not independently run or rehash the copied classes.",
+    "reviewed_source_sha256": {
+      "CommentaryDiscovery.scala": "3652116d6574fecd4e7c27e3d54ca022e2739f6793bb2ea413f1eb0de7b1a511",
+      "CommentaryIdea.scala": "2a34c73aa6dc0a6317e01912f49303cf627b017ed95495135520c0cf5f5e0ba4",
+      "FunctionalReplyReading.scala": "3ca0a350603293e38ece36e4327000a52f2764180d53ba8e63b72213f0fd292b",
+      "RootSubjectComparison.scala": "1730a58e091f15fa93478fd702ace5951b0560290a3d1e6f82d25dd368ebd3c2",
+      "MoveWorkProjection.scala": "6e0ea342b844a1633b32afb710a7a5dc89970e62211e24d7092f332d817d9629",
+      "RuntimeProtocol.scala": "5b2678eca835a226817a045809448a80c1ec829ac3749b70e9af9d81539fb6cd",
+      "CommentaryJobReducer.scala": "438e15481ebca77c1e889140bd8fc6dd1b7ea5d748b0f7ab28d0bc23b2d65a37",
+      "CommentaryAnswer.scala": "4a2cc5b71f0336d0f981abfc34c0be2c6fad1c749e5ee8a682775122fe76c246",
+      "CommentaryEnglish.scala": "4d2ea5377bf500b2c7886363e7a651459396607567142e8f914812c7d973453e",
+      "BasicPurposeReading.scala": "0723b722d0f33cbc42eec6616bfaadee145fbac9d605c21dc5026ed21c63d120",
+      "TargetResponseInvestigation.scala": "7a52ecbd2084720ea8b9beda56836d59a19dc42b2d7d8a76780a14a75d5dc819",
+      "CommentaryProposal.scala": "5754bdf78ec99baaa1f633c44f0308bf7216ca9f4154d2e2e1709c8261a1252a",
+      "PrincipalVariationComparison.scala": "05aca472f02fce53a619e2c531977aaf28d9b3d202831342add172553f9a3c2f"
+    }
+  },
+  "unchanged_outcome_boundary": {
+    "four_original_full_utility_cases": "0/4; this audit does not rescore NC4/NB1/A5/EXF5.",
+    "new_NB1_local_mechanism": "The matched conditional Rd6/Qxd6/Nxd6 mechanism is now delivered. This is a genuine repaired factual mechanism, not proof of the original move's numerical cause.",
+    "original35_fixed34_prices": "Prior result remains 22 changed forecasts, 9 same-history omitted, 3 core. Those scopes are not relabelled universal price preservation.",
+    "independent_H05_research": "Completed h128/depth24 research receipts are separate from product16 receipts and were not injected into product evidence. Finite inventories and legal PV witnesses are not full minimax proofs."
+  },
+  "not_remaining_defects": [
+    {
+      "old_failure": "Discovery-only quiet paths could not supply the same original captured-friendly material event.",
+      "current_fix": "FunctionalReplyReading.scala:155 uses paths.continuationReadingFor(path); the exact owned-path accessor was added without widening readAll or the scheduling investigationPaths scope.",
+      "status": "Fixed; not reported here as a current gate failure."
+    },
+    {
+      "old_failure": "reserve_current was tied to the original root's entire returned PV rather than the exact descendant that established the wait.",
+      "current_fix": "CommentaryDiscovery.scala:1437-1462 resolves current source from the exact accepted source history/decision; 1555-1559 binds reserve_current to reserve_source when applicable. RootSubjectComparison.scala:134-144 validates the owned decision prefix, not the entire old future realization.",
+      "status": "Fixed in the preceding goal; current H05 growth must not be credited to fixing it again."
+    },
+    {
+      "old_failure": "Conditional board proofs lost ownership solely because the current primary numeric root pair or PV suffix changed.",
+      "current_fix": "FunctionalReplyReading.RootOwner and function_live Declared(root) separate canonical board proof ownership from optional numerical receipt ownership. Prepared proof prefixes are bounded while full source certification remains exact.",
+      "status": "Fixed within its existing factual scope. Adding a utility receipt must preserve this separation."
+    },
+    {
+      "old_failure": "Broad physical bundles, exact repeated statements, intrinsic captures/checks and selected first enemy replies lost boundaries or prices during final delivery.",
+      "current_fix": "Physical Sections, final typed statement dedup/whole-Unit packing, intrinsic-action closure and explicit selected completion-source price whitelist were independently repaired and tested in the preceding goal.",
+      "status": "Not re-reported as the present utility gap; full general importance selection still remains open."
+    }
+  ],
+  "finding_1": {
+    "title": "A board-owned conditional reply has no owned resource-use value inquiry",
+    "classification": "Confirmed missing contract/candidate stage; existing fact-only behavior is truthful, not an invented numerical explanation.",
+    "call_path": [
+      "CommentaryDiscovery.scala:955-996 emitFunction builds function_before/root/live/effect/option facts, function_context and only a function_root CompareMoves at prefix Nil. Head requirement is function_context. Its own question explicitly separates resource strength and whole evaluation.",
+      "FunctionalReplyReading.scala:16-22 RootOwner/Proof carry root comparison metadata, condition, fixed declared witnesses, effect/action and optional price; no resource-use value question or current opponent-resistance receipt is represented.",
+      "FunctionalReplyReading.scala:34-69 read admits supported board context and generated-arm ownership. Numerical function_root answer is optional and remains metadata, not a local utility proof.",
+      "RuntimeProtocol.scala:465,503-506 passes these proofs into the primary root context when their canonical reference root is present.",
+      "MoveWorkProjection.scala:3017-3041 runs withRootActions, existing typed readers, FunctionalReplyReading.withAnswer, first-target reader, completion and realization.",
+      "FunctionalReplyReading.scala:231-282 validates the factual carrier, excludes redundant recapturers, groups by (condition,effect.kind), chooses one shorter proof and delivers functional_response. There is no completed local use-value obligation at that selection point.",
+      "CommentaryAnswer.scala:248-258 explicitly defines LegalReplyOption as a legal option, not an observed engine choice or a claim about its value/root score."
+    ],
+    "exact_NB1_evidence": {
+      "source": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/decision-timing-20261006/mcFinalControlled37/final-snapshots.jsonl.gz",
+      "case": "FC-SG45-NB1",
+      "reading": "The reviewer read the actual exported final snapshot, not only an earlier approximate bare-answer diagnostic. Subsequent controlled37-to39 and39-to40a records retain this book body and numerical result.",
+      "generated_function_entry_count": 4,
+      "only_compare_moves_id_per_function_entry": "function_root",
+      "function_context_and_live": "All four supported.",
+      "quiet_recapture_function_roots": [
+        "d2c4",
+        "d2b1"
+      ],
+      "short_conditional_reference": [
+        "d2c4",
+        "e8f6",
+        "d1d6",
+        "c6d6"
+      ],
+      "short_conditional_alternative": [
+        "d2b1",
+        "e8f6",
+        "d1d6",
+        "c6d6"
+      ],
+      "long_reference": [
+        "d2c4",
+        "e8f6",
+        "a1a7",
+        "d8a8",
+        "d1d6",
+        "c6d6"
+      ],
+      "actual_owned_first_search": {
+        "work_id": "work:4",
+        "prefix": [
+          "d2b1"
+        ],
+        "depth": 16,
+        "profile": "sf18-smallnet-t2-h16-v1",
+        "unrestricted_multi_pv": 3,
+        "returned_white_cp": {
+          "e8c7": 119,
+          "e8d6": 140,
+          "d8c8": 148
+        }
+      },
+      "actual_owned_followup": {
+        "work_id": "work:5",
+        "prefix": [
+          "d2b1"
+        ],
+        "depth": 16,
+        "restricted_pair": [
+          "e8c7",
+          "c6d6"
+        ],
+        "returned_white_cp": {
+          "e8c7": 119,
+          "c6d6": 490
+        },
+        "limit": "This tests Black's first response at the Nb1 child. It does not value Rd6 versus Qd2 or the later Nc3 realization."
+      },
+      "uncompleted_target_questions": "The two original Pe4 target-response inquiries remain deferred with investigation_limit. Their capture-vs-decline scope is also distinct from the functional resource-use question.",
+      "basic_first_observable_failure": "The conditional Nef6/Rd6 legal-price proof is now delivered, but the useful alternative Nb1/Nc7/Qd2/Nc3 route and the original numerical cause remain unorganized. The first missing utility layer is an owned inquiry, before renderer wording.",
+      "root_numeric_boundary": "Original Nb1 inaccuracy delta -4.629713321256702pp is retained. The new local factual proof is not its verified cause. Work3 root pair readings are118/172cp; their occurrence/profile/receipt ownership must never be substituted for the future utility question."
+    },
+    "why_strength_must_precede_the_recapture": "The relevant own decision is choosing the resource-use move Rd6 before the opponent accepts or declines the offered rook. Comparing Nxd6 with another move after Black has already captured the rook answers a different and often elementary recovery question.",
+    "first_failure_precision": "Confirmed absence of an explicit utility requirement in actual supported entries and the typed model. No claim that an existing completed utility requirement was rejected, that its numerical answer is false, or that one uncompleted target question is the sole cause of the whole utility failure."
+  },
+  "finding_2": {
+    "title": "Existing already-legal-plan comparisons stop at scheduling rather than a typed central value reader",
+    "classification": "Confirmed connected-code coverage gap; reuse candidate, not a proposal to add another named motif.",
+    "existing_shape": [
+      "CommentaryDiscovery.scala:1290-1372 C-current-support-duty already certifies the same pawn plan legal after a common opponent reply in both roots, and asks duty_current_choice/duty_other_choice at their separate two-ply prefixes.",
+      "CommentaryIdea.scala:90-110 exposes CurrentDuty with separately owned actual/alternative CompareMoves and optional answers.",
+      "CommentaryJobReducer.scala:1879-1881 adds those comparisons to dependency scheduling."
+    ],
+    "missing_consumer": [
+      "CommentaryIdea.scala:870 only creates a Member from sacrifice_loss_* or reference_action* observations. duty_* observations cannot enter that generic idea reader as written.",
+      "RuntimeProtocol.scala:457-510 has typed contexts for reply-space, reserve entry/hold/timing/response, reply-function and first-target. It has no CurrentDuty context/reader.",
+      "CommentaryIdea.scala:464-490 mechanismWitness accepts a matching legal_capture contrast or legal/illegal action contrast on the same intervening moves. Two already-legal actions with different costs/value do not create this Mechanism."
+    ],
+    "safe_reuse": "Reuse CompareMoves, exact owned child searches and the same-position current-plan question shape. Do not rename duty_* facts to reference_action* to pass an unrelated mechanism gate, broaden generic protection, or add an NB1-specific duty producer.",
+    "bound": "This audit did not execute every CurrentDuty case and does not claim all such existing comparisons fail delivery. They may remain visible as independent numerical questions. The missing part is a typed functional-use value synthesis tied to a validated board condition and current defense."
+  },
+  "finding_3": {
+    "title": "Reserve value and realization remain narrowly tied to one square and restricted response shapes",
+    "classification": "Concrete model-range/contract gap under the fixed H05 criteria; not a reappearance of the repaired source-scope bug.",
+    "admission_and_value_gates": [
+      "CommentaryDiscovery.scala:1551-1612 creates reserve-entry from one observed king destination, stationary original kings during pawn waits, a named opposing king retreat that releases that square, and a legal pawn reply that keeps it guarded.",
+      "CommentaryIdea.scala:203-257 requires supported reserve_context including reserve_current_entry on the declared completed branch. The root answer must be better/Separated; optionTest must use branch.init and branch.last.",
+      "RootSubjectComparison.scala:624-635 asks reserve_entry_value only after reserveReply(counter) is recognized and the current returned next move differs from the named entry. This can prevent even asking the value question when an otherwise useful counter has a different unmodelled plan.",
+      "RootSubjectComparison.scala:682-695 treats an entry already present in the returned waited PV differently from an off-PV option: the latter must own a separate comparable entry-value answer, exact line/occurrence identities and source history. This is an observed-realization versus explicitly compared-option distinction, not a general utility contract.",
+      "RootSubjectComparison.scala:547-576 lastPawnWaitEntry requires quiet/no-check, king/pawn-only position, no legal enemy pawn reply, one uniquely identified square that every legal enemy king reply releases.",
+      "RootSubjectComparison.scala:616 reserveReply recognizes only PassedPawn or LastPawnWait.",
+      "CommentaryAnswer.scala:192-220 stores those response shapes and one fixed entry square. RootSubjectComparison.scala:877-882 groups direct realized functions by root owner, pawn, kings and the same square."
+    ],
+    "counterexamples_from_completed_separate_research": [
+      {
+        "input": "Original Ke3 first-defense ALL8",
+        "evidence": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/research/meaning-conditions-20261008/h05-original-Ke3-all8-completed-human-reading-addendum.json",
+        "sha256": "9feb7e7785c505db7a195faa5014c623832390dfdcdd2fa07eae62b9bf4bc14f",
+        "meaning": "Leading f6/Ke6 are nearly tied at881/890cp. The Ke6 conversion uses Kd2 and queenside exchanges, with no White f4/f5 visit. A fixed f4/f5 entry is not a necessary condition of the original bounded root result.",
+        "price": "Original c3 is lost in the Ke6 route; original a3/b2 identities move through a distinct queenside structure. Equal scores do not merge costs or actors."
+      },
+      {
+        "input": "Reached quiet13-ply g4 ALL5",
+        "evidence": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/research/meaning-conditions-20261008/h05-refreshed-quiet-g4-all5-human-reading-addendum.json",
+        "sha256": "9433e3f1198a214e6c021b771ce783a571baf398d2541cd42b5538e9f2164d5b",
+        "meaning": "The five complete immediate defenses contain four king moves AND f5. A all-replies-must-be-king gate cannot represent this useful waiting position. The f5 branch instead uses exf5+ and later passed-pawn support.",
+        "price": "Four king branches lose original e4, and original g3 may be lost as a pawn or its promoted queen. The f5 branch retains/promotes those original pawns. These are separate realizations and prices.",
+        "important_negative": "Black Kf5 was already illegal from White Kf4/e4 before g4. New g-pawn control cannot be presented as the cause of a newly lost legal defense."
+      },
+      {
+        "input": "Separate reached checking17-ply g4+ ALL5",
+        "meaning": "All five king replies have successful finite conversion witnesses, but immediate Kf4 is illegal after Ke5/Kg5 and later detours reach it. Original e4 has already disappeared. This is one alternative realization, not a universal required checking-g4 event.",
+        "boundary": "The checking input and quiet input own different histories/inventories. Their facts, costs and numeric receipts are not interchangeable."
+      }
+    ],
+    "first_failure_precision": "The quoted pure last-wait helper statically rejects the quiet ALL5 input at its legal-enemy-pawn-reply predicate and the checking input at its no-check predicate. This is not an executed product replay with those research receipts. No claim that every current H05 generator is rejected at that same line. Existing bounded H05 product entry/price success remains preserved.",
+    "root_vs_local": "The existing same-f6 Kf3 versus immediate g4 comparison answers the useful timing question at one exact history. Original all8 root outcomes supply a separate bounded defense inventory. Neither silently becomes product16 evidence or proves every later defensive node."
+  },
+  "minimal_common_contract_candidate": {
+    "principle": "Keep three independent claims: a canonical board-owned conditional function; an owned value question at the decision to use that resource; and reply-specific current realizations of the same bounded question. A fact remains true when usefulness is unknown or a value claim is refuted.",
+    "resource_use_location": {
+      "quiet_recapture": "For proof.reference ending in friendly arrival then enemy capture, locate the exact original friendly-arrival row at reference.size-2 and its decision prefix reference.take(reference.size-2). Do not select the subsequent provider recapture as the value decision.",
+      "other_modes": "Derive a resource-use row only from the existing typed action/witness structure and exact owned board. If no unambiguous physical use decision exists, retain a fact-only proof and no utility claim; do not invent a use from prose, SAN or scenario ID."
+    },
+    "utility_requirements": [
+      "An exact current opponent response search and chosen representative/leading response group, bound to root occurrence, original root piece/history, current depth/profile/work/key and child position.",
+      "An own resource-use move versus the returned other own plan at the exact same decision history. Select current returned own choices before falling back to a legal hypothesis; hypothetical paths contribute no evaluation.",
+      "After selecting the resource-use move, an owned opponent comparison between the named acceptance/capture and the current strongest returned refusal. If several tied/close relevant replies implement different plans, retain their separate response realizations; one convenient capture does not exhaust resistance.",
+      "Each result retains its own AnsweredComparison, full line/occurrence identities and actor/victim transition ownership. Numeric freshness/conflict/quality bands are unchanged.",
+      "Supported board FactGroup stays separate from the value group's answered/current requirements. Optional utility absent, pending, refuted or stale must not erase a supported LegalReplyOption.",
+      "A root-judgment link requires the original numerical root owner AND bounded current resistance evidence for the relevant root alternatives. An off-pair hypothetical proof or one late local answer cannot explain the whole original delta.",
+      "Two roots can preserve value through different own moves after different adequate opponent replies. Do not impose the factual proof's identical intervening tail on value/plan survival; keep identical-tail replay only where it proves that specific legal contrast.",
+      "Same-role or promoted physical identities, current material account, actual mandatory capture/check/evasion and losses of used original support pieces remain certified and scoped to each displayed realization. No computed price or new future episode is allowed to seed completionSources."
+    ],
+    "existing_integration_seams": [
+      "CommentaryDiscovery.emitFunction can attach optional CompareMoves/value context to its existing factual proposal rather than create another motif producer. Existing supported facts remain the factual head.",
+      "FunctionalReplyReading.read can expose an additional optional utility reading alongside Proof, without converting RootOwner.answer into a local value receipt.",
+      "Reducer existing owned response searches/CompareMoves scheduling can complete the explicit use/refusal obligations and record current unknown/refuted rather than stop as soon as a legal resource is found.",
+      "RuntimeProtocol replyFunction context can carry both claims; withAnswer selects a value-qualified synthesis only when its owned utility contract is satisfied, otherwise retains a bounded conditional fact or current purpose with an explicit unresolved judgment scope.",
+      "Existing CommentaryIdea comparison/reading machinery may render qualified local results, but mechanismWitness's legal/illegal gate must not be globally weakened and branch-level Key must not be repurposed as an unqualified strategic theorem."
+    ],
+    "selection_boundary": "Factual specificity and shortest declared proof are not importance/utility rankings. A new resource-use value question should be selected because it answers the actual current judgment question under adequate resistance, not because it has more captures, more relations, a higher motif priority or a shorter sentence. BasicPurposeReading.scala:30-35 currently refuses bare-purpose simplification for an inaccuracy/mistake; preserve this protection and represent an unresolved root cause honestly rather than hiding it.",
+    "not_proposed": [
+      "No new SAN/FEN/case-number branch.",
+      "No global protection weakening.",
+      "No root evaluation changes or borrowed research score.",
+      "No all-current-legal-moves considered useful rule.",
+      "No full lifetime event list as function identity.",
+      "No larger8/80/4000 delivery limits."
+    ]
+  },
+  "meaningful_tests_to_seal_before_implementation": [
+    {
+      "case": "NB1 supported conditional Rd6 but adequate Nc7 and another useful plan",
+      "positive": "Board proof remains valid and factual. An explicit use/refusal investigation is at the resource-arrival decision. The actual Qd2/Nc3 route remains a separate useful realization when its own value evidence supports it.",
+      "negative": "Do not call Nb1 generally bad or root delta explained solely because Nb1/Nef6/Rd6 lacks Nxd6. Unknown or refuted Rd6 utility does not erase the legal conditional proof."
+    },
+    {
+      "case": "Strong refusal challenges a convenient acceptance",
+      "positive": "Complete the unrestricted current refusal pool and own chosen pair; preserve exact named capture cost.",
+      "negative": "No central usable/safe/value claim from a cooperative capture-only path, a weaker returned refusal, stale leader or a stopped comparison."
+    },
+    {
+      "case": "Two already-legal uses differ in cost or utility",
+      "positive": "An explicit owned same-position resource-use comparison can support a scoped value result even though both legal_move facts are legal.",
+      "negative": "A root score gap or two different Declared histories cannot fill a missing local answer. Close/equal results do not manufacture a sole better plan."
+    },
+    {
+      "case": "PV refresh changes realization, not the supported question",
+      "positive": "The same canonical root condition and decision owner can retain the functional question when a newly owned current reply selects a different legal continuation, with its own prices.",
+      "negative": "Old specific gain/capture/check/entry facts are not copied into the new realization. A foreign prefix, different original actor, different board, stale numeric receipt or changed root condition rejects that claim."
+    },
+    {
+      "case": "H05 quiet pawn response plus king replies",
+      "positive": "The king and pawn response classes can implement distinct useful plans under the same bounded timing question. Their e4/g3 identities and promotion/capture prices remain different.",
+      "negative": "Do not require every reply to release one fixed square or classify Kf5's pre-existing illegality as newly caused by g4. No borrowed checking-g4 all5 answer."
+    },
+    {
+      "case": "Numerical root claim admission",
+      "positive": "Only the original/current root receipt and exact owned local resistance/value receipts can support a bounded connection to the root judgment.",
+      "negative": "Local Kf3/g4 research128 values, a different primary pair, current child value or completed scheduling report cannot replace product16's original evaluation, claim a sole root cause or promote original0/4."
+    },
+    {
+      "case": "Cost closure after variable realization",
+      "positive": "Each selected physical Section closes its own captured root mover, actual checks/first replies, used support losses and actual promoted-piece costs.",
+      "negative": "Never seed completion from generated price statements, new future episodes or a cost from a different response/actor. Unknown unclosed costs defer that value explanation rather than delete facts or enlarge limits."
+    }
+  ],
+  "recommended_next_evidence_step": "Before changing selection, seal the exact NB1 current-response resource-use/refusal questions and the acceptance scope, finish those owned comparisons with the existing requested allowance, then independently read the resulting role/value explanation. Their completion may show Rd6 has only a conditional tactical role and that Nb1's alternative route is sensible; this is a useful result, not a reason to force a positive superiority story. Measure time/cost after completing the necessary comparison, keeping probe completion, value explanation and root-cause explanation separate.",
+  "review_limits": [
+    "No product compiler/test/engine was executed by this reviewer in this turn.",
+    "No current runtime overlay or approximate reconstruction was used to assert a new actual first false validator gate.",
+    "NB1 facts/query absence were read from its actual exported final snapshot; controlled outcome preservation comes from existing sealed records.",
+    "H05 helper rejection is a static contract analysis against independently sealed research inputs, not product delivery evidence.",
+    "The common utility contract above is an implementation candidate, not completed behavior or proof that all chess value differences are explained."
+  ],
+  "investigation_selection_addendum": {
+    "recorded_at_utc": "2026-10-08T17:00:06.055369+00:00",
+    "prior_audit_sha256": "5cb781920b9bb721ca89484f1f375ab0165686fc47aee4ef18a3ff37b284706d",
+    "status": "Implementation proposal only. No product edits, new tests, compilers, engines or runtime replays were performed by this reviewer.",
+    "main_conclusion": "Use a small common local-choice contract built from existing CompareMoves and exact owned child searches. Keep conditional board truth independent. Certify why the challenger was selected from a whole legal scope, and obtain both numerical values from one paired work. A local option does not become an explanation of the original root judgment merely because these two local stages finish.",
+    "confirmed_scheduler_gaps": [
+      {
+        "gate": "A CompareMoves appended only to requirements is not a pending generated decision.",
+        "source": [
+          "CommentaryProposal.scala:156-177",
+          "FunctionalReplyReading.scala:66-67",
+          "CommentaryDiscovery.scala:989-996"
+        ],
+        "evidence": "neededRequirementIds visits head comparisons only after their non-comparison heads are supported. The current C-reply-function arm deliberately has exactly [function_context]. Its reader requires that original fact-only arm to remain present.",
+        "minimal_change": "Retain the original factual arm [function_context]. Add a separate generated utility arm with [function_context, exact resource-decision premises, function_resource_value] and a separate reply arm with its own exact current premises plus function_resource_reply. Use emit.additionalHeads rather than replacing the fact-only head. Do not put facts read from the same value answer into its prerequisite context."
+      },
+      {
+        "gate": "Existing proposal answer refresh reads the literal named pair; it does not substitute the class leader into an arbitrary seed requirement.",
+        "source": [
+          "CommentaryJobReducer.scala:1604-1648",
+          "CommentaryDiscovery.scala:150-161",
+          "CommentaryDiscovery.scala:209-214"
+        ],
+        "evidence": "refreshProposalReadings searches exact prefix and requested reference/alternative moves. Discovery requires each semantic ID to retain the exact previous requirement body. A value seed cannot be silently changed to a newly returned leader under the same requirement ID.",
+        "minimal_change": "Derive a new named-pair requirement from the selected survey leader, with an identity containing the exact decision prefix, resource, challenger and survey selection origin; retain the earlier inquiry and receipt. Prefer the existing exact prefix/pair work sharing mechanism over mutating old requirements. The stable functional question key may remain physical, as TargetResponse question IDs do, but its numerical pair realization must keep a distinct immutable owner."
+      },
+      {
+        "gate": "A whole legal-class search can omit the named resource from its finite returned top-N set.",
+        "source": [
+          "TargetResponseInvestigation.scala:57-70",
+          "CommentaryJobReducer.scala:2052-2082",
+          "RootSubjectComparison.scala:399-418",
+          "RootSubjectComparison.scala:640-650"
+        ],
+        "evidence": "Search.representativePair requires coversClass AND pathsByMove(referenceMove). Reserve readers use all legal king or pawn classes and one same-work representative pair; this is safe when both lines returned, but cannot complete a resource absent from returned top3.",
+        "minimal_change": "Reuse the unrestricted/class survey if it returned both the resource and strongest other member; otherwise issue an exact [resource, strongest other] pair. The pair does not certify the whole class. Preserve separate survey-selection ownership and paired-value ownership."
+      },
+      {
+        "gate": "The existing generic survey-first proposal path is first-ply-only and priority-tuple-specific.",
+        "source": [
+          "CommentaryJobReducer.scala:1970-1984",
+          "CommentaryJobReducer.scala:1740-1777",
+          "CommentaryJobReducer.scala:1879-1890",
+          "CommentaryJobReducer.scala:1939-1958"
+        ],
+        "evidence": "issueProposalChoice surveys only decision==(0,2), prefix size1, no previous unrestricted survey and exploration count<3. A resource-use decision such as Nb1/Nc7/Rd6 is a deeper owned child and will not enter that survey path merely by naming a new CompareMoves.",
+        "minimal_change": "Select an exact typed local-choice dependency independently of producer name. Let the same survey-versus-pair helper operate at that task's certified decision anchor, then let existing issueProposalComparison enforce history, actor legality, profile, depth and deadline. Do not assign a fake first-ply anchor or hard-code an existing priority tuple."
+      },
+      {
+        "gate": "Adding pending utility heads alone does not make an already selected functional question finish after the generic exploration cap.",
+        "source": [
+          "CommentaryJobReducer.scala:2847-2888"
+        ],
+        "evidence": "The post-two-exploration completion branch links existing first-reply/reserve/direct-entry dependencies. Its only explicit over-four option is reserve_entry_value, and completed reserve can end investigation before another selected local functional dependency is checked.",
+        "minimal_change": "Include only the exact current selected local-choice task's survey/pair/reply obligations in this existing completion dependency set. Preserve one attempt per exact scope, the current finite-work retry policy, the absolute deadline and explicit stopped/deferred reasons. Do not increase the global topic cap or treat completion count as meaning success. An already completed reserve should not claim an unrelated functional question has been completed."
+      }
+    ],
+    "minimal_local_choice_contract": {
+      "internal_fields": "Canonical physical root owner and root condition; exact decision prefix/occurrences/positions; resource actor and UCI; legally exhaustive alternative scope; optional certified representative selection; optional same-work paired Answer. A reply realization is another local choice at the exact prefix after the resource. Field names are suggestions for a private model, not an instruction to add a new public schema.",
+      "no_new_requirement_type": "Both numerical stages use existing CommentaryProposal.CompareMoves. Exact legal resource premises use existing Declared/Ply/Predicate/FactGroup fields. Existing Answer already carries work/key/profile/depth, line IDs and occurrences. Keep Proof.board truth and its optional root numeric receipt separate from these optional local value records.",
+      "resource_identity": "For the actual quiet recapture proof, identify the friendly arrival through the effect.target original physical piece and the certified preceding arrival transition. The current reference ends with that arrival followed by the enemy capture; the decision before the arrival is therefore reference.dropRight(2), verified against actor/transition identity. Do not apply this arithmetic indiscriminately to check-tempo or price proofs; their resource action must be identified from the canonical action/target transition they already prove.",
+      "value_question": "At the exact position before the friendly resource is used, compare that named resource with the strongest returned other legal own plan. Include all legal alternatives, including captures and promotions, rather than only a convenient quiet seed. A resource that is legal but separated below a better own plan remains a true conditional fact but is not established as an adequate chosen plan.",
+      "reply_question": "At the exact position after that resource, compare the named capture/acceptance with the strongest returned other legal opponent reply. Other captures and promotions are part of the refusal scope. Do not assume that a capture with the proved recapture is forced, best, or representative of all defenses.",
+      "zero_or_singleton_class": "If no other legal action exists, record that board fact without manufacturing an identical-move CompareMoves or an Answer. If the scoped class is singleton, its selection needs no ranking comparison, but any comparison against the named resource still needs an owned same-work pair.",
+      "current_condition": "Before any value adoption, re-read the original root condition and resource physical identity at the exact current decision prefix. Later legal/factual declarations survive unrelated PV suffix changes. A changed current resource, actor, transition or board condition invalidates that local value realization, not the whole historical functional question."
+    },
+    "survey_leader_named_pair_certification": [
+      {
+        "step": 1,
+        "action": "Select the current exact canonical decision anchor from prepared owned paths and the original physical resource. Use historyAtPrefix/observedPrefix ownership; do not borrow a position reached by another root or by an unowned declaration.",
+        "source": [
+          "CommentaryJobReducer.scala:2015-2040",
+          "TargetResponseInvestigation.scala:87-115"
+        ]
+      },
+      {
+        "step": 2,
+        "action": "Read the latest sufficient-depth owned unrestricted search at that anchor and profile, or issue one survey when missing. The legal-scope inventory must match the exact current board. A restricted search is class-complete only when it contains every legal class member.",
+        "source": [
+          "TargetResponseInvestigation.scala:60-70",
+          "TargetResponseInvestigation.scala:87-115",
+          "CommentaryJobReducer.scala:2810-2828"
+        ]
+      },
+      {
+        "step": 3,
+        "action": "Select the strongest returned line whose first move is in the whole other-plan/refusal class. If the named resource itself is the returned leader, choose the strongest other returned member; do not compare the resource with itself. If a legal class has no returned member, perform the existing missing-class completion shape using all class moves plus the whole-pool leader. Absence from top-N is unknown.",
+        "source": [
+          "TargetResponseInvestigation.scala:53-70",
+          "TargetResponseInvestigation.scala:244-261",
+          "CommentaryJobReducer.scala:2822-2837"
+        ]
+      },
+      {
+        "step": 4,
+        "action": "If both named moves are returned with comparisonReady in that survey, use Search.pairAnswer from that work. Otherwise issue a new exact named pair and use only its two values. The earlier survey certifies challenger selection; it supplies no score to be spliced into the named pair.",
+        "source": [
+          "TargetResponseInvestigation.scala:27-46",
+          "CommentaryJobReducer.scala:1970-1984"
+        ]
+      },
+      {
+        "step": 5,
+        "action": "Validate the two owners together: packet identity, root move/occurrence, full decision prefix and transitions, child position ID, profile, sufficient compatible depth, selected challenger UCI and the exact selected line origin. Pair Answer must equal pairAnswer for its claimed work/key and own both values. Extend FirstTarget's take(2)/take(3) checks to decisionPrefix.size+1 occurrences and decisionPrefix.size+2 positions; do not hard-code first-ply checks for a deeper resource.",
+        "source": [
+          "TargetResponseInvestigation.scala:133-178"
+        ]
+      },
+      {
+        "step": 6,
+        "action": "After a newer sufficient survey changes the selected challenger, invalidate only the old representative-selection link. The old pair can remain historical; it cannot describe the current strongest other plan. A new selected challenger requires a distinct pair realization, even if a convenient old answer exists.",
+        "source": [
+          "PrincipalVariationComparison.scala:131-133",
+          "CommentaryDiscovery.scala:209-214",
+          "TargetResponseInvestigation.scala:157-177"
+        ]
+      }
+    ],
+    "adequate_first_response_scope": {
+      "existing_behavior": "Search.selectedLinePairs forms a leader star over ALL returned peers. investigationPrefixRelation retains those paths from the latest unrestricted pool plus subsequent named comparisons. Neither method filters numerical near-best peers.",
+      "source": [
+        "TargetResponseInvestigation.scala:47-56",
+        "CommentaryJobReducer.scala:2643-2693"
+      ],
+      "bounded_reuse": "Use the latest exact owned first-response unrestricted pool for each root. Its actual leader is obligatory resistance. A near-best group can reuse same-work leader-versus-peer Answer.qualityBand==Close, whose definition requires forward and reverse MoveChoiceVerdict MatchesReference/PlayableLoss. This is an existing numerical quality rule, not a new arbitrary centipawn threshold.",
+      "quality_source": [
+        "PrincipalVariationComparison.scala:123-129",
+        "TargetResponseInvestigation.scala:27-46"
+      ],
+      "unknown_boundary": "A missing quality reading, a class omitted from finite top-N, or an insufficient-depth pool is unknown, not weak. A bounded top-N survey is not individual exhaustive validation of all legal first replies. Keep that finite inventory boundary visible.",
+      "different_realizations": "Current Nb1/Nc7 and Nc4/Nef6 can lead to different own plans. Join local choice evidence to its own root/resistance prefix; do not demand the same first reply, Rd6 tail or PV suffix for both. Conversely, value proved after conditional Nef6 cannot be attributed to Nb1/Nc7 merely because the root board condition is the same.",
+      "numeric_noncomparison": "Do not compare absolute scores from two separate roots or surveys to define a plan-value difference. Same-work pair values support each local judgment. Root numeric grading remains on its original root paired receipt and profile."
+    },
+    "fail_closed_root_connection": {
+      "needed_for_local_value": "Current board proof plus canonical resource decision; whole-scope representative selection; same-work own-choice pair; and, when the conditional capture is used as the mechanism, its same-work acceptance-versus-refusal pair. Required actual captures/check replies/used support losses close within their physical Sections, not by taking the complete history ledger.",
+      "needed_for_original_judgment": "The current authoritative paired root receipt, actual played root membership, and locally adequate plans under the current strongest/qualified near-best immediate defenses. If another root preserves an equally adequate different plan, state that plan and the limitation of the claimed functional advantage. Establishing one useful conditional option is not establishing the cause of a small root score difference.",
+      "positive_claim_level": "It is defensible to say that under a named adequate response, a particular own plan stays adequate against its strongest returned refusal and uses the root-owned resource at these exact prices. It is not yet a general theorem that this resource caused the original numerical advantage or that the PV is forced.",
+      "unknown": "Pending/absent/stopped value receipts leave local utility unestablished. Keep the already verified legal conditional fact, possibly as purpose/detail, and keep the original numerical judgment; do not invent its cause or turn deferred into refuted.",
+      "refuted": "A resource separated below the best other own plan, or a stronger refusal that defeats the supposed benefit, rejects that value realization. It does not make the original legal capture/recapture fact false. Alternative adequate plans can answer a different current plan question without borrowing the refuted proof's numerical owner.",
+      "off_pair": "The existing legal off-pair carrier allowance does not authorize importing an off-pair conditional plan as the cause of the current main pair. Actual played root inclusion and the main root-condition vector remain necessary. A third unrelated played root or different canonical actor condition cannot borrow the function receipt.",
+      "freshness": "Board conditions must be replayed on their exact current canonical prefix. Numerical minDepth/profile/receipt validity remain unchanged globally. A PV realization can change while its resource remains useful, but the changed realization needs its own current receipt and prices."
+    },
+    "CurrentDuty_reuse": {
+      "confirmed_now": "currentDuties appears only in CommentaryIdea and proposal dependency scheduling; no RuntimeProtocol typed root-context field or MoveWorkProjection delivery consumer exists for CurrentDuty. Its two explicit choices already use CompareMoves and can represent two legal own plans.",
+      "source": [
+        "CommentaryIdea.scala:90-110",
+        "CommentaryJobReducer.scala:1879-1890",
+        "CommentaryDiscovery.scala:1290-1372",
+        "RuntimeProtocol.scala:486-510",
+        "MoveWorkProjection.scala:3017-3041"
+      ],
+      "common_adapter": "Adapt duty.actual and duty.alternative into the same local-choice contract at their two exact prefixes, using referenceMove as the retained own plan and all other legal moves as the opponent-to-this-plan class. The duty-context support change remains an independent physical premise. Replace arbitrary adjustment seeds only through certified survey selection and a new immutable named pair realization.",
+      "what_not_to_do": "Do not rename duty predicates into sacrifice/reference_action facts to get past CommentaryIdea.read, and do not pretend two already legal plans satisfy the current Mechanism legal-versus-illegal gate. Do not add a second motif-specific strength reader just for CurrentDuty.",
+      "delivery_seam": "A common internal value reader can expose supported/refuted/unknown local choices to FunctionalReplyReading/RootSubjectComparison at the existing root context boundary. A small CurrentDuty adapter can use the same reader and completion contract. CurrentDuty's current root answered receipt remains independently checked; optional local value should not erase duty facts or alter root scores.",
+      "scope_limit": "Sharing a local-choice contract does not automatically prove that the support difference caused a root loss. Its actual and alternative current best plans and defenses may differ. At minimum, the adapter must show the claimed retained plan's adequacy in each relevant arm and account for a different equally good plan before advancing a causal central answer."
+    },
+    "required_negative_and_positive_controls": [
+      {
+        "case": "Named resource absent from returned top3",
+        "expectation": "A whole survey with resource omitted must not mark it weak or answered. A later exact resource/selected-leader pair can establish value without score splicing. Keep both owner links."
+      },
+      {
+        "case": "Named resource is the survey leader",
+        "expectation": "Use the strongest returned OTHER legal plan. Reject identical-move fabricated pair and arbitrary worst-other seed."
+      },
+      {
+        "case": "Partial restricted pair claims strongest legal class",
+        "expectation": "Reject class certification when the work did not cover every legal class member; its same-work numerical pair may remain a valid pair only."
+      },
+      {
+        "case": "One named class omitted from finite unrestricted results",
+        "expectation": "Complete the missing class versus the whole-pool leader using exact current ownership; top-N omission alone is unknown."
+      },
+      {
+        "case": "Cross-work scores or wrong survey-selection receipt",
+        "expectation": "Reject a local value assembled from survey resource score and later pair challenger score; reject wrong work/key/line even if move and scores look plausible."
+      },
+      {
+        "case": "Canonical mismatch",
+        "expectation": "Foreign root, prefix, position, actor, transition, physical victim, repeated occurrence or profile cannot authorize value. A foreign path returns None rather than throwing."
+      },
+      {
+        "case": "Stale representative",
+        "expectation": "After a newer sufficient-depth owned unrestricted pool changes its leader, old pair remains historical but cannot certify current strongest refusal."
+      },
+      {
+        "case": "Strong refusal defeats a legal compensation mechanism",
+        "expectation": "Qxd6/Nxd6 remains a true conditional fact; a stronger adequate refusal rejects claimed utility. No fabricated forced capture wording."
+      },
+      {
+        "case": "Both root choices retain different adequate plans",
+        "expectation": "Report both useful plans; do not make the controlled legal recapture option alone a numerical superiority cause. No identical-response/PV requirement for generic utility."
+      },
+      {
+        "case": "Same UCI captures another physical victim",
+        "expectation": "No price or recapture ownership transfer solely through square/UCI equality. Existing canonical physical identity gates remain."
+      },
+      {
+        "case": "CurrentDuty two legal own plans",
+        "expectation": "Use the shared survey-selection/named-pair reader; neither plan is rejected merely because legal-versus-illegal contrast is absent."
+      },
+      {
+        "case": "Unknown or refuted numeric utility with supported board facts",
+        "expectation": "Board proof stays valid. Value/root-cause adoption is unknown or rejected respectively. Never alter original root judgment or turn missing into successful omission."
+      },
+      {
+        "case": "Selected dependency hits exploration cap",
+        "expectation": "One exact finite completion attempt is allowed by the current task/deadline policy; unrelated new topics are not. Stopped reasons, old key reports, altered anchors and retry no-loop invariants remain."
+      },
+      {
+        "case": "Actual immediate cost or used support loss",
+        "expectation": "Preserve exact mandatory capture/check/reply and used support prices in selected completion sources. Optional value receipts do not seed unselected future histories or computed prices."
+      },
+      {
+        "case": "Near-best set claims",
+        "expectation": "Only same-work Close quality qualifies a returned peer. Missing class/quality remains unknown, all top-N returned peers are not silently reclassified near-best."
+      }
+    ],
+    "smallest_implementation_order": [
+      "Add the private common local-choice data/reader and tests for survey selection plus same-work paired value; keep the factual Proof/old generated arm unchanged.",
+      "Generate one owned quiet-resource use-value question at the canonical arrival decision and route its exact survey/pair dependency through existing issuance/completion. Verify named resource omitted from top3 and best-other identity before adding reply follow-up.",
+      "Add the acceptance/refusal stage using the same reader and current adequate first-response owner; retain changed plan realizations separately rather than growing board motif predicates.",
+      "Consume only supported local value at the existing root answer seam, with original root numeric owner and exact price closure. Keep a truthful unknown boundary for the original root cause.",
+      "Use CurrentDuty as the second adapter/independent counterexample for the shared contract. Assess fresh bounded cases under sealed criteria; do not count investigation completion, new query count or shorter text as full utility."
+    ],
+    "limits": "These are source-confirmed contracts and missing links, plus a proposed implementation. No private actual caller of an unimplemented value reader has been run. Existing NB1/H05 proof truth and numeric owners are not rescored. H05 research branches demonstrate why invariants cannot require one stationary guard/check/Kf4 realization, but those h128 receipts are not product value evidence."
+  },
+  "resource_invariant_realization_refinement": {
+    "recorded_at_utc": "2026-10-08T17:02:39.385746+00:00",
+    "prior_audit_sha256": "7420554d9c4a3afb1ed9119b0b0e4ab81ca93681ee0991b55bc6692b901fb32c",
+    "source_reference_version": "The code line references in the investigation addendum refer to the sealed meaningv40a files hashed in baseline. Parent is now beginning the common CommentaryChoiceValue implementation; this reviewer has not run or certified that new code.",
+    "trigger": {
+      "provenance": "Parent supplied its newly completed depth24 interpretation in a team message. This reviewer has not independently opened or replayed that new engine receipt. No new engine was requested here.",
+      "reported_observation": "Nc4 has current Qb7 leader and near-valued Nef6/Rb8 responses; the old Qxd6 action is illegal after Qb7.",
+      "interpretation_boundary": "The old Rd6/Qxd6/Nxd6 conditional legal fact cannot define the whole resource-use utility inquiry. Engine evaluations quoted by the parent are not adopted as a product receipt or as a new root-cause explanation by this audit."
+    },
+    "invariant": {
+      "resource": "Original friendly physical actor plus proposed destination, legal own action at the exact pre-use decision prefix, and independently verified canonical root condition/provider/control. These can be revalidated in another owned first-response history.",
+      "not_invariant": "The old enemy capture, the recapture SAN/UCI, the old stationary supporting piece location, the entire declared tail, and an old returned PV are individual realization witnesses. They must not be required unchanged by the generic local-choice value certificate.",
+      "facts_survive": "An absent old Qxd6 action at a new exact child makes that old realization inapplicable there. It does not erase its earlier board proof or prove that the friendly resource has lost value.",
+      "control_scope": "Independently read provider physical presence, legal control/recapture and resource legality at the actual pre-use prefix. A same-square attack from a different physical provider is a replacement relation, not the unchanged original root-owned resource."
+    },
+    "current_reply_boundaries": [
+      "If the original named acceptance is still legal at the current exact post-resource position, a capture-versus-best-other reply CompareMoves can use the shared whole-other-legal-scope certificate.",
+      "If that acceptance is illegal there, do not invent a CompareMoves with an illegal reference, reuse a score from its old conditional child, or call it a forced/current defense. The old fact stays attached to its own exact history.",
+      "A current unrestricted post-resource survey can identify the actual strongest returned response among ALL legal replies. Its PV/prices belong to this new realization. An optional acceptance comparison is needed only when the acceptance remains legal and its adequacy matters to the mechanism claim.",
+      "The refusal scope includes quiet defenses, other captures, checks, promotions and evasions that are legal on the current board. It cannot be narrowed to only the old opponent piece or to non-captures unless the claim explicitly names that smaller class.",
+      "An engine-owned own-plan pair already values that plan under engine-best play; a later opponent survey verifies concrete resistance coverage. Lack of the old acceptance does not make that own-plan pair unowned, but it limits the explanatory event story."
+    ],
+    "alternative_plan_substitution": {
+      "allowed": "The certified current best other own plan can replace the proposed own PLAN under the same original root and current resistance, with its own paired value and exact witness/prices.",
+      "not_allowed": "A different own actor/destination cannot automatically be relabelled a realization of the original control/resource FUNCTION merely because it is numerically adequate. The root-controlled d6 recapture does not explain an unrelated good plan by receipt association alone.",
+      "minimum_for_functional_title": "If the replacement is presented under the same functional title, it must independently use or preserve the original canonical condition/provider/resource, or expose a verified transformation/replacement of that condition. Otherwise report an adequate alternative plan with the functional causal link still unestablished.",
+      "CurrentDuty_implication": "Duty can consume the same numerical local-choice certificate for two legal plans. A stronger adjustment/best-other plan is not proof that the original support change caused its strength; the independent duty-context and current resource dependence still determine the explanation."
+    },
+    "stale_depth_foreign_controls": [
+      {
+        "case": "Newer shallow survey arrives after a sufficient deeper survey",
+        "expected": "Do not replace the deeper current representative selection solely by issuance order. Choose the deepest adequate owned pool at the exact unchanged anchor/profile, with latest receipt as tie-break only."
+      },
+      {
+        "case": "Current investigation depth rises",
+        "expected": "Both survey selection and named pair must meet the current adequate-depth requirement. A deep survey cannot graft an obsolete below-threshold pair value back into current utility."
+      },
+      {
+        "case": "Different survey/pair required depths",
+        "expected": "The certificate must explicitly enforce the intended compatible-depth rule. Conservative first implementation may require equal target depth. If allowing survey depth>=pair depth, both must meet current required depth and no scores are compared across the works. Do not claim an unimplemented depth rule is already enforced."
+      },
+      {
+        "case": "New higher-depth survey changes best other",
+        "expected": "Old named pair remains historical but its representative-selection certificate is stale. Issue/read the new exact selected pair rather than aliasing the old challenger receipt."
+      },
+      {
+        "case": "Selected line has same UCI but wrong owned search origin",
+        "expected": "Reject wrong packet/work/key/profile, root occurrence, full prefix, position, transition or line/candidate ownership. Prefix equality alone does not authorize a foreign declared path."
+      },
+      {
+        "case": "Caller supplies only convenient quiet alternatives",
+        "expected": "A best-other claim computes its scope from all legal moves at the current certified board, excluding only the named own action. An arbitrary caller list cannot certify all-other utility even if the engine searched that entire smaller list."
+      },
+      {
+        "case": "Same root and provider but a different actual first reply",
+        "expected": "Revalidate the resource at that exact owned history and issue/use its own local choice certificate. Do not reuse the earlier first reply's numerical owner or force its old acceptance into the current line."
+      },
+      {
+        "case": "Resource is legal after current reply but the original provider/control is gone",
+        "expected": "The generic action can still have its own numerical value, but it no longer establishes the original root-owned functional explanation. Keep current plan value and old functional board fact separate."
+      }
+    ],
+    "first_failure_to_investigate_after_implementation": "On exact owned current first-response histories, observe whether resource-task creation, survey selection, named-pair answer, optional post-resource resistance and final functional/root adoption each pass. Record None/refuted/stopped per stage rather than attributing all failures to a source predicate. The current audit identifies absent contracts; it does not claim a first private caller failure in the new unimplemented reader."
+  },
+  "common_certificate_choicev1_review": {
+    "recorded_at_utc": "2026-10-08T17:09:17.831804+00:00",
+    "source_sha256": "3479d433c3a488bb00869bf9fa43c11eb31c75169486fcd947514f17cb3decee",
+    "test_sha256": "cfeedb819a3edd388381053ca50366b9fec77cdc80a89ec96594a13b0192e3e5",
+    "compile_manifest_sha256": "b5e502ee9e8bd5be422101aa4093474f0510eecb3a0c1fb8b02ee136dfc0391f",
+    "review_method": "Read-only source inspection after main/test compile manifests appeared. The reviewer executed no compiler, tests, engine or actual caller replay. The five tests contain explicitly supplied values for ownership/selection, not engine-strength evidence.",
+    "sound_admission_boundaries": [
+      {
+        "source": "CommentaryChoiceValue.scala:43-49",
+        "finding": "Selection uses an owned unrestricted survey at the exact prefix and current requested profile with sufficient required depth; deeper request target wins and recency breaks a tie."
+      },
+      {
+        "source": "CommentaryChoiceValue.scala:51-64",
+        "finding": "The named resource must be legal on the certified pool board. Strongest other means the first ranked returned different legal move, not a caller-supplied convenient quiet candidate."
+      },
+      {
+        "source": "CommentaryChoiceValue.scala:85-94",
+        "finding": "The selected challenger must equal the named pair alternative. The pair belongs to the exact same anchor/profile and supplies both values through Search.pairAnswer; no survey/pair score graft exists."
+      },
+      {
+        "source": "CommentaryChoiceValue.scala:95-105",
+        "finding": "Reference, alternative and selected pool paths must belong to the same PreparedPaths object. Full decision prefix occurrences/positions and the selected challenger transition match. Later PV suffix identity is not imposed."
+      },
+      {
+        "source": "CommentaryChoiceValue.scala:16-26",
+        "finding": "Checked binds packet+prepared object owners and interprets same-work relation/Close quality only as local resource competitiveness. It does not mutate a root receipt."
+      },
+      {
+        "source": "CommentaryChoiceValueTest.scala:49-107",
+        "finding": "The current five proposed tests distinguish omitted resource plus named pair, partial pair/no arbitrary weaker alternative, same-survey close value, requested-depth/prefix/foreign owner mismatch, and a newly selected survey representative."
+      }
+    ],
+    "depth_admission_edge": {
+      "status": "Source-confirmed possible admission under the code; counterexample not run. Parent notified before any code change.",
+      "module_source": "CommentaryChoiceValue.scala:90-93",
+      "upstream_source": "CommentaryInvestigation.scala:149-156",
+      "cause": "read compares work.requiredDepth to pool.work.requiredDepth. candidatesReady only requires each returned engineLine.depth>=work.requiredDepth and equal depth within that work. It does not require actual returned depth==requested depth.",
+      "counterexample": "Owned unrestricted survey work required16 with lines at actual16; exact matching restricted named pair work required16 with both values at actual24; minimumDepth16. All present current depth checks can pass while the representative was selected at a shallower completed numerical level than the pair.",
+      "existing_test_gap": "The current high-depth negative uses pair work required24 and returned24; it does not test equal requested target with higher actual returned depth.",
+      "options": "If completed-depth compatibility is intended, compare the admitted uniform actual line depths as well as target requirements, and reject deeper pair than selection pool or require equal actual numerical level. If target-depth compatibility is intentional, explicitly limit the claim to a representative selected by a sufficient lower-level pool; do not call this matching completed depth.",
+      "scope": "This is an edge in the new local certificate, not evidence that actual product inputs have hit it or that the old root numeric contract should be weakened."
+    },
+    "consumer_obligations_still_outside_module": [
+      "The caller must supply the current adequate minimumDepth/profile. Without the active investigation threshold, an older sufficient-looking survey and pair could remain valid historical local values but cannot be certified current.",
+      "adequateReplies accepts any owned unrestricted Search; current freshness/profile/minDepth must be selected through survey before using it as current first-response coverage. A missing pair quality cannot be treated as proof that that returned peer is weak.",
+      "Checked.useful means locally competitive with its certified best returned other own choice. It does not mean winning, safe material profit, compensation for a sacrifice, or cause of the original root grade. Both local choices can be losing.",
+      "The functional adapter must independently revalidate original resource actor/destination/provider/control on the exact current first-response history. This common numeric module intentionally does not establish that physical semantic relation.",
+      "If the old acceptance capture is illegal after a new response, current plan value can still be read, but old capture/recapture facts cannot serve as that history's resistance or price witness.",
+      "An unrelated best other own plan is an owned alternative plan, not automatically a realization of the original d6-control title. Original root cause remains unknown until the cross-root adequate-defense/resource connection is independently closed."
+    ],
+    "followup_controls_to_add_if_needed": [
+      "Uniform returned pair depth exceeds its requested target and the completed pool depth, while all work targets match.",
+      "A newer shallow survey must not evict an adequate deeper current pool; after current minimumDepth increases, a below-threshold pair cannot be revived by a deep survey.",
+      "A close/value-missing returned first-reply peer is unknown rather than removed from required coverage as weak.",
+      "Changed first reply preserves the physical resource but removes the old acceptance: local choice remains ownable while old realization is inapplicable.",
+      "The resource is locally competitive while its original provider/control has disappeared: numerical local value remains true but functional/root contribution is refused.",
+      "Both own plans are losing but close: locally competitive label cannot imply a successful attack or sufficient sacrifice compensation."
+    ]
+  }
+}

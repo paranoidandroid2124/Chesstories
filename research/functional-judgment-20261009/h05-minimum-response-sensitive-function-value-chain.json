@@ -1,0 +1,453 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T21:22:35.055758+00:00",
+  "purpose": "Response-sensitive minimum function/value reasoning for original H05, after held10a BASIC firstpass and before reading held10b basic. No criterion revision, product implementation or fixed output template.",
+  "preserved_firstpass": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10a-fresh180-human-firstpass.json",
+    "sha256": "b1259299b8113581025be17d24f6bfbc3685fbfe539d0e01ed692686862afc82"
+  },
+  "unchanged_criteria": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json",
+      "sha256": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-functional-root-value-human-contract-supplement-20261009.json",
+      "sha256": "194934ce44a158d83356246d32be3257133f56bc032c3dbb83f86a62dde2ab30"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+      "sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551"
+    }
+  ],
+  "book_reading": {
+    "source": {
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\100 Endgame Patterns.pdf",
+      "sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3"
+    },
+    "reading_pages_rechecked": [
+      60,
+      61,
+      62
+    ],
+    "diagrams_visually_rechecked": [
+      60,
+      61
+    ],
+    "source_pdf_footer_pages": "94-99",
+    "read_scope": "H05 and its local variations only; not a whole-book read or independent best-play proof.",
+    "key_source_lessons": [
+      {
+        "page": 60,
+        "lesson": "Early g4 gives Black f6: the g5 advance is denied cheaply and the king blockade of f5 persists. White's immediate pawn breaks do not solve the race in the author’s demonstrated defenses."
+      },
+      {
+        "page": 61,
+        "lesson": "The triangulation is a means to a task, not the task's result. Prepared Kd2 creates pressure on b4; an unprepared immediate queenside exchange permits c3. Black b3 can still defeat a too-early g4 even after Ke3."
+      },
+      {
+        "page": 62,
+        "lesson": "After adequate preparation, holding an active king square while passing the move permits entry and a central exchange/queenside race. White's e-pawn and later g-pawn need not survive permanently."
+      }
+    ]
+  },
+  "minimum_response_sensitive_chain": [
+    {
+      "stage": "Original move purpose",
+      "human_answer_needed": "White wants useful king/pawn progress, not simply a pawn majority. Ke3 develops king flexibility while retaining Pg3-g4 as a later move; immediate g4 spends that resource.",
+      "evidence_boundary": "This factual retention difference is delivered in 10a. It is not the complete root value."
+    },
+    {
+      "stage": "Current adequate defense",
+      "human_answer_needed": "Name the opponent's effective resistance and what it keeps blocked. Under f6, the f-pawn can take an attempted g5 and Black’s king/remaining waiting resources restrict useful approach. A legal g5 or king step alone is not progress.",
+      "evidence_boundary": "Book defense and exact legal f6/g5 price confirmed; current10a own value is conditional on f6. The named Ke6/f6 pair is not a complete all-first-Black survey."
+    },
+    {
+      "stage": "Choose a preparation preserving the currently needed task",
+      "human_answer_needed": "After Ke3 f6, Kf3 keeps Pg3 and the e4 guard while transferring or preparing the move; a later Kd2 is useful when the king can prepare a queenside exchange without an inadequate immediate counter. Judge the actual plan at its actual board.",
+      "evidence_boundary": "10a has tested Kf3 above immediate g4. Direct Kd2 in that same f6 stage permits legal Kxe4, while Kf3 prevents that immediate capture. This is an exact cost opportunity, not a proof Kd2 is always bad or e4 may never be sacrificed."
+    },
+    {
+      "stage": "Why the opponent cannot simply maintain the same useful blockade",
+      "human_answer_needed": "Connect the king route to pressure or a conversion obligation. In the book's prepared Kd2 stage, b4 is exposed to a useful exchange and Black cannot preserve the same waiting posture without yielding another result. Merely returning to the same placement or seeing b3 once is insufficient.",
+      "evidence_boundary": "Source supplies illustrative refusal/exchange defenses with prices. Current10a has no after-choice Black resistance report, so this full functional utility is not established by its own new receipts."
+    },
+    {
+      "stage": "Response-dependent conversion and replacement of roles",
+      "human_answer_needed": "If Black retreats, use useful king approach and a priced central exchange; if it opens f5, allow the central pawn role to be exchanged and use the retained g-pawn/check or supported passer; if a queenside exchange is adequate, prepare the king and exploit the new original pawn/king route. The friendly pawn/user/defender or plan may change.",
+      "evidence_boundary": "These are allowed explanatory tasks, not mandatory single PV events. Current10a Kf3 forecast contains f5 exf5 Kxf5 g4+ but is only an own-search witness without completed after-choice resistance; do not claim every such line wins."
+    },
+    {
+      "stage": "Return to the original judgment",
+      "human_answer_needed": "Explain the bounded reason that preparing and preserving a useful resource leaves an adequate plan under the opponent's effective resistance, whereas spending it at once leaves a blockade or an inferior priced conversion. Say which component is verified, without making it the sole centipawn cause.",
+      "evidence_boundary": "A completed root numerical comparison plus one conditional own pool are not a full causal chain; every current scoped resistance and required cost must belong to its actual root/history."
+    }
+  ],
+  "f6_Kf3_vs_Ke6_Kd2_distinction": {
+    "f6_context": "After Ke3 f6, Black still stands on e5. Kf3 keeps e4 defended; immediate Kd2 abandons that immediate king guard and allows Kxe4. The useful Kd2 in the book occurs after a different placement/turn with Black Kd6.",
+    "Ke6_context": "After first Ke3 Ke6 the f-pawn is still on f7 and immediate Kf4 is legal. Kd2 is another legally available queenside-preparation option; historical deeper Ke6 analysis used it, while current10a root/source forecasts use Kf4 and later changed preparation. Exact strong resistance and price determine which is useful.",
+    "must_not_require": "Kd2 in every Ke6 line, Kf3 in every f6 line, f4/f5 entry in every winning route, a forced five-move cycle, or every original pawn surviving.",
+    "must_not_borrow": "Do not borrow f6’s already-existing g5 capture, a different-stage b3 exhaustion, or old h128 values as evidence for the current Ke6 branch.",
+    "smallest_functional_invariant": "Maintain the currently adequate king/pawn task until the opponent must concede an adequate entry, exchange or race; retained Pg3 is a means that may hand over the move or become a checked/passers resource, rather than an invariant whose mere presence proves value."
+  },
+  "legal_observations": [
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "g3g4",
+        "f7f6"
+      ],
+      "san": [
+        "g4",
+        "f6"
+      ],
+      "fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P2K2/1P6/8 w - - 0 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "early_g4_f6_denial",
+      "named_moves": [
+        {
+          "uci": "g4g5",
+          "legal": true,
+          "gives_check_if_legal": false
+        },
+        {
+          "uci": "f3f4",
+          "legal": false,
+          "gives_check_if_legal": null
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "g3g4",
+        "f7f6",
+        "g4g5"
+      ],
+      "san": [
+        "g4",
+        "f6",
+        "g5"
+      ],
+      "fen": "8/8/5p2/2p1k1P1/ppp1P3/P1P2K2/1P6/8 b - - 0 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "g5_capture_price",
+      "named_moves": [
+        {
+          "uci": "f6g5",
+          "legal": true,
+          "gives_check_if_legal": false
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6"
+      ],
+      "san": [
+        "Ke3",
+        "f6"
+      ],
+      "fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "preserved_f6_current_stage",
+      "named_moves": [
+        {
+          "uci": "e3f3",
+          "legal": true,
+          "gives_check_if_legal": false
+        },
+        {
+          "uci": "e3d2",
+          "legal": true,
+          "gives_check_if_legal": false
+        },
+        {
+          "uci": "g3g4",
+          "legal": true,
+          "gives_check_if_legal": false
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3"
+      ],
+      "san": [
+        "Ke3",
+        "f6",
+        "Kf3"
+      ],
+      "fen": "8/8/5p2/2p1k3/ppp1P3/P1P2KP1/1P6/8 b - - 1 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "Kf3_preserves_e4_guard",
+      "named_moves": [
+        {
+          "uci": "e5e4",
+          "legal": false,
+          "gives_check_if_legal": null
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3d2"
+      ],
+      "san": [
+        "Ke3",
+        "f6",
+        "Kd2"
+      ],
+      "fen": "8/8/5p2/2p1k3/ppp1P3/P1P3P1/1P1K4/8 b - - 1 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "premature_Kd2_e4_cost",
+      "named_moves": [
+        {
+          "uci": "e5e4",
+          "legal": true,
+          "gives_check_if_legal": false
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "e5e6"
+      ],
+      "san": [
+        "Ke3",
+        "Ke6"
+      ],
+      "fen": "8/5p2/4k3/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 2 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "Ke6_root_Kd2_option",
+      "named_moves": [
+        {
+          "uci": "e3d2",
+          "legal": true,
+          "gives_check_if_legal": false
+        },
+        {
+          "uci": "e3f4",
+          "legal": true,
+          "gives_check_if_legal": false
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e5",
+        "e2e3",
+        "e5d6"
+      ],
+      "san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Ke2",
+        "Ke5",
+        "Ke3",
+        "Kd6"
+      ],
+      "fen": "8/8/3k1p2/2p5/ppp1P3/P1P1K1P1/1P6/8 w - - 6 39",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "book_prepared_Kd2_stage",
+      "named_moves": [
+        {
+          "uci": "e3d2",
+          "legal": true,
+          "gives_check_if_legal": false
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f4",
+        "d6e6",
+        "g3g4"
+      ],
+      "san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4"
+      ],
+      "fen": "8/8/4kp2/2p5/ppp1PKP1/P1P5/1P6/8 b - - 0 38",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "book_premature_g4_counter",
+      "named_moves": [
+        {
+          "uci": "b4b3",
+          "legal": true,
+          "gives_check_if_legal": false
+        },
+        {
+          "uci": "f6f5",
+          "legal": true,
+          "gives_check_if_legal": false
+        }
+      ]
+    },
+    {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "f6f5",
+        "e4f5",
+        "e5f5"
+      ],
+      "san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "f5",
+        "exf5",
+        "Kxf5"
+      ],
+      "fen": "8/8/8/2p2k2/ppp5/P1P2KP1/1P6/8 w - - 0 38",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN.",
+      "id": "current10a_f5_conversion_witness",
+      "named_moves": [
+        {
+          "uci": "g3g4",
+          "legal": true,
+          "gives_check_if_legal": true
+        }
+      ]
+    }
+  ],
+  "same_f6_timing_geometry": {
+    "early_root_route": {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "g3g4",
+        "f7f6",
+        "f3e3"
+      ],
+      "san": [
+        "g4",
+        "f6",
+        "Ke3"
+      ],
+      "fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P1K3/1P6/8 b - - 1 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN."
+    },
+    "delayed_but_still_immediate_route": {
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4"
+      ],
+      "san": [
+        "Ke3",
+        "f6",
+        "g4"
+      ],
+      "fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P1K3/1P6/8 b - - 0 36",
+      "legally_replayed": true,
+      "scope": "Legal observation only; no new numerical or strongest-defense claim. Original identities anchored at this book FEN."
+    },
+    "same_piece_placement_and_turn": true,
+    "same_castling_and_ep": true,
+    "different_halfmove_clock": true,
+    "scope": "Same geometry/turn and original tracked actors; histories and work ownership differ, so neither receipt can be rekeyed into the other."
+  },
+  "meaningful_counterexamples": [
+    {
+      "control": "Ke3 f6 Kf3 Kd6 Kf4 Ke6 g4 b3",
+      "lesson": "Even saving g4 at the original root does not make every later use timely; the still-adequate b3 reply keeps the king blockade. All king replies allowing entry is not enough if a pawn reply preserves the defense."
+    },
+    {
+      "control": "Direct Kd2 immediately after Ke3 f6 versus prepared Kd2 after the book king route",
+      "lesson": "The same legal king move can abandon e4 to an immediate Kxe4 in one state but create useful b4 pressure in another. Cost and task are stage-specific; neither universal prohibition nor universal usefulness is honest."
+    },
+    {
+      "control": "Ke3 Ke6 Kf4 versus original g4 Ke6 Kf4",
+      "lesson": "The first king entry can already be legal in both arms. A legal-entry difference cannot be invented as the original reason."
+    },
+    {
+      "control": "Original early g4 f5 exf5 versus Ke3 f5 exf5",
+      "lesson": "Early g4 has a genuine conditional support function against f5, yet Black can instead choose effective f6. A mistake can contain useful functions."
+    },
+    {
+      "control": "Prepared central/queenside conversion losing e4 or g3",
+      "lesson": "A completed useful plan can transfer the role to the king or surviving pawn and allow an old provider to be lost. Demand the relevant actual cost, not all actors’ permanent survival."
+    }
+  ],
+  "current10a_evidence_after_firstpass": {
+    "source": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10a-fresh180-execution-and-first-failure-audit.json",
+      "sha256": "897405c21e854a44733cd6960fa266289899162f203151fbee3f389f0478b7a1"
+    },
+    "fresh_queries": 4,
+    "ordinary_profile": "sf18-smallnet-t2-h16-v1",
+    "overlay_used": false,
+    "root_receipt": "Work1 Ke3+231/g4=0 is the current ordinary public numeric comparison. No old h128 score was supplied.",
+    "named_source_scope": "Work2 only compares Ke6/f6 after Ke3; its values cannot certify all eight first Black defenses or numerically replace the root receipt.",
+    "conditional_own_value": "Work3 genuinely compares Kf3+197 and g4=0 after Ke3 f6 in one full own pool. Task recognises g4 locally refuted; it does not prove the whole original root causal reason.",
+    "Task_complete": false,
+    "first_missing_meaning_obligation": "Both exact after-choice Black unrestricted resistance pools and their current leader certificates; first pending prefix Ke3 f6 Kf3 has no engine report.",
+    "first_failure": "Public selection decoder rejects the genuine shared reserve_timing ownership alias before pending work4 is sent to an engine. This is a transport/ownership-consumption failure, distinct from a completed chess refutation.",
+    "not_present": "The two exact after-choice Black resistance pools; original first-child unrestricted Black pools after either root choice; current completed later-entry/conversion proof.",
+    "no_score_transfer": "Root Ke3/g4 values, source Ke6/f6 values and conditional Kf3/g4 values are different searches/owners/limits. Do not use a child number as the official root value or cause."
+  },
+  "historical_Ke6_counter_realization": {
+    "source": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-Ke3-all8-completed-human-reading-addendum.json",
+      "sha256": "9feb7e7785c505db7a195faa5014c623832390dfdcdd2fa07eae62b9bf4bc14f"
+    },
+    "scope": "Already completed h128/depth24 historical research only, not grafted into current h16 product.",
+    "lesson": "Nearly leading first Ke6 witness uses Kd2 and queenside exchanges, never f4/f5. Original c3 is lost, original a3 becomes the b6 passer and original b2 relocates to a3.",
+    "limit": "One supplied continuation does not establish every later defense or that g4 is necessary in each realization."
+  },
+  "minimum_basic_sufficiency": "A beginner need not read all branches. The selected basic should tell what immediate g4 prematurely spends, what the actual adequate defense prevents, which preserved preparation is useful and one appropriate response-sensitive conversion with its necessary price. A correct finite numeric preference, placement cycle or legal option by itself is insufficient.",
+  "human_delivery_vs_desired_hypothesis": {
+    "actual10a": "Retained-tempo fact, tested Kf3 preference and recorded turn-transfer are visible.",
+    "still_desired_not_delivered": "Adequate blockade, pressure that changes the opponent's viable defense, response-specific useful conversion and return to the original judgment.",
+    "not_a_product_success": "Neither this reasoning memo nor the author’s demonstration supplies the missing current product sentence or creates current completed evidence."
+  },
+  "criteria_and_results_unchanged": {
+    "old_four_full_utility": "0/4 unchanged",
+    "eight_source_full_utility": "0/8 unchanged",
+    "H05_firstpass": "Held10a partial full judgment stays sealed",
+    "new10b": "Basic not yet read at this seal; same criterion will apply"
+  },
+  "work_scope": "Only new research record/renders, original book reading pages60-62, memory-only legal replay, immutable criterion/historical-human-source files and supplied10a audit after firstpass. No engines, product/main/test/UI/runner edits or source inspection."
+}

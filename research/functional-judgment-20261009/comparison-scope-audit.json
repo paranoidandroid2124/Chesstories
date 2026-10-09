@@ -1,0 +1,2995 @@
+{
+  "schema_version": "chesstory.research.functional-choice-comparison-scope.v1",
+  "sealed_utc": "2026-10-08T16:37:41.391963+00:00",
+  "status": "read-only design; no executable query plan/engine role assigned yet",
+  "owned_workspace": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+  "old_workspace": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories",
+  "old_workspace_read_only": true,
+  "baseline": {
+    "copy_manifest_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\baseline-copy-manifest.json",
+    "copy_manifest_sha256": "4b16f669d33d0761fe95a1b98f990baf9b8ab2ab3f4572f59cea6f9261084fe3",
+    "software_baseline": "meaningv40a",
+    "declared_sources_verified_by_copy": 74,
+    "declared_classes_verified_by_copy": 1824,
+    "classhash_global_reverification_performed_in_this_design": false,
+    "historical_records_rewritten": false
+  },
+  "sources_sha256_verified_before_and_after": {
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcFunctional33\\stored-reports.jsonl": "d2a787848bc8059735505148103e37ec8f0c22eb2e392996c44f5be6de198bf6",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcFunctional33\\final-snapshots.jsonl.gz": "3e89af3f111939c817c6e680b947c7bdc5d069ca59eb25141377b696710bb2d8",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-minimum-comparisons-semantic-reading.json": "cd84018cf264e9842d19c7c7aeb0753f2ea8d6605016f28eb4d081486f3e9e80",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\nb1-final37-basic-only-human-reading.json": "2bf72ee0916fcc97dff55c3e0d0442cd090e92501466b1c104f1ddce3572ac8b",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\functional-followup-v35-controlled-human-reading.json": "c1357f66e5e7b6c38ff7c95cecd6fb98ee1075065fb9c83a9f9531c69f390d17",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-functional-followup-product-inputs.json": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\nb1-owned-material-implementation37.json": "18d50a959c12e2cd1d0540b7688e90e92248987c05a3a89e2a30533c075f209c",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-minimum-comparisons-plan.json": "b74c335b95f1c93cd53bcef972e5f2cfd9a697c95f91777b2901c6955b7c3034",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min-final-independent-addendum.json": "6bc1240319113b06f9b7539ecc1e6bd2249c201c37bdda1efa8bca805d7cd10a",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5-final-independent-addendum.json": "79408e749aab23eddf595e824f2818cdfd68cb7e96a0c2ab6930309131ac6311",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-same-defense-retained-check-final-addendum.json": "805f054d7c4f2dc2143ec8cec55f64c0f690470cc6a6cb5b72746c077aeca23b",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-selected-28-attempt-final-cost-ledger.json": "2590914c286c6f890a1e21802b9ba8a9459bd91be7648ab38245c7410788008a",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-Ke3-all8-completed-human-reading-addendum.json": "9feb7e7785c505db7a195faa5014c623832390dfdcdd2fa07eae62b9bf4bc14f",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\replay_public_reports.py": "e818e1b8e08b5018d738c632030939d36928519a8155950ca29fb9bfe7ed2b6a",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\decision-timing-20261006\\fresh.py": "b84628a361c94feb75c385d2f3631f45870183af7dde068c832a245735a6a12c",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\run_comparison_plan.py": "d51bac8b8fdc708783edd9972364602f90e7bcd95fa0762e332abd5f67d7b059",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\replay_exact_projection.py": "b5eebf66bf93bbb208efb605594c02055efa81bc199a4f9f7510eefccc6f59f4",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\complete_comparisons.py": "2e1f1ff26384d145dcbd8c8418d4bbb680ce81fb16ed1d5d5713a0c64bb420b4",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\answer-selection-20261004\\fresh-run.py": "4b6c59ac764fc9a577923bc6ab4eeccbe0319004b57ac0af7ded226575aca835",
+    "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcFunctional33\\journal.jsonl.gz": "1d3bef44f3e95826bcfc7af5858840c19e95ebf1b1acc527311aec1505b71937"
+  },
+  "central_scope_decision": "A matched hypothetical recapture difference and a favorable later PV are already valid factual evidence. The new goal must complete current own choices under actual strong defense groups and attach only those bounded receipts to the original owned root question. A failed intervention must not refute another good root realization.",
+  "NB1_NC4_actual_saved_evidence": [
+    {
+      "case_id": "FC-SG45-NB1",
+      "actual_request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "human-evaluation-FC-SG45-NB1",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "d2b1",
+          "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 180000
+      },
+      "whole_saved_numeric_primary": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:candidate-comparison:915c80fff1550f2417968b2d614d524b990d2fdad2a1f8fafd4cc26ea9cd4d2e",
+        "verdict_code": "inaccuracy",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -4.629713321256702,
+          "kind": "engine_evaluation"
+        },
+        "reference_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "d2c4",
+            "e8f6",
+            "a1a7",
+            "d8a8",
+            "d1d6",
+            "c6d6",
+            "c4d6",
+            "a8a7",
+            "e2d3",
+            "f8d8",
+            "d3b3",
+            "d7f8",
+            "b3b6",
+            "a7a1",
+            "g2f1",
+            "f8e6",
+            "g1g2",
+            "g7f8"
+          ],
+          "win_percent_for_mover": 65.32413731006851,
+          "depth": 16
+        },
+        "played_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "d2b1",
+            "e8c7",
+            "e2d2",
+            "c7b5",
+            "b1c3",
+            "b5c3",
+            "d2c3",
+            "c6c7",
+            "c3a3",
+            "d7b8",
+            "d1d8",
+            "f8d8",
+            "e3g5",
+            "d8d4"
+          ],
+          "win_percent_for_mover": 60.694423988811806,
+          "depth": 16
+        }
+      },
+      "first_reply_pool": {
+        "saved_report_index": 4,
+        "whole_issued_work": {
+          "work_id": "work:4",
+          "purpose": "response_comparison",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "execution_key_sha256": "05e02ff089d7454a3791b6c5e9e56983ffb5cb73721654f121b0a5feefa740ff",
+          "variant": "standard",
+          "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "engine_position_moves_uci": [
+            "e2e4",
+            "c7c6",
+            "d2d3",
+            "d7d5",
+            "b1d2",
+            "g7g6",
+            "g1f3",
+            "f8g7",
+            "g2g3",
+            "g8f6",
+            "f1g2",
+            "e8g8",
+            "e1g1",
+            "c8g4",
+            "h2h3",
+            "g4f3",
+            "d1f3",
+            "b8d7",
+            "f3e2",
+            "d5e4",
+            "d3e4",
+            "d8c7",
+            "a2a4",
+            "a8d8",
+            "d2b3",
+            "b7b6",
+            "c1e3",
+            "c6c5",
+            "a4a5",
+            "e7e5",
+            "b3d2",
+            "f6e8",
+            "a5b6",
+            "a7b6",
+            "f1d1",
+            "c7c6",
+            "d2b1"
+          ],
+          "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19",
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "search_limits": {
+            "depth": 16,
+            "nodes": 20000000,
+            "movetime_ms": 5000,
+            "multi_pv": 3
+          },
+          "max_search_elapsed_ms": 6000,
+          "search_anchor": {
+            "root_move": "d2b1",
+            "root_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:2c3ceca390d34cd8a61409c2b2d21c81fed1354ddd1182326d7641b902329c74",
+            "position_id": "d281b24ab5a9ead14db1d0f1cf34a786e837acacba16616a4712d9b15e68fb71",
+            "prefix_moves_uci": [
+              "d2b1"
+            ]
+          }
+        },
+        "whole_completed_report": {
+          "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "work_id": "work:4",
+          "execution_key_sha256": "05e02ff089d7454a3791b6c5e9e56983ffb5cb73721654f121b0a5feefa740ff",
+          "outcome": {
+            "kind": "completed",
+            "line_suffixes": [
+              {
+                "moves": [
+                  "e8c7",
+                  "e2d2",
+                  "c7b5",
+                  "b1c3",
+                  "b5c3",
+                  "b2c3",
+                  "g7f6",
+                  "d2d5",
+                  "c6c7",
+                  "d5d6",
+                  "c7d6",
+                  "d1d6",
+                  "f6e7",
+                  "d6c6",
+                  "d8a8",
+                  "a1a8",
+                  "f8a8",
+                  "c6c7",
+                  "a8d8",
+                  "g2f1"
+                ],
+                "depth": 16,
+                "white_score": {
+                  "kind": "cp",
+                  "value": 119
+                }
+              },
+              {
+                "moves": [
+                  "e8d6",
+                  "b1c3",
+                  "d7f6",
+                  "e3g5",
+                  "d8a8",
+                  "a1a8",
+                  "f8a8",
+                  "e2f3",
+                  "d6e8",
+                  "g2f1",
+                  "c6e6",
+                  "f3e3",
+                  "e8c7",
+                  "b2b3",
+                  "a8c8",
+                  "e3d2"
+                ],
+                "depth": 16,
+                "white_score": {
+                  "kind": "cp",
+                  "value": 140
+                }
+              },
+              {
+                "moves": [
+                  "d8c8",
+                  "b1a3",
+                  "c5c4",
+                  "a3c4",
+                  "c6c4",
+                  "e2c4",
+                  "c8c4",
+                  "d1d7",
+                  "c4c2",
+                  "a1a2",
+                  "h7h5",
+                  "g2f3",
+                  "b6b5",
+                  "f3d1",
+                  "e8f6",
+                  "d7b7"
+                ],
+                "depth": 16,
+                "white_score": {
+                  "kind": "cp",
+                  "value": 148
+                }
+              }
+            ]
+          }
+        },
+        "all_current_legal_black_roots": [
+          "b6b5",
+          "c5c4",
+          "c6a4",
+          "c6a8",
+          "c6b5",
+          "c6b7",
+          "c6c7",
+          "c6c8",
+          "c6d5",
+          "c6d6",
+          "c6e4",
+          "c6e6",
+          "c6f6",
+          "d7b8",
+          "d7f6",
+          "d8a8",
+          "d8b8",
+          "d8c8",
+          "e8c7",
+          "e8d6",
+          "e8f6",
+          "f7f5",
+          "f7f6",
+          "g6g5",
+          "g7f6",
+          "g7h6",
+          "g7h8",
+          "g8h8",
+          "h7h5",
+          "h7h6"
+        ],
+        "eligible_count": 30,
+        "returned_count": 3,
+        "all_eligible_unrestricted_search_but_only_three_individually_returned": true,
+        "returned_routes": [
+          {
+            "root_reply_uci": "e8c7",
+            "root_reply_san": "Nc7",
+            "white_score": {
+              "kind": "cp",
+              "value": 119
+            },
+            "depth": 16,
+            "pv_uci": [
+              "e8c7",
+              "e2d2",
+              "c7b5",
+              "b1c3",
+              "b5c3",
+              "b2c3",
+              "g7f6",
+              "d2d5",
+              "c6c7",
+              "d5d6",
+              "c7d6",
+              "d1d6",
+              "f6e7",
+              "d6c6",
+              "d8a8",
+              "a1a8",
+              "f8a8",
+              "c6c7",
+              "a8d8",
+              "g2f1"
+            ],
+            "pv_san": [
+              "Nc7",
+              "Qd2",
+              "Nb5",
+              "Nc3",
+              "Nxc3",
+              "bxc3",
+              "Bf6",
+              "Qd5",
+              "Qc7",
+              "Qd6",
+              "Qxd6",
+              "Rxd6",
+              "Be7",
+              "Rc6",
+              "Ra8",
+              "Rxa8",
+              "Rxa8",
+              "Rc7",
+              "Rd8",
+              "Bf1"
+            ],
+            "first_own_action_uci": "e2d2",
+            "first_own_action_san": "Qd2",
+            "captures_in_this_returned_example": [
+              {
+                "offset_after_root": 5,
+                "uci": "b5c3",
+                "san": "Nxc3",
+                "actor_identity_at_root_child": "black:n:e8",
+                "victim_identity_at_root_child": "white:n:b1"
+              },
+              {
+                "offset_after_root": 6,
+                "uci": "b2c3",
+                "san": "bxc3",
+                "actor_identity_at_root_child": "white:p:b2",
+                "victim_identity_at_root_child": "black:n:e8"
+              },
+              {
+                "offset_after_root": 11,
+                "uci": "c7d6",
+                "san": "Qxd6",
+                "actor_identity_at_root_child": "black:q:c6",
+                "victim_identity_at_root_child": "white:q:e2"
+              },
+              {
+                "offset_after_root": 12,
+                "uci": "d1d6",
+                "san": "Rxd6",
+                "actor_identity_at_root_child": "white:r:d1",
+                "victim_identity_at_root_child": "black:q:c6"
+              },
+              {
+                "offset_after_root": 16,
+                "uci": "a1a8",
+                "san": "Rxa8",
+                "actor_identity_at_root_child": "white:r:a1",
+                "victim_identity_at_root_child": "black:r:d8"
+              },
+              {
+                "offset_after_root": 17,
+                "uci": "f8a8",
+                "san": "Rxa8",
+                "actor_identity_at_root_child": "black:r:f8",
+                "victim_identity_at_root_child": "white:r:a1"
+              }
+            ],
+            "replayed_legal": true,
+            "separate_own_action_value_receipt_present": false
+          },
+          {
+            "root_reply_uci": "e8d6",
+            "root_reply_san": "Nd6",
+            "white_score": {
+              "kind": "cp",
+              "value": 140
+            },
+            "depth": 16,
+            "pv_uci": [
+              "e8d6",
+              "b1c3",
+              "d7f6",
+              "e3g5",
+              "d8a8",
+              "a1a8",
+              "f8a8",
+              "e2f3",
+              "d6e8",
+              "g2f1",
+              "c6e6",
+              "f3e3",
+              "e8c7",
+              "b2b3",
+              "a8c8",
+              "e3d2"
+            ],
+            "pv_san": [
+              "Nd6",
+              "Nc3",
+              "Nf6",
+              "Bg5",
+              "Ra8",
+              "Rxa8",
+              "Rxa8",
+              "Qf3",
+              "Nde8",
+              "Bf1",
+              "Qe6",
+              "Qe3",
+              "Nc7",
+              "b3",
+              "Rc8",
+              "Qd2"
+            ],
+            "first_own_action_uci": "b1c3",
+            "first_own_action_san": "Nc3",
+            "captures_in_this_returned_example": [
+              {
+                "offset_after_root": 6,
+                "uci": "a1a8",
+                "san": "Rxa8",
+                "actor_identity_at_root_child": "white:r:a1",
+                "victim_identity_at_root_child": "black:r:d8"
+              },
+              {
+                "offset_after_root": 7,
+                "uci": "f8a8",
+                "san": "Rxa8",
+                "actor_identity_at_root_child": "black:r:f8",
+                "victim_identity_at_root_child": "white:r:a1"
+              }
+            ],
+            "replayed_legal": true,
+            "separate_own_action_value_receipt_present": false
+          },
+          {
+            "root_reply_uci": "d8c8",
+            "root_reply_san": "Rc8",
+            "white_score": {
+              "kind": "cp",
+              "value": 148
+            },
+            "depth": 16,
+            "pv_uci": [
+              "d8c8",
+              "b1a3",
+              "c5c4",
+              "a3c4",
+              "c6c4",
+              "e2c4",
+              "c8c4",
+              "d1d7",
+              "c4c2",
+              "a1a2",
+              "h7h5",
+              "g2f3",
+              "b6b5",
+              "f3d1",
+              "e8f6",
+              "d7b7"
+            ],
+            "pv_san": [
+              "Rc8",
+              "Na3",
+              "c4",
+              "Nxc4",
+              "Qxc4",
+              "Qxc4",
+              "Rxc4",
+              "Rxd7",
+              "Rxc2",
+              "Ra2",
+              "h5",
+              "Bf3",
+              "b5",
+              "Bd1",
+              "Nf6",
+              "Rb7"
+            ],
+            "first_own_action_uci": "b1a3",
+            "first_own_action_san": "Na3",
+            "captures_in_this_returned_example": [
+              {
+                "offset_after_root": 4,
+                "uci": "a3c4",
+                "san": "Nxc4",
+                "actor_identity_at_root_child": "white:n:b1",
+                "victim_identity_at_root_child": "black:p:c5"
+              },
+              {
+                "offset_after_root": 5,
+                "uci": "c6c4",
+                "san": "Qxc4",
+                "actor_identity_at_root_child": "black:q:c6",
+                "victim_identity_at_root_child": "white:n:b1"
+              },
+              {
+                "offset_after_root": 6,
+                "uci": "e2c4",
+                "san": "Qxc4",
+                "actor_identity_at_root_child": "white:q:e2",
+                "victim_identity_at_root_child": "black:q:c6"
+              },
+              {
+                "offset_after_root": 7,
+                "uci": "c8c4",
+                "san": "Rxc4",
+                "actor_identity_at_root_child": "black:r:d8",
+                "victim_identity_at_root_child": "white:q:e2"
+              },
+              {
+                "offset_after_root": 8,
+                "uci": "d1d7",
+                "san": "Rxd7",
+                "actor_identity_at_root_child": "white:r:d1",
+                "victim_identity_at_root_child": "black:n:d7"
+              },
+              {
+                "offset_after_root": 9,
+                "uci": "c4c2",
+                "san": "Rxc2",
+                "actor_identity_at_root_child": "black:r:d8",
+                "victim_identity_at_root_child": "white:p:c2"
+              }
+            ],
+            "replayed_legal": true,
+            "separate_own_action_value_receipt_present": false
+          }
+        ]
+      },
+      "old_job_elapsed_ms": 14704,
+      "old_actual_query_count": 6
+    },
+    {
+      "case_id": "FC-SG45-NC4",
+      "actual_request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "human-evaluation-FC-SG45-NC4",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "d2c4",
+          "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 180000
+      },
+      "whole_saved_numeric_primary": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:candidate-comparison:113cc48491bc0eb0a07be8cc84f8f97d2f9cb2b5255783d8f7b9097430e7ff40",
+        "runner_up_verdict_code": "inaccuracy",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -3.873121242674152,
+          "kind": "engine_evaluation"
+        },
+        "best_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "d2c4",
+            "e8f6",
+            "d1d6",
+            "c6c7",
+            "a1d1",
+            "b6b5",
+            "c4a3",
+            "b5b4",
+            "a3c4",
+            "f8e8",
+            "h3h4",
+            "g7f8",
+            "d6d2",
+            "h7h5",
+            "c4d6"
+          ],
+          "win_percent_for_mover": 66.4824067524339,
+          "depth": 16
+        },
+        "runner_up_endpoint": {
+          "kind": "engine_search",
+          "moves": [
+            "h3h4",
+            "e8f6",
+            "g2f1",
+            "c6c7",
+            "c2c3",
+            "d8b8",
+            "e2a6",
+            "f6g4",
+            "a6a7",
+            "c7a7",
+            "a1a7",
+            "d7f6"
+          ],
+          "win_percent_for_mover": 62.60928550975975,
+          "depth": 16
+        }
+      },
+      "first_reply_pool": {
+        "saved_report_index": 2,
+        "whole_issued_work": {
+          "work_id": "work:2",
+          "purpose": "response_comparison",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "execution_key_sha256": "1f7655d7dacfa049f8f89d5af0c1bef1bcd6f87a3313c0094e82d18b65b87b23",
+          "variant": "standard",
+          "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "engine_position_moves_uci": [
+            "e2e4",
+            "c7c6",
+            "d2d3",
+            "d7d5",
+            "b1d2",
+            "g7g6",
+            "g1f3",
+            "f8g7",
+            "g2g3",
+            "g8f6",
+            "f1g2",
+            "e8g8",
+            "e1g1",
+            "c8g4",
+            "h2h3",
+            "g4f3",
+            "d1f3",
+            "b8d7",
+            "f3e2",
+            "d5e4",
+            "d3e4",
+            "d8c7",
+            "a2a4",
+            "a8d8",
+            "d2b3",
+            "b7b6",
+            "c1e3",
+            "c6c5",
+            "a4a5",
+            "e7e5",
+            "b3d2",
+            "f6e8",
+            "a5b6",
+            "a7b6",
+            "f1d1",
+            "c7c6",
+            "d2c4"
+          ],
+          "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19",
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "search_limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "max_search_elapsed_ms": 3500,
+          "search_anchor": {
+            "root_move": "d2c4",
+            "root_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2c4:evidence:transition:82fca0d6105ae557fd4bc4c5bcf3d11cefcee2d553a695c213c69d84545c54ee",
+            "position_id": "7c89252ff2bfd88e5943bb1e39e9f4eb7aa05dc8c434a821cca889c37ead136f",
+            "prefix_moves_uci": [
+              "d2c4"
+            ]
+          }
+        },
+        "whole_completed_report": {
+          "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+          "engine_profile": "sf18-smallnet-t2-h16-v1",
+          "work_id": "work:2",
+          "execution_key_sha256": "1f7655d7dacfa049f8f89d5af0c1bef1bcd6f87a3313c0094e82d18b65b87b23",
+          "outcome": {
+            "kind": "completed",
+            "line_suffixes": [
+              {
+                "moves": [
+                  "e8f6",
+                  "d1d6",
+                  "c6c7",
+                  "a1d1",
+                  "b6b5",
+                  "c4a3",
+                  "b5b4",
+                  "a3c4",
+                  "f8e8",
+                  "e2f3",
+                  "d7f8",
+                  "d6d8",
+                  "e8d8",
+                  "d1d8",
+                  "c7d8",
+                  "c4e5",
+                  "d8a5",
+                  "f3d1",
+                  "a5a2",
+                  "e5c6",
+                  "a2b2"
+                ],
+                "depth": 16,
+                "white_score": {
+                  "kind": "cp",
+                  "value": 160
+                }
+              },
+              {
+                "moves": [
+                  "c6c7",
+                  "d1d2",
+                  "e8f6",
+                  "a1d1",
+                  "b6b5",
+                  "c4d6",
+                  "b5b4",
+                  "h3h4",
+                  "d7b6",
+                  "e2b5",
+                  "d8b8",
+                  "b2b3",
+                  "b6d7",
+                  "b5a6",
+                  "f6g4"
+                ],
+                "depth": 16,
+                "white_score": {
+                  "kind": "cp",
+                  "value": 190
+                }
+              },
+              {
+                "moves": [
+                  "c6b7",
+                  "h3h4",
+                  "e8f6",
+                  "d1d2",
+                  "b7b8",
+                  "c2c3",
+                  "b6b5",
+                  "c4d6",
+                  "b5b4",
+                  "c3b4",
+                  "b8b4",
+                  "a1a7",
+                  "b4b6",
+                  "a7b7"
+                ],
+                "depth": 16,
+                "white_score": {
+                  "kind": "cp",
+                  "value": 202
+                }
+              }
+            ]
+          }
+        },
+        "all_current_legal_black_roots": [
+          "b6b5",
+          "c6a4",
+          "c6a8",
+          "c6b5",
+          "c6b7",
+          "c6c7",
+          "c6c8",
+          "c6d5",
+          "c6d6",
+          "c6e4",
+          "c6e6",
+          "c6f6",
+          "d7b8",
+          "d7f6",
+          "d8a8",
+          "d8b8",
+          "d8c8",
+          "e8c7",
+          "e8d6",
+          "e8f6",
+          "f7f5",
+          "f7f6",
+          "g6g5",
+          "g7f6",
+          "g7h6",
+          "g7h8",
+          "g8h8",
+          "h7h5",
+          "h7h6"
+        ],
+        "eligible_count": 29,
+        "returned_count": 3,
+        "all_eligible_unrestricted_search_but_only_three_individually_returned": true,
+        "returned_routes": [
+          {
+            "root_reply_uci": "e8f6",
+            "root_reply_san": "Nef6",
+            "white_score": {
+              "kind": "cp",
+              "value": 160
+            },
+            "depth": 16,
+            "pv_uci": [
+              "e8f6",
+              "d1d6",
+              "c6c7",
+              "a1d1",
+              "b6b5",
+              "c4a3",
+              "b5b4",
+              "a3c4",
+              "f8e8",
+              "e2f3",
+              "d7f8",
+              "d6d8",
+              "e8d8",
+              "d1d8",
+              "c7d8",
+              "c4e5",
+              "d8a5",
+              "f3d1",
+              "a5a2",
+              "e5c6",
+              "a2b2"
+            ],
+            "pv_san": [
+              "Nef6",
+              "Rd6",
+              "Qc7",
+              "Rad1",
+              "b5",
+              "Na3",
+              "b4",
+              "Nc4",
+              "Rfe8",
+              "Qf3",
+              "Nf8",
+              "Rxd8",
+              "Rxd8",
+              "Rxd8",
+              "Qxd8",
+              "Nxe5",
+              "Qa5",
+              "Qd1",
+              "Qa2",
+              "Nc6",
+              "Qxb2"
+            ],
+            "first_own_action_uci": "d1d6",
+            "first_own_action_san": "Rd6",
+            "captures_in_this_returned_example": [
+              {
+                "offset_after_root": 12,
+                "uci": "d6d8",
+                "san": "Rxd8",
+                "actor_identity_at_root_child": "white:r:d1",
+                "victim_identity_at_root_child": "black:r:d8"
+              },
+              {
+                "offset_after_root": 13,
+                "uci": "e8d8",
+                "san": "Rxd8",
+                "actor_identity_at_root_child": "black:r:f8",
+                "victim_identity_at_root_child": "white:r:d1"
+              },
+              {
+                "offset_after_root": 14,
+                "uci": "d1d8",
+                "san": "Rxd8",
+                "actor_identity_at_root_child": "white:r:a1",
+                "victim_identity_at_root_child": "black:r:f8"
+              },
+              {
+                "offset_after_root": 15,
+                "uci": "c7d8",
+                "san": "Qxd8",
+                "actor_identity_at_root_child": "black:q:c6",
+                "victim_identity_at_root_child": "white:r:a1"
+              },
+              {
+                "offset_after_root": 16,
+                "uci": "c4e5",
+                "san": "Nxe5",
+                "actor_identity_at_root_child": "white:n:c4",
+                "victim_identity_at_root_child": "black:p:e5"
+              },
+              {
+                "offset_after_root": 21,
+                "uci": "a2b2",
+                "san": "Qxb2",
+                "actor_identity_at_root_child": "black:q:c6",
+                "victim_identity_at_root_child": "white:p:b2"
+              }
+            ],
+            "replayed_legal": true,
+            "separate_own_action_value_receipt_present": false
+          },
+          {
+            "root_reply_uci": "c6c7",
+            "root_reply_san": "Qc7",
+            "white_score": {
+              "kind": "cp",
+              "value": 190
+            },
+            "depth": 16,
+            "pv_uci": [
+              "c6c7",
+              "d1d2",
+              "e8f6",
+              "a1d1",
+              "b6b5",
+              "c4d6",
+              "b5b4",
+              "h3h4",
+              "d7b6",
+              "e2b5",
+              "d8b8",
+              "b2b3",
+              "b6d7",
+              "b5a6",
+              "f6g4"
+            ],
+            "pv_san": [
+              "Qc7",
+              "Rd2",
+              "Nef6",
+              "Rad1",
+              "b5",
+              "Nd6",
+              "b4",
+              "h4",
+              "Nb6",
+              "Qb5",
+              "Rb8",
+              "b3",
+              "Nbd7",
+              "Qa6",
+              "Ng4"
+            ],
+            "first_own_action_uci": "d1d2",
+            "first_own_action_san": "Rd2",
+            "captures_in_this_returned_example": [],
+            "replayed_legal": true,
+            "separate_own_action_value_receipt_present": false
+          },
+          {
+            "root_reply_uci": "c6b7",
+            "root_reply_san": "Qb7",
+            "white_score": {
+              "kind": "cp",
+              "value": 202
+            },
+            "depth": 16,
+            "pv_uci": [
+              "c6b7",
+              "h3h4",
+              "e8f6",
+              "d1d2",
+              "b7b8",
+              "c2c3",
+              "b6b5",
+              "c4d6",
+              "b5b4",
+              "c3b4",
+              "b8b4",
+              "a1a7",
+              "b4b6",
+              "a7b7"
+            ],
+            "pv_san": [
+              "Qb7",
+              "h4",
+              "Nef6",
+              "Rd2",
+              "Qb8",
+              "c3",
+              "b5",
+              "Nd6",
+              "b4",
+              "cxb4",
+              "Qxb4",
+              "Ra7",
+              "Qb6",
+              "Rb7"
+            ],
+            "first_own_action_uci": "h3h4",
+            "first_own_action_san": "h4",
+            "captures_in_this_returned_example": [
+              {
+                "offset_after_root": 10,
+                "uci": "c3b4",
+                "san": "cxb4",
+                "actor_identity_at_root_child": "white:p:c2",
+                "victim_identity_at_root_child": "black:p:b6"
+              },
+              {
+                "offset_after_root": 11,
+                "uci": "b8b4",
+                "san": "Qxb4",
+                "actor_identity_at_root_child": "black:q:c6",
+                "victim_identity_at_root_child": "white:p:c2"
+              }
+            ],
+            "replayed_legal": true,
+            "separate_own_action_value_receipt_present": false
+          }
+        ]
+      },
+      "old_job_elapsed_ms": 17143,
+      "old_actual_query_count": 4
+    }
+  ],
+  "NB1_numeric_assessment_separate": {
+    "actual_verdict": {
+      "kind": "move_verdict",
+      "comparison_evidence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:candidate-comparison:915c80fff1550f2417968b2d614d524b990d2fdad2a1f8fafd4cc26ea9cd4d2e",
+      "verdict_code": "inaccuracy",
+      "verdict_confidence": "engine_backed",
+      "mover": "white",
+      "delta": {
+        "candidate_win_percent_delta_for_mover": -4.629713321256702,
+        "kind": "engine_evaluation"
+      },
+      "reference_endpoint": {
+        "kind": "engine_search",
+        "moves": [
+          "d2c4",
+          "e8f6",
+          "a1a7",
+          "d8a8",
+          "d1d6",
+          "c6d6",
+          "c4d6",
+          "a8a7",
+          "e2d3",
+          "f8d8",
+          "d3b3",
+          "d7f8",
+          "b3b6",
+          "a7a1",
+          "g2f1",
+          "f8e6",
+          "g1g2",
+          "g7f8"
+        ],
+        "win_percent_for_mover": 65.32413731006851,
+        "depth": 16
+      },
+      "played_endpoint": {
+        "kind": "engine_search",
+        "moves": [
+          "d2b1",
+          "e8c7",
+          "e2d2",
+          "c7b5",
+          "b1c3",
+          "b5c3",
+          "d2c3",
+          "c6c7",
+          "c3a3",
+          "d7b8",
+          "d1d8",
+          "f8d8",
+          "e3g5",
+          "d8d4"
+        ],
+        "win_percent_for_mover": 60.694423988811806,
+        "depth": 16
+      }
+    },
+    "actual_root_pair_receipt": {
+      "issued_work": {
+        "work_id": "work:3",
+        "purpose": "focus_comparison",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "execution_key_sha256": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+        "variant": "standard",
+        "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "engine_position_moves_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6",
+          "f1d1",
+          "c7c6"
+        ],
+        "search_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "d2c4",
+            "d2b1"
+          ]
+        },
+        "search_limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "max_search_elapsed_ms": 3500
+      },
+      "report": {
+        "schema_version": "chesstory.position-commentary.engine-work-report.v6",
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "work_id": "work:3",
+        "execution_key_sha256": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2c4",
+                "e8f6",
+                "a1a7",
+                "d8a8",
+                "d1d6",
+                "c6d6",
+                "c4d6",
+                "a8a7",
+                "e2d3",
+                "f8d8",
+                "d3b3",
+                "d7f8",
+                "b3b6",
+                "a7a1",
+                "g2f1",
+                "f8e6",
+                "g1g2",
+                "g7f8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 172
+              }
+            },
+            {
+              "moves": [
+                "d2b1",
+                "e8c7",
+                "e2d2",
+                "c7b5",
+                "b1c3",
+                "b5c3",
+                "d2c3",
+                "c6c7",
+                "c3a3",
+                "d7b8",
+                "d1d8",
+                "f8d8",
+                "e3g5",
+                "d8d4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 118
+              }
+            }
+          ]
+        }
+      }
+    },
+    "root_cp172_versus118_at_depth16_same_work": true,
+    "child_pool_white119_140_148_is_not_root_delta": true,
+    "numeric_inaccuracy_does_not_mean_material_blunder_or_every_Nb1_plan_bad": true,
+    "book_good_choices_and_this_engine_label_kept_separate": true,
+    "Nc4_job_current_numeric_opponent_is_h4_not_Nb1": true,
+    "Nc4_Nb1_exact_root_pair_in_NC4_job_saved_receipts_present": false,
+    "do_not_graft_NB1_root_receipt_into_other_job": true
+  },
+  "NB1_routes_under_saved_three_actual_defenders": {
+    "Nc7": {
+      "returned_route": "Nb1 Nc7 Qd2 Nb5 Nc3 Nxc3 bxc3 (full pool); Qxc3 is a different good returned root/pair realization",
+      "resource": "A knight route via c3 can remain useful even when the knight is exchanged.",
+      "price": "Nxc3 takes the original Nb1 knight; actual recapture actor differs across returned paths. Follow exact path, not a forced pawn/queen recapture invariant.",
+      "value_status": "Whole pool branch is evaluated positive at d16; a separately owned first own action value comparison is not present."
+    },
+    "Nd6": {
+      "returned_route": "Nb1 Nd6 Nc3 Ndf6 Bg5 Ra8 Rxa8 Rxa8...",
+      "resource": "The knight can use c3; rook exchange and bishop/queen improvement differ from direct Rd6.",
+      "price": "Retain original a1 rook/Ra8 exchange when that route is selected.",
+      "value_status": "Positive conditional branch at d16; do not borrow root delta or Rc8/Nc7 values."
+    },
+    "Rc8": {
+      "returned_route": "Nb1 Rc8 Na3 c4 Nxc4 Qxc4 Qxc4 Rxc4 Rxd7 Rxc2...",
+      "resource": "Na3 and exchanges are a different usable realization; Nb1 need not always lead to Nc3.",
+      "price": "The knight/pawn and queen/rook exchanges, BlackNd7 capture and Whitec2 pawn loss belong to this path.",
+      "value_status": "Positive conditional branch at d16; material sequence is not a universal safety guarantee."
+    }
+  },
+  "matched_Nef6_Rd6_scope": {
+    "current_partial_mechanism": {
+      "immediate_Qxd6_Nxd6_difference_recoverable": true,
+      "matched_conditional_material_mechanism_answered": true,
+      "other_good_Nb1_realization_unfairly_condemned": false,
+      "full_original_functional_question_complete": false,
+      "root_grade_cause_explained": false,
+      "first_observable_failure": "Matched legal material mechanism now passes; the next missing semantic layer is the broader useful-route/defensive-value account, plus a clearer placement of Rxa7 within its own variation."
+    },
+    "new_full_utility_claim_already_proven": false,
+    "exact_current_intervention_prefixes": [
+      {
+        "relative_prefix_uci": [
+          "d2b1",
+          "e8f6",
+          "d1d6"
+        ],
+        "relative_prefix_san": [
+          "Nb1",
+          "Nef6",
+          "Rd6"
+        ],
+        "label": "constructed Nb1/Nef6/Rd6",
+        "required_question": "conditional material/value counter only",
+        "fen": "3r1rk1/3n1pbp/1pqR1np1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 b - - 5 20",
+        "all_legal_moves_uci": [
+          "b6b5",
+          "c5c4",
+          "c6a4",
+          "c6a8",
+          "c6b5",
+          "c6b7",
+          "c6c7",
+          "c6c8",
+          "c6d5",
+          "c6d6",
+          "c6e4",
+          "d7b8",
+          "d8a8",
+          "d8b8",
+          "d8c8",
+          "d8e8",
+          "f6d5",
+          "f6e4",
+          "f6e8",
+          "f6g4",
+          "f6h5",
+          "f8e8",
+          "g6g5",
+          "g7h6",
+          "g7h8",
+          "g8h8",
+          "h7h5",
+          "h7h6"
+        ],
+        "legal_count": 28,
+        "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+        "basis": "explicit constructed matched intervention"
+      },
+      {
+        "relative_prefix_uci": [
+          "d2c4",
+          "e8f6",
+          "d1d6"
+        ],
+        "relative_prefix_san": [
+          "Nc4",
+          "Nef6",
+          "Rd6"
+        ],
+        "label": "constructed Nc4/Nef6/Rd6",
+        "required_question": "conditional material/value counter only",
+        "fen": "3r1rk1/3n1pbp/1pqR1np1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R5K1 b - - 5 20",
+        "all_legal_moves_uci": [
+          "b6b5",
+          "c6a4",
+          "c6a8",
+          "c6b5",
+          "c6b7",
+          "c6c7",
+          "c6c8",
+          "c6d5",
+          "c6d6",
+          "c6e4",
+          "d7b8",
+          "d8a8",
+          "d8b8",
+          "d8c8",
+          "d8e8",
+          "f6d5",
+          "f6e4",
+          "f6e8",
+          "f6g4",
+          "f6h5",
+          "f8e8",
+          "g6g5",
+          "g7h6",
+          "g7h8",
+          "g8h8",
+          "h7h5",
+          "h7h6"
+        ],
+        "legal_count": 27,
+        "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+        "basis": "explicit constructed matched intervention"
+      }
+    ],
+    "Nc4_Qxd6_Nxd6_difference": "Already legal and delivered conditionally; do not rerun a capture-existence test merely to count progress.",
+    "strongest_NB1_reply_is_not_named_Nef6_in_saved_pool": true,
+    "old_Nc7_Rd6_controls_already_completed": [
+      {
+        "question_id": "SG45-queen-reorganization",
+        "status": "different_good_realizations_supported; original_root_ranking_unresolved",
+        "prefix": [
+          "f1d1",
+          "c7c6"
+        ],
+        "queries": [
+          {
+            "query_id": "SG45-queen-reorganization-wholelegal-d24-180s",
+            "scope": "all_legal_root_search_top_three_returned",
+            "elapsed_ms": 30076,
+            "completed_depth": 24,
+            "nodes": 23532034,
+            "returned_roots": [
+              {
+                "san": "Nc4",
+                "white_cp": 197
+              },
+              {
+                "san": "Bg5",
+                "white_cp": 143
+              },
+              {
+                "san": "h4",
+                "white_cp": 137
+              }
+            ],
+            "returned_best_line_san": [
+              "Nc4",
+              "Nef6",
+              "Rd6",
+              "Qc7",
+              "Rad1",
+              "Rfe8",
+              "h4",
+              "Rb8",
+              "Bh3",
+              "Red8",
+              "Na3",
+              "Nf8",
+              "Nb5",
+              "Qe7",
+              "Bg5",
+              "h6",
+              "Bxf6",
+              "Bxf6",
+              "h5",
+              "Rxd6",
+              "Rxd6",
+              "gxh5",
+              "Qxh5",
+              "Bg5",
+              "Bf5"
+            ]
+          },
+          {
+            "query_id": "SG45-queen-reorganization-named-d24-180s",
+            "scope": "only_registered_named_roots",
+            "elapsed_ms": 12139,
+            "completed_depth": 24,
+            "nodes": 14253126,
+            "returned_roots": [
+              {
+                "san": "Nc4",
+                "white_cp": 191
+              },
+              {
+                "san": "Nb1",
+                "white_cp": 108
+              }
+            ],
+            "returned_best_line_san": [
+              "Nc4",
+              "Qb7",
+              "c3",
+              "Nef6",
+              "Rd2",
+              "Ra8",
+              "Rad1",
+              "Qc7",
+              "Nd6",
+              "Nb8",
+              "Bf1",
+              "Nc6",
+              "Bg5",
+              "h6",
+              "Nb5",
+              "Qc8",
+              "Bxf6",
+              "Bxf6",
+              "h4",
+              "Rd8",
+              "Rxd8+",
+              "Nxd8"
+            ]
+          }
+        ]
+      },
+      {
+        "question_id": "SG45-Rd6-with-defender",
+        "status": "conditional_price_and_stronger_defense_confirmed_at_registered_depth",
+        "prefix": [
+          "f1d1",
+          "c7c6",
+          "d2c4",
+          "e8c7",
+          "d1d6"
+        ],
+        "queries": [
+          {
+            "query_id": "SG45-Rd6-with-defender-wholelegal-d24-180s",
+            "scope": "all_legal_root_search_top_three_returned",
+            "elapsed_ms": 34913,
+            "completed_depth": 24,
+            "nodes": 41259722,
+            "returned_roots": [
+              {
+                "san": "Qb7",
+                "white_cp": 275
+              },
+              {
+                "san": "Qb5",
+                "white_cp": 331
+              },
+              {
+                "san": "Qxd6",
+                "white_cp": 483
+              }
+            ],
+            "returned_best_line_san": [
+              "Qb7",
+              "Bg5",
+              "f6",
+              "Be3",
+              "Nb5",
+              "Rd5",
+              "Nc7",
+              "Rd2",
+              "Nb5",
+              "Nxe5",
+              "Nxe5",
+              "Rxd8",
+              "Rxd8",
+              "Qxb5",
+              "Bf8",
+              "f4",
+              "Nf7",
+              "Kh2",
+              "Qc7",
+              "Ra6",
+              "Rb8",
+              "Qa4",
+              "Be7",
+              "Qa2",
+              "Kg7",
+              "Ra7",
+              "Rb7",
+              "Rxb7",
+              "Qxb7",
+              "e5",
+              "Qc7",
+              "Bd5",
+              "Nxe5",
+              "fxe5",
+              "Qxe5",
+              "Bf4",
+              "Qe2+",
+              "Bg2",
+              "Qxc2",
+              "Qd5"
+            ]
+          },
+          {
+            "query_id": "SG45-Rd6-with-defender-named-d24-180s",
+            "scope": "only_registered_named_roots",
+            "elapsed_ms": 40384,
+            "completed_depth": 24,
+            "nodes": 33399673,
+            "returned_roots": [
+              {
+                "san": "Qxd6",
+                "white_cp": 491
+              }
+            ],
+            "returned_best_line_san": [
+              "Qxd6",
+              "Nxd6",
+              "Nb8",
+              "Nc4",
+              "b5",
+              "Bxc5",
+              "bxc4",
+              "Bxf8",
+              "Bxf8",
+              "Qxc4",
+              "Ne6",
+              "h4",
+              "Rd2",
+              "Qc3",
+              "Rd4",
+              "Bf1",
+              "Nd7",
+              "Bh3",
+              "Nec5",
+              "Bxd7",
+              "Nxd7",
+              "Qc7",
+              "Nc5",
+              "Qxe5",
+              "Rxe4",
+              "Qc7",
+              "Ne6",
+              "Qb8",
+              "Nd4"
+            ]
+          }
+        ]
+      },
+      {
+        "question_id": "SG45-Rd6-no-defender",
+        "status": "constructed_execution_refuted; broader_good_plan_preserved",
+        "prefix": [
+          "f1d1",
+          "c7c6",
+          "d2b1",
+          "e8c7",
+          "d1d6"
+        ],
+        "queries": [
+          {
+            "query_id": "SG45-Rd6-no-defender-wholelegal-d24-180s",
+            "scope": "all_legal_root_search_top_three_returned",
+            "elapsed_ms": 34774,
+            "completed_depth": 24,
+            "nodes": 40164516,
+            "returned_roots": [
+              {
+                "san": "Qxd6",
+                "white_cp": -446
+              },
+              {
+                "san": "Qb7",
+                "white_cp": 136
+              },
+              {
+                "san": "Qb5",
+                "white_cp": 377
+              }
+            ],
+            "returned_best_line_san": [
+              "Qxd6",
+              "h4",
+              "Nf6",
+              "Nc3",
+              "h6",
+              "Bh3",
+              "Qc6",
+              "g4",
+              "Ne6",
+              "g5",
+              "Nd4",
+              "Qc4",
+              "hxg5",
+              "hxg5",
+              "Nxe4",
+              "Bg2",
+              "Nd6",
+              "Bxd4",
+              "Nxc4",
+              "Bxc6",
+              "exd4",
+              "Nd5",
+              "Ne5",
+              "c3",
+              "dxc3"
+            ]
+          },
+          {
+            "query_id": "SG45-Rd6-no-defender-named-d24-180s",
+            "scope": "only_registered_named_roots",
+            "elapsed_ms": 12266,
+            "completed_depth": 24,
+            "nodes": 13876504,
+            "returned_roots": [
+              {
+                "san": "Qxd6",
+                "white_cp": -441
+              }
+            ],
+            "returned_best_line_san": [
+              "Qxd6",
+              "Nc3",
+              "Nf6",
+              "h4",
+              "h5",
+              "Bh3",
+              "Qc6",
+              "Kh2",
+              "Kh8",
+              "g4",
+              "hxg4",
+              "Bxg4",
+              "Ne6",
+              "Bxe6",
+              "Qxe6",
+              "Qf3",
+              "Ng4+",
+              "Qxg4",
+              "Qxg4"
+            ]
+          }
+        ]
+      }
+    ],
+    "old_Nc7_control_is_not_current_Nef6_intervention": true,
+    "Rxa7_price_scope": "The prior reference root realization includes Ra7/Ra8 before Rd6 and later Rxa7. This exact source price must remain owned, but must not be presented as the cost of the shorter constructed Nc4 Nef6 Rd6 Qxd6 path that omits Ra7."
+  },
+  "exact_candidate_positions": [
+    {
+      "relative_prefix_uci": [],
+      "relative_prefix_san": [],
+      "label": "same original Nc4/Nb1 root",
+      "required_question": "root pair ownership",
+      "fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "a1b1",
+        "a1c1",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c2c4",
+        "d1b1",
+        "d1c1",
+        "d1e1",
+        "d1f1",
+        "d2b1",
+        "d2b3",
+        "d2c4",
+        "d2f1",
+        "d2f3",
+        "e2a6",
+        "e2b5",
+        "e2c4",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c5",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 46,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2b1"
+      ],
+      "relative_prefix_san": [
+        "Nb1"
+      ],
+      "label": "actual Nb1 child",
+      "required_question": "strong first reply pool",
+      "fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19",
+      "all_legal_moves_uci": [
+        "b6b5",
+        "c5c4",
+        "c6a4",
+        "c6a8",
+        "c6b5",
+        "c6b7",
+        "c6c7",
+        "c6c8",
+        "c6d5",
+        "c6d6",
+        "c6e4",
+        "c6e6",
+        "c6f6",
+        "d7b8",
+        "d7f6",
+        "d8a8",
+        "d8b8",
+        "d8c8",
+        "e8c7",
+        "e8d6",
+        "e8f6",
+        "f7f5",
+        "f7f6",
+        "g6g5",
+        "g7f6",
+        "g7h6",
+        "g7h8",
+        "g8h8",
+        "h7h5",
+        "h7h6"
+      ],
+      "legal_count": 30,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2c4"
+      ],
+      "relative_prefix_san": [
+        "Nc4"
+      ],
+      "label": "actual Nc4 child",
+      "required_question": "strong first reply pool",
+      "fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19",
+      "all_legal_moves_uci": [
+        "b6b5",
+        "c6a4",
+        "c6a8",
+        "c6b5",
+        "c6b7",
+        "c6c7",
+        "c6c8",
+        "c6d5",
+        "c6d6",
+        "c6e4",
+        "c6e6",
+        "c6f6",
+        "d7b8",
+        "d7f6",
+        "d8a8",
+        "d8b8",
+        "d8c8",
+        "e8c7",
+        "e8d6",
+        "e8f6",
+        "f7f5",
+        "f7f6",
+        "g6g5",
+        "g7f6",
+        "g7h6",
+        "g7h8",
+        "g8h8",
+        "h7h5",
+        "h7h6"
+      ],
+      "legal_count": 29,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2b1",
+        "e8c7"
+      ],
+      "relative_prefix_san": [
+        "Nb1",
+        "Nc7"
+      ],
+      "label": "Nb1 under actual Nc7",
+      "required_question": "own Qd2/Nc3 continuation and prices",
+      "fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 w - - 4 20",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "b1a3",
+        "b1c3",
+        "b1d2",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c2c4",
+        "d1c1",
+        "d1d2",
+        "d1d3",
+        "d1d4",
+        "d1d5",
+        "d1d6",
+        "d1d7",
+        "d1e1",
+        "d1f1",
+        "e2a6",
+        "e2b5",
+        "e2c4",
+        "e2d2",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c1",
+        "e3c5",
+        "e3d2",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 50,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2b1",
+        "e8d6"
+      ],
+      "relative_prefix_san": [
+        "Nb1",
+        "Nd6"
+      ],
+      "label": "Nb1 under actual Nd6",
+      "required_question": "own Nc3 continuation and prices",
+      "fen": "3r1rk1/3n1pbp/1pqn2p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 w - - 4 20",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "b1a3",
+        "b1c3",
+        "b1d2",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c2c4",
+        "d1c1",
+        "d1d2",
+        "d1d3",
+        "d1d4",
+        "d1d5",
+        "d1d6",
+        "d1e1",
+        "d1f1",
+        "e2a6",
+        "e2b5",
+        "e2c4",
+        "e2d2",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c1",
+        "e3c5",
+        "e3d2",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 49,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2b1",
+        "d8c8"
+      ],
+      "relative_prefix_san": [
+        "Nb1",
+        "Rc8"
+      ],
+      "label": "Nb1 under actual Rc8",
+      "required_question": "own Na3/exchanges continuation and prices",
+      "fen": "2r1nrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 w - - 4 20",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "b1a3",
+        "b1c3",
+        "b1d2",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c2c4",
+        "d1c1",
+        "d1d2",
+        "d1d3",
+        "d1d4",
+        "d1d5",
+        "d1d6",
+        "d1d7",
+        "d1e1",
+        "d1f1",
+        "e2a6",
+        "e2b5",
+        "e2c4",
+        "e2d2",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c1",
+        "e3c5",
+        "e3d2",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 50,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2c4",
+        "e8f6"
+      ],
+      "relative_prefix_san": [
+        "Nc4",
+        "Nef6"
+      ],
+      "label": "Nc4 under actual Nef6",
+      "required_question": "Rd6 or another comparable good own action",
+      "fen": "3r1rk1/3n1pbp/1pq2np1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 4 20",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "a1b1",
+        "a1c1",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c4a3",
+        "c4a5",
+        "c4b6",
+        "c4d2",
+        "c4d6",
+        "c4e5",
+        "d1b1",
+        "d1c1",
+        "d1d2",
+        "d1d3",
+        "d1d4",
+        "d1d5",
+        "d1d6",
+        "d1d7",
+        "d1e1",
+        "d1f1",
+        "e2d2",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c1",
+        "e3c5",
+        "e3d2",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 52,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2c4",
+        "c6c7"
+      ],
+      "relative_prefix_san": [
+        "Nc4",
+        "Qc7"
+      ],
+      "label": "Nc4 under actual Qc7",
+      "required_question": "queen retreat may change realization; do not force Rd6",
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 4 20",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "a1b1",
+        "a1c1",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c4a3",
+        "c4a5",
+        "c4b6",
+        "c4d2",
+        "c4d6",
+        "c4e5",
+        "d1b1",
+        "d1c1",
+        "d1d2",
+        "d1d3",
+        "d1d4",
+        "d1d5",
+        "d1d6",
+        "d1d7",
+        "d1e1",
+        "d1f1",
+        "e2d2",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c1",
+        "e3c5",
+        "e3d2",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 52,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2c4",
+        "c6b7"
+      ],
+      "relative_prefix_san": [
+        "Nc4",
+        "Qb7"
+      ],
+      "label": "Nc4 under actual Qb7",
+      "required_question": "another own realization may be best",
+      "fen": "3rnrk1/1q1n1pbp/1p4p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 4 20",
+      "all_legal_moves_uci": [
+        "a1a2",
+        "a1a3",
+        "a1a4",
+        "a1a5",
+        "a1a6",
+        "a1a7",
+        "a1a8",
+        "a1b1",
+        "a1c1",
+        "b2b3",
+        "b2b4",
+        "c2c3",
+        "c4a3",
+        "c4a5",
+        "c4b6",
+        "c4d2",
+        "c4d6",
+        "c4e5",
+        "d1b1",
+        "d1c1",
+        "d1d2",
+        "d1d3",
+        "d1d4",
+        "d1d5",
+        "d1d6",
+        "d1d7",
+        "d1e1",
+        "d1f1",
+        "e2d2",
+        "e2d3",
+        "e2e1",
+        "e2f1",
+        "e2f3",
+        "e2g4",
+        "e2h5",
+        "e3c1",
+        "e3c5",
+        "e3d2",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f3",
+        "f2f4",
+        "g1f1",
+        "g1h1",
+        "g1h2",
+        "g2f1",
+        "g2f3",
+        "g2h1",
+        "g3g4",
+        "h3h4"
+      ],
+      "legal_count": 52,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "current actual strong reply"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2b1",
+        "e8f6",
+        "d1d6"
+      ],
+      "relative_prefix_san": [
+        "Nb1",
+        "Nef6",
+        "Rd6"
+      ],
+      "label": "constructed Nb1/Nef6/Rd6",
+      "required_question": "conditional material/value counter only",
+      "fen": "3r1rk1/3n1pbp/1pqR1np1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 b - - 5 20",
+      "all_legal_moves_uci": [
+        "b6b5",
+        "c5c4",
+        "c6a4",
+        "c6a8",
+        "c6b5",
+        "c6b7",
+        "c6c7",
+        "c6c8",
+        "c6d5",
+        "c6d6",
+        "c6e4",
+        "d7b8",
+        "d8a8",
+        "d8b8",
+        "d8c8",
+        "d8e8",
+        "f6d5",
+        "f6e4",
+        "f6e8",
+        "f6g4",
+        "f6h5",
+        "f8e8",
+        "g6g5",
+        "g7h6",
+        "g7h8",
+        "g8h8",
+        "h7h5",
+        "h7h6"
+      ],
+      "legal_count": 28,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "explicit constructed matched intervention"
+    },
+    {
+      "relative_prefix_uci": [
+        "d2c4",
+        "e8f6",
+        "d1d6"
+      ],
+      "relative_prefix_san": [
+        "Nc4",
+        "Nef6",
+        "Rd6"
+      ],
+      "label": "constructed Nc4/Nef6/Rd6",
+      "required_question": "conditional material/value counter only",
+      "fen": "3r1rk1/3n1pbp/1pqR1np1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R5K1 b - - 5 20",
+      "all_legal_moves_uci": [
+        "b6b5",
+        "c6a4",
+        "c6a8",
+        "c6b5",
+        "c6b7",
+        "c6c7",
+        "c6c8",
+        "c6d5",
+        "c6d6",
+        "c6e4",
+        "d7b8",
+        "d8a8",
+        "d8b8",
+        "d8c8",
+        "d8e8",
+        "f6d5",
+        "f6e4",
+        "f6e8",
+        "f6g4",
+        "f6h5",
+        "f8e8",
+        "g6g5",
+        "g7h6",
+        "g7h8",
+        "g8h8",
+        "h7h5",
+        "h7h6"
+      ],
+      "legal_count": 27,
+      "history_owner": "actual full standard-game prefix36 + exactly this relative prefix",
+      "basis": "explicit constructed matched intervention"
+    }
+  ],
+  "minimum_next_completion_obligations": {
+    "product_owned_requirements": [
+      {
+        "id": "P1",
+        "scope": "NC4 exact root Nc4/Nb1 inquiry",
+        "why": "Current NC4 job instead assesses Nc4/h4 and lacks its own required matched root receipt. Complete the existing root inquiry before selecting a general Nc4/Nb1 utility answer; preserve the root Nc4/h4 assessment separately."
+      },
+      {
+        "id": "P2",
+        "scope": "Current own unrestricted first Black pool for both original choices",
+        "why": "Accept existing complete exact owned pool where admissible; otherwise issue it once. Complete a missing named legal pair only as a supplement, never call it the strongest survey."
+      },
+      {
+        "id": "P3",
+        "scope": "Actually useful own continuation after each relevant strong defense group",
+        "why": "Use the already returned good route as a candidate, then finish an owned current-prefix own-action comparison if utility/comparability is claimed. Preserve Nc7/Qd2-Nc3, Nd6/Nc3 and Rc8/Na3 as separate candidate realizations; admit newly returned stronger defenses too."
+      },
+      {
+        "id": "P4",
+        "scope": "Matched intervention price/value only to the extent used in original judgment",
+        "why": "Factual Nxd6 availability needs no invented utility certificate. If the same Rd6 is called useful/safe or the causal root reason, complete the exact current Nef6/Rd6 Black response pool on both arms and missing legal capture/decline supplement, including real compensation/prices. Keep good other Nb1 choices separate."
+      },
+      {
+        "id": "P5",
+        "scope": "Root attribution/delivery",
+        "why": "The root comparison, branch source, own-value receipt, strongest counter receipt and final closed price account must all be current and exactly owned. If only the conditional material mechanism is proven, state that scope rather than turning root inaccuracy into a false universal failure."
+      }
+    ],
+    "minimal_independent_research_batch_if_existing_product_receipts_do_not_answer_value": {
+      "execution_not_authorized_or_started_here": true,
+      "same_normal_profile": "sf18-smallnet-t2-h16-v1",
+      "initial_questions": [
+        {
+          "question": "original Nc4/Nb1 pair stability",
+          "prefix": [],
+          "restriction": [
+            "d2c4",
+            "d2b1"
+          ],
+          "multiPV": 2,
+          "depths": [
+            20,
+            24
+          ],
+          "why": "Two depth levels only for the modest root ranking; do not deepen every unrelated relation."
+        },
+        {
+          "question": "current actual Nb1 Black defense group",
+          "prefix": [
+            "d2b1"
+          ],
+          "restriction": "alllegal-unrestricted",
+          "multiPV": 3,
+          "depths": [
+            24
+          ]
+        },
+        {
+          "question": "current actual Nc4 Black defense group",
+          "prefix": [
+            "d2c4"
+          ],
+          "restriction": "alllegal-unrestricted",
+          "multiPV": 3,
+          "depths": [
+            24
+          ]
+        }
+      ],
+      "adaptive_required_own_nodes": {
+        "initial_saved_NB1_nodes": [
+          [
+            "d2b1",
+            "e8c7"
+          ],
+          [
+            "d2b1",
+            "e8d6"
+          ],
+          [
+            "d2b1",
+            "d8c8"
+          ]
+        ],
+        "initial_saved_NC4_nodes": [
+          [
+            "d2c4",
+            "e8f6"
+          ],
+          [
+            "d2c4",
+            "c6c7"
+          ],
+          [
+            "d2c4",
+            "c6b7"
+          ]
+        ],
+        "query": "one unrestricted wholelegal White pool at each exact required child, d24/multiPV3; finish missing named useful action versus returned best once only if its value is used",
+        "default_fixed_count_if_same_six_groups_return": 10,
+        "do_not_run_unneeded_counter_or_alllegal_fullMPV_for_large_middlegame": true,
+        "new_leader_rule": "A new current leader or forcing resource challenging the claim is an explicit new required question; do not silently ignore it to preserve a named old plan."
+      },
+      "matched_Nef6_Rd6_conditional_questions_if_value_claimed": "Up to two exact Black first pools at [Nc4,Nef6,Rd6] and [Nb1,Nef6,Rd6], plus one named Qxd6 supplement on an arm only if missing from the completed pool. A natural alternative after Nb1/Nef6 must be separately preserved; intervention failure does not refute Nb1."
+    },
+    "minimal_H05_additional_scope": {
+      "repeat_old_all8_or_all5_queries": false,
+      "additional_research_engine_queries_mandatory_for_already_bounded_existing_comment": 0,
+      "root_Ke3_vs_early_g4_all8": {
+        "criterion_unchanged": "For each original rootKe3 and earlyg4, every one of the eight legal Black replies must return coherent unbounded depth24 values.",
+        "required_positions": 2,
+        "required_replies_each": 8,
+        "current_completed_positions": 2,
+        "completed_Ke3_query_id": "H05-original-after-Ke3-all-eight-black-d24-h128-long40min",
+        "completed_early_g4_query_id": "H05-original-after-early-g4-all-eight-black-d24-h128",
+        "d24_completion_not_minimax_or_causal_explanation": true
+      },
+      "quiet13ply_vs_oldquiet17_vs_checking17": [
+        {
+          "scope": "new_refreshed_quiet_g4",
+          "history_plies": 13,
+          "prefix_uci": [
+            "f3e3",
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6e5",
+            "e2e3",
+            "b4b3",
+            "e3f3",
+            "e5d6",
+            "f3f4",
+            "d6e6",
+            "g3g4"
+          ],
+          "fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 41",
+          "g4_is_check": false,
+          "black_legal_reply_roots": [
+            "e6d6",
+            "e6d7",
+            "e6e7",
+            "e6f7",
+            "f6f5"
+          ],
+          "original_white_e4_present_at_e4": true,
+          "white_b2_and_black_b3_present": true,
+          "receipt_query_id": "H05-refreshed-original-f6-quiet-g4-all-five-replies-d24-h128"
+        },
+        {
+          "scope": "old_late_quiet_g4",
+          "history_plies": 17,
+          "prefix_uci": [
+            "f3e3",
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3f2",
+            "d6c6",
+            "f2e3",
+            "c6c7",
+            "e3d2",
+            "b4c3",
+            "b2c3",
+            "c7c6",
+            "d2e3",
+            "c6d6",
+            "e3f4",
+            "d6e6",
+            "g3g4"
+          ],
+          "fen": "8/8/4kp2/2p5/p1p1PKP1/P1P5/8/8 b - - 0 43",
+          "g4_is_check": false,
+          "black_legal_reply_roots": [
+            "e6d6",
+            "e6d7",
+            "e6e7",
+            "e6f7",
+            "f6f5"
+          ],
+          "original_white_e4_present_at_e4": true,
+          "white_b2_and_black_b3_present": false,
+          "audit_record": "research/meaning-conditions-20261008/h05-final-completion-cost-semantic-audit.json"
+        },
+        {
+          "scope": "old_retained_pawn_check_g4",
+          "history_plies": 17,
+          "prefix_uci": [
+            "f3e3",
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6e5",
+            "e2e3",
+            "e5d6",
+            "e3d2",
+            "b4b3",
+            "d2e3",
+            "d6e5",
+            "e3f3",
+            "f6f5",
+            "e4f5",
+            "e5f5",
+            "g3g4"
+          ],
+          "fen": "8/8/8/2p2k2/p1p3P1/PpP2K2/1P6/8 b - - 0 43",
+          "g4_is_check": true,
+          "black_legal_reply_roots": [
+            "f5e5",
+            "f5e6",
+            "f5f6",
+            "f5g5",
+            "f5g6"
+          ],
+          "original_white_e4_present_at_e4": false,
+          "white_b2_and_black_b3_present": true,
+          "receipt_query_id": "H05-retained-original-g3-pawn-g4-check-all-five-replies-d24-h128"
+        }
+      ],
+      "same_f6_child_timing_pair_already_complete": {
+        "required_named_white_roots": 2,
+        "all_legal_white_inventory": 8,
+        "all_legal_white_roots_claimed": false,
+        "completed_named_roots": 2,
+        "depth": 24,
+        "Kf3_white_cp": 714,
+        "immediate_g4_white_cp": 0,
+        "unique_best_not_proved": true
+      },
+      "conditional_quiet13_all5_already_complete": true,
+      "checking17_all5_already_complete": {
+        "required_all_legal_black_replies": 5,
+        "completed": 5,
+        "depth": 24,
+        "strongest_returned": "Kg5, White cp8115",
+        "other_values": [
+          {
+            "root": "Ke5",
+            "white_score": {
+              "kind": "mate",
+              "value": 29
+            }
+          },
+          {
+            "root": "Kg6",
+            "white_score": {
+              "kind": "mate",
+              "value": 28
+            }
+          },
+          {
+            "root": "Ke6",
+            "white_score": {
+              "kind": "mate",
+              "value": 28
+            }
+          },
+          {
+            "root": "Kf6",
+            "white_score": {
+              "kind": "mate",
+              "value": 27
+            }
+          }
+        ],
+        "equal_score_groups": [
+          {
+            "kind": "mate",
+            "value": 28,
+            "roots": [
+              "Kg6",
+              "Ke6"
+            ]
+          }
+        ],
+        "all_five_distinct_unbounded_coherent_depth24": true,
+        "winning_value_not_unique_white_entry_or_late_g4_necessity": true
+      },
+      "remaining_product_minimum": "An actual generated source-owned current late g4/entry value inquiry must complete through the product, with current same-profile roots/pool/proof. Old researchh128 numbers are explanatory sidecars, not h16 product reports. Preserve the source born at the actual later wait rather than binding to the original Ke3 move at the wrong offset.",
+      "stronger_claim_requires_extra": "If asserting lateg4 is better/necessary, compare it with current legal alternative White choices at the exact pre-wait node; if asserting a universal reserve mechanism, evaluate it separately under original f6 and nearly equal Ke6 defenses. Otherwise keep necessity/root-numeric-cause unknown.",
+      "Ke6_control": "The nearly equal Ke6 original-root witness uses Kd2 and queenside exchanges, never visits the f4/f5 approach; allow this other good realization.",
+      "no_fixed_check_e4_survival_or_guard_square_requirement": true
+    }
+  },
+  "H05_preserved_costs": {
+    "old_selected28_ledger": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-selected-28-attempt-final-cost-ledger.json",
+      "sha256": "2590914c286c6f890a1e21802b9ba8a9459bd91be7648ab38245c7410788008a",
+      "costs": {
+        "attempts": 28,
+        "completed": 18,
+        "failed": 10,
+        "completed_execution_elapsed_ms": 2524226,
+        "failed_execution_elapsed_ms": 5932815,
+        "total_execution_elapsed_ms": 8457041,
+        "completed_clock": "42m4.226s",
+        "failed_clock": "98m52.815s",
+        "total_clock": "140m57.041s",
+        "all_executor_elapsed_ms": 8456768,
+        "all_engine_time_ms": 8455092,
+        "all_runner_wall_ms": 8457396
+      }
+    },
+    "not_new_execution_cost_or_whole_goal_duration": true
+  },
+  "execution_and_acceptance_plan": {
+    "zero_engine_preflight": "First copy original records/target transport and manifests to new-owned target with bytehash provenance; establish current source/class/profile freeze. Run replay_public_reports against original actual requests to find largest exact completed prefix, before engine launch. A mismatch stops before submission; preserve the mismatch and run the rest normally only after explicit role assignment.",
+    "actual_request_budget_to_preserve": 180000,
+    "old_criteria_budget30000_and_request_id_not_reconstructed_as_actual_resume": true,
+    "product_caller": "fresh.py --version OWN_FROZEN_VERSION --label NEW_LABEL --cases ORIGINAL_CASES --only FC-SG45-NB1,FC-SG45-NC4 --budget-ms180000 --bridge-dir OWN_PUBLIC_BRIDGE --transport OWN_PUBLIC_TRANSPORT --resume-reports OWN_BYTE_IDENTICAL_ORIGINAL_RECORDS --timings. Run only after exact prefix and requested inputs are checked.",
+    "pure_product_inputs": "Original board/full played history/played move only; no author line, standalone score or completed prose. Existing explicit generated hypothesis/typed proposal owns any intervention proof.",
+    "standalone_execution": "run_comparison_plan.py SEALED_OWN_PLAN --label UNIQUE_LABEL, sequential one engine process. Explicit plan owner/question IDs, full history, legal roots, profile and budgets before execution; outputs remain independent research and are never grafted to product.",
+    "before_after_hashes": "Current main source+compiled classes, all relevant manifest/classpath/probe/transport/runner/source record/request/bridge/engine asset, registered plan and copied bytes. Historical manifests remain historical provenance; do not rewrite them as if freshly compiled in the new checkout.",
+    "coherent_epoch": "Every required root must have current exact path, required depth, unbounded score, legal PV and coherent full MultiPV epoch. Preserve structured and final raw epoch separately if they differ; mixed incomplete rows or a missing requested root are unknown.",
+    "strongest_pool": "Unrestricted same-owned-prefix pool returns current leaders. Top3 completion certifies those returned leaders at that search, not every legal move individually or a minimax theorem. A restricted named test cannot replace the full pool.",
+    "profile_barrier": "No CP or WDL subtraction across h16/h128, different nets/threads/limits or descendant/root nodes. Existing h128 H05 comparisons are read only within their declared profile/history. A new researchprofile batch needs both compared arms wholly rerun within that explicitly sealed profile; product accepts only its own allowed issued profile/key.",
+    "failure_states": "unknown for budget failure/incomplete/foreign/stale/off-owned receipts; refuted only for a fully evaluated failed named intervention within its declared scope; supported fact/value/original judgment are separate. Failure of one intervention preserves independent questions and other good realizations.",
+    "no_identical_pool_retry_alias": "Dedup failed work by exact original history/prefix/restriction/depth/profile/limits; unsubmitted aliases remain unowned unknown. A single explicitly registered larger-budget retry gets a new key and retry_of provenance. Do not change only a named-pair alias, silently lower depth, borrow partial epoch, or drop the hardest defense.",
+    "proposed_research_completion_ladder_not_yet_policy": "Prefer existing allowed profile; seal first60s/500m, then only a required failure120–600s/5b or1200s/10b with new key and preserved original failure. Keep requested depth/root set; escalate the actually exhausted node/time budget, not all optional work. No automatic hash-profile change. Exact limits require parent execution-role approval/seal before running.",
+    "timing_and_costs": "Separate engine execution elapsed, UCI time/nodes, adapter/RPC, source replay count/new query count, Java projection/compilation/decoder and whole goal walltime. Count each actual query once, completed versus failed separately. One-engine concurrency with actual Threads/Hash/ClearHash transcript. No general performance inference from multithread timing variance.",
+    "final_acceptance_order": "Read basic alone against immutable pre-output human question first; then verify numerical whole object/owner and exact canonical core/detail prices, current functional proof and UI/schema delivery. Job completion or shorter prose alone is not utility success."
+  },
+  "existing_paths_and_copy_requirements": {
+    "runners": [
+      {
+        "old_read_only_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\replay_public_reports.py",
+        "new_copied_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\replay_public_reports.py",
+        "content_sha256": "e818e1b8e08b5018d738c632030939d36928519a8155950ca29fb9bfe7ed2b6a",
+        "role": "Zero-engine public replay and exact-prefix discovery",
+        "line_anchors": [
+          49,
+          81,
+          148,
+          157,
+          191
+        ],
+        "new_copied_file_exists": true
+      },
+      {
+        "old_read_only_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\decision-timing-20261006\\fresh.py",
+        "new_copied_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\decision-timing-20261006\\fresh.py",
+        "content_sha256": "b84628a361c94feb75c385d2f3631f45870183af7dde068c832a245735a6a12c",
+        "role": "Actual product public caller and completed-prefix resume",
+        "line_anchors": [
+          33,
+          51,
+          73,
+          104,
+          122,
+          186,
+          190,
+          217
+        ],
+        "new_copied_file_exists": true
+      },
+      {
+        "old_read_only_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\run_comparison_plan.py",
+        "new_copied_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\run_comparison_plan.py",
+        "content_sha256": "d51bac8b8fdc708783edd9972364602f90e7bcd95fa0762e332abd5f67d7b059",
+        "role": "Sealed independent research work; never product receipt",
+        "line_anchors": [
+          12,
+          19,
+          35,
+          45,
+          65
+        ],
+        "new_copied_file_exists": true
+      },
+      {
+        "old_read_only_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\replay_exact_projection.py",
+        "new_copied_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\replay_exact_projection.py",
+        "content_sha256": "b5eebf66bf93bbb208efb605594c02055efa81bc199a4f9f7510eefccc6f59f4",
+        "role": "Instrumented diagnostic only; not whole-work public acceptance",
+        "line_anchors": [
+          37,
+          55,
+          125
+        ],
+        "new_copied_file_exists": true
+      },
+      {
+        "old_read_only_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\complete_comparisons.py",
+        "new_copied_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\complete_comparisons.py",
+        "content_sha256": "2e1f1ff26384d145dcbd8c8418d4bbb680ce81fb16ed1d5d5713a0c64bb420b4",
+        "role": "Historical fixed examples/depths; not adaptive generic execution plan",
+        "line_anchors": [
+          42,
+          62,
+          68
+        ],
+        "new_copied_file_exists": true
+      },
+      {
+        "old_read_only_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\answer-selection-20261004\\fresh-run.py",
+        "new_copied_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\answer-selection-20261004\\fresh-run.py",
+        "content_sha256": "4b6c59ac764fc9a577923bc6ab4eeccbe0319004b57ac0af7ded226575aca835",
+        "role": "Shared RPC dependency; imports only under caller control",
+        "line_anchors": [
+          1
+        ],
+        "new_copied_file_exists": true
+      }
+    ],
+    "needed_original_targets": [
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcFunctional33",
+        "content": "stored-reports.jsonl,requests/cases provenance,journal.jsonl.gz,final-snapshots.jsonl.gz,manifest.json",
+        "role": "exact original actual10 report prefix and label/cost evidence"
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\annotated-games-20261003\\FullGameProbe.scala",
+        "content": "same public reducer/serializer transport; copy bytes only",
+        "role": "normal public before/replay/fresh caller"
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\critical-comparison-20261007\\FullGameProbe.scala",
+        "content": "default public replay transport; either pin copied default or explicitly choose actual same previous transport",
+        "role": "preflight whole descriptor ownership"
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\productbridge38",
+        "content": "historical public bridge bundle/manifest; copy bytes as a frozen old bridge, rebuild newcurrent UI bridge when code changes",
+        "role": "actual product decoder/engine contract"
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\completed-comparisons-v1",
+        "content": "direct-bridge.ts,fresh-bridge.bundle.mjs and source manifest",
+        "role": "normal h16 independent named/unrestricted research"
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-research",
+        "content": "frozen bundle/manifest only as old researchprofile evidence; no default product use",
+        "role": "old h128 profiles and audit sidecars"
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004",
+        "content": "verified main40a manifest/classpath fields and read-only dependency jars; new own classes/compiler outputs must use owned paths",
+        "role": "new compiled main/probe freeze"
+      }
+    ],
+    "weak_paths_not_for_acceptance": [
+      "replay_exact_projection.py uses key-only matching and instrumentation copies; useful for first-stage diagnostics, not proof of whole public equality.",
+      "complete_comparisons.py hardcodes old input examples/60s limits; use generic sealed runner instead of silently widening its old experiment.",
+      "run_comparison_plan.py hashes bundle and records runner/asset but does not itself enforce all main/class or registered source hashes before/after; the new execution/audit wrapper must enforce these declared boundaries.",
+      "fresh.py verifies product sources before and bridge/class hashes after; add independent current source/input/transport/asset afterchecks rather than claiming its existing finally block covers every file."
+    ]
+  },
+  "old_NB1_NC4_cost_measurement": {
+    "old_actual_executions": [
+      {
+        "case_id": "FC-SG45-NC4",
+        "work_id": "work:0",
+        "execution_key": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+        "elapsed_ms": 144,
+        "outcome": "completed",
+        "completed_depth": 8,
+        "nodes": 18207,
+        "engine_time_ms": 37,
+        "executor_elapsed_ms": 138
+      },
+      {
+        "case_id": "FC-SG45-NC4",
+        "work_id": "work:1",
+        "execution_key": "96c60a28ec6ed2577ce28e0004290712e822a543cf81e7505a6a3e4cbbb29577",
+        "elapsed_ms": 989,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 1280217,
+        "engine_time_ms": 920,
+        "executor_elapsed_ms": 987
+      },
+      {
+        "case_id": "FC-SG45-NC4",
+        "work_id": "work:2",
+        "execution_key": "1f7655d7dacfa049f8f89d5af0c1bef1bcd6f87a3313c0094e82d18b65b87b23",
+        "elapsed_ms": 909,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 977815,
+        "engine_time_ms": 683,
+        "executor_elapsed_ms": 908
+      },
+      {
+        "case_id": "FC-SG45-NC4",
+        "work_id": "work:3",
+        "execution_key": "da9606eafbf60ff8110cfe5a5817dc7bfe670f36e0f4fdd1b3dc0a7aa3c2b032",
+        "elapsed_ms": 716,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 669039,
+        "engine_time_ms": 448,
+        "executor_elapsed_ms": 714
+      },
+      {
+        "case_id": "FC-SG45-NB1",
+        "work_id": "work:0",
+        "execution_key": "05ea62c501fda15ec420e2a0efc0c30b6cc3078e51b5d32e69c971734565e5e5",
+        "elapsed_ms": 49,
+        "outcome": "completed",
+        "completed_depth": 8,
+        "nodes": 34622,
+        "engine_time_ms": 24,
+        "executor_elapsed_ms": 47
+      },
+      {
+        "case_id": "FC-SG45-NB1",
+        "work_id": "work:1",
+        "execution_key": "e95ecf9a071cbb97cf3df975d42b256f399e5da6ef2d573f71ffb79465f11147",
+        "elapsed_ms": 38,
+        "outcome": "completed",
+        "completed_depth": 8,
+        "nodes": 4188,
+        "engine_time_ms": 5,
+        "executor_elapsed_ms": 37
+      },
+      {
+        "case_id": "FC-SG45-NB1",
+        "work_id": "work:2",
+        "execution_key": "f2b60ff6a043918e296b82c114f0dfd1d0c293edbdfc8787055033a456706ece",
+        "elapsed_ms": 914,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 1203262,
+        "engine_time_ms": 865,
+        "executor_elapsed_ms": 913
+      },
+      {
+        "case_id": "FC-SG45-NB1",
+        "work_id": "work:3",
+        "execution_key": "a01508eb567da301017ef508e667cf5516220d21abf0b2f01ff47187ad39e3c2",
+        "elapsed_ms": 486,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 595570,
+        "engine_time_ms": 409,
+        "executor_elapsed_ms": 485
+      },
+      {
+        "case_id": "FC-SG45-NB1",
+        "work_id": "work:4",
+        "execution_key": "05e02ff089d7454a3791b6c5e9e56983ffb5cb73721654f121b0a5feefa740ff",
+        "elapsed_ms": 978,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 907517,
+        "engine_time_ms": 747,
+        "executor_elapsed_ms": 977
+      },
+      {
+        "case_id": "FC-SG45-NB1",
+        "work_id": "work:5",
+        "execution_key": "d6735912f0f3f67a55fb86c7128f1f861209fa2521cb81cd945b5d6fae5b33ed",
+        "elapsed_ms": 909,
+        "outcome": "completed",
+        "completed_depth": 16,
+        "nodes": 970983,
+        "engine_time_ms": 646,
+        "executor_elapsed_ms": 908
+      }
+    ],
+    "query_count": 10,
+    "completed_elapsed_ms": 6132,
+    "failed_elapsed_ms": 0,
+    "job_elapsed_ms_total": 31847,
+    "counts_are_historical_not_newqueries": true
+  },
+  "new_engine_queries": 0,
+  "runners_or_product_invoked": false,
+  "code_or_test_or_prior_record_edits": false,
+  "only_new_file_written": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\comparison-scope-audit.json"
+}

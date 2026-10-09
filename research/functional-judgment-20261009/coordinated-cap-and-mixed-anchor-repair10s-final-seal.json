@@ -1,0 +1,69 @@
+{
+  "epoch": "10s",
+  "scope": [
+    "Exact attempted unresolved fact cap reason",
+    "Default and explicit identical engine anchor logical scope; raw descriptor/key and ownership unchanged"
+  ],
+  "artifacts": {
+    "main": {
+      "manifest_path": "target/relationship-delivery-20261004/main-manifest-10s.json",
+      "manifest_sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690",
+      "source_count": 79,
+      "class_count": 1913,
+      "compile_exit_code": 0,
+      "compile_seconds": 137.278,
+      "working_source_postcheck_drift": 0
+    },
+    "test": {
+      "manifest_path": "target/relationship-delivery-20261004/test-manifest-10s.json",
+      "manifest_sha256": "9cd93684072047f4994a281b1108d1b6482e6ea4f843c1c52fcc3f3a04844082",
+      "source_count": 123,
+      "class_count": 459,
+      "compile_exit_code": 0,
+      "compile_seconds": 129.436,
+      "working_source_postcheck_drift": 0
+    }
+  },
+  "classpath": {
+    "path": "target/relationship-delivery-20261004/classpath-10s.json",
+    "sha256": "f60d3160b930cbb3de525deda5447bb55615357dc0d122fa0cb83878484acb98"
+  },
+  "implementation": {
+    "reducer_source_sha256": "76d3257d9f2bd0aabd244f19af21c6fd244f8fadd272cd69f20ebeb153c0f7f4",
+    "new_cap_test_sha256": "fd150d8b6a42c8492a47f914bb3aa09c5be979c6fe0cb7db5f8dfd5d44198f51",
+    "applied_seal": {
+      "path": "target/functional-judgment-20261009/forced-fact-cap-reason10s/applied-source-seal.json",
+      "sha256": "753cdabfc33a00cc5ed6099d188d329abac2bcd25fccb47fc5d259a69c7507ca"
+    }
+  },
+  "focused": {
+    "epoch": "10s",
+    "suites": [
+      "io.chesstory.runtime.FactForcedContinuationJobTest",
+      "io.chesstory.runtime.CommentaryChoiceValueTest",
+      "io.chesstory.runtime.CommentaryChoiceValueConflictTest"
+    ],
+    "main_manifest_sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690",
+    "test_manifest_sha256": "9cd93684072047f4994a281b1108d1b6482e6ea4f843c1c52fcc3f3a04844082",
+    "classpath_sha256": "f60d3160b930cbb3de525deda5447bb55615357dc0d122fa0cb83878484acb98",
+    "engine_queries": 0,
+    "working_source_mutation": false,
+    "java_heap_mb": 3072,
+    "exit_code": 0,
+    "elapsed_seconds": 18.23,
+    "log_sha256": "658ed3741782cbf34943133f2a93f7f2dea9959ea3b085e8d943659ca05dc5a5"
+  },
+  "baseline_failure_scope": {
+    "cap": "Three exact cap-reason REDs on held10r, new corrected seven controls all pass10s. All earlier fixture errors and their logs are retained separately.",
+    "mixed_anchor": "Three semantic REDs among23 tests on held10r; all original and foreign-scope controls preserved, all23 pass10s.",
+    "inherited_runtime": "Eleven deterministic first failures reproduced against HEAD40a and10p; no claim that downstream assertions were reached. Normal30s omitted route remains timed out; research120s pass is separate.",
+    "original_fact_wrapper_assertion": "Original FactForcedJobTest expecting wrapperpartial remains unchanged and inheritedRED. Underlying factResult.partial and unknown samples are retained; new cap controls assert this boundary exactly."
+  },
+  "human_utility_limits": [
+    "Fixed old0/4 and eight-source0/8 readings unchanged.",
+    "No new engine results or numeric/source grafts were used.",
+    "No full root numerical-cause success claimed.",
+    "Reference-arm survey-starvation risk and downstream-price coverage gaps are preserved in attribution audit."
+  ],
+  "source_hold": true
+}

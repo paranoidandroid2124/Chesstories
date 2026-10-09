@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-09T06:44:00Z",
+  "scope": "Read-only current10s source trace and existing execution accounting. No engine, compiler, public projection, test, report build or product modification. A new audit record only.",
+  "authoritative_main_manifest_sha256": "0ad4a34061285eac22c9df15a0d8a4d14ba0ee46e6fa0826214d7b3181773690",
+  "observed_costs": {
+    "fresh_NB1": {
+      "job_elapsed_ms": 192274,
+      "java_RPC_elapsed_sum_ms": 104480,
+      "node_adapter_elapsed_sum_ms": 40055,
+      "raw_engine_time_sum_ms_nested_in_adapter": 25985,
+      "remaining_driver_wall_ms": 47739,
+      "first_wire_line_bytes": 92240,
+      "last_wire_line_bytes": 21334722,
+      "source": "research/functional-judgment-20261009/fresh-native-two-case10s-receipt-cost-scope-audit.json",
+      "sha256": "4f43f59f80f63534a55858458326ab743b9e9a3ba812fd62a6e2329343c09a29"
+    },
+    "source8_aggregate": {
+      "java_RPC_elapsed_sum_ms": 212774,
+      "engine_adapter_elapsed_sum_ms": 93217,
+      "source": "research/functional-judgment-20261009/source-scene-current10s-normal21-execution-delivery-and-cost-audit.json",
+      "sha256": "1ffdce7305edbbcac422d653270f5e4f2d534e5323cd734e87a2418d6d2224fe",
+      "read_scope": "Execution accounting fields only; no new interpretation of private source8 chess results."
+    },
+    "interpretation": "Java RPC timing encloses report input encoding, reduction, public projection, Java JSON output, stdout pipe/reader queue and Python JSON decoding. Journal writing and another full snapshot encoding for Node occur outside this timer. These measurements establish material state/transport cost, not isolated time in any one function. Engine raw times are nested, not extra wall time to add."
+  },
+  "exact_call_chain": [
+    {"file": "research/functional-judgment-20261009/run_fresh_native_bounded18.py", "lines": [147,153,154,158,175,190,192], "finding": "Times the entire java.call, then separately serializes the returned snapshot into the gzip journal and the Node execution request."},
+    {"file": "research/answer-selection-20261004/fresh-run.py", "lines": [132,150,152,155], "finding": "RPC writes json.dumps to stdin, waits for a complete stdout line via a reader queue, and returns only after json.loads."},
+    {"file": "target/annotated-games-20261003/FullGameProbe.scala", "lines": [33,38,42,43,67,70], "finding": "Each report invokes submitIssuedWorkReport, projects the full resulting snapshot, and Json.stringify prints it. Terminal-only research diagnostics are an additional research cost; they are absent while issued_engine_work remains."},
+    {"file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala", "lines": [889,903,1230,1245,1632,1699,1703,1714], "finding": "Packet-local preparation and rebound owned response readings support comparison/fact/task refresh. Augmented questions can require a second comparison/fact refresh. Exact packet replacement invalidates preparation ownership."},
+    {"file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PositionCommentaryJobProtocol.scala", "lines": [57,63,403,442], "finding": "Both awaiting and terminal public statuses project observations. Awaiting projection is not just the next work descriptor."},
+    {"file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala", "lines": [225,256,343,348,452,514,525,567,602,607], "finding": "Visits all prepared paths, all packet position catalogues, base selection/trajectories, proposals/current task contexts and retained response searches; exports all of these alongside the small selected explanation."},
+    {"file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PositionResourceProtocol.scala", "lines": [18,63], "finding": "For each historical position, builds sorted/grouped controls, rays, legal moves, pawn states/files and advance catalogues, including exact source IDs."}
+  ],
+  "plausible_cost_regions_not_profiled": [
+    "RuntimeProtocol full observation/proposal/receipt projection plus PositionResourceProtocol catalogue serialization grows with all admitted historical paths and positions, rather than with selected BASIC size.",
+    "MoveWorkProjection.buildSelection at170-201 indexes all resources/transitions and comparison effects; continuation and physical identity reading is lazy/cached per PreparedPaths but may be demanded anew when a different immutable packet replaces the old owner.",
+    "Reducer refreshProposalReadings at1632-1725 resolves current certificates/conflicts and augments both functional and anchored obligations. Current epoch/ownership checking is real work; deleting it would permit old scores to become current.",
+    "Large Java strings/JSON trees, stdout lines, Python parsed snapshots, journal dumps and later Node request dumps create repeated allocation/encoding of the same broad public state. No isolated GC, CPU or allocation profile was performed."
+  ],
+  "existing_reuse_must_be_preserved": [
+    "MoveReviewAssembler.scala17-45 merges immutable legal/evaluation observations and reuses retained evidence when exact legal replays are unchanged; NodeLineTransitionAssembler.scala204-283 shares prefixes and retains old physical occurrences. It is false to say every report recalculates all chess evidence.",
+    "ObservedLineProtocol.scala41-104 caches resource JSON, base selection, piece/identity/support/continuation/fact results inside one exact packet owner. Reducer889-890 reuses inherited preparation only when belongsTo(packet).",
+    "CommentaryJobRegistry.scala298-308 serializes a terminal result once into retained bytes. The research FullGameProbe uses the reducer/projector directly and does not exercise this registry terminal cache."
+  ],
+  "future_smallest_safe_seam": {
+    "location": "A public certificate projection beside RuntimeProtocol.observationsJson, after current question/certificate and selected answer/price closure are known; keep the reducer's private entire immutable report/history ledger.",
+    "required_closure": [
+      "Original numerical root receipt and exact canonical history/occurrence/physical actors; pending work descriptor and exact current declared functional/anchored owner/context.",
+      "Current full survey plus exact named pair at the same position/profile/achieved depth/selection epoch, including legal omitted-resource/capture tests and all explicit branch values being claimed.",
+      "Each current conflict child with its exact two earlier parent work IDs/keys and revalidation state, including the metadata needed to prevent retired old comparisons from becoming current again.",
+      "Selected CORE and DETAIL witness paths, full position/transition ownership and typed fact source namespaces actually referenced; independent price duties remain independent of value/capture hypotheses.",
+      "All selected required prices: literal material capture/exchange rows, original actor/victim tracking, check response/trade closure, piece absence/promotion records and required refs; preserve physical Section boundaries and immutable completionSources."
+    ],
+    "identity": "Select by explicit immutable work/key, declared question ID, canonical history/position/occurrence, profile, homogeneous achieved depth and current epoch. Never select by raw FEN, age or SAN.",
+    "fail_closed": "If the certificate dependency/price/source closure cannot be supplied, keep the full established projection or expose an explicit unavailable certificate. Do not change the numerical judgment, remap reports or treat deferred values as answered.",
+    "possible_followup_optimization": "Serialize a validated certificate once per immutable state revision; reuse immutable physical catalogue objects only under complete ownership identity. A delta wire protocol requires client/schema changes and controlled equivalence checks; it is not implemented or benchmarked here."
+  },
+  "why_plain_count_or_age_cuts_are_not_safe": [
+    "Earlier genuine completed43 had41 response rows. The UI19 capacity audit identified six historical parent receipts work6/7/9/10/12/13 still required by three exact conflict children. Old age alone did not mean unused ownership.",
+    "Current CommentaryComparisonConflict.scala79-111 and CommentaryChoiceValue.scala65-99 derive retirement/selection-epoch rules from exact ordered receipts. Cutting a counter or refresh can resurrect an earlier useful pool or wrongly allow a pre-refresh named pair for an omitted resource.",
+    "Initial static ordinary5/generic24 limits rejected valid larger finite family ledgers. Existing repair used declared exact-owner slots and certified dependencies; merely discarding surplus rows would erase needed evidence.",
+    "Price references can originate in an earlier selected physical use and remain mandatory after later value/plan changes. RootQuestionSummary.scala776-780 now verifies literally expressed anchored price closure. A retained PieceAbsence or numerical receipt is not a substitute for the capture being stated.",
+    "This audit does not claim a measured latest-N output experiment failed: the preserved exact-dependency/foreign-source/price negative controls establish why an unqualified row or age cut cannot satisfy the existing contract."
+  ],
+  "verified_current_source_sha256": {
+    "CommentaryJobReducer.scala": "76d3257d9f2bd0aabd244f19af21c6fd244f8fadd272cd69f20ebeb153c0f7f4",
+    "RuntimeProtocol.scala": "968bd8552e1fa9f8127bfa646f5c97883a545e17903e91d7417edd123a08de58",
+    "ObservedLineProtocol.scala": "03f192e5fa159ed982d46b2cd9827df40d27844a2968bf8513165d9bc104bb77",
+    "PositionCommentaryJobProtocol.scala": "34328593bfb44241a88e460058515a33e62d5bb1866d6eb1c1b1c9d69db5238d",
+    "PositionResourceProtocol.scala": "23500f31d0f6167aa9b7a4bdf38b03d8edc8af5ad5977f647bcea1e96d6bc630",
+    "MoveWorkProjection.scala": "0fc604be92c064ee7d72b4ff4c0d39deb398064ac2a17be2a325b799b75f52c9",
+    "CommentaryComparisonConflict.scala": "8d10c62e69d6cbc9d4f8d17fff26503efad981aecc63c6d655a98b73a9ffa192",
+    "CommentaryChoiceValue.scala": "76c836f6f0d20f5ca0ca06c04aa5529848adb393399d981043469c8247692551",
+    "CommentaryJobRegistry.scala": "50391a64c9a613d53432b5cc045ae1c4a0574cdfed1afff780da8fb51b83920f"
+  },
+  "report_delta_readonly": {
+    "builder_lines": [51,73],
+    "result": "New independent reader/index guards bind the same8 case IDs/text hashes/unchanged criteria and exact49 count,47 completed+2 failed, ownership/legal/schema/accountability. Two literal readings0/8, six fully completed search cases still lacking meaning, and old8b Rd3/Re8 guard not counted as new improvement are appropriately bounded claims.",
+    "hash_at_read": {"builder": "67423b0d824f0d1d70dc5cf03f75c80661a6ab58306a7d3244bdac258239b155", "report": "0379a8c11b87b72afb14227116dfed13d5504387d8f65bc662a538b6f204a052"},
+    "parent_notified_report_hash_differs_from_previous_notice": true,
+    "no_build_or_fresh8_private_chess_read": true
+  },
+  "limits": [
+    "Static source and existing wall-time observations identify plausible seams only; no isolated timing, memory, allocation or serialization speedup has been proved.",
+    "Finite current certificate does not prove whole root cause/all response utility and must not change fixed0/4 or source0/8 outcomes.",
+    "No change to depth18 policy, work budgets, numerical receipt admission, price safeguards, frontend capacity or shipped schema is proposed as an immediate workaround."
+  ]
+}

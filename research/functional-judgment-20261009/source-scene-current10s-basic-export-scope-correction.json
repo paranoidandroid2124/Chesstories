@@ -1,0 +1,47 @@
+{
+  "sealed_utc": "2026-10-09T06:09:53.416657+00:00",
+  "original_export_path": "research/functional-judgment-20261009/source-scene-current10s-normal21-basic.json",
+  "original_export_sha256": "1002bff3864444fb7f1aca57d3fd7830eebb2d2a311c0209616663b2dce9d53d",
+  "corrected_text_only_path": "research/functional-judgment-20261009/source-scene-current10s-normal21-basic-text-only.json",
+  "corrected_text_only_sha256": "d019408f255d78372220f236a9dd18a4c1de6016100df7f0d3d501af139038c1",
+  "removed_only_public_primary_endpoint_objects": {
+    "FJ-SG35-ROOT-NG8": [
+      "best_endpoint",
+      "runner_up_endpoint"
+    ],
+    "FJ-SG35-ROOT-ND6": [
+      "reference_endpoint",
+      "played_endpoint"
+    ],
+    "FJ-SG35-LATE-ND6": [
+      "best_endpoint",
+      "runner_up_endpoint"
+    ],
+    "FJ-SG35-LATE-NE4": [
+      "reference_endpoint",
+      "played_endpoint"
+    ],
+    "FJ-SG42-RD3": [
+      "reference_endpoint",
+      "played_endpoint"
+    ],
+    "FJ-SG42-BD3": [
+      "best_endpoint",
+      "runner_up_endpoint"
+    ],
+    "FJ-SG17-BXF4": [
+      "best_endpoint",
+      "runner_up_endpoint"
+    ],
+    "FJ-SG17-QXD7": [
+      "reference_endpoint",
+      "played_endpoint"
+    ]
+  },
+  "bodies_questions_grades_deltas_unchanged": true,
+  "private_journals_or_task_opened": false,
+  "human_reader_exposure_note": "This agent inadvertently displayed public primary endpoint move arrays in the original alleged BASIC export. Preserve this fact; its reading is criteria-fixed text evaluation with disclosed extra exposure, not a pristine text-only first pass. Parent can perform a separate first reading of corrected text-only view before private audit. Information present only in endpoints must not count as delivered prose.",
+  "runtime_report_input_source_mutation": false,
+  "new_engine_queries": 0,
+  "original_driver_and_run_artifacts_preserved": true
+}

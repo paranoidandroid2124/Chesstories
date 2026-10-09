@@ -1,0 +1,24 @@
+{
+  "sealed_utc": "2026-10-09T05:44:26.339119+00:00",
+  "reader": "Parent BASIC first pass; no10s private task/price/UI diagnosis read before this seal",
+  "basic_path": "research/functional-judgment-20261009/nb1-produced10s-basic-only.json",
+  "basic_sha256": "ea1741153df6754a612cc483c4f2f68fdcf426dab368b1abe5c5646ce704b18f",
+  "prior_outputs_known": true,
+  "not_a_blind_holdout": true,
+  "criteria_unchanged": true,
+  "full_old_cases_passed": 0,
+  "full_fixed_source_cases_passed": 0,
+  "recoverable_from_basic": [
+    "Nc4 supplies current d6 control, while Nb1 can return with Nc3.",
+    "In the matched Nef6 position, Rd6 is competitive with Ra7 after Nc4, while Nb1 prefers Nc3 to immediate Rd6.",
+    "Qc7 evades the rook attack and keeps targeting it; the conditional Qxd6/Nxd6 transaction and missing Nb1 recapture are explicit.",
+    "Later Rad1 changes current support; the separate recorded continuation carries a displayed rook loss and queen capture."
+  ],
+  "not_recoverable_from_basic": [
+    "How the adequate own plan changes under every scoped relevant defense.",
+    "How the later original-knight loss and replacement queen support change choice value.",
+    "A complete bounded reason for the original numerical mistake judgment."
+  ],
+  "basic_text_assessment": "The same bounded useful matched-response and price explanation as10r remains. Its long separate relation/history tail competes with the leading point. No new full root judgment success is counted.",
+  "native_vs_fresh_scope": "This exact26 native-report result is distinct from the new15-query ordinary two-case run; neither prose nor values are substituted between them."
+}

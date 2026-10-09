@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T16:57:31.542046+00:00",
+  "criteria_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\human-criteria-and-scenes.json",
+  "criteria_sha256": "4701af6026b62be14d3ac03bcef40d62d3a58e4badfe9ddda6b4f9b054900ed4",
+  "neutral_input_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\source-scene-engine-neutral-inputs.json",
+  "neutral_input_sha256": "724d60dbbaa0bc5302223860d776d2d1413526ca1168822ad7a3dc781b603422",
+  "source_pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+  "source_pdf_sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+  "page_count": 603,
+  "pages_actually_read_for_registered_scenes": [
+    186,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    351,
+    354,
+    355,
+    356,
+    357,
+    358,
+    359,
+    361,
+    419,
+    422,
+    423,
+    424,
+    425,
+    426
+  ],
+  "texts": [
+    {
+      "reading_page": 186,
+      "pdf_zero_based_index": 185,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-186.txt",
+      "sha256": "eb17ccaced0b545d54774be938da1b9c169b1dfaf62c17235c1a7bf43c901839",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 189,
+      "pdf_zero_based_index": 188,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-189.txt",
+      "sha256": "fbe3877ec57d5439eb7b77928283d50b02e6dbc8414e1885f97167bd73f6e469",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 190,
+      "pdf_zero_based_index": 189,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-190.txt",
+      "sha256": "bede72dcb775681680f46ccb9476260d77c26e24bf6ae23081d0403ba630e854",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 191,
+      "pdf_zero_based_index": 190,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-191.txt",
+      "sha256": "f9ac09a09e5f0e99ff974a1dd04b58f5a52bac9e438932757842c19688b854f9",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 192,
+      "pdf_zero_based_index": 191,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-192.txt",
+      "sha256": "214ad6373b733a97e73070d13d95f7e5684842dcec5257c414e0009097ad2b8c",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 193,
+      "pdf_zero_based_index": 192,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-193.txt",
+      "sha256": "3a805f23e4d55c711f806cf335b66661f0c84881883c499cef0233fa815a1f9a",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 194,
+      "pdf_zero_based_index": 193,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-194.txt",
+      "sha256": "23eb7fb6901dc2ef711f00fdee3b97beae34985a3305e8fddc441e846b7ff62a",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 195,
+      "pdf_zero_based_index": 194,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-195.txt",
+      "sha256": "60d8d915a93f714538c5832c8e15dd55c3dd14066b95131b417decdd117a334a",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 351,
+      "pdf_zero_based_index": 350,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-351.txt",
+      "sha256": "8ebfa7555630510a6b96ec9ba0f4e059eaf669c512a0f38171d048c20872ee96",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 354,
+      "pdf_zero_based_index": 353,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-354.txt",
+      "sha256": "7ce845d2306310544b957cff4b493f8813d55ae682fd1d57cdb0aff7681244ed",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 355,
+      "pdf_zero_based_index": 354,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-355.txt",
+      "sha256": "e2b3786f930dd256e678068841a7ff0cfbd85867bb192dcbcbe87aff668263a9",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 356,
+      "pdf_zero_based_index": 355,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-356.txt",
+      "sha256": "a521ec7d228a6fc941a5b28a21c7c578d9bbf0351d0417a8cb9c5c364d96bedc",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 357,
+      "pdf_zero_based_index": 356,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-357.txt",
+      "sha256": "3b98a2d1ca93a8f27c14258ca746a2895e1dd7584e2de5d0befc347171de08aa",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 358,
+      "pdf_zero_based_index": 357,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-358.txt",
+      "sha256": "083bf00cda3f6f8047eca1dd75aa20e817128ce7fee84e1441ff4cc9c276226a",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 359,
+      "pdf_zero_based_index": 358,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-359.txt",
+      "sha256": "f1b876836df22ad7fd91f575a46a32b356958faa5030edea24e9043068eb4d75",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 361,
+      "pdf_zero_based_index": 360,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-361.txt",
+      "sha256": "b2c754687930b791ef113fa5bd8119619156e59cf1463b9e938e7c1806f6572e",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 419,
+      "pdf_zero_based_index": 418,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-419.txt",
+      "sha256": "dbb4d1068a95d2e90da06b182bf53eeb9031a2b26399fbaa87bcfd2f09a04be1",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 422,
+      "pdf_zero_based_index": 421,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-422.txt",
+      "sha256": "c4516d1dbf599ffffaead5e741613e883685ddcfed450970fb61f519bb1b018f",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 423,
+      "pdf_zero_based_index": 422,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-423.txt",
+      "sha256": "2207ecd662c9e579c060185aa5d31f26d36997d177ac24367832d4cfa8dcfde5",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 424,
+      "pdf_zero_based_index": 423,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-424.txt",
+      "sha256": "20d189f5e39e1521521500a6e13d1c433901f84b5f4d412865158d63aef23eff",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 425,
+      "pdf_zero_based_index": 424,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-425.txt",
+      "sha256": "14176b227061d51feea36a933c3cb01bcf100ba488a9c2c0670183535756cff4",
+      "source_text_exact_or_final_newline_match": true
+    },
+    {
+      "reading_page": 426,
+      "pdf_zero_based_index": 425,
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-426.txt",
+      "sha256": "bee8e5d7da3037b6c7153d5612a3fdf026b35998d5d108d15b5d8d11565ae31a",
+      "source_text_exact_or_final_newline_match": true
+    }
+  ],
+  "renders": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-193.png",
+      "sha256": "d894f4afaa793bfcdf37b3b5f1b06ae861dad667cdb9f2c9546b0a84c71fac49",
+      "visually_inspected": true,
+      "registered_cohort": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-356.png",
+      "sha256": "158cd4cfebaa82759f505e6786d565ec7a3a2a5d6af8e28f352d4ad9e776abae",
+      "visually_inspected": true,
+      "registered_cohort": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-359.png",
+      "sha256": "568f911fd1d0a17b5c88198277933a33728ec7c0e76847c667f5dce28dc69079",
+      "visually_inspected": true,
+      "registered_cohort": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-diagram-186.png",
+      "sha256": "741edec820193bf6a29b9861ede4f6196fa6369fdb6affac562202620466d637",
+      "visually_inspected": true,
+      "registered_cohort": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-diagram-251.png",
+      "sha256": "77ac92c4a0898490e3c4ac0a490fa8ac4457f60fdbda8e677c69aa843c2618c9",
+      "visually_inspected": true,
+      "registered_cohort": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-diagram-351.png",
+      "sha256": "5b8028c02c1db14d32ea2d1ae4d2f91fa9cf4167e902a153f342c38d54a27cfa",
+      "visually_inspected": true,
+      "registered_cohort": true
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\theory-reading\\sg-diagram-419.png",
+      "sha256": "f8b7cd416c4f92f3bcac25f401c68f9685d428ab446fab2fab19ce135ebee328",
+      "visually_inspected": true,
+      "registered_cohort": true
+    }
+  ],
+  "legal_input_verification": [
+    {
+      "id": "FJ-SG35-ROOT-NG8",
+      "history_plies": 71,
+      "root_exact_match": true,
+      "played_uci": "e7g8",
+      "played_san": "Ng8",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG35-ROOT-ND6",
+      "history_plies": 71,
+      "root_exact_match": true,
+      "played_uci": "c4d6",
+      "played_san": "Nd6",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG35-LATE-ND6",
+      "history_plies": 79,
+      "root_exact_match": true,
+      "played_uci": "c4d6",
+      "played_san": "Nd6",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "history_plies": 79,
+      "root_exact_match": true,
+      "played_uci": "f6e4",
+      "played_san": "Ne4",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG42-RD3",
+      "history_plies": 0,
+      "root_exact_match": true,
+      "played_uci": "e3d3",
+      "played_san": "Rd3",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG42-BD3",
+      "history_plies": 0,
+      "root_exact_match": true,
+      "played_uci": "f5d3",
+      "played_san": "Bd3",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG17-BXF4",
+      "history_plies": 37,
+      "root_exact_match": true,
+      "played_uci": "e5f4",
+      "played_san": "Bxf4",
+      "played_is_legal": true
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "history_plies": 37,
+      "root_exact_match": true,
+      "played_uci": "c8d7",
+      "played_san": "Qxd7",
+      "played_is_legal": true
+    }
+  ],
+  "legal_replay_sha256": "8698c6f23d81ffdf449928d7874abc2b79930a7ad29270c7fe03623994990560",
+  "local_inventory_sha256": "72ecf8561366990ddf0c08e82f18df7a500f3c4d5d244ac00877790efa36d792",
+  "scope": "Source/text/diagram consistency and legal input checks only. No engine, product source, new product output, whole-book completion or utility certification.",
+  "limitations": [
+    "No unrestricted strength survey completed",
+    "Source named strongest reply is not an independently computed all-legal maximum",
+    "Diagram-derived SG42 history scope begins at the root",
+    "Early/late SG35 derived b6 recapture ledger does not establish all root value"
+  ]
+}
