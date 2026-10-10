@@ -19,3 +19,7 @@
 /lila-docker/scripts/ops_auto_deploy.ps1
 /lila-docker/scripts/remove_auto_deploy_task.ps1
 /tools/stockfish/
+
+# Local Python caches from research tooling.
+/research/**/__pycache__/
+/research/**/*.py[cod]

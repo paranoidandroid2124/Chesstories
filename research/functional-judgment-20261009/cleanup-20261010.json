@@ -1,0 +1,72 @@
+{
+  "completed_utc": "2026-10-10T01:48:32.955975+00:00",
+  "base_commit": "2a20a7db7d922ac85d1fe69f714f60075cf4a9e5",
+  "scope": "This task-owned checkout only; original reports and current/baseline compiled evidence retained.",
+  "archive_path": "C:\\Users\\양자\\.codex\\task-artifacts\\chesstories-cleanup-20261010\\obsolete-outputs.zip",
+  "archive_sha256": "bb19b60550b0b8007f1ddd1f103f8db5ff56e19cb56c87f5def7d329fd179acc",
+  "archive_bytes": 161688779,
+  "unique_archive_objects": 5700,
+  "removed_files": 58171,
+  "removed_bytes": 1598437889,
+  "categories": {
+    "python_cache": {
+      "files": 12,
+      "bytes": 287668
+    },
+    "unreferenced_intermediate_research": {
+      "files": 201,
+      "bytes": 8135948
+    },
+    "completed_one_shot_tool": {
+      "files": 4,
+      "bytes": 12588
+    },
+    "historical_repeated_public_snapshots": {
+      "files": 1,
+      "bytes": 914482828
+    },
+    "obsolete_compiled_output": {
+      "files": 57953,
+      "bytes": 675518857
+    }
+  },
+  "removed_tracked_tools": [
+    "archive_bounded18_evidence.py",
+    "archive_final10s_evidence.py",
+    "archive_nominal16_completion_evidence.py",
+    "bootstrap_baseline.py"
+  ],
+  "retained_untracked_research_files": [
+    "h05-10a-fresh180-basic.json",
+    "h05-10a-fresh180-execution-and-first-failure-audit.json",
+    "h05-10a-fresh180-human-firstpass.json",
+    "h05-10b-anchored-completion-boundary-audit.json",
+    "h05-10b-native-completion-cost-and-delivery-audit.json",
+    "h05-10b-prefix-consolidation-research-basic.json",
+    "h05-10b-prefix-consolidation-research-human-firstpass.json",
+    "h05-10b-response-value-evidence-and-human-connection-supplement.json",
+    "h05-10b-resume180-basic.json",
+    "h05-10b-resume180-human-firstpass.json",
+    "h05-10e-five-local-conflict-cycles.json",
+    "h05-actual43-retained-pawn-opponent-denial-audit.json",
+    "h05-choicev9-fresh180-basic.json",
+    "h05-choicev9-fresh180-human-firstpass.json",
+    "h05-completed43-actual-final-delivery-first-failure.json",
+    "h05-parent-family10i6-controlled43-basic-human-firstpass.json",
+    "h05-prefix-consolidation-research-override-audit.json",
+    "h05-root-defense-epoch-terminology-correction.json",
+    "h05-west-choice-d16-first-refutation.json",
+    "nb1-choicev9-exact-native-replay-audit.json",
+    "nb1-choicev9-produced-fixture-provenance.json",
+    "nb1-choicev9-replay-basic.json",
+    "nb1-delayed-d6-canonical-legal-evidence.json",
+    "nb1-delayed-d6-replacement-provider-human-audit.json",
+    "nb1-reroute-owned-path-audit.json",
+    "sg45-function-plan-user-supplemental-reading-contract.json",
+    "source-scene-before40a-execution-audit.json"
+  ],
+  "preserved_hash_checks_before_and_after": 4441,
+  "new_engine_queries": 0,
+  "product_source_changes": 0,
+  "restore": "manifest.json inside the local archive maps each original workspace-relative path to objects/<sha256>. Validate hashes and restore only the needed paths; do not overwrite later edits."
+}
